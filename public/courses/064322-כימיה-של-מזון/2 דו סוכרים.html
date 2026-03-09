@@ -5,55 +5,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables: Glassmorphism Dark Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
-            --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --primary-bg: #0a0a0f;
+            --secondary-bg: rgba(255,255,255,0.03);
+            --accent-color: #6C63FF;
+            --accent-secondary: #A855F7;
+            --accent-gradient: linear-gradient(135deg, #6C63FF, #A855F7);
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --correct-color: #22c55e;
+            --incorrect-color: #ef4444;
+            --card-bg: rgba(255,255,255,0.04);
+            --eureka-bg: rgba(168,85,247,0.08);
+            --eureka-border: #A855F7;
+            --glass-bg: rgba(255,255,255,0.03);
+            --glass-border: rgba(255,255,255,0.06);
+            --glass-blur: blur(12px);
+            --radius: 16px;
+            --radius-sm: 10px;
         }
 
-        /* --- Global Styles --- */
+        @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes cardIn { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+        @keyframes shimmer { 0%{ background-position:-200% 0; } 100%{ background-position:200% 0; } }
+        @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.6; } }
+        @keyframes glowPulse { 0%,100%{ box-shadow:0 0 20px rgba(108,99,255,.15); } 50%{ box-shadow:0 0 30px rgba(168,85,247,.25); } }
+
+        *{ box-sizing:border-box; }
+
         body {
             background-color: var(--primary-bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 20% 60%, rgba(108,99,255,.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(168,85,247,.06), transparent);
             color: var(--text-color);
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
             margin: 0;
-            padding: 20px;
+            padding: 24px 16px;
+            min-height: 100vh;
         }
 
         .container {
-            width: 90%; /* As per prompt */
-            margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 28px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            animation: fadeIn .6s ease-out;
         }
 
-        h1, h2 {
-            color: var(--accent-color);
+        h1 {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            font-weight: 700;
+            font-size: 1.75em;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 16px;
+            margin-top: 0;
+            letter-spacing: -.02em;
+        }
+
+        h2 {
+            color: var(--text-color);
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.3em;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 12px;
+            letter-spacing: -.01em;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            margin-bottom: 28px;
+            border-radius: var(--radius);
+            animation: cardIn .5s ease-out both;
+        }
+        .section:nth-child(2){ animation-delay:.1s; }
+        .section:nth-child(3){ animation-delay:.2s; }
+        .section:nth-child(4){ animation-delay:.3s; }
+        .section:nth-child(5){ animation-delay:.4s; }
+
+        .theory-text { font-size:1.05em; line-height:1.85; color:var(--text-muted); }
+        .theory-text ul { padding-right:20px; }
+        .theory-text li { margin-bottom:8px; }
+        .theory-text h3 {
+            color:#fff; margin-top:28px; margin-bottom:12px;
+            border-bottom:none; text-align:right;
+            font-weight:600; font-size:1.1em;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .eureka-box {
+            background: var(--eureka-bg);
+            border-right: 3px solid var(--eureka-border);
+            padding: 18px 20px;
+            margin: 24px 0;
+            border-radius: var(--radius-sm);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-top: 1px solid rgba(168,85,247,.12);
+            border-bottom: 1px solid rgba(168,85,247,.12);
+            border-left: 1px solid rgba(168,85,247,.12);
+            animation: slideIn .4s ease-out both;
+        }
+
+        .eureka-box strong {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+
         .flashcard-container {
-            height: 250px;
-            margin-bottom: 15px;
+            min-height: 220px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -62,135 +149,144 @@
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
+            min-height: 220px;
+            background: var(--card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 28px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity .3s ease-in-out, transform .3s ease, box-shadow .3s ease;
+            animation: glowPulse 4s ease-in-out infinite;
         }
-        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(108,99,255,.2);
+            border-color: rgba(108,99,255,.2);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+            font-size: 1.5em;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-color);
         }
-        
-        .flashcard-back-style {
-             font-size: 1.1em;
-        }
+        .flashcard-back-style { font-size:1.05em; line-height:1.7; color:var(--text-muted); }
 
-        /* --- Questions Styling (MCQ & T/F) --- */
-         .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
-         }
-
-        .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+        .question-container-single, .question-container-all {
+            margin-bottom: 16px;
+            padding: 18px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
         }
+        .question-text { font-weight:600; margin-bottom:16px; font-size:1.05em; }
 
         .options button, .tf-options button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 16px;
+            margin: 8px 0;
+            background: rgba(108,99,255,.12);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid rgba(108,99,255,.2);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: .95em;
+            transition: all .25s ease;
         }
-
         .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+            background: rgba(108,99,255,.25);
+            border-color: var(--accent-color);
+            transform: translateX(-4px);
+            box-shadow: 0 0 16px rgba(108,99,255,.15);
         }
-
-        .options button:disabled, .tf-options button:disabled {
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-        
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        .options button:disabled, .tf-options button:disabled { cursor:not-allowed; opacity:.7; }
+        .options button.correct, .tf-options button.correct { opacity:1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity:1; }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            animation: fadeIn .3s ease-out;
         }
-
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            background: rgba(34,197,94,.15);
+            border: 1px solid rgba(34,197,94,.3);
+            color: #4ade80;
         }
-
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            background: rgba(239,68,68,.15);
+            border: 1px solid rgba(239,68,68,.3);
+            color: #f87171;
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 12px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: .9em;
+            padding: 12px 16px;
+            background: rgba(255,255,255,.02);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            animation: fadeIn .3s ease-out;
         }
 
-        /* --- Navigation & Utility Styling --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
+            margin-top: 16px;
+            margin-bottom: 12px;
         }
 
         .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
+            background: var(--accent-gradient);
+            color: #fff;
             border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: .9em;
+            transition: all .25s ease;
+            box-shadow: 0 2px 12px rgba(108,99,255,.2);
         }
+        .nav-button:hover:not(:disabled), .view-all-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(108,99,255,.35);
+        }
+        .nav-button:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
 
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
-        }
-
-        .counter {
-            font-size: 0.9em;
-        }
-
-        .view-all-container {
-            text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
-        }
-
-        .hidden {
-            display: none;
-        }
+        .counter { font-size:.85em; color:var(--text-muted); font-family:'JetBrains Mono', monospace; }
+        .view-all-container { text-align:center; margin-top:16px; margin-bottom:16px; }
+        .hidden { display:none; }
 
         #mcq-all-questions .question-container-all,
         #tf-all-questions .question-container-all {
             margin-bottom: 20px;
+            animation: fadeIn .3s ease-out both;
         }
+
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:transparent; }
+        ::-webkit-scrollbar-thumb { background:rgba(108,99,255,.3); border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:rgba(108,99,255,.5); }
+        ::selection { background:rgba(108,99,255,.3); color:#fff; }
 
     </style>
 </head>
