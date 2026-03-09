@@ -1,7 +1,7 @@
 // src/app/courses/[courseName]/CourseHtmlViewer.tsx
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Select,
   SelectContent,
@@ -14,6 +14,100 @@ import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface CourseHtmlViewerProps {
   files: string[]; // Contains paths to both .html and .pdf files
+}
+
+/**
+ * Auto-resizing iframe that never shows a scrollbar.
+ * Uses ResizeObserver + MutationObserver to continuously track
+ * content height changes (e.g. collapsible sections opening).
+ */
+function IframeAutoHeight({ src, title }: { src: string; title: string }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const syncHeight = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    try {
+      const body = iframe.contentWindow?.document.body;
+      const html = iframe.contentWindow?.document.documentElement;
+      if (body && html) {
+        // Read scrollHeight directly — never collapse to 0 to avoid page jump
+        const contentHeight = Math.max(
+          body.scrollHeight, body.offsetHeight,
+          html.scrollHeight, html.offsetHeight
+        );
+        const newHeight = contentHeight + 20;
+        // Only update if the height actually changed
+        const currentHeight = parseInt(iframe.style.height) || 0;
+        if (Math.abs(newHeight - currentHeight) > 2) {
+          iframe.style.height = `${newHeight}px`;
+        }
+      }
+    } catch {
+      iframe.style.height = '100vh';
+    }
+  }, []);
+
+  const handleLoad = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    syncHeight();
+
+    try {
+      const iframeDoc = iframe.contentWindow?.document;
+      const iframeBody = iframeDoc?.body;
+      if (!iframeDoc || !iframeBody) return;
+
+      // Hide scrollbar inside the iframe content
+      const style = iframeDoc.createElement('style');
+      style.textContent = `
+        html, body {
+          overflow: hidden !important;
+          overflow-x: hidden !important;
+        }
+      `;
+      iframeDoc.head.appendChild(style);
+
+      // ResizeObserver — fires when any element inside changes size
+      const resizeObserver = new ResizeObserver(() => {
+        syncHeight();
+      });
+      resizeObserver.observe(iframeBody);
+
+      // MutationObserver — fires when DOM changes (e.g. section expanded)
+      const mutationObserver = new MutationObserver(() => {
+        // Small delay to let CSS transitions/animations complete
+        requestAnimationFrame(() => syncHeight());
+      });
+      mutationObserver.observe(iframeBody, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class', 'open', 'hidden'],
+      });
+
+      // Cleanup on unmount (handled by React re-keying)
+    } catch {
+      // Cross-origin — can't observe
+    }
+  }, [syncHeight]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      src={src}
+      title={title}
+      onLoad={handleLoad}
+      style={{
+        width: '100%',
+        minHeight: '200px',
+        border: 'none',
+        overflow: 'hidden',
+        display: 'block',
+      }}
+    />
+  );
 }
 
 // Simple helpers to replace Node.js path module on client side
@@ -128,31 +222,10 @@ export default function CourseHtmlViewer({ files }: CourseHtmlViewerProps) {
       {selectedFile && (
         <div className="mt-6 border rounded-lg overflow-hidden">
           {fileType === 'html' ? (
-            <iframe
+            <IframeAutoHeight
               key={selectedFile}
               src={selectedFile}
               title={getDisplayName(selectedFile)}
-              style={{
-                width: '100%',
-                minHeight: isMobile ? '60vh' : '80vh',
-                maxHeight: '100vh',
-                border: 'none',
-                overflow: 'auto'
-              }}
-              onLoad={(e) => {
-                const iframe = e.target as HTMLIFrameElement;
-                try {
-                  const body = iframe.contentWindow?.document.body;
-                  const html = iframe.contentWindow?.document.documentElement;
-                  if (body && html) {
-                    const contentHeight = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-                    iframe.style.height = `${contentHeight + 20}px`;
-                  }
-                } catch (err) {
-                  console.warn('Could not dynamically adjust iframe height:', err);
-                  iframe.style.height = isMobile ? '70vh' : '100vh';
-                }
-              }}
             />
           ) : fileType === 'pdf' ? (
             isMobile ? (
