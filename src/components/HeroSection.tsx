@@ -32,8 +32,8 @@ export default function HeroSection() {
             key={resolvedTheme === 'light' ? 'light-video' : 'dark-video'}
             src={
               resolvedTheme === 'light'
-                ? "/lightmode-ASCII-background-1080p-60fps.mp4"
-                : "/darkmode-ASCII-background-1080p-60fps.mp4"
+                ? `${process.env.NODE_ENV === 'production' ? '/biotechfood-static' : ''}/lightmode-ASCII-background-1080p-60fps.mp4`
+                : `${process.env.NODE_ENV === 'production' ? '/biotechfood-static' : ''}/darkmode-ASCII-background-1080p-60fps.mp4`
             }
             autoPlay
             loop
