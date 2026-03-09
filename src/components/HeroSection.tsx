@@ -41,7 +41,7 @@ export default function HeroSection() {
             loop
             muted
             playsInline // Important for mobile playback
-            className="absolute top-0 left-0 w-full h-full object-cover z-0 object-[65%_center] md:object-center md:contrast-[1.6] md:saturate-[1.4]"
+            className="absolute top-0 left-0 w-full h-full object-cover z-0 object-[65%_center] md:object-center contrast-[1.6] saturate-[1.4]"
           >
             Your browser does not support the video tag.
           </video>
