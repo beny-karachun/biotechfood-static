@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ארכאות: מאפיינים ופילוגנטיקה</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Euryarchaeota", definition: "אחת המערכות העיקריות של ארכאות, הכוללת מגוון רחב של יצורים כמו מתאנוגנים, הלופילים קיצוניים, תרמו-אצידופילים ומפרקי סולפט היפרתרמופילים." },
+            { term: "Crenarchaeota", definition: "מערכה של ארכאות שרבים מחבריה הם היפרתרמופילים. רבים מהם תלויים בגופרית למטבוליזם, בין אם כמקבל או כתורם אלקטרונים. כוללת גם מינים החיים בסביבות קרות." },
+            { term: "Korarchaeota", definition: "מערכה של ארכאות שהתגלתה באמצעות טכניקות מבוססות DNA. נחשבת לענף קדום ועמוק בעץ החיים של הארכאות, וחבריה הם היפרתרמופילים." },
+            { term: "Asgard Archaea", definition: "קבוצת-על של ארכאות הנחשבת לקרובה ביותר לאיקריוטים. מכילה חלבונים שנחשבו בעבר ייחודיים לאיקריוטים, ותומכת במודל שתי הממלכות של החיים." },
+            { term: "מתאנוגנים (Methanogens)", definition: "ארכאות המייצרות גז מתאן (CH4) כתוצר לוואי מטבולי. הן אנאירוביות אובליגטוריות ורגישות לחמצן." },
+            { term: "הלופילים (Halophiles)", definition: "אורגניזמים, בעיקר ארכאות, הדורשים ריכוזי מלח גבוהים (לפחות 2M NaCl) כדי לגדול. מאזנים את הלחץ האוסמוטי על ידי צבירת מומסים תואמים כמו K+." },
+            { term: "Thermoplasma", definition: "סוג של ארכאון תרמו-אצידופילי. גדל ב-pH נמוך מאוד (סביב 0.8) ובטמפרטורות גבוהות. ייחודי בכך שהוא חסר דופן תא." },
+            { term: "Sulfolobus", definition: "סוג של ארכאון מהמערכה Crenarchaeota. הוא תרמו-אצידופילי, גדל במעיינות חמים חומציים, ומבצע חמצון גופרית." },
+            { term: "Bacteriorhodopsin", definition: "חלבון ממברנלי ופיגמנט סגול הנמצא בהלוארכאות מסוימות. פועל כמשאבת פרוטונים המופעלת על ידי אור, ומאפשר יצירת אנרגיה בתנאים אנאירוביים." },
+            { term: "קשר אתרי (Ether linkage)", definition: "סוג הקשר הכימי המחבר בין גליצרול לשרשראות האיזופרנואידיות בליפידים הממברנליים של ארכאות. קשר זה עמיד יותר מהקשר האסטרי שבחיידקים ואיקריוטים." },
+            { term: "קופקטור F420", definition: "קופקטור ייחודי הנמצא במתאנוגנים ובקבוצות ארכאה אחרות. מעורב בתגובות חיזור-חמצון וזוהר בצבע כחול-ירוק תחת אור UV, מה שמאפשר זיהוי מהיר של מתאנוגנים." },
+            { term: "סינטרופיה (Syntrophy)", definition: "שיתוף פעולה מטבולי בין מינים שונים של מיקרואורגניזמים. במתאנוגנים, זהו לעתים קרובות שיתוף פעולה עם חיידקים המייצרים מימן, המשמש כסובסטרט למתאנוגנזה." },
+            { term: "היפרתרמופיל (Hyperthermophile)", definition: "אורגניזם הגדל ומשגשג בטמפרטורות גבוהות במיוחד, מעל 80 מעלות צלזיוס. רבים מהם נמצאים במערכות Crenarchaeota ו-Euryarchaeota." },
+            { term: "אצידופיל (Acidophile)", definition: "אורגניזם הגדל ומשגשג בסביבות חומציות מאוד עם ערכי pH נמוכים. דוגמה בולטת היא Thermoplasma, הגדלה ב-pH 0.8." },
+            { term: "פוטוכמוטרופיה (Photochemotrophy)", definition: "דרך מטבולית בה אורגניזם מנצל אור כמקור אנרגיה, אך אינו מבצע פוטוסינתזה מלאה. דוגמה היא השימוש בבקטריורודופסין על ידי הלופילים." },
+            { term: "Methanopyrus", definition: "סוג של ארכאון מתאנוגני והיפרתרמופילי. ידוע ביכולתו לגדול בטמפרטורה של 110 מעלות צלזיוס, מהגבוהות ביותר הידועות ליצור חי." },
+            { term: "Archaeoglobus", definition: "סוג של ארכאון היפרתרמופילי ממערכת Euryarchaeota, המבצע חיזור סולפט. מראה על קשר אבולוציוני בין חיזור סולפט למתאנוגנזה." },
+            { term: "מודל שתי הממלכות (Two-domain model)", definition: "היפותזה פילוגנטית לפיה האיקריוטים התפתחו מתוך קבוצת ארכאות (כמו Asgard), ולכן יש רק שתי ממלכות-על בחיים: חיידקים וארכאות (שהאיקריוטים הם ענף בתוכה)." }
+        ];
+
+        const mcqData = [
+            { question: "איזו קבוצה פילוגנטית נחשבת לקרובה ביותר לאב הקדמון של האיקריוטים, על סמך הימצאות חלבוני חתימה איקריוטיים?", options: ["Crenarchaeota", "Korarchaeota", "Euryarchaeota", "Asgard Archaea"], correctIndex: 3, explanation: "קבוצת העל Asgard Archaea מכילה גנים לחלבונים רבים שנחשבו ייחודיים לאיקריוטים (כמו פרופילין, גלסולין ורכיבי ESCRT), מה שממקם אותה כקבוצת האחות של האיקריוטים." },
+            { question: "מהי התכונה הביוכימית המבנית העיקרית המבדילה בין הליפידים הממברנליים של ארכאות לאלו של חיידקים ואיקריוטים?", options: ["נוכחות של סטרולים", "קשרים אתריים ושרשראות איזופרנואידיות", "קשרים אסטריים וחומצות שומן מסועפות", "ממברנה דו-שכבתית בלבד"], correctIndex: 1, explanation: "המאפיין המובהק של ממברנות ארכאיות הוא קשרים אתריים (ether linkages) בין גליצרול לשרשראות פחמימניות המבוססות על איזופרן, בניגוד לקשרים אסטריים וחומצות שומן ישרות בשתי הממלכות האחרות." },
+            { question: "ארכאון מבודד מערימת פסולת פחם, גדל באופן אופטימלי ב-pH 0.8 ואינו בעל דופן תא. לאיזה סוג סביר להניח שהוא שייך?", options: ["Sulfolobus", "Halobacterium", "Thermoplasma", "Methanococcus"], correctIndex: 2, explanation: "השילוב של סביבה חומצית קיצונית (אצידופיל), טמפרטורה גבוהה (תרמופיל) והיעדר דופן תא הוא סימן היכר ייחודי של הסוג Thermoplasma." },
+            { question: "איזה מהבאים מתאר בצורה הטובה ביותר את תפקידו של בקטריורודופסין ב-Halobacterium?", options: ["חיזור סולפט בתנאים אנאירוביים", "חמצון גופרית ליצירת ATP", "שאיבת פרוטונים מונעת אור ליצירת ATP", "קיבוע פחמן דו-חמצני באמצעות אור"], correctIndex: 2, explanation: "בקטריורודופסין הוא פיגמנט רגיש לאור שפועל כמשאבת פרוטונים. הוא יוצר מפל פרוטונים על פני הממברנה, המנוצל על ידי ATP סינתאז ליצירת ATP בתהליך הנקרא פוטופוספורילציה." },
+            { question: "איזה מהסובסטרטים הבאים יכול לשמש את Methanosarcina ליצירת מתאן, אך לא את Methanobacterium?", options: ["H2 + CO2", "פורמאט", "אצטט", "פירובט"], correctIndex: 2, explanation: "בעוד ששני הסוגים יכולים להשתמש ב-H2 ו-CO2, רק Methanosarcina מסוגל לבצע מתאנוגנזה אצטוטרופית, כלומר שימוש באצטט כמקור לפחמן וליצירת מתאן." },
+            { question: "בהתבסס על העץ הפילוגנטי, מי מהבאים הוא הקרוב ביותר מבחינה אבולוציונית ל-Archaeoglobus?", options: ["Methanosarcina", "Halobacterium", "Sulfolobus", "Thermoplasma"], correctIndex: 0, explanation: "בעץ של Euryarchaeota, הענפים של Archaeoglobus ושל המתאנוגנים ההלופילים (שקרובים ל-Methanosarcina) חולקים אב קדמון משותף וקרוב יחסית, מה שמצביע על קרבה פילוגנטית." },
+            { question: "מהי המשמעות של הימצאות קופקטור F420 בארכאון Archaeoglobus, שאינו מתאנוגן?", options: ["זוהי הוכחה להעברה גנטית אופקית מחיידקים", "הדבר מצביע על כך ש-Archaeoglobus הוא למעשה מתאנוגן נסתר", "זה מרמז על קשר אבולוציוני בין מסלול חיזור הסולפט למתאנוגנזה", "זהו מאפיין כללי של כל ה-Euryarchaeota ללא יוצא מן הכלל"], correctIndex: 2, explanation: "הימצאות F420, קופקטור מפתח במתאנוגנזה, ב-Archaeoglobus המבצע חיזור סולפט, נחשבת לראיה חזקה לכך ששני המסלולים המטבוליים הללו חולקים היסטוריה אבולוציונית משותפת." },
+            { question: "איזו קבוצה של ארכאות ממלאת תפקיד מרכזי בחמצון אמוניה באוקיינוסים, ובכך משפיעה באופן דרמטי על מחזור החנקן העולמי?", options: ["Halophiles", "Marine Group I Crenarchaeota (Thaumarchaeota)", "Methanogens", "Korarchaeota"], correctIndex: 1, explanation: "ארכאות ימיות מקבוצת Crenarchaeota Group I, שסווגו מחדש כ-Thaumarchaeota, זוהו כמחמצנות האמוניה העיקריות ברוב סביבות האוקיינוס, במיוחד במים עמוקים וקרים." },
+            { question: "בהתבסס על העץ הפילוגנטי, איזה סוג נמצא בענף הבזאלי (השורשי) ביותר של עץ הארכאות המוצג?", options: ["Methanopyrus", "Sulfolobus", "Korarchaeota", "Thermoplasma"], correctIndex: 2, explanation: "Korarchaeota מיוצג כענף קדום ועמוק שהתפצל מוקדם מאוד משאר קווי הארכאות המוכרים, מה שמציב אותו קרוב לשורש המשותף של הממלכה." },
+            { question: "מהו ההסבר הסביר ביותר לכך שלארכאות הלופיליות יש צורות גיאומטריות מוזרות כמו ריבועים שטוחים?", options: ["היעדר דופן תא מאפשר גמישות מורפולוגית", "לחץ אוסמוטי גבוה גורם לממברנה להתקפל בצורות אלו", "מבנה ייחודי של חלבוני השלד התוך-תאי והגליקופרוטאינים במעטפת התא", "זוהי תופעת לוואי של התחלקות תא לא סימטרית"], correctIndex: 2, explanation: "הצורות הלא שגרתיות מיוחסות למבנה המסודר של הגליקופרוטאין (S-layer) המהווה את מעטפת התא, יחד עם חלבוני שלד תא התומכים בצורה זו כנגד הלחץ הטורגור הנמוך יחסית." },
+            { question: "בסביבה אנאירובית עשירה בתרכובות אורגניות וגופרית אלמנטרית, איזה מהבאים יתאר תגובה אנרגטית אפשרית עבור Thermococcus?", options: ["תרכובת אורגנית + SO4^2- -> H2S + CO2", "תרכובת אורגנית + S0 -> H2S + CO2", "H2 + S0 -> H2S", "4H2 + CO2 -> CH4 + 2H2O"], correctIndex: 1, explanation: "Thermococcus הוא כמו-אורגנוטרוף היפרתרמופילי. הוא מנצל תרכובות אורגניות כמקור פחמן ואנרגיה, ומשתמש בגופרית אלמנטרית (S0) כמקבל אלקטרונים סופי, תוך יצירת H2S." },
+            { question: "איזו תכונה משותפת ל-Methanopyrus kandleri ול-Geogemma barossii (זן 121)?", options: ["שניהם מתאנוגנים", "שניהם גדלים ב-pH נמוך מ-1", "שניהם היפרתרמופילים הגדלים בטמפרטורות שמעל 100 מעלות צלזיוס", "לשניהם אין דופן תא"], correctIndex: 2, explanation: "שני האורגניזמים הללו ידועים ביכולתם לגדול בטמפרטורות קיצוניות. Methanopyrus גדל ב-110 מעלות ו-Geogemma שורד ואף מתחלק ב-121 מעלות, מה שהופך את שניהם להיפרתרמופילים מהשורה הראשונה." },
+            { question: "מהו ההבדל המטבולי העיקרי בין Sulfolobus ל-Thermoproteus?", options: ["Sulfolobus מחמצן גופרית, Thermoproteus מחזר אותה", "Sulfolobus הוא אוטוטרוף, Thermoproteus הוא הטרוטרוף", "Sulfolobus משתמש בחמצן, Thermoproteus משתמש ב-S0 כמקבל אלקטרונים", "אין הבדל מהותי, שניהם עושים אותו דבר"], correctIndex: 2, explanation: "טבלה 14.8 מראה ש-Sulfolobus יכול להשתמש בחמצן כמקבל אלקטרונים (Organic compound + O2). לעומת זאת, Thermoproteus משתמש בגופרית אלמנטרית (S0) כמקבל אלקטרונים (Organic compound + S0). זהו הבדל מפתח בנשימה שלהם." },
+            { question: "באיזה בית גידול לא צפוי למצוא מתאנוגנים פעילים?", options: ["במעי של פרה", "במשקעי אגם אנאירוביים", "בפני השטח של אדמה חקלאית מאווררת היטב", "בנביעות הידרותרמיות בקרקעית הים"], correctIndex: 2, explanation: "מתאנוגנים הם אנאירוביים אובליגטוריים ורגישים מאוד לחמצן. אדמה מאווררת היטב היא סביבה אירובית עשירה בחמצן, ולכן אינה מתאימה לפעילות מתאנוגנית." },
+            { question: "לאיזו קבוצה שייך הסוג Sulfolobus?", options: ["Euryarchaeota הלופילים", "Euryarchaeota מתאנוגנים", "Crenarchaeota היפרתרמופילים", "Korarchaeota"], correctIndex: 2, explanation: "Sulfolobus הוא סוג קלאסי של Crenarchaeota, המאופיין כתרמו-אצידופיל (גדל בחום וחומציות) ומנצל גופרית." },
+            { question: "הימצאותם של חלבונים כמו טובולין, אקטין ומערכת ESCRT בארכאות Asgard תומכת באיזו היפותזה אבולוציונית?", options: ["היפותזת הסינטרופיה", "מודל שלוש הממלכות הקלאסי", "היפותזת האנדוסימביוזה הסדרתית", "מודל שתי הממלכות (ארכאה-ראשונה)"], correctIndex: 3, explanation: "מודל שתי הממלכות טוען שהאיקריוטים התפתחו מתוך ארכאות. הימצאות רכיבים תאיים איקריוטיים מורכבים אלו בארכאות Asgard מספקת את החוליה החסרה ומחזקת מאוד מודל זה." },
+            { question: "איזו מהמורפולוגיות הבאות אינה אופיינית לסוגים המוזכרים בטבלה של ארכאות הלופיליות?", options: ["מתגים (Rods)", "קוקים (Cocci)", "דיסקים שטוחים", "ספירוכטות (Spirochetes)"], correctIndex: 3, explanation: "הטבלה מראה מגוון צורות כמו מתגים, קוקים, צורות פלאומורפיות וצורות גיאומטריות (משולשים, ריבועים), אך ספירוכטות, צורה סלילית ארוכה, אינה מוזכרת שם ואופיינית יותר לחיידקים." },
+            { question: "מהי המשמעות הפילוגנטית של העובדה ש-Thermoplasma, חסר דופן התא, מקובץ יחד עם מתאנוגנים והלופילים בעלי דופן?", options: ["ייתכן שאיבד את דופן התא שלו באופן משני במהלך האבולוציה", "זה מצביע על כך של-Thermoplasma יש דופן תא נסתרת", "זה אומר שדופן התא אינו מאפיין חשוב במיון ארכאות", "זה מוכיח ש-Thermoplasma אינו שייך ל-Euryarchaeota"], correctIndex: 0, explanation: "המיקום של Thermoplasma בתוך ענף ה-Euryarchaeota מרמז שאב קדמון משותף היה בעל דופן, ו-Thermoplasma איבד תכונה זו במהלך האבולוציה, כהתאמה לסגנון חייו הייחודי." },
+            { question: "איזה מהבאים הוא הסבר אפשרי לדומיננטיות של Crenarchaeota על פני חיידקים בעומק האוקיינוס (האזור המזופלגי)?", options: ["הם יכולים לבצע פוטוסינתזה בעומק רב יותר", "הם עמידים יותר ללחץ הידרוסטטי גבוה וטמפרטורות נמוכות", "הם מתמחים בניצול מקורות אנרגיה זמינים בעומק, כמו אמוניה", "הם גדלים מהר יותר מחיידקים בכל התנאים"], correctIndex: 2, explanation: "היכולת של Crenarchaeota ימיים (Thaumarchaeota) לבצע כימואוטוטרופיה על ידי חמצון אמוניה, מקור אנרגיה נפוץ במים עמוקים וחשוכים, מקנה להם יתרון תחרותי בסביבה זו." },
+            { question: "בהינתן סביבה הידרותרמית ב-105 מעלות צלזיוס עם H2 ו-CO2, איזה אורגניזם הכי סביר שישגשג שם?", options: ["Halobacterium salinarum", "Methanobacterium thermoautotrophicum", "Methanopyrus kandleri", "Thermoplasma acidophilum"], correctIndex: 2, explanation: "Methanopyrus kandleri הוא היפרתרמופיל קיצוני שיכול לגדול ב-110 מעלות ומשתמש ב-H2 ו-CO2. שאר האופציות אינן מתאימות לטמפרטורה זו." },
+            { question: "הסידור הגנטי שבו הגן לפרוטאורודופסין (pop) נמצא בסמיכות לגנים של ה-SSU rRNA בארכאות ימיות הוא אינדיקציה ל-", options: ["תפקוד חיוני של החלבון", "רכישה לאחרונה בהעברה אופקית", "קשר תפקודי בין יצירת חלבונים לייצור אנרגיה מאור", "שייכות טקסונומית של האורגניזם"], correctIndex: 0, explanation: "המיקום השמור של גן באזור חיוני וקונסרבטיבי כמו אופרון הריבוזום מרמז על כך שלגן יש תפקיד חשוב ויציב בגנום, ולא שהוא נרכש לאחרונה או שהוא נייד." },
+            { question: "מהי המשמעות של העובדה ש-Nanoarchaeum equitans חי בצמוד ל-Ignicoccus hospitalis?", options: ["זוהי דוגמה לסינטרופיה קלאסית", "Nanoarchaeum הוא טורף של Ignicoccus", "Nanoarchaeum הוא ככל הנראה טפיל או סימביונט שאינו יכול לגדול באופן עצמאי", "Ignicoccus מגן על Nanoarchaeum מפני וירוסים"], correctIndex: 2, explanation: "הגנום של Nanoarchaeum חסר גנים למסלולים ביוסינתטיים רבים, מה שמצביע על כך שהוא תלוי במארח שלו, Ignicoccus, לקבלת חומרי מזון חיוניים. זוהי דוגמה לסימביוזה אובליגטורית." },
+            { question: "איזו קבוצה מהבאות כוללת ארכאות שהן גם אלקליפיליות (גדלות ב-pH בסיסי) וגם הלופיליות?", options: ["Methanosarcina", "Thermoplasma", "Natronobacterium", "Sulfolobus"], correctIndex: 2, explanation: "הסוג Natronobacterium, כפי ששמו מרמז, מותאם באופן ייחודי לאגמי סודה (natron) שהם גם מלוחים מאוד וגם בסיסיים מאוד (pH גבוה)." },
+            { question: "מהי התוצאה הסופית של פעולת חלבון ה-HR (Halorhodopsin) בארכאות הלופיליות?", options: ["שאיבת יוני כלוריד (Cl-) אל תוך התא", "שאיבת יוני נתרן (Na+) אל מחוץ לתא", "יצירת מתאן ממתנול", "חיזור סולפט לסולפיד"], correctIndex: 0, explanation: "התרשים בעמוד 6 מראה בבירור ש-HR (Halorhodopsin) היא משאבה המכניסה יוני כלוריד אל תוך התא, כתגובה לאור. זהו מנגנון נוסף לוויסות אוסמוטי ואנרגטי." },
+            { question: "בהתבסס על המידע הפיזיולוגי והפילוגנטי, איזה מהבאים הכי פחות סביר שיהיה נכון לגבי Korarchaeota?", options: ["הם היפרתרמופילים", "הם חיים במעיינות חמים", "יש להם גנום גדול ומורכב מאוד", "הם בעלי קשר אתרי בממברנה"], correctIndex: 2, explanation: "כענף בזאלי ועתיק, ובהתחשב באורגניזמים דומים בעלי גנום מצומצם (כמו Nanoarchaeum), סביר להניח של-Korarchaeota יש גנום קטן ופשוט יחסית, המותאם לחיים בסביבה מאוד ספציפית." },
+            { question: "איזה סוג של חלבון, שנחשב לחתימה איקריוטית, נמצא בארכאות מקבוצת Lokiarchaeota וקשור לארגון השלד התוך-תאי?", options: ["קולגן", "קרטין", "לוקיאקטין (Lokiactin)", "מיוזין"], correctIndex: 2, explanation: "תרשים החלבונים מראה נוכחות של 'Lokiactin' ב-Lokiarchaeales, שהוא הומולוג של אקטין האיקריוטי, חלבון מפתח בשלד התוך-תאי ובתנועה." },
+            { question: "על פי טבלת המצעים למתאנוגנזה, איזה סוג מצע משמש אך ורק את הסוג Methanosaeta?", options: ["CO2-type substrates", "Methyl substrates", "Acetotrophic substrate", "Formate"], correctIndex: 2, explanation: "הטבלה בעמוד 9 מראה באופן ספציפי ש-Methanothrix (Methanosaeta) משתמש ב-Acetate. טבלה 14.6 בעמוד 10 מסווגת את האצטט כ-Acetotrophic substrate." },
+            { question: "בניסוי עם זן SCM1 (ארכאון ימי מחמצן אמוניה), מה הקשר בין ריכוז האמוניה (NH4+), ריכוז הניטריט (NO2-) ומספר התאים?", options: ["ככל שמספר התאים עולה, ריכוז האמוניה עולה וריכוז הניטריט יורד", "ככל שמספר התאים עולה, ריכוז האמוניה יורד וריכוז הניטריט עולה", "ריכוז האמוניה והניטריט עולים יחד עם מספר התאים", "ריכוז האמוניה והניטריט יורדים יחד עם עליית מספר התאים"], correctIndex: 1, explanation: "הגרף בעמוד 32 מראה בבירור שככל שהתאים (DAPI) מתרבים, הם צורכים אמוניה (ריכוזו יורד) ומייצרים ניטריט (ריכוזו עולה), מה שמדגים את התהליך המטבולי של חמצון אמוניה." },
+            { question: "איזה מהבאים הוא דוגמה לתגובה כימוליתוטרופית המבוצעת על ידי ארכאות היפרתרמופיליות?", options: ["תרכובת אורגנית + O2 -> H2O + CO2", "פירובט -> CO2 + H2 + אצטט", "H2 + S0 -> H2S", "גלוקוז -> 2 אתנול + 2 CO2"], correctIndex: 2, explanation: "תגובה כימוליתוטרופית מנצלת תרכובות אי-אורגניות כמקור אנרגיה. התגובה H2 + S0 -> H2S משתמשת במימן (H2) אי-אורגני כמקור אלקטרונים ובגופרית (S0) כמקבל אלקטרונים." },
+            { question: "בהתבסס על העץ הפילוגנטי של הלופילים (טבלה 14.2), איזה סוג בעל מורפולוגיית קוקוס (Cocci)?", options: ["Halobacterium", "Haloferax", "Halococcus", "Haloarcula"], correctIndex: 2, explanation: "הטבלה בעמוד 4 מפרטת את המורפולוגיה של הסוגים השונים, ומציינת במפורש ש-Halococcus ו-Natronococcus הם בעלי מורפולוגיית קוקוס." },
+            { question: "מהי המשמעות האקולוגית של סינטרופיה עבור מתאנוגנים?", options: ["היא מאפשרת להם לטרוף חיידקים אחרים", "היא מאפשרת להם לנצל סובסטרטים מורכבים על ידי שיתוף פעולה עם אורגניזמים המפרקים אותם", "היא הופכת אותם לעמידים יותר לחמצן", "היא מאפשרת להם לבצע פוטוסינתזה"], correctIndex: 1, explanation: "בסינטרופיה, חיידקים מפרקים תרכובות אורגניות מורכבות לתוצרים פשוטים יותר, כמו H2, CO2 ואצטט, שאותם המתאנוגנים יכולים לנצל בקלות ליצירת מתאן. זהו שיתוף פעולה מטבולי." },
+            { question: "בחינת הרכב הגנים של ארכאות מקבוצת Heimdallarchaeia חשובה במיוחד להבנת האבולוציה של-", options: ["המתאנוגנזה", "ההלופיליות הקיצונית", "המקור של המיטוכונדריה", "מנגנונים מרכזיים בתא האיקריוטי כמו השלד התוך-תאי והמעטפת הגרעינית"], correctIndex: 3, explanation: "Heimdallarchaeia, כחלק מקבוצת Asgard, נחשבת לקרובה ביותר לאיקריוטים. הגנום שלה מכיל הומולוגים לרכיבים איקריוטיים מורכבים, והבנתו שופכת אור על שלבי המעבר מארכאון פשוט לתא איקריוטי מורכב." },
+            { question: "איזה מהבאים אינו מהווה בית גידול אופייני לארכאות ממערכת ה-Crenarchaeota?", options: ["מעיינות חמים געשיים (Solfataras)", "נביעות הידרותרמיות תת-ימיות ('black smokers')", "מים קרים ועמוקים באנטארקטיקה", "אגמי מלח היפר-מלוחים ורוויים"], correctIndex: 3, explanation: "בעוד ש-Crenarchaeota נמצאות במגוון בתי גידול תרמיים וקרים, אגמים היפר-מלוחים הם בית הגידול הקלאסי של ארכאות הלופיליות, השייכות למערכת ה-Euryarchaeota." },
+            { question: "מה המאפיין הייחודי של הממברנה של Thermoplasma acidophilum המאפשר לה לשרוד ללא דופן תא?", options: ["היא מכילה אחוז גבוה של חלבוני הופנואיד", "היא בנויה כשכבה יחידה (monolayer) של ליפידים טטרא-אתריים", "היא מחוזקת על ידי שלד חיצוני של סידן פחמתי", "היא גמישה במיוחד ויכולה לשנות צורה במהירות"], correctIndex: 1, explanation: "הממברנה של Thermoplasma מורכבת מליפוגליקן המכיל ליפידים מסוג טטרא-אתר. ליפידים אלו חוצים את כל הממברנה ויוצרים שכבה יחידה (monolayer) יציבה ועמידה במיוחד לחום ולחומצה." },
+            { question: "איזה יון משמש כמומס תואם (compatible solute) עיקרי ב-Halobacterium כדי לאזן את הלחץ האוסמוטי?", options: ["Na+", "Cl-", "Mg2+", "K+"], correctIndex: 3, explanation: "כדי להתמודד עם ריכוז ה-NaCl החיצוני הגבוה, Halobacterium צובר ריכוז גבוה מאוד של יוני אשלגן (K+) בתוך התא. האנזימים שלו מותאמים לתפקד בריכוז K+ גבוה זה." },
+            { question: "במודל שתי הממלכות, היכן ממוקמים האיקריוטים בעץ החיים?", options: ["כקבוצת אחות לחיידקים", "כקבוצת אחות לארכאות", "כענף שהתפתח מתוך ממלכת הארכאות", "כממלכה נפרדת לחלוטין שהתפתחה במקביל"], correctIndex: 2, explanation: "מודל שתי הממלכות, הנתמך על ידי גילויי Asgard, מציע שהאיקריוטים אינם קבוצת אחות לארכאות, אלא ענף שהתפתח ישירות מתוך קבוצה ספציפית בתוך הארכאות." },
+            { question: "איזה מהבאים מתאר נכונה את היחס בין Desulfurococcus ל-Thermoproteus על פי העץ הפילוגנטי?", options: ["הם שייכים לאותה מערכה אך לסדרות שונות", "Desulfurococcus הוא אב קדמון של Thermoproteus", "הם חולקים אב קדמון משותף וקרוב יותר מאשר עם Sulfolobus", "הם אינם קרובים זה לזה כלל"], correctIndex: 2, explanation: "בעץ של Crenarchaeota, הענפים של Desulfurococcus ו-Thermoproteus מתפצלים מנקודה משותפת, בעוד שהענף של Sulfolobus התפצל מוקדם יותר, מה שמצביע על קרבה גדולה יותר בין השניים הראשונים." },
+            { question: "מהי מטרת השימוש במערכת החלבונים CORVET/HOPS, שנמצאה גם בארכאות Asgard?", options: ["תיקון DNA", "שיכפול הגנום", "תיווך איחוי שלפוחיות עם ממברנות מטרה (endosomal sorting)", "בקרת ביטוי גנים"], correctIndex: 2, explanation: "טבלת חלבוני החתימה מראה שמערכות CORVET/HOPS שייכות לקטגוריית 'Endosomal sorting'. באיקריוטים, תפקידן הוא לזהות ולאחות שלפוחיות לממברנות הנכונות במערכת האנדו-ממברנלית." },
+            { question: "בהתבסס על הנתונים, מה ניתן להסיק לגבי תפוצת ארכאות וחיידקים בעמודת המים באוקיינוס השקט?", options: ["חיידקים דומיננטיים בכל העומקים", "ארכאות דומיננטיות בכל העומקים", "חיידקים דומיננטיים במים העליונים, וארכאות (בעיקר Crenarchaeota) דומיננטיות במים העמוקים", "היחס ביניהם נשאר קבוע לאורך כל עמודת המים"], correctIndex: 2, explanation: "הגרפים בעמוד 27 ו-28 מראים בבירור מגמה של ירידה באחוז החיידקים ועלייה באחוז ה-Crenarchaeota ככל שמעמיקים, עד שהארכאות הופכות לקבוצה הדומיננטית מתחת לכ-200-500 מטר." }
+        ];
+
+        const tfData = [
+            { question: "כל הארכאות הן אקסטרמופיליות, כלומר חיות בתנאי סביבה קיצוניים.", answer: false, explanation: "בעוד שארכאות רבות הן אקסטרמופיליות, מינים רבים, במיוחד מה-Crenarchaeota וה-Euryarchaeota הימיות, חיים בסביבות מתונות כמו אוקיינוסים בטמפרטורות קרות." },
+            { question: "הסוג Thermoplasma מאופיין בדופן תא עבה המגנה עליו בסביבה החומצית.", answer: false, explanation: "באופן מפתיע, ל-Thermoplasma אין דופן תא כלל. הממברנה הציטופלזמטית המיוחדת שלה מספקת את היציבות הנדרשת." },
+            { question: "כל חברי המערכה Euryarchaeota הם מתאנוגנים.", answer: false, explanation: "מערכת ה-Euryarchaeota מגוונת מאוד וכוללת גם הלופילים (כמו Halobacterium), תרמו-אצידופילים (Thermoplasma) ומפרקי סולפט (Archaeoglobus)." },
+            { question: "בקטריורודופסין הוא חלבון המאפשר לארכאות הלופיליות לבצע פוטוסינתזה מלאה הכוללת קיבוע פחמן.", answer: false, explanation: "בקטריורודופסין הוא משאבת פרוטונים המופעלת על ידי אור. הוא מייצר גרדיאנט פרוטונים המשמש ליצירת ATP, אך אינו מערב שרשרת העברת אלקטרונים או קיבוע פחמן כמו בפוטוסינתזה." },
+            { question: "מתאנוגנים יכולים להשתמש בחמצן כמקבל אלקטרונים סופי בריכוזים נמוכים.", answer: false, explanation: "מתאנוגנים הם אנאירוביים אובליגטוריים ורגישים מאוד לחמצן. חשיפה לחמצן היא קטלנית עבורם." },
+            { question: "הסוג Methanopyrus הוא דוגמה לארכאון מתאנוגני מזופילי, הגדל בטמפרטורות מתונות.", answer: false, explanation: "Methanopyrus הוא היפרתרמופיל קיצוני, המסוגל לגדול בטמפרטורה של 110 מעלות צלזיוס, מהגבוהות ביותר שנמדדו לאורגניזם חי." },
+            { question: "הליפידים הממברנליים של ארכאות מכילים קשרים אסטריים, בדומה לחיידקים.", answer: false, explanation: "לארכאות יש קשרים אתריים (ether linkages) בליפידים הממברנליים שלהן, אשר עמידים יותר כימית מהקשרים האסטריים (ester linkages) המצויים בחיידקים ובאיקריוטים." },
+            { question: "קופקטור F420 ייחודי למתאנוגנים בלבד ואינו נמצא באף קבוצת ארכאות אחרת.", answer: false, explanation: "בעוד ש-F420 הוא סימן היכר של מתאנוגנים, הוא נמצא גם בקבוצות אחרות כמו Archaeoglobus, מה שמצביע על קשרים אבולוציוניים." },
+            { question: "הסוג Halobacterium שומר על מאזן אוסמוטי על ידי שאיבת מלח החוצה מהתא.", answer: false, explanation: "Halobacterium מאזן את ריכוז המלח החיצוני הגבוה על ידי צבירת ריכוז מלח פנימי גבוה לא פחות, בעיקר יוני אשלגן (K+), המכונים מומסים תואמים." },
+            { question: "כל המתאנוגנים משתמשים אך ורק ב-H2 ו-CO2 ליצירת מתאן.", answer: false, explanation: "קיימים מסלולים מגוונים למתאנוגנזה. סוגים כמו Methanosarcina יכולים להשתמש גם במתנול, מתילאמינים ואצטט." },
+            { question: "על פי העץ הפילוגנטי, Crenarchaeota ו-Euryarchaeota הן המערכות היחידות בממלכת הארכאות.", answer: false, explanation: "קיימות מערכות נוספות, כמו Korarchaeota וקבוצת-העל Asgard, אשר מייצגות ענפים חשובים ונפרדים בעץ החיים של הארכאות." },
+            { question: "ארכאות מסוג Sulfolobus מבצעות חיזור של גופרית.", answer: false, explanation: "Sulfolobus ידוע ביכולתו לבצע חמצון של גופרית (sulfur oxidation) כמקור אנרגיה בסביבתו החמה והחומצית." },
+            { question: "התגלית של ארכאות מקבוצת Asgard מחזקת את מודל שלוש הממלכות (ארכאה, חיידקים, איקריוטים).", answer: false, explanation: "להיפך, התגלית מחזקת את מודל שתי הממלכות, לפיו האיקריוטים התפתחו מתוך ענף של ארכאות (קבוצת Asgard), מה שהופך אותם לתת-קבוצה בתוך ממלכת הארכאות." },
+            { question: "הסוג Archaeoglobus הוא הלופיל המבצע חיזור סולפט.", answer: false, explanation: "Archaeoglobus הוא היפרתרמופיל (לא הלופיל) המבצע חיזור סולפט. הוא קרוב פילוגנטית למתאנוגנים." },
+            { question: "העברה גנטית אופקית של גן הבקטריורודופסין התרחשה מארכאות לחיידקים.", answer: true, explanation: "הנתונים מצביעים על כך שגן הפרוטאורודופסין, הדומה לבקטריורודופסין, עבר בהעברה גנטית אופקית מארכאות לחיידקים פלנקטוניים ימיים." },
+            { question: "הסוג Thermoproteus שייך למערכת Euryarchaeota.", answer: false, explanation: "Thermoproteus, יחד עם Sulfolobus, הוא סוג מייצג של מערכת ה-Crenarchaeota." },
+            { question: "לארכאות מסוג Haloarcula יכולה להיות צורת תא מרובעת או משולשת.", answer: true, explanation: "באופן יוצא דופן, מינים מסוימים של הלופילים, כמו Haloarcula, יכולים להציג מורפולוגיות שטוחות וזוויתיות כמו ריבועים ומשולשים." },
+            { question: "ארכאות ימיות מקבוצת Crenarchaeota group I (כיום Thaumarchaeota) מסוגלות לחמצן אמוניה.", answer: true, explanation: "מחקרים הראו שארכאות ימיות אלו הן אוטוטרופיות וממלאות תפקיד מפתח במחזור החנקן על ידי חמצון אמוניה לניטריט באוקיינוסים." },
+            { question: "כל חברי קבוצת-העל Asgard מכילים את כל חלבוני החתימה האיקריוטיים, כולל טובולין וקומפלקס ARP 2/3.", answer: false, explanation: "ישנה שונות בין המערכות השונות בקבוצת Asgard. לדוגמה, טובולין נמצא רק בחלק מהן, מה שמצביע על רכישה הדרגתית של המאפיינים האיקריוטיים." },
+            { question: "הסוג Methanosaeta (Methanothrix) מתמחה בשימוש באצטט כמקור בלעדי למתאנוגנזה.", answer: true, explanation: "שלא כמו מתאנוגנים אחרים המשתמשים במגוון סובסטרטים, Methanosaeta הוא אצטוטרופי אובליגטורי, כלומר משתמש רק באצטט." },
+            { question: "הסוג Pyrococcus הוא מתאנוגן המשתמש בגופרית.", answer: false, explanation: "Pyrococcus הוא אורגנוטרוף היפרתרמופילי המשתמש בגופרית אלמנטרית (S0) כמקבל אלקטרונים, אך אינו מייצר מתאן. הוא שייך ל-Euryarchaeota." },
+            { question: "על פי העץ הפילוגנטי, Korarchaeota הוא ענף שהתפצל מאוחר יחסית, לאחר הפיצול בין Euryarchaeota ו-Crenarchaeota.", answer: false, explanation: "Korarchaeota נחשב לענף בזאלי ועמוק שהתפצל מוקדם מאוד, קרוב לשורש עץ הארכאות, לפני הפיצול המרכזי למערכות הגדולות האחרות." },
+            { question: "ארכאות הלופיליות הן אירוביות פקולטטיביות.", answer: true, explanation: "בתנאים אירוביים הן נושמות, ובתנאים אנאירוביים חלקן יכולות לעבור לפוטוכמוטרופיה באמצעות בקטריורודופסין או תהליכים אחרים." },
+            { question: "זן 121, Geogemma barossii, מראה את זמן ההכפלה המהיר ביותר שלו בטמפרטורה של 121 מעלות צלזיוס.", answer: false, explanation: "למרות שהוא שורד ב-121 מעלות, זמן ההכפלה המהיר ביותר שלו (הקצר ביותר) נצפה סביב 103 מעלות צלזיוס. ב-121 מעלות, הצמיחה איטית מאוד." },
+            { question: "השרשראות הפחמימניות בליפידים של ארכאות הן מסוג חומצות שומן.", answer: false, explanation: "השרשראות הפחמימניות בממברנות ארכאיות בנויות מיחידות חוזרות של איזופרן (phytanyl) ולא מחומצות שומן לינאריות כמו בחיידקים ואיקריוטים." },
+            { question: "הסוג Natronobacterium הוא הלופיל הגדל בסביבה בסיסית (אלקלית).", answer: true, explanation: "כשמו כן הוא, Natronobacterium הוא אלקליפילי והלופילי, וגדל באגמי סודה מלוחים עם pH גבוה, כמו אגם מגאדי בקניה." },
+            { question: "הגן pop המצוי ליד גני ריבוזום בארכאות ימיות מקודד לחלבון פרוטאורודופסין.", answer: true, explanation: "הקשר הפיזי בין הגן pop לגני SSU rRNA בארכאות פלנקטוניות הוא ראיה חזקה לכך שהחלבון שהוא מקודד, פרוטאורודופסין, הוא חלק אינטגרלי מהגנום שלהן." },
+            { question: "במחקר על הדומיננטיות של ארכאות באוקיינוס, נמצא כי Crenarchaeota מהוות רוב באזורים העמוקים (מתחת ל-1000 מטר).", answer: true, explanation: "הגרפים מראים בבירור שבעוד שחיידקים דומיננטיים קרוב לפני השטח, Crenarchaeota הופכות לקבוצה הדומיננטית באזור המזופלגי העמוק של האוקיינוס." },
+            { question: "הסוג Ignicoccus הוא ארכאון זעיר החי כטפיל על פני Nanoarchaeum.", answer: false, explanation: "המצב הוא הפוך. Nanoarchaeum equitans הוא ארכאון זעיר החי כסימביונט או טפיל על פני התא הגדול יותר של Ignicoccus hospitalis." },
+            { question: "מערכות המיון האנדוסומלי (ESCRT) נמצאות גם בארכאות מקבוצת Asgard וגם באיקריוטים.", answer: true, explanation: "קיומן של מערכות ESCRT, החיוניות ליצירת שלפוחיות באיקריוטים, בארכאות Asgard הוא אחת הראיות החזקות ביותר לקרבה האבולוציונית בין שתי הקבוצות." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

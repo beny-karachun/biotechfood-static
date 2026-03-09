@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: נוגדי חמצון וחמצון שומנים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "נוגד חמצון ראשוני", definition: "תרכובת המגיבה ישירות עם רדיקלים חופשיים, בדרך כלל על ידי מסירת אטום מימן, כדי לעצור את תגובת השרשרת של החמצון (שלב ההתפשטות)." },
+            { term: "נוגד חמצון שניוני", definition: "תרכובת המעכבת חמצון במנגנונים עקיפים, כגון קליטת חמצן, קלאציה של יוני מתכת, או כיבוי חמצן סינגלטי." },
+            { term: "קלאטור (Chelator)", definition: "סוג של נוגד חמצון שניוני הנקשר ליוני מתכת (כגון ברזל ונחושת) ומונע מהם להשתתף בתגובות ייזום חמצון על ידי הורדת פוטנציאל החיזור שלהם." },
+            { term: "BHA (Butylated hydroxyanisole)", definition: "נוגד חמצון פנולי סינתטי, מסיס בשמן, המשמש לעיכוב חמצון שומנים במזון." },
+            { term: "BHT (Butylated hydroxytoluene)", definition: "נוגד חמצון פנולי סינתטי, דומה ל-BHA, בעל יעילות גבוהה בעיכוב חמצון שומנים, במיוחד בטמפרטורות גבוהות." },
+            { term: "טוקופרול (ויטמין E)", definition: "נוגד חמצון טבעי מסיס בשמן. הצורה הפעילה היא אלפא-טוקופרול, הפועל כנוגד חמצון ראשוני על ידי מסירת מימן ליצירת רדיקל יציב (בזכות רזוננס)." },
+            { term: "חומצה אסקורבית (ויטמין C)", definition: "נוגד חמצון מסיס במים הפועל כקולט חמצן וכחומר מחזר המסוגל לחדש נוגדי חמצון ראשוניים כמו טוקופרול." },
+            { term: "חמצון עצמי (Auto-oxidation)", definition: "תהליך חמצון שומנים בלתי רוויים המתרחש באמצעות מנגנון רדיקלי הכולל שלבי ייזום, התפשטות וסיום." },
+            { term: "כיבוי חמצן סינגלטי", definition: "מנגנון פעולה של נוגדי חמצון שניוניים, כמו קרוטנואידים, בו הם מקבלים אנרגיה ממולקולת חמצן סינגלטי מעוררת והופכים אותה לחמצן טריפלטי יציב יותר." },
+            { term: "סינרגיזם", definition: "מצב בו השפעתם המשולבת של שני נוגדי חמצון גדולה מסכום השפעותיהם בנפרד, למשל כאשר חומצה אסקורבית מחדשת טוקופרול." },
+            { term: "TBHQ (Tert-Butylhydroquinone)", definition: "נוגד חמצון פנולי סינתטי יעיל במיוחד, במיוחד בשמנים לטיגון, בשל יציבותו בטמפרטורות גבוהות." },
+            { term: "חומצה ציטרית", definition: "חומצה אורגנית הפועלת כנוגד חמצון שניוני על ידי קלאציה של יוני מתכת, ונמצאת בשימוש נרחב בתעשיית המזון, לעיתים קרובות בשילוב עם חומצה אסקורבית." },
+            { term: "חמצון בטמפרטורה גבוהה (טיגון)", definition: "תהליך חמצון מהיר ומורכב של שמן, הכולל פירוק מהיר של הידרופראוקסידים ויצירת תרכובות נדיפות, פולריות ופולימרים המשפיעים על איכות השמן." }
+        ];
+
+        const mcqData = [
+            { question: "איזה מהבאים אינו מנגנון פעולה של נוגד חמצון שניוני?", options: ["קלאציה של יוני מתכת", "מסירת אטום מימן לרדיקל פרוקסילי", "כיבוי חמצן סינגלטי", "ספיחה של חמצן מהסביבה"], correctIndex: 1, explanation: "מסירת אטום מימן לרדיקל פרוקסילי היא המנגנון האופייני לנוגדי חמצון ראשוניים (כמו BHT או טוקופרול) ולא שניוניים. שאר האפשרויות הן מנגנונים של נוגדי חמצון שניוניים." },
+            { question: "במערכת מזון מסוג אמולסיית שמן-במים, היכן צפוי נוגד חמצון הידרופילי (כמו חומצה אסקורבית) להיות היעיל ביותר?", options: ["בתוך טיפות השמן", "בממשק (interphase) שבין המים לשמן", "בפאזה המימית", "ביעילות שווה בכל המקומות"], correctIndex: 1, explanation: "נוגדי חמצון הידרופיליים נוטים להתרכז בממשק שבין המים לשמן, שם הם יכולים להגן על השומנים מפני חמצון שמקורו בפאזה המימית. תופעה זו ידועה כפרדוקס נוגדי החמצון." },
+            { question: "מהי הסיבה הכימית לכך שבטא-קרוטן יעיל במניעת חמצון הנגרם על ידי אור (photo-oxidation)?", options: ["הוא תורם אטומי מימן ביעילות גבוהה", "הוא מבצע קלאציה ליוני מתכת", "הוא מכבה חמצן סינגלטי מעורר", "הוא יוצר קומפלקס יציב עם חומצות שומן"], correctIndex: 2, explanation: "בטא-קרוטן פועל כנוגד חמצון שניוני על ידי קליטת האנרגיה מחמצן סינגלטי (הנוצר בתגובות פוטו-חמצון) והפיכתו לחמצן טריפלטי פחות ריאקטיבי, ובכך מונע ממנו לתקוף חומצות שומן." },
+            { question: "מדוע ערך הפראוקסיד (PV) של שמן טיגון עשוי להיות נמוך, למרות שהשמן מחומצן מאוד?", options: ["הטמפרטורה הגבוהה מונעת יצירת פראוקסידים", "נוגדי חמצון טבעיים בשמן מפרקים את הפראוקסידים", "פראוקסידים אינם יציבים בטמפרטורות גבוהות ומתפרקים במהירות לתוצרים שניוניים", "נוכחות מים מהמזון מונעת את מדידת הפראוקסידים"], correctIndex: 2, explanation: "בטיגון, הטמפרטורות הגבוהות גורמות לפירוק מהיר של הידרופראוקסידים (הנמדדים ב-PV) לאלדהידים, קטונים ותרכובות אחרות. לכן, PV נמוך אינו מעיד בהכרח על איכות טובה של שמן טיגון משומש." },
+            { question: "איזה מהמשפטים הבאים מתאר בצורה הטובה ביותר את הסינרגיזם בין ויטמין E (טוקופרול) וויטמין C (חומצה אסקורבית)?", options: ["ויטמין C משפר את המסיסות של ויטמין E בשמן", "ויטמין E מגן על ויטמין C מפני חמצון", "ויטמין C מחזר את הרדיקל של ויטמין E בחזרה לצורתו הפעילה", "שניהם יחד מבצעים קלאציה של מתכות ביעילות גבוהה יותר"], correctIndex: 2, explanation: "לאחר שטוקופרול (ויטמין E) תורם מימן והופך לרדיקל, חומצה אסקורבית (ויטמין C) יכולה לתרום לו מימן ולחדש אותו, מה שמאפשר לו להמשיך ולפעול כנוגד חמצון. זהו מנגנון סינרגיסטי קלאסי." },
+            { question: "איזה מהתרכובות הבאות אינה נוצרת בדרך כלל במהלך טיגון עמוק של שמן?", options: ["חומצות שומן חופשיות", "חומצות דימריות ופולימריות", "ריכוז גבוה של הידרופראוקסידים יציבים", "אלדהידים וקטונים נדיפים"], correctIndex: 2, explanation: "במהלך טיגון, הידרופראוקסידים נוצרים אך הם אינם יציבים ומתפרקים במהירות. לכן, ריכוזם נשאר נמוך. לעומת זאת, נוצרים חומצות שומן חופשיות (מהידרוליזה), פולימרים (המעלים צמיגות) ותרכובות נדיפות." },
+            { question: "מה ההבדל העיקרי בין המנגנון של EDTA ובין המנגנון של BHT כנוגדי חמצון?", options: ["EDTA פועל בשלב ההתפשטות, BHT בשלב הייזום", "EDTA הוא נוגד חמצון ראשוני, BHT הוא שניוני", "EDTA הוא קלאטור של מתכות, BHT הוא תורם מימן לרדיקלים חופשיים", "EDTA מסיס בשמן, BHT מסיס במים"], correctIndex: 2, explanation: "EDTA הוא נוגד חמצון שניוני הפועל כקלאטור יוני מתכת ומונע מהם ליזום חמצון. BHT הוא נוגד חמצון ראשוני הפועל בשלב ההתפשטות על ידי תרומת מימן לרדיקלים חופשיים." },
+            { question: "איזה מהשמנים הבאים, על סמך הרכב חומצות השומן שלו, צפוי להיות בעל היציבות החמצונית הנמוכה ביותר בטמפרטורת החדר?", options: ["שמן קוקוס (עשיר בחומצות רוויות)", "שמן זית (עשיר בחומצה אולאית)", "שמן חמניות (עשיר בחומצה לינולאית)", "שמן דגים (עשיר בחומצות רב בלתי רוויות ארוכות שרשרת)"], correctIndex: 3, explanation: "יציבות חמצונית יורדת ככל שדרגת אי-הרוויה עולה. שמן דגים, העשיר בחומצות שומן רב בלתי רוויות (PUFA) עם קשרים כפולים רבים, הוא הרגיש ביותר לחמצון." },
+            { question: "מהי מטרת השימוש בחומצה ציטרית יחד עם חומצה אסקורבית בתעשיית פירות ים?", options: ["לשפר את הטעם והמרקם בלבד", "להגביר את מסיסות השומן במוצר", "לפעול באופן סינרגיסטי: קלאציה של פרו-אוקסידנטים ואינאקטיבציה של אנזימים", "למנוע התפתחות חיידקים בלבד"], correctIndex: 2, explanation: "השילוב הוא סינרגיסטי. חומצה ציטרית פועלת כקלאטור לקשירת יוני מתכת המזרזים חמצון (פרו-אוקסידנטים), בעוד חומצה אסקורבית פועלת כקולטת חמצן וכחומר מחזר." },
+            { question: "איזה מהבאים אינו מאפיין של נוגד חמצון פנולי יעיל?", options: ["יכולת לייצב את הרדיקל הנוצר על ידי רזוננס", "פוטנציאל חיזור נמוך", "קבוצות צדדיות גדולות הגורמות להפרעה סטרית", "מסיסות גבוהה מאוד במים לפעולה בשמן"], correctIndex: 3, explanation: "כדי לפעול בשמן (פאזה ליפידית), נוגד החמצון צריך להיות מסיס בשמן (ליפופילי). מסיסות גבוהה במים תמנע ממנו להגיע לסובסטרט השומני ולהגן עליו ביעילות." },
+            { question: "הפיכת אלפא-טוקופריל אצטט לאלפא-טוקופרול פעיל דורשת:", options: ["חמצון של קבוצת האצטט", "הידרוליזה של הקשר האסטרי", "חיזור של טבעת הכרומן", "פתיחה של הטבעת"], correctIndex: 1, explanation: "אלפא-טוקופריל אצטט הוא פרו-ויטמין. קבוצת ההידרוקסיל הפנולית, החיונית לפעילות נוגדת החמצון, חסומה על ידי קבוצת אצטט. יש לבצע הידרוליזה של הקשר האסטרי כדי לשחרר את ההידרוקסיל ולקבל טוקופרול פעיל." },
+            { question: "בתהליך האוטו-אוקסידציה של שומן, שלב ההתפשטות (propagation) מאופיין בעיקר על ידי:", options: ["יצירת רדיקל אלקילי ראשוני מיוני מתכת", "תגובה של רדיקל פרוקסילי עם חומצת שומן חדשה ליצירת הידרופראוקסיד ורדיקל אלקילי חדש", "תגובה בין שני רדיקלים ליצירת תוצרים יציבים", "תגובה ישירה של חמצן סינגלטי עם קשר כפול"], correctIndex: 1, explanation: "שלב ההתפשטות הוא תגובת שרשרת. רדיקל פרוקסילי (ROO•) מגיב עם חומצת שומן נוספת (RH) ויוצר הידרופראוקסיד (ROOH) ורדיקל אלקילי חדש (R•), שממשיך את השרשרת." },
+            { question: "איזה מהנוגדי החמצון הסינתטיים נחשב ליעיל במיוחד בטמפרטורות טיגון גבוהות?", options: ["פרופיל גלאט (PG)", "TBHQ", "BHA", "חומצה אסקורבית"], correctIndex: 1, explanation: "TBHQ (Tert-Butylhydroquinone) ידוע ביציבותו ויעילותו הגבוהה בטמפרטורות גבוהות, ולכן הוא מועדף לשימוש בשמני טיגון." },
+            { question: "איזה מהבאים אינו תוצר שניוני של חמצון שומנים בטיגון?", options: ["מלוניאלדהיד (MDA)", "טרנס-2-אלקנאלים", "חומצות אפוקסי", "טריגליצרידים שלמים"], correctIndex: 3, explanation: "טריגליצרידים שלמים הם הסובסטרט המקורי, לא תוצר חמצון. כל השאר הם תוצרים שניוניים הנוצרים מפירוק הידרופראוקסידים: MDA, אלדהידים שונים וחומצות אפוקסי." },
+            { question: "פעילות פרו-אוקסידטיבית של טאנינים עלולה להתרחש בתנאים של:", options: ["pH נמוך במעי", "טמפרטורה נמוכה", "pH גבוה במעי של חרקים", "נוכחות של ויטמין C"], correctIndex: 2, explanation: "כפי שצוין במצגת, טאנינים יכולים להפוך לפרו-אוקסידנטים במעי של חרקים, סביבה המאופיינת ב-pH גבוה." },
+            { question: "שמן זית כתית מעולה (EVOO) נחשב עמיד יחסית לטיגון. איזה מהגורמים הבאים אינו תורם לעמידות זו?", options: ["תכולה גבוהה של חומצה אולאית (חד-בלתי-רוויה)", "תכולה גבוהה של נוגדי חמצון פנוליים טבעיים", "תכולה נמוכה של חומצות שומן רב-בלתי-רוויות (PUFA)", "תכולה גבוהה של חומצה לינולנית (אומגה 3)"], correctIndex: 3, explanation: "חומצה לינולנית היא חומצת שומן רב-בלתי-רוויה (PUFA) הרגישה מאוד לחמצון. תכולה גבוהה שלה הייתה מורידה את יציבות השמן. יציבות שמן הזית נובעת מתכולה גבוהה של חומצה חד-בלתי-רוויה (אולאית), תכולה נמוכה של PUFA, ונוכחות פנולים טבעיים." },
+            { question: "איזה משפט אינו נכון לגבי נוגדי חמצון במזון?", options: ["ניתן להוסיף אותם ישירות למזון או לאריזה", "הם תמיד מונעים חמצון לחלוטין", "הם יעילים בריכוזים נמוכים יחסית לסובסטרט", "פעילותם תלויה במסיסות שלהם ובמבנה המזון"], correctIndex: 1, explanation: "נוגדי חמצון אינם מונעים חמצון לחלוטין, אלא מעכבים אותו באופן משמעותי ומאריכים את חיי המדף של המוצר." },
+            { question: "היציבות של רדיקל פנוקסילי, הנוצר לאחר שנוגד חמצון פנולי תורם מימן, נובעת בעיקר מ:", options: ["הידרופוביות גבוהה", "משקל מולקולרי נמוך", "דה-לוקליזציה של האלקטרון הבלתי מזווג על פני הטבעת הארומטית (רזוננס)", "יכולת לקשור מים"], correctIndex: 2, explanation: "מבנה הרזוננס של הטבעת הפנולית מאפשר לפזר את האלקטרון הבודד על פני מספר אטומים, מה שמייצב את הרדיקל ומונע ממנו להיות ריאקטיבי ולהמשיך את תגובת השרשרת." },
+            { question: "איזה סוג של תרכובות אחראי בעיקר לעלייה בצמיגות של שמן במהלך טיגון ממושך?", options: ["חומצות שומן חופשיות", "אלדהידים נדיפים", "חומצות דימריות ופולימריות", "קטונים"], correctIndex: 2, explanation: "במהלך הטיגון, רדיקלים חופשיים יכולים להגיב זה עם זה וליצור מולקולות גדולות יותר, כמו דימרים ופולימרים של חומצות שומן. מולקולות גדולות אלו גורמות לעלייה משמעותית בצמיגות השמן." },
+            { question: "הוספת EDTA למערכת מזון נועדה בעיקר למנוע חמצון על ידי:", options: ["נטרול רדיקלים פרוקסיליים", "מניעת ייזום חמצון על ידי יוני מתכת", "חידוש של טוקופרולים", "תגובה עם חמצן אטמוספרי"], correctIndex: 1, explanation: "EDTA הוא קלאטור חזק הנקשר ליוני מתכת כמו ברזל ונחושת, ובכך מונע מהם לפעול כקטליזטורים בשלב הייזום של תגובת החמצון." },
+            { question: "איזה מהבאים מתאר את תפקידו של חמצן בשלב ההתפשטות (propagation) של אוטו-אוקסידציה?", options: ["הוא יוזם את התגובה על ידי עירור אלקטרוני", "הוא מגיב עם רדיקל אלקילי (R•) ליצירת רדיקל פרוקסילי (ROO•)", "הוא מגיב עם שני רדיקלים כדי לסיים את השרשרת", "הוא מפרק הידרופראוקסידים"], correctIndex: 1, explanation: "לאחר שנוצר רדיקל אלקילי (R•) בשלב הייזום או ההתפשטות, הוא מגיב במהירות רבה עם חמצן מולקולרי (O2) ליצירת רדיקל פרוקסילי (ROO•), שהוא המין המרכזי שממשיך את תגובת השרשרת." },
+            { question: "לפי הפרדוקס הצרפתי, צריכה גבוהה של שומן רווי אינה מתואמת עם תמותה גבוהה ממחלות לב. מה ההסבר שהוצע לתופעה זו?", options: ["צריכה מוגברת של לחם מלא", "צריכת יין אדום העשיר בנוגדי חמצון טבעיים (פוליפנולים)", "פעילות גופנית מוגברת", "גנטיקה ייחודית של הצרפתים"], correctIndex: 1, explanation: "ההשערה המרכזית היא שצריכה מתונה של יין אדום, העשיר בפוליפנולים כמו רסברטרול ופלבנואידים אחרים, מספקת הגנה קרדיווסקולרית המקזזת את ההשפעות השליליות של השומן הרווי." },
+            { question: "מה ההבדל המבני העיקרי בין BHA ל-BHT הגורם להבדלים בתכונותיהם?", options: ["ל-BHT יש שרשרת צדדית ארוכה יותר", "BHA מכיל קבוצת מתוקסי, בעוד BHT מכיל קבוצת מתיל", "BHT הוא דימר של BHA", "ל-BHA יש שתי קבוצות הידרוקסיל, ול-BHT יש אחת"], correctIndex: 1, explanation: "BHA (Butylated Hydroxyanisole) מכיל קבוצת מתוקסי על הטבעת, בעוד BHT (Butylated Hydroxytoluene) מכיל קבוצת מתיל באותו מיקום. הבדל זה משפיע על תכונותיהם הפיזיקליות והכימיות." },
+            { question: "ריכוז הפוליפנולים ביין אדום גבוה משמעותית מריכוזם ביין לבן. מה הסיבה העיקרית לכך?", options: ["זני הענבים האדומים עשירים יותר בפוליפנולים באופן טבעי", "תהליך התסיסה של יין אדום כולל מגע ממושך של התירוש עם הקליפות והחרצנים", "מוסיפים פוליפנולים באופן מלאכותי ליין אדום", "האלכוהול ביין אדום גורם לייצור פוליפנולים"], correctIndex: 1, explanation: "רוב הפוליפנולים בענב נמצאים בקליפות ובחרצנים. בייצור יין אדום, התסיסה מתבצעת במגע עם רכיבים אלה, מה שמאפשר מיצוי נרחב של הפוליפנולים לתוך היין." },
+            { question: "איזה מהבאים אינו נחשב לנוגד חמצון סינתטי?", options: ["TBHQ", "BHA", "טוקופרול", "פרופיל גלאט"], correctIndex: 2, explanation: "טוקופרולים (ויטמין E) הם נוגדי חמצון טבעיים המצויים בשמנים צמחיים. BHA, TBHQ ופרופיל גלאט הם כולם נוגדי חמצון סינתטיים המיוצרים באופן תעשייתי." },
+            { question: "מהי המשמעות של 'Hindered Phenol' בהקשר של נוגדי חמצון כמו BHT?", options: ["פנול שפעילותו מעוכבת על ידי מולקולות אחרות", "פנול שקבוצת ההידרוקסיל הפעילה שלו מוקפת בקבוצות צדדיות גדולות (כמו tert-butyl)", "פנול שאינו יכול לתרום מימן", "פנול הקשור למולקולת סוכר"], correctIndex: 1, explanation: "המונח מתייחס לנוכחות קבוצות צדדיות גדולות ליד קבוצת ההידרוקסיל. קבוצות אלו גורמות להפרעה סטרית המייצבת את הרדיקל הפנוקסילי הנוצר ומשפיעה על ריאקטיביות נוגד החמצון." },
+            { question: "איזה סוג חמצן מולקולרי הוא הריאקטיבי ביותר ויוזם חמצון שומנים בנוכחות אור וצבען?", options: ["חמצן טריפלטי (מצב היסוד)", "חמצן סינגלטי (מצב מעורר)", "רדיקל סופראוקסיד", "אוזון"], correctIndex: 1, explanation: "חמצן סינגלטי (¹O₂) הוא צורה מעוררת ואנרגטית של חמצן מולקולרי. הוא נוצר כאשר חמצן במצב היסוד (טריפלטי, ³O₂) מקבל אנרגיה, למשל מחומר רגיש לאור (sensitizer). חמצן סינגלטי יכול להגיב ישירות עם קשרים כפולים בשומנים." },
+            { question: "איזה מהבאים אינו גורם המשפיע על קצב השינויים הכימיים בשמן טיגון?", options: ["סוג השמן והרכבו", "משך וטמפרטורת הטיגון", "נוכחות נוגדי חמצון", "נפח סיר הטיגון"], correctIndex: 3, explanation: "סוג השמן, תנאי הטיגון (זמן וטמפרטורה), ונוכחות נוגדי חמצון הם גורמים קריטיים המשפיעים על תגובות החמצון וההידרוליזה. נפח הסיר כשלעצמו אינו גורם כימי ישיר, אם כי הוא יכול להשפיע על יחס שטח פנים לנפח." },
+            { question: "כיצד אסקרוביל פלמיטט (Ascorbyl palmitate) פותר את בעיית המסיסות של ויטמין C במערכות שומניות?", options: ["הוא קושר את ויטמין C לחלבון", "הוא יוצר אמולסיה של ויטמין C בשמן", "הוא נגזרת של ויטמין C הקשורה לחומצת שומן (חומצה פלמיטית), מה שהופך אותו למסיס בשמן", "הוא מפרק את השומן ליחידות קטנות יותר"], correctIndex: 2, explanation: "אסקרוביל פלמיטט הוא אסטר של חומצה אסקורבית וחומצה פלמיטית. הוספת השרשרת הפחמימנית הארוכה וההידרופובית של החומצה הפלמיטית הופכת את המולקולה כולה לאמפיפילית ובעלת מסיסות טובה יותר בשומן." },
+            { question: "חומצות דימריות ופולימריות הנוצרות בטיגון הן תוצאה של:", options: ["הידרוליזה של טריגליצרידים", "תגובות בין רדיקלים חופשיים של חומצות שומן", "דהידרציה של גליצרול", "פירוק של בטא-קרוטן"], correctIndex: 1, explanation: "בטמפרטורות גבוהות, רדיקלים חופשיים של חומצות שומן יכולים להגיב זה עם זה בתגובות סיום (termination) או פילמור, וליצור קשרים קוולנטיים ביניהם. התוצרים הם דימרים, טרימרים ופולימרים גדולים יותר." },
+            { question: "מבין נוגדי החמצון הפנוליים הסינתטיים, מי נחשב להכי פחות יציב בטמפרטורות גבוהות?", options: ["BHA", "BHT", "TBHQ", "פרופיל גלאט (PG)"], correctIndex: 3, explanation: "פרופיל גלאט (PG) רגיש לחום ונוטה להתפרק בטמפרטורות גבוהות, מה שהופך אותו לפחות מתאים ליישומים כמו טיגון עמוק בהשוואה ל-BHT או TBHQ." },
+            { question: "מה ההגדרה הכללית של נוגד חמצון (AO) במזון?", options: ["חומר המונע כל שינוי כימי במזון", "חומר שבריכוז נמוך יחסית לסובסטרט, מעכב או מונע באופן משמעותי את חמצון הסובסטרט", "כל ויטמין שמוסיפים למזון", "חומר המשפר את טעם המזון לאחר חמצון"], correctIndex: 1, explanation: "ההגדרה המדויקת מדגישה שני היבטים מרכזיים: הוא פועל בריכוז נמוך, והוא מעכב או מונע חמצון באופן משמעותי." },
+            { question: "איזה מהמשפטים הבאים אינו נכון לגבי הפיכת ציס-פאטי אסיד לטרנס-פאטי אסיד במהלך טיגון?", options: ["זהו סוג של איזומריזציה גאומטרית", "היא דורשת אנרגיה גבוהה (חום)", "היא משפרת את הערך התזונתי של השמן", "היא יכולה להתרחש כחלק ממנגנוני חמצון רדיקליים"], correctIndex: 2, explanation: "היווצרות חומצות שומן טראנס נחשבת לתהליך שלילי מבחינה תזונתית, שכן צריכתן קשורה לסיכון מוגבר למחלות לב וכלי דם. כל שאר האמירות נכונות." },
+            { question: "היכולת של לציטין לפעול כסינרגיסט נובעת בין היתר מ:", options: ["יכולתו לתרום מימן ביעילות", "היותו מקור לחומצה זרחתית שיכולה לבצע קלאציה של מתכות", "יכולתו לכבות חמצן סינגלטי", "היותו מסיס בשמן באופן מושלם"], correctIndex: 1, explanation: "לציטין הוא פוספוליפיד המכיל קבוצת פוספט. לאחר הידרוליזה, הוא יכול לשחרר חומצה זרחתית, אשר לה יש יכולת קלאציה של יוני מתכת, ובכך הוא פועל כנוגד חמצון שניוני סינרגיסטי." },
+            { question: "בסקירת מנגנוני החמצון וההגנה, פירוק הידרופראוקסידים (Peroxide Decomposition) יכול להיות מזורז על ידי:", options: ["נוכחות טוקופרולים", "טמפרטורה נמוכה", "יוני מתכת במצב חמצון משתנה (כמו Mn+)", "אריזת ואקום"], correctIndex: 2, explanation: "יוני מתכת כמו ברזל, נחושת ומנגן יכולים לזרז את הפירוק של הידרופראוקסידים ליצירת רדיקלים חדשים (אלקוקסי ופרוקסי), ובכך להאיץ את תהליך החמצון הכולל." }
+        ];
+
+        const tfData = [
+            { question: "נוגדי חמצון ראשוניים כמו BHT וטוקופרולים פועלים בעיקר על ידי קלאציה של יוני מתכת המזרזים חמצון.", answer: false, explanation: "לא נכון. נוגדי חמצון ראשוניים פועלים על ידי מסירת אטום מימן לרדיקלים חופשיים ובכך עוצרים את תגובת השרשרת. קלאציה של מתכות היא מנגנון של נוגדי חמצון שניוניים." },
+            { question: "חומצה אסקורבית (ויטמין C) יעילה מאוד במניעת חמצון בשמנים נקיים (bulk oils) בשל יכולתה לחדש טוקופרולים.", answer: false, explanation: "לא נכון. חומצה אסקורבית מסיסה במים ואינה מסיסה בשמן, ולכן יעילותה בשמן נקי מוגבלת מאוד. היא יעילה יותר במערכות המכילות פאזה מימית, כמו אמולסיות." },
+            { question: "בטא-קרוטן מונע חמצון בעיקר על ידי תרומת אטום מימן לרדיקלים פרוקסיליים.", answer: false, explanation: "לא נכון. מנגנון הפעולה העיקרי של בטא-קרוטן הוא כיבוי (quenching) של חמצן סינגלטי, צורה מעוררת וריאקטיבית של חמצן, ולא על ידי תרומת מימן." },
+            { question: "במהלך טיגון עמוק, ערך הפראוקסיד (PV) של השמן עולה באופן רציף ולינארי עם זמן הטיגון.", answer: false, explanation: "לא נכון. ערך הפראוקסיד עשוי לעלות בתחילה אך אז לרדת, מכיוון שהפראוקסידים אינם יציבים בטמפרטורה גבוהה ומתפרקים במהירות לתוצרים שניוניים. לכן, PV אינו מדד אמין לאיכות שמן טיגון משומש." },
+            { question: "נוגדי חמצון סינתטיים כמו BHA ו-TBHQ הם תרכובות פנוליות.", answer: true, explanation: "נכון. BHA, BHT, TBHQ ופרופיל גלאט הם כולם נוגדי חמצון סינתטיים המבוססים על מבנה של טבעת פנולית עם קבוצת הידרוקסיל, שהיא חיונית לפעילותם." },
+            { question: "נוכחות נוגדי חמצון במזון מבטיחה שהוא לעולם לא יתחמצן.", answer: false, explanation: "לא נכון. נוגדי חמצון אינם מונעים חמצון לחלוטין אלא מאטים את התהליך באופן משמעותי, ובכך מאריכים את חיי המדף של המוצר." },
+            { question: "הסיבה שיציבות שמן זית גבוהה יחסית היא תכולה גבוהה של חומצות שומן רב-בלתי-רוויות.", answer: false, explanation: "לא נכון. יציבותו הגבוהה של שמן זית נובעת מתכולה גבוהה של חומצה אולאית (חד-בלתי-רוויה) ותכולה נמוכה של חומצות רב-בלתי-רוויות, יחד עם נוכחות פנולים טבעיים." },
+            { question: "חומצה ציטרית ו-EDTA פועלות כנוגדי חמצון דרך אותו מנגנון כימי.", answer: true, explanation: "נכון. שתיהן פועלות כנוגדי חמצון שניוניים על ידי מנגנון של קלאציה, כלומר קשירה של יוני מתכת ומניעת השתתפותם בתגובות חמצון." },
+            { question: "היווצרות חומצות שומן טראנס במהלך טיגון היא תהליך רצוי המשפר את יציבות השמן.", answer: false, explanation: "לא נכון. היווצרות חומצות שומן טראנס היא תהליך בלתי רצוי מבחינה תזונתית, הקשור לסיכונים בריאותיים." },
+            { question: "טוקופריל אצטט הוא צורה פעילה יותר של ויטמין E מאשר אלפא-טוקופרול.", answer: false, explanation: "לא נכון. טוקופריל אצטט הוא צורה יציבה אך לא פעילה. יש צורך בהידרוליזה של קבוצת האצטט כדי לשחרר את קבוצת ההידרוקסיל ולקבל את הצורה הפעילה, אלפא-טוקופרול." },
+            { question: "ניתן לעכב חמצון במזון על ידי אריזה תחת חנקן או בואקום.", answer: true, explanation: "נכון. סילוק חמצן, המהווה מגיב חיוני בתהליך החמצון, הוא שיטה פיזיקלית יעילה למניעת או עיכוב תגובות חמצון." },
+            { question: "עלייה בצמיגות שמן טיגון מעידה על היווצרות חומצות שומן חופשיות כתוצאה מהידרוליזה.", answer: false, explanation: "לא נכון. העלייה בצמיגות נובעת בעיקר מהיווצרות של דימרים ופולימרים, שהם מולקולות גדולות. חומצות שומן חופשיות הן מולקולות קטנות יחסית ואינן הגורם העיקרי לעליית הצמיגות." },
+            { question: "שלב הסיום (Termination) בתהליך האוטו-אוקסידציה מתרחש כאשר רדיקל חופשי מגיב עם מולקולה יציבה.", answer: false, explanation: "לא נכון. שלב הסיום מתרחש כאשר שני רדיקלים חופשיים מגיבים זה עם זה ליצירת תוצר לא-רדיקלי ויציב, ובכך עוצרים את תגובת השרשרת." },
+            { question: "ניתן להשתמש ב-BHT כנוגד חמצון באבקות מרק וחטיפים על בסיס דגנים.", answer: true, explanation: "נכון. לפי התקנות שהוצגו, BHT (E321) מאושר לשימוש במגוון מוצרים, כולל אבקות מרק וחטיפים, בריכוזים מוגדרים." },
+            { question: "פעילות נוגדת חמצון במזון תמיד מתורגמת ישירות לתועלת בריאותית בגוף האדם.", answer: false, explanation: "לא נכון. כפי שהודגש במצגת, היעילות במניעת חמצון במזון אינה זהה בהכרח לתועלת בריאותית. ההשפעה הבריאותית תלויה בזמינות ביולוגית, ריכוז באיבר המטרה וגורמים נוספים." },
+            { question: "חומצה אסקורבית יכולה לפעול כקולטת חמצן (Oxygen Scavenger).", answer: true, explanation: "נכון. אחד ממנגנוני הפעולה של חומצה אסקורבית הוא תגובה ישירה עם חמצן, מה שהופך אותה לקולטת חמצן יעילה במערכות מימיות או באריזות." },
+            { question: "כל נוגדי החמצון הפנוליים הם ממקור טבעי.", answer: false, explanation: "לא נכון. ישנם נוגדי חמצון פנוליים טבעיים (כמו טוקופרולים ופלבנואידים) וגם סינתטיים (כמו BHA, BHT, TBHQ)." },
+            { question: "רדיקל של טוקופרול הוא יציב יחסית בזכות דה-לוקליזציה של האלקטרון הלא-מזווג.", answer: true, explanation: "נכון. מבנה הרזוננס של הטבעת הארומטית מאפשר פיזור של מטען האלקטרון, מה שמייצב מאוד את הרדיקל ומונע ממנו להיות ריאקטיבי ולהמשיך את תגובת השרשרת." },
+            { question: "שמן חמניות עשיר בחומצה אולאית ולכן יציב יותר משמן זית.", answer: false, explanation: "לא נכון. שמן חמניות סטנדרטי עשיר בחומצה לינולאית (רב-בלתי-רוויה) והוא פחות יציב משמן זית, העשיר בחומצה אולאית (חד-בלתי-רוויה). קיים זן של חמניות עשיר באולאית (High-oleic) שהוא יציב יותר." },
+            { question: "הידרוליזה של טריגליצרידים בטיגון גורמת ליצירת גליצרול וחומצות שומן חופשיות.", answer: true, explanation: "נכון. נוכחות חום ומים (מהמזון המטוגן) גורמת להידרוליזה של קשרים אסטריים בטריגליצרידים, מה שמשחרר חומצות שומן חופשיות, דיגליצרידים, מונוגליצרידים וגליצרול." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

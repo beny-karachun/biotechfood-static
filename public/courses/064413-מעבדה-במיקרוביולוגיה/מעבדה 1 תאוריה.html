@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מיקרוביולוגיה בסיסית - כלי למידה</title>
+    <script>
+        // MathJax Configuration
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimiters for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Delimiters for display math
+            processEscapes: true // Allows using \$ for literal dollar signs
+          },
+          svg: {
+            fontCache: 'global' // Use global font cache for SVGs
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // Tags to ignore
+          }
+        };
+      </script>
+      <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+      </script>
+    <style>
+        :root {
+            --bg-color: #333;
+            --container-color: #444; /* Slightly lighter than pure #666 for better contrast */
+            --text-color: #E0E0E0;
+            --accent-color: #3D90D7;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --button-hover-bg: #555;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #6b6b6b;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 90%; /* Adjusted for better readability */
+            margin: 20px auto;
+            background-color: var(--container-color);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 5px;
+            margin-bottom: 20px; /* Increased spacing */
+        }
+        h1 {
+             text-align: center;
+             border-bottom: none;
+             margin-bottom: 30px;
+        }
+
+        p, ul, li {
+            margin-bottom: 15px; /* Consistent spacing */
+        }
+        ul {
+             padding-right: 20px; /* Proper indentation for RTL */
+        }
+
+        /* Interactive Sections General Styling */
+        .interactive-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--bg-color); /* Slightly different background for sections */
+            border-radius: 6px;
+             border: 1px solid #555;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px; /* Increased spacing */
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+            margin: 0 5px; /* Spacing between buttons */
+        }
+
+        button:hover {
+            background-color: #2a7ab0; /* Darker accent on hover */
+        }
+         button:disabled {
+             background-color: #555;
+             cursor: not-allowed;
+         }
+
+        /* Study Cards */
+        .card-container {
+            perspective: 1000px;
+            min-height: 150px;
+            margin-bottom: 20px; /* Spacing before navigation */
+        }
+
+        .card {
+            width: 100%;
+            height: 150px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .card-front {
+            background-color: var(--card-front-bg);
+        }
+
+        .card-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* MCQs and True/False */
+        .question-container, .tf-question-container {
+             min-height: 150px; /* Ensure space for content */
+             margin-bottom: 20px; /* Spacing before options/navigation */
+             padding: 15px;
+             background-color: var(--card-front-bg); /* Re-use card bg */
+             border-radius: 5px;
+        }
+        .question-text, .tf-question-text {
+             font-size: 1.1em;
+             margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            text-align: right;
+            margin-bottom: 10px;
+            background-color: var(--button-hover-bg); /* Default option color */
+             padding: 12px; /* Larger click area */
+        }
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+             background-color: var(--accent-color);
+        }
+        .options button.correct, .tf-options button.correct {
+             background-color: var(--correct-color) !important;
+             color: white;
+         }
+        .options button.incorrect, .tf-options button.incorrect {
+             background-color: var(--incorrect-color) !important;
+             color: white;
+         }
+        .options button.correct-reveal, .tf-options button.correct-reveal {
+            border: 2px solid var(--correct-color); /* Highlight correct if missed */
+             background-color: var(--button-hover-bg); /* Keep original background */
+         }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-radius: 4px;
+            font-size: 0.95em;
+            border: 1px dashed #777;
+            display: none; /* Hidden by default */
+        }
+         .explanation.visible {
+             display: block;
+         }
+
+        /* View All Sections */
+        .all-questions-container {
+            margin-top: 20px;
+            border-top: 1px solid #666;
+            padding-top: 20px;
+        }
+        .all-questions-container .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #3a3a3a;
+            border-radius: 5px;
+        }
+        .all-questions-container .question-block .options button,
+        .all-questions-container .question-block .tf-options button {
+             font-size: 0.9em; /* Slightly smaller in all view */
+             padding: 8px;
+        }
+        .view-all-button {
+             margin: 20px 0 10px 0; /* Positioning for view all toggle */
+             display: block; /* Make it take full width available */
+             width: fit-content; /* Adjust width to content */
+             margin-right: auto; /* Align to start in RTL */
+             margin-left: auto; /* Align to start in RTL */
+         }
+
+         /* MathJax SVG styling */
+         mjx-container svg {
+             direction: ltr; /* Ensure math renders LTR */
+             display: inline-block; /* Prevent excessive spacing */
+         }
+         /* Ensure display math is centered */
+         mjx-container[display="true"] {
+            display: block;
+            text-align: center;
+            margin: 1em 0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מיקרוביולוגיה בסיסית: מעבדה 1 - טכניקות יסוד</h1>
+
+        <!-- Theory Section -->
+        <section id="theory">
+            <h2>מבוא ותיאוריה</h2>
+
+            <h3>דרישות תזונתיות של מיקרואורגניזמים</h3>
+            <p>כ-95% ממשקל התא היבש מורכב מיסודות עיקריים (מקרו-נוטריינטים): פחמן (C), חמצן (O), מימן (H), חנקן (N), גופרית (S), זרחן (P), אשלגן (K), סידן (Ca), מגנזיום (Mg) וברזל (Fe). יסודות אלו הם אבני הבניין לסוכרים, שומנים, חלבונים וחומצות גרעין.</p>
+            <p>בנוסף, נדרשים מיקרו-נוטריינטים (יסודות קורט) בכמויות זעירות, כגון Mn, Zn, Co, Mo, Ni, Cu, המשמשים לעיתים קרובות כחלק מאנזימים או קו-פקטורים.</p>
+            <p>ניתן לחלק חיידקים לפי מקור הפחמן והאנרגיה שלהם:</p>
+            <ul>
+                <li><b>אוטוטרופים (Autotrophs):</b> מייצרים חומרים אורגניים מחומרים אי-אורגניים (בעיקר CO<sub>2</sub>).
+                    <ul>
+                        <li>פוטואוטוטרופים: משתמשים באור כמקור אנרגיה.</li>
+                        <li>כימואוטוטרופים (ליטוטרופים): מפיקים אנרגיה מחמצון תרכובות אי-אורגניות.</li>
+                    </ul>
+                </li>
+                <li><b>הטרוטרופים (Heterotrophs):</b> זקוקים לפחמן אורגני מוכן מהסביבה.
+                    <ul>
+                        <li>פוטוהטרוטרופים: משתמשים באור כמקור אנרגיה ובפחמן אורגני.</li>
+                        <li>כימוהטרוטרופים: מפיקים אנרגיה מחמצון תרכובות אורגניות (רוב החיידקים המוכרים).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>מצעי מזון (Media)</h3>
+            <p>מצע גידול מספק את הנוטריינטים הדרושים לגידול מיקרואורגניזמים במעבדה. מצעים יכולים להיות נוזליים (מרק - broth) או מוצקים (בעזרת הוספת אגר - agar).</p>
+            <ul>
+                <li><b>מצע מוגדר (Defined/Synthetic Medium):</b> כל מרכיביו הכימיים וכמויותיהם ידועים. מתאים למחקר ספציפי על דרישות תזונתיות.</li>
+                <li><b>מצע מורכב (Complex Medium):</b> מכיל רכיבים שהרכבם הכימי המדויק אינו ידוע במלואו (כמו פפטון, תמצית שמרים, תמצית בשר). עשיר בנוטריינטים ומאפשר גידול של מגוון רחב של חיידקים, כולל כאלו שדרישותיהם אינן ידועות. דוגמאות נפוצות: Nutrient Agar, LB (Luria-Bertani), YE (Yeast Extract).</li>
+            </ul>
+            <p><b>מרכיבים נפוצים במצעים מורכבים:</b></p>
+            <ul>
+                <li><b>פפטון/טריפטון (Peptone/Tryptone):</b> תוצר פירוק אנזימטי של חלבונים (כמו קזאין). מספק חומצות אמינו, פפטידים וחנקן.</li>
+                <li><b>תמצית בשר (Beef Extract):</b> תמצית מימית מרוכזת של בשר. עשירה בחומרים אורגניים קטנים, ויטמינים ומינרלים.</li>
+                <li><b>תמצית שמרים (Yeast Extract):</b> תמצית מימית של תאי שמרים שעברו פירוק עצמי (אוטוליזה). עשירה בויטמיני B וחנקן.</li>
+                <li><b>אגר (Agar):</b> פוליסכריד המופק מאצות ים. משמש להקשיית מצעים נוזליים. אינו מנוצל תזונתית על ידי רוב החיידקים, נמס בטמפ' גבוהה (80-100°C) ונקרש סביב 40-45°C.</li>
+                <li><b>מים מזוקקים (Distilled Water):</b> משמשים להכנת מצעים כדי למנוע שינויים בהרכב בגלל מינרלים ומלחים המצויים במי ברז, העלולים להשפיע על גידול או ליצור משקעים.</li>
+            </ul>
+
+            <h3>עיקור (Sterilization)</h3>
+            <p>תהליך המיועד להשמדת כל המיקרואורגניזמים, כולל נבגים (ספורות) עמידים, במטרה למנוע זיהום.</p>
+            <ul>
+                <li><b>חום רטוב (Moist Heat) - אוטוקלב (Autoclave):</b> השיטה הנפוצה והיעילה ביותר לעיקור מצעים וכלי זכוכית עמידים בחום. האוטוקלב הוא מיכל לחץ המשתמש בקיטור רווי תחת לחץ. התנאים הסטנדרטיים הם $121^\circ C$ בלחץ של כ-1.1 אטמוספירות (מעל הלחץ האטמוספירי הרגיל) למשך 20-60 דקות. החום הרטוב יעיל כי הוא גורם לדנטורציה (הרס מבנה) של חלבונים וחומצות גרעין. הרתחה רגילה ($100^\circ C$) אינה מספיקה להשמדת נבגים עמידים.</li>
+                <li><b>חום יבש (Dry Heat) - תנור עיקור:</b> משמש לעיקור כלי זכוכית ריקים, אבקות או שמנים. דורש טמפרטורות גבוהות יותר (160-170°C) וזמנים ארוכים יותר (כשעתיים) כי העברת החום פחות יעילה, וההשמדה מתבצעת בעיקר דרך חמצון.</li>
+            </ul>
+             <p>נהוג להשתמש באינדיקטורים (כמו סרט הדבקה מיוחד) המוצמדים לכלים ומצעים לפני העיקור, אשר משנים את צבעם כאשר תנאי העיקור (טמפ' ולחץ) הושגו.</p>
+
+            <h3>טכניקות בסיסיות במיקרוביולוגיה</h3>
+            <p>עבודה במיקרוביולוגיה דורשת שמירה על <b>תנאים אספטיים (Aseptic Technique)</b> למניעת זיהום של התרבית הנבדקת ושל הסביבה.</p>
+            <ul>
+                <li><b>עבודה ליד להבה:</b> יצירת סביבת עבודה סטרילית זמנית באמצעות מבער בונזן. האוויר החם העולה מהלהבה יוצר זרם כלפי מעלה המרחיק חלקיקים מהאזור. פתחי כלים (מבחנות, צלחות) מעוברים באש לפני ואחרי העברת חומר.</li>
+                <li><b>כלי העברה:</b> מחט ולולאה בקטריולוגית (Needle & Loop) עשויים מתכת. מעוקרים על ידי ליבון באש עד להאדמה לפני ואחרי כל שימוש. יש לקררם קצרות (למשל, על ידי נגיעה בדופן הפנימית של צלחת אגר סטרילית) לפני מגע עם חיידקים.</li>
+                <li><b>תרבית נקייה (Pure Culture):</b> תרבית המכילה זן יחיד של מיקרואורגניזם. חיונית למחקר ואפיון. מושגת לרוב על ידי בידוד מושבות בודדות.</li>
+                <li><b>מושבה (Colony):</b> גוש נראה לעין של חיידקים על מצע מוצק, שמקורו בתא בודד (או קבוצה קטנה של תאים) שהתרבה.</li>
+            </ul>
+
+            <h3>שיטות זריעה</h3>
+            <ul>
+                <li><b>זריעת בידוד (Streak Plate):</b> טכניקה לקבלת מושבות בודדות מתרבית מעורבת או מרוכזת. דוגמים כמות קטנה של חיידקים באמצעות לולאה מעוקרת ומורחים על פני שטח קטן של צלחת אגר. לאחר ליבון וקירור הלולאה, מושכים קווים מהאזור הראשון לאזור שני נקי, וחוזרים על התהליך לאזור שלישי ורביעי, תוך ליבון הלולאה בין כל אזור. המטרה היא לדלל את כמות החיידקים על פני הצלחת כך שבאזורים האחרונים יצמחו מושבות מבודדות שמקורן בתא בודד.</li>
+                <li><b>זריעה על מצע משופע (Slant):</b> מצע אגר שהתמצק בזווית בתוך מבחנה. משמש לשימור תרביות או לבדיקות ביוכימיות. זורעים על ידי מריחת החיידק (עם מחט או לולאה) בקו זיגזג על פני השיפוע.</li>
+                <li><b>זריעה בפיזור (Spreading):</b> שיטה לזריעת נפח ידוע של נוזל (לרוב דילול של דגימה) על פני צלחת אגר, במטרה לספור את מספר החיידקים בדגימה המקורית. משתמשים במקל פיזור סטרילי (כמו מקל דריגלסקי - Drigalski spreader, מעוקר בטבילה באתנול והעברה מהירה באש).</li>
+                <li><b>דילולים עשרוניים (Serial Dilutions):</b> סדרת דילולים של דגימה (לרוב בפקטור 10 כל פעם) כדי להגיע לריכוז חיידקים שניתן לספור לאחר זריעה בפיזור (מקובל לספור צלחות עם 30-300 מושבות). למשל, העברת 0.5 מ"ל דגימה ל-4.5 מ"ל תמיסת דילול (כמו סליין) היא דילול של $10^{-1}$.</li>
+            </ul>
+
+            <h3>מיקרואורגניזמים בסביבה</h3>
+            <p>מיקרואורגניזמים נמצאים בכל סביבה טבעית (אוויר, מים, קרקע, גוף האדם). הרכב האוכלוסייה תלוי בתנאי הסביבה (נוטריינטים, חמצן, טמפרטורה, לחות, pH וכו').</p>
+            <ul>
+                <li><b>אוויר:</b> מכיל חיידקים ופטריות, לעיתים קרובות נישאים על חלקיקי אבק. חיידקי אוויר לרוב עמידים ליובש וקרינה. ניתן לדגום על ידי חשיפת צלחת אגר פתוחה לאוויר.</li>
+                <li><b>מים:</b> הרכב המיקרופלורה במים תלוי במקור המים (מי ברז, מי ביוב, אגם). ניתן להעריך את כמות החיידקים על ידי זריעת דילולים וספירת מושבות (CFU - Colony Forming Units).
+                חישוב ריכוז החיידקים בדגימה המקורית (CFU/ml):
+                 $$ \frac{\text{cell}}{\text{ml}} = \frac{\sum(\text{number of colonies})}{V_{\text{spreading/plating}} \cdot \sum(\text{dilutions})} $$
+                כאשר:
+                $\sum(\text{number of colonies})$ הוא סכום המושבות שנספרו (בצלחות הניתנות לספירה),
+                $V_{\text{spreading/plating}}$ הוא נפח הדילול שנזרע (למשל 0.1 מ"ל),
+                $\sum(\text{dilutions})$ הוא סכום הדילולים מהם נלקחו הדגימות שנספרו.
+                </li>
+                 <li><b>גוף האדם (מיקרופלורה/מיקרוביוטה):</b> גוף האדם מארח אוכלוסיות גדולות ומגוונות של מיקרואורגניזמים (בעור, בפה, במעי וכו'). הרכב המיקרופלורה משפיע על בריאות האדם. ניתן לדגום באמצעות מטוש סטרילי מאזורים שונים.</li>
+                <li><b>מצע אגר דם (Blood Agar):</b> מצע מורכב ועשיר (לרוב Nutrient Agar בתוספת 5% דם כבש). משמש לגידול חיידקים דקדקניים (שדורשים תנאי גידול מיוחדים) ולאבחון יכולת המוליזה (פירוק כדוריות דם אדומות) של חיידקים. סוגי המוליזה:
+                    <ul>
+                        <li><b>אלפא (α):</b> פירוק חלקי, יצירת אזור ירקרק מסביב למושבה.</li>
+                        <li><b>בתא (β):</b> פירוק מלא, יצירת אזור שקוף לחלוטין מסביב למושבה.</li>
+                        <li><b>גמא (γ):</b> אין פירוק, המצע נשאר אדום מסביב למושבה.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>מורפולוגיה של מושבה (Colony Morphology)</h3>
+            <p>תיאור המראה המאקרוסקופי של מושבת חיידקים על מצע מוצק. מאפיינים אלו יכולים לסייע בזיהוי ראשוני:</p>
+            <ul>
+                <li><b>גודל:</b> קוטר המושבה (נקודתית, קטנה, בינונית, גדולה).</li>
+                <li><b>צורה (Form):</b> המיתאר הכללי (עגולה, לא רגולרית, חוטית וכו').</li>
+                <li><b>התרוממות (Elevation):</b> הפרופיל של המושבה מהצד (שטוחה, קמורה, כיפתית וכו').</li>
+                <li><b>שוליים (Margin):</b> מראה קצה המושבה (חלקים, גליים, משוננים, מסועפים וכו').</li>
+                <li><b>פני שטח (Surface):</b> מרקם פני המושבה (חלק, מבריק, מחוספס, יבש, רירי וכו').</li>
+                <li><b>תכונות אופטיות:</b> שקיפות (שקופה, אטומה, שקופה למחצה).</li>
+                <li><b>צבע (Pigmentation):</b> צבע המושבה (לבנה, קרם, צהובה וכו').</li>
+            </ul>
+        </section>
+
+        <!-- Study Cards Section -->
+        <section id="study-cards" class="interactive-section">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="card-container">
+                <div class="card" id="studyCard">
+                    <div class="card-face card-front" id="cardFront">לחץ כאן להתחלה</div>
+                    <div class="card-face card-back" id="cardBack"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button id="prevCard">הקודם</button>
+                <div class="counter" id="cardCounter"></div>
+                <button id="nextCard">הבא</button>
+            </div>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq" class="interactive-section">
+            <h2>שאלות אמריקאיות (MCQ)</h2>
+            <div class="question-container" id="mcqContainer">
+                <div class="question-text" id="mcqQuestionText"></div>
+                <div class="options" id="mcqOptions"></div>
+                <div class="explanation" id="mcqExplanation"></div>
+            </div>
+            <div class="navigation">
+                <button id="prevMcq">הקודם</button>
+                <div class="counter" id="mcqCounter"></div>
+                <button id="nextMcq">הבא</button>
+            </div>
+             <button class="view-all-button" id="viewAllMcqBtn">הצג את כל השאלות</button>
+             <div id="allMcqContainer" class="all-questions-container" style="display: none;">
+                 <h3>כל השאלות האמריקאיות:</h3>
+                 <!-- All MCQs will be loaded here by JS -->
+             </div>
+        </section>
+
+        <!-- True/False Questions Section -->
+        <section id="true-false" class="interactive-section">
+            <h2>שאלות נכון / לא נכון</h2>
+            <div class="tf-question-container" id="tfContainer">
+                 <div class="tf-question-text" id="tfQuestionText"></div>
+                 <div class="tf-options" id="tfOptions">
+                     <button data-answer="true">נכון</button>
+                     <button data-answer="false">לא נכון</button>
+                 </div>
+                 <div class="explanation" id="tfExplanation"></div>
+            </div>
+            <div class="navigation">
+                <button id="prevTf">הקודם</button>
+                <div class="counter" id="tfCounter"></div>
+                <button id="nextTf">הבא</button>
+            </div>
+            <button class="view-all-button" id="viewAllTfBtn">הצג את כל השאלות</button>
+            <div id="allTfContainer" class="all-questions-container" style="display: none;">
+                <h3>כל שאלות הנכון/לא נכון:</h3>
+                <!-- All T/F questions will be loaded here by JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Data for Study Cards
+        const studyCardData = [
+            { front: "מצע LB (Luria-Bertani)", back: "מצע מורכב נפוץ לגידול חיידקים, מכיל טריפטון, תמצית שמרים ו-NaCl." },
+            { front: "מצע YE (Yeast Extract)", back: "מצע מורכב המכיל פפטון, דקסטרוז (גלוקוז) ותמצית שמרים." },
+            { front: "אגר (Agar)", back: "פוליסכריד מאצות ים המשמש להקשיית מצעי גידול נוזליים." },
+            { front: "עיקור (Sterilization)", back: "תהליך להשמדת כל המיקרואורגניזמים, כולל נבגים." },
+            { front: "אוטוקלב (Autoclave)", back: "מכשיר המשתמש בקיטור רווי תחת לחץ (לרוב 121°C) לעיקור יעיל של מצעים וכלים." },
+            { front: "טכניקה אספטית (Aseptic Technique)", back: "שיטות עבודה למניעת זיהום של תרביות ושל סביבת העבודה." },
+            { front: "מחט ולולאה בקטריולוגית", back: "כלי מתכת המשמשים להעברת מיקרואורגניזמים; מעוקרים בליבון באש." },
+            { front: "תרבית נקייה (Pure Culture)", back: "תרבית המכילה זן יחיד של מיקרואורגניזם." },
+            { front: "מושבה (Colony)", back: "צבר נראה לעין של חיידקים על מצע מוצק, שמקורו לרוב מתא בודד." },
+            { front: "זריעת בידוד (Streak Plate)", back: "טכניקה לדילול חיידקים על פני צלחת אגר לקבלת מושבות בודדות." },
+            { front: "מצע משופע (Slant)", back: "מצע אגר שהתמצק בזווית במבחנה, משמש לשימור תרביות." },
+            { front: "זריעה בפיזור (Spreading)", back: "פיזור נפח ידוע של נוזל על צלחת אגר לספירת חיידקים, לרוב בעזרת מקל דריגלסקי." },
+            { front: "מקל דריגלסקי (Drigalski Spreader)", back: "כלי זכוכית או פלסטיק בצורת L המשמש לפיזור נוזל על פני צלחת אגר." },
+            { front: "דילולים עשרוניים (Serial Dilutions)", back: "סדרת דילולים בפקטור קבוע (לרוב 10) להפחתת ריכוז החיידקים בדגימה." },
+            { front: "CFU (Colony Forming Unit)", back: "יחידה לספירת חיידקים חיים; מייצגת מושבה שצמחה מתא בודד או מקבוצת תאים." },
+            { front: "מיקרופלורה / מיקרוביוטה", back: "אוכלוסיית המיקרואורגניזמים המאכלסת סביבה מסוימת, כמו גוף האדם." },
+            { front: "אגר דם (Blood Agar)", back: "מצע עשיר המכיל דם, משמש לגידול חיידקים דקדקניים ולאבחון המוליזה." },
+            { front: "המוליזה (Hemolysis)", back: "פירוק תאי דם אדומים על ידי חיידקים. סוגים: אלפא (חלקי, ירקרק), בתא (מלא, שקוף), גמא (אין)." },
+            { front: "מורפולוגיה של מושבה", back: "תיאור המראה החיצוני של מושבה: גודל, צורה, התרוממות, שוליים, פני שטח, צבע, שקיפות." },
+            { front: "מקרו-נוטריינטים", back: "יסודות הנדרשים בכמויות גדולות על ידי מיקרואורגניזמים (כמו C, H, O, N, P, S)." },
+            { front: "מיקרו-נוטריינטים (יסודות קורט)", back: "יסודות הנדרשים בכמויות זעירות (כמו Fe, Mn, Zn, Cu)." },
+            { front: "אוטוטרוף (Autotroph)", back: "אורגניזם המייצר את מזונו מחומרים אי-אורגניים." },
+            { front: "הטרוטרוף (Heterotroph)", back: "אורגניזם הצורך תרכובות אורגניות מוכנות כמקור פחמן ואנרגיה." },
+            { front: "מצע מוגדר (Defined Medium)", back: "מצע שכל מרכיביו הכימיים וכמויותיהם ידועים." },
+            { front: "מצע מורכב (Complex Medium)", back: "מצע המכיל רכיבים שהרכבם המדויק אינו ידוע (כמו פפטון, תמצית שמרים)." },
+            { front: "פפטון / טריפטון", back: "תוצר פירוק חלבונים, מספק חומצות אמינו וחנקן." },
+            { front: "תמצית שמרים (Yeast Extract)", back: "מקור עשיר לויטמיני B וחנקן." },
+            { front: "נבג / ספורה (Spore)", back: "מבנה עמיד ביותר הנוצר על ידי חיידקים מסוימים בתנאי עקה, עמיד לחום ויובש." }
+        ];
+
+        // Data for Multiple Choice Questions
+        const mcqData = [
+             {
+                 question: "מהי המטרה העיקרית של זריעת בידוד (streak plate)?",
+                 options: [
+                     "לספור את מספר החיידקים בדגימה",
+                     "לקבל מושבות נפרדות ומבודדות מתרבית מעורבת",
+                     "לבדוק את יכולת התנועה של חיידקים במצע",
+                     "לשמר תרבית חיידקים לאורך זמן רב יחסית לאחר הגעתה"
+                 ],
+                 correctAnswer: 1,
+                 explanation: "זריעת בידוד נועדה לדלל את החיידקים על פני הצלחת כדי שיתפתחו מושבות בודדות, שמקור כל אחת מהן הוא בתא בודד, ובכך לאפשר קבלת תרבית נקייה."
+             },
+             {
+                 question: "איזה רכיב במצע גידול משמש להקשיית המצע ממצב נוזלי למוצק?",
+                 options: [
+                     "פפטון",
+                     "תמצית שמרים",
+                     "אגר",
+                     "NaCl (מלח בישול)"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "אגר הוא פוליסכריד המופק מאצות ומשמש כחומר מקשה במצעי גידול מוצקים. רוב החיידקים אינם יכולים לפרק אותו."
+             },
+             {
+                 question: "מהם התנאים הסטנדרטיים לעיקור באוטוקלב?",
+                 options: [
+                     "100°C למשך 30 דקות בלחץ אטמוספירי רגיל",
+                     "160°C למשך שעתיים ללא לחץ נוסף",
+                     "121°C בלחץ של כ-1.1 אטמוספירות מעל הרגיל למשך 20-60 דקות",
+                     "80°C למשך שעה אחת בלחץ גבוה מאוד של 5 אטמוספירות"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "השילוב של טמפרטורה גבוהה (121°C) ולחץ קיטור גבוה מאפשר חדירת חום יעילה והשמדה של כל צורות החיים, כולל נבגים עמידים."
+             },
+             {
+                 question: "חיידק הגדל על מצע המכיל רק מלחים אי-אורגניים ו-CO2 כמקור פחמן, ומשתמש באור כמקור אנרגיה, מוגדר כ:",
+                 options: [
+                     "כימוהטרוטרוף",
+                     "פוטואוטוטרוף",
+                     "פוטוהטרוטרוף",
+                     "כימואוטוטרוף (ליטוטרוף)"
+                 ],
+                 correctAnswer: 1,
+                 explanation: "פוטו = אור כמקור אנרגיה, אוטו = CO2 כמקור פחמן. לכן, זהו פוטואוטוטרוף."
+             },
+             {
+                 question: "מדוע משתמשים במים מזוקקים להכנת מצעי גידול?",
+                 options: [
+                     "כי הם זולים יותר ממי ברז רגילים",
+                     "כדי למנוע השפעה של מינרלים ומלחים ממי ברז על גידול החיידקים או יצירת משקעים",
+                     "מים מזוקקים מכילים חומרי הזנה חיוניים לחיידקים",
+                     "כדי להבטיח שה-pH של המצע יהיה בדיוק 7.0 ללא צורך בכיוון נוסף"
+                 ],
+                 correctAnswer: 1,
+                 explanation: "מי ברז מכילים יונים (כמו סידן, מגנזיום, כלור) שיכולים להגיב עם רכיבי המצע או לעכב גידול חיידקים מסוימים. מים מזוקקים נטולי יונים אלו."
+             },
+             {
+                 question: "מהי מטרת העברת פתח מבחנה או צלחת באש לפני ואחרי העברת חומר?",
+                 options: [
+                     "לחמם את המבחנה כדי שהחיידקים יגדלו מהר יותר",
+                     "לייבש את פתח הכלי למניעת טפטוף",
+                     "ליצור זרם אוויר חם כלפי מעלה המרחיק מזהמים ולעקר שטחית את הפתח",
+                     "לסמן את הכלי בסימן חריכה קטן לזיהוי עתידי"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "זוהי חלק מהטכניקה האספטית. הלהבה יוצרת סביבה סטרילית רגעית סביב הפתח ומשמידה מיקרואורגניזמים על שפת הכלי."
+             },
+             {
+                 question: "איזה מהבאים מתאר בצורה הטובה ביותר מצע מורכב (Complex Medium)?",
+                 options: [
+                     "מצע שכל מרכיביו הכימיים ידועים בכמות מדויקת",
+                     "מצע המכיל רכיבים כמו פפטון ותמצית שמרים שהרכבם המדויק אינו ידוע",
+                     "מצע נוזלי בלבד, ללא יכולת הקשייה",
+                     "מצע המשמש אך ורק לגידול חיידקים אוטוטרופיים הדורשים אור"
+                 ],
+                 correctAnswer: 1,
+                 explanation: "מצע מורכב מאופיין בכך שהוא מכיל רכיבים טבעיים (כמו תוצרי פירוק חלבונים או תמציות תאים) שהרכבם המולקולרי המדויק משתנה."
+             },
+              {
+                 question: "בזריעה בשיטת Spreading עם מקל דריגלסקי, מה השלב הראשון לפני פיזור הנוזל על הצלחת?",
+                 options: [
+                     "טבילת המקל בתרבית החיידקים",
+                     "חימום המקל באש עד להאדמה מלאה",
+                     "עיקור המקל על ידי טבילתו באתנול והעברתו המהירה באש",
+                     "קירור המקל במקרר למשך דקה לפחות למניעת נזק לאגר"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "עיקור המקל באתנול והצתה מהירה שלו מבטיחים שהוא סטרילי לפני המגע עם הדגימה ועם האגר, ומונעים זיהום."
+             },
+              {
+                  question: "מהי המשמעות של המוליזה מסוג בתא (β) על צלחת אגר דם?",
+                  options: [
+                      "אין פירוק של תאי דם אדומים כלל",
+                      "פירוק חלקי של תאי דם אדומים, היוצר הילה ירקרקה מסביב למושבה",
+                      "פירוק מלא של תאי דם אדומים, היוצר הילה שקופה לחלוטין מסביב למושבה",
+                      "התכה של מצע האגר באזור המושבה עקב פעילות אנזימטית חזקה"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "המוליזה מסוג בתא מאופיינת בפירוק מלא של ההמוגלובין ותאי הדם האדומים באזור שסביב המושבה, מה שגורם לאזור להיראות שקוף."
+              },
+              {
+                  question: "איזה מהמאפיינים הבאים אינו חלק מתיאור מורפולוגיה של מושבה?",
+                  options: [
+                      "צורת התרוממות (Elevation)",
+                      "צבע הפיגמנט (אם קיים)",
+                      "רצף ה-DNA של החיידק",
+                      "מראה השוליים (Margin)"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "מורפולוגיה של מושבה מתייחסת למאפיינים הנראים לעין (מאקרוסקופיים) של המושבה עצמה. רצף ה-DNA הוא מאפיין גנטי מיקרוסקופי."
+              },
+              {
+                 question: "כאשר מכינים דילול עשרוני ראשון ($10^{-1}$) מדגימת מים, כיצד עושים זאת בדרך כלל?",
+                 options: [
+                     "מוסיפים 1 מ\"ל מים ל-99 מ\"ל סליין",
+                     "מוסיפים 0.1 מ\"ל מים ל-0.9 מ\"ל סליין",
+                     "מוסיפים 0.5 מ\"ל מים ל-4.5 מ\"ל סליין",
+                     "מוסיפים 10 מ\"ל מים ל-90 מ\"ל סליין"
+                 ],
+                 correctAnswer: 2, // Based on the protocol text page 6 & 7
+                 explanation: "הוספת 0.5 מ\"ל דגימה ל-4.5 מ\"ל תמיסת דילול יוצרת נפח כולל של 5 מ\"ל, והדגימה מהווה 0.5/5 = 1/10 מהנפח הכולל, כלומר דילול של $10^{-1}$."
+              },
+              {
+                 question: "מהו תפקיד ה-NaCl במצע LB?",
+                 options: [
+                     "לשמש כמקור פחמן עיקרי לחיידקים",
+                     "לספק יסודות קורט חיוניים שלא נמצאים ברכיבים אחרים",
+                     "לשמור על מאזן אוסמוטי מתאים לגידול החיידקים",
+                     "לשמש כחומר מקשה במקום אגר במצעים מסוימים"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "ריכוז מלחים (אוסמולריות) נכון חשוב לתפקוד תקין של תאי החיידקים. NaCl מסייע לשמור על לחץ אוסמוטי הדומה לזה שבתוך התאים."
+              },
+               {
+                  question: "איזה סוג מיקרואורגניזם ישרוד עיקור באוטוקלב בצורה הטובה ביותר?",
+                  options: [
+                      "חיידק רגיל שאינו יוצר נבגים",
+                      "וירוס בעל מעטפת שומנית",
+                      "נבג (ספורה) של חיידק",
+                      "תא שמר פעיל הנמצא בשלב חלוקה מהיר"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "נבגים הם מבנים עמידים במיוחד הנוצרים על ידי חיידקים מסוימים, והם מסוגלים לשרוד תנאים קשים כולל חום גבוה יחסית. עיקור באוטוקלב נועד להשמיד גם אותם."
+              },
+              {
+                  question: "באיזה שלב בזריעת בידוד (streak plate) מבצעים ליבון של הלולאה הבקטריולוגית?",
+                  options: [
+                      "רק לפני תחילת הזריעה כולה",
+                      "אחרי סיום כל שלבי הזריעה בלבד",
+                      "לפני תחילת הזריעה, ובין כל אזור זריעה (לפני המעבר לאזור הבא)",
+                      "אף פעם לא מבצעים ליבון, רק טובלים באתנול בין השלבים"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "ליבון הלולאה לפני כל מריחה באזור חדש מבטיח שכמות החיידקים המועברת הולכת ופוחתת, ומאפשרת דילול יעיל וקבלת מושבות בודדות."
+              },
+              {
+                  question: "מהי תמצית שמרים (Yeast Extract)?",
+                  options: [
+                      "תוצר פירוק של חלבון החלב, קזאין",
+                      "פוליסכריד המופק מאצות ים אדומות",
+                      "תמצית מימית מרוכזת של שמרים שעברו פירוק עצמי (אוטוליזה)",
+                      "סוכר פשוט המשמש כמקור אנרגיה עיקרי לחיידקים מסוימים"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "תמצית שמרים עשירה בויטמינים (בעיקר מקבוצת B), חומצות אמינו ורכיבים תאיים אחרים המועילים לגידול חיידקים רבים."
+              },
+              {
+                 question: "איזה מהבאים מהווה 'יסוד קורט' (מיקרו-נוטריינט) ולא 'מקרו-נוטריינט'?",
+                 options: [
+                     "פחמן (C)",
+                     "חנקן (N)",
+                     "זרחן (P)",
+                     "נחושת (Cu)"
+                 ],
+                 correctAnswer: 3,
+                 explanation: "פחמן, חנקן וזרחן הם מקרו-נוטריינטים הנדרשים בכמויות גדולות. נחושת היא יסוד קורט הנדרש בכמויות זעירות, לרוב כקו-פקטור לאנזימים."
+              },
+              {
+                  question: "חיידק המשתמש בתרכובות אורגניות כמקור פחמן ואנרגיה הוא:",
+                  options: [
+                      "פוטואוטוטרוף",
+                      "כימואוטוטרוף",
+                      "כימוהטרוטרוף",
+                      "פוטוהטרוטרוף"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "כימו = אנרגיה מתרכובות כימיות, הטרו = פחמן מתרכובות אורגניות. רוב החיידקים המוכרים, כולל אלו הגדלים במעבדה על מצעים מורכבים, הם כימוהטרוטרופים."
+              },
+              {
+                  question: "מהי המטרה העיקרית של דגימת חיידקים מהאוויר על צלחות פתוחות?",
+                  options: [
+                      "למדוד את מהירות הרוח במעבדה",
+                      "לזהות ולכמת באופן גס את סוגי וכמות המיקרואורגניזמים הנישאים באוויר",
+                      "לגדל חיידקים אנאירוביים שאינם זקוקים לחמצן",
+                      "לבחון את עמידות מצע האגר להתייבשות לאורך זמן"
+                  ],
+                  correctAnswer: 1,
+                  explanation: "חשיפת צלחת אגר לאוויר מאפשרת לחלקיקים נושאי מיקרואורגניזמים (כמו אבק או טיפות רסס) לנחות על המצע ולצמוח למושבות, ובכך להעריך את המיקרופלורה האווירית."
+              },
+               {
+                 question: "סטודנט זרע 0.1 מ\"ל מדילול $10^{-2}$ של דגימת מי ברז וקיבל 45 מושבות על הצלחת. מה ריכוז החיידקים (CFU/ml) במים המקוריים?",
+                 options: [
+                     "450 CFU/ml",
+                     "4,500 CFU/ml",
+                     "45,000 CFU/ml",
+                     "45 CFU/ml"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "הנוסחה היא: CFU/ml = (מספר מושבות) / (נפח שנזרע * דילול). כאן: 45 / (0.1 ml * $10^{-2}$) = 45 / $10^{-3}$ = 45 * $10^3$ = 45,000 CFU/ml."
+              },
+              {
+                 question: "באיזו טמפרטורה בדרך כלל מבצעים אינקובציה (הדגרה) לתרביות של חיידקים שנלקחו מגוף האדם?",
+                 options: [
+                     "4°C (טמפרטורת מקרר)",
+                     "25°C (טמפרטורת החדר)",
+                     "37°C (טמפרטורת גוף האדם)",
+                     "55°C (טמפרטורה גבוהה לחיידקים תרמופיליים)"
+                 ],
+                 correctAnswer: 2, // Based on E. coli incubation and Blood agar incubation
+                 explanation: "טמפרטורת גוף האדם היא סביב 37°C, ולכן זוהי הטמפרטורה האופטימלית לגידול רוב החיידקים המהווים חלק מהמיקרופלורה האנושית."
+              },
+               {
+                  question: "מה המשמעות של מושבה בעלת מראה 'פילמנטי' (Filamentous)?",
+                  options: [
+                      "המושבה עגולה וסימטרית לחלוטין",
+                      "המושבה שטוחה מאוד ומתפשטת על פני שטח גדול",
+                      "המושבה מורכבת מחוטים ארוכים ומסועפים, דמויי קורים",
+                      "המושבה בעלת מרקם רירי ונוזלי במיוחד"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "צורה פילמנטית מתארת מושבה שאינה קומפקטית אלא מורכבת מסיבים או חוטים הנראים לעין, לעיתים קרובות אופייני לפטריות או לחיידקים אקטינומיצטים."
+              },
+              {
+                  question: "איזה רכיב במצע YE מספק את מקור הפחמן והאנרגיה העיקרי?",
+                  options: [
+                      "Peptone",
+                      "Yeast extract",
+                      "Dextrose (D-glucose)",
+                      "Distilled water"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "דקסטרוז הוא סוכר פשוט (גלוקוז) המשמש כמקור פחמן ואנרגיה זמין לחיידקים רבים. פפטון ותמצית שמרים מספקים בעיקר חנקן, ויטמינים וחומצות אמינו."
+              },
+              {
+                  question: "מה ההבדל העיקרי בין עיקור בחום רטוב (אוטוקלב) לעיקור בחום יבש (תנור)?",
+                  options: [
+                      "חום יבש יעיל יותר בהשמדת נבגים מחום רטוב",
+                      "אוטוקלב משתמש בטמפרטורות נמוכות יותר אך בלחץ גבוה, בעוד תנור משתמש בטמפרטורות גבוהות יותר ללא לחץ",
+                      "חום רטוב מתאים רק לעיקור נוזלים, חום יבש מתאים רק לכלי זכוכית",
+                      "עיקור בחום יבש מהיר בהרבה מעיקור בחום רטוב באותה טמפרטורה"
+                  ],
+                  correctAnswer: 1,
+                  explanation: "חום רטוב (קיטור בלחץ) חודר לחומרים ומעביר חום ביעילות רבה יותר מחום יבש, ולכן דורש טמפרטורות נמוכות יותר וזמנים קצרים יותר להשגת עיקור, במיוחד של נבגים עמידים."
+              },
+              {
+                  question: "כאשר מעבירים חיידקים מצלחת למבחנת סלנט (שיפוע אגר), באיזו תנועה בדרך כלל זורעים על פני האגר?",
+                  options: [
+                      "דקירה עמוקה לתוך האגר עד לתחתית המבחנה",
+                      "מריחה בקו זיגזג על פני שטח האגר המשופע",
+                      "טפטוף של התרבית הנוזלית על האגר",
+                      "ערבוב של החיידקים לתוך האגר כשהוא עדיין מותך"
+                  ],
+                  correctAnswer: 1,
+                  explanation: "זריעה על סלנט נועדה ליצור שטח פנים גדול לגידול על פני האגר. תנועת זיגזג מהתחתית כלפי מעלה מבטיחה פיזור אחיד יחסית של החיידקים."
+              },
+              {
+                  question: "איזו פעולה יש לבצע עם לולאה בקטריולוגית מיד *לאחר* שסיימת להשתמש בה להעברת חיידקים?",
+                  options: [
+                      "להניח אותה על השולחן להתקררות",
+                      "לשטוף אותה במים וסבון",
+                      "ללבן אותה באש עד להאדמה לעיקור",
+                      "לטבול אותה באתנול לחיטוי מהיר"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "עיקור הלולאה מיד לאחר השימוש חיוני להשמדת החיידקים שנותרו עליה ולמניעת זיהום הסביבה או התרבית הבאה."
+              },
+              {
+                  question: "מה מציינת המורפולוגיה 'שוליים גליים' (Undulate margin) של מושבה?",
+                  options: [
+                      "שולי המושבה חלקים ועגולים לחלוטין",
+                      "שולי המושבה נראים כמו קורים מסועפים",
+                      "שולי המושבה אינם ישרים אלא יוצרים גלים קלים",
+                      "המושבה כולה מורמת מעל פני האגר בצורה לא אחידה"
+                  ],
+                  correctAnswer: 2,
+                  explanation: "'Undulate' מתאר שוליים שאינם חלקים אלא בעלי קימורים קלים, כמו גלים."
+              },
+              {
+                  question: "מטרת הניסוי של דגימת חיידקים ממקורות שונים (אוויר, מים, גוף) היא בעיקר:",
+                  options: [
+                      "למצוא חיידק פתוגני חדש שלא תואר מעולם",
+                      "להדגים את נוכחותם ומגוונם של מיקרואורגניזמים בסביבות שונות",
+                      "לבדוק את יעילות העיקור של צלחות האגר שהוכנו",
+                      "לפתח מצע גידול אוניברסלי המתאים לכל סוגי החיידקים בעולם"
+                  ],
+                  correctAnswer: 1,
+                  explanation: "הניסויים בחלק ד' נועדו להמחיש שמיקרואורגניזמים נמצאים בסביבות שונות, והרכב האוכלוסייה משתנה בהתאם למקור ולתנאי הגידול."
+              },
+               {
+                 question: "איזה מהרכיבים הבאים במצעי הגידול שנלמדו (LB, YE) משמש כמקור עיקרי לחנקן?",
+                 options: [
+                     "Dextrose (גלוקוז)",
+                     "NaCl",
+                     "Peptone / Tryptone ו- Yeast Extract",
+                     "Agar"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "פפטון וטריפטון הם תוצרי פירוק של חלבונים, ולכן עשירים בחומצות אמינו ובחנקן. גם תמצית שמרים תורמת חנקן וויטמינים."
+             },
+             {
+                 question: "מה ההבדל המהותי בין טכניקת Streaking לבין טכניקת Spreading?",
+                 options: [
+                     "Streaking משתמש במחט ו-Spreading בלולאה",
+                     "Streaking נועד לבידוד מושבות (איכותני), Spreading נועד לספירת מושבות (כמותי)",
+                     "Spreading מתבצע על מצע נוזלי ו-Streaking על מצע מוצק",
+                     "Streaking דורש עיקור הכלי בין שלבים, Spreading לא דורש עיקור כלל"
+                 ],
+                 correctAnswer: 1,
+                 explanation: "מטרת ה-Streaking היא להפריד תאים זה מזה לקבלת מושבות בודדות (איכותני). מטרת ה-Spreading היא לפזר נפח ידוע של דילול באופן אחיד כדי לספור מושבות ולקבוע ריכוז (כמותי)."
+             },
+             {
+                 question: "מה משותף לפוטואוטוטרופים ולכימואוטוטרופים?",
+                 options: [
+                     "שניהם משתמשים באור כמקור אנרגיה",
+                     "שניהם משתמשים בתרכובות אורגניות כמקור פחמן",
+                     "שניהם מסוגלים להשתמש ב-CO2 כמקור הפחמן העיקרי שלהם",
+                     "שניהם גדלים רק בסביבה חסרת חמצן לחלוטין"
+                 ],
+                 correctAnswer: 2,
+                 explanation: "הקידומת 'אוטו' מציינת שהם מייצרים את התרכובות האורגניות שלהם בעצמם, תוך שימוש במקור פחמן אי-אורגני, שהוא לרוב CO2."
+             }
+        ];
+
+        // Data for True/False Questions
+        const trueFalseData = [
+            { question: "מצע LB הוא דוגמה למצע מוגדר (defined medium).", isTrue: false, explanation: "מצע LB מכיל טריפטון ותמצית שמרים, שהם רכיבים מורכבים שהרכבם המדויק אינו ידוע, ולכן הוא מצע מורכב." },
+            { question: "עיקור באוטוקלב משמיד גם נבגים (ספורות) של חיידקים.", isTrue: true, explanation: "השילוב של טמפרטורה גבוהה (121°C) ולחץ קיטור באוטוקלב יעיל בהשמדת כל צורות החיים, כולל נבגים עמידים." },
+            { question: "זריעת בידוד (streak plate) משמשת לקביעה כמותית מדויקת של מספר החיידקים בדגימה.", isTrue: false, explanation: "זריעת בידוד היא טכניקה איכותנית לקבלת מושבות בודדות. לקביעה כמותית משתמשים בזריעה בפיזור (spreading) לאחר דילולים." },
+            { question: "יש ללבן את הלולאה הבקטריולוגית באש גם לאחר סיום השימוש בה.", isTrue: true, explanation: "עיקור הלולאה לאחר השימוש מונע זיהום של סביבת העבודה ושל המשתמש." },
+            { question: "מים מזוקקים מכילים ריכוז גבוה של מינרלים החיוניים לגידול חיידקים.", isTrue: false, explanation: "מים מזוקקים עוברים תהליך לניקוי ממינרלים ומלחים. משתמשים בהם דווקא כדי למנוע השפעות לא רצויות של יונים ממי ברז." },
+            { question: "הטרוטרופים מסוגלים לסנתז את כל התרכובות האורגניות הדרושות להם מ-CO2.", isTrue: false, explanation: "הטרוטרופים זקוקים למקור פחמן אורגני מוכן מהסביבה. אוטוטרופים הם אלו המשתמשים ב-CO2." },
+            { question: "אגר דם הוא מצע סלקטיבי המאפשר גידול רק של חיידקים גראם-שליליים.", isTrue: false, explanation: "אגר דם הוא מצע עשיר ולא סלקטיבי, המאפשר גידול של חיידקים רבים, כולל כאלה הדורשים תנאים מיוחדים (דקדקניים). הוא משמש בעיקר לאבחון המוליזה." },
+            { question: "כאשר מכינים צלחות אגר, מוסיפים את האגר למרק הנוזלי רק לאחר העיקור באוטוקלב.", isTrue: false, explanation: "מוסיפים את האגר למרק לפני העיקור. החום באוטוקלב ממיס את האגר ומעקר את התמיסה בו-זמנית." },
+            { question: "מורפולוגיה של מושבה נקבעת אך ורק על פי הגנום של החיידק ואינה מושפעת מתנאי הגידול.", isTrue: false, explanation: "בעוד שהגנטיקה קובעת את הפוטנציאל המורפולוגי, תנאי הגידול (סוג המצע, טמפרטורה, זמן אינקובציה) יכולים להשפיע על המראה הסופי של המושבה." },
+            { question: "בזריעת בידוד, חשוב לגעת עם הלולאה באזור הקודם שנזרע כדי לאסוף חיידקים למריחה באזור החדש.", isTrue: true, explanation: "מטרת המגע באזור הקודם היא לאסוף כמות קטנה של חיידקים ולהעבירם לאזור נקי, ובכך להמשיך בתהליך הדילול על פני הצלחת." },
+            { question: "פפטון ותמצית בשר הם דוגמאות לרכיבים של מצע מוגדר.", isTrue: false, explanation: "אלו רכיבים מורכבים, תוצרי פירוק של חומרים ביולוגיים, שהרכבם המדויק משתנה. מצע מוגדר מכיל רק תרכובות כימיות טהורות בכמויות ידועות." },
+            { question: "טמפרטורת האינקובציה האופטימלית לחיידקים שנלקחו מדגימת אוויר בחדר היא תמיד 37°C.", isTrue: false, explanation: "חיידקי סביבה (כמו אוויר) לרוב גדלים טוב יותר בטמפרטורות נמוכות יותר, כמו טמפרטורת החדר (25-30°C), כפי שצוין בפרוטוקול (30°C)." },
+            { question: "נוכחות המוליזה מסוג גמא (γ) מצביעה על פירוק חלקי של תאי דם אדומים.", isTrue: false, explanation: "המוליזה גמא מצביעה על *חוסר* המוליזה. אלפא היא פירוק חלקי (ירקרק), ובתא היא פירוק מלא (שקוף)." },
+            { question: "חום יבש (תנור) יעיל יותר מעיקור באוטוקלב להשמדת נבגים עמידים.", isTrue: false, explanation: "חום רטוב (אוטוקלב) יעיל משמעותית יותר מחום יבש בהשמדת נבגים בגלל יכולת חדירת החום הטובה יותר." },
+            { question: "ניתן להשתמש בלולאה בקטריולוגית גם לזריעה על מצע משופע (slant).", isTrue: true, explanation: "ניתן להשתמש בלולאה (או במחט) לזריעה בזיגזג על פני השטח של מצע משופע." },
+            { question: "חישוב CFU/ml מתבסס על ספירת כל התאים בדגימה, כולל תאים מתים.", isTrue: false, explanation: "CFU מייצג Colony Forming Units - יחידות היוצרות מושבה. רק תאים חיים המסוגלים להתחלק וליצור מושבה נספרים בשיטה זו." },
+            { question: "כל המיקרואורגניזמים זקוקים לחמצן כדי לגדול.", isTrue: false, explanation: "קיימים מיקרואורגניזמים אנאירוביים שאינם זקוקים לחמצן, וחלקם אף מתים בנוכחותו." },
+            { question: "מטרת הוספת 2% אגר למרק היא להפוך אותו למצע מוצק המתאים לצלחות פטרי.", isTrue: true, explanation: "ריכוז אגר של 1.5%-2% נפוץ ליצירת מצעי אגר מוצקים ויציבים." },
+            { question: "כימואוטוטרופים משיגים אנרגיה על ידי פירוק תרכובות אורגניות מורכבות.", isTrue: false, explanation: "כימואוטוטרופים משיגים אנרגיה מחמצון של תרכובות *אי-אורגניות* (כמו אמוניה, גופרית, ברזל)." },
+            { question: "חשוב לקרר את הלולאה לאחר ליבונה באש לפני שנוגעים בחיידקים.", isTrue: true, explanation: "לולאה חמה תהרוג את החיידקים במגע ותיצור אירוסול (פיזור טיפות נושאות חיידקים לאוויר), ולכן יש לקררה קצרות." }
+        ];
+
+
+        // --- Study Cards Logic ---
+        const card = document.getElementById('studyCard');
+        const cardFront = document.getElementById('cardFront');
+        const cardBack = document.getElementById('cardBack');
+        const prevCardBtn = document.getElementById('prevCard');
+        const nextCardBtn = document.getElementById('nextCard');
+        const cardCounter = document.getElementById('cardCounter');
+        let currentCardIndex = 0;
+
+        function displayCard(index) {
+            if (index >= 0 && index < studyCardData.length) {
+                const cardData = studyCardData[index];
+                cardFront.textContent = cardData.front;
+                cardBack.textContent = cardData.back;
+                card.classList.remove('is-flipped'); // Show front initially
+                cardCounter.textContent = `כרטיסייה ${index + 1} / ${studyCardData.length}`;
+                prevCardBtn.disabled = index === 0;
+                nextCardBtn.disabled = index === studyCardData.length - 1;
+            }
+        }
+
+        card.addEventListener('click', () => {
+            card.classList.toggle('is-flipped');
+        });
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < studyCardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        // --- MCQ Logic ---
+        // Get references to the SINGLE VIEW elements ONCE
+        const singleMcqQuestionText = document.getElementById('mcqQuestionText');
+        const singleMcqOptionsContainer = document.getElementById('mcqOptions');
+        const singleMcqExplanation = document.getElementById('mcqExplanation');
+        // Other buttons and containers
+        const prevMcqBtn = document.getElementById('prevMcq');
+        const nextMcqBtn = document.getElementById('nextMcq');
+        const mcqCounter = document.getElementById('mcqCounter');
+        const viewAllMcqBtn = document.getElementById('viewAllMcqBtn');
+        const allMcqContainer = document.getElementById('allMcqContainer');
+        let currentMcqIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // Store user answers
+
+        function displayMcq(index, containerIdPrefix = 'single') {
+            if (index < 0 || index >= mcqData.length) return;
+
+            const mcq = mcqData[index];
+            let questionTextEl, optionsContainerEl, explanationEl;
+
+            // Target the correct elements based on view mode
+            if (containerIdPrefix === 'single') {
+                questionTextEl = singleMcqQuestionText;
+                optionsContainerEl = singleMcqOptionsContainer;
+                explanationEl = singleMcqExplanation;
+            } else {
+                // For 'view all', target dynamically created elements
+                questionTextEl = document.getElementById(`${containerIdPrefix}McqQuestionText${index}`);
+                optionsContainerEl = document.getElementById(`${containerIdPrefix}McqOptions${index}`);
+                explanationEl = document.getElementById(`${containerIdPrefix}McqExplanation${index}`);
+            }
+
+            if (!questionTextEl || !optionsContainerEl || !explanationEl) {
+                 console.error(`Elements not found for MCQ index ${index} with prefix ${containerIdPrefix}`);
+                 return; // Element not found
+            }
+
+            questionTextEl.textContent = mcq.question;
+            optionsContainerEl.innerHTML = ''; // Clear previous options
+            explanationEl.style.display = 'none'; // Hide explanation initially
+            explanationEl.textContent = '';
+
+            mcq.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.dataset.index = i; // Store option index
+                button.dataset.questionIndex = index; // Store question index
+                optionsContainerEl.appendChild(button);
+
+                // Add event listener only if the question hasn't been answered yet
+                if (mcqAnswers[index] === null) {
+                    button.addEventListener('click', () => handleMcqAnswer(index, i, containerIdPrefix));
+                }
+            });
+
+            // Update navigation/state only for single view
+            if (containerIdPrefix === 'single') {
+                mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+                prevMcqBtn.disabled = index === 0;
+                nextMcqBtn.disabled = index === mcqData.length - 1;
+            }
+
+            // Re-apply feedback styles if the question has already been answered
+            if (mcqAnswers[index] !== null) {
+                showMcqFeedback(index, mcqAnswers[index], containerIdPrefix);
+            }
+
+             // Re-render MathJax if needed
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                  MathJax.typesetPromise([optionsContainerEl, explanationEl, questionTextEl]).catch(function (err) { console.error('MathJax typeset error:', err); });
+             }
+        }
+
+
+         function handleMcqAnswer(questionIndex, selectedOptionIndex, containerIdPrefix = 'single') {
+             if (mcqAnswers[questionIndex] !== null) return; // Already answered
+
+             mcqAnswers[questionIndex] = selectedOptionIndex;
+
+             // Show feedback in the view where the answer was clicked
+             showMcqFeedback(questionIndex, selectedOptionIndex, containerIdPrefix);
+
+            // Update the other view as well if it exists and is visible
+            if (containerIdPrefix === 'single' && allMcqContainer.style.display !== 'none') {
+                // Answered in single view, update corresponding block in all view
+                showMcqFeedback(questionIndex, selectedOptionIndex, `all${questionIndex}`);
+            } else if (containerIdPrefix !== 'single' && questionIndex === currentMcqIndex) {
+                // Answered in all view, update the single view if it's showing this question
+                showMcqFeedback(questionIndex, selectedOptionIndex, 'single');
+            }
+         }
+
+         function showMcqFeedback(questionIndex, selectedOptionIndex, containerIdPrefix) {
+             const mcq = mcqData[questionIndex];
+             let optionsContainerEl, explanationEl;
+
+            // Target the correct elements based on view mode
+            if (containerIdPrefix === 'single') {
+                optionsContainerEl = singleMcqOptionsContainer;
+                explanationEl = singleMcqExplanation;
+            } else {
+                optionsContainerEl = document.getElementById(`${containerIdPrefix}McqOptions${questionIndex}`);
+                explanationEl = document.getElementById(`${containerIdPrefix}McqExplanation${questionIndex}`);
+            }
+
+             if (!optionsContainerEl || !explanationEl) {
+                 console.error(`Feedback elements not found for MCQ index ${questionIndex} with prefix ${containerIdPrefix}`);
+                 return; // Elements not found
+             }
+
+             const buttons = optionsContainerEl.querySelectorAll('button');
+
+             buttons.forEach(button => {
+                 button.disabled = true; // Disable all buttons
+                 const buttonIndex = parseInt(button.dataset.index);
+
+                 // Clear previous feedback classes
+                 button.classList.remove('correct', 'incorrect', 'correct-reveal');
+
+                 if (buttonIndex === mcq.correctAnswer) {
+                     if (selectedOptionIndex === mcq.correctAnswer) {
+                         button.classList.add('correct'); // Correct answer selected
+                     } else {
+                         button.classList.add('correct-reveal'); // Show correct if missed
+                     }
+                 } else if (buttonIndex === selectedOptionIndex) {
+                     button.classList.add('incorrect'); // Incorrect answer selected
+                 }
+             });
+
+             explanationEl.textContent = `הסבר: ${mcq.explanation}`;
+             explanationEl.classList.add('visible');
+             explanationEl.style.display = 'block'; // Ensure visibility
+
+              // Re-render MathJax if needed
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                 MathJax.typesetPromise([explanationEl]).catch(function (err) { console.error('MathJax typeset error:', err); });
+             }
+         }
+
+        prevMcqBtn.addEventListener('click', () => {
+            if (currentMcqIndex > 0) {
+                currentMcqIndex--;
+                displayMcq(currentMcqIndex, 'single');
+            }
+        });
+
+        nextMcqBtn.addEventListener('click', () => {
+            if (currentMcqIndex < mcqData.length - 1) {
+                currentMcqIndex++;
+                displayMcq(currentMcqIndex, 'single');
+            }
+        });
+
+        viewAllMcqBtn.addEventListener('click', () => {
+             if (allMcqContainer.style.display === 'none') {
+                 allMcqContainer.innerHTML = '<h3>כל השאלות האמריקאיות:</h3>'; // Clear previous if any
+                 mcqData.forEach((mcqItem, index) => { // Use mcqItem to avoid conflict
+                     const block = document.createElement('div');
+                     block.className = 'question-block';
+                     // Use the 'all' prefix for IDs in the view all section
+                     block.innerHTML = `
+                         <div class="question-text" id="all${index}McqQuestionText${index}"></div>
+                         <div class="options" id="all${index}McqOptions${index}"></div>
+                         <div class="explanation" id="all${index}McqExplanation${index}"></div>
+                     `;
+                     allMcqContainer.appendChild(block);
+                     // Display each question using the 'all' prefix
+                     displayMcq(index, `all${index}`);
+                 });
+                 allMcqContainer.style.display = 'block';
+                 viewAllMcqBtn.textContent = 'הסתר את כל השאלות';
+             } else {
+                 allMcqContainer.style.display = 'none';
+                 viewAllMcqBtn.textContent = 'הצג את כל השאלות';
+             }
+         });
+
+
+        // --- True/False Logic ---
+        // Get references to the SINGLE VIEW elements ONCE
+        const singleTfQuestionText = document.getElementById('tfQuestionText');
+        const singleTfOptionsContainer = document.getElementById('tfOptions');
+        const singleTfExplanation = document.getElementById('tfExplanation');
+        // Other buttons and containers
+        const prevTfBtn = document.getElementById('prevTf');
+        const nextTfBtn = document.getElementById('nextTf');
+        const tfCounter = document.getElementById('tfCounter');
+        const viewAllTfBtn = document.getElementById('viewAllTfBtn');
+        const allTfContainer = document.getElementById('allTfContainer');
+        let currentTfIndex = 0;
+        let tfAnswers = new Array(trueFalseData.length).fill(null); // Store user answers
+
+         function displayTf(index, containerIdPrefix = 'single') {
+            if (index < 0 || index >= trueFalseData.length) return;
+
+            const tf = trueFalseData[index];
+            let questionTextEl, optionsContainerEl, explanationEl;
+
+            // Target the correct elements based on view mode
+            if (containerIdPrefix === 'single') {
+                questionTextEl = singleTfQuestionText;
+                optionsContainerEl = singleTfOptionsContainer;
+                explanationEl = singleTfExplanation;
+            } else {
+                 // For 'view all', target dynamically created elements
+                questionTextEl = document.getElementById(`${containerIdPrefix}TfQuestionText${index}`);
+                optionsContainerEl = document.getElementById(`${containerIdPrefix}TfOptions${index}`);
+                explanationEl = document.getElementById(`${containerIdPrefix}TfExplanation${index}`);
+            }
+
+             if (!questionTextEl || !optionsContainerEl || !explanationEl) {
+                 console.error(`Elements not found for T/F index ${index} with prefix ${containerIdPrefix}`);
+                 return; // Element not found
+             }
+
+             questionTextEl.textContent = tf.question;
+             explanationEl.textContent = '';
+             explanationEl.style.display = 'none';
+
+             const buttons = optionsContainerEl.querySelectorAll('button');
+             buttons.forEach(button => {
+                 // Clear previous feedback and enable
+                 button.classList.remove('correct', 'incorrect', 'correct-reveal');
+                 button.disabled = false;
+
+                 // Clone and replace to remove old listeners, then add new one if needed
+                 const newButton = button.cloneNode(true);
+                 button.parentNode.replaceChild(newButton, button);
+
+                 if (tfAnswers[index] === null) { // Only add listener if not answered
+                     newButton.addEventListener('click', () => {
+                         const selectedAnswer = newButton.dataset.answer === 'true';
+                         handleTfAnswer(index, selectedAnswer, containerIdPrefix);
+                     });
+                 }
+             });
+
+             // Update navigation/state only for single view
+             if (containerIdPrefix === 'single') {
+                 tfCounter.textContent = `שאלה ${index + 1} / ${trueFalseData.length}`;
+                 prevTfBtn.disabled = index === 0;
+                 nextTfBtn.disabled = index === trueFalseData.length - 1;
+             }
+
+             // Re-apply feedback styles if the question has already been answered
+            if (tfAnswers[index] !== null) {
+                showTfFeedback(index, tfAnswers[index], containerIdPrefix);
+            }
+        }
+
+        function handleTfAnswer(questionIndex, selectedAnswer, containerIdPrefix = 'single') {
+             if (tfAnswers[questionIndex] !== null) return; // Already answered
+
+             tfAnswers[questionIndex] = selectedAnswer;
+
+             // Show feedback in the view where the answer was clicked
+             showTfFeedback(questionIndex, selectedAnswer, containerIdPrefix);
+
+             // Update the other view as well if it exists and is visible
+             if (containerIdPrefix === 'single' && allTfContainer.style.display !== 'none') {
+                // Answered in single view, update corresponding block in all view
+                 showTfFeedback(questionIndex, selectedAnswer, `all${questionIndex}`);
+             } else if (containerIdPrefix !== 'single' && questionIndex === currentTfIndex) {
+                 // Answered in all view, update the single view if it's showing this question
+                 showTfFeedback(questionIndex, selectedAnswer, 'single');
+             }
+        }
+
+         function showTfFeedback(questionIndex, selectedAnswer, containerIdPrefix) {
+            const tf = trueFalseData[questionIndex];
+            let optionsContainerEl, explanationEl;
+
+             // Target the correct elements based on view mode
+            if (containerIdPrefix === 'single') {
+                optionsContainerEl = singleTfOptionsContainer;
+                explanationEl = singleTfExplanation;
+            } else {
+                optionsContainerEl = document.getElementById(`${containerIdPrefix}TfOptions${questionIndex}`);
+                explanationEl = document.getElementById(`${containerIdPrefix}TfExplanation${questionIndex}`);
+            }
+
+             if (!optionsContainerEl || !explanationEl) {
+                 console.error(`Feedback elements not found for T/F index ${questionIndex} with prefix ${containerIdPrefix}`);
+                 return; // Elements not found
+             }
+
+             const buttons = optionsContainerEl.querySelectorAll('button');
+
+             buttons.forEach(button => {
+                 button.disabled = true; // Disable buttons after answer
+                 const buttonAnswer = button.dataset.answer === 'true';
+
+                 // Clear previous feedback classes
+                 button.classList.remove('correct', 'incorrect', 'correct-reveal');
+
+                 if (buttonAnswer === tf.isTrue) { // This is the correct answer button
+                     if (selectedAnswer === tf.isTrue) {
+                         button.classList.add('correct'); // Correct answer was selected
+                     } else {
+                         button.classList.add('correct-reveal'); // Highlight correct if missed
+                     }
+                 } else if (buttonAnswer === selectedAnswer) { // This is the incorrect button that was selected
+                     button.classList.add('incorrect');
+                 }
+             });
+
+             explanationEl.textContent = `הסבר: ${tf.explanation}`;
+             explanationEl.classList.add('visible');
+             explanationEl.style.display = 'block'; // Ensure visibility
+         }
+
+
+        prevTfBtn.addEventListener('click', () => {
+            if (currentTfIndex > 0) {
+                currentTfIndex--;
+                displayTf(currentTfIndex, 'single');
+            }
+        });
+
+        nextTfBtn.addEventListener('click', () => {
+            if (currentTfIndex < trueFalseData.length - 1) {
+                currentTfIndex++;
+                displayTf(currentTfIndex, 'single');
+            }
+        });
+
+         viewAllTfBtn.addEventListener('click', () => {
+             if (allTfContainer.style.display === 'none') {
+                 allTfContainer.innerHTML = '<h3>כל שאלות הנכון/לא נכון:</h3>'; // Clear previous
+                 trueFalseData.forEach((tfItem, index) => { // Use tfItem to avoid conflict
+                     const block = document.createElement('div');
+                     block.className = 'question-block';
+                      // Use the 'all' prefix for IDs in the view all section
+                     block.innerHTML = `
+                         <div class="tf-question-text" id="all${index}TfQuestionText${index}"></div>
+                         <div class="tf-options" id="all${index}TfOptions${index}">
+                             <button data-answer="true">נכון</button>
+                             <button data-answer="false">לא נכון</button>
+                         </div>
+                         <div class="explanation" id="all${index}TfExplanation${index}"></div>
+                     `;
+                     allTfContainer.appendChild(block);
+                      // Display each question using the 'all' prefix
+                     displayTf(index, `all${index}`);
+                 });
+                 allTfContainer.style.display = 'block';
+                 viewAllTfBtn.textContent = 'הסתר את כל השאלות';
+             } else {
+                 allTfContainer.style.display = 'none';
+                 viewAllTfBtn.textContent = 'הצג את כל השאלות';
+             }
+         });
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        // Initial display for MCQ using the fixed single-view elements
+        displayMcq(currentMcqIndex, 'single');
+        // Initial display for T/F using the fixed single-view elements
+        displayTf(currentTfIndex, 'single');
+
+    </script>
+</body>
+</html>

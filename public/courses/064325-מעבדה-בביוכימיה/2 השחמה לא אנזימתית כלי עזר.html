@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללמידה: גורמים המשפיעים על השחמה לא אנזימטית</title>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams' 
+            },
+            chtml: {
+                matchFontHeight: true 
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        /* General page styling */
+        body {
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            font-family: 'Arial', sans-serif; /* Standard font */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Main container for content */
+        .container {
+            width: 90%;
+            max-width: 1000px; /* Max width for very large screens */
+            margin: 20px auto; /* Center content */
+            padding: 20px;
+            background-color: #444; /* Slightly lighter than body for content area distinction */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Headings */
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents */
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-top: 30px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; }
+        h3 { font-size: 1.2em; }
+
+        /* General content styling */
+        p {
+            margin-bottom: 15px; /* Vertical spacing */
+            text-align: justify; /* Justify text for better readability in Hebrew */
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7; /* Blue accents/buttons */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2a7cb0; /* Darker blue on hover */
+        }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Navigation elements styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        /* Counters for questions/cards */
+        .counter {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* Study Cards Styling */
+        .study-card-container {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px; /* Vertical spacing */
+            perspective: 1000px; /* For 3D flip effect */
+        }
+        .study-card {
+            width: 100%;
+            min-height: 200px; /* Ensure card has some height */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            display: flex; /* Using flex to center content */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            text-align: center; /* Center text */
+        }
+        .study-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .study-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide the back of the face during flip */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box; /* Include padding in width/height */
+            border-radius: 8px; /* Match container */
+        }
+        .study-card-front {
+            background-color: #777;
+            color: #E0E0E0;
+        }
+        .study-card-back {
+            background-color: #888;
+            color: #E0E0E0;
+            transform: rotateY(180deg);
+        }
+        .study-card-term {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        .study-card-definition {
+            font-size: 1.1em;
+        }
+
+        /* MCQ and True/False Question Styling */
+        .question-item {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px; /* Vertical spacing */
+        }
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        .options-container button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: right; /* Align text to the right for Hebrew options */
+            background-color: #587894; /* A slightly different blue for options */
+        }
+        .options-container button:hover:not(:disabled) {
+            background-color: #3D90D7;
+        }
+        .options-container button.correct {
+            background-color: #4CAF50 !important; /* Green for correct */
+            color: white !important;
+        }
+        .options-container button.incorrect {
+            background-color: #F44336 !important; /* Red for incorrect */
+            color: white !important;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            background-color: #4CAF50; /* Green correct */
+            color: white;
+        }
+        .feedback.incorrect {
+            background-color: #F44336; /* Red incorrect */
+            color: white;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #555;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        /* "View All" sections */
+        .view-all-container {
+            margin-top: 20px;
+            border-top: 1px solid #3D90D7;
+            padding-top: 20px;
+        }
+
+        /* Specific styles for math content if needed, MathJax usually handles its own */
+        .mathjax-formula { 
+            /* MathJax outputs LTR math, so ensure it's not forced RTL by parent */
+            direction: ltr; 
+            display: inline-block; /* Or block for display math, helps with directionality */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: גורמים המשפיעים על השחמה לא אנזימטית</h1>
+        <p>מסמך זה מבוסס על חומר הקורס מהטכניון, הפקולטה להנדסת-מזון וביוטכנולוגיה, מעבדה בביוכימיה וכימיה של מזון.</p>
+
+        <!-- Theory Section -->
+        <section id="theory">
+            <h2>חומר תיאורטי</h2>
+            <div id="theory-content">
+                <!-- Theory content will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Study Cards Section -->
+        <section id="study-cards">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="study-card-container">
+                <div id="study-card" class="study-card" onclick="flipCard()">
+                    <div class="study-card-face study-card-front">
+                        <p id="current-card-front" class="study-card-term"></p>
+                    </div>
+                    <div class="study-card-face study-card-back">
+                        <p id="current-card-back" class="study-card-definition"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button id="prev-card-button" onclick="prevCard()">הקודם</button>
+                <span id="card-counter" class="counter"></span>
+                <button id="next-card-button" onclick="nextCard()">הבא</button>
+            </div>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq">
+            <h2>שאלות רב-ברירה (MCQ)</h2>
+            <div id="mcq-single-view">
+                <div class="question-item">
+                    <p id="mcq-question-text" class="question-text"></p>
+                    <div id="mcq-options-container" class="options-container">
+                        <!-- MCQ options will be populated here -->
+                    </div>
+                    <div id="mcq-feedback" class="feedback" style="display:none;"></div>
+                    <div id="mcq-explanation" class="explanation" style="display:none;"></div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-mcq-button" onclick="prevMcq()">הקודם</button>
+                    <span id="mcq-counter" class="counter"></span>
+                    <button id="next-mcq-button" onclick="nextMcq()">הבא</button>
+                </div>
+            </div>
+            <button onclick="toggleViewAllMcqs()" id="view-all-mcqs-button">הצג/הסתר את כל השאלות</button>
+            <div id="mcq-view-all-container" class="view-all-container" style="display:none;">
+                <!-- All MCQs will be populated here when "View All" is clicked -->
+            </div>
+        </section>
+
+        <!-- True/False Questions Section -->
+        <section id="tf">
+            <h2>שאלות נכון/לא נכון</h2>
+            <div id="tf-single-view">
+                 <div class="question-item">
+                    <p id="tf-question-text" class="question-text"></p>
+                    <div id="tf-options-container" class="options-container">
+                        <!-- True/False options will be populated here -->
+                    </div>
+                    <div id="tf-feedback" class="feedback" style="display:none;"></div>
+                    <div id="tf-explanation" class="explanation" style="display:none;"></div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-tf-button" onclick="prevTf()">הקודם</button>
+                    <span id="tf-counter" class="counter"></span>
+                    <button id="next-tf-button" onclick="nextTf()">הבא</button>
+                </div>
+            </div>
+            <button onclick="toggleViewAllTfs()" id="view-all-tfs-button">הצג/הסתר את כל השאלות</button>
+            <div id="tf-view-all-container" class="view-all-container" style="display:none;">
+                <!-- All T/F questions will be populated here when "View All" is clicked -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- DATA ---
+
+        // Theory Content
+        const theoryContent = `
+            <p>תהליכי השחמה הינם תופעה נפוצה המתרחשת במהלך עיבוד ואחסון של מוצרי מזון ורכיביהם. תגובות אלו יכולות להיות מזורזות על ידי פעילות אנזימטית או על ידי חשיפה לחום.</p>
+            <p>במסגרת לימוד זה, ההתמקדות היא בהשחמה שאינה אנזימטית, ובפרט בריאקצית Maillard. ריאקציה זו נחקרת במערכות מודל המורכבות מסוכרים ומחומצות אמינו.</p>
+            <p>השלב הראשוני והמכריע בריאקצית Maillard כולל יצירת קשר כימי בין קבוצות קרבוניליות, המצויות בסוכרים (בצורתם הפתוחה), לבין קבוצות אמיניות, המצויות בחומצות אמינו, פפטידים וחלבונים. קבוצה קרבונילית היא קבוצה פונקציונלית מהצורה $C=O$.</p>
+            <p>בשלבים מתקדמים יותר של התגובה, נוצרים פולימרים מורכבים וצבעוניים הנקראים מלנואידים. למלנואידים משקל מולקולרי גבוה, והם האחראים העיקריים להקניית הצבע הכהה (חום עד שחור) האופייני לתערובת שעברה את התגובה.</p>
+            <p>קצב ההתקדמות של ריאקצית Maillard, וכתוצאה מכך מידת ההשחמה, מושפע ממספר גורמים מרכזיים:</p>
+            <ul>
+                <li><strong>טמפרטורה:</strong> טמפרטורות גבוהות מאיצות משמעותית את קצב התגובה.</li>
+                <li><strong>ריכוז הסוכר:</strong> ריכוז גבוה יותר של סוכר מחזר יכול להוביל להשחמה אינטנסיבית יותר, עד לגבול מסוים.</li>
+                <li><strong>סוג הסוכר:</strong> סוכרים שונים מגיבים בקצבים שונים. סוכרים מחזרים (כגון גלוקוז, פרוקטוז, לקטוז) מגיבים מהר יותר מסוכרים שאינם מחזרים (כגון סוכרוז) אשר דורשים תחילה הידרוליזה.</li>
+                <li><strong>רמת החומציות ($pH$):</strong> ריאקצית Maillard מועדפת לרוב בסביבה בסיסית או ניטרלית. $pH$ נמוך (סביבה חומצית) יכול לעכב את התגובה. ערך $pH$ אופטימלי תלוי במערכת הספציפית.</li>
+            </ul>
+            <p>מטרת הניסוי המתואר במקור היא לבחון באופן כמותי כיצד סוג הסוכר וריכוזו משפיעים על היקף ההשחמה הלא אנזימטית במערכת מבוקרת.</p>
+        `;
+
+        // Study Cards Data
+        const studyCardsData = [
+            { term: "השחמה לא אנזימטית", definition: "תהליך כימי המתרחש במזון, בעיקר בנוכחות סוכרים וחומצות אמינו או חלבונים, המוביל ליצירת צבע חום ושינויים בטעם ובארומה, ללא מעורבות של אנזימים. הדוגמה הקלאסית היא ריאקצית Maillard." },
+            { term: "ריאקצית Maillard", definition: "סדרה מורכבת של תגובות כימיות בין חומצות אמינו לסוכרים מחזרים, המתרחשת בחום. היא גורמת להשחמה וליצירת מגוון רחב של תרכובות טעם וארומה במזונות רבים." },
+            { term: "קבוצה קרבונילית", definition: "קבוצה פונקציונלית המורכבת מאטום פחמן הקשור בקשר כפול לאטום חמצן ($C=O$). קיימת בסוכרים מחזרים (בצורתם הפתוחה) והיא חיונית לתחילת ריאקצית Maillard." },
+            { term: "קבוצה אמינית", definition: "קבוצה פונקציונלית המכילה אטום חנקן הקשור לאטומי מימן או פחמן (למשל, $-NH_2$). קיימת בחומצות אמינו, פפטידים וחלבונים, ומשתתפת בריאקצית Maillard." },
+            { term: "מלנואידים", definition: "פולימרים הטרוגניים בעלי משקל מולקולרי גבוה וצבע חום-שחור, הנוצרים בשלבים המאוחרים של ריאקצית Maillard. הם תורמים לצבע ולעיתים לטעם של מזונות שעברו השחמה." },
+            { term: "טמפרטורה (בהקשר להשחמה)", definition: "גורם מרכזי המשפיע על קצב ריאקצית Maillard. טמפרטורות גבוהות יותר מאיצות את התגובה באופן משמעותי. בניסוי משתמשים באמבט מים רותחים ($100^{\\circ}C$)." },
+            { term: "ריכוז סוכר", definition: "כמות הסוכר הזמינה לתגובה. ריכוז גבוה יותר של סוכר מחזר יכול להוביל להשחמה אינטנסיבית יותר, עד לנקודה מסוימת. בניסוי נבדקים ריכוזים שונים (למשל, $0.25 \\text{ M}$, $0.125 \\text{ M}$, $0.0625 \\text{ M}$)." },
+            { term: "סוג סוכר", definition: "מבנה הסוכר משפיע על נטייתו להשתתף בריאקצית Maillard. סוכרים מחזרים (כמו פרוקטוז ולקטוז) מגיבים ישירות. סוכרוז (סוכר שאינו מחזר) צריך לעבור הידרוליזה לגלוקוז ופרוקטוז כדי להגיב ביעילות." },
+            { term: "$pH$ (בהקשר להשחמה)", definition: "רמת החומציות של הסביבה. ריאקצית Maillard מועדפת בתנאים בסיסיים או ניטרליים. $pH$ נמוך (חומצי) יכול לעכב את התגובה. בניסוי משתמשים בבופר $pH=8$." },
+            { term: "בופר סורנסון $pH=8$", definition: "תמיסת בופר (Sorensen buffer) המשמשת לשמירה על רמת $pH$ קבועה של 8 במערכת התגובה, תנאי המעודד את ריאקצית Maillard." },
+            { term: "גליצין $0.1 \\text{ M}$", definition: "חומצת אמינו פשוטה המשמשת בניסוי כמקור לקבוצות אמיניות לצורך ריאקצית Maillard עם הסוכרים השונים. ריכוזה בתמיסה הוא $0.1 \\text{ Molar}$." },
+            { term: "פרוקטוז", definition: "חד-סוכר (מונוסכריד) מסוג קטוהקסוז. סוכר מחזר המשתתף ביעילות בריאקצית Maillard. בניסוי נבדק בריכוז התחלתי של $0.25 \\text{ M}$." },
+            { term: "לקטוז", definition: "דו-סוכר (דיסכריד) המורכב מגלוקוז וגלקטוז. סוכר מחזר המשתתף בריאקצית Maillard. בניסוי נבדק בריכוז התחלתי של $0.25 \\text{ M}$." },
+            { term: "סוכרוז", definition: "דו-סוכר (דיסכריד) המורכב מגלוקוז ופרוקטוז. סוכר שאינו מחזר בתנאים רגילים, ולכן צפוי להראות פחות השחמה או השחמה איטית יותר בהשוואה לסוכרים מחזרים, אלא אם עובר הידרוליזה בתנאי הניסוי. בניסוי נבדק בריכוז התחלתי של $0.25 \\text{ M}$." },
+            { term: "אמבט מים רותחים", definition: "אמצעי חימום המספק טמפרטורה קבועה של $100^{\\circ}C$ (מעלות צלזיוס) לצורך האצת ריאקצית ההשחמה במבחנות הניסוי." },
+            { term: "מהלך העבודה - מיהול סוכרים", definition: "שלב הכנה בו מכינים תמיסות סוכר (פרוקטוז, לקטוז, סוכרוז) בריכוזים נמוכים יותר (למשל $0.125 \\text{ M}, 0.0625 \\text{ M}$) מהתמיסה המקורית ($0.25 \\text{ M}$) על ידי מיהול בבופר סורנסון $pH=8$ לנפח סופי של $5 \\text{ mL}$." },
+            { term: "הכנת מבחנות התגובה", definition: "לכל מבחנה מוסיפים $2.5 \\text{ mL}$ תמיסת גליצין, ולאחר מכן $2.5 \\text{ mL}$ מתמיסת הסוכר המתאימה (בריכוז הרצוי). מערבבים היטב באמצעות וורטקס." },
+            { term: "מבחנת בלאנק (Blank)", definition: "מבחנת ביקורת המכילה את כל רכיבי התגובה פרט לאחד מהמגיבים העיקריים הגורמים לצבע. בניסוי זה, היא מכילה $2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ בופר סורנסון $pH=8$ (במקום תמיסת סוכר). משמשת לאיפוס הספקטרופוטומטר." },
+            { term: "וורטקס (Vortex)", definition: "מכשיר מעבדה המשמש לערבוב יסודי של תמיסות במבחנות על ידי יצירת מערבולת חזקה." },
+            { term: "חימום ומעקב", definition: "המבחנות מונחות באמבט מים רותחים ($100^{\\circ}C$) למשך 20 דקות. במהלך זמן זה, עוקבים אחר סדר התפתחות הצבע במבחנות השונות." },
+            { term: "קירור וקריאה", definition: "לאחר החימום, המבחנות מקוררות על השולחן למשך 10 דקות. לאחר מכן, נמדדת הבליעה (absorbance) שלהן בספקטרופוטומטר באורך גל של $420 \\text{ nm}$." },
+            { term: "אורך גל $420 \\text{ nm}$", definition: "אורך הגל של האור בו נמדדת הבליעה של התמיסות. אורך גל זה מתאים למדידת הצבע החום-צהוב הנוצר כתוצאה מריאקצית Maillard." },
+            { term: "MSDS", definition: "Material Safety Data Sheet (גיליון בטיחות חומרים). מסמך המספק מידע מקיף על חומר כימי מסוים, כולל סיכונים, אמצעי זהירות, הוראות עזרה ראשונה וטיפול בשפך. חובה לקרוא אותו לפני השימוש בחומרים במעבדה." },
+            { term: "השוואה כמותית של השחמה", definition: "מדידת הבליעה באורך גל של $420 \\text{ nm}$ מאפשרת להשוות באופן כמותי את מידת ההשחמה בין התמיסות השונות (סוגי סוכר וריכוזים שונים). בליעה גבוהה יותר מצביעה על השחמה רבה יותר." },
+            { term: "סוכר מחזר", definition: "סוכר בעל קבוצת אלדהיד או קטון חופשית (או שיכול ליצור כזו בשיווי משקל בתמיסה), המסוגל לחזר חומרים אחרים. סוכרים אלו, כמו גלוקוז, פרוקטוז ולקטוז, הם המשתתפים העיקריים בריאקצית Maillard." }
+        ];
+
+        // MCQ Data
+        const mcqData = [
+            // Questions about general principles
+            { question: "מהי ריאקצית Maillard בעיקרה?", options: ["תגובה אנזימטית הגורמת להשחמת פירות", "תגובה בין שומנים לחלבונים בטמפרטורה גבוהה היוצרת טעמים", "סדרת תגובות בין חומצות אמינו לסוכרים מחזרים הגורמת להשחמה ויצירת ארומות", "תהליך פירוק סוכרוז לחומצה לקטית בנוכחות חיידקים מסוימים"], answer: 2, explanation: "ריאקצית Maillard היא תגובה כימית מורכבת בין קבוצות אמינו (מחומצות אמינו או חלבונים) לקבוצות קרבוניל של סוכרים מחזרים, המובילה להשחמה וליצירת תרכובות טעם וארומה." },
+            { question: "אילו שני סוגי קבוצות פונקציונליות חיוניים להתחלת ריאקצית Maillard?", options: ["קבוצת הידרוקסיל וקבוצת מתיל", "קבוצת קרבוקסיל וקבוצת פוספט", "קבוצת קרבוניל וקבוצת אמינו", "קבוצת סולפידריל וקבוצת אתר"], answer: 2, explanation: "השלב ההתחלתי של ריאקצית Maillard הוא קישור בין קבוצה קרבונילית (בסוכר) לקבוצה אמינית (בחומצת אמינו)." },
+            { question: "מהם מלנואידים הנוצרים בריאקצית Maillard?", options: ["אנזימים המפרקים סוכרים מורכבים ליחידות פשוטות יותר", "סוכרים פשוטים בעלי טעם מתוק במיוחד הנוצרים במהלך התגובה", "פולימרים צבעוניים בעלי משקל מולקולרי גבוה התורמים לצבע הכהה", "חומצות אורגניות קצרות שרשרת המשפיעות על חומציות המזון"], answer: 2, explanation: "מלנואידים הם תוצרים מאוחרים של ריאקצית Maillard, והם פולימרים הטרוגניים, חומים-שחורים, בעלי משקל מולקולרי גבוה." },
+            { question: "כיצד משפיעה הטמפרטורה על קצב ריאקצית Maillard?", options: ["הטמפרטורה אינה משפיעה כלל על קצב התגובה", "טמפרטורות נמוכות יותר מאיצות את התגובה באופן משמעותי", "טמפרטורות גבוהות יותר מאיצות את התגובה באופן משמעותי", "ההשפעה תלויה בסוג החומצה האמינית בלבד ולא בטמפרטורה"], answer: 2, explanation: "ככלל, עלייה בטמפרטורה מאיצה את קצב ריאקצית Maillard, כפי שקורה ברוב התגובות הכימיות." },
+            { question: "מהי ההשפעה הכללית של רמת ה-$pH$ על ריאקצית Maillard?", options: ["התגובה מועדפת בתנאי $pH$ חומציים מאוד (מתחת ל-3)", "התגובה אינה תלויה כלל ברמת ה-$pH$ של המערכת", "התגובה מועדפת בדרך כלל בתנאים בסיסיים או ניטרליים", "התגובה מתרחשת באופן אופטימלי רק ב-$pH$ ניטרלי לחלוטין (7.0)"], answer: 2, explanation: "ריאקצית Maillard מועדפת בדרך כלל בערכי $pH$ ניטרליים עד בסיסיים. סביבה חומצית מאטה את התגובה. בניסוי משתמשים ב-$pH=8$." },
+            // Questions about the specific experiment materials
+            { question: "באיזה $pH$ מתבצע הניסוי לבדיקת השפעת גורמים על השחמה לא אנזימטית?", options: ["$pH=5$", "$pH=7$", "$pH=8$", "$pH=10$, על מנת להאיץ את התהליך כמה שיותר"], answer: 2, explanation: "הניסוי משתמש בבופר סורנסון $pH=8$." },
+            { question: "מהו ריכוז תמיסת הגליצין המשמשת בניסוי?", options: ["$0.05 \\text{ M}$", "$0.1 \\text{ M}$", "$0.25 \\text{ M}$", "$1.0 \\text{ M}$ מכיוון שגליצין הוא המגיב העיקרי"], answer: 1, explanation: "בניסוי משתמשים בתמיסת גליצין בריכוז $0.1 \\text{ M}$." },
+            { question: "איזה מהסוכרים הבאים אינו סוכר מחזר ולכן צפוי להגיב לאט יותר בריאקצית Maillard ללא הידרוליזה?", options: ["פרוקטוז, שהוא קטוז אך עדיין מחזר", "לקטוז, שהוא דו-סוכר מחזר", "סוכרוז, המורכב מגלוקוז ופרוקטוז אך קשרם חוסם את יכולת החיזור", "גלוקוז, שהוא אלדוהקסוז קלאסי ומחזר מאוד"], answer: 2, explanation: "סוכרוז הוא דו-סוכר שאינו מחזר מכיוון שהקשר הגליקוזידי בין גלוקוז לפרוקטוז מערב את הפחמנים האנומריים של שניהם. פרוקטוז ולקטוז הם סוכרים מחזרים." },
+            { question: "מהו ריכוזן ההתחלתי של תמיסות האם של פרוקטוז, לקטוז וסוכרוז לפני המיהולים?", options: ["$0.1 \\text{ M}$ כל אחת", "$0.0625 \\text{ M}$ כל אחת", "$0.25 \\text{ M}$ כל אחת", "$0.5 \\text{ M}$ כל אחת, כדי לאפשר מגוון רחב של מיהולים"], answer: 2, explanation: "תמיסות האם של הסוכרים (פרוקטוז, לקטוז, סוכרוז) סופקו בריכוז של $0.25 \\text{ M}$." },
+            { question: "מה תפקידו של בופר סורנסון בניסוי ההשחמה?", options: ["לשמש כמקור נוסף לקבוצות אמיניות בתגובה", "לשמור על $pH$ קבוע במערכת התגובה", "להאיץ את התגובה על ידי הורדת טמפרטורת הרתיחה של המים", "לשמש כאינדיקטור צבע למידת ההשחמה שהתרחשה"], answer: 1, explanation: "בופר סורנסון משמש לשמירה על $pH$ יציב ($pH=8$) במערכת התגובה, מאחר וקצב התגובה תלוי ב-$pH$." },
+            // Questions about the procedure
+            { question: "מהו הנפח הסופי אליו מדוללות תמיסות הסוכרים בריכוזים $0.125 \\text{ M}$ ו-$0.0625 \\text{ M}$?", options: ["$1 \\text{ mL}$", "$2.5 \\text{ mL}$", "$5 \\text{ mL}$", "$10 \\text{ mL}$ על מנת שיהיה מספיק חומר לכל הבדיקות"], answer: 2, explanation: "כל אחד מהסוכרים מדולל לקבלת תמיסות בריכוזים $0.125 \\text{ M}$ ו-$0.0625 \\text{ M}$ בנפח סופי של $5 \\text{ mL}$." },
+            { question: "כמה מבחנות זכוכית חד פעמיות יש להכין עבור כלל הדגימות והביקורת בניסוי?", options: ["3 מבחנות, אחת לכל סוג סוכר בריכוז הגבוה ביותר", "6 מבחנות, שתיים לכל סוג סוכר עבור הריכוזים המהולים", "9 מבחנות, אחת לכל שילוב של סוכר וריכוז שנבדק", "10 מבחנות, כולל 9 דגימות סוכר-גליצין ומבחנת בלאנק אחת"], answer: 3, explanation: "לפי ההנחיות, יש להכין 10 מבחנות זכוכית: 3 ריכוזים עבור כל אחד מ-3 הסוכרים (סהכ 9) ועוד מבחנת בלאנק אחת." },
+            { question: "מהו הנפח של תמיסת גליצין ומהו הנפח של תמיסת סוכר המוסיפים לכל מבחנת תגובה?", options: ["$1 \\text{ mL}$ גליצין ו-$4 \\text{ mL}$ סוכר", "$2.5 \\text{ mL}$ גליצין ו-$2.5 \\text{ mL}$ סוכר", "$5 \\text{ mL}$ גליצין ו-$5 \\text{ mL}$ סוכר", "$2 \\text{ mL}$ גליצין ו-$3 \\text{ mL}$ סוכר, ליצירת יחס מולי אופטימלי"], answer: 1, explanation: "לכל מבחנה מוסיפים $2.5 \\text{ mL}$ של תמיסת גליצין ו-$2.5 \\text{ mL}$ של תמיסת הסוכר המתאימה." },
+            { question: "מה מכילה מבחנת הבלאנק (blank) בניסוי זה?", options: ["מים מזוקקים בלבד, לאיפוס כללי של המכשיר", "$2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ מים מזוקקים", "$2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ בופר סורנסון $pH=8$", "$2.5 \\text{ mL}$ תמיסת פרוקטוז בריכוז הגבוה ביותר ו-$2.5 \\text{ mL}$ בופר סורנסון"], answer: 2, explanation: "מבחנת הבלאנק מכילה $2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ בופר סורנסון $pH=8$, ללא סוכר. היא משמשת לאיפוס הספקטרופוטומטר." },
+            { question: "באיזו טמפרטורה ולמשך כמה זמן מחממים את המבחנות באמבט המים?", options: ["$60^{\\circ}C$ למשך 30 דקות", "$80^{\\circ}C$ למשך 15 דקות", "$100^{\\circ}C$ למשך 20 דקות", "$120^{\\circ}C$ למשך 10 דקות באוטוקלאב"], answer: 2, explanation: "המבחנות מונחות באמבט מים רותחים ($100^{\\circ}C$) למשך 20 דקות." },
+            { question: "מהי הפעולה שיש לבצע מיד לאחר הוצאת המבחנות מאמבט המים הרותחים ולפני קריאת הבליעה?", options: ["לערבב שוב בוורטקס למשך דקה שלמה", "להוסיף $1 \\text{ mL}$ של חומצה חזקה לעצירת התגובה מיידית", "לקרר על השולחן למשך 10 דקות", "לחמם אותן בתנור יבש ב $50^{\\circ}C$ לייצוב הצבע"], answer: 2, explanation: "לאחר החימום באמבט, יש לקרר את המבחנות על השולחן למשך 10 דקות לפני מדידת הבליעה." },
+            { question: "באיזה אורך גל נמדדת הבליעה של התמיסות בספקטרופוטומטר?", options: ["$280 \\text{ nm}$ (אופייני לחלבונים)", "$340 \\text{ nm}$ (אופייני ל-NADH)", "$420 \\text{ nm}$ (אופייני למלנואידים)", "$600 \\text{ nm}$ (אופייני למדידת עכירות תרביות חיידקים)"], answer: 2, explanation: "הבליעה נמדדת באורך גל של $420 \\text{ nm}$, המתאים למדידת הצבע החום-צהוב של תוצרי ההשחמה." },
+            { question: "מהי מטרת קריאת דפי MSDS של החומרים לפני המעבדה?", options: ["ללמוד את המבנה הכימי המדויק של כל חומר ולהבין את תכונותיו הפיזיקליות", "להכיר את הסיכונים הכרוכים בשימוש בחומרים, אמצעי הזהירות הנדרשים ודרכי טיפול במקרה חירום", "למצוא מתכונים אלטרנטיביים לביצוע הניסוי עם חומרים פחות מסוכנים ויותר זמינים", "לדעת את העלות הכספית של כל חומר כדי לחשב את תקציב הניסוי בצורה מדויקת"], answer: 1, explanation: "קריאת דפי MSDS (Material Safety Data Sheets) חיונית להבנת הסיכונים, אמצעי המיגון והטיפול במקרה של תקלה או חשיפה לחומרים המשמשים במעבדה." },
+            { question: "איזו פעולה מתבצעת באמצעות מכשיר הוורטקס (Vortex) במהלך הניסוי?", options: ["חימום מדויק של התמיסות לטמפרטורה הרצויה", "מדידת רמת ה-$pH$ של התמיסות השונות", "ערבוב יסודי של התמיסות במבחנות", "הפרדת מוצקים מנוזלים על ידי צנטריפוגציה מהירה"], answer: 2, explanation: "וורטקס משמש לערבוב יסודי של התמיסות במבחנות על ידי יצירת מערבולת." },
+            { question: "מה מייצגת בליעה גבוהה יותר הנמדדת באורך גל $420 \\text{ nm}$?", options: ["ריכוז נמוך יותר של סוכר מחזר בתמיסה המקורית", "מידת השחמה נמוכה יותר כתוצאה מהתגובה", "מידת השחמה גבוהה יותר כתוצאה מהתגובה", "יעילות נמוכה יותר של הבופר בשמירה על $pH$ קבוע"], answer: 2, explanation: "בליעה גבוהה יותר באורך גל $420 \\text{ nm}$ מצביעה על היווצרות רבה יותר של מלנואידים צבעוניים, כלומר מידת השחמה גבוהה יותר." },
+            { question: "מדוע חשוב לקרר את המבחנות לפני קריאת הבליעה?", options: ["קירור עוצר לחלוטין את התגובה ומייצב את הצבע הנוצר", "טמפרטורה גבוהה עלולה לפגוע ברכיבים האופטיים של הספקטרופוטומטר", "הבליעה של מלנואידים תלוית טמפרטורה ויש למדוד בטמפרטורה אחידה ומוגדרת", "כל התשובות הנל נכונות במידה זו או אחרת"], answer: 3, explanation: "קירור המבחנות עוזר לעצור את התגובה, מונע נזק פוטנציאלי למכשיר, ומבטיח שהמדידות יתבצעו בתנאים עקביים, שכן בליעה יכולה להיות מושפעת מטמפרטורה." },
+            { question: "מהו סדר הפעולות הנכון להכנת תמיסת פרוקטוז בריכוז $0.0625 \\text{ M}$ מהתמיסה המקורית בריכוז $0.25 \\text{ M}$?", options: ["לקיחת נפח מתמיסת האם ומיהולו פי 2 בבופר, ואז מיהול התוצאה שוב פי 2 בבופר", "ערבוב תמיסת האם עם מים ביחס 1:3 (חלק תמיסה לשלושה חלקי מים)", "לקיחת נפח מתמיסת האם ומיהולו פי 4 ישירות בבופר סורנסון", "חימום תמיסת האם לפירוק חלק מהסוכר עד להגעה לריכוז הרצוי"], answer: 2, explanation: "כדי להגיע מריכוז $0.25 \\text{ M}$ לריכוז $0.0625 \\text{ M}$ יש לבצע מיהול פי 4 ($0.25 / 0.0625 = 4$). הדבר נעשה על ידי לקיחת נפח מסוים מתמיסת האם והוספת בופר עד לנפח סופי הגדול פי 4 מהנפח ההתחלתי." },
+            { question: "כמה סוגי סוכרים שונים נבדקים בניסוי זה?", options: ["סוג אחד בלבד, פרוקטוז, בריכוזים שונים", "שני סוגים, סוכר מחזר (לקטוז) וסוכר לא מחזר (סוכרוז)", "שלושה סוגים: פרוקטוז, לקטוז וסוכרוז", "ארבעה סוגים, כולל גלוקוז כביקורת נוספת"], answer: 2, explanation: "הניסוי בודק שלושה סוגי סוכרים: פרוקטוז, לקטוז וסוכרוז." },
+            { question: "מהי מטרת השימוש בריכוזים שונים של אותו סוכר בניסוי?", options: ["לבדוק את יציבות הסוכר לאורך זמן בריכוזים שונים", "לראות אם יש ריכוז סף מינימלי להתרחשות תגובת ההשחמה", "לבחון את השפעת ריכוז הסוכר על קצב ומידת ההשחמה", "לוודא שהספקטרופוטומטר מכויל כראוי לכל טווח הריכוזים האפשרי"], answer: 2, explanation: "השימוש בריכוזים שונים של אותו סוכר מאפשר לבדוק כיצד ריכוז המגיב (הסוכר) משפיע על תוצאות התגובה (מידת ההשחמה)." },
+            { question: "מהו התפקיד העיקרי של הגליצין בניסוי ההשחמה?", options: ["לשמש כממס עבור הסוכרים השונים", "לספק את הקבוצות האמיניות הדרושות לריאקצית Maillard", "לזרז את הידרוליזת הסוכרוז לחד-סוכרים", "לשמש כחומר מחזר חזק יותר מהסוכרים עצמם"], answer: 1, explanation: "גליצין היא חומצת אמינו, והיא משמשת כמקור לקבוצות אמיניות החיוניות להתרחשות ריאקצית Maillard עם הקבוצות הקרבוניליות של הסוכרים." },
+            { question: "על פי העקרונות של ריאקצית Maillard, איזה סוכר מבין הנבדקים צפוי לגרום להשחמה הנמוכה ביותר בתנאי הניסוי (בהנחה שלא חלה הידרוליזה משמעותית)?", options: ["פרוקטוז, כי הוא קטוז", "לקטוז, כי הוא דו-סוכר", "סוכרוז, כי הוא סוכר לא מחזר", "כל הסוכרים יגרמו להשחמה זהה מכיוון שהריכוז המולרי ההתחלתי שלהם זהה"], answer: 2, explanation: "סוכרוז הוא סוכר שאינו מחזר, ולכן הוא צפוי להשתתף בריאקצית Maillard במידה פחותה יותר (או לאט יותר) מאשר פרוקטוז ולקטוז (שהם סוכרים מחזרים), אלא אם כן הוא עובר הידרוליזה לגלוקוז ופרוקטוז בתנאי הניסוי." },
+            { question: "מהי מטרת המעקב אחר סדר המגיבים במהלך 20 דקות החימום?", options: ["לזהות איזה סוכר מתחיל להשחים ראשון, מה שעשוי להעיד על מהירות תגובה גבוהה יותר", "לוודא שאמבט המים שומר על טמפרטורה אחידה לאורך כל התהליך", "לבדוק אם יש צורך להוסיף עוד גליצין למבחנות שלא מראות השחמה", "לקבוע את הזמן המדויק בו כל מבחנה מגיעה למקסימום בליעה"], answer: 0, explanation: "המעקב אחר סדר התפתחות הצבע (השחמה) במבחנות השונות במהלך החימום מאפשר לקבל הערכה איכותית לגבי מהירות התגובה היחסית של הסוכרים והריכוזים השונים." },
+            { question: "תהליך ההשחמה הנבדק בניסוי זה משופעל בעיקר על ידי:", options: ["אנזימים ספציפיים המצויים בתמיסות הסוכר", "חום מאמבט המים הרותחים", "אור חזק במעבדה", "חומרים מחמצנים המוספים לתערובת התגובה בכוונה תחילה"], answer: 1, explanation: "ריאקצית Maillard היא תגובה כימית המואצת על ידי חום. בניסוי זה, החימום באמבט מים רותחים ($100^{\\circ}C$) הוא הגורם המרכזי המניע את תהליך ההשחמה הלא אנזימטית." },
+            { question: "מהו סך כל המבחנות המוכנות עבור שלב מיהול הסוכרים (סעיף א במהלך העבודה)?", options: ["3 מבחנות, אחת לכל סוג סוכר", "6 מבחנות, שתיים לכל סוג סוכר עבור שני הריכוזים המהולים", "9 מבחנות, שלוש לכל סוג סוכר עבור כל הריכוזים כולל המקורי", "10 מבחנות, כולל הבלאנק וכל דגימות הסוכר בריכוזיהן"], answer: 1, explanation: "בסעיף א, מכינים לכל אחד משלושת הסוכרים שני ריכוזים מהולים ($0.125 \\text{ M}$ ו-$0.0625 \\text{ M}$). לכן, מדובר ב $3 \\text{ סוכרים} \\times 2 \\text{ ריכוזים מהולים} = 6$ מבחנות הכנה של תמיסות סוכר מהולות." },
+            { question: "באיזה הקשר מוזכר המונח פינוי פסולת בהוראות הניסוי?", options: ["פינוי כללי של אשפה מהמעבדה בסוף היום", "הנחיה ספציפ специфиית לפנות את המבחנות לכלי המיועד לפסולת השחמה", "הוראות לניקוי שפך של חומצות או בסיסים חזקים", "המלצה למחזר את מבחנות הזכוכית לאחר שטיפה יסודית בחומר ניקוי מתאים"], answer: 1, explanation: "בסוף הוראות הניסוי מצוין: פנה את המבחנות לכלי המיועד לפסולת השחמה. זוהי הנחיה ספציפית לטיפול בפסולת מהניסוי." }
+        ];
+
+        // True/False Data
+        const tfData = [
+            { question: "ריאקצית Maillard היא דוגמה להשחמה אנזימטית.", answer: false, explanation: "ריאקצית Maillard היא תגובה כימית של השחמה לא אנזימטית, המתרחשת בין חומצות אמינו לסוכרים מחזרים." },
+            { question: "נוכחות קבוצות קרבוניליות בסוכרים חיונית לתחילת ריאקצית Maillard.", answer: true, explanation: "השלב הראשון בריאקצית Maillard הוא תגובה בין קבוצה קרבונילית של סוכר לקבוצה אמינית." },
+            { question: "מלנואידים הם תרכובות חסרות צבע הנוצרות בשלבים המוקדמים של ריאקצית Maillard.", answer: false, explanation: "מלנואידים הם פולימרים צבעוניים (חום-שחור) בעלי משקל מולקולרי גבוה הנוצרים בשלבים המאוחרים של ריאקצית Maillard." },
+            { question: "טמפרטורה נמוכה (קרוב ל-$0^{\\circ}C$) מאיצה את ריאקצית Maillard.", answer: false, explanation: "טמפרטורות גבוהות מאיצות את ריאקצית Maillard. טמפרטורות נמוכות מאטות אותה משמעותית." },
+            { question: "בניסוי המתואר, משתמשים בבופר בעל $pH=7.0$ (ניטרלי).", answer: false, explanation: "בניסוי משתמשים בבופר סורנסון $pH=8$, שהוא בסיסי קלות." },
+            { question: "גליצין משמש בניסוי כמקור לסוכר מחזר.", answer: false, explanation: "גליצין היא חומצת אמינו ומשמשת כמקור לקבוצות אמיניות. הסוכרים (פרוקטוז, לקטוז, סוכרוז) הם מקור הקבוצות הקרבוניליות." },
+            { question: "פרוקטוז הוא סוכר שאינו מחזר.", answer: false, explanation: "פרוקטוז הוא חד-סוכר (קטוהקסוז) והוא סוכר מחזר." },
+            { question: "לקטוז הוא חד-סוכר.", answer: false, explanation: "לקטוז הוא דו-סוכר המורכב מגלוקוז וגלקטוז. הוא סוכר מחזר." },
+            { question: "סוכרוז צפוי להשחים מהר יותר מפרוקטוז באותם תנאי ריכוז וטמפרטורה.", answer: false, explanation: "סוכרוז הוא סוכר שאינו מחזר ולכן צפוי להשחים לאט יותר מפרוקטוז (סוכר מחזר), אלא אם עובר הידרוליזה." },
+            { question: "הריכוז ההתחלתי של כל תמיסות הסוכר שסופקו לניסוי הוא $0.1 \\text{ M}$.", answer: false, explanation: "הריכוז ההתחלתי של תמיסות הסוכר (פרוקטוז, לקטוז, סוכרוז) הוא $0.25 \\text{ M}$." },
+            { question: "בניסוי מכינים שני ריכוזים נוספים ($0.125 \\text{ M}$ ו-$0.0625 \\text{ M}$) לכל סוג סוכר על ידי מיהול.", answer: true, explanation: "בנוסף לריכוז המקורי ($0.25 \\text{ M}$), מכינים שני ריכוזים מהולים של $0.125 \\text{ M}$ ו-$0.0625 \\text{ M}$ לכל סוכר." },
+            { question: "נפח תמיסת הגליצין המוסף לכל מבחנה הוא $5.0 \\text{ mL}$.", answer: false, explanation: "לכל מבחנה מוסיפים $2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ תמיסת סוכר." },
+            { question: "מבחנת הבלאנק מכילה תמיסת סוכרוז בריכוז הגבוה ביותר ובופר.", answer: false, explanation: "מבחנת הבלאנק מכילה $2.5 \\text{ mL}$ תמיסת גליצין ו-$2.5 \\text{ mL}$ בופר סורנסון ($pH=8$), ללא סוכר." },
+            { question: "חימום המבחנות מתבצע באמבט מים בטמפרטורה של $80^{\\circ}C$.", answer: false, explanation: "החימום מתבצע באמבט מים רותחים, כלומר $100^{\\circ}C$." },
+            { question: "משך החימום של המבחנות באמבט המים הוא 10 דקות.", answer: false, explanation: "משך החימום הוא 20 דקות." },
+            { question: "לאחר החימום, יש לקרר את המבחנות לפני קריאת הבליעה.", answer: true, explanation: "לאחר החימום, המבחנות מקוררות על השולחן למשך 10 דקות לפני מדידת הבליעה." },
+            { question: "קריאת הבליעה מתבצעת באורך גל של $540 \\text{ nm}$.", answer: false, explanation: "קריאת הבליעה מתבצעת באורך גל של $420 \\text{ nm}$." },
+            { question: "ערבוב התמיסות במבחנות נעשה על ידי ניעור ידני בלבד.", answer: false, explanation: "הערבוב (וורטקס) מצוין בהוראות, מה שמבטיח ערבוב יסודי." },
+            { question: "קריאת דפי MSDS היא המלצה בלבד ואינה חובה במעבדה.", answer: false, explanation: "ההנחיה היא: יש לקרוא בקפידה את דפי ה-MSDS. זוהי דרישת בטיחות חשובה." },
+            { question: "בליעה גבוהה יותר ב-$420 \\text{ nm}$ מעידה על מידת השחמה נמוכה יותר.", answer: false, explanation: "בליעה גבוהה יותר באורך גל $420 \\text{ nm}$ מעידה על היווצרות רבה יותר של תוצרים צבעוניים, כלומר מידת השחמה גבוהה יותר." }
+        ];
+        
+        // --- APPLICATION LOGIC ---
+
+        // Current indices for navigation
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+
+        // DOM Elements
+        const theoryContentDiv = document.getElementById('theory-content');
+        
+        const cardFront = document.getElementById('current-card-front');
+        const cardBack = document.getElementById('current-card-back');
+        const cardCounterEl = document.getElementById('card-counter');
+        const studyCardEl = document.getElementById('study-card');
+
+        const mcqQuestionText = document.getElementById('mcq-question-text');
+        const mcqOptionsContainer = document.getElementById('mcq-options-container');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounterEl = document.getElementById('mcq-counter');
+        const mcqViewAllContainer = document.getElementById('mcq-view-all-container');
+
+        const tfQuestionText = document.getElementById('tf-question-text');
+        const tfOptionsContainer = document.getElementById('tf-options-container');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounterEl = document.getElementById('tf-counter');
+        const tfViewAllContainer = document.getElementById('tf-view-all-container');
+
+        // --- INITIALIZATION ---
+        function initApp() {
+            // Populate theory
+            theoryContentDiv.innerHTML = theoryContent;
+
+            // Initialize sections
+            displayCard(currentCardIndex);
+            displayMcq(currentMcqIndex, false); // false for not viewAll mode
+            displayTf(currentTfIndex, false);   // false for not viewAll mode
+            
+            // Render MathJax for initial content
+            renderMath();
+        }
+
+        // --- MATHJAX RENDERING ---
+        function renderMath() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise();
+            }
+        }
+
+        // --- STUDY CARDS LOGIC ---
+        function displayCard(index) {
+            const card = studyCardsData[index];
+            cardFront.innerHTML = card.term; // innerHTML to parse potential MathJax
+            cardBack.innerHTML = card.definition; // innerHTML to parse potential MathJax
+            studyCardEl.classList.remove('is-flipped');
+            cardCounterEl.textContent = `כרטיסיה ${index + 1} / ${studyCardsData.length}`;
+            renderMath(); // Re-render MathJax for new card content
+        }
+
+        function flipCard() {
+            studyCardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % studyCardsData.length;
+            displayCard(currentCardIndex);
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + studyCardsData.length) % studyCardsData.length;
+            displayCard(currentCardIndex);
+        }
+        
+        // --- MCQ LOGIC ---
+        function displayMcq(index, isViewAll) {
+            const q = mcqData[index];
+            let questionTextEl, optionsContainerEl, feedbackEl, explanationEl, counterEl;
+
+            if (isViewAll) {
+                // Construct IDs for "View All" elements
+                questionTextEl = document.getElementById(`mcq-all-question-text-${index}`);
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${index}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${index}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${index}`);
+                // Counter is not per question in "View All"
+            } else {
+                // Use single view elements
+                questionTextEl = mcqQuestionText;
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+                counterEl = mcqCounterEl;
+                counterEl.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            }
+            
+            if (!questionTextEl) return; // Element not found (e.g. view all not generated yet)
+
+            questionTextEl.innerHTML = q.question; // Use innerHTML for MathJax
+            optionsContainerEl.innerHTML = ''; // Clear previous options
+
+            q.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; // Use innerHTML for MathJax
+                button.onclick = () => selectMcqOption(index, i, isViewAll);
+                optionsContainerEl.appendChild(button);
+            });
+
+            // Reset feedback and explanation
+            feedbackEl.style.display = 'none';
+            explanationEl.style.display = 'none';
+            
+            // If question was already answered, display its state
+            if (q.isAnswered) {
+                showMcqFeedback(index, q.selectedOption, isViewAll);
+            }
+            renderMath();
+        }
+
+        function selectMcqOption(questionIndex, optionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            if (q.isAnswered) return; // Prevent re-answering
+
+            q.selectedOption = optionIndex;
+            q.isAnswered = true;
+            
+            showMcqFeedback(questionIndex, optionIndex, isViewAll);
+
+            // If interaction is in single view, update the displayed MCQ
+            if (!isViewAll && currentMcqIndex === questionIndex) {
+                 // Disable options for single view
+                const singleViewOptions = mcqOptionsContainer.getElementsByTagName('button');
+                for (let btn of singleViewOptions) {
+                    btn.disabled = true;
+                }
+            } else if (isViewAll) {
+                // Disable options for this specific question in "View All"
+                const allViewOptionsContainer = document.getElementById(`mcq-all-options-container-${questionIndex}`);
+                if (allViewOptionsContainer) {
+                    const allViewOptions = allViewOptionsContainer.getElementsByTagName('button');
+                    for (let btn of allViewOptions) {
+                        btn.disabled = true;
+                    }
+                }
+            }
+        }
+
+        function showMcqFeedback(questionIndex, selectedOptionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            let optionsContainerEl, feedbackEl, explanationEl;
+
+            if (isViewAll) {
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${questionIndex}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${questionIndex}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${questionIndex}`);
+            } else {
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+            }
+            
+            if (!optionsContainerEl) return; // Safety check
+
+            const buttons = optionsContainerEl.getElementsByTagName('button');
+            buttons[selectedOptionIndex].classList.add(selectedOptionIndex === q.answer ? 'correct' : 'incorrect');
+            if (selectedOptionIndex !== q.answer) {
+                buttons[q.answer].classList.add('correct'); // Also show the correct answer
+            }
+
+            for (let btn of buttons) {
+                btn.disabled = true; // Disable all options after an answer
+            }
+
+            feedbackEl.textContent = selectedOptionIndex === q.answer ? 'נכון!' : 'לא נכון.';
+            feedbackEl.className = `feedback ${selectedOptionIndex === q.answer ? 'correct' : 'incorrect'}`;
+            feedbackEl.style.display = 'block';
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`; // Use innerHTML for MathJax
+            explanationEl.style.display = 'block';
+            renderMath();
+        }
+
+        function nextMcq() {
+            currentMcqIndex = (currentMcqIndex + 1) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function prevMcq() {
+            currentMcqIndex = (currentMcqIndex - 1 + mcqData.length) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function toggleViewAllMcqs() {
+            const btn = document.getElementById('view-all-mcqs-button');
+            if (mcqViewAllContainer.style.display === 'none') {
+                mcqViewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל השאלות';
+                if (mcqViewAllContainer.innerHTML === '') { // Populate only once
+                    mcqData.forEach((q, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'question-item';
+                        itemDiv.innerHTML = `
+                            <p id="mcq-all-question-text-${index}" class="question-text"></p>
+                            <div id="mcq-all-options-container-${index}" class="options-container"></div>
+                            <div id="mcq-all-feedback-${index}" class="feedback" style="display:none;"></div>
+                            <div id="mcq-all-explanation-${index}" class="explanation" style="display:none;"></div>
+                        `;
+                        mcqViewAllContainer.appendChild(itemDiv);
+                        displayMcq(index, true); // true for ViewAll mode
+                    });
+                }
+            } else {
+                mcqViewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל השאלות';
+            }
+            renderMath();
+        }
+
+        // --- TRUE/FALSE LOGIC --- (Similar to MCQ)
+        function displayTf(index, isViewAll) {
+            const q = tfData[index];
+            let questionTextEl, optionsContainerEl, feedbackEl, explanationEl, counterEl;
+
+            if (isViewAll) {
+                questionTextEl = document.getElementById(`tf-all-question-text-${index}`);
+                optionsContainerEl = document.getElementById(`tf-all-options-container-${index}`);
+                feedbackEl = document.getElementById(`tf-all-feedback-${index}`);
+                explanationEl = document.getElementById(`tf-all-explanation-${index}`);
+            } else {
+                questionTextEl = tfQuestionText;
+                optionsContainerEl = tfOptionsContainer;
+                feedbackEl = tfFeedback;
+                explanationEl = tfExplanation;
+                counterEl = tfCounterEl;
+                counterEl.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            }
+
+            if (!questionTextEl) return;
+
+            questionTextEl.innerHTML = q.question; // Use innerHTML for MathJax
+            optionsContainerEl.innerHTML = '';
+
+            const trueButton = document.createElement('button');
+            trueButton.textContent = 'נכון';
+            trueButton.onclick = () => selectTfOption(index, true, isViewAll);
+            optionsContainerEl.appendChild(trueButton);
+
+            const falseButton = document.createElement('button');
+            falseButton.textContent = 'לא נכון';
+            falseButton.onclick = () => selectTfOption(index, false, isViewAll);
+            optionsContainerEl.appendChild(falseButton);
+            
+            feedbackEl.style.display = 'none';
+            explanationEl.style.display = 'none';
+
+            if (q.isAnswered) {
+                showTfFeedback(index, q.selectedOption, isViewAll);
+            }
+            renderMath();
+        }
+
+        function selectTfOption(questionIndex, chosenAnswer, isViewAll) {
+            const q = tfData[questionIndex];
+            if (q.isAnswered) return;
+
+            q.selectedOption = chosenAnswer;
+            q.isAnswered = true;
+
+            showTfFeedback(questionIndex, chosenAnswer, isViewAll);
+            
+            if (!isViewAll && currentTfIndex === questionIndex) {
+                const singleViewOptions = tfOptionsContainer.getElementsByTagName('button');
+                for (let btn of singleViewOptions) {
+                    btn.disabled = true;
+                }
+            } else if (isViewAll) {
+                const allViewOptionsContainer = document.getElementById(`tf-all-options-container-${questionIndex}`);
+                if (allViewOptionsContainer) {
+                    const allViewOptions = allViewOptionsContainer.getElementsByTagName('button');
+                    for (let btn of allViewOptions) {
+                        btn.disabled = true;
+                    }
+                }
+            }
+        }
+        
+        function showTfFeedback(questionIndex, chosenAnswer, isViewAll) {
+            const q = tfData[questionIndex];
+            let optionsContainerEl, feedbackEl, explanationEl;
+
+            if (isViewAll) {
+                optionsContainerEl = document.getElementById(`tf-all-options-container-${questionIndex}`);
+                feedbackEl = document.getElementById(`tf-all-feedback-${questionIndex}`);
+                explanationEl = document.getElementById(`tf-all-explanation-${questionIndex}`);
+            } else {
+                optionsContainerEl = tfOptionsContainer;
+                feedbackEl = tfFeedback;
+                explanationEl = tfExplanation;
+            }
+
+            if (!optionsContainerEl) return;
+
+            const buttons = optionsContainerEl.getElementsByTagName('button'); // 0: True, 1: False
+            const correctButtonIndex = q.answer ? 0 : 1;
+            const chosenButtonIndex = chosenAnswer ? 0 : 1;
+
+            buttons[chosenButtonIndex].classList.add(chosenAnswer === q.answer ? 'correct' : 'incorrect');
+            if (chosenAnswer !== q.answer) {
+                buttons[correctButtonIndex].classList.add('correct');
+            }
+            
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+
+            feedbackEl.textContent = chosenAnswer === q.answer ? 'נכון!' : 'לא נכון.';
+            feedbackEl.className = `feedback ${chosenAnswer === q.answer ? 'correct' : 'incorrect'}`;
+            feedbackEl.style.display = 'block';
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`; // Use innerHTML for MathJax
+            explanationEl.style.display = 'block';
+            renderMath();
+        }
+
+
+        function nextTf() {
+            currentTfIndex = (currentTfIndex + 1) % tfData.length;
+            displayTf(currentTfIndex, false);
+        }
+
+        function prevTf() {
+            currentTfIndex = (currentTfIndex - 1 + tfData.length) % tfData.length;
+            displayTf(currentTfIndex, false);
+        }
+
+        function toggleViewAllTfs() {
+            const btn = document.getElementById('view-all-tfs-button');
+            if (tfViewAllContainer.style.display === 'none') {
+                tfViewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל השאלות';
+                if (tfViewAllContainer.innerHTML === '') { // Populate only once
+                    tfData.forEach((q, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'question-item';
+                        itemDiv.innerHTML = `
+                            <p id="tf-all-question-text-${index}" class="question-text"></p>
+                            <div id="tf-all-options-container-${index}" class="options-container"></div>
+                            <div id="tf-all-feedback-${index}" class="feedback" style="display:none;"></div>
+                            <div id="tf-all-explanation-${index}" class="explanation" style="display:none;"></div>
+                        `;
+                        tfViewAllContainer.appendChild(itemDiv);
+                        displayTf(index, true); // true for ViewAll mode
+                    });
+                }
+            } else {
+                tfViewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל השאלות';
+            }
+            renderMath();
+        }
+
+        // --- START THE APP ---
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>

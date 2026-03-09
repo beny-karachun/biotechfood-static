@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: תגובות כימיות של ליפידים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "אוטו-אוקסידציה", definition: "תהליך חמצון עצמי של ליפידים המתרחש במנגנון של רדיקלים חופשיים. כולל שלושה שלבים: אתחול, התפשטות וסיום, ומוביל לעפשות וירידה באיכות המזון." },
+            { term: "הידרוגנציה", definition: "תהליך כימי תעשייתי להוספת אטומי מימן לקשרים הכפולים בחומצות שומן בלתי רוויות. התהליך מעלה את נקודת ההתכה של השמן והופך אותו למוצק או מוצק למחצה." },
+            { term: "חמצן סינגלט (¹O₂)", definition: "מצב מעורר של מולקולת חמצן, בו שני האלקטרונים החיצוניים הם בעלי ספינים הפוכים. הוא אלקטרופילי מאוד ומגיב במהירות עם קשרים כפולים בליפידים, מה שמתחיל תהליכי חמצון." },
+            { term: "חמצן טריפלט (³O₂)", definition: "מצב היסוד של מולקולת חמצן, שהוא בירדיקל בעל שני אלקטרונים עם ספינים מקבילים. מצב זה פחות ריאקטיבי מחמצן סינגלט בתגובות ישירות עם ליפידים." },
+            { term: "אינטראסטריפיקציה", definition: "תהליך סידור מחדש של חומצות שומן על שלד הגליצרול בטריגליצרידים. משמש כחלופה להידרוגנציה חלקית ליצירת מרגרינה ללא שומן טראנס." },
+            { term: "עפשות הידרוליטית", definition: "קלקול שומנים הנובע מפירוק קשרים אסטריים על ידי מים (בעזרת אנזימים כמו ליפאז, חומצה או בסיס), לשחרור חומצות שומן חופשיות (FFA) הגורמות לטעמי לוואי." },
+            { term: "פרו-אוקסידנטים", definition: "חומרים המאיצים תהליכי חמצון. דוגמאות נפוצות במזון כוללות מתכות מעבר (כמו ברזל ונחושת) ופיגמנטים פוטוסנסיטיים (כמו כלורופיל) המייצרים חמצן סינגלט." },
+            { term: "ערך פראוקסיד (PV)", definition: "מדד לכמות ההידרופראוקסידים (תוצרי החמצון הראשוניים) בשומן. משמש למעקב אחר שלבי החמצון המוקדמים. נמדד בדרך כלל במיליאקוויוולנט של חמצן לקילוגרם שומן." },
+            { term: "מבחן TBARS", definition: "מבחן המודד חומרים המגיבים עם חומצה תיוברביטורית, ובעיקר מלונדיאלדהיד, שהוא תוצר פירוק שניוני של חמצון ליפידים. משמש כמדד לחמצון מתקדם ולטעמי לוואי." },
+            { term: "חומר בלתי מסתבן", definition: "חלק מהליפידים שאינו עובר הידרוליזה (ספוניפיקציה) בתגובה עם בסיס חזק. כולל תרכובות כמו ויטמינים מסיסי שומן (A, E), כולסטרול וקרוטנואידים." },
+            { term: "טרנסאסטריפיקציה", definition: "תגובה כימית כללית של החלפת קבוצת אלקוקסי באסטר עם אלכוהול אחר. אינטראסטריפיקציה היא סוג ספציפי של טרנסאסטריפיקציה המתרחשת בין טריגליצרידים." },
+            { term: "הידרוגנציה חלקית", definition: "תהליך הידרוגנציה שאינו מובא לסיומו המלא, וכתוצאה מכך חלק מהקשרים הכפולים נשארים. תהליך זה ידוע לשמצה ביצירת איזומרים של שומן טראנס." }
+        ];
+
+        const mcqData = [
+            { question: "איזו מהאפשרויות הבאות אינה תוצאה ישירה של תהליך הידרוגנציה חלקית של שמן צמחי?", options: ["עלייה בנקודת ההתכה של השמן", "יצירת חומצות שומן טראנס", "ירידה בערך היוד", "עלייה משמעותית בתכולת חומצות השומן החיוניות"], correctIndex: 3, explanation: "הידרוגנציה, ובמיוחד הידרוגנציה חלקית, גורמת לאיבוד של חומצות שומן חיוניות (PUFA) על ידי הפיכתן לחומצות שומן רוויות או טראנס. שאר האפשרויות הן תוצאות אופייניות של התהליך." },
+            { question: "מהו ההבדל המהותי בין חמצון ליפידים באמצעות חמצן סינגלט (¹O₂) לבין אוטו-אוקסידציה עם חמצן טריפלט (³O₂)?", options: ["חמצן סינגלט תוקף ישירות את הקשר הכפול, בעוד שאוטו-אוקסידציה מתחילה בהוצאת אטום מימן", "אוטו-אוקסידציה אינה דורשת אנרגיית אתחול, בניגוד לחמצון עם חמצן סינגלט", "חמצון עם חמצן סינגלט מייצר רק איזומר אחד של הידרופרוקסיד", "אוטו-אוקסידציה מתרחשת רק בטמפרטורות גבוהות מאוד"], correctIndex: 0, explanation: "חמצן סינגלט, בהיותו אלקטרופילי, מגיב ישירות עם הקשר הכפול בתגובת 'ene'. לעומת זאת, מנגנון האוטו-אוקסידציה הרדיקלי מתחיל בשלב אתחול של יצירת רדיקל ליפידי על ידי הוצאת מימן אלילי." },
+            { question: "יצרן מרגרינה מעוניין לייצר מוצר ללא שומן טראנס בעל מרקם רך. באיזו טכנולוגיה סביר ביותר שישתמש?", options: ["הידרוגנציה מלאה של שמן סויה", "הידרוגנציה חלקית מבוקרת", "ערבוב שמן סויה נוזלי עם שמן סויה שעבר הידרוגנציה מלאה, ולאחר מכן אינטראסטריפיקציה", "ליפוליזה אנזימטית של שמן דקלים"], correctIndex: 2, explanation: "אינטראסטריפיקציה מאפשרת סידור מחדש של חומצות שומן רוויות (משמן שעבר הידרוגנציה מלאה) ובלתי רוויות (משמן נוזלי) ליצירת טריגליצרידים בעלי תכונות רצויות, ללא יצירת שומן טראנס." },
+            { question: "איזה מהמשפטים הבאים אינו נכון לגבי פרו-אוקסידנטים במזון?", options: ["מתכות מעבר כמו ברזל ונחושת מאיצות חמצון גם בריכוזים נמוכים מאוד (ppm)", "כלורופיל יכול לפעול כפרו-אוקסידנט על ידי יצירת חמצן סינגלט בנוכחות אור", "יוני מתכת יכולים להתחיל חמצון על ידי תגובה ישירה עם חומצת שומן בלתי רוויה ליצירת רדיקל", "פעילותם של פרו-אוקסידנטים מתכתיים פוחתת משמעותית בפעילות מים (aw) נמוכה מאוד, קרוב לאפס"], correctIndex: 3, explanation: "בפעילות מים נמוכה מאוד (מתחת ל-0.1), דווקא קצב החמצון עולה, בין היתר עקב ניידות מוגברת של זרזים. הפעילות המינימלית של פרו-אוקסידנטים מתכתיים היא בפעילות מים של כ-0.3." },
+            { question: "במהלך שלב ה-propagation (התפשטות) של אוטו-אוקסידציה, איזה רדיקל הוא הדומיננטי והמניע את תגובת השרשרת?", options: ["רדיקל הידרוקסיל (HO•)", "רדיקל אלקיל ליפידי (R•)", "רדיקל פרוקסי (ROO•)", "אטום מימן (H•)"], correctIndex: 2, explanation: "הרדיקל הפרוקסי (ROO•) נוצר מתגובת הרדיקל הליפידי (R•) עם חמצן. רדיקל זה מגיב עם מולקולת שומן נוספת (RH), יוצר הידרופרוקסיד (ROOH) ורדיקל ליפידי חדש (R•), ובכך מניע את תגובת השרשרת המתמשכת." },
+            { question: "מדוע חומצות שומן חופשיות (FFA) רגישות לחמצון יותר מאשר טריגליצרידים (TG)?", options: ["כי קבוצת הקרבוקסיל החופשית מייצבת את הרדיקל הנוצר", "כי הן ניידות יותר במערכת ומגיעות בקלות למגע עם פרו-אוקסידנטים", "כי היעדר שלד הגליצרול חושף את הקשרים הכפולים לתקיפה", "כי הן תמיד בעלות דרגת אי-רוויה גבוהה יותר"], correctIndex: 1, explanation: "למרות שכל התשובות נשמעות סבירות, הסיבה העיקרית היא הניידות המוגברת שלהן. כחומצות חופשיות, הן יכולות לנוע ביתר קלות במטריצת המזון ולהגיע למגע עם זרזים לחמצון כמו יוני מתכת." },
+            { question: "איזו מהתופעות הבאות אינה מאפיינת את שלב הסיום (termination) של אוטו-אוקסידציה?", options: ["יצירת תוצרים לא-רדיקליים", "תגובה בין שני רדיקלים פרוקסיים (ROO•)", "תלות בריכוז חמצן גבוה", "תגובה בין רדיקל פרוקסי לרדיקל ליפידי (R•)"], correctIndex: 2, explanation: "שלב הסיום מתרחש כאשר ריכוז הרדיקלים החופשיים גבוה מספיק כדי שהם יגיבו זה עם זה. תהליך זה דומיננטי כאשר ריכוז החמצן נמוך, מה שמגביל את שלב ההתפשטות ומעלה את הסיכוי להתנגשות בין רדיקלים." },
+            { question: "במבחן למדידת ערך פראוקסיד (PV), מהו העיקרון הכימי המרכזי?", options: ["תגובת צבע בין מלונדיאלדהיד לחומצה תיוברביטורית", "חמצון של יודיד (I⁻) ליוד (I₂) על ידי הידרופראוקסידים", "מדידת בליעת UV של דיאנים מצומדים", "מדידת צריכת החמצן בדגימה לאורך זמן"], correctIndex: 1, explanation: "מדידת PV מבוססת על יכולתם של הידרופראוקסידים (ROOH), תוצרי החמצון הראשוניים, לחמצן יוני יודיד (ממקור כמו KI) ליוד מולקולרי (I₂), אשר לאחר מכן ניתן לכימות באמצעות טיטרציה." },
+            { question: "שמן קנולה עבר הידרוגנציה מתקדמת. איזה שינוי אינו צפוי להתרחש בהרכב חומצות השומן שלו?", options: ["ירידה דרסטית בערך היוד", "ירידה באחוז חומצה לינולנית (18:3)", "עלייה באחוז שומן טראנס ולאחר מכן ירידה", "עלייה מתמדת באחוז חומצה אלאידית (18:1t-9)"], correctIndex: 3, explanation: "במהלך הידרוגנציה מתקדמת, אחוז שומן הטראנס עולה בשלבים הראשונים (הידרוגנציה חלקית) אך לאחר מכן יורד ככל שהתהליך מתקדם והקשרים הכפולים (כולל טראנס) הופכים לרוויים. לכן, לא תהיה עלייה מתמדת." },
+            { question: "מהי הסיבה העיקרית לכך ששומן טראנס תעשייתי נחשב למזיק יותר משומן רווי?", options: ["הוא מעלה רמות LDL ומוריד רמות HDL", "הוא גורם לעלייה מהירה יותר במשקל", "הוא מתחמצן מהר יותר משומן רווי", "הוא אינו מכיל כולסטרול"], correctIndex: 0, explanation: "ההשפעה השלילית העיקרית והמוכחת של שומן טראנס תעשייתי היא השפעתו הכפולה והמזיקה על פרופיל השומנים בדם: העלאת הכולסטרול ה'רע' (LDL) והורדת הכולסטרול ה'טוב' (HDL)." },
+            { question: "חברה מפתחת שמן סויה מהונדס גנטית המכיל 85% חומצה אולאית (18:1) במקום 25% בשמן רגיל. מהי האסטרטגיה הביוטכנולוגית הסבירה ביותר שהופעלה?", options: ["החדרת גן לאנזים דה-סטוראז ממיקרואורגניזם", "ביטול (Knock-out) של הגן לאנזים אומגה-12 דה-סטוראז", "הפעלת יתר של אנזימי אלונגאז", "שימוש בליפאז ספציפי למיקום sn-2"], correctIndex: 1, explanation: "האנזים אומגה-12 דה-סטוראז אחראי להפיכת חומצה אולאית (18:1) לחומצה לינולאית (18:2). ביטול פעילותו מונע את ההמרה הזו וגורם להצטברות של חומצה אולאית." },
+            { question: "איזה מהמשפטים הבאים מתאר באופן שגוי את ההבדלים בין שומן טראנס טבעי (ממעלי גירה) לתעשייתי?", options: ["בשומן טבעי, האיזומר הדומיננטי הוא חומצה ואקסנית (18:1t-11)", "שומן טראנס תעשייתי מכיל בעיקר חומצה אלאידית (18:1t-9)", "שומן טבעי נוצר עקב הידרוגנציה חלקית על קטליזטור ניקל", "ריכוז שומן הטראנס בשומן חלב הוא כ-3%, בעוד שבשמן מוקשה חלקית הוא יכול להגיע ל-30% ומעלה"], correctIndex: 2, explanation: "שומן טראנס טבעי נוצר בתהליך ביו-הידרוגנציה מיקרוביאלי בכרס של מעלי גירה. שומן טראנס תעשייתי נוצר מהידרוגנציה חלקית על קטליזטור מתכתי כמו ניקל." },
+            { question: "בתהליך ליפוליזה מבוקר, כמו בייצור גבינות מסוימות, מהו התוצר הרצוי העיקרי התורם לארומה?", options: ["גליצרול", "חומצות שומן חופשיות (FFA) קצרות שרשרת", "דיגליצרידים", "פוספוליפידים"], correctIndex: 1, explanation: "בגבינות כמו רוקפור, ליפאזות מפרקות טריגליצרידים ומשחררות חומצות שומן חופשיות, במיוחד קצרות שרשרת (כמו חומצה בוטירית), אשר הן נדיפות ותורמות לארומה האופיינית." },
+            { question: "איזו מהתכונות הבאות אינה מאפיינת חמצן סינגלט (¹O₂)?", options: ["זמן חיים ארוך יחסית (מיקרו-שניות)", "ריאקטיביות גבוהה פי 1500 מחמצן טריפלט עם קשרים כפולים", "יכולת להיווצר על ידי פוטו-סנסיטיזציה", "מצב אנרגטי נמוך ממצב היסוד של חמצן"], correctIndex: 3, explanation: "חמצן סינגלט הוא מצב מעורר, כלומר הוא בעל רמת אנרגיה גבוהה יותר (22-37 קק״ל/מול) ממצב היסוד, שהוא חמצן טריפלט. האנרגיה העודפת היא המקור לריאקטיביות הגבוהה שלו." },
+            { question: "מדוע ערך ה-PV (Peroxide Value) אינו מדד טוב לשלבים מתקדמים של קלקול חמצוני?", options: ["כי הוא מודד רק תוצרים ראשוניים (הידרופראוקסידים) שמתפרקים בשלבים מתקדמים", "כי המדידה דורשת ציוד מורכב ויקר", "כי הוא אינו רגיש מספיק בריכוזים נמוכים", "כי הוא מושפע מאוד מנוכחות מים בדגימה"], correctIndex: 0, explanation: "ערך ה-PV מודד את ריכוז ההידרופראוקסידים. בשלבים מתקדמים של חמצון, תרכובות אלו, שאינן יציבות, מתפרקות לתוצרים שניוניים (אלדהידים, קטונים) הגורמים לטעם וריח רעים. לכן, ערך ה-PV עשוי אפילו לרדת בשלבים אלו." },
+            { question: "מהי מטרת השימוש באנזים ליפאז ספציפי לעמדות sn-1,3 בייצור שומנים מותאמים (tailor-made lipids) לתחליפי חלב אם?", options: ["לייצר טריגליצרידים עם חומצה פלמיטית בעמדה sn-2, בדומה לחלב אם", "לפרק לחלוטין את כל הטריגליצרידים לחומצות שומן חופשיות", "להסיר את כל חומצות השומן הרוויות מהשמן", "ליצור שומן טראנס באופן מבוקר"], correctIndex: 0, explanation: "בחלב אם, חומצה פלמיטית (רוויה) נמצאת בעיקר בעמדה sn-2. ליפאז ספציפי ל-1,3 מאפשר להרכיב טריגליצרידים (כמו OPO) המחקים מבנה זה, מה שמשפר את ספיגת השומן והסידן אצל תינוקות." },
+            { question: "בטיגון עמוק, מתרחשת עפשות הידרוליטית בשמן. מהו המקור העיקרי למים המשתתפים בתגובה זו?", options: ["התעבות לחות מהאוויר", "פירוק של מולקולות השמן עצמן", "המים הנמצאים במזון המטוגן", "תוספת מים מכוונת למניעת התחמצנות"], correctIndex: 2, explanation: "במהלך טיגון, המים الموجودים במזון (למשל תפוח אדמה) משתחררים אל השמן החם וגורמים להידרוליזה של קשרים אסטריים, מה שמוביל לשחרור FFA ומאיץ את קלקול השמן." },
+            { question: "איזה מהמשפטים הבאים אינו נכון לגבי תגובת פנטון (Fenton reaction) בהקשר של חמצון ליפידים?", options: ["היא דורשת נוכחות של יון מתכת מעבר כמו ברזל (Fe²⁺)", "היא מייצרת רדיקל הידרוקסיל (HO•), שהוא מחמצן חזק מאוד", "היא הופכת מי חמצן (H₂O₂) לרדיקלים חופשיים", "היא תהליך יעיל להפסקת תגובות שרשרת רדיקליות"], correctIndex: 3, explanation: "תגובת פנטון היא מנגנון אתחול (initiation) חזק מאוד. הרדיקל ההידרוקסילי שהיא מייצרת הוא מאוד ריאקטיבי ויכול להתחיל תגובות שרשרת רדיקליות חדשות, ולכן היא מאיצה חמצון ולא מפסיקה אותו." },
+            { question: "מה ההשפעה של העלאת הטמפרטורה על קצב חמצון השומנים?", options: ["הקצב תמיד יורד כי מסיסות החמצן בשמן פוחתת", "הקצב עולה באופן כללי, אך מקדם הטמפרטורה Q10 יורד בטמפרטורות גבוהות", "הקצב אינו מושפע מהטמפרטורה אלא רק מנוכחות אור", "הקצב עולה רק בנוכחות פרו-אוקסידנטים מתכתיים"], correctIndex: 1, explanation: "באופן כללי, העלאת טמפרטורה מאיצה תגובות כימיות, כולל חמצון. עם זאת, בטמפרטורות גבוהות, מסיסות החמצן (שהוא מגיב הכרחי) בשמן יורדת, ולכן ההאצה בקצב מתמתנת. כלומר, ה-Q10 גדול מ-2 בטמפ' נמוכות וקרוב ל-2 בטמפ' גבוהות." },
+            { question: "יצרן חטיפים רוצה להאריך את חיי המדף של מוצר עשיר בשומן בלתי רווי. איזו אסטרטגיית אריזה תהיה היעילה ביותר למניעת חמצון?", options: ["אריזה בנייר שעווה", "אריזה בשקית פלסטיק שקופה", "אריזה תחת אוויר רגיל", "אריזת ואקום בתוספת סופח חמצן"], correctIndex: 3, explanation: "חמצון דורש חמצן. אריזת ואקום מסלקת את רוב החמצן, ותוספת של סופח חמצן (oxygen scavenger) מסלקת את השאריות, ובכך מונעת כמעט לחלוטין את תהליך החמצון ומאריכה משמעותית את חיי המדף." },
+            { question: "מהי התוצאה של תגובת חמצון ליפידים בטמפרטורות גבוהות, כמו בטיגון ממושך?", options: ["יצירת דימרים ופולימרים המעלים את צמיגות השמן", "הפיכה של כל חומצות השומן לרוויות", "ירידה בצמיגות השמן עקב פירוק מולקולות", "שיפור הערך התזונתי של השמן"], correctIndex: 0, explanation: "בחום גבוה, רדיקלים ותוצרי חמצון יכולים להגיב זה עם זה וליצור קשרים חדשים בין מולקולות שומן, מה שמוביל להיווצרות דימרים ופולימרים. תהליך זה מעלה את צמיגות השמן, פוגע באיכותו והופך אותו לקשה יותר לעיכול." },
+            { question: "איזה מהבאים אינו נכלל בקבוצת הליפידים הבלתי-מסתבנים (non-saponifiable)?", options: ["ויטמין E (טוקופרול)", "כולסטרול", "טריאצילגליצרול (טריגליצריד)", "קרוטנואידים"], correctIndex: 2, explanation: "טריאצילגליצרולים הם אסטרים של גליצרול וחומצות שומן. הם הבסיס לתגובת הסיבון (ספוניפיקציה), בה בסיס חזק מפרק את הקשרים האסטריים. שאר החומרים הם בעלי מבנה שונה ואינם מגיבים בתהליך זה." },
+            { question: "בהשוואה בין חומצה אולאית (18:1), לינולאית (18:2) ולינולנית (18:3), איזו מהן צפויה להתחמצן בקצב המהיר ביותר בתנאים זהים?", options: ["חומצה אולאית, כי יש לה מיקום ספציפי לקשר הכפול", "חומצה לינולנית, כי יש לה את המספר הגבוה ביותר של קשרים כפולים", "כולן יתחמצנו באותו קצב", "חומצה לינולאית, כי יש לה מבנה מצומד אידיאלי"], correctIndex: 1, explanation: "קצב החמצון עולה באופן דרמטי עם העלייה במספר הקשרים הכפולים, מכיוון שיש יותר אתרים רגישים (מימנים אליליים) ליצירת רדיקלים. לכן, חומצה לינולנית (3 קשרים כפולים) תתחמצן מהר יותר מלינולאית (2), שתתחמצן מהר יותר מאולאית (1)." },
+            { question: "מה תפקיד הזרז (catalyst) בתהליך הידרוגנציה?", options: ["לספק אטומי מימן לתגובה", "להוריד את טמפרטורת התגובה לטמפרטורת החדר", "לספק משטח פעיל לספיחת המימן והשמן, ובכך להקל על התגובה", "למנוע היווצרות של שומן טראנס"], correctIndex: 2, explanation: "הזרז, בדרך כלל ניקל, מספק אתר שבו מולקולות המימן (H₂) והקשרים הכפולים של השמן יכולים להיספח ולהיפגש, מה שמוריד את אנרגיית השפעול ומאפשר לתגובה להתרחש בתנאים תעשייתיים." },
+            { question: "איזו קביעה לגבי הקשר בין ערך יוד לאחוז שומן טראנס במהלך הידרוגנציה אינה נכונה?", options: ["כאשר ערך היוד יורד מ-130 ל-110, כמות הטראנס עולה מעט", "כאשר ערך היוד יורד מ-110 ל-68, כמות הטראנס עולה משמעותית", "כאשר ערך היוד יורד מ-68 ל-5, כמות הטראנס עולה עוד יותר", "כאשר ערך היוד הוא 5, המוצר הוא כמעט כולו שומן רווי"], correctIndex: 2, explanation: "כאשר ערך היוד יורד מ-68 ל-5, פירוש הדבר שההידרוגנציה קרובה מאוד להשלמה. בשלב זה, רוב קשרי הטראנס שנוצרו קודם לכן כבר עברו רוויה והפכו לקשרים יחידים. לכן, אחוז שומן הטראנס יורד דרסטית ולא עולה." },
+            { question: "מדוע קצב החמצון הוא הנמוך ביותר בפעילות מים (aw) של כ-0.3?", options: ["כי בערך זה כל המים קשורים ואינם זמינים לתגובות", "כי ריכוז החמצן המומס הוא מינימלי ב-aw זה", "כי כמות מים קטנה מייצבת הידרופרוקסידים ומפחיתה פעילות קטליטית של מתכות", "כי ב-aw זה מתחיל גידול משמעותי של מיקרואורגניזמים שצורכים את השומן"], correctIndex: 2, explanation: "ב-aw=0.3, יש מספיק מולקולות מים כדי ליצור שכבת הידרציה סביב יוני מתכת, מה שמפחית את פעילותם כפרו-אוקסידנטים. כמו כן, מים יכולים לייצב הידרופרוקסידים באמצעות קשרי מימן, ולהאט את פירוקם." },
+            { question: "מהו תוצר הפירוק השניוני העיקרי הנמדד במבחן TBARS?", options: ["הידרופרוקסיד", "רדיקל פרוקסי", "מלונדיאלדהיד", "דיאן מצומד"], correctIndex: 2, explanation: "מלונדיאלדהיד (Malondialdehyde) הוא אלדהיד קטן שנוצר כתוצאה מפירוק הידרופראוקסידים, במיוחד אלו שנוצרו מחומצות שומן רב בלתי רוויות. הוא מגיב עם חומצה תיוברביטורית (TBA) ליצירת קומפלקס צבעוני, מה שמאפשר את כימותו." },
+            { question: "איזו מהתכונות הבאות אינה משותפת גם לתהליך אינטראסטריפיקציה כימית וגם לאנזימטית?", options: ["הן משנות את תכונות ההתכה וההתגבשות של השומן", "הן מייצרות מוצר סופי ללא שומן טראנס", "הן פועלות באופן אקראי על כל עמדות הגליצרול", "הן יכולות לשמש ליצירת מרגרינה"], correctIndex: 2, explanation: "אינטראסטריפיקציה כימית (עם זרז כמו נתרן מתוקסיד) היא אקראית ומשפיעה על כל שלוש עמדות הגליצרול. לעומת זאת, אינטראסטריפיקציה אנזימטית משתמשת לרוב בליפאזות ספציפיות לעמדות sn-1,3, מה שמאפשר שליטה על מבנה התוצר." },
+            { question: "איזה מהבאים אינו מנגנון אתחול (initiation) של אוטו-אוקסידציה?", options: ["פוטו-אוקסידציה באמצעות כלורופיל ואור", "תגובה בין שתי מולקולות ROOH", "פעולת האנזים ליפוקסיגנאז", "תגובת פנטון עם יוני ברזל"], correctIndex: 1, explanation: "תגובה בין שתי מולקולות הידרופרוקסיד (ROOH) היא תהליך פירוק שמתרחש לאחר שלב האתחול, והיא תורמת ליצירת רדיקלים נוספים ומאיצה את החמצון, אך אינה מנגנון האתחול הראשוני של התהליך מתחילתו." },
+            { question: "באיזה מקרה עפשות הידרוליטית היא תהליך רצוי בתעשיית המזון?", options: ["אחסון חלב גולמי", "טיגון צ'יפס", "ייצור יוגורט ובגבינות מסוימות", "שמירת שמן זית לאורך זמן"], correctIndex: 2, explanation: "בעוד שברוב המקרים ליפוליזה אינה רצויה, במוצרים כמו יוגורט וגבינות מסוימות (כמו פטה או רוקפור), פירוק מבוקר של שומנים לחומצות שומן חופשיות תורם לפרופיל הטעם והארומה הייחודי והרצוי של המוצר." },
+            { question: "מהו ההסבר לכך שהידרוגנציה, בנוסף להקשיית השומן, גם מפחיתה את רגישותו לחמצון?", options: ["היא מסירה את כל הפרו-אוקסידנטים מהשמן", "היא הופכת קשרי ציס לקשרי טראנס שהם פחות ריאקטיביים", "היא מקטינה את מספר הקשרים הכפולים, שהם האתרים הרגישים לחמצון", "היא מוסיפה נוגדי חמצון טבעיים לשמן"], correctIndex: 2, explanation: "חמצון מתרחש בעיקר בקשרים הכפולים. הידרוגנציה מסלקת את הקשרים האלה על ידי הוספת מימן (רוויה). ככל שיש פחות קשרים כפולים, כך השמן יציב יותר בפני חמצון." },
+            { question: "איזה מהמשפטים הבאים מתאר באופן שגוי את תהליך הפוטו-אוקסידציה?", options: ["מולקולת סנסיטייזר (כמו כלורופיל) בולעת פוטון ועוברת למצב מעורר", "הסנסיטייזר המעורר מעביר אנרגיה לחמצן טריפלט והופך אותו לחמצן סינגלט", "חמצן סינגלט תוקף מולקולת שומן ויוצר הידרופרוקסיד", "התהליך כולו מתרחש במנגנון של רדיקלים חופשיים מההתחלה ועד הסוף"], correctIndex: 3, explanation: "פוטו-אוקסידציה אינה תגובת שרשרת רדיקלית כמו אוטו-אוקסידציה. היא מתחילה בתגובה ישירה (לא רדיקלית) בין חמצן סינגלט לקשר הכפול. ההידרופרוקסידים שנוצרים יכולים בהמשך להתפרק וליזום תגובות רדיקליות." },
+            { question: "מה ההבדל העיקרי בין הידרוגנציה מלאה לחלקית?", options: ["הידרוגנציה מלאה אינה דורשת קטליזטור", "הידרוגנציה חלקית יוצרת רק שומן רווי", "הידרוגנציה מלאה הופכת את כל הקשרים הכפולים ליחידים ואינה מייצרת טראנס בתוצר הסופי", "הידרוגנציה מלאה מורידה את נקודת ההתכה של השמן"], correctIndex: 2, explanation: "הידרוגנציה מלאה, כשמה כן היא, ממשיכה עד שכל הקשרים הכפולים (כולל איזומרי הטראנס שנוצרו בדרך) הופכים לקשרים יחידים (רוויים). התוצר הסופי הוא שומן רווי לחלוטין, ללא שומן טראנס." },
+            { question: "מהי המשמעות של ערך יוד (Iodine Value) גבוה בשמן?", options: ["השמן מכיל אחוז גבוה של שומן רווי", "השמן יציב מאוד לחמצון", "השמן מכיל רמה גבוהה של אי-רוויה (הרבה קשרים כפולים)", "השמן עבר הידרוגנציה מלאה"], correctIndex: 2, explanation: "ערך היוד הוא מדד למספר הקשרים הכפולים בשומן. ככל שיש יותר קשרים כפולים (דרגת אי-רוויה גבוהה יותר), כך יותר יוד יכול להגיב איתם, ולכן ערך היוד יהיה גבוה יותר." }
+        ];
+
+        const tfData = [
+            { question: "תהליך אינטראסטריפיקציה אנזימטית הוא תמיד אקראי ומשפיע על כל שלוש עמדות הגליצרול.", answer: false, explanation: "אינטראסטריפיקציה אנזימטית משתמשת לרוב בליפאזות ספציפיות, בדרך כלל לעמדות sn-1 ו-sn-3, ולכן היא אינה אקראית ומאפשרת ייצור מבוקר של טריגליצרידים." },
+            { question: "חמצן במצבו היסודי (טריפלט) הוא בירדיקל, ולכן הוא מגיב בקלות עם מולקולות שומן שאינן רדיקלים.", answer: false, explanation: "למרות היותו בירדיקל, חמצן טריפלט אינו ריאקטיבי במיוחד כלפי מולקולות במצב סינגלט (כמו שומנים) עקב מגבלות ספין. התגובה דורשת אתחול ליצירת רדיקל ליפידי תחילה." },
+            { question: "בתהליך הידרוגנציה, קצב התגובה של הפיכת טריאנים (3 קשרים כפולים) לדיאנים (2) מהיר יותר מהפיכת דיאנים למנואנים (1).", answer: true, explanation: "ההידרוגנציה היא סלקטיבית, וחומצות השומן עם יותר קשרים כפולים מגיבות מהר יותר. לכן, חומצות לינולניות (18:3) יהפכו ללינולאיות (18:2) לפני שהן יהפכו לאולאיות (18:1)." },
+            { question: "נוכחות מים בשמן טיגון מאטה את קלקולו על ידי קירור השמן.", answer: false, explanation: "ההיפך הוא הנכון. מים מהמזון המטוגן גורמים לעפשות הידרוליטית, המשחררת חומצות שומן חופשיות (FFA) שמאיצות את תהליכי החמצון והקלקול של השמן." },
+            { question: "ערך TBARS גבוה מעיד על שלב התחלתי של חמצון שומנים.", answer: false, explanation: "מבחן TBARS מודד תוצרי פירוק שניוניים כמו מלונדיאלדהיד. ריכוז גבוה שלהם מעיד על שלב מתקדם של חמצון, שבו ההידרופראוקסידים הראשוניים כבר התפרקו." },
+            { question: "שומן טראנס טבעי, כמו חומצה ואקסנית, נוצר בכרס של מעלי גירה בתהליך זהה כימית להידרוגנציה תעשייתית.", answer: false, explanation: "שומן טראנס טבעי נוצר על ידי ביו-הידרוגנציה אנזימטית המבוצעת על ידי מיקרואורגניזמים. התהליך התעשייתי משתמש בקטליזטור מתכתי (ניקל) ובתנאי לחץ וטמפרטורה גבוהים." },
+            { question: "ניתן לייצר שמן עשיר בחומצה סטארית (18:0) מקנולה על ידי ביטול גנטי של האנזים אומגה-9 דה-סטוראז.", answer: true, explanation: "אנזים זה אחראי להפיכת חומצה סטארית (18:0) לחומצה אולאית (18:1). ביטול פעילותו יגרום להצטברות של חומצה סטארית רוויה בצמח." },
+            { question: "הידרופראוקסידים, תוצרי החמצון הראשוניים, הם האחראים העיקריים לטעמי הלוואי של עפשות.", answer: false, explanation: "הידרופראוקסידים עצמם הם חסרי טעם וריח. טעמי הלוואי נגרמים על ידי תוצרי הפירוק השניוניים שלהם, שהם בעיקר אלדהידים וקטונים נדיפים." },
+            { question: "בשלב ההתפשטות של אוטו-אוקסידציה, כל תגובה של רדיקל פרוקסי (ROO•) עם מולקולת שומן (RH) צורכת רדיקל חופשי אחד ומייצרת רדיקל חופשי אחד.", answer: true, explanation: "זהו המאפיין של תגובת שרשרת. ROO• + RH → ROOH + R•. רדיקל פרוקסי נצרך ורדיקל אלקיל נוצר, כך שמספר הרדיקלים הכולל נשאר קבוע והתגובה ממשיכה." },
+            { question: "הוספת כלורופיל לשמן המאוחסן בבקבוק אטום וחשוך תאיץ את חמצונו.", answer: false, explanation: "כלורופיל פועל כפרו-אוקסידנט רק בנוכחות אור, שכן הוא זקוק לאנרגיית הפוטון כדי לעבור למצב מעורר ולהפעיל חמצן. בחושך, אין לו השפעה פרו-אוקסידטיבית משמעותית." },
+            { question: "חומצות שומן טראנס הן בעלות נקודת התכה גבוהה יותר מאיזומרי הציס המקבילים להן.", answer: true, explanation: "המבנה הליניארי והישר יותר של חומצות טראנס מאפשר אריזה צפופה ויעילה יותר של המולקולות, מה שמוביל לאינטראקציות בין-מולקולריות חזקות יותר ונקודת התכה גבוהה יותר." },
+            { question: "תהליך הליפוליזה תמיד מזיק לאיכות המזון ויש להימנע ממנו בכל מחיר.", answer: false, explanation: "בעוד שליפוליזה לא מבוקרת גורמת לעפשות, ישנם מוצרים כמו גבינות מיושנות או יוגורט שבהם ליפוליזה מבוקרת היא חלק רצוי מהתהליך, התורם לפרופיל הטעם והארומה." },
+            { question: "שומנים רוויים לחלוטין אינם יכולים לעבור אוטו-אוקסידציה כלל.", answer: false, explanation: "שומנים רוויים עמידים מאוד לחמצון, אך בתנאים קיצוניים מאוד של חום או קרינה, גם הם יכולים לעבור חמצון, אם כי בקצב איטי לאין שיעור משומנים בלתי רוויים." },
+            { question: "מדידת בליעת UV באורך גל של 234 ננומטר יכולה לשמש למעקב אחר היווצרות דיאנים מצומדים במהלך חמצון.", answer: true, explanation: "במהלך חמצון של חומצות שומן כמו לינולאית, מתרחש סידור מחדש של הקשרים הכפולים ליצירת מערכת של דיאנים מצומדים. למערכת זו יש בליעת UV אופיינית בסביבות 234 ננומטר." },
+            { question: "שלב הסיום (termination) באוטו-אוקסידציה מתרחש בעיקר כאשר ריכוז החמצן במערכת גבוה.", answer: false, explanation: "שלב הסיום, בו רדיקלים מגיבים זה עם זה, דומיננטי דווקא כאשר ריכוז החמצן נמוך. בריכוז חמצן גבוה, שלב ההתפשטות (בו רדיקלים מגיבים עם חמצן) הוא השולט." },
+            { question: "חומצה אולאית (18:1) יוצרת ארבעה איזומרים של הידרופרוקסידים בתגובה עם חמצן טריפלט.", answer: true, explanation: "הוצאת מימן משני צידי הקשר הכפול (C8, C11) ולאחר מכן תגובה עם חמצן ויצירת קשר מצומד, מובילה ליצירת ארבעה איזומרים אפשריים: 8-OOH, 9-OOH, 10-OOH, 11-OOH." },
+            { question: "תהליך הפרקציונציה (fractionation) של שומן מבוסס על הפרדה לפי גודל המולקולות.", answer: false, explanation: "פרקציונציה מבוססת על הפרדת השומן למקטעים לפי תכונות ההתכה שלהם. על ידי קירור מבוקר, גורמים לטריגליצרידים הרוויים יותר (בעלי נקודת התכה גבוהה) להתגבש, ואז מפרידים אותם מהמקטע הנוזלי." },
+            { question: "הידרוגנציה חלקית תמיד מובילה לירידה בערך היוד של השמן.", answer: true, explanation: "ערך היוד מודד את מספר הקשרים הכפולים. כל הידרוגנציה, גם חלקית, כרוכה בהפיכת חלק מהקשרים הכפולים ליחידים, ולכן בהכרח תגרום לירידה בערך היוד." },
+            { question: "כל הליפידים הם חומרים מסתבנים.", answer: false, explanation: "רק ליפידים המכילים קשרים אסטריים, כמו טריגליצרידים, הם מסתבנים. ליפידים אחרים כמו כולסטרול, ויטמינים מסיסי שומן וקרוטנואידים שייכים לחומר הבלתי-מסתבן." },
+            { question: "רדיקל ההידרוקסיל (HO•) שנוצר בתגובת פנטון הוא פחות ריאקטיבי מרדיקל פרוקסי (ROO•).", answer: false, explanation: "רדיקל ההידרוקסיל הוא אחד הרדיקלים הריאקטיביים ביותר בכימיה והוא יגיב כמעט עם כל מולקולה אורגנית. הוא הרבה יותר ריאקטיבי מרדיקל פרוקסי." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

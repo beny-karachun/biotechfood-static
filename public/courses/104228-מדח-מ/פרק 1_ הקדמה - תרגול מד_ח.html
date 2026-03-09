@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 1: הקדמה - תרגול משוואות דיפרנציאליות חלקיות</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 90%;
+            margin: 20px auto;
+            background-color: #444; /* Slightly lighter than #333 for better contrast if needed */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+        .theory-section, .problem-container, .problem-view-all-item {
+            background-color: #505050; /* Darker than #666 for better contrast */
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #666;
+        }
+        .problem-statement {
+            margin-bottom: 15px;
+        }
+        .solution-area {
+            display: none;
+            background-color: #585858; /* Slightly different for solution area */
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+            border: 1px dashed #3D90D7;
+        }
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2a7cb0;
+        }
+        .navigation-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .problem-counter {
+            font-weight: bold;
+            margin: 0 15px;
+        }
+        .view-all-container {
+            display: none;
+            margin-top: 30px;
+        }
+        /* Ensure MathJax content renders LTR */
+        .mjx-math {
+            direction: ltr !important;
+            text-align: left !important; /* For display math blocks */
+        }
+        mjx-container {
+             direction: ltr !important;
+             text-align: left !important; /* For display math blocks */
+        }
+        code {
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        ul {
+            padding-right: 20px; /* For RTL lists */
+        }
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 1: הקדמה - תרגול מד"ח</h1>
+
+        <div class="theory-section">
+            <h2>סיכום תיאורטי: פרק 1 - הקדמה</h2>
+            <p>פרק זה מציג את המושגים הבסיסיים של משוואות דיפרנציאליות חלקיות (מד"ח).</p>
+            
+            <h3>הגדרה כללית ודוגמאות</h3>
+            <p>
+                <strong>משוואה דיפרנציאלית חלקית (מד"ח)</strong> היא משוואה המקשרת בין פונקציה לא ידועה של מספר משתנים בלתי תלויים לבין נגזרותיה החלקיות.
+                <strong>פתרון המד"ח</strong> הוא מציאת הפונקציה הלא ידועה המקיימת את המשוואה.
+            </p>
+            <p>דוגמאות מפורסמות:</p>
+            <ul>
+                <li><strong>משוואת הגלים:</strong> $u_{tt} - c^2 u_{xx} = 0$. מתארת את משרעת הגל $u(x,t)$ בנקודה $x$ ובזמן $t$.</li>
+                <li><strong>משוואת החום:</strong> $u_t - k u_{xx} = 0$. מתארת את הטמפרטורה $u(x,t)$.</li>
+                <li><strong>משוואת לפלס:</strong> $u_{xx} + u_{yy} = 0$ או $\Delta u = 0$. מתארת פוטנציאל חשמלי/כבידתי $u(x,y)$.
+                    כאשר $\Delta = \sum_{i=1}^n \frac{\partial^2}{\partial x_i^2}$ הוא אופרטור הלפלסיאן.
+                </li>
+            </ul>
+            <p>הקורס יתמקד בעיקר במד"ח עם שני משתנים בלתי תלויים. הצורה הכללית של מד"ח היא:
+            $F(x_1, x_2, \ldots, x_n, u, u_{x_1}, u_{x_2}, \ldots, u_{x_1x_1}, \ldots) = 0$.
+            </p>
+
+            <h3>1.1 מושגים במד"ח</h3>
+            <p><strong>הגדרה 1.2: סדר המד"ח</strong></p>
+            <p>סדר המד"ח הוא סדר הנגזרת החלקית הגבוהה ביותר המופיעה במשוואה.</p>
+            
+            <p><strong>הגדרה 1.3: ליניאריות של מד"ח</strong></p>
+            <ul>
+                <li><strong>ליניארית:</strong> הפונקציה $F$ היא ליניארית בפונקציה הנעלמת $u$ ובכל נגזרותיה.
+                    לדוגמה: $a(x,y)u_{xx} + b(x,y)u_{xy} + c(x,y)u_{yy} + d(x,y)u_x + e(x,y)u_y + f(x,y)u = g(x,y)$.
+                </li>
+                <li><strong>סמי-ליניארית:</strong> הפונקציה $F$ היא ליניארית בנגזרות החלקיות מהסדר הגבוה ביותר, אך יכולה להיות לא-ליניארית ב-$u$ ובנגזרות מסדר נמוך יותר. מקדמי הנגזרות מסדר גבוה תלויים רק במשתנים הבלתי תלויים.
+                    לדוגמה: $u_{xx} + u_{yy} = u^3 + x$.
+                </li>
+                <li><strong>קוואזי-ליניארית:</strong> הפונקציה $F$ היא ליניארית בנגזרות החלקיות מהסדר הגבוה ביותר, אך המקדמים של נגזרות אלו יכולים להיות תלויים ב-$u$ ובנגזרות מסדר נמוך יותר.
+                    לדוגמה: $u u_{xx} + (u_x)^2 u_{yy} = \sin(u)$.
+                </li>
+                <li><strong>אי-ליניארית:</strong> כל מד"ח שאינה ליניארית, סמי-ליניארית או קוואזי-ליניארית.
+                    לדוגמה: $(u_x)^2 + (u_y)^2 = 1$.
+                </li>
+            </ul>
+
+            <p><strong>הגדרה 1.4: מד"ח הומוגנית</strong></p>
+            <p>מד"ח <em>ליניארית</em> תיקרא הומוגנית אם הפונקציה $F$ אינה מכילה איבר חופשי (איבר שתלוי רק במשתנים הבלתי תלויים $x,y,\ldots$). כלומר, אם $u=0$ הוא פתרון למשוואה.</p>
+            
+            <p><strong>טענה 1.5: עקרון הסופרפוזיציה</strong></p>
+            <ol>
+                <li>אוסף הפתרונות של מד"ח ליניארית והומוגנית מהווה מרחב לינארי.</li>
+                <li>אוסף הפתרונות של מד"ח ליניארית ואי-הומוגנית מהווה מרחב אפיני (כלומר, פתרון כללי הוא סכום של פתרון פרטי כלשהו ופתרון כללי של המשוואה ההומוגנית המתאימה).</li>
+            </ol>
+            <p><strong>דוגמאות פשוטות (מתוך הרצאה 1.6):</strong></p>
+            <ul>
+                <li>פתרון המד"ח $u_x = 0$ הוא $u(x,y) = f(y)$, כאשר $f$ היא פונקציה שרירותית של $y$.</li>
+                <li>פתרון המד"ח $u_x = y$ הוא $u(x,y) = xy + f(y)$.</li>
+            </ul>
+
+            <h3>1.2 תנאים נלווים</h3>
+            <p>לרוב, למד"ח יש אינסוף פתרונות. כדי לקבל פתרון יחיד (או קבוצה מצומצמת של פתרונות), יש צורך להוסיף תנאים נלווים. מד"ח יחד עם תנאים נלווים נקראת <strong>בעיית קושי</strong>.</p>
+            <p>סוגי תנאים נפוצים:</p>
+            <ul>
+                <li><strong>תנאי שפה:</strong> מוגדרים על שפת התחום $D$ בו מחפשים פתרון.
+                    <ul>
+                        <li><strong>תנאי דיריכלה (Dirichlet):</strong> ערך הפונקציה $u$ נתון על השפה.</li>
+                        <li><strong>תנאי נוימן (Neumann):</strong> הנגזרת הנורמלית של $u$ נתונה על השפה.</li>
+                        <li><strong>תנאי רובין (Robin):</strong> צירוף לינארי של $u$ ונגזרתה הנורמלית נתון על השפה.</li>
+                        <li><strong>תנאים מעורבים:</strong> סוגים שונים של תנאי שפה על חלקים שונים של השפה.</li>
+                    </ul>
+                </li>
+                <li><strong>תנאי התחלה:</strong> כאשר אחד המשתנים מייצג זמן (לרוב $t$), התנאים ניתנים בזמן התחלתי $t=t_0$.</li>
+                <li><strong>עקום התחלה:</strong> תנאי שהפתרון יעבור דרך עקום (או משטח) נתון.</li>
+            </ul>
+            <p>דוגמה מההרצאה (עמוד 5): עבור המד"ר $u_x = au+b$ (כאשר $a,b$ קבועים, $a \neq 0$):</p>
+            <ul>
+                <li>עם תנאי $u(0,y)=y$, מתקבל פתרון יחיד.</li>
+                <li>עם תנאי $u(x,0)=2x$, לרוב לא קיים פתרון.</li>
+                <li>עם תנאי $u(x,0)=-b/a$, קיימים אינסוף פתרונות (אם $f(0)$ מתאים, כאשר $u(x,y) = (f(y) + b/a)e^{ax} - b/a$ הוא הפתרון הכללי יותר).</li>
+            </ul>
+
+            <h3>1.3 פתרון אמיתי (קלאסי)</h3>
+            <p><strong>הגדרה 1.7: פתרון אמיתי (קלאסי)</strong></p>
+            <p>פתרון $u$ של מד"ח נקרא פתרון אמיתי או קלאסי אם הוא גזיר ברציפות עד לסדר המשוואה.</p>
+            <p><strong>הגדרה 1.8: פתרון מוכלל (חלש)</strong></p>
+            <p>פתרון $u$ שמקיים את הדרישות לפתרון אמיתי "כמעט בכל מקום" (כלומר, פרט למספר סופי של עקומים או נקודות).</p>
+
+            <h3>1.4 מוצגות היטב (Well-Posedness)</h3>
+            <p>השאלה היסודית עבור בעיית קושי היא האם הבעיה "מוצגת היטב".</p>
+            <p><strong>הגדרה 1.10 (הדמר, 1923):</strong> בעיית קושי נקראת <strong>מוצגת היטב</strong> אם מתקיימים התנאים הבאים:</p>
+            <ol>
+                <li><strong>קיום (Existence):</strong> לבעיה קיים פתרון.</li>
+                <li><strong>יחידות (Uniqueness):</strong> לבעיה קיים לכל היותר פתרון אחד.</li>
+                <li><strong>יציבות (Stability):</strong> הפתרון "משתנה מעט" כאשר המשוואה או התנאים הנלווים "משתנים מעט" (תלות רציפה של הפתרון בנתונים).</li>
+            </ol>
+        </div>
+
+        <h2>תרגול: בעיות ופתרונות</h2>
+
+        <div class="navigation-controls">
+            <button id="prevProblemBtn">הבעיה הקודמת</button>
+            <span id="problemCounter" class="problem-counter">בעיה 1 / 25</span>
+            <button id="nextProblemBtn">הבעיה הבאה</button>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button id="viewAllBtn">הצג את כל הבעיות</button>
+        </div>
+
+        <div id="singleProblemView">
+            <!-- Problems will be injected here by JavaScript -->
+        </div>
+
+        <div id="viewAllContainer" class="view-all-container">
+            <h2>כל הבעיות</h2>
+            <!-- All problems will be injected here for "View All" mode -->
+        </div>
+    </div>
+
+    <script>
+        // --- Problem Data ---
+        const problems = [
+            // --- Order and Linearity Problems ---
+            {
+                statement: "קבעו את הסדר של המשוואה הדיפרנציאלית החלקית הבאה: $u_{xxx} + u_{yy} + x u_x + y u_y + u = 0$.",
+                solution: "הנגזרת החלקית הגבוהה ביותר במשוואה היא $u_{xxx}$ (נגזרת שלישית של $u$ לפי $x$). לכן, סדר המשוואה הוא 3."
+            },
+            {
+                statement: "סווגו את המשוואה הבאה מבחינת ליניאריות (ליניארית, סמי-ליניארית, קוואזי-ליניארית, אי-ליניארית): $u_t + u u_x = u_{xx}$.",
+                solution: "המשוואה היא: $u_t + u u_x - u_{xx} = 0$.<br>" +
+                           "הנגזרת מהסדר הגבוה ביותר היא $u_{xx}$ והיא מופיעה באופן ליניארי (מקדם 1-).<br>" +
+                           "הנגזרת $u_t$ מופיעה באופן ליניארי (מקדם 1).<br>" +
+                           "האיבר $u u_x$ מכיל את הפונקציה הנעלמת $u$ כופלת את הנגזרת $u_x$. המקדם של הנגזרת מהסדר הראשון $u_x$ הוא $u$, שתלוי בפונקציה הנעלמת.<br>" +
+                           "מכיוון שהנגזרת הגבוהה ביותר ($u_{xx}$) מופיעה באופן ליניארי, אך מקדמי נגזרות מסדר נמוך יותר (כמו $u_x$ שהמקדם שלו הוא $u$) יכולים להיות תלויים ב-$u$, המשוואה היא <strong>קוואזי-ליניארית</strong>."
+            },
+            {
+                statement: "סווגו את המשוואה הבאה מבחינת ליניאריות: $(u_x)^2 + (u_y)^2 = \\sin(x)$.",
+                solution: "המשוואה מכילה ריבועים של הנגזרות הראשונות, $(u_x)^2$ ו- $(u_y)^2$. לכן, היא <strong>אי-ליניארית</strong>."
+            },
+            {
+                statement: "קבעו את הסדר וסווגו את הליניאריות של המשוואה: $x^2 u_{xy} + y^2 u_y + e^x u = \\cos(y)$.",
+                solution: "<strong>סדר:</strong> הנגזרת הגבוהה ביותר היא $u_{xy}$ (סדר 2). לכן, סדר המשוואה הוא 2.<br>" +
+                           "<strong>ליניאריות:</strong> כל הנגזרות ($u_{xy}, u_y$) והפונקציה $u$ מופיעות במשוואה בחזקה ראשונה, והמקדמים שלהן ($x^2, y^2, e^x$) תלויים רק במשתנים הבלתי תלויים $x,y$. לכן, המשוואה היא <strong>ליניארית</strong>."
+            },
+            {
+                statement: "סווגו את המשוואה הבאה מבחינת ליניאריות: $u_{tt} - u_{xx} + \\sin(u) = 0$.",
+                solution: "הנגזרות הגבוהות ביותר ($u_{tt}, u_{xx}$) מופיעות באופן ליניארי. האיבר $\\sin(u)$ תלוי בפונקציה הנעלמת $u$ באופן לא ליניארי, אך אינו כופל נגזרות מהסדר הגבוה ביותר. לכן, המשוואה היא <strong>סמי-ליניארית</strong>."
+            },
+            // --- Homogeneity Problems ---
+            {
+                statement: "האם המשוואה הליניארית הבאה היא הומוגנית? $u_{xx} + u_{yy} = 0$. נמקו.",
+                solution: "כן, המשוואה הומוגנית. כל האיברים במשוואה מכילים את הפונקציה $u$ או נגזרותיה. אין איבר חופשי שתלוי רק ב-$x,y$. אם $u=0$, אז $0_{xx} + 0_{yy} = 0+0=0$, כך ש-$u=0$ הוא פתרון."
+            },
+            {
+                statement: "האם המשוואה הליניארית הבאה היא הומוגנית? $u_t - k u_{xx} = \\sin(x)$. נמקו.",
+                solution: "לא, המשוואה אינה הומוגנית. קיים איבר חופשי $\\sin(x)$ שתלוי רק במשתנה הבלתי תלוי $x$ (ובהנחה ש-$t$ הוא המשתנה השני). אם $u=0$, נקבל $0 - 0 = \\sin(x)$, וזה לא נכון באופן כללי (אלא אם $\\sin(x)=0$). מכיוון שיש 'מקור' או 'איבר כפייה' $\\sin(x)$, היא אי-הומוגנית."
+            },
+            // --- Verifying Solutions ---
+            {
+                statement: "הראו שהפונקציה $u(x,t) = \\sin(x-ct)$ היא פתרון למשוואת הגלים $u_{tt} - c^2 u_{xx} = 0$.",
+                solution: "נגזור את $u(x,t) = \\sin(x-ct)$:<br>" +
+                           "$u_t = -c \\cos(x-ct)$<br>" +
+                           "$u_{tt} = -c^2 \\sin(x-ct)$<br>" +
+                           "$u_x = \\cos(x-ct)$<br>" +
+                           "$u_{xx} = -\\sin(x-ct)$<br>" +
+                           "נציב במשוואת הגלים:<br>" +
+                           "$u_{tt} - c^2 u_{xx} = (-c^2 \\sin(x-ct)) - c^2 (-\\sin(x-ct)) = -c^2 \\sin(x-ct) + c^2 \\sin(x-ct) = 0$.<br>" +
+                           "המשוואה מתקיימת, לכן $u(x,t)$ הוא פתרון."
+            },
+            {
+                statement: "האם $u(x,y) = x^2 - y^2$ הוא פתרון למשוואת לפלס $u_{xx} + u_{yy} = 0$?",
+                solution: "נגזור את $u(x,y) = x^2 - y^2$:<br>" +
+                           "$u_x = 2x$<br>" +
+                           "$u_{xx} = 2$<br>" +
+                           "$u_y = -2y$<br>" +
+                           "$u_{yy} = -2$<br>" +
+                           "נציב במשוואת לפלס:<br>" +
+                           "$u_{xx} + u_{yy} = 2 + (-2) = 0$.<br>" +
+                           "כן, הפונקציה היא פתרון למשוואת לפלס."
+            },
+             // --- Superposition Problems ---
+            {
+                statement: "יהיו $u_1(x,t)$ ו-$u_2(x,t)$ שני פתרונות למשוואת החום ההומוגנית $u_t - k u_{xx} = 0$. הראו כי גם $u(x,t) = A u_1(x,t) + B u_2(x,t)$ הוא פתרון, כאשר $A, B$ קבועים.",
+                solution: "נתון כי $u_1$ ו-$u_2$ הם פתרונות, לכן מתקיים:<br>" +
+                           "$(u_1)_t - k (u_1)_{xx} = 0$<br>" +
+                           "$(u_2)_t - k (u_2)_{xx} = 0$<br>" +
+                           "נגדיר $u = A u_1 + B u_2$. נגזור ונציב במשוואה:<br>" +
+                           "$u_t = (A u_1 + B u_2)_t = A (u_1)_t + B (u_2)_t$<br>" +
+                           "$u_{xx} = (A u_1 + B u_2)_{xx} = A (u_1)_{xx} + B (u_2)_{xx}$<br>" +
+                           "לכן, $u_t - k u_{xx} = (A (u_1)_t + B (u_2)_t) - k (A (u_1)_{xx} + B (u_2)_{xx})$<br>" +
+                           "$= A((u_1)_t - k (u_1)_{xx}) + B((u_2)_t - k (u_2)_{xx})$<br>" +
+                           "מכיוון ש-$u_1$ ו-$u_2$ פתרונות, הביטויים בסוגריים שווים לאפס:<br>" +
+                           "$= A(0) + B(0) = 0$.<br>" +
+                           "לכן, $u = A u_1 + B u_2$ הוא גם פתרון. זהו עקרון הסופרפוזיציה."
+            },
+            // --- Simple PDE Solving ---
+            {
+                statement: "פתרו את המשוואה הדיפרנציאלית החלקית $u_y = x^2 + \\sin(y)$.",
+                solution: "כדי לפתור, נבצע אינטגרציה לפי $y$ כאשר $x$ נחשב לקבוע:<br>" +
+                           "$u(x,y) = \\int (x^2 + \\sin(y)) dy$<br>" +
+                           "$u(x,y) = x^2 \\int dy + \\int \\sin(y) dy$<br>" +
+                           "$u(x,y) = x^2 y - \\cos(y) + C(x)$<br>" +
+                           "כאשר $C(x)$ היא פונקציה שרירותית של $x$ (קבוע האינטגרציה ביחס ל-$y$)."
+            },
+            {
+                statement: "מצאו את הפתרון הכללי למשוואה $u_{xy} = 0$.",
+                solution: "ניתן לכתוב את המשואה כ- $(u_x)_y = 0$.<br>" +
+                           "אינטגרציה לפי $y$ נותנת: $u_x = F(x)$, כאשר $F(x)$ היא פונקציה שרירותית של $x$.<br>" +
+                           "כעת, אינטגרציה לפי $x$ נותנת: $u(x,y) = \\int F(x) dx + G(y)$.<br>" +
+                           "נגדיר $\\int F(x) dx = f(x)$ (פונקציה שרירותית נוספת של $x$).<br>" +
+                           "לכן, הפתרון הכללי הוא $u(x,y) = f(x) + G(y)$, כאשר $f(x)$ ו-$G(y)$ הן פונקציות שרירותיות כלשהן."
+            },
+            {
+                statement: "פתרו את המד\"ח $u_x = e^y$ עם תנאי $u(0,y) = y^2$.",
+                solution: "נפתור את המד\"ח $u_x = e^y$ על ידי אינטגרציה לפי $x$ (כאשר $y$ קבוע):<br>" +
+                           "$u(x,y) = \\int e^y dx = x e^y + C(y)$<br>" +
+                           "כאשר $C(y)$ היא פונקציה שרירותית של $y$.<br>" +
+                           "כעת נשתמש בתנאי $u(0,y) = y^2$:<br>" +
+                           "$u(0,y) = (0)e^y + C(y) = C(y)$<br>" +
+                           "לכן, $C(y) = y^2$.<br>" +
+                           "הפתרון הסופי הוא $u(x,y) = x e^y + y^2$."
+            },
+            // --- Auxiliary Conditions ---
+            {
+                statement: "מהו ההבדל העקרוני בין תנאי שפה מסוג דיריכלה לתנאי שפה מסוג נוימן?",
+                solution: "<strong>תנאי שפה מסוג דיריכלה</strong> מציין את ערך הפונקציה הנעלמת $u$ עצמה על שפת התחום.<br>" +
+                           "<strong>תנאי שפה מסוג נוימן</strong> מציין את ערך הנגזרת הנורמלית (הנגזרת בכיוון הניצב לשפה) של הפונקציה $u$ על שפת התחום."
+            },
+            {
+                statement: "עבור משוואת החום $u_t = k u_{xx}$ במוט סופי $0 \\le x \\le L$ ו-$t \\ge 0$, אילו סוגי תנאים נלווים נדרשים בדרך כלל כדי להגדיר בעיה היטב?",
+                solution: "בדרך כלל נדרשים:<br>" +
+                           "1. <strong>תנאי התחלה:</strong> ערך הטמפרטורה $u(x,0) = f(x)$ לכל $x$ במוט בזמן $t=0$.<br>" +
+                           "2. <strong>תנאי שפה (שניים):</strong> תנאים בשני קצוות המוט, $x=0$ ו-$x=L$, לכל $t > 0$. למשל:<br>" +
+                           "   - תנאי דיריכלה: $u(0,t) = g_1(t)$ ו-$u(L,t) = g_2(t)$ (טמפרטורה קבועה או משתנה בזמן בקצוות).<br>" +
+                           "   - תנאי נוימן: $u_x(0,t) = h_1(t)$ ו-$u_x(L,t) = h_2(t)$ (שטף חום נתון בקצוות, למשל קצוות מבודדים כאשר $h_1=h_2=0$).<br>" +
+                           "   - תנאי רובין או תנאים מעורבים גם אפשריים."
+            },
+            // --- Problems related to u_x = au+b example ---
+            {
+                statement: "נתונה המד\"ח $u_x = 2u + 4$. הפתרון הכללי (כאשר $y$ הוא פרמטר) הוא $u(x,y) = C(y)e^{2x} - 2$.<br>מצאו את הפתרון הפרטי המקיים את תנאי ההתחלה $u(0,y) = \\cos(y)$.",
+                solution: "הפתרון הכללי הוא $u(x,y) = C(y)e^{2x} - 2$.<br>" +
+                           "נשתמש בתנאי ההתחלה $u(0,y) = \\cos(y)$:<br>" +
+                           "$u(0,y) = C(y)e^{2(0)} - 2 = C(y)e^0 - 2 = C(y) - 2$.<br>" +
+                           "לכן, $C(y) - 2 = \\cos(y)$, מה שמוביל ל- $C(y) = \\cos(y) + 2$.<br>" +
+                           "הפתרון הפרטי הוא $u(x,y) = (\\cos(y) + 2)e^{2x} - 2$."
+            },
+            {
+                statement: "עבור המד\"ח $u_x = au + b$ ($a \\neq 0$), מצאנו שהפתרון הכללי יכול להיכתב כ-$u(x,y) = (f(y) + b/a)e^{ax} - b/a$.<br>תחת איזה תנאי על $f(y)$ וקבוע $K$ יהיו אינסוף פתרונות לבעיה עם תנאי השפה $u(x,0) = K$?",
+                solution: "כדי שיהיו אינסוף פתרונות עם תנאי השפה $u(x,0)=K$, הפונקציה $f(y)$ צריכה לאפשר זאת. נציב $y=0$ בפתרון הכללי:<br>" +
+                           "$u(x,0) = (f(0) + b/a)e^{ax} - b/a$.<br>" +
+                           "אנו דורשים שזה יהיה שווה לקבוע $K$:<br>" +
+                           "$(f(0) + b/a)e^{ax} - b/a = K$.<br>" +
+                           "כדי שזהות זו תתקיים לכל $x$, הביטוי שכופל את $e^{ax}$ חייב להיות אפס (אחרת תהיה תלות ב-$x$).<br>" +
+                           "לכן, $f(0) + b/a = 0 \\implies f(0) = -b/a$.<br>" +
+                           "אם תנאי זה מתקיים, אז המשוואה הופכת ל- $0 \\cdot e^{ax} - b/a = K$, כלומר $-b/a = K$.<br>" +
+                           "אז, אם $K = -b/a$ ו-$f(0) = -b/a$, אז כל פונקציה $f(y)$ המקיימת $f(0)=-b/a$ תיתן פתרון. מכיוון שיש אינסוף פונקציות כאלה, יהיו אינסוף פתרונות.<br>" +
+                           "לסיכום: התנאי הוא $K = -b/a$, ו-$f(y)$ היא פונקציה כלשהי המקיימת $f(0) = -b/a$."
+            },
+            // --- Classical vs. Generalized Solutions ---
+            {
+                statement: "נתון הפתרון $u(x,y) = |y|$ למשוואה $u_x = 0$. האם זהו פתרון קלאסי בכל המישור $\\mathbb{R}^2$? נמקו.",
+                solution: "המשוואה $u_x = 0$ היא מסדר ראשון. פתרון קלאסי דורש שהנגזרות עד סדר המשוואה (כלומר, נגזרות ראשונות) יהיו רציפות.<br>" +
+                           "$u_x = \\frac{\\partial}{\\partial x} |y| = 0$. נגזרת זו רציפה (היא 0 בכל מקום).<br>" +
+                           "עם זאת, הפונקציה $u(x,y)=|y|$ עצמה אינה גזירה ברציפות ביחס ל-$y$ בנקודות בהן $y=0$. הנגזרת $u_y = \\text{sgn}(y)$ (עבור $y \\neq 0$) אינה מוגדרת ב-$y=0$ ואינה רציפה שם.<br>" +
+                           "ההגדרה של פתרון קלאסי למד\"ח דורשת שהפונקציה $u$ וכל הנגזרות המופיעות במשוואה (עד סדר המשוואה) יהיו רציפות. כאן המשוואה היא $u_x=0$. הפונקציה $u=|y|$ רציפה. הנגזרת $u_x=0$ רציפה. לכן, $u(x,y)=|y|$ <strong>הוא פתרון קלאסי</strong> למשוואה הספציפית $u_x=0$.<br>" +
+                           "אם המשוואה הייתה כוללת $u_y$, אז $u=|y|$ לא היה פתרון קלאסי."
+            },
+            {
+                statement: "מהי הדרישה העיקרית על פונקציה $F(y)$ כך ש-$u(x,y) = F(y)$ יהיה פתרון קלאסי למשוואה $u_{xx} + u_x + u = F(y)$?",
+                solution: "המד\"ח היא $u_{xx} + u_x + u = F(y)$. נציב $u(x,y) = F(y)$:<br>" +
+                           "$u_x = \\frac{\\partial}{\\partial x} F(y) = 0$<br>" +
+                           "$u_{xx} = \\frac{\\partial}{\\partial x} (0) = 0$<br>" +
+                           "הצבה במשוואה נותנת: $0 + 0 + F(y) = F(y)$.<br>" +
+                           "זהות זו מתקיימת לכל פונקציה $F(y)$.<br>" +
+                           "כדי ש-$u(x,y) = F(y)$ יהיה פתרון קלאסי, הפונקציה $u$ ונגזרותיה המופיעות במשוואה (עד סדר 2 לפי $x$) צריכות להיות רציפות. מכיוון ש-$u_x=0$ ו-$u_{xx}=0$, הן רציפות תמיד.<br>" +
+                           "הדרישה היחידה על $F(y)$ היא שהיא תהיה <strong>רציפה</strong> (כדי ש-$u$ יהיה רציף), ושתהיה גזירה פעמיים ברציפות אם היו מופיעות נגזרות לפי $y$ במשוואה והיינו בודקים גזירות גם לפיהן. מכיוון שהמשוואה אינה מגבילה את $F(y)$ מעבר לכך שהיא עצמה, הדרישה המינימלית לפתרון קלאסי היא ש-$F(y)$ תהיה פונקציה רציפה."
+            },
+            // --- Well-Posedness Problems ---
+            {
+                statement: "פרטו את שלושת התנאים של הדמר (Hadamard) לבעיית קושי מוצגת היטב.",
+                solution: "שלושת התנאים של הדמר לבעיית קושי מוצגת היטב הם:<br>" +
+                           "1. <strong>קיום (Existence):</strong> חייב להתקיים לפחות פתרון אחד לבעיה.<br>" +
+                           "2. <strong>יחידות (Uniqueness):</strong> חייב להתקיים לכל היותר פתרון אחד לבעיה.<br>" +
+                           "3. <strong>יציבות (Stability):</strong> הפתרון צריך להיות תלוי באופן רציף בנתוני הבעיה (המשוואה עצמה והתנאים הנלווים). כלומר, שינוי קטן בנתונים יוביל לשינוי קטן בפתרון."
+            },
+            {
+                statement: "מדוע תנאי היציבות חשוב בבעיות פיזיקליות הממודלות על ידי מד\"ח?",
+                solution: "תנאי היציבות חשוב מכיוון שבמציאות הפיזיקלית, מדידות של נתונים (כמו תנאי התחלה או שפה) תמיד כרוכות בשגיאות קטנות. אם הבעיה אינה יציבה, שגיאות מדידה קטנות אלו עלולות להוביל לשינויים גדולים מאוד בפתרון המתמטי, מה שהופך את המודל לבלתי אמין לתיאור המציאות או לניבוי התנהגות המערכת."
+            },
+            {
+                statement: "האם משוואה כמו $(u_x)^2 = -1$ יכולה להגדיר בעיית קושי מוצגת היטב עבור פונקציות ממשיות $u(x,y)$? נמקו בהתבסס על תנאי הקיום.",
+                solution: "עבור פונקציות ממשיות $u(x,y)$, הנגזרת $u_x$ היא פונקציה ממשית. ריבוע של מספר ממשי הוא תמיד אי-שלילי, כלומר $(u_x)^2 \\ge 0$.<br>" +
+                           "המשוואה $(u_x)^2 = -1$ דורשת שריבוע של מספר ממשי יהיה שלילי, וזה בלתי אפשרי במספרים הממשיים.<br>" +
+                           "לכן, לא קיים פתרון ממשי למשוואה זו. מכיוון שתנאי ה<strong>קיום</strong> אינו מתקיים, המשוואה אינה יכולה להגדיר בעיית קושי מוצגת היטב עבור פונקציות ממשיות."
+            },
+            // --- Mixed concept problems ---
+            {
+                statement: "נתונה משוואת החום $u_t = u_{xx}$. אם $u_1(x,t)$ הוא פתרון, האם $u_2(x,t) = u_1(x, t+C)$ (כאשר $C$ קבוע) הוא גם פתרון? האם $u_3(x,t) = u_1(x+C, t)$ הוא גם פתרון?",
+                solution: "משוואת החום $u_t = u_{xx}$ היא ליניארית והומוגנית, והמקדמים שלה קבועים.<br>" +
+                           "1. עבור $u_2(x,t) = u_1(x, t+C)$: נגדיר $\\tau = t+C$. אז $\\frac{\\partial u_2}{\\partial t} = \\frac{\\partial u_1}{\\partial \\tau} \\frac{\\partial \\tau}{\\partial t} = \\frac{\\partial u_1}{\\partial \\tau} \\cdot 1$. וכן $\\frac{\\partial^2 u_2}{\\partial x^2} = \\frac{\\partial^2 u_1}{\\partial x^2}$.<br>" +
+                           "   המשוואה עבור $u_1$ היא $\\frac{\\partial u_1}{\\partial \\tau} = \\frac{\\partial^2 u_1}{\\partial x^2}$. לכן, גם $u_2$ מקיים את המשוואה. <strong>כן, $u_2$ הוא פתרון</strong> (אינווריאנטיות להזזה בזמן).<br>" +
+                           "2. עבור $u_3(x,t) = u_1(x+C, t)$: נגדיר $\\xi = x+C$. אז $\\frac{\\partial u_3}{\\partial t} = \\frac{\\partial u_1}{\\partial t}$. וכן $\\frac{\\partial u_3}{\\partial x} = \\frac{\\partial u_1}{\\partial \\xi} \\frac{\\partial \\xi}{\\partial x} = \\frac{\\partial u_1}{\\partial \\xi} \\cdot 1$, ולכן $\\frac{\\partial^2 u_3}{\\partial x^2} = \\frac{\\partial^2 u_1}{\\partial \\xi^2}$.<br>" +
+                           "   המשוואה עבור $u_1$ היא $\\frac{\\partial u_1}{\\partial t} = \\frac{\\partial^2 u_1}{\\partial \\xi^2}$. לכן, גם $u_3$ מקיים את המשוואה. <strong>כן, $u_3$ הוא פתרון</strong> (אינווריאנטיות להזזה במרחב)."
+            },
+            {
+                statement: "מהו סדר המד\"ח $u_{tt} = (1+(u_x)^2) u_{xx}$? האם היא ליניארית, קוואזי-ליניארית או סמי-ליניארית?",
+                solution: "הנגזרת הגבוהה ביותר היא $u_{tt}$ או $u_{xx}$, שתיהן מסדר 2. לכן <strong>סדר המד\"ח הוא 2</strong>.<br>" +
+                           "הנגזרת הגבוהה ביותר ($u_{xx}$) מופיעה באופן ליניארי, אך המקדם שלה $(1+(u_x)^2)$ תלוי בנגזרת מסדר נמוך יותר ($u_x$).<br>" +
+                           "לכן, המשוואה היא <strong>קוואזי-ליניארית</strong>."
+            },
+            {
+                statement: "נתונה המשוואה $u_x + f(y) u_y = g(x,y,u)$. תחת אילו תנאים על $f$ ו-$g$ המשוואה תהיה (א) ליניארית (ב) סמי-ליניארית (ג) קוואזי-ליניארית?",
+                solution: "המשוואה היא מסדר ראשון.<br>" +
+                           "(א) <strong>ליניארית:</strong> המשוואה תהיה ליניארית אם $g(x,y,u)$ היא ליניארית ב-$u$, כלומר $g(x,y,u) = A(x,y)u + B(x,y)$. הפונקציה $f(y)$ יכולה להיות כל פונקציה של $y$.<br>" +
+                           "(ב) <strong>סמי-ליניארית:</strong> כל המד\"ח מסדר ראשון שהיא ליניארית בנגזרות היא סמי-ליניארית אם המקדמים של הנגזרות ($1$ ו-$f(y)$) תלויים רק ב-$x,y$. $g(x,y,u)$ יכולה להיות כל פונקציה (לאו דווקא ליניארית ב-$u$). מכיוון ש-$f(y)$ תלויה רק ב-$y$, המשוואה תמיד סמי-ליניארית כל עוד $f(y)$ מוגדרת היטב.<br>" +
+                           "(ג) <strong>קוואזי-ליניארית:</strong> כל מד\"ח מסדר ראשון היא קוואזי-ליניארית אם היא ליניארית בנגזרות, כאשר המקדמים יכולים להיות תלויים גם ב-$u$. במקרה שלנו, המקדמים של $u_x$ ו-$u_y$ הם $1$ ו-$f(y)$ (שאינם תלויים ב-$u$). לכן, התנאי לקוואזי-ליניאריות זהה לתנאי לסמי-ליניאריות: $f(y)$ מוגדרת היטב ו-$g(x,y,u)$ יכולה להיות כל פונקציה.<br>" +
+                           "למעשה, כל משוואה סמי-ליניארית היא גם קוואזי-ליניארית. אם $g$ ליניארית ב-$u$, אז היא גם סמי-ליניארית וגם קוואזי-ליניארית."
+            }
+        ];
+
+        // --- JavaScript Logic ---
+        let currentProblemIndex = 0;
+        const problemCounterElement = document.getElementById('problemCounter');
+        const singleProblemViewContainer = document.getElementById('singleProblemView');
+        const viewAllContainer = document.getElementById('viewAllContainer');
+
+        function displayProblem(index) {
+            // Clear previous problem from single view
+            singleProblemViewContainer.innerHTML = '';
+
+            const problem = problems[index];
+            const problemDiv = document.createElement('div');
+            problemDiv.className = 'problem-container';
+            problemDiv.id = `problem-container-${index}`;
+
+            const statementDiv = document.createElement('div');
+            statementDiv.className = 'problem-statement';
+            statementDiv.id = `problem-statement-${index}`;
+            statementDiv.innerHTML = `<h3>בעיה ${index + 1}</h3><p>${problem.statement}</p>`;
+            
+            const showSolutionBtn = document.createElement('button');
+            showSolutionBtn.textContent = 'הצג פתרון';
+            showSolutionBtn.id = `solution-button-${index}`;
+            showSolutionBtn.onclick = () => toggleSolution(index, false);
+
+            const solutionDiv = document.createElement('div');
+            solutionDiv.className = 'solution-area';
+            solutionDiv.id = `solution-area-${index}`;
+            solutionDiv.innerHTML = `<h4>פתרון:</h4><p>${problem.solution}</p>`;
+
+            problemDiv.appendChild(statementDiv);
+            problemDiv.appendChild(showSolutionBtn);
+            problemDiv.appendChild(solutionDiv);
+            
+            singleProblemViewContainer.appendChild(problemDiv);
+
+            problemCounterElement.textContent = `בעיה ${index + 1} / ${problems.length}`;
+            
+            if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+                MathJax.typesetPromise([problemDiv]);
+            }
+        }
+
+        function toggleSolution(index, isViewAll) {
+            const prefix = isViewAll ? 'view-all-' : '';
+            const solutionArea = document.getElementById(`solution-area-${prefix}${index}`);
+            const button = document.getElementById(`solution-button-${prefix}${index}`);
+            if (solutionArea) {
+                if (solutionArea.style.display === 'none' || solutionArea.style.display === '') {
+                    solutionArea.style.display = 'block';
+                    button.textContent = 'הסתר פתרון';
+                    if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+                         // Typeset only if it's the first time showing or content might have changed
+                        if (!solutionArea.dataset.mathjaxTyset) {
+                            MathJax.typesetPromise([solutionArea]);
+                            solutionArea.dataset.mathjaxTyset = "true";
+                        }
+                    }
+                } else {
+                    solutionArea.style.display = 'none';
+                    button.textContent = 'הצג פתרון';
+                }
+            }
+        }
+
+        document.getElementById('prevProblemBtn').addEventListener('click', () => {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        document.getElementById('nextProblemBtn').addEventListener('click', () => {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                displayProblem(currentProblemIndex);
+            }
+        });
+        
+        document.getElementById('viewAllBtn').addEventListener('click', () => {
+            const btn = document.getElementById('viewAllBtn');
+            if (viewAllContainer.style.display === 'none' || viewAllContainer.style.display === '') {
+                viewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל הבעיות';
+                if (viewAllContainer.innerHTML.includes('כל הבעיות</h2>')) { // Check if already populated
+                    // Populate if not already done or if problems might have changed
+                    viewAllContainer.innerHTML = '<h2>כל הבעיות</h2>'; // Clear and repopulate
+                    problems.forEach((problem, index) => {
+                        const problemItemDiv = document.createElement('div');
+                        problemItemDiv.className = 'problem-view-all-item';
+
+                        const statementDiv = document.createElement('div');
+                        statementDiv.className = 'problem-statement';
+                        statementDiv.id = `problem-statement-view-all-${index}`;
+                        statementDiv.innerHTML = `<h3>בעיה ${index + 1}</h3><p>${problem.statement}</p>`;
+                        
+                        const showSolutionBtn = document.createElement('button');
+                        showSolutionBtn.textContent = 'הצג פתרון';
+                        showSolutionBtn.id = `solution-button-view-all-${index}`;
+                        showSolutionBtn.onclick = () => toggleSolution(index, true);
+
+                        const solutionDiv = document.createElement('div');
+                        solutionDiv.className = 'solution-area';
+                        solutionDiv.id = `solution-area-view-all-${index}`;
+                        solutionDiv.innerHTML = `<h4>פתרון:</h4><p>${problem.solution}</p>`;
+
+                        problemItemDiv.appendChild(statementDiv);
+                        problemItemDiv.appendChild(showSolutionBtn);
+                        problemItemDiv.appendChild(solutionDiv);
+                        viewAllContainer.appendChild(problemItemDiv);
+                    });
+                }
+                 if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([viewAllContainer]);
+                }
+            } else {
+                viewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל הבעיות';
+            }
+        });
+
+        // Initial display
+        displayProblem(currentProblemIndex);
+        // Also typeset the theory section on load
+        if (typeof MathJax !== "undefined" && MathJax.typesetPromise) {
+            MathJax.typesetPromise([document.querySelector('.theory-section')]);
+        }
+    </script>
+</body>
+</html>

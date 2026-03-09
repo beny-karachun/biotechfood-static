@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 6: בטיחות מזון - סיכונים ופעילות מים</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 6: בטיחות מזון - סיכונים ופעילות מים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 6 ---
+
+        const flashcardData = [
+            { term: "HACCP", definition: "Hazard Analysis and Critical Control Points - גישה שיטתית למניעת סיכונים בבטיחות מזון, המבוססת על ניתוח סיכונים וזיהוי נקודות בקרה קריטיות." },
+            { term: "סיכונים מיקרוביאליים", definition: "סיכונים הנובעים מנוכחות או התפתחות של מיקרואורגניזמים (חיידקים, עובשים, שמרים, וירוסים) הגורמים למחלות או לקלקול מזון." },
+            { term: "גופים זרים", definition: "עצמים פיזיים שאינם אמורים להימצא במזון ועלולים לגרום נזק. דוגמאות: זכוכית, מתכת, חרקים, חלקי צמח לא אכילים, עצמות." },
+            { term: "סיכוני אלרגיה", definition: "סיכונים הנובעים מנוכחות חלבונים (אלרגנים) במזון הגורמים לתגובה חיסונית אצל אנשים רגישים. דוגמאות נפוצות: חלב, ביצים, סויה, בוטנים." },
+            { term: "פעילות מים (aw)", definition: "מדד לכמות המים החופשיים הזמינים במזון לפעילות כימית ומיקרוביאלית. נע בין 0 (אין מים חופשיים) ל-1 (מים טהורים)." },
+            { term: "לחות יחסית (%RH)", definition: "היחס באחוזים בין לחץ אדי המים באוויר ללחץ אדי המים באוויר רווי באותה טמפרטורה. קשורה לפעילות המים בשיווי משקל: aw = %RH / 100." },
+            { term: "רטיבות (%WB)", definition: "אחוז המים הכולל במזון על בסיס משקל רטוב (Wet Basis)." },
+            { term: "תכולת מים (בסיס יבש)", definition: "כמות המים בגרמים לכל גרם חומר יבש במזון. מדד שונה מרטיבות או aw." },
+            { term: "Relative Stability Map", definition: "תרשים המתאר את הקשר בין פעילות המים (aw) לקצב של תגובות קלקול שונות במזון (חמצון שומנים, השחמה, פעילות אנזימטית, גדילת מיקרואורגניזמים)." },
+            { term: "גבול aw לגדילת חיידקים רגילים", definition: "לפי הטבלה, חיידקים רגילים (כמו Salmonella, Clostridium botulinum) דורשים aw מינימלי של כ-0.91 לגדילה." },
+            { term: "גבול aw לגדילת שמרים רגילים", definition: "לפי הטבלה, שמרים רגילים (כמו Torulopsis) דורשים aw מינימלי של כ-0.88 לגדילה." },
+            { term: "גבול aw לגדילת עובשים רגילים", definition: "לפי הטבלה, עובשים רגילים (כמו Aspergillus flavus) דורשים aw מינימלי של כ-0.80 לגדילה." },
+            { term: "חיידקים הלופילים", definition: "חיידקים הזקוקים לסביבה בעלת ריכוז מלח גבוה (ופעילות מים נמוכה יחסית) כדי לגדול." },
+            { term: "עובשים קסרופילים", definition: "עובשים המותאמים לגדילה בתנאי יובש (פעילות מים נמוכה)." },
+            { term: "שמרים אוסמופילים", definition: "שמרים המותאמים לגדילה בסביבה בעלת ריכוז סוכר גבוה (לחץ אוסמוטי גבוה ופעילות מים נמוכה)." },
+            { term: "מחלה עקב התפתחות חיידק בגוף", definition: "הרעלת מזון הנגרמת מצריכת מזון המכיל חיידקים פתוגניים שמתרבים בתוך גוף האדם. דוגמאות: Salmonella, Listeria monocytogenes, E. coli, Campylobacter." },
+            { term: "מחלה עקב רעלן (טוקסין) חיידקי", definition: "הרעלת מזון הנגרמת מצריכת מזון המכיל רעלן שהופרש על ידי חיידקים שגדלו במזון קודם לכן. דוגמאות: Staphylococcus aureus, Clostridium botulinum." },
+            { term: "וירוסים כגורמי מחלות מזון", definition: "וירוסים אינם גדלים במזון עצמו, אך מזון יכול לשמש נשא להעברתם. ההדבקה מתרחשת בגוף האדם. דוגמאות: Hepatitis A, Norovirus." },
+            { term: "חמצון שומנים ו-aw", definition: "לפי מפת היציבות, חמצון שומנים מהיר יותר בפעילות מים נמוכה יחסית (אך לא אפסית) וגם בפעילות מים גבוהה מאוד, והוא האיטי ביותר ב-aw בינוני." },
+            { term: "השחמה לא אנזימטית (מייארד) ו-aw", definition: "לפי מפת היציבות, תגובת מייארד מהירה ביותר בטווח aw בינוני (סביב 0.6-0.7) ויורדת ב-aw נמוך או גבוה יותר." }
+
+        ];
+
+        const mcqData = [
+            {
+                question: "מה מייצגות האותיות HACCP?",
+                options: ["Health And Critical Control Points", "Hazard Analysis and Critical Control Points", "High Acid Concentration Control Procedure", "Handling And Cleaning Critical Procedures"],
+                correctIndex: 1,
+                explanation: "HACCP מייצג Hazard Analysis and Critical Control Points, גישה לניתוח סיכונים וזיהוי נקודות בקרה קריטיות בייצור מזון."
+            },
+            {
+                question: "איזה מהבאים אינו אחד משלושת סוגי הסיכונים העיקריים בבטיחות מזון לפי הטקסט?",
+                options: ["סיכונים מיקרוביאליים", "סיכונים כלכליים", "גופים זרים", "סיכוני אלרגיה"],
+                correctIndex: 1,
+                explanation: "שלושת סוגי הסיכונים העיקריים המוזכרים הם מיקרוביאליים, גופים זרים ואלרגנים. סיכונים כלכליים הם תוצאה אפשרית של כשל בבטיחות, אך אינם סוג סיכון ישיר במזון עצמו."
+            },
+            {
+                question: "מהו הגורם העיקרי לסיכוני אלרגיה במזון?",
+                options: ["פחמימות", "שומנים", "חלבונים", "ויטמינים"],
+                correctIndex: 2,
+                explanation: "אלרגנים במזון הם לרוב חלבונים ספציפיים הגורמים לתגובה חיסונית אצל אנשים רגישים."
+            },
+            {
+                question: "מה מודדת פעילות המים (aw)?",
+                options: ["את כמות המים הכוללת במזון", "את טמפרטורת המים במזון", "את כמות המים החופשיים הזמינים לתגובות", "את חומציות המים במזון"],
+                correctIndex: 2,
+                explanation: "פעילות המים (aw) היא מדד לזמינות המים במזון עבור תהליכים כימיים, אנזימטיים ומיקרוביאליים, ולא לכמות המים הכוללת."
+            },
+            {
+                question: "מה הקשר בין פעילות המים (aw) ללחות יחסית בשיווי משקל (%RH)?",
+                options: ["aw = %RH", "aw = 100 / %RH", "aw = %RH / 100", "אין קשר ישיר"],
+                correctIndex: 2,
+                explanation: "פעילות המים של מזון שווה ללחות היחסית של האוויר הנמצא בשיווי משקל עם המזון, מחולקת ב-100 (כאשר aw בטווח 0-1 ו-%RH בטווח 0-100)."
+            },
+            {
+                question: "מהו ערך ה-aw המינימלי המשוער לגדילת רוב החיידקים הפתוגניים?",
+                options: ["0.60", "0.80", "0.88", "0.91"],
+                correctIndex: 3,
+                explanation: "לפי הטבלה, חיידקים רגילים כמו סלמונלה וקלוסטרידיום בוטולינום דורשים aw של לפחות 0.91 כדי לגדול."
+            },
+            {
+                question: "איזה סוג מיקרואורגניזם יכול לגדול בפעילות המים הנמוכה ביותר מבין הבאים?",
+                options: ["חיידקים רגילים", "שמרים רגילים", "עובשים קסרופילים", "וירוסים"],
+                correctIndex: 2,
+                explanation: "עובשים קסרופילים מותאמים לגדילה בתנאי יובש ויכולים לגדול ב-aw נמוך יחסית (לפי הטבלה עד 0.65, ושמרים אוסמופילים עד 0.60)."
+            },
+            {
+                question: "לפי מפת היציבות היחסית, באיזה טווח aw קצב חמצון השומנים הוא לרוב הנמוך ביותר?",
+                options: ["aw נמוך מאוד (קרוב ל-0)", "aw בינוני (סביב 0.3-0.4)", "aw גבוה (סביב 0.7-0.8)", "aw גבוה מאוד (קרוב ל-1)"],
+                correctIndex: 1,
+                explanation: "הגרף מראה שקצב חמצון השומנים יורד עם העלייה ב-aw עד למינימום בטווח בינוני, ואז עולה שוב ב-aw גבוה."
+            },
+             {
+                question: "Staphylococcus aureus גורם להרעלת מזון בעיקר על ידי:",
+                options: ["התרבות מהירה במעי הדק", "הפרשת רעלן (טוקסין) לתוך המזון", "יצירת נבגים עמידים לחום", "פלישה לתאי הגוף"],
+                correctIndex: 1,
+                explanation: "סטפילוקוקוס אוראוס מייצר רעלן יציב לחום (אנטרוטוקסין) במזון, וצריכת הרעלן היא הגורמת למחלה."
+            },
+             {
+                question: "איזה מהפתוגנים הבאים הוא וירוס המועבר במזון?",
+                options: ["Salmonella", "Listeria monocytogenes", "Norovirus", "Clostridium botulinum"],
+                correctIndex: 2,
+                explanation: "נורו-וירוס (והפטיטיס A) הם וירוסים שיכולים לעבור דרך מזון או מים מזוהמים ולגרום למחלה."
+            },
+            {
+                question: "מה נכון לגבי גדילת וירוסים במזון?",
+                options: ["וירוסים גדלים מצוין במזונות עתירי חלבון", "וירוסים יכולים לגדול רק במזונות בעלי aw נמוך", "וירוסים אינם יכולים להתרבות במזון עצמו", "וירוסים מושמדים בקלות על ידי קירור"],
+                correctIndex: 2,
+                explanation: "וירוסים זקוקים לתאים חיים של פונדקאי כדי להתרבות, ולכן אינם יכולים לגדול או להתרבות במזון דומם."
+            },
+             {
+                question: "נתונה גבינה לבנה המכילה 80 גרם מים ו-20 גרם חומר יבש (סהכ 100 גרם). מהי תכולת המים על בסיס יבש?",
+                options: ["80%", "20%", "4 גרם מים לגרם יבש", "0.8 גרם מים לגרם יבש"],
+                correctIndex: 2,
+                explanation: "תכולת מים על בסיס יבש = (גרם מים) / (גרם חומר יבש) = 80 / 20 = 4."
+            },
+             {
+                question: "מהי הסכנה העיקרית בגופים זרים מזכוכית במזון?",
+                options: ["פגיעה בטעם המוצר", "סיכון לפציעה פיזית חמורה בבליעה", "זיהום מיקרוביאלי", "תגובה אלרגית"],
+                correctIndex: 1,
+                explanation: "שברי זכוכית הם חדים ועלולים לגרום לחתכים ופציעות פנימיות חמורות במערכת העיכול."
+            },
+             {
+                question: "מהי הדרך העיקרית שבה גדילת חיידקים כמו סלמונלה גורמת למחלה?",
+                options: ["הפרשת רעלן למזון", "התרבות במערכת העיכול ופלישה לרקמות", "יצירת תגובה אלרגית", "שינוי ה-pH בקיבה"],
+                correctIndex: 1,
+                explanation: "סלמונלה ופתוגנים דומים גורמים למחלה על ידי התרבות במעיים, ולעיתים פלישה דרך דופן המעי למערכת הדם."
+            },
+            {
+                question: "לפי מפת היציבות היחסית, באיזה טווח aw שיעור ההשחמה הלא-אנזימטית (מייארד) הוא הגבוה ביותר?",
+                options: ["aw נמוך מאוד", "aw בינוני (סביב 0.6-0.7)", "aw גבוה (סביב 0.9)", "aw קרוב ל-1"],
+                correctIndex: 1,
+                explanation: "הגרף מראה שיא בפעילות ההשחמה הלא-אנזימטית בטווח aw בינוני."
+            },
+            {
+                question: "איזה מזון מהטבלה בעמוד 14 דורש את ה-aw הנמוך ביותר לגדילת מיקרואורגניזמים?",
+                options: ["חלב טרי", "מיץ פירות מרוכז", "ריבה", "דבש"],
+                correctIndex: 3,
+                explanation: "דבש מושפע מחיידקים הלופילים הדורשים aw=0.75, בעוד ריבה מעובשים ב-aw=0.80 ומיץ פירות משמרים ב-aw=0.88. חלב טרי דורש aw גבוה (0.91+)."
+                // Note: The table shows xerophilic molds at 0.65 and osmophilic yeast at 0.60, typically found in flour and dried fruits, having the lowest aw requirements listed. Honey is listed at 0.75 for halophilic bacteria.
+            },
+             {
+                question: "Clostridium botulinum מסוכן במיוחד כי הוא:",
+                options: ["גורם לאלרגיה חריפה", "מייצר נבגים עמידים ורעלן עצבי חזק", "צומח מהר מאוד בטמפרטורת החדר", "משנה את צבע המזון לירוק"],
+                correctIndex: 1,
+                explanation: "קלוסטרידיום בוטולינום מייצר רעלן (בוטולינום טוקסין) שהוא אחד הרעלנים הביולוגיים החזקים ביותר, וגם יוצר נבגים עמידים מאוד לחום."
+            },
+             {
+                question: "מה יכול לקרות למזון עם aw גבוה (מעל 0.91) אם אינו מטופל כראוי?",
+                options: ["הוא ישאר יציב לאורך זמן ללא שינוי", "הוא יתייבש במהירות", "הוא מועד לגדילה מהירה של חיידקים וקלקול", "הוא יהפוך לחומצי מאוד"],
+                correctIndex: 2,
+                explanation: "Aw גבוה מספק תנאים אופטימליים לגדילת חיידקים רבים, כולל פתוגניים וגורמי קלקול."
+            },
+             {
+                question: "כיצד הורדת פעילות המים (aw) משפיעה על יציבות המזון?",
+                options: ["היא תמיד מורידה את היציבות", "היא לרוב מעלה את היציבות המיקרוביאלית אך עלולה להשפיע על תגובות אחרות", "אין לה כל השפעה", "היא רק משפיעה על צבע המזון"],
+                correctIndex: 1,
+                explanation: "הורדת aw היא עיקרון מרכזי בשימור מזון כי היא מעכבת גדילת מיקרואורגניזמים. עם זאת, כפי שמראה מפת היציבות, היא יכולה להאיץ תגובות אחרות כמו חמצון שומנים ב-aw נמוך מאוד."
+            },
+            {
+                question: "איזה סיכון בטיחותי קשור בעיקר לחלבונים?",
+                options: ["גופים זרים", "סיכונים מיקרוביאליים", "סיכוני אלרגיה", "חמצון שומנים"],
+                correctIndex: 2,
+                explanation: "אלרגנים במזון הגורמים לתגובות חיסוניות הם בדרך כלל חלבונים."
+            },
+            {
+                question: "מהו המדד המתאים ביותר לתיאור זמינות המים לגדילת חיידקים?",
+                options: ["אחוז רטיבות (WB)", "תכולת מים על בסיס יבש", "פעילות מים (aw)", "טמפרטורת המים"],
+                correctIndex: 2,
+                explanation: "פעילות המים (aw) היא המדד הישיר לזמינות המים החופשיים הנדרשים לתהליכים ביולוגיים, כולל גדילת מיקרואורגניזמים."
+            },
+             {
+                question: "מה ההבדל העיקרי בין הרעלה הנגרמת מ-Salmonella לזו הנגרמת מ-Staphylococcus aureus?",
+                options: ["סלמונלה גורמת לשלשול, סטפילוקוקוס לכאב ראש", "סלמונלה נגרמת מגדילת החיידק בגוף, סטפילוקוקוס מצריכת רעלן שנוצר במזון", "סלמונלה נמצאת רק בביצים, סטפילוקוקוס רק בחלב", "אין הבדל משמעותי"],
+                correctIndex: 1,
+                explanation: "סלמונלה היא זיהום (infection) הדורש התרבות החיידק בגוף, בעוד הרעלת סטפילוקוקוס היא שיכרון (intoxication) הנגרם מצריכת רעלן שכבר נמצא במזון."
+            },
+             {
+                question: "פסטה יבשה (aw~0.4) יציבה מיקרוביאלית כי:",
+                options: ["היא מכילה חומרים אנטי-בקטריאליים", "ה-pH שלה נמוך מאוד", "פעילות המים שלה נמוכה מדי לגדילת רוב המיקרואורגניזמים", "היא עשויה מקמח מלא בלבד"],
+                correctIndex: 2,
+                explanation: "ערך ה-aw הנמוך בפסטה יבשה מעכב ביעילות גדילה של חיידקים, שמרים ועובשים."
+            },
+             {
+                question: "איזה גורם עיקרי קובע אם הרעלת מזון תתרחש מגדילת חיידק בגוף או מרעלן?",
+                options: ["סוג המזון שנאכל", "המיקרואורגניזם הספציפי המעורב", "טמפרטורת האחסון של המזון", "כמות המזון שנאכלה"],
+                correctIndex: 1,
+                explanation: "המנגנון הפתוגני (גדילה בגוף או יצירת רעלן במזון) הוא מאפיין של סוג החיידק הספציפי."
+            },
+             {
+                question: "מדוע חשוב לסמן אלרגנים על אריזות מזון?",
+                options: ["כדי להזהיר אנשים רגישים מפני חשיפה מסכנת חיים", "כדי להעלות את מחיר המוצר", "זה נדרש רק עבור מוצרים מיובאים", "כדי להאריך את חיי המדף"],
+                correctIndex: 0,
+                explanation: "סימון אלרגנים חיוני לאנשים הסובלים מאלרגיות למזון כדי שיוכלו להימנע ממוצרים המכילים את האלרגן ולמנוע תגובה מסוכנת."
+            },
+             {
+                question: "גבינה לבנה עם 9% חומר יבש (91% מים) ו-aw=0.98 תהיה:",
+                options: ["יציבה מאוד נגד קלקול מיקרוביאלי", "מועדת לקלקול מהיר על ידי חיידקים", "יציבה רק נגד עובשים", "מתאימה לאחסון מחוץ למקרר"],
+                correctIndex: 1,
+                explanation: "ערך aw של 0.98 הוא גבוה מאוד ומאפשר גדילה מהירה של חיידקים רבים, ולכן המוצר יהיה מועד לקלקול אם לא ישמר בקירור."
+            },
+             {
+                question: "מה משותף ל- Hepatitis A ול- Norovirus בהקשר למזון?",
+                options: ["שניהם חיידקים המייצרים רעלנים", "שניהם וירוסים היכולים לעבור דרך מזון מזוהם", "שניהם גדלים היטב במזון בטמפרטורת החדר", "שניהם סוגים של עובשים"],
+                correctIndex: 1,
+                explanation: "שני אלו הם וירוסים נפוצים הגורמים למחלות המועברות במזון (foodborne viruses)."
+            },
+             {
+                question: "מהו הסיכון העיקרי בשאריות מתכת במזון?",
+                options: ["פגיעה בטעם", "תגובה אלרגית", "סיכון בטיחותי (בליעה) ופוטנציאל לרעילות", "קלקול מהיר של המוצר"],
+                correctIndex: 2,
+                explanation: "חלקיקי מתכת עלולים להיות חדים ולגרום לפציעה, ומתכות כבדות מסוימות עלולות להיות רעילות אם נצרכות בכמות מספקת."
+            },
+             {
+                question: "מהי הדרישה העיקרית מבחינת aw לשם עיכוב גדילה של עובשים רגילים?",
+                options: ["aw מעל 0.95", "aw מתחת ל-0.91", "aw מתחת ל-0.88", "aw מתחת ל-0.80"],
+                correctIndex: 3,
+                explanation: "לפי הטבלה, עובשים רגילים דורשים aw מינימלי של 0.80 לגדילה."
+            },
+             {
+                question: "מזון בעל פעילות מים נמוכה מאוד (למשל 0.2) יהיה יציב מבחינה מיקרוביאלית, אך עלול להיות רגיש יותר ל:",
+                options: ["גדילת חיידקים הלופילים", "פעילות אנזימטית מוגברת", "חמצון שומנים", "השחמה אנזימטית"],
+                correctIndex: 2,
+                explanation: "כפי שמראה מפת היציבות, ב-aw נמוך מאוד, קצב חמצון השומנים יכול לעלות."
+            }
+        ];
+
+
+        const tfData = [
+             { question: "HACCP מתמקד רק בסיכונים מיקרוביאליים.", answer: false, explanation: "HACCP מנתח את כל סוגי הסיכונים: מיקרוביאליים, כימיים (כולל אלרגנים) ופיזיקליים (גופים זרים)." },
+             { question: "זכוכית במזון נחשבת לגוף זר מסוכן.", answer: true, explanation: "שברי זכוכית הם מהגופים הזרים המסוכנים ביותר עקב פוטנציאל הפציעה הגבוה." },
+             { question: "אלרגנים במזון הם בעיקר סוכרים.", answer: false, explanation: "אלרגנים במזון הם בדרך כלל חלבונים ספציפיים." },
+             { question: "פעילות מים (aw) מודדת את אחוז המים הכולל במזון.", answer: false, explanation: "aw מודדת את המים החופשיים/זמינים, לא את הכמות הכוללת." },
+             { question: "ערך aw נע בין 0 ל-1.", answer: true, explanation: "ערכי aw נעים תיאורטית בין 0 (אין מים חופשיים) ל-1 (מים טהורים)." },
+             { question: "ככל שפעילות המים (aw) נמוכה יותר, כך המזון יציב יותר מבחינה מיקרוביאלית.", answer: true, explanation: "הורדת aw היא עיקרון בסיסי בשימור מזון המעכב גדילת מיקרואורגניזמים." },
+             { question: "רוב החיידקים יכולים לגדול היטב ב-aw של 0.7.", answer: false, explanation: "לפי הטבלה, רוב החיידקים הרגילים דורשים aw מינימלי של 0.91." },
+             { question: "עובשים ושמרים מסוימים יכולים לגדול ב-aw נמוך יותר מחיידקים רגילים.", answer: true, explanation: "הטבלה מראה שעובשים ושמרים מסוימים (קסרופילים, אוסמופילים) יכולים לגדול ב-aw נמוך משמעותית מ-0.91." },
+             { question: "לפי מפת היציבות, חמצון שומנים תמיד מהיר יותר ככל ש-aw גבוה יותר.", answer: false, explanation: "הגרף מראה שחמצון שומנים הוא האיטי ביותר ב-aw בינוני ועולה שוב ב-aw גבוה מאוד." },
+             { question: "פעילות אנזימטית במזון נפסקת לחלוטין כאשר aw יורד מתחת ל-0.8.", answer: false, explanation: "הגרף מראה שפעילות אנזימטית נמשכת גם ב-aw נמוך מ-0.8, אם כי בקצב איטי יותר." },
+             { question: "הרעלת מזון מ-Staphylococcus aureus נגרמת מאכילת החיידק החי.", answer: false, explanation: "ההרעלה נגרמת מאכילת הרעלן (טוקסין) שהחיידק ייצר במזון." },
+             { question: "וירוסים כמו Norovirus יכולים להתרבות בתוך מזון.", answer: false, explanation: "וירוסים זקוקים לתאים חיים של פונדקאי כדי להתרבות ואינם מתרבים במזון עצמו." },
+             { question: "Salmonella הוא סוג של וירוס.", answer: false, explanation: "סלמונלה הוא סוג של חיידק." },
+             { question: "פעילות מים ולחות יחסית בשיווי משקל קשורות זו לזו.", answer: true, explanation: "aw שווה ל-%RH (בשיווי משקל) חלקי 100." },
+             { question: "מזון יבש לחלוטין (aw=0) הוא היציב ביותר מכל הבחינות.", answer: false, explanation: "בעוד שהוא יציב מיקרוביאלית, aw נמוך מאוד יכול להאיץ תגובות אחרות כמו חמצון שומנים." },
+             { question: "מוצר עם 90% רטיבות (WB) תמיד יהיה בעל aw של 0.90.", answer: false, explanation: "אין קשר ישיר ופשוט בין אחוז רטיבות ל-aw. הקשר תלוי בסוג המזון וברכיבים הקושרים מים." },
+             { question: "Clostridium botulinum הוא חיידק הגורם למחלה על ידי התרבות במעי.", answer: false, explanation: "המחלה (בוטוליזם) נגרמת מצריכת הרעלן החזק שהחיידק מייצר, לרוב במזון." },
+             { question: "כל סוגי העובשים דורשים aw גבוה מ-0.9 כדי לגדול.", answer: false, explanation: "עובשים רגילים דורשים aw=0.80, ועובשים קסרופילים יכולים לגדול ב-aw נמוך עוד יותר." },
+             { question: "ניהול סיכוני אלרגיה כולל רק סימון על האריזה.", answer: false, explanation: "ניהול אלרגנים כולל גם מניעת זיהום צולב בייצור, ניהול חומרי גלם ועוד." },
+             { question: "ניתן להסתמך על מראה וריח כדי לזהות נוכחות רעלן של Clostridium botulinum במזון.", answer: false, explanation: "הרעלן עצמו חסר טעם, ריח או צבע, ולכן לא ניתן לזיהוי בחושים. גם החיידק לא תמיד גורם לשינוי נראה לעין במזון." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

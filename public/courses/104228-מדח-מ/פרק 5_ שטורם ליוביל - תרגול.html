@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 5: שטורם ליוביל - תרגול משוואות דיפרנציאליות חלקיות</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                tags: 'ams' // For automatic numbering of equations
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #444; /* Slightly lighter than #333 for container */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+        .theory-section, .problem-container, .all-problems-container {
+            background-color: #555; /* Darker than #666 for distinct sections */
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .problem-statement, .solution-area {
+            margin-bottom: 15px;
+        }
+        .solution-area {
+            background-color: #484848; /* Slightly different for solution area */
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            display: none; /* Hidden by default */
+        }
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #3175b0;
+        }
+        .navigation-buttons {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .problem-counter {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 15px;
+        }
+        /* Ensure math renders LTR */
+        .MathJax, .MathJax_Display {
+            direction: ltr !important;
+            text-align: left !important; /* For display math */
+        }
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important; /* For display math */
+        }
+        /* Specific styling for equations to ensure they are aligned left even in RTL */
+        mjx-container[jax="SVG"][display="true"] {
+             display: block;
+             text-align: left !important;
+             margin: 1em 0;
+        }
+        code {
+            background-color: #222;
+            color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 5: שטורם ליוביל - תרגול</h1>
+
+        <div class="theory-section">
+            <h2>תקציר תיאורטי: פרק 5 - שטורם ליוביל</h2>
+            <p>תורת שטורם-ליוביל (Sturm-Liouville) עוסקת בחקר משוואות דיפרנציאליות רגילות (מד"ר) מסדר שני מהצורה הכללית:</p>
+            <p>$$ \frac{d}{dx} \left( p(x) \frac{dv(x)}{dx} \right) + q(x)v(x) + \lambda r(x)v(x) = 0 $$</p>
+            <p>כאשר $v(x)$ היא הפונקציה הנעלמת, $\lambda$ הוא פרמטר, ו-$p(x), q(x), r(x)$ הן פונקציות נתונות. הפונקציה $r(x)$ נקראת פונקציית המשקל (weight function) ומקיימת $r(x) > 0$, וכן $p(x) > 0$ בתחום הנדון.</p>
+            <p>המטרה היא למצוא את הערכים של $\lambda$ (הנקראים ערכים עצמיים - ע"ע) שעבורם קיימים פתרונות לא טריוויאליים $v(x)$ (הנקראים פונקציות עצמיות - פ"ע) המקיימים את המשוואה ותנאי שפה נתונים.</p>
+
+            <h3>סוגי בעיות שטורם-ליוביל:</h3>
+            <ol>
+                <li><strong>בעיית שטורם-ליוביל רגולרית:</strong> מוגדרת בקטע $[a,b]$ עם תנאי שפה מופרדים (separated boundary conditions):
+                    <p>$ \alpha_1 v(a) + \alpha_2 v'(a) = 0 $</p>
+                    <p>$ \beta_1 v(b) + \beta_2 v'(b) = 0 $</p>
+                    כאשר לפחות אחד מכל זוג מקדמים $(\alpha_1, \alpha_2)$ ו-$(\beta_1, \beta_2)$ אינו אפס.
+                    עבור בעיה רגולרית, כל הערכים העצמיים הם פשוטים (מריבוי 1).
+                    דוגמאות כוללות תנאי דיריכלה ($v(a)=v(b)=0$) ותנאי נוימן ($v'(a)=v'(b)=0$).
+                </li>
+                <li><strong>בעיית שטורם-ליוביל מחזורית:</strong> מוגדרת עם תנאי שפה מחזוריים, בדרך כלל בקטע $[a,b]$ כאשר $p(a)=p(b)$:
+                    <p>$ v(a) = v(b) $</p>
+                    <p>$ v'(a) = v'(b) $</p>
+                    בבעיות מחזוריות, ייתכנו ערכים עצמיים עם ריבוי גדול מ-1.
+                </li>
+            </ol>
+
+            <h3>תכונות עיקריות:</h3>
+            <ul>
+                <li><strong>אופרטור שטורם-ליוביל:</strong> $L[v] = (p(x)v'(x))' + q(x)v(x)$. המשוואה נכתבת כ-$L[v] + \lambda r(x)v(x) = 0$.</li>
+                <li><strong>זהות גרין (או זהות לגרנז'):</strong> עבור פונקציות $u,v$ המקיימות את תנאי השפה של בעיית שטורם-ליוביל (רגולרית או מחזורית עם $p(a)=p(b)$):
+                    <p>$ \int_a^b (uL[v] - vL[u]) dx = [p(x)(uv' - vu')]|_a^b = 0 $</p>
+                </li>
+                <li><strong>אורתוגונליות:</strong> פונקציות עצמיות $v_n(x), v_m(x)$ השייכות לערכים עצמיים שונים $\lambda_n \neq \lambda_m$ הן אורתוגונליות ביחס לפונקציית המשקל $r(x)$:
+                    <p>$ \int_a^b v_n(x) v_m(x) r(x) dx = 0 \quad (\text{for } n \neq m) $</p>
+                    המכפלה הפנימית מוגדרת $ (u,v)_r = \int_a^b u(x)v(x)r(x)dx $.
+                </li>
+                <li><strong>ערכים עצמיים ממשיים:</strong> כל הערכים העצמיים של בעיית שטורם-ליוביל רגולרית או מחזורית הם ממשיים.</li>
+                <li><strong>סדרת הערכים העצמיים:</strong> הערכים העצמיים מהווים סדרה דיסקרטית, ממשית, עולה מונוטונית ושואפת לאינסוף: $\lambda_1 < \lambda_2 < \lambda_3 < \dots \to \infty$.</li>
+            </ul>
+
+            <h3>פיתוח לפי פונקציות עצמיות (טורי פורייה מוכללים):</h3>
+            <p>ניתן להציג פונקציה $f(x)$ (בתנאים מסוימים) כטור אינסופי של פונקציות עצמיות של בעיית שטורם-ליוביל:</p>
+            <p>$ f(x) \sim \sum_{n=1}^{\infty} c_n v_n(x) $</p>
+            <p>המקדמים $c_n$ ניתנים על ידי:</p>
+            <p>$ c_n = \frac{\int_a^b f(x) v_n(x) r(x) dx}{\int_a^b v_n^2(x) r(x) dx} = \frac{(f, v_n)_r}{(v_n, v_n)_r} $</p>
+            <p><strong>משפט ההתכנסות:</strong> עבור $f(x)$ גזירה למקוטעין, הטור מתכנס נקודתית ל-$f(x)$ בנקודות רציפות, ולממוצע הגבולות החד-צדדיים $ \frac{1}{2}(f(x^+) + f(x^-)) $ בנקודות אי-רציפות (קפיצה) בתוך הקטע הפתוח $(a,b)$.</p>
+            <p>מקרים פרטיים חשובים כוללים טורי סינוסים (לתנאי דיריכלה), טורי קוסינוסים (לתנאי נוימן), וטורי פורייה מלאים (לתנאים מחזוריים).</p>
+            <p><strong>הערה על טרנספורמציה למבנה שטורם-ליוביל (טענה 5.1):</strong> כל מד"ר לינארית הומוגנית מסדר שני מהצורה $A(x)v'' + B(x)v' + C(x)v + \lambda D(x)v = 0$ (כאשר $A(x)>0, D(x)>0$) ניתנת להעברה לצורת שטורם-ליוביל על ידי הכפלה בגורם אינטגרציה מתאים $ \mu(x) = \frac{1}{A(x)} e^{\int \frac{B(x)}{A(x)} dx} $. אז $p(x) = A(x)\mu(x)$, $q(x) = C(x)\mu(x)$, ו-$r(x) = D(x)\mu(x)$.</p>
+        </div>
+
+        <h2>תרגול אינטראקטיבי</h2>
+        <div class="navigation-buttons">
+            <button id="prevProblem">הבעיה הקודמת</button>
+            <span id="problemCounter" class="problem-counter">בעיה 1 / 25</span>
+            <button id="nextProblem">הבעיה הבאה</button>
+        </div>
+
+        <div id="problemDisplay" class="problem-container">
+            <div id="problemStatement" class="problem-statement"></div>
+            <button id="showSolutionButton">הצג פתרון</button>
+            <div id="solutionArea" class="solution-area"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button id="viewAllProblemsButton">הצג את כל הבעיות</button>
+        </div>
+        <div id="allProblemsContainer" class="all-problems-container" style="display: none;">
+            <h2>כל הבעיות</h2>
+        </div>
+
+    </div>
+
+    <script>
+        // Array to hold all problems and their solutions
+        const problems = [
+            {
+                problem: "נתונה המשוואה $(x^2 v'(x))' + (x^3 + \\lambda x)v(x) = 0$ בקטע $x \\in [1, e]$. רשום את המשוואה בצורת שטורם-ליוביל הסטנדרטית וזהה את הפונקציות $p(x), q(x), r(x)$ ואת הפרמטר $\\lambda$.",
+                solution: "המשוואה כבר נתונה בצורת שטורם-ליוביל: $(p(x)v'(x))' + q(x)v(x) + \\lambda r(x)v(x) = 0$.<br>" +
+                          "על ידי השוואה, אנו מזהים:<br>" +
+                          "$p(x) = x^2$<br>" +
+                          "$q(x) = x^3$<br>" +
+                          "$r(x) = x$<br>" +
+                          "הפרמטר הוא $\\lambda$."
+            },
+            {
+                problem: "הפוך את המשוואה הדיפרנציאלית $v''(x) + \\frac{1}{x}v'(x) + \\lambda v(x) = 0$ לצורת שטורם-ליוביל בקטע $x > 0$.",
+                solution: "המשוואה היא $A(x)v'' + B(x)v' + C(x)v + \\lambda D(x)v = 0$, כאשר $A(x)=1, B(x)=\\frac{1}{x}, C(x)=0, D(x)=1$.<br>" +
+                          "גורם האינטגרציה הוא $\\mu(x) = \\frac{1}{A(x)} e^{\\int \\frac{B(x)}{A(x)} dx} = \\frac{1}{1} e^{\\int \\frac{1/x}{1} dx} = e^{\\int \\frac{1}{x} dx} = e^{\\ln|x|} = |x|$.<br>" +
+                          "בקטע $x>0$, $\\mu(x) = x$.<br>" +
+                          "נכפיל את המשוואה המקורית ב-$x$:<br>" +
+                          "$x v''(x) + v'(x) + \\lambda x v(x) = 0$<br>" +
+                          "ניתן לכתוב את שני האיברים הראשונים כנגזרת של מכפלה: $(x v'(x))' = x v''(x) + v'(x)$.<br>" +
+                          "לכן, צורת שטורם-ליוביל היא: $(x v'(x))' + \\lambda x v(x) = 0$.<br>" +
+                          "כאן $p(x) = x, q(x) = 0, r(x) = x$."
+            },
+            {
+                problem: "מצא את הערכים העצמיים והפונקציות העצמיות עבור בעיית שטורם-ליוביל הרגולרית: $v''(x) + \\lambda v(x) = 0$ עם תנאי שפה $v(0)=0, v(L)=0$.",
+                solution: "זוהי בעיית דיריכלה סטנדרטית. נבחן שלושה מקרים עבור $\\lambda$:<br>" +
+                          "1. מקרה $\\lambda = 0$: $v''(x)=0 \\Rightarrow v(x) = Ax+B$.<br>" +
+                          "$v(0)=0 \\Rightarrow B=0$. $v(L)=0 \\Rightarrow AL=0 \\Rightarrow A=0$. לכן $v(x)=0$, פתרון טריוויאלי.<br>" +
+                          "2. מקרה $\\lambda < 0$: נסמן $\\lambda = -k^2$ ($k>0$). $v''(x) - k^2 v(x) = 0$.<br>" +
+                          "הפתרון הכללי הוא $v(x) = A e^{kx} + B e^{-kx}$.<br>" +
+                          "$v(0)=0 \\Rightarrow A+B=0 \\Rightarrow B=-A$.<br>" +
+                          "$v(L)=0 \\Rightarrow A e^{kL} - A e^{-kL} = 0 \\Rightarrow A (e^{kL} - e^{-kL}) = 0$.<br>" +
+                          "כיוון ש-$kL > 0$, $e^{kL} \\neq e^{-kL}$, ולכן $A=0$, וגם $B=0$. פתרון טריוויאלי.<br>" +
+                          "3. מקרה $\\lambda > 0$: נסמן $\\lambda = k^2$ ($k>0$). $v''(x) + k^2 v(x) = 0$.<br>" +
+                          "הפתרון הכללי הוא $v(x) = A \\cos(kx) + B \\sin(kx)$.<br>" +
+                          "$v(0)=0 \\Rightarrow A \\cos(0) + B \\sin(0) = 0 \\Rightarrow A=0$.<br>" +
+                          "$v(L)=0 \\Rightarrow B \\sin(kL) = 0$. כדי שיהיה פתרון לא טריוויאלי, $B \\neq 0$, ולכן $\\sin(kL)=0$.<br>" +
+                          "זה מתקיים אם $kL = n\\pi$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "לכן $k_n = \\frac{n\\pi}{L}$.<br>" +
+                          "הערכים העצמיים הם $\\lambda_n = k_n^2 = \\left(\\frac{n\\pi}{L}\\right)^2$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "הפונקציות העצמיות המתאימות (עד כדי קבוע כפלי) הן $v_n(x) = \\sin\\left(\\frac{n\\pi x}{L}\\right)$."
+            },
+            {
+                problem: "מצא את הערכים העצמיים והפונקציות העצמיות עבור בעיית שטורם-ליוביל הרגולרית: $v''(x) + \\lambda v(x) = 0$ עם תנאי שפה $v'(0)=0, v'(L)=0$.",
+                solution: "זוהי בעיית נוימן סטנדרטית. נבחן שלושה מקרים עבור $\\lambda$:<br>" +
+                          "1. מקרה $\\lambda = 0$: $v''(x)=0 \\Rightarrow v(x) = Ax+B$. $v'(x)=A$.<br>" +
+                          "$v'(0)=0 \\Rightarrow A=0$. $v'(L)=0 \\Rightarrow A=0$.<br>" +
+                          "לכן $v(x)=B$. זהו פתרון לא טריוויאלי אם $B \\neq 0$. לכן $\\lambda_0=0$ הוא ערך עצמי, והפונקציה העצמית המתאימה היא $v_0(x)=1$ (או כל קבוע שונה מאפס).<br>" +
+                          "2. מקרה $\\lambda < 0$: נסמן $\\lambda = -k^2$ ($k>0$). $v(x) = A e^{kx} + B e^{-kx}$. $v'(x) = Ak e^{kx} - Bk e^{-kx}$.<br>" +
+                          "$v'(0)=0 \\Rightarrow Ak-Bk=0 \\Rightarrow A=B$ (כי $k \\neq 0$).<br>" +
+                          "$v'(L)=0 \\Rightarrow Ak e^{kL} - Ak e^{-kL} = 0 \\Rightarrow Ak(e^{kL} - e^{-kL})=0$.<br>" +
+                          "כיוון ש-$kL > 0$, $e^{kL} \\neq e^{-kL}$, ולכן $A=0$. פתרון טריוויאלי.<br>" +
+                          "3. מקרה $\\lambda > 0$: נסמן $\\lambda = k^2$ ($k>0$). $v(x) = A \\cos(kx) + B \\sin(kx)$. $v'(x) = -Ak \\sin(kx) + Bk \\cos(kx)$.<br>" +
+                          "$v'(0)=0 \\Rightarrow -Ak \\sin(0) + Bk \\cos(0) = 0 \\Rightarrow Bk=0 \\Rightarrow B=0$ (כי $k \\neq 0$).<br>" +
+                          "$v'(L)=0 \\Rightarrow -Ak \\sin(kL) = 0$. כדי שיהיה פתרון לא טריוויאלי, $A \\neq 0$, ולכן $\\sin(kL)=0$.<br>" +
+                          "זה מתקיים אם $kL = n\\pi$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "לכן $k_n = \\frac{n\\pi}{L}$.<br>" +
+                          "הערכים העצמיים הם $\\lambda_n = k_n^2 = \\left(\\frac{n\\pi}{L}\\right)^2$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "הפונקציות העצמיות המתאימות הן $v_n(x) = \\cos\\left(\\frac{n\\pi x}{L}\\right)$.<br>" +
+                          "לסיכום: ע\"ע $\\lambda_n = \\left(\\frac{n\\pi}{L}\\right)^2$ עבור $n=0,1,2,\\dots$, ופ\"ע $v_n(x) = \\cos\\left(\\frac{n\\pi x}{L}\\right)$."
+            },
+            {
+                problem: "הוכח כי הפונקציות העצמיות $v_n(x) = \\sin(\\frac{n\\pi x}{L})$ ו-$v_m(x) = \\sin(\\frac{m\\pi x}{L})$ (עבור $n \\neq m$ שלמים חיוביים) של בעיית דיריכלה $v'' + \\lambda v=0, v(0)=v(L)=0$ הן אורתוגונליות בקטע $[0,L]$ ביחס לפונקציית המשקל $r(x)=1$.",
+                solution: "עלינו להראות כי $\\int_0^L \\sin(\\frac{n\\pi x}{L}) \\sin(\\frac{m\\pi x}{L}) (1) dx = 0$ עבור $n \\neq m$.<br>" +
+                          "נשתמש בזהות הטריגונומטרית: $\\sin A \\sin B = \\frac{1}{2}[\\cos(A-B) - \\cos(A+B)]$.<br>" +
+                          "לכן, האינטגרל הוא: $\\frac{1}{2} \\int_0^L \\left[ \\cos\\left(\\frac{(n-m)\\pi x}{L}\\right) - \\cos\\left(\\frac{(n+m)\\pi x}{L}\\right) \\right] dx$.<br>" +
+                          "מאחר ש-$n \\neq m$ ו-$n,m$ שלמים חיוביים, אז $n-m \\neq 0$ ו-$n+m \\neq 0$.<br>" +
+                          "האינטגרציה נותנת:<br>" +
+                          "$\\frac{1}{2} \\left[ \\frac{L}{(n-m)\\pi} \\sin\\left(\\frac{(n-m)\\pi x}{L}\\right) - \\frac{L}{(n+m)\\pi} \\sin\\left(\\frac{(n+m)\\pi x}{L}\\right) \\right]_0^L$<br>" +
+                          "כאשר מציבים את הגבולות $x=L$ ו-$x=0$:<br>" +
+                          "$\\sin(\\frac{(n-m)\\pi L}{L}) = \\sin((n-m)\\pi) = 0$.<br>" +
+                          "$\\sin(\\frac{(n+m)\\pi L}{L}) = \\sin((n+m)\\pi) = 0$.<br>" +
+                          "וגם $\\sin(0)=0$.<br>" +
+                          "לכן, כל הביטוי מתאפס: $\\frac{1}{2} [0 - 0] = 0$.<br>" +
+                          "הפונקציות אורתוגונליות."
+            },
+            {
+                problem: "נתונה בעיית שטורם-ליוביל מחזורית: $v''(x) + \\lambda v(x) = 0$ בקטע $x \\in [-\\pi, \\pi]$, עם תנאי שפה $v(-\\pi)=v(\\pi), v'(-\\pi)=v'(\\pi)$. מהם הערכים העצמיים והפונקציות העצמיות?",
+                solution: "1. מקרה $\\lambda = 0$: $v(x) = Ax+B$.<br>" +
+                          "$v(-\\pi)=v(\\pi) \\Rightarrow -A\\pi+B = A\\pi+B \\Rightarrow -A\\pi = A\\pi \\Rightarrow 2A\\pi = 0 \\Rightarrow A=0$.<br>" +
+                          "$v'(x)=A$. $v'(-\\pi)=v'(\\pi) \\Rightarrow A=A$, תמיד נכון.<br>" +
+                          "לכן $A=0$, ו-$v(x)=B$. זהו פתרון לא טריוויאלי אם $B \\neq 0$. לכן $\\lambda_0=0$ הוא ע\"ע, עם פ\"ע $v_0(x)=1$ (ריבוי 1).<br>" +
+                          "2. מקרה $\\lambda < 0$: $\\lambda = -k^2, k>0$. $v(x) = A e^{kx} + B e^{-kx}$.<br>" +
+                          "לאחר הצבת תנאי השפה, מתקבל פתרון טריוויאלי (דומה למקרים הרגולריים, דורש אלגברה קצת יותר ארוכה).<br>" +
+                          "3. מקרה $\\lambda > 0$: $\\lambda = k^2, k>0$. $v(x) = A \\cos(kx) + B \\sin(kx)$.<br>" +
+                          "$v(-\\pi)=v(\\pi) \\Rightarrow A \\cos(-k\\pi) + B \\sin(-k\\pi) = A \\cos(k\\pi) + B \\sin(k\\pi)$<br>" +
+                          "$\\Rightarrow A \\cos(k\\pi) - B \\sin(k\\pi) = A \\cos(k\\pi) + B \\sin(k\\pi) \\Rightarrow -2B \\sin(k\\pi) = 0$.<br>" +
+                          "$v'(-\\pi)=v'(\\pi)$: $v'(x) = -Ak \\sin(kx) + Bk \\cos(kx)$.<br>" +
+                          "$-Ak \\sin(-k\\pi) + Bk \\cos(-k\\pi) = -Ak \\sin(k\\pi) + Bk \\cos(k\\pi)$<br>" +
+                          "$\\Rightarrow Ak \\sin(k\\pi) + Bk \\cos(k\\pi) = -Ak \\sin(k\\pi) + Bk \\cos(k\\pi) \\Rightarrow 2Ak \\sin(k\\pi) = 0$.<br>" +
+                          "כדי שיהיה פתרון לא טריוויאלי, $A$ או $B$ (או שניהם) אינם אפס.<br>" +
+                          "מהמשוואות, אם $\\sin(k\\pi) \\neq 0$, אז $A=0$ ו-$B=0$ (טריוויאלי).<br>" +
+                          "לכן, חייב להתקיים $\\sin(k\\pi) = 0$. זה אומר $k\\pi = n\\pi$, כלומר $k=n$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "במקרה זה, שתי המשוואות מתקיימות לכל $A,B$.<br>" +
+                          "הערכים העצמיים הם $\\lambda_n = k^2 = n^2$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "לכל $\\lambda_n = n^2$ ($n \\ge 1$), יש שתי פונקציות עצמיות בלתי תלויות לינארית: $v_{n,1}(x) = \\cos(nx)$ ו-$v_{n,2}(x) = \\sin(nx)$. הריבוי הוא 2.<br>" +
+                          "לסיכום: ע\"ע $\\lambda_0=0$ עם פ\"ע $v_0(x)=1$ (ריבוי 1). ע\"ע $\\lambda_n=n^2$ ($n=1,2,\\dots$) עם פ\"ע $\\cos(nx), \\sin(nx)$ (ריבוי 2)."
+            },
+            {
+                problem: "מהי זהות גרין (או זהות לגרנז') עבור אופרטור שטורם-ליוביל $L[v] = (p(x)v'(x))' + q(x)v(x)$? מה התנאי על $p(x), u(x), v(x)$ ותנאי השפה כדי שהאינטגרל $\\int_a^b (uL[v] - vL[u]) dx$ יתאפס?",
+                solution: "זהות גרין היא:<br>" +
+                          "$\\int_a^b (uL[v] - vL[u]) dx = \\int_a^b [u((pv')' + qv) - v((pu')' + qu)] dx$<br>" +
+                          "לאחר פישוט אלגברי (אינטגרציה בחלקים):<br>" +
+                          "$= \\int_a^b [u(pv')' - v(pu')'] dx = \\int_a^b \\frac{d}{dx}[p(uv' - vu')] dx$<br>" +
+                          "$= [p(x)(u(x)v'(x) - v(x)u'(x))]_a^b$.<br>" +
+                          "כדי שהאינטגרל יתאפס, הביטוי $[p(x)(uv' - vu')]|_a^b$ צריך להתאפס. זה קורה אם:<br>" +
+                          "1. $u,v$ מקיימות תנאי שפה מופרדים של בעיית שטורם-ליוביל רגולרית (למשל, דיריכלה או נוימן בשני הקצוות).<br>" +
+                          "2. $u,v$ מקיימות תנאי שפה מחזוריים ($u(a)=u(b), u'(a)=u'(b)$, וכן עבור $v$) וגם $p(a)=p(b)$."
+            },
+            {
+                problem: "הוכח כי הערכים העצמיים של בעיית שטורם-ליוביל רגולרית הם ממשיים.",
+                solution: "תהי $v(x)$ פונקציה עצמית המתאימה לערך עצמי $\\lambda$ (שעשוי להיות מרוכב) של בעיית שטורם-ליוביל רגולרית: $L[v] + \\lambda r(x)v(x) = 0$.<br>" +
+                          "ניקח צמוד מרוכב של המשוואה: $L[\\bar{v}] + \\bar{\\lambda} r(x)\\bar{v}(x) = 0$ (כאשר $p,q,r$ ממשיות, אז $L[\\bar{v}]=\\overline{L[v]}$).<br>" +
+                          "נכפיל את המשוואה הראשונה ב-$\bar{v}$ ואת השנייה ב-$v$ ונחסר:<br>" +
+                          "$\\bar{v}L[v] - vL[\\bar{v}] + (\\lambda - \\bar{\\lambda})r(x)v(x)\\bar{v}(x) = 0$<br>" +
+                          "$\\bar{v}L[v] - vL[\\bar{v}] + (\\lambda - \\bar{\\lambda})r(x)|v(x)|^2 = 0$<br>" +
+                          "נבצע אינטגרציה על הקטע $[a,b]$:<br>" +
+                          "$\\int_a^b (\\bar{v}L[v] - vL[\\bar{v}]) dx + (\\lambda - \\bar{\\lambda}) \\int_a^b r(x)|v(x)|^2 dx = 0$<br>" +
+                          "מזהות גרין, כיוון ש-$v$ ו-$\bar{v}$ מקיימות את אותם תנאי שפה רגולריים, האינטגרל הראשון מתאפס.<br>" +
+                          "לכן, $((\\lambda - \\bar{\\lambda})) \\int_a^b r(x)|v(x)|^2 dx = 0$.<br>" +
+                          "מאחר ש-$v(x)$ היא פונקציה עצמית, היא לא זהותית אפס. כמו כן $r(x)>0$, ולכן $|v(x)|^2 r(x) \\ge 0$ ולא זהותית אפס. לכן $\\int_a^b r(x)|v(x)|^2 dx > 0$.<br>" +
+                          "מכאן נובע שחייב להתקיים $\\lambda - \\bar{\\lambda} = 0$, כלומר $\\lambda = \\bar{\\lambda}$.<br>" +
+                          "זה מוכיח ש-$\lambda$ הוא ממשי."
+            },
+            {
+                problem: "רשום את הנוסחה למקדמי טור פורייה-סינוסים של פונקציה $f(x)$ בקטע $[0,L]$. מהן הפונקציות העצמיות ופונקציית המשקל במקרה זה?",
+                solution: "טור פורייה-סינוסים של $f(x)$ בקטע $[0,L]$ הוא $f(x) \\sim \\sum_{n=1}^{\\infty} b_n \\sin\\left(\\frac{n\\pi x}{L}\\right)$.<br>" +
+                          "המקדמים $b_n$ ניתנים על ידי: $b_n = \\frac{2}{L} \\int_0^L f(x) \\sin\\left(\\frac{n\\pi x}{L}\\right) dx$.<br>" +
+                          "זהו פיתוח לפי הפונקציות העצמיות של בעיית שטורם-ליוביל $v'' + \\lambda v = 0$ עם תנאי דיריכלה $v(0)=0, v(L)=0$.<br>" +
+                          "הפונקציות העצמיות הן $v_n(x) = \\sin\\left(\\frac{n\\pi x}{L}\\right)$.<br>" +
+                          "במשוואה $v''+\\lambda v = 0$, ניתן לראות את זה כ- $(1 \cdot v')' + 0 \cdot v + \\lambda \cdot 1 \cdot v = 0$.<br>" +
+                          "לכן, $p(x)=1, q(x)=0, r(x)=1$. פונקציית המשקל היא $r(x)=1$."
+            },
+            {
+                problem: "פתח את הפונקציה $f(x)=1$ לטור סינוסים בקטע $[0, \\pi]$.",
+                solution: "כאן $L=\\pi$. המקדמים הם $b_n = \\frac{2}{\\pi} \\int_0^\\pi (1) \\sin(nx) dx$.<br>" +
+                          "$b_n = \\frac{2}{\\pi} \\left[ -\\frac{\\cos(nx)}{n} \\right]_0^\\pi = -\\frac{2}{n\\pi} [\\cos(n\\pi) - \\cos(0)]$<br>" +
+                          "$b_n = -\\frac{2}{n\\pi} [(-1)^n - 1]$.<br>" +
+                          "אם $n$ זוגי, $n=2k$, אז $(-1)^{2k}-1 = 1-1=0$, ולכן $b_{2k}=0$.<br>" +
+                          "אם $n$ אי-זוגי, $n=2k-1$, אז $(-1)^{2k-1}-1 = -1-1=-2$.<br>" +
+                          "לכן $b_{2k-1} = -\\frac{2}{(2k-1)\\pi} (-2) = \\frac{4}{(2k-1)\\pi}$.<br>" +
+                          "הפיתוח הוא: $f(x) = 1 \\sim \\sum_{k=1}^{\\infty} \\frac{4}{(2k-1)\\pi} \\sin((2k-1)x)$."
+            },
+            {
+                problem: "פתח את הפונקציה $f(x)=x$ לטור קוסינוסים בקטע $[0, L]$.",
+                solution: "טור קוסינוסים: $f(x) \\sim \\frac{a_0}{2} + \\sum_{n=1}^{\\infty} a_n \\cos\\left(\\frac{n\\pi x}{L}\\right)$.<br>" +
+                          "$a_0 = \\frac{2}{L} \\int_0^L x dx = \\frac{2}{L} \\left[ \\frac{x^2}{2} \\right]_0^L = \\frac{2}{L} \\frac{L^2}{2} = L$.<br>" +
+                          "עבור $n \\ge 1$: $a_n = \\frac{2}{L} \\int_0^L x \\cos\\left(\\frac{n\\pi x}{L}\\right) dx$.<br>" +
+                          "נשתמש באינטגרציה בחלקים: $\\int u dv = uv - \\int v du$.<br>" +
+                          "נסמן $u=x \\Rightarrow du=dx$. $dv = \\cos\\left(\\frac{n\\pi x}{L}\\right) dx \\Rightarrow v = \\frac{L}{n\\pi} \\sin\\left(\\frac{n\\pi x}{L}\\right)$.<br>" +
+                          "$a_n = \\frac{2}{L} \\left( \\left[ x \\frac{L}{n\\pi} \\sin\\left(\\frac{n\\pi x}{L}\\right) \\right]_0^L - \\int_0^L \\frac{L}{n\\pi} \\sin\\left(\\frac{n\\pi x}{L}\\right) dx \\right)$<br>" +
+                          "האיבר הראשון מתאפס בגבולות: $L \\frac{L}{n\\pi} \\sin(n\\pi) - 0 = 0$.<br>" +
+                          "$a_n = \\frac{2}{L} \\left( - \\frac{L}{n\\pi} \\int_0^L \\sin\\left(\\frac{n\\pi x}{L}\\right) dx \\right) = -\\frac{2}{n\\pi} \\left[ -\\frac{L}{n\\pi} \\cos\\left(\\frac{n\\pi x}{L}\\right) \\right]_0^L$<br>" +
+                          "$a_n = \\frac{2L}{n^2\\pi^2} \\left[ \\cos\\left(\\frac{n\\pi x}{L}\\right) \\right]_0^L = \\frac{2L}{n^2\\pi^2} [\\cos(n\\pi) - \\cos(0)] = \\frac{2L}{n^2\\pi^2} [(-1)^n - 1]$.<br>" +
+                          "אם $n$ זוגי, $a_n=0$. אם $n$ אי-זוגי, $n=2k-1$, $a_{2k-1} = \\frac{2L}{(2k-1)^2\\pi^2}(-2) = -\\frac{4L}{(2k-1)^2\\pi^2}$.<br>" +
+                          "הפיתוח: $f(x)=x \\sim \\frac{L}{2} + \\sum_{k=1}^{\\infty} \\left( -\\frac{4L}{(2k-1)^2\\pi^2} \\right) \\cos\\left(\\frac{(2k-1)\\pi x}{L}\\right)$."
+            },
+            {
+                problem: "מהו משפט ההתכנסות של טורי שטורם-ליוביל (פורייה מוכללים) עבור פונקציה $f(x)$ שהיא גזירה למקוטעין בקטע $[a,b]$?",
+                solution: "משפט ההתכנסות קובע כי טור שטורם-ליוביל (פורייה מוכלל) של פונקציה $f(x)$ שהיא גזירה למקוטעין בקטע $[a,b]$ מתכנס נקודתית באופן הבא:<br>" +
+                          "1. בנקודות $x \\in (a,b)$ שבהן $f(x)$ רציפה, הטור מתכנס ל-$f(x)$.<br>" +
+                          "2. בנקודות $x \\in (a,b)$ שבהן ל-$f(x)$ יש אי-רציפות מסוג קפיצה, הטור מתכנס לממוצע הגבולות החד-צדדיים: $\\frac{1}{2}(f(x^+) + f(x^-))$.<br>" +
+                          "התנהגות הטור בקצוות הקטע $x=a, x=b$ תלויה בתנאי השפה הספציפיים של בעיית שטורם-ליוביל."
+            },
+            {
+                problem: "למה מתכנס טור הסינוסים של $f(x)=1$ בקטע $[0, \\pi]$ (מהשאלה הקודמת) בנקודות $x=0, x=\\pi/2, x=\\pi$?",
+                solution: "טור הסינוסים של $f(x)=1$ הוא $f(x) \\sim \\sum_{k=1}^{\\infty} \\frac{4}{(2k-1)\\pi} \\sin((2k-1)x)$.<br>" +
+                          "טור סינוסים מתאים להרחבה אי-זוגית של הפונקציה המקורית לתקופה $2L=2\\pi$.<br>" +
+                          "הפונקציה המורחבת $f_{ext}(x)$ היא: $f_{ext}(x)=1$ עבור $x \\in (0, \\pi)$, ו-$f_{ext}(x)=-1$ עבור $x \\in (-\\pi, 0)$.<br>" +
+                          "1. ב-$x=0$: יש אי-רציפות קפיצה בהרחבה האי-זוגית (מ-1 ל-1-). $f_{ext}(0^+) = 1, f_{ext}(0^-) = -1$. הטור מתכנס לממוצע: $\\frac{1+(-1)}{2} = 0$. (כל איברי הטור $\\sin(nx)$ הם 0 ב-$x=0$).<br>" +
+                          "2. ב-$x=\\pi/2$: הפונקציה המקורית $f(x)=1$ רציפה בנקודה זו בתוך הקטע $(0, \\pi)$. לכן הטור מתכנס ל-$f(\\pi/2)=1$.<br>" +
+                          "3. ב-$x=\\pi$: יש אי-רציפות קפיצה בהרחבה האי-זוגית (מ-1 ל-1-). $f_{ext}(\\pi^-) = 1, f_{ext}(\\pi^+) = -1$. הטור מתכנס לממוצע: $\\frac{1+(-1)}{2} = 0$. (כל איברי הטור $\\sin(nx)$ הם 0 ב-$x=\\pi$)."
+            },
+            {
+                problem: "האם כל הערכים העצמיים של בעיית שטורם-ליוביל רגולרית חייבים להיות חיוביים?",
+                solution: "לא בהכרח. הערכים העצמיים חייבים להיות ממשיים. האם הם חיוביים תלוי בפונקציות $p(x), q(x), r(x)$ ובתנאי השפה.<br>" +
+                          "לדוגמה, עבור $v'' + \\lambda v = 0$ עם תנאי שפה $v'(0)=0, v'(L)=0$, הערך העצמי הנמוך ביותר הוא $\\lambda_0=0$, שאינו חיובי.<br>" +
+                          "אם מתקיימים תנאים נוספים, כמו $q(x) \\ge 0$ ותנאי שפה מסוימים (כגון דיריכלה), אז ניתן להוכיח שהערכים העצמיים הם אי-שליליים או חיוביים ממש."
+            },
+            {
+                problem: "מה הריבוי של הערכים העצמיים בבעיית שטורם-ליוביל רגולרית? ומה לגבי בעיה מחזורית?",
+                solution: "בבעיית שטורם-ליוביל רגולרית, כל הערכים העצמיים הם פשוטים, כלומר הריבוי שלהם הוא 1. לכל ערך עצמי יש (עד כדי קבוע כפלי) פונקציה עצמית אחת בלבד.<br>" +
+                          "בבעיית שטורם-ליוביל מחזורית, הריבוי של הערכים העצמיים יכול להיות גדול מ-1. לדוגמה, עבור $v'' + \\lambda v = 0$ עם תנאים מחזוריים בקטע $[-\\pi, \\pi]$, הערך העצמי $\\lambda_0=0$ הוא פשוט (פ\"ע קבוע), אך הערכים העצמיים $\\lambda_n=n^2$ עבור $n \\ge 1$ הם בעלי ריבוי 2 (פ\"ע הן $\\cos(nx)$ ו-$\\sin(nx)$)."
+            },
+            {
+                problem: "נתונה המשוואה $x^2 v'' + x v' + (\\lambda x^2 - m^2)v = 0$ (משוואת בסל פרמטרית). העבר אותה לצורת שטורם-ליוביל. (כאן $m$ הוא קבוע).",
+                solution: "נחלק ב-$x^2$ (בהנחה $x \\neq 0$): $v'' + \\frac{1}{x}v' + (\\lambda - \\frac{m^2}{x^2})v = 0$.<br>" +
+                          "זוהי צורה $A(x)v'' + B(x)v' + C(x)v + \\lambda D(x)v = 0$ כאשר:<br>" +
+                          "$A(x)=1, B(x)=\\frac{1}{x}, C(x)=-\\frac{m^2}{x^2}, D(x)=1$.<br>" +
+                          "גורם האינטגרציה (כפי שחושב בשאלה 2) הוא $\\mu(x) = x$ (עבור $x>0$).<br>" +
+                          "נכפיל את המשוואה $v'' + \\frac{1}{x}v' + (\\lambda - \\frac{m^2}{x^2})v = 0$ ב-$x$:<br>" +
+                          "$x v'' + v' + (\\lambda x - \\frac{m^2}{x})v = 0$<br>" +
+                          "$(x v')' + (\\lambda x - \\frac{m^2}{x})v = 0$<br>" +
+                          "זוהי צורת שטורם-ליוביל: $(p(x)v')' + q(x)v + \\lambda r(x)v = 0$, כאשר:<br>" +
+                          "$p(x) = x$<br>" +
+                          "$q(x) = -\\frac{m^2}{x}$<br>" +
+                          "$r(x) = x$"
+            },
+            {
+                problem: "מהי הנורמה (בריבוע) $(v_n, v_n)_r = \\int_a^b v_n^2(x) r(x) dx$ של הפונקציות העצמיות $v_n(x) = \\sin(\\frac{n\\pi x}{L})$ בבעיית דיריכלה ($r(x)=1, [a,b]=[0,L]$)?",
+                solution: "עלינו לחשב $\\int_0^L \\sin^2\\left(\\frac{n\\pi x}{L}\\right) (1) dx$.<br>" +
+                          "נשתמש בזהות $\\sin^2 \\theta = \\frac{1 - \\cos(2\\theta)}{2}$.<br>" +
+                          "האינטגרל הוא $\\int_0^L \\frac{1}{2} \\left( 1 - \\cos\\left(\\frac{2n\\pi x}{L}\\right) \\right) dx$.<br>" +
+                          "$= \\frac{1}{2} \\left[ x - \\frac{L}{2n\\pi} \\sin\\left(\\frac{2n\\pi x}{L}\\right) \\right]_0^L$<br>" +
+                          "כאשר $n$ הוא שלם חיובי (כמו בבעיית דיריכלה).<br>" +
+                          "$= \\frac{1}{2} \\left( (L - \\frac{L}{2n\\pi} \\sin(2n\\pi)) - (0 - \\frac{L}{2n\\pi} \\sin(0)) \\right)$<br>" +
+                          "מאחר ש-$\sin(2n\\pi)=0$ ו-$\sin(0)=0$, נקבל:<br>" +
+                          "$= \\frac{1}{2} (L - 0 - 0) = \\frac{L}{2}$.<br>" +
+                          "לכן, הנורמה בריבוע היא $\\frac{L}{2}$."
+            },
+            {
+                problem: "נתונה בעיית שטורם-ליוביל $v'' + \\lambda v = 0$ עם תנאי שפה $v(0)=0, v'(L)=0$. מצא את הערכים העצמיים והפונקציות העצמיות.",
+                solution: "1. $\\lambda=0$: $v(x)=Ax+B$. $v(0)=0 \\Rightarrow B=0$. $v'(x)=A$. $v'(L)=0 \\Rightarrow A=0$. פתרון טריוויאלי.<br>" +
+                          "2. $\\lambda < 0$, $\\lambda=-k^2$: $v(x)=Ae^{kx}+Be^{-kx}$. $v(0)=0 \\Rightarrow A+B=0 \\Rightarrow B=-A$.<br>" +
+                          "$v(x)=A(e^{kx}-e^{-kx})$. $v'(x)=Ak(e^{kx}+e^{-kx})$.<br>" +
+                          "$v'(L)=0 \\Rightarrow Ak(e^{kL}+e^{-kL})=0$. מאחר $k>0, e^{kL}+e^{-kL}>0$, אז $A=0$. פתרון טריוויאלי.<br>" +
+                          "3. $\\lambda > 0$, $\\lambda=k^2$: $v(x)=A\\cos(kx)+B\\sin(kx)$. $v(0)=0 \\Rightarrow A=0$.<br>" +
+                          "אז $v(x)=B\\sin(kx)$. $v'(x)=Bk\\cos(kx)$.<br>" +
+                          "$v'(L)=0 \\Rightarrow Bk\\cos(kL)=0$. עבור פתרון לא טריוויאלי, $B \\neq 0, k \\neq 0$, לכן $\\cos(kL)=0$.<br>" +
+                          "זה מתקיים אם $kL = (n - \\frac{1}{2})\\pi = \\frac{(2n-1)\\pi}{2}$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "$k_n = \\frac{(2n-1)\\pi}{2L}$.<br>" +
+                          "הערכים העצמיים: $\\lambda_n = k_n^2 = \\left(\\frac{(2n-1)\\pi}{2L}\\right)^2$ עבור $n=1,2,3,\\dots$.<br>" +
+                          "הפונקציות העצמיות: $v_n(x) = \\sin\\left(\\frac{(2n-1)\\pi x}{2L}\\right)$."
+            },
+            {
+                problem: "הסבר מדוע סדרת הערכים העצמיים של בעיית שטורם-ליוביל רגולרית שואפת לאינסוף.",
+                solution: "הטענה $\\lambda_n \\to \\infty$ כאשר $n \\to \\infty$ היא חלק ממשפט שטורם-ליוביל (טענה 5.10 שצוינה ללא הוכחה בתקציר).<br>" +
+                          "באופן אינטואיטיבי, ככל שהערך העצמי $\\lambda$ גדול יותר, הפונקציה העצמית $v(x)$ מתאפיינת בתדירות מרחבית גבוהה יותר (יותר תנודות בקטע). כדי לקיים את תנאי השפה בקצוות הקטע, ככל שיש יותר תנודות, כך הערך של $\\lambda$ (שקשור לריבוע התדירות במקרים פשוטים כמו $v''+\\lambda v=0$) צריך להיות גדול יותר.<br>" +
+                          "ההוכחה הפורמלית מסתמכת על תכונות של פונקציות עצמיות ושימוש בשיטות מתקדמות יותר מתורת המשוואות הדיפרנציאליות, כמו קריטריון המינימקס של קוראנט-פישר."
+            },
+            {
+                problem: "האם הפונקציה $v(x) = \\cosh(x)$ יכולה להיות פונקציה עצמית של בעיית שטורם-ליוביל $v'' - v + \\lambda v = 0$ בקטע כלשהו עם תנאי שפה רגולריים?",
+                solution: "נציב את $v(x)=\\cosh(x)$ במשוואה. $v'(x)=\\sinh(x), v''(x)=\\cosh(x)$.<br>" +
+                          "$\\cosh(x) - \\cosh(x) + \\lambda \\cosh(x) = 0$<br>" +
+                          "$\\lambda \\cosh(x) = 0$.<br>" +
+                          "כיוון ש-$\cosh(x)$ אינה זהותית אפס (למעשה, $\cosh(x) \\ge 1$), חייב להתקיים $\\lambda=0$.<br>" +
+                          "אז, $v(x)=\\cosh(x)$ יכולה להיות פונקציה עצמית המתאימה לערך עצמי $\\lambda=0$ אם היא מקיימת תנאי שפה רגולריים מתאימים.<br>" +
+                          "לדוגמה, אם המשוואה היא $v'' + (\\lambda-1)v=0$, אז עבור $\\lambda=0$, נקבל $v''-v=0$. $v(x)=\\cosh(x)$ הוא פתרון. <br>" +
+                          "אם נדרוש תנאי שפה $v'(0)=0$ (מתקיים כי $\\sinh(0)=0$) ו-$v'(L) - \\tanh(L)v(L) = 0$ (זהו תנאי שפה רגולרי מסוג רובין), אז $v(x)=\\cosh(x)$ תהיה פ\"ע."
+            },
+            {
+                problem: "כיצד תשתנה נוסחת המקדמים $c_n = \\frac{(f, v_n)_r}{(v_n, v_n)_r}$ אם הפונקציות העצמיות $v_n(x)$ הן אורתונורמליות ביחס למשקל $r(x)$?",
+                solution: "פונקציות עצמיות $v_n(x)$ הן אורתונורמליות ביחס למשקל $r(x)$ אם הן אורתוגונליות וגם הנורמה של כל אחת מהן היא 1.<br>" +
+                          "כלומר, $(v_n, v_m)_r = \\int_a^b v_n(x) v_m(x) r(x) dx = \\delta_{nm}$ (הדלתא של קרונקר).<br>" +
+                          "בפרט, $(v_n, v_n)_r = \\int_a^b v_n^2(x) r(x) dx = 1$.<br>" +
+                          "במקרה זה, המכנה בנוסחת המקדמים הופך ל-1, והנוסחה למקדמים פשוטה יותר:<br>" +
+                          "$c_n = (f, v_n)_r = \\int_a^b f(x) v_n(x) r(x) dx$."
+            },
+            {
+                problem: "נתונה המשוואה $e^x v'' + e^x v' + e^{2x} v + \\lambda e^x v = 0$. העבר אותה לצורת שטורם-ליוביל.",
+                solution: "המשוואה היא $A(x)v'' + B(x)v' + C(x)v + \\lambda D(x)v = 0$ עם:<br>" +
+                          "$A(x) = e^x, B(x) = e^x, C(x) = e^{2x}, D(x) = e^x$.<br>" +
+                          "גורם האינטגרציה: $\\mu(x) = \\frac{1}{A(x)} e^{\\int \\frac{B(x)}{A(x)} dx} = \\frac{1}{e^x} e^{\\int \\frac{e^x}{e^x} dx} = e^{-x} e^{\\int 1 dx} = e^{-x} e^x = 1$.<br>" +
+                          "כיוון שגורם האינטגרציה הוא 1, המשוואה כבר כמעט בצורת שטורם-ליוביל אם נזהה $p(x)=A(x)$.<br>" +
+                          "$p(x) = A(x) \\mu(x) = e^x \cdot 1 = e^x$.<br>" +
+                          "$q(x) = C(x) \\mu(x) = e^{2x} \cdot 1 = e^{2x}$.<br>" +
+                          "$r(x) = D(x) \\mu(x) = e^x \cdot 1 = e^x$.<br>" +
+                          "נוודא ש-$(p(x)v')' = p(x)v'' + p'(x)v'$. כאן $p'(x)=e^x$.<br>" +
+                          "אז $(e^x v')' = e^x v'' + e^x v'$. זה בדיוק מה שיש לנו במשוואה המקורית.<br>" +
+                          "לכן, צורת שטורם-ליוביל היא: $(e^x v'(x))' + e^{2x} v(x) + \\lambda e^x v(x) = 0$."
+            },
+            {
+                problem: "מה הקשר בין בעיית שטורם-ליוביל והשיטה של הפרדת משתנים לפתרון מד\"ח חלקיות?",
+                solution: "בשיטת הפרדת משתנים לפתרון מד\"ח חלקיות (כגון משוואת חום, גלים, או לפלס), מניחים פתרון מהצורה $u(x,t) = X(x)T(t)$ (או $u(x,y)=X(x)Y(y)$). לאחר הצבה במד\"ח והפרדת המשתנים, מקבלים לרוב שתי משוואות דיפרנציאליות רגילות (מד\"ר) - אחת עבור כל משתנה.<br>" +
+                          "המד\"ר עבור המשתנה המרחבי (למשל $X(x)$), יחד עם תנאי השפה ההומוגניים של הבעיה המקורית, מהווה לעיתים קרובות בעיית שטורם-ליוביל. <br>" +
+                          "הפתרון של בעיית שטורם-ליוביל זו מספק את הערכים העצמיים $\\lambda_n$ ואת הפונקציות העצמיות $X_n(x)$ (הבסיס המרחבי).<br>" +
+                          "לאחר מכן, הערכים העצמיים $\\lambda_n$ משמשים במד\"ר השנייה (למשל עבור $T(t)$) כדי למצוא את הפתרונות $T_n(t)$.<br>" +
+                          "הפתרון הכללי למד\"ח נבנה כסופרפוזיציה (טור) של מכפלות $X_n(x)T_n(t)$, והמקדמים של הטור נקבעים באמצעות תנאי ההתחלה (או תנאי השפה הלא-הומוגניים הנותרים) תוך שימוש בתכונות האורתוגונליות של הפונקציות העצמיות (פיתוח לטור פורייה מוכלל)."
+            },
+            {
+                problem: "נתונה הפונקציה $f(x) = \\sin(x)$ בקטע $[0, \\pi]$. מצא את מקדם $b_1$ בפיתוח שלה לטור סינוסים בקטע זה. הסבר את התוצאה.",
+                solution: "הפיתוח לטור סינוסים הוא $f(x) \\sim \\sum_{n=1}^{\\infty} b_n \\sin(nx)$ (כאן $L=\\pi$).<br>" +
+                          "המקדם $b_1$ הוא $b_1 = \\frac{2}{\\pi} \\int_0^\\pi f(x) \\sin(1x) dx = \\frac{2}{\\pi} \\int_0^\\pi \\sin(x) \\sin(x) dx = \\frac{2}{\\pi} \\int_0^\\pi \\sin^2(x) dx$.<br>" +
+                          "$\\int_0^\\pi \\sin^2(x) dx = \\int_0^\\pi \\frac{1-\\cos(2x)}{2} dx = \\left[ \\frac{x}{2} - \\frac{\\sin(2x)}{4} \\right]_0^\\pi = (\\frac{\\pi}{2} - 0) - (0-0) = \\frac{\\pi}{2}$.<br>" +
+                          "לכן, $b_1 = \\frac{2}{\\pi} \\cdot \\frac{\\pi}{2} = 1$.<br>" +
+                          "ההסבר: הפונקציה הנתונה $f(x)=\\sin(x)$ היא בעצמה אחת מפונקציות הבסיס של טור הסינוסים בקטע $[0, \\pi]$ (הפונקציה עבור $n=1$). לכן, כאשר מפתחים אותה לטור כזה, רק המקדם של $\\sin(x)$ (כלומר $b_1$) יהיה שונה מאפס, וערכו יהיה 1, ושאר המקדמים $b_n$ ($n \\neq 1$) יהיו אפס, בגלל האורתוגונליות."
+            },
+             {
+                problem: "נתונה בעיית שטורם-ליוביל $(x v')' + \\frac{\\lambda}{x} v = 0$ עם תנאי שפה $v(1)=0, v(e)=0$. הראה כי $\\lambda_k = (k\\pi)^2$ ($k=1,2,...$) הם ערכים עצמיים, ו-$v_k(x) = \\sin(k\\pi \\ln x)$ הן הפונקציות העצמיות המתאימות.",
+                solution: "זוהי משוואת אוילר-קושי מוכללת. נבצע החלפת משתנים: $t = \\ln x$. אז $x = e^t$.<br>" +
+                          "$\\frac{dv}{dx} = \\frac{dv}{dt} \\frac{dt}{dx} = \\frac{dv}{dt} \\frac{1}{x}$. לכן $x \\frac{dv}{dx} = \\frac{dv}{dt}$.<br>" +
+                          "המשוואה היא $\\frac{d}{dx}(x \\frac{dv}{dx}) + \\frac{\\lambda}{x} v = 0$.<br>" +
+                          "$\frac{d}{dt}(\frac{dv}{dt}) \\frac{dt}{dx} + \\frac{\\lambda}{e^t} v = 0 \\Rightarrow \\frac{d^2v}{dt^2} \\frac{1}{x} + \\frac{\\lambda}{x} v = 0$.<br>" +
+                          "נכפיל ב-$x$: $\\frac{d^2v}{dt^2} + \\lambda v = 0$. זוהי $V''(t) + \\lambda V(t) = 0$, כאשר $V(t)=v(e^t)$.<br>" +
+                          "תנאי השפה: $x=1 \\Rightarrow t = \\ln 1 = 0$. $x=e \\Rightarrow t = \\ln e = 1$.<br>" +
+                          "$v(1)=0 \\Rightarrow V(0)=0$.<br>" +
+                          "$v(e)=0 \\Rightarrow V(1)=0$.<br>" +
+                          "קיבלנו בעיית דיריכלה סטנדרטית בקטע $[0,1]$ עבור $V(t)$: $V''(t) + \\lambda V(t) = 0, V(0)=0, V(1)=0$.<br>" +
+                          "הערכים העצמיים הם $\\lambda_k = (\\frac{k\\pi}{1})^2 = (k\\pi)^2$ עבור $k=1,2,\\dots$.<br>" +
+                          "הפונקציות העצמיות $V_k(t) = \\sin(k\\pi t)$.<br>" +
+                          "נחזור למשתנה $x$: $t=\\ln x$.<br>" +
+                          "הפונקציות העצמיות הן $v_k(x) = \\sin(k\\pi \\ln x)$."
+            }
+        ];
+
+        let currentProblemIndex = 0;
+
+        const problemStatementEl = document.getElementById('problemStatement');
+        const solutionAreaEl = document.getElementById('solutionArea');
+        const showSolutionButton = document.getElementById('showSolutionButton');
+        const prevProblemButton = document.getElementById('prevProblem');
+        const nextProblemButton = document.getElementById('nextProblem');
+        const problemCounterEl = document.getElementById('problemCounter');
+        const viewAllProblemsButton = document.getElementById('viewAllProblemsButton');
+        const allProblemsContainerEl = document.getElementById('allProblemsContainer');
+
+        function displayProblem(index) {
+            const problem = problems[index];
+            problemStatementEl.innerHTML = problem.problem;
+            solutionAreaEl.innerHTML = problem.solution;
+            solutionAreaEl.style.display = 'none'; // Hide solution initially
+            showSolutionButton.textContent = 'הצג פתרון';
+            problemCounterEl.textContent = `בעיה ${index + 1} / ${problems.length}`;
+            // Rerender MathJax for the new content
+            if (window.MathJax && window.MathJax.typeset) {
+                MathJax.typesetPromise([problemStatementEl, solutionAreaEl]).catch((err) => console.log('MathJax typesetting error:', err));
+            }
+        }
+
+        showSolutionButton.addEventListener('click', () => {
+            if (solutionAreaEl.style.display === 'none') {
+                solutionAreaEl.style.display = 'block';
+                showSolutionButton.textContent = 'הסתר פתרון';
+            } else {
+                solutionAreaEl.style.display = 'none';
+                showSolutionButton.textContent = 'הצג פתרון';
+            }
+        });
+
+        prevProblemButton.addEventListener('click', () => {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        nextProblemButton.addEventListener('click', () => {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        viewAllProblemsButton.addEventListener('click', () => {
+            if (allProblemsContainerEl.style.display === 'none') {
+                allProblemsContainerEl.innerHTML = '<h2>כל הבעיות</h2>'; // Clear previous content
+                problems.forEach((problem, index) => {
+                    const problemDiv = document.createElement('div');
+                    problemDiv.className = 'problem-container';
+                    problemDiv.style.marginBottom = '25px';
+                    problemDiv.style.padding = '15px';
+
+
+                    const statementDiv = document.createElement('div');
+                    statementDiv.className = 'problem-statement';
+                    statementDiv.innerHTML = `<strong>בעיה ${index + 1}:</strong><br>${problem.problem}`;
+
+                    const solButton = document.createElement('button');
+                    solButton.textContent = 'הצג פתרון';
+                    solButton.style.marginBottom = '10px';
+
+                    const solDiv = document.createElement('div');
+                    solDiv.className = 'solution-area';
+                    solDiv.innerHTML = problem.solution;
+                    solDiv.style.display = 'none';
+
+                    solButton.addEventListener('click', () => {
+                        if (solDiv.style.display === 'none') {
+                            solDiv.style.display = 'block';
+                            solButton.textContent = 'הסתר פתרון';
+                        } else {
+                            solDiv.style.display = 'none';
+                            solButton.textContent = 'הצג פתרון';
+                        }
+                         if (window.MathJax && window.MathJax.typeset) {
+                            MathJax.typesetPromise([solDiv]).catch((err) => console.log('MathJax typesetting error:', err));
+                        }
+                    });
+
+                    problemDiv.appendChild(statementDiv);
+                    problemDiv.appendChild(solButton);
+                    problemDiv.appendChild(solDiv);
+                    allProblemsContainerEl.appendChild(problemDiv);
+                });
+                allProblemsContainerEl.style.display = 'block';
+                viewAllProblemsButton.textContent = 'הסתר את כל הבעיות';
+                if (window.MathJax && window.MathJax.typeset) {
+                    MathJax.typesetPromise([allProblemsContainerEl]).catch((err) => console.log('MathJax typesetting error:', err));
+                }
+            } else {
+                allProblemsContainerEl.style.display = 'none';
+                viewAllProblemsButton.textContent = 'הצג את כל הבעיות';
+            }
+        });
+
+        // Initial display
+        displayProblem(currentProblemIndex);
+
+        // Typeset theory section initially
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const theorySection = document.querySelector('.theory-section');
+            if (window.MathJax && window.MathJax.typeset && theorySection) {
+                 MathJax.typesetPromise([theorySection]).catch((err) => console.log('MathJax typesetting error:', err));
+            }
+        });
+    </script>
+</body>
+</html>

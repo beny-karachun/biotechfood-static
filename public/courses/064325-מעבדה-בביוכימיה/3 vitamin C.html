@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללימוד: יציבות ויטמין C ומדידתו</title>
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams',
+                autoload: {
+                    color: [],
+                    colorV2: ['color']
+                },
+                packages: {'[+]': ['noerrors']}
+            },
+            chtml: {
+                matchFontHeight: false,
+                fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2'
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors']
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax startup: ready.');
+                    MathJax.startup.defaultReady();
+                    // This function is defined in the main script block below
+                    // It will populate initial content and call MathJax.typesetPromise()
+                    initializeInteractiveContent();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <style>
+        /* CSS Styles */
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #444; /* Slightly lighter than page bg for main container */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .content-section {
+            background-color: #666; /* Medium Gray for content blocks */
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents for headers */
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 1px solid #555;
+            padding-bottom: 8px;
+        }
+        ul {
+            padding-right: 20px; /* RTL padding */
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #777;
+            padding: 10px;
+            text-align: right; /* RTL text align */
+        }
+        th {
+            background-color: #3D90D7;
+            color: #E0E0E0;
+        }
+        /* Interactive Elements Styling */
+        .interactive-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #2a7cb5;
+        }
+        .button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        .counter {
+            font-size: 1em;
+            color: #ccc;
+        }
+
+        /* Study Card Styling */
+        .card-container {
+            perspective: 1000px;
+            min-height: 200px; /* Ensure space for card content */
+            margin-bottom: 20px;
+        }
+        .card {
+            width: 100%;
+            height: 200px; /* Fixed height for card */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            background-color: #525252; /* Slightly different from section background */
+            text-align: center;
+        }
+        .card-front {
+            /* background-color: #525252; */
+        }
+        .card-back {
+            /* background-color: #5a5a5a; */
+            transform: rotateY(180deg);
+        }
+        
+        /* MCQ and True/False Styling */
+        .options-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options-list li {
+            background-color: #555;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .options-list li:hover:not(.disabled) {
+            background-color: #3D90D7;
+        }
+        .options-list li.correct {
+            background-color: #4CAF50 !important; /* Green for correct */
+            color: white;
+        }
+        .options-list li.incorrect {
+            background-color: #F44336 !important; /* Red for incorrect */
+            color: white;
+        }
+        .options-list li.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #505050;
+            border-radius: 5px;
+            border-right: 3px solid #3D90D7; /* RTL border */
+        }
+        .view-all-container .content-section { /* For questions in view-all */
+             margin-bottom: 15px; /* Spacing between questions in view all */
+        }
+        .view-all-container .question-block {
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #777;
+        }
+        .view-all-container .question-block:last-child {
+            border-bottom: none;
+        }
+        .safety-warning {
+            color: #F44336; /* Red for warnings */
+            font-weight: bold;
+            border: 1px solid #F44336;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+
+        /* Ensure MathJax content is baseline aligned and flows correctly in RTL */
+        mjx-container {
+            text-align: left !important; /* Math should be LTR */
+            direction: ltr !important;   /* Math direction LTR */
+            display: inline-block; /* Helps with alignment in RTL */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללימוד: ויטמין C - תכונות, יציבות ושיטות קביעה</h1>
+
+        <!-- Theory Section -->
+        <div class="content-section" id="theory-section">
+            <h2>מבוא תיאורטי</h2>
+            <p class="safety-warning">לפני המעבדה: יש לקרוא בקפידה את דפי ה-MSDS (Material Safety Data Sheets) של כל החומרים אשר ישמשו אותך במעבדה!</p>
+
+            <h3>ויטמין C – חומצה אסקורבית ($L-\text{Ascorbic Acid}$)</h3>
+            <ul>
+                <li>חומצה אסקורבית (AA) היא אחד הויטמינים הרגישים ביותר. היא קיימת בצורה מחוזרת (חומצה אסקורבית) ובצורה מחומצנת (חומצה דהידרואסקורבית, DAA).</li>
+                <li>חומצה אסקורבית מתחמצנת בקלות לחומצה דהידרואסקורבית (DAA). תגובת החמצון:
+                    $$ \text{L-ascorbic acid} \rightarrow \text{L-dehydroascorbic acid (DAA)} + 2H^+ + 2e^- $$</li>
+                <li>לצורת ה-DAA יש פעילות ויטמינית מלאה.</li>
+                <li>הפעילות הויטמינית אובדת כאשר הטבעת הלקטונית של DAA נפתחת ונוצרת חומצה 2,3-דיקטוגלוקונית (2,3-diketogulonic acid), שהיא חסרת פעילות ויטמינית.</li>
+                <li>חומצה אסקורבית במצב נקי ויבש יציבה יחסית בפני חמצון על ידי אוויר.</li>
+                <li>חומצה אסקורבית מסיסה מאוד במים (כ-1 גרם ב-3 מ"ל מים). מסיסות גבוהה זו עלולה לגרום לאובדן משמעותי של הויטמין מפירות וירקות לאחר מיצויים מימיים.</li>
+            </ul>
+
+            <h3>יציבות ויטמין C</h3>
+            <p>יציבות ויטמין C מושפעת ממספר גורמים:</p>
+            <ul>
+                <li><strong>pH:</strong> ויטמין C יציב יותר בסביבה חומצית. ב-pH הנמוך מ-4, קצב החמצון שלו נמוך. בסביבה בסיסית (למשל, pH 7.5-8), יציבותו פוחתת והוא מתפרק מהר יותר.</li>
+                <li><strong>טמפרטורה:</strong> טמפרטורות גבוהות מאיצות את קצב החמצון והפירוק של ויטמין C. טיפולים תרמיים כמו הרתחה יכולים לגרום לאובדן משמעותי.</li>
+                <li><strong>חמצן:</strong> חשיפה לחמצן (אוויר) מעודדת חמצון של חומצה אסקורבית ל-DAA, ובסופו של דבר לפירוק.</li>
+                <li><strong>אור:</strong> חשיפה לאור, במיוחד אור UV, יכולה לזרז את פירוק ויטמין C.</li>
+                <li><strong>תנאי אחסון:</strong> אחסון בטמפרטורה נמוכה, בחושך ובאריזות אטומות לחמצן מסייע לשמירה על יציבות הויטמין.</li>
+                <li><strong>נוכחות יוני מתכת:</strong> יוני מתכת מסוימים (כגון $ \text{Cu}^{2+} $ ו-$ \text{Fe}^{3+} $) מזרזים חמצון של ויטמין C (מידע זה הוא כללי, לא מפורט במקור אך רלוונטי).</li>
+            </ul>
+
+            <h3>קביעת חומצה אסקורבית (AA)</h3>
+            <p>קביעת ריכוז חומצה אסקורבית (הצורה המחוזרת) נעשית לרוב באמצעות טיטרציה עם הריאגנט 2,6-דיכלורופנול-אינדופנול (DPIP).</p>
+            <ul>
+                <li><strong>עקרון השיטה:</strong> חומצה אסקורבית מחזרת את DPIP. בתגובה זו, AA מתחמצן ל-DAA, ו-DPIP (צבעוני) מתחזר לצורה חסרת צבע.
+                    $$ \text{L-ascorbic acid} + \text{DPIP}_{\text{(oxidized, colored)}} \rightarrow \text{L-dehydroascorbic acid} + \text{DPIP}_{\text{(reduced, colorless)}} $$</li>
+                <li><strong>ריאגנט DPIP:</strong>
+                    <ul>
+                        <li>בסביבה חומצית (pH נמוך), צורתו המחומצנת של DPIP היא אדומה.</li>
+                        <li>בסביבה ניטרלית או בסיסית (pH גבוה), צורתו המחומצנת של DPIP היא כחולה.</li>
+                        <li>צורתו המחוזרת של DPIP היא חסרת צבע בכל pH.</li>
+                    </ul>
+                </li>
+                <li><strong>נקודת סיום הטיטרציה:</strong> הטיטרציה מתבצעת בדרך כלל בסביבה חומצית (לשם כך מוסיפים תמיסת מיצוי חומצית). נקודת הסיום מתקבלת כאשר כל ה-AA בדגימה חזר, ועודף קטן של DPIP צובע את התמיסה בוורוד-אדום חלש ויציב (למשל, למשך 15 שניות).</li>
+                <li><strong>תמיסת מיצוי (חומצה מטאפוספורית – חומצה אצטית):</strong> משמשת למיצוי ויטמין C מהדגימה, לייצובו (מניעת חמצון) וליצירת סביבה חומצית מתאימה לטיטרציה עם DPIP.
+                    <ul>
+                        <li><u>חומצה מטאפוספורית ($ \text{HPO}_3 $):</u> מסייעת בייצוב AA על ידי קשירת יוני מתכת העלולים לזרז חמצון, וכן משקעת חלבונים העלולים להפריע למדידה.</li>
+                        <li><u>חומצה אצטית ($ \text{CH}_3\text{COOH} $):</u> תורמת לחומציות התמיסה ומסייעת בייצוב AA.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>קביעת חומצה דהידרואסקורבית (DAA) וויטמין C כולל</h3>
+            <p>קביעת DAA (ולעיתים ויטמין C כולל, שהוא סכום AA + DAA) נעשית בשיטה פלואורומטרית.</p>
+            <ul>
+                <li><strong>עקרון השיטה:</strong>
+                    <ol>
+                        <li>ראשית, כל החומצה האסקורבית (AA) בדגימה מחומצנת ל-DAA. לעיתים משתמשים בפחם פעיל (Activated charcoal / Norit) לצורך חמצון זה ו/או לניקוי הדגימה.</li>
+                        <li>לאחר מכן, DAA מגיב עם אורתו-פנילנדיאמין (o-Phenylenediamine, o-PD) ליצירת תרכובת פלואורסצנטית (נגזרת קינוקסלין).
+                            $$ \text{DAA} + \text{o-Phenylenediamine} \rightarrow \text{Fluorescent adduct (Quinoxaline derivative)} $$</li>
+                        <li>עוצמת הפלואורסצנציה הנפלטת (למשל, אורך גל פליטה 430nm כאשר העירור ב-350nm) יחסית לריכוז ה-DAA בדגימה.</li>
+                    </ol>
+                </li>
+                <li><strong>ריאגנטים ותפקידם:</strong>
+                    <ul>
+                        <li><u>אורתו-פנילנדיאמין (o-Phenylenediamine):</u> הריאגנט היוצר את התוצר הפלואורסצנטי עם DAA.
+                            <br/><span class="safety-warning">זהירות: o-Phenylenediamine הוא אמין ארומטי מסוכן. העבודה איתו מחייבת שימוש במנדף, כפפות כפולות ונקיטת אמצעי זהירות מרביים.</span></li>
+                        <li><u>פחם פעיל (מטופל בחומצה):</u> משמש ככל הנראה לחמצון AA ל-DAA ו/או לספיחת חומרים מפריעים (צבע, חלקיקים) מהדגימה לפני התגובה עם o-PD.</li>
+                        <li><u>תמיסת סודיום אצטט ($ \text{CH}_3\text{COONa} $):</u> מוספת לדגימות. ככל הנראה משמשת כבופר לכוונון ה-pH לסביבה אופטימלית לתגובת הקונדנסציה בין DAA ל-o-PD.</li>
+                        <li><u>תמיסת חומצה בורית–סודיום אצטט ($ \text{H}_3\text{BO}_3 / \text{CH}_3\text{COONa} $):</u> משמשת בהכנת דגימות ה"בלנק" (blank). חומצה בורית עשויה למנוע את תגובת הקונדנסציה (למשל, על ידי יצירת קומפלקס עם DAA או שינוי pH) כך שהבלנק ימדוד פלואורסצנציה רקעית שאינה ספציפית לתוצר התגובה.</li>
+                    </ul>
+                </li>
+                 <li><strong>עקום כיול:</strong> לקביעה כמותית, מכינים עקום כיול באמצעות ריכוזים ידועים של AA (שעובר חמצון ל-DAA בתהליך) או DAA.</li>
+            </ul>
+
+            <h3>סיכום חומרים עיקריים ותפקידם (טבלאות)</h3>
+            
+            <h4>טבלה 1: צורות ויטמין C ופעילותן</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>צורה</th>
+                        <th>אופי כימי</th>
+                        <th>פעילות ויטמינית</th>
+                        <th>הערות יציבות</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>חומצה אסקורבית (AA)</td>
+                        <td>מחוזרת</td>
+                        <td>מלאה</td>
+                        <td>רגישה לחמצון</td>
+                    </tr>
+                    <tr>
+                        <td>חומצה דהידרואסקורבית (DAA)</td>
+                        <td>מחומצנת</td>
+                        <td>מלאה</td>
+                        <td>יכולה לעבור פתיחת טבעת לקטונית לאיבוד פעילות</td>
+                    </tr>
+                    <tr>
+                        <td>חומצה 2,3-דיקטוגלוקונית</td>
+                        <td>תוצר פירוק של DAA (טבעת פתוחה)</td>
+                        <td>חסרת פעילות</td>
+                        <td>תוצר פירוק בלתי פעיל</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>טבלה 2: תכונות ריאגנט DPIP</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>מצב ה-DPIP</th>
+                        <th>סביבה (pH)</th>
+                        <th>צבע</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>מחומצן (Oxidized)</td>
+                        <td>חומצית</td>
+                        <td>אדום</td>
+                    </tr>
+                    <tr>
+                        <td>מחומצן (Oxidized)</td>
+                        <td>ניטרלית / בסיסית</td>
+                        <td>כחול</td>
+                    </tr>
+                    <tr>
+                        <td>מחוזר (Reduced)</td>
+                        <td>כל סביבה</td>
+                        <td>חסר צבע</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>טבלה 3: ריאגנטים עיקריים ותפקידם בניתוח ויטמין C</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ריאגנט</th>
+                        <th>תפקיד(ים) עיקרי(ים)</th>
+                        <th>באיזו בדיקה משמש</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>חומצה מטאפוספורית ($ \text{HPO}_3 $)</td>
+                        <td>מייצבת AA, משקעת חלבונים, קושרת מתכות</td>
+                        <td>מיצוי והכנת דגימה ל-AA ול-DAA</td>
+                    </tr>
+                    <tr>
+                        <td>חומצה אצטית ($ \text{CH}_3\text{COOH} $)</td>
+                        <td>יצירת סביבה חומצית, מייצבת AA</td>
+                        <td>מיצוי והכנת דגימה ל-AA ול-DAA</td>
+                    </tr>
+                    <tr>
+                        <td>DPIP (2,6-דיכלורופנול-אינדופנול)</td>
+                        <td>טיטרנט לקביעת AA (מחמצן AA), אינדיקטור צבעוני</td>
+                        <td>קביעת AA</td>
+                    </tr>
+                    <tr>
+                        <td>o-Phenylenediamine (אורתו-פנילנדיאמין)</td>
+                        <td>מגיב עם DAA ליצירת תרכובת פלואורסצנטית</td>
+                        <td>קביעת DAA</td>
+                    </tr>
+                    <tr>
+                        <td>פחם פעיל (מטופל בחומצה)</td>
+                        <td>ככל הנראה מחמצן AA ל-DAA, סופח חומרים מפריעים</td>
+                        <td>קביעת DAA</td>
+                    </tr>
+                    <tr>
+                        <td>סודיום אצטט ($ \text{CH}_3\text{COONa} $)</td>
+                        <td>בופר / כוונון pH לתגובת DAA עם o-PD</td>
+                        <td>קביעת DAA</td>
+                    </tr>
+                    <tr>
+                        <td>חומצה בורית ($ \text{H}_3\text{BO}_3 $)</td>
+                        <td>בשימוש בדגימות בלנק בקביעת DAA, ייתכן למניעת תגובה או בקרת pH ספציפית לבלנק</td>
+                        <td>קביעת DAA (בלנק)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Study Cards Section -->
+        <div class="content-section" id="study-cards-section">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="card-container">
+                <div class="card" id="studyCard">
+                    <div class="card-face card-front" id="cardFront">לחץ כאן להתחלה...</div>
+                    <div class="card-face card-back" id="cardBack"></div>
+                </div>
+            </div>
+            <div class="interactive-controls">
+                <button class="button" id="prevCardBtn">הקודם</button>
+                <span class="counter" id="cardCounter">כרטיסיה 0 / 0</span>
+                <button class="button" id="nextCardBtn">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="content-section" id="mcq-section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcqSingleView">
+                <div id="mcqQuestion"></div>
+                <ul class="options-list" id="mcqOptions"></ul>
+                <div class="explanation" id="mcqExplanation" style="display: none;"></div>
+            </div>
+            <div class="interactive-controls">
+                <button class="button" id="prevMcqBtn">הקודם</button>
+                <span class="counter" id="mcqCounter">שאלה 0 / 0</span>
+                <button class="button" id="nextMcqBtn">הבא</button>
+            </div>
+            <button class="button" id="viewAllMcqsBtn">הצג את כל השאלות</button>
+            <div class="view-all-container" id="allMcqsContainer" style="display: none;">
+                <h3>כל שאלות הרב-ברירה:</h3>
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="content-section" id="tf-section">
+            <h2>שאלות נכון / לא נכון</h2>
+            <div id="tfSingleView">
+                <div id="tfQuestion"></div>
+                <ul class="options-list" id="tfOptions">
+                    <li data-answer="true">נכון</li>
+                    <li data-answer="false">לא נכון</li>
+                </ul>
+                <div class="explanation" id="tfExplanation" style="display: none;"></div>
+            </div>
+            <div class="interactive-controls">
+                <button class="button" id="prevTfBtn">הקודם</button>
+                <span class="counter" id="tfCounter">שאלה 0 / 0</span>
+                <button class="button" id="nextTfBtn">הבא</button>
+            </div>
+            <button class="button" id="viewAllTfsBtn">הצג את כל השאלות</button>
+            <div class="view-all-container" id="allTfsContainer" style="display: none;">
+                <h3>כל שאלות הנכון/לא נכון:</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Logic
+        
+        // --- Data Definitions ---
+
+        // Study Cards Data
+        const studyCards = [
+            { front: "חומצה אסקורבית (AA)", back: "הצורה המחוזרת של ויטמין C, פעילה ויטמינית ורגישה לחמצון. נוסחתה הכימית היא $ C_6H_8O_6 $." },
+            { front: "חומצה דהידרואסקורבית (DAA)", back: "הצורה המחומצנת של ויטמין C, גם היא פעילה ויטמינית. נוצרת מחמצון של AA." },
+            { front: "2,3-דיקטוגלוקונית", back: "תוצר פירוק של DAA הנוצר מפתיחת הטבעת הלקטונית. חסרת פעילות ויטמינית." },
+            { front: "DPIP", back: "2,6-דיכלורופנול-אינדופנול. ריאגנט המשמש לטיטרציה של AA. צבעו משתנה עם מצב החמצון וה-pH." },
+            { front: "צבע DPIP מחומצן בסביבה חומצית", back: "אדום." },
+            { front: "צבע DPIP מחומצן בסביבה ניטרלית/בסיסית", back: "כחול." },
+            { front: "צבע DPIP מחוזר", back: "חסר צבע." },
+            { front: "o-Phenylenediamine (o-PD)", back: "אורתו-פנילנדיאמין. ריאגנט המגיב עם DAA ליצירת תרכובת פלואורסצנטית. חומר מסוכן (אמין ארומטי)." },
+            { front: "שיטה פלואורומטרית", back: "שיטת מדידה המבוססת על עירור מולקולות באורך גל מסוים ומדידת האור הנפלט באורך גל אחר (פלואורסצנציה). משמשת לקביעת DAA." },
+            { front: "תמיסת מיצוי (ויטמין C)", back: "תמיסה המכילה חומצה מטאפוספורית וחומצה אצטית. משמשת למיצוי ויטמין C מרקמות, לייצובו וליצירת סביבה חומצית." },
+            { front: "תפקיד חומצה מטאפוספורית", back: "מייצבת AA על ידי קשירת יוני מתכת ושיקוע חלבונים." },
+            { front: "תפקיד חומצה אצטית בתמיסת מיצוי", back: "תורמת לחומציות ומסייעת בייצוב AA." },
+            { front: "פחם פעיל (Activated Charcoal)", back: "בניסוי קביעת DAA, משמש ככל הנראה לחמצון AA ל-DAA ו/או לספיחת חומרים מפריעים." },
+            { front: "יציבות ויטמין C ב-pH שונים", back: "יציב יותר בסביבה חומצית. מתפרק מהר יותר בסביבה בסיסית." },
+            { front: "השפעת טמפרטורה על ויטמין C", back: "טמפרטורות גבוהות מאיצות את פירוק ויטמין C." },
+            { front: "אורך גל עירור (Excitation) בקביעת DAA", back: "בדרך כלל סביב 350nm." },
+            { front: "אורך גל פליטה (Emission) בקביעת DAA", back: "בדרך כלל סביב 430nm." },
+            { front: "MSDS", back: "Material Safety Data Sheet. דף מידע בטיחותי המספק מידע על סיכונים וטיפול בחומרים כימיים. חובה לקרוא לפני שימוש בחומרים." },
+            { front: "טבעת לקטונית", back: "מבנה טבעתי אסטרי פנימי במולקולות כמו AA ו-DAA. פתיחתה ב-DAA גורמת לאובדן פעילות ויטמינית." },
+            { front: "חמצון (Oxidation)", back: "תהליך כימי הכרוך באובדן אלקטרונים. AA מתחמצן ל-DAA." },
+            { front: "חיזור (Reduction)", back: "תהליך כימי הכרוך בקבלת אלקטרונים. DPIP מתחזר על ידי AA." },
+        ];
+
+        // Multiple Choice Questions Data
+        const mcqQuestions = [
+            {
+                question: "מהי הצורה של ויטמין C בעלת פעילות ויטמינית מלאה, הנוצרת כתוצאה מחמצון של חומצה אסקורבית?",
+                options: ["חומצה 2,3-דיקטוגלוקונית", "חומצה דהידרואסקורבית (DAA)", "חומצה ציטרית", "חומצה גלוקורונית"],
+                correctAnswer: "חומצה דהידרואסקורבית (DAA)",
+                explanation: "חומצה דהידרואסקורבית (DAA) היא הצורה המחומצנת של חומצה אסקורבית ושומרת על פעילות ויטמינית מלאה."
+            },
+            {
+                question: "מהו צבעו של הריאגנט DPIP בצורתו המחומצנת בסביבה חומצית?",
+                options: ["כחול", "חסר צבע", "אדום", "ירוק"],
+                correctAnswer: "אדום",
+                explanation: "בסביבה חומצית, DPIP מחומצן מקבל צבע אדום."
+            },
+            {
+                question: "איזה ריאגנט משמש ליצירת תוצר פלואורסצנטי עם DAA בקביעה פלואורומטרית?",
+                options: ["DPIP", "חומצה מטאפוספורית", "o-Phenylenediamine", "פחם פעיל"],
+                correctAnswer: "o-Phenylenediamine",
+                explanation: "o-Phenylenediamine מגיב עם DAA ליצירת תרכובת פלואורסצנטית."
+            },
+            {
+                question: "מהו אחד התפקידים העיקריים של חומצה מטאפוספורית בתמיסת מיצוי לויטמין C?",
+                options: ["לשמש כאינדיקטור צבע", "לחמצן חומצה אסקורבית ל-DAA", "לייצב חומצה אסקורבית על ידי קשירת יוני מתכת", "לספק סביבה בסיסית לתגובה"],
+                correctAnswer: "לייצב חומצה אסקורבית על ידי קשירת יוני מתכת",
+                explanation: "חומצה מטאפוספורית מייצבת חומצה אסקורבית, בין היתר, על ידי קשירת יוני מתכת המזרזים חמצון ושיקוע חלבונים."
+            },
+            {
+                question: "באילו תנאי pH ויטמין C נחשב ליציב יותר?",
+                options: ["בסביבה בסיסית חזקה (pH גדול מ-10)", "בסביבה ניטרלית (pH בסביבות 7)", "בסביבה חומצית (pH נמוך מ-4)", "יציבותו אינה תלויה ב-pH"],
+                correctAnswer: "בסביבה חומצית (pH נמוך מ-4)",
+                explanation: "ויטמין C יציב יותר בסביבה חומצית; בסביבה בסיסית הוא מתפרק מהר יותר."
+            },
+            {
+                question: "פתיחת הטבעת הלקטונית של DAA מובילה ליצירת:",
+                options: ["חומצה אסקורבית פעילה יותר", "חומצה 2,3-דיקטוגלוקונית חסרת פעילות", "תוצר פלואורסצנטי יציב", "DPIP בצורתו המחוזרת"],
+                correctAnswer: "חומצה 2,3-דיקטוגלוקונית חסרת פעילות",
+                explanation: "פתיחת הטבעת הלקטונית של DAA יוצרת חומצה 2,3-דיקטוגלוקונית, שהיא חסרת פעילות ויטמינית."
+            },
+            {
+                question: "מהי מטרת השימוש בפחם פעיל (Activated Charcoal) בהכנת דגימות לקביעת DAA?",
+                options: ["לשמש כבופר לשמירה על pH קבוע", "לחזר DAA בחזרה ל-AA", "לחמצן AA ל-DAA ו/או לספוח חומרים מפריעים", "להגביר את הפלואורסצנציה של התוצר הסופי"],
+                correctAnswer: "לחמצן AA ל-DAA ו/או לספוח חומרים מפריעים",
+                explanation: "פחם פעיל משמש ככל הנראה לחמצון AA ל-DAA ולהסרת חומרים מפריעים מהדגימה."
+            },
+            {
+                question: "בטיטרציה של חומצה אסקורבית עם DPIP, מה מסמן את נקודת הסיום?",
+                options: ["היעלמות מוחלטת של צבע מהתמיסה", "הופעת צבע כחול קבוע", "הופעת צבע ורוד-אדום חלש ויציב", "היווצרות משקע לבן"],
+                correctAnswer: "הופעת צבע ורוד-אדום חלש ויציב",
+                explanation: "נקודת הסיום בטיטרציה זו (בסביבה חומצית) היא הופעת צבע ורוד-אדום חלש כתוצאה מעודף DPIP שלא חזר."
+            },
+            {
+                question: "איזו תכונה של חומצה אסקורבית תורמת לאובדנה בעת מיצוי מפירות וירקות במים?",
+                options: ["רגישותה לאור חזק", "מסיסותה הנמוכה במים", "מסיסותה הגבוהה מאוד במים", "נטייתה להתפלמר בטמפרטורת החדר"],
+                correctAnswer: "מסיסותה הגבוהה מאוד במים",
+                explanation: "חומצה אסקורבית מסיסה מאוד במים (1 גרם ב-3 מ״ל), מה שעלול לגרום לאובדן משמעותי בעת מיצויים מימיים."
+            },
+            {
+                question: "אילו אורכי גל אופייניים משמשים לעירור (Excitation) ופליטה (Emission) בקביעה פלואורומטרית של DAA עם o-PD?",
+                options: ["עירור 280nm, פליטה 350nm", "עירור 350nm, פליטה 430nm", "עירור 430nm, פליטה 350nm", "עירור 500nm, פליטה 550nm"],
+                correctAnswer: "עירור 350nm, פליטה 430nm",
+                explanation: "אורכי הגל הנפוצים הם עירור סביב 350nm ופליטה סביב 430nm."
+            },
+             {
+                question: "מהו הסיכון העיקרי בעבודה עם o-Phenylenediamine, המחייב שימוש במנדף וכפפות כפולות?",
+                options: ["הוא חומר נפיץ במגע עם אוויר", "הוא חומצה חזקה ומאכלת", "הוא אמין ארומטי מסוכן ורעיל", "הוא פולט קרינה רדיואקטיבית חלשה"],
+                correctAnswer: "הוא אמין ארומטי מסוכן ורעיל",
+                explanation: "o-Phenylenediamine הוא אמין ארומטי הנחשב לחומר מסוכן, ומחייב אמצעי זהירות מיוחדים."
+            },
+            {
+                question: "איזה מהבאים אינו גורם המשפיע ישירות על יציבות ויטמין C?",
+                options: ["טמפרטורה", "pH", "נוכחות חמצן", "צפיפות הדגימה"],
+                correctAnswer: "צפיפות הדגימה",
+                explanation: "טמפרטורה, pH, ונוכחות חמצן הם גורמים עיקריים המשפיעים על יציבות ויטמין C. צפיפות הדגימה אינה גורם ישיר לפירוקו."
+            },
+            {
+                question: "באיזו צורה, מבין הבאות, ויטמין C מאבד את פעילותו הויטמינית?",
+                options: ["L-ascorbic acid", "L-dehydroascorbic acid", "מלח נתרן של חומצה אסקורבית", "חומצה 2,3-דיקטוגלוקונית"],
+                correctAnswer: "חומצה 2,3-דיקטוגלוקונית",
+                explanation: "חומצה 2,3-דיקטוגלוקונית היא תוצר פירוק של DAA והיא חסרת פעילות ויטמינית."
+            },
+            {
+                question: "מדוע משתמשים בתמיסת חומצה בורית-סודיום אצטט בהכנת דגימות 'בלנק' בקביעת DAA?",
+                options: ["כדי להגביר את הפלואורסצנציה של ה-DAA", "כדי לחמצן את כל ה-AA ל-DAA בצורה יעילה יותר", "כדי למנוע את תגובת DAA עם o-PD או לשלוט ב-pH באופן ספציפי לבלנק", "כדי לשמש כסטנדרט פנימי במדידה"],
+                correctAnswer: "כדי למנוע את תגובת DAA עם o-PD או לשלוט ב-pH באופן ספציפי לבלנק",
+                explanation: "תמיסת חומצה בורית-סודיום אצטט בבלנק נועדה ככל הנראה למנוע את התגובה הספציפית הנמדדת או לשלוט בתנאים כך שהבלנק ייצג רקע לא ספציפי."
+            },
+            {
+                question: "איזה תהליך כימי עוברת חומצה אסקורבית (AA) כאשר היא מגיבה עם DPIP?",
+                options: ["חיזור (Reduction)", "חמצון (Oxidation)", "הידרוליזה (Hydrolysis)", "אסטריפיקציה (Esterification)"],
+                correctAnswer: "חמצון (Oxidation)",
+                explanation: "חומצה אסקורבית (AA) מתחמצנת ל-DAA תוך כדי חיזור של DPIP."
+            },
+            {
+                question: "צבעו של DPIP במצב מחוזר הוא:",
+                options: ["אדום בסביבה חומצית וכחול בבסיסית", "ירוק בכל סביבה", "צהוב חיוור", "חסר צבע בכל סביבה"],
+                correctAnswer: "חסר צבע בכל סביבה",
+                explanation: "כאשר DPIP מתחזר, הוא הופך לחסר צבע ללא תלות ב-pH."
+            },
+            {
+                question: "מטרות הניסוי המתואר במקור כוללות בדיקת השפעת:",
+                options: ["סוגים שונים של ממסים אורגניים על מסיסות ויטמין C", "סביבה חומצית ובסיסית, טיפולים תרמיים ותנאי אחסון על יציבות ויטמין C", "קרינת גמא על מבנה הויטמין", "ריאגנטים שונים על צבעו של ויטמין C"],
+                correctAnswer: "סביבה חומצית ובסיסית, טיפולים תרמיים ותנאי אחסון על יציבות ויטמין C",
+                explanation: "מטרות הניסוי המפורטות במקור כוללות קביעת השפעת סביבה חומצית/בסיסית, טיפולים תרמיים ותנאי אחסון על יציבות ויטמין C."
+            },
+            {
+                question: "חומצה אסקורבית במצב נקי ויבש היא:",
+                options: ["מאוד לא יציבה ומתפרקת במהירות באוויר", "יציבה יחסית בפני חמצון על ידי אוויר", "מגיבה באלימות עם לחות", "בעלת צבע כחול עז"],
+                correctAnswer: "יציבה יחסית בפני חמצון על ידי אוויר",
+                explanation: "במצב נקי ויבש, חומצה אסקורבית יציבה יחסית לחמצון אטמוספרי."
+            },
+            {
+                question: "הקביעה הכמותית של DAA עם o-Phenylenediamine מבוססת על מדידת:",
+                options: ["הולכה חשמלית של התמיסה", "שינוי בנפח התמיסה", "עוצמת הפלואורסצנציה הנפלטת", "ספיגת אור בתחום הנראה (בליעה)"],
+                correctAnswer: "עוצמת הפלואורסצנציה הנפלטת",
+                explanation: "השיטה מבוססת על מדידת עוצמת הפלואורסצנציה של התוצר הנוצר בין DAA ל-o-PD."
+            },
+            {
+                question: "איזה מהבאים אינו רכיב בתמיסת המיצוי הסטנדרטית לויטמין C המוזכרת?",
+                options: ["חומצה מטאפוספורית", "מים מזוקקים", "חומצה אצטית", "נתרן הידרוקסידי"],
+                correctAnswer: "נתרן הידרוקסידי",
+                explanation: "תמיסת המיצוי מכילה חומצה מטאפוספורית וחומצה אצטית מומסות במים. נתרן הידרוקסידי (בסיס חזק) אינו חלק ממנה ויפגע ביציבות הויטמין."
+            },
+            {
+                question: "המרת חומצה אסקורבית (AA) לחומצה דהידרואסקורבית (DAA) היא תהליך של:",
+                options: ["חיזור הכולל קבלת שני פרוטונים ושני אלקטרונים", "חמצון הכולל איבוד שני פרוטונים ושני אלקטרונים", "פתיחת טבעת לקטונית ללא שינוי במספר האלקטרונים", "הוספת מולקולת מים ללא שינוי ברמת החמצון"],
+                correctAnswer: "חמצון הכולל איבוד שני פרוטונים ושני אלקטרונים",
+                explanation: "תהליך החמצון של AA ל-DAA כרוך באובדן של שני פרוטונים ($2H^+$) ושני אלקטרונים ($2e^-$)."
+            },
+            {
+                question: "מהו הערך המשוער של pH בתמיסת חומצה אסקורבית המומסת במים מזוקקים בלבד, כפי שמוזכר בהכנת תמיסות?",
+                options: ["סביב pH 7 (ניטרלי)", "סביב pH 3 (חומצי)", "סביב pH 8 (בסיסי קל)", "סביב pH 12 (בסיסי חזק)"],
+                correctAnswer: "סביב pH 3 (חומצי)",
+                explanation: "מוזכר כי המסית חומצה אסקורבית במים מזוקקים מתקבל pH חומצי בסביבות 3."
+            },
+            {
+                question: "כדי לקבל pH בסיסי בתמיסת חומצה אסקורבית לצורך בדיקת יציבות, השתמשו ב:",
+                options: ["חומצה הידרוכלורית מרוכזת", "סודה לשתיה (נתרן ביקרבונט)", "חומצה גופרתית", "אמוניה"],
+                correctAnswer: "סודה לשתיה (נתרן ביקרבונט)",
+                explanation: "להכנת תמיסה בסיסית של חומצה אסקורבית (pH 7.5-8) השתמשו בתוספת סודה לשתיה."
+            },
+            {
+                question: "כיצד משפיעה הרתחה של תמיסת חומצה אסקורבית למשך 30 דקות על ריכוזה?",
+                options: ["הרתחה גורמת לעלייה בריכוז החומצה האסקורבית עקב אידוי המים", "הרתחה אינה משפיעה כלל על ריכוז החומצה האסקורבית", "הרתחה גורמת לירידה משמעותית בריכוז החומצה האסקורבית עקב פירוק תרמי וחמצון", "הרתחה הופכת את כל החומצה האסקורבית לבלתי מסיסה"],
+                correctAnswer: "הרתחה גורמת לירידה משמעותית בריכוז החומצה האסקורבית עקב פירוק תרמי וחמצון",
+                explanation: "טיפול תרמי כמו הרתחה ממושכת צפוי לגרום לאובדן ניכר של ויטמין C."
+            },
+            {
+                question: "מהי מטרת השימוש בתמיסת סודיום אצטט בעת קביעת DAA?",
+                options: ["לחמצן את ה-AA ל-DAA באופן סלקטיבי", "לשמש כאינדיקטור צבעוני לסיום התגובה", "לשמש כבופר לכוונון ה-pH לתגובה האופטימלית של DAA עם o-Phenylenediamine", "למנוע את תגובת ה-DAA עם o-Phenylenediamine בדגימות הבקרה"],
+                correctAnswer: "לשמש כבופר לכוונון ה-pH לתגובה האופטימלית של DAA עם o-Phenylenediamine",
+                explanation: "סביר להניח שתמיסת סודיום אצטט משמשת כבופר כדי להבטיח pH אופטימלי לתגובת הקונדנסציה."
+            },
+            {
+                question: "מהו המבנה הכימי המסוכן ב-o-Phenylenediamine הדורש זהירות מיוחדת?",
+                options: ["קבוצת קרבוקסיל חומצית מאוד", "קשר משולש פחמן-פחמן לא יציב", "מבנה של אמין ארומטי", "נוכחות של מתכת כבדה במולקולה"],
+                correctAnswer: "מבנה של אמין ארומטי",
+                explanation: "o-Phenylenediamine הוא אמין ארומטי, וקבוצת חומרים זו ידועה כבעלת פוטנציאל סיכון."
+            },
+            {
+                question: "הטיפול בפחם פעיל עם 10% חומצת מלח ($ \text{HCl} $) ולאחר מכן חימום ושטיפות נועד:",
+                options: ["להגדיל את גודל החלקיקים של הפחם", "לנקות את הפחם ולהפעילו (acid-washed activated charcoal)", "להמיס את הפחם לצורך תגובה הומוגנית", "להפוך את הפחם לפלואורסצנטי"],
+                correctAnswer: "לנקות את הפחם ולהפעילו (acid-washed activated charcoal)",
+                explanation: "הטיפול בחומצה וחימום נועד לנקות את הפחם הפעיל ולהגדיל את יעילותו בספיחה או בתגובות שטח."
+            },
+            {
+                question: "בניסוי המתואר, מדוע מכינים עקום כיול לקביעת DAA?",
+                options: ["כדי לבדוק את טוהר הריאגנט o-Phenylenediamine", "כדי לכמת את ריכוז ה-DAA בדגימות הנעלמות על ידי השוואה לריכוזים ידועים", "כדי לקבוע את אורך הגל האופטימלי למדידת הפלואורסצנציה", "כדי לבדוק את יציבות ה-DAA לאורך זמן"],
+                correctAnswer: "כדי לכמת את ריכוז ה-DAA בדגימות הנעלמות על ידי השוואה לריכוזים ידועים",
+                explanation: "עקום כיול משמש לקשר בין האות הנמדד (פלואורסצנציה) לריכוז האנליט (DAA) באמצעות דגימות סטנדרטיות בריכוז ידוע."
+            },
+            {
+                question: "איזה מהבאים מתאר נכון את תגובת חומצה אסקורבית עם DPIP?",
+                options: ["חומצה אסקורבית מחמצנת את DPIP", "DPIP מחמצן את חומצה אסקורבית", "התגובה היא תגובת סתירה חומצה-בסיס", "התגובה מייצרת משקע צבעוני"],
+                correctAnswer: "DPIP מחמצן את חומצה אסקורבית",
+                explanation: "בתגובה זו, DPIP הוא החומר המחמצן (מקבל אלקטרונים) וחומצה אסקורבית היא החומר המחוזר (מוסר אלקטרונים ומתחמצן)."
+            },
+            {
+                question: "מהי מטרת ההנחיה לשמור תמיסת o-Phenylenediamine בחושך עד לשימוש?",
+                options: ["למנוע התגבשות של החומר בטמפרטורת החדר", "למנוע פירוק של החומר הרגיש לאור", "להגביר את מסיסותו במים", "לשנות את צבע התמיסה לגוון הרצוי"],
+                correctAnswer: "למנוע פירוק של החומר הרגיש לאור",
+                explanation: "חומרים רבים, ובפרט תרכובות אורגניות מורכבות כמו o-Phenylenediamine, רגישים לאור ויכולים להתפרק בחשיפה ממושכת, לכן שומרים אותם בחושך."
+            }
+        ];
+
+        // True/False Questions Data
+        const tfQuestions = [
+            { question: "חומצה דהידרואסקורבית (DAA) חסרת פעילות ויטמינית לחלוטין.", isCorrect: false, explanation: "לא נכון. ל-DAA יש פעילות ויטמינית מלאה, בדומה לחומצה אסקורבית." },
+            { question: "DPIP בצורתו המחוזרת הוא כחול בסביבה בסיסית.", isCorrect: false, explanation: "לא נכון. DPIP בצורתו המחוזרת הוא חסר צבע בכל סביבת pH." },
+            { question: "קביעת DAA עם o-Phenylenediamine מבוססת על תגובת צבע הנמדדת בספקטרופוטומטר רגיל.", isCorrect: false, explanation: "לא נכון. הקביעה מבוססת על תגובה היוצרת תוצר פלואורסצנטי, הנמדד בפלואורימטר." },
+            { question: "ויטמין C יציב יותר בטמפרטורות גבוהות ובסביבה בסיסית.", isCorrect: false, explanation: "לא נכון. ויטמין C יציב יותר בטמפרטורות נמוכות ובסביבה חומצית." },
+            { question: "תמיסת מיצוי המכילה חומצה מטאפוספורית וחומצה אצטית משמשת לייצוב ויטמין C.", isCorrect: true, explanation: "נכון. חומצות אלו עוזרות לייצב את ויטמין C ולמנוע את חמצונו המהיר." },
+            { question: "פתיחת טבעת לקטונית ב-DAA יוצרת חומצה אסקורבית.", isCorrect: false, explanation: "לא נכון. פתיחת טבעת לקטונית ב-DAA יוצרת חומצה 2,3-דיקטוגלוקונית, שהיא חסרת פעילות ויטמינית." },
+            { question: "ניתן להשתמש ב-o-Phenylenediamine ללא אמצעי זהירות מיוחדים.", isCorrect: false, explanation: "לא נכון. o-Phenylenediamine הוא אמין ארומטי מסוכן ויש לעבוד איתו בזהירות רבה, במנדף ועם כפפות." },
+            { question: "בטיטרצית AA עם DPIP, ה-AA מתחזר וה-DPIP מתחמצן.", isCorrect: false, explanation: "לא נכון. AA מתחמצן (מוסר אלקטרונים) ו-DPIP מתחזר (מקבל אלקטרונים)." },
+            { question: "חומצה אסקורבית מסיסה היטב בממסים אורגניים כמו הקסאן, אך פחות במים.", isCorrect: false, explanation: "לא נכון. חומצה אסקורבית מסיסה מאוד במים ופחות בממסים אורגניים לא קוטביים." },
+            { question: "עוצמת הפלואורסצנציה בתגובת DAA עם o-PD יחסית הפוכה לריכוז ה-DAA.", isCorrect: false, explanation: "לא נכון. עוצמת הפלואורסצנציה יחסית ישירות לריכוז ה-DAA." },
+            { question: "חומצה 2,3-דיקטוגלוקונית שומרת על חלק מהפעילות הויטמינית של ויטמין C.", isCorrect: false, explanation: "לא נכון. חומצה 2,3-דיקטוגלוקונית היא תוצר פירוק חסר פעילות ויטמינית." },
+            { question: "הוספת סודה לשתיה לתמיסת חומצה אסקורבית תיצור סביבה חומצית יותר.", isCorrect: false, explanation: "לא נכון. סודה לשתיה (נתרן ביקרבונט) היא בסיס חלש ותגרום לעליית ה-pH, כלומר לסביבה בסיסית יותר." },
+            { question: "ניתן להשתמש בפחם פעיל כדי לחזר DAA בחזרה ל-AA.", isCorrect: false, explanation: "לא נכון. פחם פעיל בהקשר של ויטמין C משמש לרוב לחמצון AA ל-DAA או לניקוי הדגימה." },
+            { question: "דפי MSDS מכילים מידע על אופן הכנת התמיסות במעבדה.", isCorrect: false, explanation: "לא נכון. דפי MSDS (Material Safety Data Sheets) מספקים מידע בטיחותי על חומרים (סיכונים, טיפול, עזרה ראשונה), לא הוראות הכנה לניסויים ספציפיים." },
+            { question: "השיטה הפלואורומטרית לקביעת DAA רגישה יותר משיטת הטיטרציה עם DPIP לקביעת AA.", isCorrect: true, explanation: "נכון. שיטות פלואורומטריות הן לרוב רגישות יותר משיטות טיטרציה קולורימטריות." },
+            { question: "חומצה אסקורבית בצורתה היבשה והנקייה מתחמצנת במהירות רבה במגע עם אוויר.", isCorrect: false, explanation: "לא נכון. במצב נקי ויבש, חומצה אסקורבית יציבה יחסית בפני חמצון על ידי אוויר." },
+            { question: "חומצה בורית משמשת בתגובת קביעת DAA כדי לזרז את יצירת התוצר הפלואורסצנטי.", isCorrect: false, explanation: "לא נכון. חומצה בורית (לרוב בתמיסת בופר עם סודיום אצטט) משמשת בהכנת הבלנק, ככל הנראה כדי למנוע את התגובה הספציפית או לשלוט ב-pH באופן שונה מהדגימה." },
+            { question: "בסביבה ניטרלית, DPIP מחומצן הוא חסר צבע.", isCorrect: false, explanation: "לא נכון. בסביבה ניטרלית (או בסיסית), DPIP מחומצן הוא כחול." },
+            { question: "אחסון מיץ פירות בטמפרטורת החדר ובחשיפה לאור יסייע לשמר את תכולת ויטמין C.", isCorrect: false, explanation: "לא נכון. תנאים אלו (טמפרטורה גבוהה, אור) מזרזים את פירוק ויטמין C." },
+            { question: "כל הטיטרציות בניסוי המתואר במקור מתבצעות באותה כוס כימית ללא שטיפה ביניהן.", isCorrect: false, explanation: "לא נכון. המקור מציין במפורש שיש לרוקן ולשטוף את הכוס הכימית בין טיטרציות למניעת זיהום וטעויות." },
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+
+        // --- DOM Element References ---
+        // Study Cards
+        const cardElement = document.getElementById('studyCard');
+        const cardFrontElement = document.getElementById('cardFront');
+        const cardBackElement = document.getElementById('cardBack');
+        const prevCardBtn = document.getElementById('prevCardBtn');
+        const nextCardBtn = document.getElementById('nextCardBtn');
+        const cardCounterElement = document.getElementById('cardCounter');
+
+        // MCQs
+        const mcqQuestionElement = document.getElementById('mcqQuestion');
+        const mcqOptionsElement = document.getElementById('mcqOptions');
+        const mcqExplanationElement = document.getElementById('mcqExplanation');
+        const prevMcqBtn = document.getElementById('prevMcqBtn');
+        const nextMcqBtn = document.getElementById('nextMcqBtn');
+        const mcqCounterElement = document.getElementById('mcqCounter');
+        const viewAllMcqsBtn = document.getElementById('viewAllMcqsBtn');
+        const allMcqsContainer = document.getElementById('allMcqsContainer');
+        const mcqSingleViewElements = { // For stable ID operations
+            question: mcqQuestionElement,
+            options: mcqOptionsElement,
+            explanation: mcqExplanationElement
+        };
+
+
+        // True/False
+        const tfQuestionElement = document.getElementById('tfQuestion');
+        const tfOptionsElement = document.getElementById('tfOptions');
+        const tfExplanationElement = document.getElementById('tfExplanation');
+        const prevTfBtn = document.getElementById('prevTfBtn');
+        const nextTfBtn = document.getElementById('nextTfBtn');
+        const tfCounterElement = document.getElementById('tfCounter');
+        const viewAllTfsBtn = document.getElementById('viewAllTfsBtn');
+        const allTfsContainer = document.getElementById('allTfsContainer');
+        const tfSingleViewElements = { // For stable ID operations
+            question: tfQuestionElement,
+            options: tfOptionsElement,
+            explanation: tfExplanationElement
+        };
+        
+        // --- Utility Functions ---
+        function typesetMathJax(elements) {
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise(elements).catch(function (err) {
+                    console.error('MathJax Typesetting Error:', err);
+                });
+            }
+        }
+
+        // --- Study Card Logic ---
+        function displayCard(index) {
+            if (studyCards.length === 0) return;
+            const card = studyCards[index];
+            cardFrontElement.innerHTML = card.front;
+            cardBackElement.innerHTML = card.back;
+            cardCounterElement.textContent = `כרטיסיה ${index + 1} / ${studyCards.length}`;
+            cardElement.classList.remove('flipped');
+            // Typeset MathJax content for front and back of the card
+            typesetMathJax([cardFrontElement, cardBackElement]);
+        }
+
+        // --- MCQ Logic ---
+        function displayMcq(index) {
+            if (mcqQuestions.length === 0) return;
+            const q = mcqQuestions[index];
+            mcqSingleViewElements.question.innerHTML = q.question;
+            mcqSingleViewElements.options.innerHTML = ''; // Clear previous options
+            q.options.forEach(optionText => {
+                const li = document.createElement('li');
+                li.innerHTML = optionText; // Use innerHTML for potential MathJax
+                li.addEventListener('click', () => selectMcqOption(li, optionText, q));
+                mcqSingleViewElements.options.appendChild(li);
+            });
+            mcqSingleViewElements.explanation.style.display = 'none';
+            mcqSingleViewElements.explanation.innerHTML = '';
+            mcqCounterElement.textContent = `שאלה ${index + 1} / ${mcqQuestions.length}`;
+            // Typeset MathJax content for the question and options
+            typesetMathJax([mcqSingleViewElements.question, mcqSingleViewElements.options]);
+        }
+
+        function selectMcqOption(selectedLi, selectedOptionText, question) {
+            const optionsLis = mcqSingleViewElements.options.querySelectorAll('li');
+            optionsLis.forEach(li => {
+                li.classList.add('disabled'); // Disable all options
+                if (li.innerHTML === question.correctAnswer) {
+                    li.classList.add('correct');
+                } else if (li === selectedLi) {
+                    li.classList.add('incorrect');
+                }
+            });
+            mcqSingleViewElements.explanation.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`;
+            mcqSingleViewElements.explanation.style.display = 'block';
+            typesetMathJax([mcqSingleViewElements.explanation]); // Typeset explanation if it has math
+        }
+
+        function displayAllMcqs() {
+            allMcqsContainer.innerHTML = '<h3>כל שאלות הרב-ברירה:</h3>'; // Reset
+            mcqQuestions.forEach((q, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.classList.add('question-block');
+                
+                const qNum = document.createElement('h4');
+                qNum.textContent = `שאלה ${index + 1}:`;
+                questionBlock.appendChild(qNum);
+
+                const qText = document.createElement('p');
+                qText.innerHTML = q.question;
+                questionBlock.appendChild(qText);
+
+                const optsList = document.createElement('ul');
+                optsList.classList.add('options-list');
+                q.options.forEach(optText => {
+                    const li = document.createElement('li');
+                    li.innerHTML = optText;
+                    // Simplified interaction for "View All": just show correct/incorrect on click
+                    li.addEventListener('click', function handler() {
+                        optsList.querySelectorAll('li').forEach(item => item.classList.add('disabled')); // Disable siblings
+                        if (optText === q.correctAnswer) {
+                            li.classList.add('correct');
+                        } else {
+                            li.classList.add('incorrect');
+                            // Highlight correct one as well
+                            Array.from(optsList.children).find(childLi => childLi.innerHTML === q.correctAnswer)?.classList.add('correct');
+                        }
+                        qExp.style.display = 'block';
+                        li.removeEventListener('click', handler); // Prevent re-clicks
+                        typesetMathJax([qExp]); // Re-typeset explanation if needed
+                    }, { once: true });
+                    optsList.appendChild(li);
+                });
+                questionBlock.appendChild(optsList);
+
+                const qExp = document.createElement('div');
+                qExp.classList.add('explanation');
+                qExp.style.display = 'none'; // Initially hidden
+                qExp.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`;
+                questionBlock.appendChild(qExp);
+                
+                allMcqsContainer.appendChild(questionBlock);
+            });
+            allMcqsContainer.style.display = 'block';
+            viewAllMcqsBtn.textContent = 'הסתר את כל השאלות';
+            typesetMathJax([allMcqsContainer]); // Typeset all math in the generated list
+        }
+        
+        function toggleViewAllMcqs() {
+            if (allMcqsContainer.style.display === 'none') {
+                displayAllMcqs();
+            } else {
+                allMcqsContainer.style.display = 'none';
+                viewAllMcqsBtn.textContent = 'הצג את כל השאלות';
+            }
+        }
+
+        // --- True/False Logic ---
+        function displayTf(index) {
+            if (tfQuestions.length === 0) return;
+            const q = tfQuestions[index];
+            tfSingleViewElements.question.innerHTML = q.question;
+            
+            // Reset options state
+            const tfOptionsLis = tfSingleViewElements.options.querySelectorAll('li');
+            tfOptionsLis.forEach(li => {
+                li.classList.remove('correct', 'incorrect', 'disabled');
+                // Re-attach event listeners if they were removed or use event delegation
+            });
+            
+            tfSingleViewElements.explanation.style.display = 'none';
+            tfSingleViewElements.explanation.innerHTML = '';
+            tfCounterElement.textContent = `שאלה ${index + 1} / ${tfQuestions.length}`;
+            typesetMathJax([tfSingleViewElements.question]);
+        }
+
+        function selectTfOption(selectedLi, selectedAnswer, question) {
+            const optionsLis = tfSingleViewElements.options.querySelectorAll('li');
+            optionsLis.forEach(li => {
+                li.classList.add('disabled');
+                const answerValue = li.dataset.answer === 'true';
+                if (answerValue === question.isCorrect) {
+                    li.classList.add('correct');
+                } else if (li === selectedLi) {
+                    li.classList.add('incorrect');
+                }
+            });
+            tfSingleViewElements.explanation.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`;
+            tfSingleViewElements.explanation.style.display = 'block';
+            typesetMathJax([tfSingleViewElements.explanation]);
+        }
+        
+        function displayAllTfs() {
+            allTfsContainer.innerHTML = '<h3>כל שאלות הנכון/לא נכון:</h3>'; // Reset
+            tfQuestions.forEach((q, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.classList.add('question-block');
+
+                const qNum = document.createElement('h4');
+                qNum.textContent = `שאלה ${index + 1}:`;
+                questionBlock.appendChild(qNum);
+
+                const qText = document.createElement('p');
+                qText.innerHTML = q.question;
+                questionBlock.appendChild(qText);
+
+                const optsList = document.createElement('ul');
+                optsList.classList.add('options-list');
+                ['נכון', 'לא נכון'].forEach(optString => {
+                    const li = document.createElement('li');
+                    li.textContent = optString;
+                    const answerBool = optString === 'נכון';
+                    li.addEventListener('click', function handler() {
+                        optsList.querySelectorAll('li').forEach(item => item.classList.add('disabled'));
+                        if (answerBool === q.isCorrect) {
+                            li.classList.add('correct');
+                        } else {
+                            li.classList.add('incorrect');
+                            // Highlight correct one
+                             Array.from(optsList.children).find(childLi => (childLi.textContent === 'נכון') === q.isCorrect)?.classList.add('correct');
+                        }
+                        qExp.style.display = 'block';
+                        li.removeEventListener('click', handler);
+                        typesetMathJax([qExp]);
+                    }, { once: true });
+                    optsList.appendChild(li);
+                });
+                questionBlock.appendChild(optsList);
+                
+                const qExp = document.createElement('div');
+                qExp.classList.add('explanation');
+                qExp.style.display = 'none';
+                qExp.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`;
+                questionBlock.appendChild(qExp);
+
+                allTfsContainer.appendChild(questionBlock);
+            });
+            allTfsContainer.style.display = 'block';
+            viewAllTfsBtn.textContent = 'הסתר את כל השאלות';
+            typesetMathJax([allTfsContainer]);
+        }
+
+        function toggleViewAllTfs() {
+            if (allTfsContainer.style.display === 'none') {
+                displayAllTfs();
+            } else {
+                allTfsContainer.style.display = 'none';
+                viewAllTfsBtn.textContent = 'הצג את כל השאלות';
+            }
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            // Cards
+            cardElement.addEventListener('click', () => cardElement.classList.toggle('flipped'));
+            prevCardBtn.addEventListener('click', () => {
+                currentCardIndex = (currentCardIndex - 1 + studyCards.length) % studyCards.length;
+                displayCard(currentCardIndex);
+            });
+            nextCardBtn.addEventListener('click', () => {
+                currentCardIndex = (currentCardIndex + 1) % studyCards.length;
+                displayCard(currentCardIndex);
+            });
+
+            // MCQs
+            prevMcqBtn.addEventListener('click', () => {
+                currentMcqIndex = (currentMcqIndex - 1 + mcqQuestions.length) % mcqQuestions.length;
+                displayMcq(currentMcqIndex);
+            });
+            nextMcqBtn.addEventListener('click', () => {
+                currentMcqIndex = (currentMcqIndex + 1) % mcqQuestions.length;
+                displayMcq(currentMcqIndex);
+            });
+            viewAllMcqsBtn.addEventListener('click', toggleViewAllMcqs);
+
+
+            // True/False
+            tfSingleViewElements.options.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', () => {
+                    // Check if already answered for single view to prevent re-triggering
+                    if (li.classList.contains('disabled')) return;
+                    selectTfOption(li, li.dataset.answer === 'true', tfQuestions[currentTfIndex]);
+                });
+            });
+            prevTfBtn.addEventListener('click', () => {
+                currentTfIndex = (currentTfIndex - 1 + tfQuestions.length) % tfQuestions.length;
+                displayTf(currentTfIndex);
+            });
+            nextTfBtn.addEventListener('click', () => {
+                currentTfIndex = (currentTfIndex + 1) % tfQuestions.length;
+                displayTf(currentTfIndex);
+            });
+            viewAllTfsBtn.addEventListener('click', toggleViewAllTfs);
+        }
+        
+        // --- Initialization on Page Load & MathJax Ready ---
+        // This function will be called by MathJax.startup.ready()
+        function initializeInteractiveContent() {
+            console.log("Initializing interactive content after MathJax is ready.");
+            
+            // Initial display calls
+            if (studyCards.length > 0) {
+                displayCard(currentCardIndex);
+            } else {
+                cardCounterElement.textContent = "אין כרטיסיות";
+                cardFrontElement.textContent = "אין כרטיסיות להצגה";
+            }
+
+            if (mcqQuestions.length > 0) {
+                displayMcq(currentMcqIndex);
+            } else {
+                mcqCounterElement.textContent = "אין שאלות";
+                mcqSingleViewElements.question.textContent = "אין שאלות להצגה";
+            }
+
+            if (tfQuestions.length > 0) {
+                displayTf(currentTfIndex);
+            } else {
+                tfCounterElement.textContent = "אין שאלות";
+                tfSingleViewElements.question.textContent = "אין שאלות להצגה";
+            }
+            
+            setupEventListeners(); // Setup event listeners after initial display
+            
+            // The displayX functions already call typesetMathJax for their specific parts.
+            // The theory section is static HTML, MathJax will process it.
+            // We ensure that MathJax process the whole document once fully setup.
+            // MathJax.typesetPromise(); // This might be redundant if display functions are specific enough
+                                    // or if defaultReady took care of static content.
+                                    // It's safer to let displayX handle their own MathJax calls.
+            console.log("Interactive content initialization complete.");
+        }
+
+        // Note: initializeInteractiveContent is called from MathJax.startup.ready callback
+        // This ensures MathJax is loaded before we try to typeset anything.
+    </script>
+</body>
+</html>

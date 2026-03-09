@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Wave Equation Extensions</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wave Equation: Method of Extensions (Semi-Infinite Domain)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p>We consider the 1D Wave Equation on a semi-infinite domain $x \in (0, \infty), t \in (0, \infty)$:</p> <!-- Notation Change -->
+            $$ u_{tt} = c^2 u_{xx} $$
+            <p>with initial conditions:</p>
+            $$ u(x,0) = f(x), \quad u_t(x,0) = g(x) \quad \text{for } x \in (0, \infty) $$ <!-- Notation Change -->
+            <p>and a boundary condition at $x=0$. Common types are:</p>
+            <ul>
+                <li><strong>Dirichlet BC (Fixed End):</strong> $u(0,t) = 0$</li>
+                <li><strong>Neumann BC (Free End):</strong> $u_x(0,t) = 0$</li>
+            </ul>
+
+            <h3>Method of Extensions</h3>
+            <p>The idea is to extend the initial conditions $f(x)$ and $g(x)$ (originally defined only for $x \in (0, \infty)$) to the entire real line $\mathbb{R}$ in such a way that the solution to the wave equation on the infinite line, using these extended conditions with D'Alembert's formula, automatically satisfies the boundary condition at $x=0$.</p>
+
+            <h4>Case 1: Dirichlet Boundary Condition $u(0,t) = 0$</h4>
+            <p>We use **odd extensions** for the initial conditions:</p>
+            $$
+            f_{odd}(x) =
+            \begin{cases}
+                f(x) & \text{if } x \in (0, \infty) \\
+                0 & \text{if } x = 0 \\
+                -f(-x) & \text{if } x \in (-\infty, 0)
+            \end{cases}
+            $$
+            $$
+            g_{odd}(x) =
+            \begin{cases}
+                g(x) & \text{if } x \in (0, \infty) \\
+                0 & \text{if } x = 0 \\
+                -g(-x) & \text{if } x \in (-\infty, 0)
+            \end{cases}
+            $$
+            <p>The odd extension makes the function zero at the origin (if $f, g$ are continuous towards 0) and antisymmetric about the origin.</p>
+
+            <h4>Case 2: Neumann Boundary Condition $u_x(0,t) = 0$</h4>
+            <p>We use **even extensions** for the initial conditions:</p>
+             $$
+            f_{even}(x) =
+            \begin{cases}
+                f(x) & \text{if } x \in [0, \infty) \\
+                f(-x) & \text{if } x \in (-\infty, 0)
+            \end{cases}
+            $$
+            $$
+            g_{even}(x) =
+            \begin{cases}
+                g(x) & \text{if } x \in [0, \infty) \\
+                g(-x) & \text{if } x \in (-\infty, 0)
+            \end{cases}
+            $$
+             <p>The even extension makes the function symmetric about the origin, ensuring its derivative is zero at the origin (if $f', g'$ exist and are continuous towards 0).</p>
+
+            <h4>Solution using D'Alembert's Formula</h4>
+            <p>Once the appropriate extensions $f_{ext}$ and $g_{ext}$ (either odd or even) are defined, the solution for the semi-infinite problem for $x \in (0, \infty)$ is given by applying D'Alembert's formula to these extended functions:</p>
+            $$ u(x,t) = \frac{1}{2}[f_{ext}(x+ct) + f_{ext}(x-ct)] + \frac{1}{2c} \int_{x-ct}^{x+ct} g_{ext}(s) \, ds \quad \text{for } x \in (0, \infty), t \in (0, \infty) $$
+            <p>When evaluating $f_{ext}$ or $g_{ext}$ at negative arguments (which happens when $x-ct \in (-\infty, 0)$), use the appropriate odd or even extension definition.</p>
+            <p>For example, if $x-ct \in (-\infty, 0)$ and we used an odd extension for $f$: $f_{ext}(x-ct) = -f(-(x-ct)) = -f(ct-x)$.</p>
+            <p>If $x-ct \in (-\infty, 0)$ and we used an even extension for $f$: $f_{ext}(x-ct) = f(-(x-ct)) = f(ct-x)$.</p>
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Let $f(x) = x^2$ for $x \in (0, \infty)$. Find its odd extension $f_{odd}(x)$ for all $x \in \mathbb{R}$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>For $x \in (0, \infty)$, $f_{odd}(x) = f(x) = x^2$.</p>
+                    <p>For $x \in (-\infty, 0)$, $f_{odd}(x) = -f(-x) = -((-x)^2) = -x^2$.</p>
+                    <p>For $x=0$, $f_{odd}(0) = 0$.</p>
+                    $$ f_{odd}(x) =
+                    \begin{cases}
+                        x^2 & \text{if } x \in (0, \infty) \\
+                        0 & \text{if } x = 0 \\
+                        -x^2 & \text{if } x \in (-\infty, 0)
+                    \end{cases} $$
+                    <p>This can also be written as $f_{odd}(x) = x|x|$ or $f_{odd}(x) = x^2 \text{sgn}(x)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Let $f(x) = x^2$ for $x \in (0, \infty)$. Find its even extension $f_{even}(x)$ for all $x \in \mathbb{R}$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>For $x \in [0, \infty)$, $f_{even}(x) = f(x) = x^2$.</p>
+                    <p>For $x \in (-\infty, 0)$, $f_{even}(x) = f(-x) = (-x)^2 = x^2$.</p>
+                    <p>So, $f_{even}(x) = x^2$ for all $x \in \mathbb{R}$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Let $g(x) = \sin(x)$ for $x \in (0, \infty)$. Find its odd extension $g_{odd}(x)$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q3">
+                    <p><strong>Solution:</strong></p>
+                     <p>For $x \in (0, \infty)$, $g_{odd}(x) = g(x) = \sin(x)$.</p>
+                    <p>For $x \in (-\infty, 0)$, $g_{odd}(x) = -g(-x) = -\sin(-x) = -(-\sin x) = \sin x$.</p>
+                    <p>For $x=0$, $g_{odd}(0) = 0$.</p>
+                    <p>So, $g_{odd}(x) = \sin(x)$ for all $x \in \mathbb{R}$. (Sine is naturally an odd function).</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Let $g(x) = \cos(x)$ for $x \in (0, \infty)$. Find its even extension $g_{even}(x)$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q4">
+                    <p><strong>Solution:</strong></p>
+                     <p>For $x \in [0, \infty)$, $g_{even}(x) = g(x) = \cos(x)$.</p>
+                     <p>For $x \in (-\infty, 0)$, $g_{even}(x) = g(-x) = \cos(-x) = \cos x$.</p>
+                     <p>So, $g_{even}(x) = \cos(x)$ for all $x \in \mathbb{R}$. (Cosine is naturally an even function).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Solve $u_{tt} = 9u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, with $u(0,t)=0$, $u(x,0)=\sin(x)$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3$. Dirichlet BC $u(0,t)=0 \implies$ use odd extensions.</p>
+                    <p>$f(x)=\sin x$ for $x \in (0, \infty)$. $f_{odd}(x)=\sin x$ for all $x$.</p>
+                    <p>$g(x)=0$ for $x \in (0, \infty)$. $g_{odd}(x)=0$ for all $x$.</p>
+                    <p>Use D'Alembert with extended functions:</p>
+                    $$ u(x,t) = \frac{1}{2}[f_{odd}(x+3t) + f_{odd}(x-3t)] + \frac{1}{2(3)} \int_{x-3t}^{x+3t} 0 \, ds $$
+                    $$ u(x,t) = \frac{1}{2}[\sin(x+3t) + \sin(x-3t)] $$
+                    <p>Using $\sin A + \sin B = 2\sin(\frac{A+B}{2})\cos(\frac{A-B}{2})$:</p>
+                    $$ u(x,t) = \frac{1}{2}[2\sin(\frac{x+3t+x-3t}{2})\cos(\frac{x+3t-(x-3t)}{2})] $$
+                    $$ u(x,t) = \sin(x)\cos(3t) $$
+                    <p>Solution is $u(x,t) = \sin(x)\cos(3t)$ for $x \in (0, \infty), t \in (0, \infty)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Solve $u_{tt} = 9u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, with $u_x(0,t)=0$, $u(x,0)=\cos(x)$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3$. Neumann BC $u_x(0,t)=0 \implies$ use even extensions.</p>
+                    <p>$f(x)=\cos x$ for $x \in (0, \infty)$. $f_{even}(x)=\cos x$ for all $x$.</p>
+                    <p>$g(x)=0$ for $x \in (0, \infty)$. $g_{even}(x)=0$ for all $x$.</p>
+                     <p>Use D'Alembert with extended functions:</p>
+                    $$ u(x,t) = \frac{1}{2}[f_{even}(x+3t) + f_{even}(x-3t)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2}[\cos(x+3t) + \cos(x-3t)] $$
+                    <p>Using $\cos A + \cos B = 2\cos(\frac{A+B}{2})\cos(\frac{A-B}{2})$:</p>
+                     $$ u(x,t) = \frac{1}{2}[2\cos(\frac{x+3t+x-3t}{2})\cos(\frac{x+3t-(x-3t)}{2})] $$
+                    $$ u(x,t) = \cos(x)\cos(3t) $$
+                    <p>Solution is $u(x,t) = \cos(x)\cos(3t)$ for $x \in (0, \infty), t \in (0, \infty)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Let $f(x)=x$ for $x \in (0, \infty)$. Find $f_{odd}(x)$ and $f_{even}(x)$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q7">
+                     <p><strong>Solution:</strong></p>
+                     <p>Odd extension:</p>
+                     <p>$f_{odd}(x) = x$ for $x \in (0, \infty)$. $f_{odd}(0)=0$. $f_{odd}(x)=-f(-x)=-(-x)=x$ for $x \in (-\infty, 0)$.</p>
+                     <p>So, $f_{odd}(x)=x$ for all $x \in \mathbb{R}$.</p>
+                     <p>Even extension:</p>
+                      <p>$f_{even}(x) = x$ for $x \in [0, \infty)$. $f_{even}(x)=f(-x)=-x$ for $x \in (-\infty, 0)$.</p>
+                      <p>So, $f_{even}(x)=|x|$ for all $x \in \mathbb{R}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Solve $u_{tt} = c^2 u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=x$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>Dirichlet BC $\implies$ use odd extensions.</p>
+                    <p>$f(x)=x$ for $x \in (0, \infty)$. $f_{odd}(x)=x$ for all $x$.</p>
+                    <p>$g(x)=0$ for $x \in (0, \infty)$. $g_{odd}(x)=0$ for all $x$.</p>
+                    <p>$u(x,t) = \frac{1}{2}[f_{odd}(x+ct) + f_{odd}(x-ct)] + 0$.</p>
+                    <p>$u(x,t) = \frac{1}{2}[(x+ct) + (x-ct)] = \frac{1}{2}[2x] = x$.</p>
+                    <p>Solution is $u(x,t) = x$ for $x \in (0, \infty), t \in (0, \infty)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Solve $u_{tt} = c^2 u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=x$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q9">
+                    <p><strong>Solution:</strong></p>
+                     <p>Neumann BC $\implies$ use even extensions.</p>
+                     <p>$f(x)=x$ for $x \in (0, \infty)$. $f_{even}(x)=|x|$ for all $x$.</p>
+                     <p>$g(x)=0$ for $x \in (0, \infty)$. $g_{even}(x)=0$ for all $x$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[f_{even}(x+ct) + f_{even}(x-ct)] + 0$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[|x+ct| + |x-ct|]$.</p>
+                     <p>Since we are only interested in $x \in (0, \infty), t \in (0, \infty)$, $x+ct$ is always positive, so $|x+ct|=x+ct$.</p>
+                     <p>The term $|x-ct|$ depends on whether $x \ge ct$ or $x \in (0, ct)$.</p>
+                     <p>$u(x,t) = \frac{1}{2}(x+ct + |x-ct|)$.</p>
+                     <p>If $x \ge ct$, $u(x,t) = \frac{1}{2}(x+ct + x-ct) = \frac{1}{2}(2x) = x$.</p>
+                     <p>If $x \in (0, ct)$, $u(x,t) = \frac{1}{2}(x+ct + -(x-ct)) = \frac{1}{2}(x+ct -x+ct) = \frac{1}{2}(2ct) = ct$.</p>
+                     $$ u(x,t) =
+                     \begin{cases}
+                        x & \text{if } x \ge ct \\
+                        ct & \text{if } x \in (0, ct)
+                     \end{cases}
+                     $$
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve $u_{tt} = 4u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=x$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=2$. Dirichlet BC $\implies$ odd extensions.</p>
+                    <p>$f(x)=0 \implies f_{odd}(x)=0$.</p>
+                    <p>$g(x)=x$ for $x \in (0, \infty)$. $g_{odd}(x)=x$ for all $x$.</p>
+                    <p>$u(x,t) = 0 + \frac{1}{2c} \int_{x-ct}^{x+ct} g_{odd}(s) ds = \frac{1}{4} \int_{x-2t}^{x+2t} s ds$.</p>
+                    <p>$u(x,t) = \frac{1}{4} [\frac{s^2}{2}]_{x-2t}^{x+2t} = \frac{1}{8} [(x+2t)^2 - (x-2t)^2]$.</p>
+                    <p>$u(x,t) = \frac{1}{8} [(x^2+4xt+4t^2) - (x^2-4xt+4t^2)] = \frac{1}{8}[8xt] = xt$.</p>
+                    <p>Solution is $u(x,t) = xt$ for $x \in (0, \infty), t \in (0, \infty)$.</p>
+                </div>
+            </article>
+
+             <!-- Questions 11-30 -->
+
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Solve $u_{tt} = 4u_{xx}$ for $x \in (0, \infty), t \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=x$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=2$. Neumann BC $\implies$ even extensions.</p>
+                    <p>$f(x)=0 \implies f_{even}(x)=0$.</p>
+                    <p>$g(x)=x$ for $x \in (0, \infty)$. $g_{even}(x)=|x|$ for all $x$.</p>
+                    <p>$u(x,t) = 0 + \frac{1}{2c} \int_{x-ct}^{x+ct} g_{even}(s) ds = \frac{1}{4} \int_{x-2t}^{x+2t} |s| ds$.</p>
+                    <p>Case 1: $x-2t \ge 0$ (i.e., $x \ge 2t$). The interval $[x-2t, x+2t]$ is entirely non-negative.
+                    $u(x,t) = \frac{1}{4} \int_{x-2t}^{x+2t} s ds = \frac{1}{4} [\frac{s^2}{2}]_{x-2t}^{x+2t} = \frac{1}{8}[(x+2t)^2 - (x-2t)^2] = \frac{1}{8}[8xt] = xt$.</p>
+                    <p>Case 2: $x-2t < 0$ (i.e., $x \in (0, 2t)$). The interval contains 0.
+                    $u(x,t) = \frac{1}{4} \left[ \int_{x-2t}^{0} |s| ds + \int_{0}^{x+2t} |s| ds \right] = \frac{1}{4} \left[ \int_{x-2t}^{0} (-s) ds + \int_{0}^{x+2t} s ds \right]$.</p>
+                    <p>$u(x,t) = \frac{1}{4} \left[ [-\frac{s^2}{2}]_{x-2t}^{0} + [\frac{s^2}{2}]_{0}^{x+2t} \right]$.</p>
+                    <p>$u(x,t) = \frac{1}{4} \left[ (0 - (-\frac{(x-2t)^2}{2})) + (\frac{(x+2t)^2}{2} - 0) \right]$.</p>
+                    <p>$u(x,t) = \frac{1}{8} [(x-2t)^2 + (x+2t)^2] = \frac{1}{8} [(x^2-4xt+4t^2) + (x^2+4xt+4t^2)]$.</p>
+                    <p>$u(x,t) = \frac{1}{8} [2x^2 + 8t^2] = \frac{x^2+4t^2}{4}$.</p>
+                     $$ u(x,t) =
+                     \begin{cases}
+                        xt & \text{if } x \ge 2t \\
+                        \frac{x^2+4t^2}{4} & \text{if } x \in (0, 2t)
+                     \end{cases}
+                     $$
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Let $f(x)=1$ for $x \in (0, \infty)$. Find $f_{odd}(x)$ and $f_{even}(x)$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q12">
+                    <p><strong>Solution:</strong></p>
+                     <p>Odd extension: $f_{odd}(x)=1$ for $x \in (0, \infty)$, $f_{odd}(0)=0$, $f_{odd}(x)=-f(-x)=-1$ for $x \in (-\infty, 0)$. This is the sign function, $f_{odd}(x)=\text{sgn}(x)$.</p>
+                     <p>Even extension: $f_{even}(x)=1$ for $x \in [0, \infty)$, $f_{even}(x)=f(-x)=1$ for $x \in (-\infty, 0)$. So $f_{even}(x)=1$ for all $x \in \mathbb{R}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=1$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. Dirichlet $\implies$ odd.</p>
+                    <p>$f(x)=0 \implies f_{odd}=0$. $g(x)=1$ for $x \in (0, \infty)$. $g_{odd}(x)=\text{sgn}(x)$.</p>
+                    <p>$u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} \text{sgn}(s) ds$.</p>
+                    <p>Case 1: $x-t \ge 0$ ($x \ge t$). Interval is $\subseteq [0, \infty)$. $\int_{x-t}^{x+t} 1 ds = [s]_{x-t}^{x+t} = (x+t)-(x-t)=2t$. $u(x,t)=\frac{1}{2}(2t)=t$.</p>
+                    <p>Case 2: $x-t < 0$ ($x \in (0, t)$). Interval is $(-,+)$. $\int_{x-t}^{x+t} \text{sgn}(s) ds = \int_{x-t}^{0} (-1) ds + \int_{0}^{x+t} (1) ds$.</p>
+                    <p>$= [-s]_{x-t}^0 + [s]_0^{x+t} = (0 - (-(x-t))) + ((x+t)-0) = (x-t) + (x+t) = 2x$.</p>
+                    <p>$u(x,t)=\frac{1}{2}(2x)=x$.</p>
+                     $$ u(x,t) =
+                     \begin{cases}
+                        t & \text{if } x \ge t \\
+                        x & \text{if } x \in (0, t)
+                     \end{cases}
+                     $$
+                     <p>This can be written as $u(x,t) = \min(x,t)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=1$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q14">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. Neumann $\implies$ even.</p>
+                     <p>$f(x)=0 \implies f_{even}=0$. $g(x)=1$ for $x \in (0, \infty)$. $g_{even}(x)=1$ for all $x$.</p>
+                     <p>$u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} 1 ds$.</p>
+                     <p>$u(x,t) = \frac{1}{2} [s]_{x-t}^{x+t} = \frac{1}{2}[(x+t)-(x-t)] = \frac{1}{2}(2t) = t$.</p>
+                     <p>Solution is $u(x,t)=t$ for $x \in (0, \infty), t \in (0, \infty)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Let $f(x) = e^{-x}$ for $x \in (0, \infty)$. Find $f_{odd}(x)$ and $f_{even}(x)$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>Odd: $f_{odd}(x)=e^{-x}$ for $x \in (0, \infty)$, $f_{odd}(0)=0$, $f_{odd}(x)=-f(-x)=-e^{-(-x)}=-e^x$ for $x \in (-\infty, 0)$.
+                    $$ f_{odd}(x) =
+                    \begin{cases}
+                        e^{-x} & x \in (0, \infty) \\ 0 & x=0 \\ -e^x & x \in (-\infty, 0)
+                    \end{cases} $$</p>
+                    <p>Even: $f_{even}(x)=e^{-x}$ for $x \in [0, \infty)$, $f_{even}(x)=f(-x)=e^{-(-x)}=e^x$ for $x \in (-\infty, 0)$.
+                     $$ f_{even}(x) =
+                    \begin{cases}
+                        e^{-x} & x \in [0, \infty) \\ e^x & x \in (-\infty, 0)
+                    \end{cases} $$
+                    <p>This is $f_{even}(x)=e^{-|x|}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=e^{-x}$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q16">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. Dirichlet $\implies$ odd.</p>
+                    <p>$f_{odd}(x)$ from Q15. $g_{odd}(x)=0$.</p>
+                    <p>$u(x,t) = \frac{1}{2}[f_{odd}(x+t) + f_{odd}(x-t)]$.</p>
+                    <p>Case 1: $x-t \ge 0$ ($x \ge t$). Both arguments are non-negative.
+                    $u(x,t) = \frac{1}{2}[e^{-(x+t)} + e^{-(x-t)}] = \frac{1}{2}e^{-x}[e^{-t}+e^t] = e^{-x}\cosh(t)$.</p>
+                    <p>Case 2: $x-t < 0$ ($x \in (0, t)$). $x+t>0$, $x-t<0$.
+                    $u(x,t) = \frac{1}{2}[f_{odd}(x+t) + f_{odd}(x-t)] = \frac{1}{2}[e^{-(x+t)} + (-e^{x-t})]$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[e^{-x}e^{-t} - e^x e^{-t}] = \frac{1}{2}e^{-t}[e^{-x}-e^x] = e^{-t} \frac{e^{-x}-e^x}{2} = -e^{-t}\sinh(x)$.</p>
+                     $$ u(x,t) =
+                     \begin{cases}
+                        e^{-x}\cosh(t) & \text{if } x \ge t \\
+                        -e^{-t}\sinh(x) & \text{if } x \in (0, t)
+                     \end{cases}
+                     $$
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=e^{-x}$, $u_t(x,0)=0$.</p> <!-- Notation Change -->
+                <button onclick="toggleSolution('sol-we-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-we-q17">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. Neumann $\implies$ even.</p>
+                     <p>$f_{even}(x)=e^{-|x|}$. $g_{even}(x)=0$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[f_{even}(x+t) + f_{even}(x-t)] = \frac{1}{2}[e^{-|x+t|} + e^{-|x-t|}]$.</p>
+                     <p>Since $x>0, t>0$, $x+t>0$, so $|x+t|=x+t$.</p>
+                      $$ u(x,t) = \frac{1}{2}[e^{-(x+t)} + e^{-|x-t|}] $$
+                     <p>Case 1: $x \ge t$. $|x-t|=x-t$. $u(x,t) = \frac{1}{2}[e^{-(x+t)} + e^{-(x-t)}] = e^{-x}\cosh(t)$.</p>
+                     <p>Case 2: $x \in (0,t)$. $|x-t|=-(x-t)=t-x$. $u(x,t) = \frac{1}{2}[e^{-(x+t)} + e^{-(t-x)}] = \frac{1}{2}e^{-t}[e^{-x} + e^{x}] = e^{-t}\cosh(x)$.</p>
+                      $$ u(x,t) =
+                     \begin{cases}
+                        e^{-x}\cosh(t) & \text{if } x \ge t \\
+                        e^{-t}\cosh(x) & \text{if } x \in (0, t)
+                     \end{cases}
+                     $$
+                 </div>
+            </article>
+
+            <article class="question-block">
+                 <p class="question-number">Question 18:</p>
+                 <p class="question-text">Let $f(x)=H(x-a)$ for $x \in (0, \infty)$, where $a>0$ and $H$ is the Heaviside step function ($H(z)=1$ if $z>0$, 0 if $z \le 0$). Find $f_{odd}(x)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q18')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q18">
+                     <p><strong>Solution:</strong></p>
+                     <p>$f(x)=1$ if $x \in (a, \infty)$, $f(x)=0$ if $x \in (0, a]$.</p> <!-- Notation Change -->
+                     <p>$f_{odd}(x)=f(x)$ for $x \in (0, \infty)$. $f_{odd}(0)=0$. $f_{odd}(x)=-f(-x)$ for $x \in (-\infty, 0)$.</p>
+                     <p>If $x \in (-\infty, 0)$, then $-x \in (0, \infty)$.</p>
+                     <p>If $-x > a$ (i.e., $x < -a$), $f(-x)=1$, so $f_{odd}(x)=-1$.</p>
+                     <p>If $0 < -x \le a$ (i.e., $x \in [-a, 0)$), $f(-x)=0$, so $f_{odd}(x)=0$.</p> <!-- Notation Change -->
+                     $$ f_{odd}(x) =
+                     \begin{cases}
+                         1 & \text{if } x \in (a, \infty) \\
+                         0 & \text{if } x \in [-a, a] \\
+                         -1 & \text{if } x \in (-\infty, -a)
+                     \end{cases}
+                     $$
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 19:</p>
+                 <p class="question-text">Let $f(x)=H(x-a)$ for $x \in (0, \infty)$, where $a>0$. Find $f_{even}(x)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q19')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q19">
+                     <p><strong>Solution:</strong></p>
+                     <p>$f(x)=1$ if $x \in (a, \infty)$, $f(x)=0$ if $x \in [0, a]$.</p> <!-- Notation Change -->
+                     <p>$f_{even}(x)=f(x)$ for $x \in [0, \infty)$. $f_{even}(x)=f(-x)$ for $x \in (-\infty, 0)$.</p>
+                      <p>If $x \in (-\infty, 0)$, then $-x \in (0, \infty)$.</p>
+                      <p>If $-x > a$ (i.e., $x < -a$), then $f(-x)=1$. So $f_{even}(x)=1$.</p>
+                      <p>If $0 < -x \le a$ (i.e., $x \in [-a, 0)$), then $f(-x)=0$. So $f_{even}(x)=0$.</p> <!-- Notation Change -->
+                      $$ f_{even}(x) =
+                      \begin{cases}
+                          1 & \text{if } x \in (a, \infty) \\
+                          0 & \text{if } x \in [0, a] \\
+                          0 & \text{if } x \in [-a, 0) \\
+                          1 & \text{if } x \in (-\infty, -a)
+                      \end{cases}
+                      $$
+                      <p>This simplifies to:</p>
+                      $$ f_{even}(x) =
+                      \begin{cases}
+                          1 & \text{if } |x|>a \\
+                          0 & \text{if } |x| \le a
+                      \end{cases}
+                      $$
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 20:</p>
+                 <p class="question-text">Solve $u_{tt}=c^2 u_{xx}$, for $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=f(x)$ from Q18, $u_t(x,0)=0$. Find $u(a/2, a/c)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q20')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q20">
+                     <p><strong>Solution:</strong></p>
+                     <p>Dirichlet $\implies$ odd. $f_{odd}(x)$ from Q18. $g_{odd}=0$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[f_{odd}(x+ct) + f_{odd}(x-ct)]$.</p>
+                     <p>We need $u(a/2, a/c)$. $x=a/2, t=a/c$.</p>
+                     <p>$x+ct = a/2 + c(a/c) = a/2+a = 3a/2$.</p>
+                     <p>$x-ct = a/2 - c(a/c) = a/2-a = -a/2$.</p>
+                     <p>$u(a/2, a/c) = \frac{1}{2}[f_{odd}(3a/2) + f_{odd}(-a/2)]$.</p>
+                     <p>From Q18: $f_{odd}(3a/2)=1$ (since $3a/2 > a$). $f_{odd}(-a/2)=0$ (since $x=-a/2 \in [-a, a]$).</p>
+                     <p>$u(a/2, a/c) = \frac{1}{2}[1 + 0] = 1/2$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 21:</p>
+                 <p class="question-text">Solve $u_{tt}=c^2 u_{xx}$, for $x \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=f(x)$ from Q19, $u_t(x,0)=0$. Find $u(a/2, a/c)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q21')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q21">
+                     <p><strong>Solution:</strong></p>
+                     <p>Neumann $\implies$ even. $f_{even}(x)$ from Q19. $g_{even}=0$.</p>
+                     <p>$u(x,t) = \frac{1}{2}[f_{even}(x+ct) + f_{even}(x-ct)]$.</p>
+                     <p>We need $u(a/2, a/c)$. $x=a/2, t=a/c$.</p>
+                     <p>$x+ct = 3a/2$. $x-ct = -a/2$.</p>
+                     <p>$u(a/2, a/c) = \frac{1}{2}[f_{even}(3a/2) + f_{even}(-a/2)]$.</p>
+                     <p>From Q19: $f_{even}(3a/2)=1$ (since $|3a/2|>a$). $f_{even}(-a/2)=0$ (since $|-a/2|\le a$).</p>
+                     <p>$u(a/2, a/c) = \frac{1}{2}[1 + 0] = 1/2$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 22:</p>
+                 <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=\sin(\pi x)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q22')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q22">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. Dirichlet $\implies$ odd.</p>
+                     <p>$f_{odd}=0$. $g(x)=\sin(\pi x)$ for $x \in (0, \infty)$. $g_{odd}(x)=\sin(\pi x)$ for all $x$.</p>
+                     <p>$u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} \sin(\pi s) ds = \frac{1}{2} [-\frac{\cos(\pi s)}{\pi}]_{x-t}^{x+t}$.</p>
+                     <p>$u(x,t) = -\frac{1}{2\pi} [\cos(\pi(x+t)) - \cos(\pi(x-t))]$.</p>
+                     <p>Using $\cos A - \cos B = -2\sin(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                     <p>$u(x,t) = -\frac{1}{2\pi} [-2 \sin(\pi x) \sin(\pi t)] = \frac{1}{\pi}\sin(\pi x)\sin(\pi t)$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 23:</p>
+                 <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=0$, $u_t(x,0)=\cos(\pi x)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q23')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q23">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. Neumann $\implies$ even.</p>
+                     <p>$f_{even}=0$. $g(x)=\cos(\pi x)$ for $x \in (0, \infty)$. $g_{even}(x)=\cos(\pi x)$ for all $x$.</p>
+                     <p>$u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} \cos(\pi s) ds = \frac{1}{2} [\frac{\sin(\pi s)}{\pi}]_{x-t}^{x+t}$.</p>
+                     <p>$u(x,t) = \frac{1}{2\pi} [\sin(\pi(x+t)) - \sin(\pi(x-t))]$.</p>
+                     <p>Using $\sin A - \sin B = 2\cos(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                     <p>$u(x,t) = \frac{1}{2\pi} [2 \cos(\pi x) \sin(\pi t)] = \frac{1}{\pi}\cos(\pi x)\sin(\pi t)$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 24:</p>
+                 <p class="question-text">Let $f(x)=H(x-a)$ for $x \in (0, \infty)$, where $a>0$ and $H$ is the Heaviside step function ($H(z)=1$ if $z \in (0, \infty)$, 0 if $z \in (-\infty, 0]$). Find $f_{odd}(x)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q24')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q24">
+                     <p><strong>Solution:</strong></p>
+                     <p>$f(x)=1$ if $x \in (a, \infty)$, $f(x)=0$ if $x \in (0, a]$.</p>
+                     <p>$f_{odd}(x)=f(x)$ for $x \in (0, \infty)$. $f_{odd}(0)=0$. $f_{odd}(x)=-f(-x)$ for $x \in (-\infty, 0)$.</p>
+                     <p>If $x \in (-\infty, 0)$, then $-x \in (0, \infty)$.</p>
+                     <p>If $-x > a$ (i.e., $x < -a$), $f(-x)=1$, so $f_{odd}(x)=-1$.</p>
+                     <p>If $0 < -x \le a$ (i.e., $x \in [-a, 0)$), $f(-x)=0$, so $f_{odd}(x)=0$.</p>
+                     $$ f_{odd}(x) =
+                     \begin{cases}
+                         1 & \text{if } x \in (a, \infty) \\
+                         0 & \text{if } x \in [-a, a] \\
+                         -1 & \text{if } x \in (-\infty, -a)
+                     \end{cases}
+                     $$
+                     <p>This can be written as $f_{odd}(x) = H(x-a) - H(-x-a)$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 25:</p>
+                 <p class="question-text">Find $u(a/2, a/c)$ for the problem in Q20 using $f_{odd}$ from Q24.</p>
+                 <button onclick="toggleSolution('sol-we-q25')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q25">
+                     <p><strong>Solution:</strong></p>
+                      <p>Problem is $u_{tt}=c^2 u_{xx}$, $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=f(x)$ from Q24, $u_t(x,0)=0$. Find $u(a/2, a/c)$.</p>
+                      <p>Dirichlet $\implies$ odd. $f_{odd}(x)$ from Q24. $g_{odd}=0$.</p>
+                      <p>$u(x,t) = \frac{1}{2}[f_{odd}(x+ct) + f_{odd}(x-ct)]$.</p>
+                      <p>$x=a/2, t=a/c$. $x+ct = a/2 + c(a/c) = a/2+a = 3a/2$. $x-ct = a/2 - c(a/c) = a/2-a = -a/2$.</p>
+                      <p>$u(a/2, a/c) = \frac{1}{2}[f_{odd}(3a/2) + f_{odd}(-a/2)]$.</p>
+                      <p>From Q24: $f_{odd}(3a/2) = 1$ (since $3a/2 > a$). $f_{odd}(-a/2) = 0$ (since $x=-a/2 \in [-a, a]$).</p>
+                      <p>$u(a/2, a/c) = \frac{1}{2}[1 + 0] = 1/2$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 26:</p>
+                 <p class="question-text">Why does the odd extension satisfy $u(0,t)=0$?</p>
+                 <button onclick="toggleSolution('sol-we-q26')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q26">
+                     <p><strong>Solution:</strong></p>
+                     <p>The solution using D'Alembert is $u(x,t) = \frac{1}{2}[f_{odd}(x+ct) + f_{odd}(x-ct)] + \frac{1}{2c}\int_{x-ct}^{x+ct} g_{odd}(s) ds$.</p>
+                     <p>Set $x=0$: $u(0,t) = \frac{1}{2}[f_{odd}(ct) + f_{odd}(-ct)] + \frac{1}{2c}\int_{-ct}^{ct} g_{odd}(s) ds$.</p>
+                     <p>Since $f_{odd}$ is odd, $f_{odd}(-ct) = -f_{odd}(ct)$. So $f_{odd}(ct) + f_{odd}(-ct) = f_{odd}(ct) - f_{odd}(ct) = 0$.</p>
+                     <p>Since $g_{odd}$ is odd, its integral over a symmetric interval $[-ct, ct]$ is zero. $\int_{-A}^{A} \text{odd}(s) ds = 0$.</p>
+                     <p>Therefore, $u(0,t) = \frac{1}{2}[0] + \frac{1}{2c}[0] = 0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 27:</p>
+                 <p class="question-text">Why does the even extension satisfy $u_x(0,t)=0$?</p>
+                 <button onclick="toggleSolution('sol-we-q27')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q27">
+                     <p><strong>Solution:</strong></p>
+                     <p>$u(x,t) = \frac{1}{2}[f_{even}(x+ct) + f_{even}(x-ct)] + \frac{1}{2c}\int_{x-ct}^{x+ct} g_{even}(s) ds$.</p>
+                     <p>Differentiate with respect to $x$ using Chain Rule and Leibniz rule:</p>
+                      <p>$u_x(x,t) = \frac{1}{2}[f'_{even}(x+ct) \cdot 1 + f'_{even}(x-ct) \cdot 1] + \frac{1}{2c}[g_{even}(x+ct)\cdot 1 - g_{even}(x-ct)\cdot 1]$.</p>
+                     <p>Set $x=0$: $u_x(0,t) = \frac{1}{2}[f'_{even}(ct) + f'_{even}(-ct)] + \frac{1}{2c}[g_{even}(ct) - g_{even}(-ct)]$.</p>
+                     <p>If $f_{even}$ is even, its derivative $f'_{even}$ is odd (assuming differentiability). Thus $f'_{even}(-ct) = -f'_{even}(ct)$. The first term is $\frac{1}{2}[f'_{even}(ct) - f'_{even}(ct)] = 0$.</p>
+                     <p>Since $g_{even}$ is even, $g_{even}(-ct)=g_{even}(ct)$. The second term is $\frac{1}{2c}[g_{even}(ct) - g_{even}(ct)] = 0$.</p>
+                     <p>Therefore, $u_x(0,t) = 0 + 0 = 0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 28:</p>
+                 <p class="question-text">Solve $u_{tt}=u_{xx}$, for $x \in (0, \infty)$, $u(0,t)=0$, $u(x,0)=f(x)$ where $f(x)=2x-x^2$ for $x \in (0,2)$ and $f(x)=0$ for $x \in [2, \infty)$, $u_t(x,0)=0$. Find $u(1,3)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q28')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q28">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. Dirichlet $\implies$ odd.</p>
+                     <p>$f(x) = \begin{cases} 2x-x^2 & x \in (0,2) \\ 0 & x \in [2, \infty) \end{cases}$. $g=0$.</p>
+                     <p>$f_{odd}(x) = -f(-x)$ for $x<0$. If $x \in (-2, 0)$, then $-x \in (0, 2)$, so $f(-x) = 2(-x)-(-x)^2 = -2x-x^2$. $f_{odd}(x) = -(-2x-x^2) = 2x+x^2$. If $x \in (-\infty, -2]$, then $-x \in [2, \infty)$, so $f(-x)=0$. $f_{odd}(x)=0$.</p>
+                      $$ f_{odd}(x) =
+                     \begin{cases}
+                         2x-x^2 & \text{if } x \in (0,2) \\
+                         2x+x^2 & \text{if } x \in (-2,0) \\
+                         0 & \text{otherwise } (|x| \ge 2 \text{ or } x=0)
+                     \end{cases}
+                     $$
+                     <p>$u(x,t) = \frac{1}{2}[f_{odd}(x+t) + f_{odd}(x-t)]$.</p>
+                     <p>Find $u(1,3)$. $x=1, t=3$. $x+t=4$. $x-t=-2$.</p>
+                     <p>$u(1,3) = \frac{1}{2}[f_{odd}(4) + f_{odd}(-2)]$.</p>
+                     <p>$f_{odd}(4)=0$ since $|4|\ge 2$. $f_{odd}(-2)=0$ since $|-2|\ge 2$.</p>
+                     <p>$u(1,3) = \frac{1}{2}[0+0] = 0$.</p>
+                 </div>
+             </article>
+
+              <article class="question-block">
+                 <p class="question-number">Question 29:</p>
+                 <p class="question-text">Solve $u_{tt}=4u_{xx}$, for $x \in (0, \infty)$, $u_x(0,t)=0$, $u(x,0)=f(x)$ where $f(x)=\cos(\pi x/2)$ for $x \in (0,1)$ and $f(x)=0$ for $x \in [1, \infty)$, $u_t(x,0)=0$. Find $u(0.5, 1)$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q29')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=2$. Neumann $\implies$ even.</p>
+                     <p>$f(x) = \begin{cases} \cos(\pi x/2) & x \in (0,1) \\ 0 & x \in [1, \infty) \end{cases}$. $g=0$.</p>
+                     <p>$f_{even}(x)=f(x)$ for $x\ge 0$. $f_{even}(x)=f(-x)$ for $x<0$.</p>
+                     <p>If $x \in (-1, 0)$, then $-x \in (0, 1)$, $f(-x)=\cos(\pi(-x)/2)=\cos(-\pi x/2)=\cos(\pi x/2)$. So $f_{even}(x)=\cos(\pi x/2)$ for $|x|<1$.</p>
+                     <p>If $x \in (-\infty, -1]$, then $-x \in [1, \infty)$, $f(-x)=0$. So $f_{even}(x)=0$ for $|x|\ge 1$.</p>
+                      $$ f_{even}(x) =
+                     \begin{cases}
+                         \cos(\pi x/2) & \text{if } |x|<1 \\
+                         0 & \text{if } |x| \ge 1
+                     \end{cases}
+                     $$
+                     <p>$u(x,t) = \frac{1}{2}[f_{even}(x+ct) + f_{even}(x-ct)]$.</p>
+                     <p>Find $u(0.5, 1)$. $x=0.5, t=1$. $c=2$.</p>
+                     <p>$x+ct = 0.5+2(1)=2.5$. $x-ct = 0.5-2(1)=-1.5$.</p>
+                     <p>$u(0.5, 1) = \frac{1}{2}[f_{even}(2.5) + f_{even}(-1.5)]$.</p>
+                     <p>$f_{even}(2.5)=0$ since $|2.5|\ge 1$. $f_{even}(-1.5)=0$ since $|-1.5|\ge 1$.</p>
+                     <p>$u(0.5, 1) = \frac{1}{2}[0+0] = 0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 30:</p>
+                 <p class="question-text">If $f(x)=0$ and $g(x)=1$ for $x \in (0,L)$ and $g(x)=0$ for $x \in [L, \infty)$, find $u(L/2, L/c)$ for the wave equation on $x \in (0, \infty)$ with $u(0,t)=0$.</p> <!-- Notation Change -->
+                 <button onclick="toggleSolution('sol-we-q30')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-we-q30">
+                     <p><strong>Solution:</strong></p>
+                     <p>Dirichlet $\implies$ odd.</p>
+                     <p>$f_{odd}=0$. $g(x) = \begin{cases} 1 & x \in (0,L) \\ 0 & x \in [L, \infty) \end{cases}$.</p>
+                     <p>$g_{odd}(x) = -g(-x)$ for $x<0$. If $x \in (-L, 0)$, then $-x \in (0, L)$, $g(-x)=1$, so $g_{odd}(x)=-1$. If $x \in (-\infty, -L]$, then $-x \in [L, \infty)$, $g(-x)=0$, so $g_{odd}(x)=0$.</p>
+                      $$ g_{odd}(x) =
+                     \begin{cases}
+                         1 & \text{if } x \in (0,L) \\
+                         -1 & \text{if } x \in (-L,0) \\
+                         0 & \text{otherwise } (|x| \ge L \text{ or } x=0)
+                     \end{cases}
+                     $$
+                     <p>$u(x,t) = \frac{1}{2c}\int_{x-ct}^{x+ct} g_{odd}(s) ds$.</p>
+                     <p>Find $u(L/2, L/c)$. $x=L/2, t=L/c$.</p>
+                     <p>$x+ct = L/2+c(L/c)=L/2+L=3L/2$. $x-ct = L/2-c(L/c)=L/2-L=-L/2$.</p>
+                     <p>$u(L/2, L/c) = \frac{1}{2c} \int_{-L/2}^{3L/2} g_{odd}(s) ds$.</p>
+                     <p>$ = \frac{1}{2c} \left[ \int_{-L/2}^{0} g_{odd}(s)ds + \int_{0}^{L} g_{odd}(s)ds + \int_{L}^{3L/2} g_{odd}(s)ds \right]$.</p>
+                     <p>$ = \frac{1}{2c} \left[ \int_{-L/2}^{0} (-1) ds + \int_{0}^{L} (1) ds + \int_{L}^{3L/2} (0) ds \right]$.</p>
+                     <p>$ = \frac{1}{2c} \left[ [-s]_{-L/2}^0 + [s]_0^L + 0 \right]$.</p>
+                     <p>$ = \frac{1}{2c} \left[ (0 - (-(-L/2))) + (L-0) \right] = \frac{1}{2c} [ -L/2 + L ] = \frac{1}{2c} [L/2] = \frac{L}{4c}$.</p>
+                 </div>
+             </article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

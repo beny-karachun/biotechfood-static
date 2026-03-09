@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: תגובות השחמה לא אנזימטיות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "תגובת מייארד", definition: "שרשרת תגובות כימיות בין חומצות אמינו לסוכרים מחזרים, המובילה ליצירת צבע חום וטעמים וריחות אופייניים במזון מחומם." },
+            { term: "שיחלוף אמדורי", definition: "איזומריזציה של גליקוזילאמין (מאלדוז) ל-1-אמינו-2-קטוז. שלב מפתח בתחילת תגובת מייארד." },
+            { term: "שיחלוף היינס", definition: "איזומריזציה של קטוזילאמין (מקטוז) ל-2-אמינו-אלדוז. מקביל לשיחלוף אמדורי עבור סוכרים קטוניים." },
+            { term: "דגרדציית סטרקר", definition: "תגובה בין תרכובת דיקרבונילית לחומצה אמינית, המובילה ליצירת אלדהיד (תורם לריח), אמינו-קטון ופחמן דו-חמצני." },
+            { term: "מלנואידינים", definition: "פולימרים חנקניים מורכבים בעלי צבע חום כהה ומשקל מולקולרי גבוה, הנוצרים בשלב הסופי של תגובת מייארד." },
+            { term: "תוצרי גליקציה מתקדמים (AGEs)", definition: "תרכובות הנוצרות מחיבור לא אנזימטי של סוכרים לחלבונים, הן במזון בטמפרטורות גבוהות והן בגוף החי. קשורות להזדקנות ומחלות." },
+            { term: "אקרילאמיד", definition: "תרכובת שעלולה להיות מסרטנת, הנוצרת בתגובת מייארד בין אספרגין לסוכר מחזר בטמפרטורות גבוהות, בעיקר במזונות עמילניים." },
+            { term: "סוכר מחזר", definition: "סוכר בעל קבוצת אלדהיד או קטון חופשית (או המי-אצטל), המסוגל להגיב בתגובת מייארד. דוגמאות: גלוקוז, פרוקטוז." },
+            { term: "קרמליזציה", definition: "תהליך השחמה של סוכר באמצעות חימום לטמפרטורות גבוהות (מעל 160 מעלות צלזיוס), ללא צורך בנוכחות חומצות אמינו." },
+            { term: "פורפורל ו-HMF", definition: "תרכובות הטרוציקליות (פוראן) הנוצרות מדהידרציה של סוכרים במהלך תגובת מייארד וקרמליזציה. משמשות לעיתים כמדד להשחמה." },
+            { term: "בסיס שיף (Schiff base)", definition: "תוצר ביניים הנוצר מהתעבות של אמין ראשוני עם קרבוניל. שלב ראשוני הפיך בתגובת מייארד." },
+            { term: "פעילות מים (aw)", definition: "מדד לכמות המים הזמינים במזון לתגובות כימיות. לתגובת מייארד יש קצב אופטימלי בפעילות מים בינונית (סביב 0.6-0.7)." }
+        ];
+
+        const mcqData = [
+            { question: "מהו ההבדל המהותי בין שיחלוף אמדורי לשיחלוף היינס?", options: ["שיחלוף אמדורי דורש חום גבוה יותר", "שיחלוף אמדורי מתחיל עם סוכר אלדוזי ויוצר קטוז-אמין, בעוד שיחלוף היינס מתחיל עם סוכר קטוזי ויוצר אלדוז-אמין", "שיחלוף היינס הוא שלב הפיך ואילו אמדורי אינו הפיך", "רק שיחלוף אמדורי מוביל ליצירת מלנואידינים"], correctIndex: 1, explanation: "ההבחנה המרכזית היא בסוג הסוכר המגיב: אלדוז (כמו גלוקוז) עובר שיחלוף אמדורי, וקטוז (כמו פרוקטוז) עובר שיחלוף היינס, מה שמוביל לתוצרים שונים במבנם." },
+            { question: "יצרן של פירות יבשים מעוניין למזער את תגובת מייארד במוצר. איזו מהפעולות הבאות תהיה היעילה ביותר?", options: ["העלאת טמפרטורת הייבוש כדי לקצר את התהליך", "הוספת כמות קטנה של גלוקוז כדי לשפר את הטעם", "טיפול בפירות עם תמיסת SO2 (סולפיט) לפני הייבוש", "ייבוש לרמת פעילות מים (aw) של 0.65"], correctIndex: 2, explanation: "SO2 מגיב עם תוצרי ביניים קרבוניליים ומונע את המשך התגובה ליצירת צבע. העלאת טמפרטורה תאיץ את התגובה, הוספת גלוקוז תספק מגיב, ו-aw של 0.65 קרוב לאופטימום להשחמה." },
+            { question: "איזה מהמשפטים הבאים אינו מתאר נכונה את דגרדציית סטרקר?", options: ["היא דורשת נוכחות של תרכובת דיקרבונילית וחומצה אמינית", "היא אחראית ליצירת אלדהידים התורמים לריח האופייני של מזון מבושל", "היא מובילה לשחרור מולקולת פחמן דו-חמצני מחומצת האמינו", "היא השלב העיקרי שבו נוצרים הפיגמנטים החומים, המלנואידינים"], correctIndex: 3, explanation: "דגרדציית סטרקר חיונית ליצירת ארומה (ריח), אך יצירת הצבע החום מתרחשת בעיקר בשלב הסופי של הפולימריזציה ליצירת מלנואידינים." },
+            { question: "מהי הסיבה הכימית לכך שקצב תגובת מייארד יורד בפעילות מים (aw) גבוהה מאוד (מעל 0.9)?", options: ["המים מגיבים עם הסוכר ומפרקים אותו", "עודף מים גורם לדילול המגיבים ומסיט את שיווי המשקל של שלב הדחיסה הראשוני חזרה למגיבים", "המים גורמים לפרוטונציה של קבוצת האמין ומנטרלים אותה", "בפעילות מים גבוהה, הטמפרטורה של המזון אינה יכולה לעלות מעל 100 מעלות"], correctIndex: 1, explanation: "שלב הדחיסה הראשוני בין סוכר לאמין משחרר מולקולת מים. לפי עיקרון לה-שטלייה, ריכוז גבוה של תוצר (מים) ידחוף את התגובה ההפיכה חזרה לכיוון המגיבים ויאט את הקצב הכולל." },
+            { question: "איזה מהבאים מהווה את המגיבים העיקריים ליצירת אקרילאמיד במזון?", options: ["חומצת האמינו ליזין ופרוקטוז", "כולסטרול וחומצות שומן רוויות", "חומצת האמינו אספרגין וסוכר מחזר", "חלבון הקזאין ולקטוז"], correctIndex: 2, explanation: "אקרילאמיד נוצר ספציפית מהתגובה בין הקבוצה האמידית של חומצת האמינו אספרגין לבין סוכר מחזר בטמפרטורות גבוהות." },
+            { question: "מהו ההסבר לכך שב-pH נמוך מאוד (למשל 2-3) תגובת מייארד כמעט ואינה מתרחשת?", options: ["הסוכר עובר הידרוליזה ואינו פעיל יותר", "קבוצת האמין של חומצת האמינו עוברת פרוטונציה מלאה והופכת ללא-נוקליאופילית", "האנזימים המעורבים בתהליך עוברים דנטורציה", "המלנואידינים אינם יציבים בסביבה חומצית ומתפרקים"], correctIndex: 1, explanation: "ההתקפה הנוקליאופילית של האמין על הסוכר היא השלב הראשון והחיוני. בסביבה חומצית חזקה, זוג האלקטרונים הבודד של החנקן האמיני קושר פרוטון (NH3+), מה שמונע ממנו לתקוף את הפחמן הקרבונילי." },
+            { question: "איזה מהמזונות הבאים צפוי להכיל את הרמה הגבוהה ביותר של תוצרי גליקציה מתקדמים (AGEs) שמקורם במזון?", options: ["יוגורט טבעי דל שומן", "סטייק בקר שנצלה היטב על הגריל", "תפוח עץ טרי", "אורז לבן מבושל במים"], correctIndex: 1, explanation: "AGEs נוצרים בכמות גבוהה במיוחד במזונות עשירים בחלבון ושומן שעוברים חימום יבש ואינטנסיבי. צליית בשר היא דוגמה קלאסית לכך." },
+            { question: "מהי הפונקציה העיקרית של המלנואידינים בתגובת מייארד?", options: ["לשמש כקטליזטורים לשלבים המוקדמים של התגובה", "לתרום לריח האפוי האופייני", "להיות אחראים לצבע החום הכהה ולעיתים לתכונות נוגדות חמצון", "לפרק את חומצת האמינו ליזין"], correctIndex: 2, explanation: "המלנואידינים הם הפיגמנטים הסופיים, פולימרים גדולים ומורכבים האחראים לצבע. לריח תורמים בעיקר תוצרים קטנים ונדיפים יותר כמו אלדהידים מפירוק סטרקר ופורפורלים." },
+            { question: "חומצת האמינו פרולין אינה יוצרת אלדהיד סטרקר. מהי הסיבה המבנית לכך?", options: ["היא חומצה אמינית הידרופובית מדי", "היא חסרה קבוצה קרבוקסילית", "היא אמין שניוני (אימין) כחלק ממבנה טבעתי", "השרשרת הצדדית שלה גדולה מדי"], correctIndex: 2, explanation: "פרולין היא ייחודית בכך שקבוצת האמינו שלה היא חלק ממבנה טבעתי, מה שהופך אותה לאמין שניוני. מנגנון דגרדציית סטרקר דורש אמין ראשוני." },
+            { question: "בתהליך ייצור ריבה, משתמשים בסוכרוז ומחממים אותו עם פרי חומצי. מדוע מתרחשת השחמה למרות שסוכרוז אינו סוכר מחזר?", options: ["הפרוקטוז מהפרי מגיב ישירות עם הסוכרוז", "החומצה מהפרי והחום גורמים להידרוליזה של הסוכרוז לגלוקוז ופרוקטוז, שהם סוכרים מחזרים", "בטמפרטורות גבוהות, סוכרוז הופך למחזר", "הפוליפנולים מהפרי גורמים להשחמה אנזימטית"], correctIndex: 1, explanation: "סוכרוז הוא דיסכריד. התנאים החומציים והחום גורמים לשבירת הקשר הגליקוזידי וליצירת חד-סוכרים מחזרים (גלוקוז ופרוקטוז), אשר יכולים להשתתף בתגובת מייארד." },
+            { question: "מהו ההבדל המרכזי בין קרמליזציה לתגובת מייארד?", options: ["קרמליזציה מתרחשת רק ב-pH בסיסי", "תגובת מייארד אינה יוצרת טעם, רק צבע", "קרמליזציה היא פירוק תרמי של סוכר בלבד ואינה דורשת חומצות אמינו", "קרמליזציה דורשת פעילות מים גבוהה יותר"], correctIndex: 2, explanation: "ההבדל המהותי הוא במגיבים. מייארד דורשת סוכר מחזר וחומצת אמינו. קרמליזציה היא תהליך המתרחש בטמפרטורות גבוהות יותר וכולל פירוק של סוכרים בלבד, ללא צורך באמין." },
+            { question: "במערכת מזון המכילה גלוקוז וליזין, מה יהיה התוצר הראשוני הבלתי הפיך (בתנאים רגילים) של תגובת מייארד?", options: ["בסיס שיף", "גלוקוזילאמין", "תוצר שיחלוף אמדורי (1-אמינו-1-דהאוקסי-פרוקטוז)", "אלדהיד סטרקר"], correctIndex: 2, explanation: "יצירת בסיס שיף וגליקוזילאמין הם שלבים הפיכים. שיחלוף אמדורי הוא איזומריזציה שתוצרה יציב יותר, והוא נחשב לנקודת האל-חזור במנגנון התגובה." },
+            { question: "כיצד שינויים ב-pH במהלך תגובת מייארד (כמו בתרשים glucose-casein) יכולים להעיד על התקדמותה?", options: ["ה-pH עולה באופן דרמטי בשלבים הסופיים", "ה-pH יורד מעט בתחילת התגובה עקב צריכת חומצות אמינו בסיסיות, ואז יורד עוד יותר עם שחרור חומצות אורגניות", "ה-pH נשאר קבוע לאורך כל התגובה", "ה-pH הופך לבסיסי מאוד עקב יצירת אמינים"], correctIndex: 1, explanation: "חומצות אמינו בסיסיות (כמו ליזין) מגיבות ראשונות, מה שגורם לירידה קלה ב-pH. בשלבים מתקדמים יותר משתחררות חומצות כמו חומצה פורמית, הגורמות לירידה נוספת ב-pH." },
+            { question: "איזה מהבאים אינו תוצר אופייני של שלב הפירוק (degradation) המתקדם בתגובת מייארד?", options: ["פורפורל ו-HMF", "רדוקטונים", "תרכובות דיקרבוניליות", "גליקוזילאמין"], correctIndex: 3, explanation: "גליקוזילאמין הוא תוצר של השלב הראשוני. שלב הפירוק המתקדם כולל דהידרציה ופירוק של תוצר אמדורי/היינס ליצירת תרכובות ריאקטיביות כמו פורפורלים, רדוקטונים ודיקרבונילים." },
+            { question: "מדוע אחסון תפוחי אדמה בטמפרטורה נמוכה (במקרר) לפני טיגון עלול להגביר את יצירת האקרילאמיד?", options: ["הקור גורם להרס חומצת האמינו אספרגין", "הטמפרטורה הנמוכה מעודדת פירוק של עמילן לסוכרים מחזרים (גלוקוז ופרוקטוז)", "הקור מגביר את רמת הלחות בתפוח האדמה", "הקור משנה את מבנה החלבונים בתפוח האדמה"], correctIndex: 1, explanation: "אחסון בקור מפעיל אנזימים המפרקים עמילן לסוכרים מחזרים. כתוצאה מכך, ריכוז אחד המגיבים (סוכר מחזר) עולה, מה שמוביל ליותר אקרילאמיד בטיגון." },
+            { question: "מהו תפקידם של רדוקטונים ותרכובות דיקרבוניליות בתגובת מייארד?", options: ["הם תוצרים סופיים ויציבים שאינם מגיבים יותר", "הם תוצרי ביניים ריאקטיביים מאוד המשתתפים בדגרדציית סטרקר ובפולימריזציה", "הם אחראים בעיקר לטעם המר של מוצרים שרופים", "הם מונעים את התגובה על ידי קשירת חומצות אמינו"], correctIndex: 1, explanation: "תרכובות אלו נוצרות מפירוק תוצר אמדורי/היינס והן ריאקטיביות ביותר. הדיקרבונילים חיוניים לדגרדציית סטרקר, ושניהם מהווים אבני בניין להמשך התגובות." },
+            { question: "איזה מהתהליכים הבאים אינו דרך יעילה למניעת השחמת מייארד?", options: ["הורדת pH מתחת ל-6", "שימוש בסוכרוז במקום בגלוקוז", "ייבוש מהיר של המוצר לרמת aw נמוכה מאוד (מתחת ל-0.2)", "הוספת כמות קטנה של חומצת אמינו פרולין"], correctIndex: 3, explanation: "בעוד שפרולין אינה עוברת דגרדציית סטרקר טיפוסית, היא עדיין חומצת אמינו שיכולה להשתתף בשלבים הראשונים של תגובת מייארד וליצור צבע. הוספתה לא תמנע השחמה." },
+            { question: "מהי ההשפעה הבריאותית העיקרית המיוחסת ליצירת קשרי צילוב על ידי AGEs בקולגן?", options: ["שיפור גמישות העור", "אובדן גמישות של כלי דם ועלייה בלחץ הדם", "חיזוק רקמת העצם", "זירוז תהליכי ריפוי פצעים"], correctIndex: 1, explanation: "קשרי הצילוב הנוצרים על ידי AGEs בקולגן גורמים לרקמות לאבד את גמישותן. בכלי דם, הדבר מוביל להתקשחות העורקים ולסיבוכים קרדיווסקולריים." },
+            { question: "בייצור אבקת חלב, תגובת מייארד נחשבת בלתי רצויה. מהי הפגיעה התזונתית העיקרית הנגרמת?", options: ["פירוק ויטמין C", "הרס חומצות שומן חיוניות", "הפיכת חומצת האמינו החיונית ליזין לבלתי זמינה לספיגה", "דנטורציה של חלבון הקזאין"], correctIndex: 2, explanation: "ליזין, חומצה אמינית חיונית, היא ריאקטיבית במיוחד בתגובת מייארד. קישורה לסוכר הופך אותה לבלתי זמינה לעיכול וספיגה, ובכך מוריד את הערך התזונתי של החלבון." },
+            { question: "תהליך יצירת צבע וטעם בחימום סוכר טהור (ללא אמינים) ב-180 מעלות צלזיוס נקרא:", options: ["שיחלוף אמדורי", "דגרדציית סטרקר", "קרמליזציה", "גליקוליזה"], correctIndex: 2, explanation: "זהו התיאור המדויק של קרמליזציה - פירוק תרמי של סוכרים בהיעדר חומצות אמינו, המוביל ליצירת צבע וטעם." },
+            { question: "איזה מהבאים אינו נכון לגבי AGEs?", options: ["הם נוצרים מהר יותר בטמפרטורות גבוהות", "הם קשורים לסיבוכים של מחלת הסוכרת", "רמותיהם יורדות כאשר חלב מרוכז לגבינה", "הם יכולים לגרום לקשרי צילוב בחלבונים כמו קולגן"], correctIndex: 2, explanation: "ריכוז השומן והחלבון והסרת הלחות בתהליך הכנת גבינה, יחד עם תהליכי חימום ויישון, דווקא מעלים באופן דרמטי את תכולת ה-AGEs בהשוואה לחלב נוזלי." },
+            { question: "מדוע הוספת מעט חומצה מזרזת את שלב הדחיסה הראשוני בתגובת מייארד, אך עודף חומצה בולם אותו?", options: ["מעט חומצה מפרקת את הסוכר, עודף חומצה הורס את האמין", "מעט חומצה עושה פרוטונציה לקרבוניל ומגבירה את האלקטרופיליות שלו, עודף חומצה עושה פרוטונציה לאמין ומנטרל אותו", "התגובה דורשת pH ניטרלי בדיוק", "חומצה תמיד בולמת את התגובה, בכל ריכוז"], correctIndex: 1, explanation: "כמות קטנה של חומצה מזרזת את התגובה על ידי הפיכת החמצן הקרבונילי לקבוצה עוזבת טובה יותר (כמים), אך כמות גדולה מדי מנטרלת את הנוקליאופיל (האמין) ומונעת את התגובה." },
+            { question: "מהו התוצר העיקרי של דגרדציית חומצה אסקורבית שיכול להמשיך ולהגיב עם אמינים ליצירת השחמה?", options: ["חומצה אצטית", "פרוקטוז", "פורפורל ותרכובות דומות", "פחמן דו-חמצני"], correctIndex: 2, explanation: "פירוק חומצה אסקורבית (ויטמין C), במיוחד בתנאים מחמצנים, מוביל ליצירת תרכובות קרבוניליות ריאקטיביות כמו פורפורל, אשר יכולות להשתתף בתגובות דמויות מייארד." },
+            { question: "איזה שלב בתגובת מייארד מתאר בצורה הטובה ביותר את המעבר מאלדוז לקטוז מבחינה מבנית?", options: ["יצירת בסיס שיף", "שיחלוף אמדורי", "דגרדציית סטרקר", "פולימריזציה למלנואידינים"], correctIndex: 1, explanation: "שיחלוף אמדורי הוא איזומריזציה (שינוי מבני) שבה גליקוזילאמין, שמקורו באלדוז (כמו גלוקוז), מסתדר מחדש ליצירת 1-אמינו-2-קטוז, שהוא נגזרת של קטוז (כמו פרוקטוז)." },
+            { question: "באיזה טווח של פעילות מים (aw) תגובת מייארד היא בדרך כלל המהירה ביותר?", options: ["0.0-0.2", "0.2-0.4", "0.6-0.7", "0.9-1.0"], correctIndex: 2, explanation: "בטווח זה יש מספיק מים כדי לאפשר ניידות של המגיבים, אך לא יותר מדי כדי לגרום לאפקט דילול או להסיט את שיווי המשקל של התגובה הראשונית לאחור." },
+            { question: "רמות גבוהות של AGEs בגוף נמצאו כקשורות למספר מצבים רפואיים, אך איזה מהבאים אינו נמנה עליהם בדרך כלל?", options: ["סיבוכי סוכרת", "התקשחות עורקים וטרשת עורקים", "תהליכי הזדקנות מואצים", "שיפור בתפקוד הכליות"], correctIndex: 3, explanation: "ההיפך הוא הנכון. הצטברות AGEs בכליות היא גורם משמעותי בהתפתחות כשל כלייתי, במיוחד בחולי סוכרת (נפרופתיה סוכרתית)." },
+            { question: "מהי תגובת הביניים המתרחשת בין תרכובת דיקרבונילית לחומצה אמינית לפני שחרור האלדהיד בדגרדציית סטרקר?", options: ["יצירת קשר פפטידי", "הידרוליזה של הדיקרבוניל", "יצירת בסיס שיף ולאחריו דקרבוקסילציה", "אסטריפיקציה"], correctIndex: 2, explanation: "המנגנון כולל התעבות של חומצת האמינו עם הדיקרבוניל ליצירת בסיס שיף, אשר לאחר מכן עובר סידור מחדש ודקרבוקסילציה (איבוד CO2) כדי לשחרר את אלדהיד הסטרקר." },
+            { question: "איזה מהבאים מתאר נכונה את היווצרות המלנואידינים?", options: ["תגובת דחיסה פשוטה בין שתי מולקולות סוכר", "פולימריזציה אלדולית ודחיסה של תוצרי ביניים ריאקטיביים כמו פורפורלים ורדוקטונים, לעיתים בשילוב עם אמינים", "תגובה אנזימטית מזורזת על ידי פוליפנול אוקסידאז", "פירוק של חלבונים ליצירת פיגמנטים שחורים"], correctIndex: 1, explanation: "זהו תהליך פולימריזציה מורכב ולא ספציפי שבו תוצרי פירוק קטנים וריאקטיביים מתחברים זה לזה ועם שאריות אמינו ליצירת המקרומולקולות הצבעוניות הגדולות." },
+            { question: "בחימום תמיסה של פרוקטוז וגליצין, איזה תהליך איזומריזציה יתרחש לאחר שלב הדחיסה הראשוני?", options: ["שיחלוף היינס", "שיחלוף אמדורי", "קרמליזציה", "דגרדציית סטרקר"], correctIndex: 0, explanation: "פרוקטוז הוא סוכר קטוזי. כאשר הוא מגיב עם חומצה אמינית, תוצר הביניים יעבור שיחלוף היינס, המקביל לשיחלוף אמדורי המתרחש עם סוכרים אלדוזיים." },
+            { question: "מדוע טיגון בשמן עמוק הוא תהליך יעיל מאוד ליצירת תגובות מייארד?", options: ["השמן מספק חומצות שומן המשתתפות בתגובה", "הטמפרטורה הגבוהה של השמן (מעל 160 מעלות) מאיצה מאוד את התגובה, והשמן מסיר מים מפני שטח המזון", "השמן מוריד את ה-pH של המזון", "השמן מונע כניסת חמצן ובכך מזרז את התגובה"], correctIndex: 1, explanation: "טיגון מספק שני תנאים אידיאליים: טמפרטורה גבוהה מאוד המאיצה את הקינטיקה, והסרת מים מהירה מפני השטח, מה שמוריד את פעילות המים לטווח האופטימלי לתגובה." },
+            { question: "איזה מהמשפטים הבאים מתאר באופן שגוי את ההשפעה של גורם סביבתי על תגובת מייארד?", options: ["עליית טמפרטורה בדרך כלל מאיצה את התגובה", "הקצב המהיר ביותר נצפה בפעילות מים של כ-0.7", "יוני נחושת וברזל יכולים לזרז את התגובה", "התגובה מהירה ביותר בסביבה חומצית חזקה (pH 2)"], correctIndex: 3, explanation: "סביבה חומצית חזקה בולמת את התגובה על ידי נטרול קבוצת האמין הנוקליאופילית. התגובה מהירה יותר בסביבה ניטרלית עד בסיסית קלות." },
+            { question: "תרכובות כמו HMF ופורפורל, הנוצרות מדהידרציה של סוכרים, הן בעלות מבנה בסיסי של:", options: ["בנזן", "ציקלוהקסאן", "פיראן", "פוראן"], correctIndex: 3, explanation: "Hydroxymethylfurfural (HMF) ו-Furfural הן נגזרות של טבעת הפוראן, טבעת הטרוציקלית מחומשת המכילה אטום חמצן אחד." },
+            { question: "במערכת המכילה רק גלוקוז וחומצת האמינו ליזין, אילו סוגי תרכובות ריח עיקריות ייווצרו?", options: ["בעיקר תרכובות גופרית", "בעיקר פיראזינים ואלדהידים", "בעיקר אסטרים פירותיים", "לא ייווצרו תרכובות ריח כלל"], correctIndex: 1, explanation: "דגרדציית סטרקר של ליזין תיצור אלדהיד סטרקר מתאים. בנוסף, תגובות בין תוצרי ביניים יכולות ליצור פיראזינים, שהם תורמים חשובים לארומה של מזון קלוי ואפוי. תרכובות גופרית דורשות חומצות אמינו המכילות גופרית." },
+            { question: "מהי הסיבה המרכזית לכך שבישול במים (הרתחה) אינו מוביל להשחמת מייארד משמעותית, בניגוד לאפייה?", options: ["הטמפרטורה המקסימלית של 100 מעלות צלזיוס נמוכה מדי לקצב תגובה מהיר, ופעילות המים גבוהה מדי", "המים שוטפים את הסוכרים מהמזון", "בישול במים מעלה את ה-pH ומונע את התגובה", "החמצן המומס במים מפריע לתגובה"], correctIndex: 0, explanation: "אפייה מגיעה לטמפרטורות גבוהות בהרבה מפני שטח המזון, וגורמת לייבוש המוריד את פעילות המים לטווח אופטימלי. בישול במים מוגבל ל-100 מעלות ומתרחש ב-aw קרוב ל-1, שני תנאים שאינם אידיאליים לתגובה." },
+            { question: "איזה מהבאים אינו תוצר של תגובת מייארד או קרמליזציה?", options: ["מלנואידינים", "פיראזינים", "מלטול", "גלוקוז אוקסידאז"], correctIndex: 3, explanation: "גלוקוז אוקסידאז הוא אנזים. ניתן להשתמש בו כדי למנוע את תגובת מייארד על ידי סילוק אחד המגיבים (גלוקוז), אך הוא אינו תוצר של התגובה עצמה." }
+        ];
+
+        const tfData = [
+            { question: "תגובת קרמליזציה דורשת נוכחות של חומצות אמינו כדי להתרחש.", answer: false, explanation: "קרמליזציה היא פירוק תרמי של סוכרים בלבד ואינה דורשת חומצות אמינו, בניגוד לתגובת מייארד." },
+            { question: "הורדת ה-pH של מזון תמיד תאט את תגובת מייארד.", answer: true, explanation: "סביבה חומצית גורמת לפרוטונציה של קבוצת האמין, מה שמפחית את הנוקליאופיליות שלה ומונע את השלב הראשון של התגובה." },
+            { question: "קצב תגובת מייארד עולה באופן לינארי עם העלייה בפעילות המים (aw).", answer: false, explanation: "הקצב אופטימלי ב-aw בינוני. ב-aw נמוך מאוד אין ניידות מגיבים, וב-aw גבוה מאוד המים העודפים דוחפים את שיווי המשקל של שלב הדחיסה הראשוני חזרה למגיבים." },
+            { question: "תוצרי שיחלוף אמדורי ושיחלוף היינס הם חסרי צבע.", answer: true, explanation: "הצבע החום האופייני לתגובת מייארד נוצר רק בשלבים מאוחרים יותר, עם היווצרות המלנואידינים. תוצרי הביניים הראשונים הם חסרי צבע." },
+            { question: "חומצת האמינו פרולין אינה משתתפת בדגרדציית סטרקר ליצירת אלדהיד.", answer: true, explanation: "פרולין היא חומצה אמינית שניונית (אימינו), והמבנה הטבעתי שלה מונע ממנה לעבור את מנגנון דגרדציית סטרקר הטיפוסי. היא כן יוצרת תרכובות טעם אחרות." },
+            { question: "סוכרוז, סוכר שאינו מחזר, יכול להשתתף ישירות בתגובת מייארד.", answer: false, explanation: "סוכרוז אינו מחזר ולכן אינו יכול להגיב ישירות. עם זאת, בחימום בסביבה חומצית הוא יכול לעבור הידרוליזה לגלוקוז ופרוקטוז (סוכרים מחזרים), אשר כן יגיבו." },
+            { question: "הוספת יוני מתכת כמו ברזל (Fe) ונחושת (Cu) יכולה להאט את תגובת מייארד.", answer: false, explanation: "יוני מתכת אלו פועלים כקטליזטורים ומאיצים את התגובה, ככל הנראה על ידי זירוז חיבור הסוכר לחלבון." },
+            { question: "אקרילאמיד נוצר בעיקר במזונות עשירים בחלבון ושומן כמו בשר וגבינה.", answer: false, explanation: "אקרילאמיד נוצר בעיקר במזונות צמחיים עשירים בפחמימות וחומצת האמינו אספרגין, כמו תפוחי אדמה ודגנים, בטמפרטורות גבוהות." },
+            { question: "שימוש ב-SO2 (סולפיטים) הוא דרך יעילה למנוע השחמה מכיוון שהוא מגיב עם חומצות האמינו.", answer: false, explanation: "SO2 מונע השחמה על ידי תגובה עם תוצרי ביניים קרבוניליים הנוצרים במהלך התגובה, ובכך חוסם את המשך יצירת הפיגמנטים החומים." },
+            { question: "שלב הדחיסה הראשוני בתגובת מייארד, יצירת בסיס שיף, הוא שלב בלתי הפיך.", answer: false, explanation: "השלב הראשון של דחיסת הסוכר והאמין הוא הפיך. רק לאחר שיחלוף אמדורי או היינס, התגובה הופכת למעשה לבלתי הפיכה בתנאים רגילים." },
+            { question: "תגובת מייארד תורמת תמיד באופן חיובי לאיכות המזון.", answer: false, explanation: "בעוד שהיא יוצרת טעמים וצבעים רצויים, היא יכולה להיות לא רצויה (באבקת חלב) ולגרום לאובדן ערך תזונתי, כמו הרס של ליזין." },
+            { question: "תוצרי גליקציה מתקדמים (AGEs) נוצרים אך ורק בגוף החי כתוצאה ממחלות כמו סוכרת.", answer: false, explanation: "AGEs נוצרים גם במזון שעובר חימום אינטנסיבי וניתן לצרוך אותם. הם נוצרים גם בגוף בתהליכים פיזיולוגיים רגילים, אך קצבם מוגבר בסוכרת." },
+            { question: "שיחלוף אמדורי מתחיל באלדוז ומסתיים בקטוז-אמין.", answer: true, explanation: "לדוגמה, גלוקוז (אלדוז) מגיב עם אמין, ולאחר שיחלוף אמדורי נוצר פרוקטוז-אמין (קטוז-אמין)." },
+            { question: "דגרדציית סטרקר היא האחראית העיקרית ליצירת הצבע החום בתגובת מייארד.", answer: false, explanation: "דגרדציית סטרקר אחראית בעיקר ליצירת תרכובות ריח (אלדהידים). הצבע החום נוצר בעיקר בשלב הסופי, בפולימריזציה ליצירת מלנואידינים." },
+            { question: "טמפרטורה אופטימלית לתגובת מייארד היא סביב 50-60 מעלות צלזיוס.", answer: false, explanation: "התגובה אכן מתרחשת בטמפרטורות אלה אך באיטיות רבה. קצב התגובה עולה משמעותית עם עליית הטמפרטורה, והיא מהירה מאוד בטמפרטורות אפייה וטיגון." },
+            { question: "בשיחלוף היינס, הפרוטונציה מתרחשת על אטום החנקן של פחמן C-2.", answer: true, explanation: "זאת בניגוד לשיחלוף אמדורי, שם הפרוטונציה מתרחשת על אטום החנקן של פחמן C-1." },
+            { question: "המונח מלנואידינים מתייחס לקבוצה קטנה של תרכובות בעלות מבנה כימי מוגדר היטב.", answer: false, explanation: "מלנואידינים הם קבוצה הטרוגנית ומורכבת של פולימרים, שמבנם המדויק אינו מאופיין היטב ומשתנה בהתאם לתנאי התגובה." },
+            { question: "טיגון תפוחי אדמה ייצור יותר אקרילאמיד מאשר בישולם במים.", answer: true, explanation: "היווצרות אקרילאמיד דורשת טמפרטורות גבוהות (מעל 120 מעלות צלזיוס) שלא מושגות בבישול במים (עד 100 מעלות)." },
+            { question: "קצב תגובת מייארד בסביבה בסיסית מהיר יותר מאשר בסביבה ניטרלית.", answer: true, explanation: "סביבה בסיסית מזרזת את שיחלוף אמדורי על ידי סיוע במשיכת הפרוטון, וכן מבטיחה שקבוצת האמין תישאר במצב לא מיונן ונוקליאופילי." },
+            { question: "פירוק חומצה אסקורבית (ויטמין C) יכול גם הוא לגרום להשחמה לא אנזימטית.", answer: true, explanation: "תוצרי הפירוק של חומצה אסקורבית, כמו פורפורל, יכולים להמשיך ולהגיב עם חומצות אמינו וליצור פיגמנטים חומים, במנגנון הדומה לתגובת מייארד." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

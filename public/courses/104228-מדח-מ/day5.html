@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 5</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 5: Separation of Variables (Wave Eq. - Dirichlet BCs)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>Separation of Variables for the Wave Equation (Homogeneous PDE, Homogeneous Dirichlet BCs):</strong></p>
+            <p>Solves the Initial Boundary Value Problem (IBVP) on a finite domain $0 < x < L, t > 0$:</p>
+            $$ u_{tt} = c^2 u_{xx} $$
+            with boundary conditions (BCs):
+            $$ u(0,t) = 0, \quad u(L,t) = 0 $$
+            and initial conditions (ICs):
+            $$ u(x,0) = f(x), \quad u_t(x,0) = g(x) $$
+            <p><strong>Steps (Recap & Extension):</strong></p>
+            <ol>
+                <li><strong>Assume Separable Solution:</strong> $u(x,t) = X(x)T(t)$. Substitute into the PDE:
+                    $$ X(x)T''(t) = c^2 X''(x)T(t) $$</li>
+                <li><strong>Separate Variables:</strong> Divide by $c^2X(x)T(t)$:
+                    $$ \frac{T''(t)}{c^2 T(t)} = \frac{X''(x)}{X(x)} = -\lambda \quad (\text{separation constant}) $$
+                    This yields two ODEs:
+                    $$ X'' + \lambda X = 0 $$
+                    $$ T'' + c^2\lambda T = 0 $$</li>
+                <li><strong>Spatial Problem (X):</strong> Apply BCs $X(0)=0, X(L)=0$. As solved in Day 4, the eigenvalues and eigenfunctions are:
+                    $$ \lambda_n = \left(\frac{n\pi}{L}\right)^2, \quad X_n(x) = \sin\left(\frac{n\pi x}{L}\right) \quad \text{for } n=1, 2, 3, \dots $$</li>
+                <li><strong>Temporal Problem (T):</strong> For each $\lambda_n$, solve $T_n'' + c^2\lambda_n T_n = 0$. Let $\omega_n = \sqrt{c^2\lambda_n} = \frac{n\pi c}{L}$ (angular frequency). The ODE is $T_n'' + \omega_n^2 T_n = 0$. This is a second-order linear ODE with constant coefficients. The general solution is:
+                    $$ T_n(t) = A_n \cos(\omega_n t) + B_n \sin(\omega_n t) $$
+                    $$ T_n(t) = A_n \cos\left(\frac{n\pi ct}{L}\right) + B_n \sin\left(\frac{n\pi ct}{L}\right) $$</li>
+                <li><strong>Superposition Principle:</strong> The general solution is a superposition of product solutions $u_n(x,t) = X_n(x)T_n(t)$:
+                    $$ u(x,t) = \sum_{n=1}^{\infty} \left[ A_n \cos\left(\frac{n\pi ct}{L}\right) + B_n \sin\left(\frac{n\pi ct}{L}\right) \right] \sin\left(\frac{n\pi x}{L}\right) $$</li>
+                <li><strong>Apply Initial Conditions (ICs) using Fourier Sine Series:</strong>
+                    <ul>
+                    <li><strong>IC 1: $u(x,0) = f(x)$</strong><br>
+                    Set $t=0$: $u(x,0) = \sum_{n=1}^{\infty} [A_n \cos(0) + B_n \sin(0)] \sin(\frac{n\pi x}{L}) = \sum_{n=1}^{\infty} A_n \sin(\frac{n\pi x}{L})$.<br>
+                    So, $f(x) = \sum_{n=1}^{\infty} A_n \sin(\frac{n\pi x}{L})$. This requires $A_n$ to be the Fourier Sine coefficients of $f(x)$:
+                    $$ A_n = \frac{2}{L} \int_0^L f(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$</li>
+                    <li><strong>IC 2: $u_t(x,0) = g(x)$</strong><br>
+                    First, differentiate the general solution with respect to $t$:<br>
+                    $u_t(x,t) = \sum_{n=1}^{\infty} \left[ -A_n \omega_n \sin(\omega_n t) + B_n \omega_n \cos(\omega_n t) \right] \sin(\frac{n\pi x}{L})$.<br>
+                    Set $t=0$: $u_t(x,0) = \sum_{n=1}^{\infty} [ -A_n \omega_n \sin(0) + B_n \omega_n \cos(0) ] \sin(\frac{n\pi x}{L}) = \sum_{n=1}^{\infty} B_n \omega_n \sin(\frac{n\pi x}{L})$.<br>
+                    So, $g(x) = \sum_{n=1}^{\infty} (B_n \omega_n) \sin(\frac{n\pi x}{L})$. This requires $B_n \omega_n$ to be the Fourier Sine coefficients of $g(x)$:
+                    $$ B_n \omega_n = \frac{2}{L} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$
+                    $$ B_n = \frac{1}{\omega_n} \frac{2}{L} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx = \frac{2}{n\pi c} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$</li>
+                    </ul>
+                </li>
+            </ol>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Temporal ODE -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the general solution to the ODE $T'' + 9 T = 0$.</p>
+                <button onclick="toggleSolution('sol-d5-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is a second-order linear homogeneous ODE with constant coefficients. The characteristic equation is $r^2 + 9 = 0$, which has roots $r = \pm 3i$.</p>
+                    <p>The general solution is $T(t) = C_1 \cos(3t) + C_2 \sin(3t)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the general solution to the ODE $T'' + \omega^2 T = 0$, where $\omega$ is a positive constant.</p>
+                <button onclick="toggleSolution('sol-d5-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>The characteristic equation is $r^2 + \omega^2 = 0$, with roots $r = \pm i\omega$.</p>
+                    <p>The general solution is $T(t) = C_1 \cos(\omega t) + C_2 \sin(\omega t)$.</p>
+                </div>
+            </article>
+
+            <!-- Finding A_n, B_n -->
+             <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">For the wave equation $u_{tt} = c^2 u_{xx}$ on $[0, L]$ with $u(0,t)=u(L,t)=0$, find the coefficients $A_n$ if $u(x,0) = 3\sin(\frac{2\pi x}{L})$.</p>
+                <button onclick="toggleSolution('sol-d5-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>$u(x,0) = f(x) = \sum_{n=1}^{\infty} A_n \sin(\frac{n\pi x}{L})$.</p>
+                    <p>We are given $f(x) = 3\sin(\frac{2\pi x}{L})$.</p>
+                    <p>By matching coefficients, $A_2 = 3$ and $A_n = 0$ for $n \neq 2$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">For the wave equation $u_{tt} = c^2 u_{xx}$ on $[0, \pi]$ with $u(0,t)=u(\pi,t)=0$, find the coefficients $B_n$ if $u_t(x,0) = 5\sin(3x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $u_t(x,0) = g(x) = \sum_{n=1}^{\infty} (B_n \omega_n) \sin(nx)$, where $\omega_n = \frac{n\pi c}{L} = nc$.</p>
+                    <p>We are given $g(x) = 5\sin(3x)$.</p>
+                    <p>By matching coefficients, $B_3 \omega_3 = 5$, and $B_n \omega_n = 0$ for $n \neq 3$ (meaning $B_n=0$ for $n \neq 3$).</p>
+                    <p>$B_3 (3c) = 5 \implies B_3 = \frac{5}{3c}$. All other $B_n=0$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">For the wave equation $u_{tt} = 9 u_{xx}$ on $[0, \pi]$ with $u(0,t)=u(\pi,t)=0$, find $A_n$ and $B_n$ if $u(x,0) = \sin(x)$ and $u_t(x,0) = 6\sin(2x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3, L=\pi$. $\omega_n = \frac{n\pi c}{L} = 3n$.</p>
+                    <p>$u(x,0) = f(x) = \sum A_n \sin(nx) = \sin(x)$. Matching: $A_1=1$, $A_n=0$ for $n\neq 1$.</p>
+                    <p>$u_t(x,0) = g(x) = \sum (B_n \omega_n) \sin(nx) = 6\sin(2x)$. Matching: $B_2 \omega_2 = 6$, $B_n \omega_n=0$ for $n\neq 2$.</p>
+                    <p>$B_2 (3 \cdot 2) = 6 \implies 6B_2 = 6 \implies B_2 = 1$. All other $B_n=0$.</p>
+                    <p>So, $A_1=1$, $B_2=1$, and all other $A_n, B_n$ are zero.</p>
+                </div>
+            </article>
+
+             <!-- Full Problem Solving -->
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Solve $u_{tt} = u_{xx}$ for $0 < x < \pi, t > 0$, with $u(0,t)=u(\pi,t)=0$, $u(x,0) = 2\sin(x)$, and $u_t(x,0)=0$.</p>
+                <button onclick="toggleSolution('sol-d5-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1, L=\pi$. $\omega_n = n$. $f(x)=2\sin(x), g(x)=0$.</p>
+                    <p>$A_n$: $f(x)=\sum A_n \sin(nx) = 2\sin(x) \implies A_1=2$, $A_n=0$ for $n\neq 1$.</p>
+                    <p>$B_n$: $g(x)=\sum (B_n \omega_n) \sin(nx) = 0 \implies B_n \omega_n=0$ for all $n$. Since $\omega_n \neq 0$, $B_n=0$ for all $n$.</p>
+                    <p>The solution is $u(x,t) = \sum_{n=1}^{\infty} [ A_n \cos(nt) + B_n \sin(nt) ] \sin(nx)$.</p>
+                    <p>$u(x,t) = [A_1 \cos(1t) + B_1 \sin(1t)]\sin(1x) + \dots$</p>
+                    <p>$u(x,t) = [2 \cos(t) + 0]\sin(x) = 2\cos(t)\sin(x)$.</p>
+                    <p>So, $u(x,t) = 2\sin(x)\cos(t)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Solve $u_{tt} = 4u_{xx}$ for $0 < x < L, t > 0$, with $u(0,t)=u(L,t)=0$, $u(x,0)=0$, and $u_t(x,0)=\sin(\frac{3\pi x}{L})$.</p>
+                <button onclick="toggleSolution('sol-d5-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=2, L=L$. $\omega_n = \frac{n\pi c}{L} = \frac{2n\pi}{L}$. $f(x)=0, g(x)=\sin(\frac{3\pi x}{L})$.</p>
+                    <p>$A_n$: $f(x)=\sum A_n \sin(\frac{n\pi x}{L}) = 0 \implies A_n=0$ for all $n$.</p>
+                    <p>$B_n$: $g(x)=\sum (B_n \omega_n) \sin(\frac{n\pi x}{L}) = \sin(\frac{3\pi x}{L})$.</p>
+                    <p>Matching coefficients: $B_3 \omega_3 = 1$. All other $B_n \omega_n=0$, so $B_n=0$ for $n\neq 3$.</p>
+                    <p>$\omega_3 = \frac{2(3)\pi}{L} = \frac{6\pi}{L}$.</p>
+                    <p>$B_3 (\frac{6\pi}{L}) = 1 \implies B_3 = \frac{L}{6\pi}$.</p>
+                    <p>The solution is $u(x,t) = \sum_{n=1}^{\infty} [ A_n \cos(\omega_n t) + B_n \sin(\omega_n t) ] \sin(\frac{n\pi x}{L})$.</p>
+                    <p>$u(x,t) = [ A_3 \cos(\omega_3 t) + B_3 \sin(\omega_3 t) ] \sin(\frac{3\pi x}{L}) + \dots$</p>
+                    <p>$u(x,t) = [ 0 + \frac{L}{6\pi} \sin(\frac{6\pi t}{L}) ] \sin(\frac{3\pi x}{L})$.</p>
+                    <p>So, $u(x,t) = \frac{L}{6\pi} \sin(\frac{3\pi x}{L}) \sin(\frac{6\pi t}{L})$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Find the formula for the coefficients $A_n$ for the wave equation $u_{tt} = c^2 u_{xx}$ on $[0, \pi]$ with $u(0,t)=u(\pi,t)=0$ and $u(x,0) = f(x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>The general solution has the form $u(x,t) = \sum_{n=1}^{\infty} [ A_n \cos(nct) + B_n \sin(nct) ] \sin(nx)$.</p>
+                    <p>Setting $t=0$: $u(x,0) = \sum_{n=1}^{\infty} A_n \sin(nx) = f(x)$.</p>
+                    <p>$A_n$ are the Fourier Sine coefficients of $f(x)$ on $[0, \pi]$.</p>
+                    $$ A_n = \frac{2}{\pi} \int_0^\pi f(x) \sin(nx) \, dx $$
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Find the formula for the coefficients $B_n$ for the wave equation $u_{tt} = c^2 u_{xx}$ on $[0, L]$ with $u(0,t)=u(L,t)=0$ and $u_t(x,0) = g(x)$. Assume $u(x,0)=0$.</p>
+                <button onclick="toggleSolution('sol-d5-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>The general solution is $u(x,t) = \sum_{n=1}^{\infty} [ A_n \cos(\omega_n t) + B_n \sin(\omega_n t) ] \sin(\frac{n\pi x}{L})$, where $\omega_n = \frac{n\pi c}{L}$.</p>
+                    <p>Since $u(x,0)=0$, we have $\sum A_n \sin(\frac{n\pi x}{L}) = 0$, which implies $A_n=0$ for all $n$.</p>
+                    <p>Then $u(x,t) = \sum B_n \sin(\omega_n t) \sin(\frac{n\pi x}{L})$.</p>
+                    <p>$u_t(x,t) = \sum B_n \omega_n \cos(\omega_n t) \sin(\frac{n\pi x}{L})$.</p>
+                    <p>$u_t(x,0) = \sum B_n \omega_n \sin(\frac{n\pi x}{L}) = g(x)$.</p>
+                    <p>$B_n \omega_n$ are the Fourier Sine coefficients of $g(x)$.</p>
+                    $$ B_n \omega_n = \frac{2}{L} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$
+                    $$ B_n = \frac{1}{\omega_n} \frac{2}{L} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx = \frac{2}{n\pi c} \int_0^L g(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve $u_{tt} = 9u_{xx}$ for $0 < x < 1, t > 0$, $u(0,t)=u(1,t)=0$, $u(x,0) = 0$, $u_t(x,0) = 1$.</p>
+                <button onclick="toggleSolution('sol-d5-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3, L=1$. $f(x)=0 \implies A_n=0$. $g(x)=1$. $\omega_n = \frac{n\pi c}{L} = 3n\pi$.</p>
+                    <p>$B_n \omega_n = \frac{2}{1} \int_0^1 1 \cdot \sin(n\pi x) \, dx = 2 \left[ -\frac{\cos(n\pi x)}{n\pi} \right]_0^1$.</p>
+                    <p>$B_n \omega_n = -\frac{2}{n\pi} [\cos(n\pi) - \cos(0)] = -\frac{2}{n\pi}[(-1)^n - 1]$.</p>
+                    <p>$B_n \omega_n = \frac{2(1-(-1)^n)}{n\pi}$. If $n$ is even, $B_n \omega_n = 0$. If $n$ is odd ($n=2m-1$), $B_{2m-1} \omega_{2m-1} = \frac{4}{(2m-1)\pi}$.</p>
+                    <p>$B_n = \frac{1}{\omega_n} \frac{2(1-(-1)^n)}{n\pi} = \frac{1}{3n\pi} \frac{2(1-(-1)^n)}{n\pi} = \frac{2(1-(-1)^n)}{3(n\pi)^2}$.</p>
+                    <p>For odd $n=2m-1$: $B_{2m-1} = \frac{4}{3((2m-1)\pi)^2}$.</p>
+                    <p>$u(x,t) = \sum_{n=1}^{\infty} B_n \sin(\omega_n t) \sin(n\pi x)$.</p>
+                    <p>$u(x,t) = \sum_{m=1}^{\infty} \frac{4}{3((2m-1)\pi)^2} \sin(3(2m-1)\pi t) \sin((2m-1)\pi x)$.</p>
+                </div>
+            </article>
+
+            <!-- Questions 11-30 -->
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Solve $T'' + 16 T = 0$ with $T(0)=1, T'(0)=0$.</p>
+                 <button onclick="toggleSolution('sol-d5-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>General solution $T(t) = C_1 \cos(4t) + C_2 \sin(4t)$.</p>
+                    <p>$T(0) = C_1 \cos(0) + C_2 \sin(0) = C_1 = 1$.</p>
+                    <p>$T'(t) = -4C_1 \sin(4t) + 4C_2 \cos(4t)$.</p>
+                    <p>$T'(0) = -4C_1 \sin(0) + 4C_2 \cos(0) = 4C_2 = 0 \implies C_2 = 0$.</p>
+                    <p>So, $T(t) = \cos(4t)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Solve $T'' + 25 T = 0$ with $T(0)=0, T'(0)=10$.</p>
+                <button onclick="toggleSolution('sol-d5-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>General solution $T(t) = C_1 \cos(5t) + C_2 \sin(5t)$.</p>
+                    <p>$T(0) = C_1 = 0$.</p>
+                    <p>$T'(t) = -5C_1 \sin(5t) + 5C_2 \cos(5t)$.</p>
+                    <p>$T'(0) = 5C_2 = 10 \implies C_2 = 2$.</p>
+                    <p>So, $T(t) = 2\sin(5t)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Solve $u_{tt} = u_{xx}$ for $0 < x < \pi, t > 0$, $u(0,t)=u(\pi,t)=0$, $u(x,0) = 0$, $u_t(x,0) = \sin(x) + 3\sin(4x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1, L=\pi$. $\omega_n = n$. $f(x)=0 \implies A_n=0$. $g(x)=\sin(x)+3\sin(4x)$.</p>
+                    <p>$g(x) = \sum B_n \omega_n \sin(nx) = \sum B_n n \sin(nx)$.</p>
+                    <p>Matching coefficients: $B_1 \cdot 1 = 1 \implies B_1 = 1$.</p>
+                    <p>$B_4 \cdot 4 = 3 \implies B_4 = 3/4$.</p>
+                    <p>All other $B_n=0$.</p>
+                    <p>$u(x,t) = \sum_{n=1}^{\infty} [ 0 + B_n \sin(nt) ] \sin(nx)$.</p>
+                    <p>$u(x,t) = B_1 \sin(1t)\sin(1x) + B_4 \sin(4t)\sin(4x)$.</p>
+                    <p>$u(x,t) = \sin(t)\sin(x) + \frac{3}{4}\sin(4t)\sin(4x)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">What is the physical meaning of the coefficients $A_n$ and $B_n$ in the wave equation solution?</p>
+                <button onclick="toggleSolution('sol-d5-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>The solution $u(x,t) = \sum [ A_n \cos(\omega_n t) + B_n \sin(\omega_n t) ] \sin(\frac{n\pi x}{L})$ represents the vibration as a sum of standing waves (normal modes) $\sin(n\pi x/L)$.</p>
+                    <ul>
+                        <li>$A_n$ determines the initial amplitude of the $n$-th mode, related to the initial displacement $f(x)$. It is the coefficient of the $n$-th mode in the Fourier Sine series of $f(x)$.</li>
+                        <li>$B_n \omega_n$ (where $\omega_n = n\pi c/L$) determines the initial velocity profile of the $n$-th mode, related to the initial velocity $g(x)$. Specifically, $B_n \omega_n$ is the coefficient of the $n$-th mode in the Fourier Sine series of $g(x)$. $B_n$ itself scales the contribution of the sine term in time for the $n$-th mode.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Write the general solution for $u_{tt} = 16 u_{xx}$ on $[0, 2]$ with $u(0,t)=u(2,t)=0$.</p>
+                <button onclick="toggleSolution('sol-d5-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q15">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=4, L=2$. $\omega_n = \frac{n\pi c}{L} = \frac{n\pi(4)}{2} = 2n\pi$.</p>
+                     <p>Eigenfunctions are $\sin(\frac{n\pi x}{L}) = \sin(\frac{n\pi x}{2})$.</p>
+                     <p>The general solution is:</p>
+                     $$ u(x,t) = \sum_{n=1}^{\infty} \left[ A_n \cos(2n\pi t) + B_n \sin(2n\pi t) \right] \sin\left(\frac{n\pi x}{2}\right) $$
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Find the coefficient $A_1$ for $u_{tt}=u_{xx}$ on $[0, \pi]$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=x(\pi-x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q16">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $A_n = \frac{2}{\pi} \int_0^\pi x(\pi-x) \sin(nx) dx$.</p>
+                    <p>We need $A_1 = \frac{2}{\pi} \int_0^\pi (\pi x - x^2) \sin(x) dx$.</p>
+                    <p>Use integration by parts ($\int (\pi x - x^2)\sin x dx$):</p>
+                    <p>$u=\pi x - x^2 \implies du = (\pi-2x)dx$. $dv=\sin x dx \implies v = -\cos x$.</p>
+                    <p>$\int = -(\pi x - x^2)\cos x - \int (-\cos x)(\pi-2x)dx = -(\pi x - x^2)\cos x + \int (\pi-2x)\cos x dx$.</p>
+                    <p>Second integration by parts ($\int (\pi-2x)\cos x dx$):</p>
+                    <p>$u=\pi-2x \implies du=-2dx$. $dv=\cos x dx \implies v=\sin x$.</p>
+                    <p>$\int = (\pi-2x)\sin x - \int (\sin x)(-2)dx = (\pi-2x)\sin x + 2\int \sin x dx = (\pi-2x)\sin x - 2\cos x$.</p>
+                    <p>Combined integral: $[- (\pi x - x^2)\cos x + (\pi-2x)\sin x - 2\cos x]_0^\pi$.</p>
+                    <p>At $x=\pi$: $-(\pi^2-\pi^2)\cos\pi + (\pi-2\pi)\sin\pi - 2\cos\pi = 0 + 0 - 2(-1) = 2$.</p>
+                    <p>At $x=0$: $-(0)\cos 0 + (\pi-0)\sin 0 - 2\cos 0 = 0 + 0 - 2(1) = -2$.</p>
+                    <p>Value of integral $= 2 - (-2) = 4$.</p>
+                    <p>$A_1 = \frac{2}{\pi} (4) = \frac{8}{\pi}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Find the coefficient $B_1$ for $u_{tt}=9u_{xx}$ on $[0, \pi]$, $u(0,t)=u(\pi,t)=0$, $u_t(x,0)=x$.</p>
+                <button onclick="toggleSolution('sol-d5-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3, L=\pi$. $\omega_n=3n$. $g(x)=x$.</p>
+                    <p>$B_n \omega_n = \frac{2}{\pi} \int_0^\pi x \sin(nx) dx$.</p>
+                    <p>From Day 4 Q6 (with $L=\pi$), $\int_0^\pi x \sin(nx) dx = \pi \frac{(-1)^{n+1}}{n}$.</p>
+                    <p>$B_n \omega_n = \frac{2}{\pi} (\pi \frac{(-1)^{n+1}}{n}) = \frac{2(-1)^{n+1}}{n}$.</p>
+                    <p>We need $B_1$. For $n=1$: $B_1 \omega_1 = \frac{2(-1)^{1+1}}{1} = 2$.</p>
+                    <p>$\omega_1 = 3(1) = 3$.</p>
+                    <p>$B_1 (3) = 2 \implies B_1 = 2/3$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Solve $u_{tt} = u_{xx}$, $u(0,t)=u(1,t)=0$, $u(x,0)=0$, $u_t(x,0)=2\sin(3\pi x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1, L=1$. $\omega_n=n\pi$. $f(x)=0 \implies A_n=0$. $g(x)=2\sin(3\pi x)$.</p>
+                    <p>$g(x) = \sum B_n \omega_n \sin(n\pi x) = 2\sin(3\pi x)$.</p>
+                    <p>Matching: $B_3 \omega_3 = 2$. $B_n=0$ for $n \neq 3$.</p>
+                    <p>$\omega_3 = 3\pi$. $B_3 (3\pi) = 2 \implies B_3 = 2/(3\pi)$.</p>
+                    <p>$u(x,t) = \sum [0 + B_n \sin(\omega_n t)] \sin(n\pi x)$.</p>
+                    <p>$u(x,t) = B_3 \sin(\omega_3 t) \sin(3\pi x) = \frac{2}{3\pi} \sin(3\pi t) \sin(3\pi x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">If $u(x,t)$ is a solution to the wave equation $u_{tt}=c^2 u_{xx}$, what PDE does $v(x,t) = u(x, t/c)$ satisfy?</p>
+                <button onclick="toggleSolution('sol-d5-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q19">
+                     <p><strong>Solution:</strong></p>
+                     <p>Let $\tau = t/c$. So $v(x,t) = u(x, \tau)$.</p>
+                     <p>$v_t = u_\tau \frac{\partial \tau}{\partial t} = u_\tau \frac{1}{c}$.</p>
+                     <p>$v_{tt} = \frac{\partial}{\partial t} (u_\tau \frac{1}{c}) = u_{\tau\tau} \frac{\partial \tau}{\partial t} \frac{1}{c} = u_{\tau\tau} \frac{1}{c^2}$.</p>
+                     <p>$v_x = u_x$. $v_{xx} = u_{xx}$.</p>
+                     <p>The original equation is $u_{\tau\tau} = c^2 u_{xx}$.</p>
+                     <p>Substitute: $c^2 v_{tt} = c^2 v_{xx}$.</p>
+                     <p>So $v(x,t)$ satisfies $v_{tt} = v_{xx}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Find the coefficient $A_2$ for $u_{tt}=4u_{xx}$ on $[0, \pi]$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=x$.</p>
+                <button onclick="toggleSolution('sol-d5-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q20">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $A_n = \frac{2}{\pi} \int_0^\pi x \sin(nx) dx$.</p>
+                    <p>From Day 4 Q6 (with $L=\pi$), the value of the integral is $\pi \frac{(-1)^{n+1}}{n}$.</p>
+                    <p>$A_n = \frac{2}{\pi} (\pi \frac{(-1)^{n+1}}{n}) = \frac{2(-1)^{n+1}}{n}$.</p>
+                    <p>For $n=2$, $A_2 = \frac{2(-1)^{2+1}}{2} = \frac{2(-1)}{2} = -1$.</p>
+                    <p>$A_2 = -1$.</p>
+                 </div>
+            </article>
+
+             <!-- Questions 21-30 -->
+             <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Solve $T'' + \pi^2 T = 0$ with $T(0)=0, T'(0)=2\pi$.</p>
+                <button onclick="toggleSolution('sol-d5-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q21">
+                    <p><strong>Solution:</strong></p>
+                     <p>General solution $T(t) = C_1 \cos(\pi t) + C_2 \sin(\pi t)$.</p>
+                     <p>$T(0) = C_1 = 0$.</p>
+                     <p>$T'(t) = -C_1 \pi \sin(\pi t) + C_2 \pi \cos(\pi t)$.</p>
+                     <p>$T'(0) = C_2 \pi = 2\pi \implies C_2 = 2$.</p>
+                     <p>So, $T(t) = 2\sin(\pi t)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Find the coefficient $B_2$ for $u_{tt}=u_{xx}$ on $[0, 1]$, $u(0,t)=u(1,t)=0$, $u_t(x,0)=x(1-x)$.</p>
+                 <button onclick="toggleSolution('sol-d5-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1, L=1$. $\omega_n = n\pi$. $g(x)=x(1-x)$.</p>
+                    <p>$B_n \omega_n = \frac{2}{1} \int_0^1 (x-x^2)\sin(n\pi x) dx$.</p>
+                    <p>From Day 4 Q9, this integral gives $\frac{4(1-(-1)^n)}{(n\pi)^3}$.</p>
+                    <p>$B_n \omega_n = \frac{4(1-(-1)^n)}{(n\pi)^3}$.</p>
+                    <p>We need $B_2$. For $n=2$, $1-(-1)^2 = 1-1=0$. So $B_2 \omega_2 = 0$.</p>
+                    <p>Since $\omega_2 = 2\pi \neq 0$, we must have $B_2=0$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Solve $u_{tt} = 25 u_{xx}$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=0$, $u_t(x,0)=10\sin(5x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q23">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=5, L=\pi$. $\omega_n = nc = 5n$. $f(x)=0 \implies A_n=0$. $g(x)=10\sin(5x)$.</p>
+                    <p>$g(x) = \sum B_n \omega_n \sin(nx) = 10\sin(5x)$.</p>
+                    <p>Matching: $B_5 \omega_5 = 10$. $B_n=0$ for $n \neq 5$.</p>
+                    <p>$\omega_5 = 5(5)=25$. $B_5(25) = 10 \implies B_5 = 10/25 = 2/5$.</p>
+                    <p>$u(x,t) = \sum [0 + B_n \sin(\omega_n t)] \sin(nx)$.</p>
+                    <p>$u(x,t) = B_5 \sin(\omega_5 t) \sin(5x) = \frac{2}{5} \sin(25t) \sin(5x)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">What is the fundamental frequency of vibration for the solution to $u_{tt}=c^2 u_{xx}$ on $[0, L]$ with Dirichlet BCs?</p>
+                <button onclick="toggleSolution('sol-d5-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>The solution involves terms $\cos(\omega_n t)$ and $\sin(\omega_n t)$ where $\omega_n = \frac{n\pi c}{L}$. These are the angular frequencies of the normal modes.</p>
+                    <p>The fundamental frequency corresponds to the lowest mode, $n=1$.</p>
+                    <p>The fundamental angular frequency is $\omega_1 = \frac{\pi c}{L}$.</p>
+                    <p>The fundamental frequency (in Hz, if time is seconds) is usually defined as $f_1 = \omega_1 / (2\pi) = \frac{c}{2L}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Find the coefficient $A_3$ for $u_{tt}=u_{xx}$ on $[0, \pi]$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=1$.</p>
+                <button onclick="toggleSolution('sol-d5-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q25">
+                    <p><strong>Solution:</strong></p>
+                     <p>$L=\pi$. $A_n = \frac{2}{\pi} \int_0^\pi 1 \cdot \sin(nx) dx$.</p>
+                     <p>From Day 4 Q5, $A_n = -\frac{2}{n\pi}[(-1)^n - 1]$.</p>
+                     <p>For $n=3$ (odd), $A_3 = -\frac{2}{3\pi}[(-1)^3 - 1] = -\frac{2}{3\pi}[-1 - 1] = -\frac{2}{3\pi}[-2] = \frac{4}{3\pi}$.</p>
+                     <p>$A_3 = 4/(3\pi)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Solve $u_{tt} = 4 u_{xx}$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=3\sin(x)$, $u_t(x,0)=\sin(2x)$.</p>
+                <button onclick="toggleSolution('sol-d5-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q26">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=2, L=\pi$. $\omega_n = nc = 2n$.</p>
+                     <p>$f(x)=3\sin(x) \implies A_1=3, A_n=0$ for $n\neq 1$.</p>
+                     <p>$g(x)=\sin(2x) \implies B_2 \omega_2 = 1, B_n=0$ for $n\neq 2$.</p>
+                     <p>$\omega_2 = 2(2)=4$. $B_2(4)=1 \implies B_2 = 1/4$.</p>
+                     <p>$u(x,t) = [A_1 \cos(\omega_1 t) + B_1 \sin(\omega_1 t)] \sin(x) + [A_2 \cos(\omega_2 t) + B_2 \sin(\omega_2 t)] \sin(2x) + \dots$</p>
+                     <p>$u(x,t) = [3 \cos(2t) + 0 \sin(2t)] \sin(x) + [0 \cos(4t) + \frac{1}{4} \sin(4t)] \sin(2x)$.</p>
+                     <p>$u(x,t) = 3\cos(2t)\sin(x) + \frac{1}{4}\sin(4t)\sin(2x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">Find the coefficient $B_4$ for $u_{tt}=c^2 u_{xx}$ on $[0, L]$, $u(0,t)=u(L,t)=0$, $u_t(x,0)=g(x)=1$.</p>
+                <button onclick="toggleSolution('sol-d5-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q27">
+                    <p><strong>Solution:</strong></p>
+                    <p>$B_n \omega_n = \frac{2}{L} \int_0^L 1 \cdot \sin(\frac{n\pi x}{L}) dx = \frac{2}{L} [-\frac{L}{n\pi}\cos(\frac{n\pi x}{L})]_0^L$.</p>
+                    <p>$B_n \omega_n = -\frac{2}{n\pi}[\cos(n\pi)-\cos(0)] = -\frac{2}{n\pi}[(-1)^n - 1]$.</p>
+                    <p>For $n=4$ (even), $B_4 \omega_4 = -\frac{2}{4\pi}[(-1)^4 - 1] = -\frac{1}{2\pi}[1 - 1] = 0$.</p>
+                    <p>Since $\omega_4 \neq 0$, $B_4 = 0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">If $f(x)=0$ in the wave equation problem, what does the solution represent physically?</p>
+                <button onclick="toggleSolution('sol-d5-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q28">
+                    <p><strong>Solution:</strong></p>
+                    <p>If $f(x)=u(x,0)=0$, the string starts at its equilibrium position (zero displacement).</p>
+                    <p>The motion is driven entirely by the initial velocity $g(x)=u_t(x,0)$.</p>
+                    <p>The solution $u(x,t) = \sum B_n \sin(\omega_n t) \sin(n\pi x/L)$ represents the subsequent vibration caused by imparting an initial velocity profile $g(x)$ to the string while it was initially flat.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">If $g(x)=0$ in the wave equation problem, what does the solution represent physically?</p>
+                <button onclick="toggleSolution('sol-d5-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q29">
+                    <p><strong>Solution:</strong></p>
+                    <p>If $g(x)=u_t(x,0)=0$, the string starts with zero initial velocity everywhere.</p>
+                    <p>The motion is driven entirely by the initial displacement $f(x)=u(x,0)$.</p>
+                    <p>The solution $u(x,t) = \sum A_n \cos(\omega_n t) \sin(n\pi x/L)$ represents the subsequent vibration caused by releasing the string from an initial shape $f(x)$ with no initial push/velocity.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">Solve $u_{tt} = u_{xx}$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=0$, $u_t(x,0)=0$.</p>
+                <button onclick="toggleSolution('sol-d5-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d5-q30">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1, L=\pi$. $f(x)=0 \implies A_n=0$. $g(x)=0 \implies B_n \omega_n = 0 \implies B_n=0$.</p>
+                    <p>Since all $A_n$ and $B_n$ are zero, the only solution is the trivial solution $u(x,t) = 0$.</p>
+                    <p>Physically: If the string starts flat and with no initial velocity, it remains flat.</p>
+                 </div>
+            </article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

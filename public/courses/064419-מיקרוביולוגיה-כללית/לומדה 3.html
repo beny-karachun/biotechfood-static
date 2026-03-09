@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי למידה: אומדן כמותי של חיידקים - חלק 1</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 90%; /* Adjusted from 2/3rds for better content fit */
+            margin: 20px auto;
+            background-color: #666666;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2, h3 {
+            color: #E0E0E0;
+            border-bottom: 1px solid #888;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: none;
+            margin-top: 0;
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7;
+            color: #E0E0E0;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #2a7ab8;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Navigation Controls */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            margin-bottom: 15px;
+        }
+
+        .counter {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Theory Section */
+        details {
+            background-color: #555;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            border: 1px solid #777;
+        }
+        summary {
+            padding: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1em;
+            color: #E0E0E0;
+            background-color: #606060;
+            border-radius: 5px 5px 0 0;
+        }
+        details[open] summary {
+             border-bottom: 1px solid #777;
+        }
+        .theory-content {
+            padding: 15px;
+            font-size: 0.95em;
+        }
+        .theory-content h3 {
+             margin-top: 15px;
+             margin-bottom: 10px;
+             padding-bottom: 5px;
+             border-bottom: 1px dotted #888;
+             font-size: 1.1em;
+        }
+        .theory-content p {
+            margin-bottom: 12px;
+        }
+        .theory-content ul {
+            margin-right: 20px;
+            margin-bottom: 12px;
+        }
+         .theory-content li {
+            margin-bottom: 5px;
+        }
+
+
+        /* Flashcard Section */
+        .flashcard-section {
+            margin-bottom: 30px;
+        }
+        .flashcard-container {
+            perspective: 1000px;
+            min-height: 200px; /* Ensure space for card */
+            margin-bottom: 20px; /* Space below card */
+        }
+        .flashcard {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            background-color: transparent; /* Let faces handle background */
+        }
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 18px;
+            border: 1px solid #888;
+        }
+        .card-front {
+            background-color: #777;
+            color: #E0E0E0;
+        }
+        .card-back {
+            background-color: #888;
+            color: #E0E0E0;
+            transform: rotateY(180deg);
+        }
+
+
+        /* Question Sections (MCQ & T/F) */
+        .question-section {
+            margin-bottom: 30px;
+        }
+        .question-display {
+            background-color: #707070;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 100px; /* Adjust as needed */
+            margin-bottom: 15px; /* Space between question and options/buttons */
+        }
+        .question-text {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .options-list li {
+            margin-bottom: 10px;
+        }
+        .options-list button, .tf-buttons button {
+            width: 100%;
+            text-align: right;
+            padding: 12px 15px;
+            background-color: #5f5f5f;
+            border: 1px solid #888;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .options-list button:hover, .tf-buttons button:hover:not(:disabled) { /* Avoid hover effect on disabled */
+            background-color: #6a6a6a;
+            border-color: #999;
+        }
+        .options-list button.selected {
+            border-color: #3D90D7;
+        }
+        .options-list button.correct, .tf-buttons button.correct {
+            background-color: rgba(76, 175, 80, 0.3); /* Green tint */
+            border-color: #4CAF50;
+            color: #dff0d8;
+        }
+        .options-list button.incorrect, .tf-buttons button.incorrect {
+            background-color: rgba(244, 67, 54, 0.3); /* Red tint */
+            border-color: #F44336;
+             color: #f2dede;
+        }
+        .options-list button:disabled, .tf-buttons button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            background-color: #4CAF50; /* Solid green for text background */
+            color: #ffffff;
+        }
+        .feedback.incorrect {
+            background-color: #F44336; /* Solid red for text background */
+            color: #ffffff;
+        }
+        .explanation {
+            font-size: 0.9em;
+            color: #cccccc;
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #505050; /* Slightly different background for explanation */
+            border-radius: 4px;
+            border-right: 3px solid #3D90D7; /* Accent border */
+        }
+
+        .tf-buttons {
+            display: flex;
+            gap: 10px; /* Space between True/False buttons */
+        }
+
+        .view-all-container {
+            margin-top: 15px;
+            border-top: 1px solid #888;
+            padding-top: 15px;
+            text-align: center; /* Center the 'View All' button */
+        }
+
+        .all-questions-container {
+            margin-top: 20px;
+        }
+        .all-questions-container .question-item {
+             background-color: #5a5a5a;
+             padding: 15px;
+             border-radius: 5px;
+             margin-bottom: 15px;
+             border: 1px solid #777;
+        }
+         .all-questions-container .question-item .question-text {
+              font-size: 1em;
+              margin-bottom: 10px;
+         }
+        .all-questions-container .feedback {
+            margin-top: 10px;
+            padding: 8px;
+        }
+         .all-questions-container .explanation {
+            font-size: 0.85em;
+            margin-top: 8px; /* Reduced margin in all view */
+         }
+
+         /* Hide elements initially */
+         .feedback, .explanation {
+             display: none;
+         }
+         /* CSS rule to show elements when the 'visible' class is added */
+         .feedback.visible, .explanation.visible {
+             display: block;
+         }
+         .all-questions-container {
+            display: none; /* Hide 'all questions' view initially */
+         }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>כלי למידה: אומדן כמותי של חיידקים - חלק 1</h1>
+
+        <!-- Theory Section -->
+        <details>
+            <summary>תאוריה: שיטות לאומדן כמותי של חיידקים (חלק 1)</summary>
+            <div class="theory-content">
+                <h3>מבוא לאומדן כמותי</h3>
+                <p>קביעת מספר המיקרואורגניזמים, כמו חיידקים, היא פעולה חיונית בתחומים רבים. ברפואה, היא מסייעת לאבחן זיהומים ולעקוב אחר יעילות טיפולים. בתעשייה (מזון, תרופות, קוסמטיקה) ובבקרת איכות מים, היא משמשת לאיתור זיהומים ולוודא בטיחות מוצרים. במחקר, ספירת חיידקים מאפשרת לחקור גדילה, תמותה והשפעות סביבתיות עליהם.</p>
+                <p>תוצאות הספירה מבוטאות לרוב כריכוז (למשל, מספר תאים ליחידת נפח נוזל או ליחידת משקל מוצק) או כפיזור (מספר תאים ליחידת שטח). אין שיטה אחת מושלמת שמתאימה לכל מצב; הבחירה תלויה בסוג הדגימה, במשאבים הזמינים ובמטרת הבדיקה. חשוב לא להשוות ישירות תוצאות שהתקבלו משיטות שונות עבור אותה דגימה.</p>
+                <p>השיטות נחלקות לשתי קבוצות עיקריות: <strong>שיטות ישירות</strong>, הסופרות את התאים עצמם, ו<strong>שיטות עקיפות</strong> (שיידונו בחלק 2), המודדות פרמטר הקשור למספר התאים.</p>
+
+                <h3>שיטות ספירה ישירות</h3>
+
+                <h4>1. ספירה באמצעות מיקרוסקופ ותא ספירה</h4>
+                <p>בשיטה זו, משתמשים במיקרוסקופ ובתא ספירה מיוחד בעל נפח ידוע ומדויק, המחולק לרשת משבצות. תא מסוג פטרוף-האוזר (Petroff-Hausser) מותאם לפרוקריוטים, עם עומק רדוד (כ-0.02 מ"מ) המאפשר יצירת שכבה אחידה יחסית של חיידקים. סופרים את החיידקים במספר משבצות, מחשבים ממוצע למשבצת, ובעזרת נפח המשבצת וגורם המיהול (אם בוצע), מחשבים את הריכוז המקורי.</p>
+                <ul>
+                    <li><strong>יתרונות:</strong> פשוטה, מהירה יחסית, זולה, מאפשרת קבלת תוצאה מיידית. שימושית כשלא מכירים את תנאי הגידול של החיידקים. ניתן לעיתים להבחין במורפולוגיה.</li>
+                    <li><strong>חסרונות:</strong> עלולה להיות מייגעת ולא מדויקת בריכוזים נמוכים או גבוהים מדי. קשה לספור חיידקים קטנים מאוד. לרוב אינה מבחינה בין תאים חיים למתים (אלא אם משתמשים בצביעה מיוחדת). חלקיקים אחרים בדגימה עלולים להפריע לספירה. לא מתאימה לחיידקים שיוצרים צברים גדולים. הרגישות מוגבלת (קשה לספור מתחת לכ-10<sup>5</sup>-10<sup>6</sup> תאים למ"ל).</li>
+                </ul>
+
+                <h4>2. מונה קאולטר (Coulter Counter)</h4>
+                <p>מכשיר זה סופר חלקיקים (כולל חיידקים) המורחפים בנוזל מוליך. התאים עוברים בזה אחר זה דרך נקב זעיר בין שני מדורים עם אלקטרודות. כל תא שעובר משנה לרגע את ההתנגדות החשמלית בין המדורים, ושינוי זה נרשם כספירה. גודל השינוי תלוי בגודל החלקיק.</p>
+                 <ul>
+                    <li><strong>יתרונות:</strong> מהיר ומדויק יותר ממיקרוסקופ בתחום ריכוזים מסוים. מספק מידע על התפלגות גודל החלקיקים.</li>
+                    <li><strong>חסרונות:</strong> אינו מבחין בין תאים חיים למתים או בין חיידקים לחלקיקים אחרים בגודל דומה. לא מתאים לריכוזים גבוהים מאוד (סיכוי למעבר של מספר תאים יחד). לא סופר חיידקים בצברים. דורש נקב בגודל מותאם לגודל התאים הנספרים.</li>
+                 </ul>
+
+                <h4>3. ציטומטריית זרימה (Flow Cytometry / FACS)</h4>
+                <p>שיטה מתקדמת המאפשרת ספירה ואפיון של תאים בודדים בזרימה. תאים מוזרמים בזרם נוזל דק דרך קרן לייזר. המכשיר מודד את האופן שבו כל תא מפזר את האור ואת הפלורסנציה שהוא פולט (טבעית או לאחר סימון).</p>
+                <ul>
+                    <li><strong>פיזור אור קדמי (Forward Scatter - FSC):</strong> מעיד על גודל התא.</li>
+                    <li><strong>פיזור אור צידי (Side Scatter - SSC):</strong> מעיד על המורכבות הפנימית של התא (גרנולריות, אברונים).</li>
+                    <li><strong>פלורסנציה:</strong> ניתן למדוד פלורסנציה טבעית או כזו הנובעת מסימון התאים בצבעים פלורסנטיים או נוגדנים מסומנים, מה שמאפשר להבחין בין אוכלוסיות שונות או למדוד פעילות תאית.</li>
+                    <li><strong>FACS (Fluorescence-Activated Cell Sorting):</strong> גרסה של המכשיר המאפשרת גם למיין פיזית את התאים לאוכלוסיות שונות לאחר המדידה.</li>
+                </ul>
+                 <ul>
+                    <li><strong>יתרונות:</strong> מהירה מאוד (סופרת אלפי תאים בשנייה), רגישה ומדויקת. מספקת מידע רב על כל תא (גודל, מורכבות, מאפיינים פלורסנטיים). מאפשרת אנליזה של אוכלוסיות הטרוגניות ומיון תאים. ניתן להבדיל בין חיים/מתים בעזרת צבענים מתאימים.</li>
+                    <li><strong>חסרונות:</strong> מכשור יקר, דורש מיומנות גבוהה להפעלה ואנליזה. לא מתאים לדגימות עם ממסים אורגניים או שמנים. דגימות עכורות מאוד או כאלו המכילות צברים גדולים עלולות לגרום לבעיות (חסימת אור, סתימת הנחיר). תוצאות תלויות באיכות הסימון הפלורסנטי ובחירת הגלאים.</li>
+                </ul>
+
+                <h4>4. ספירה חיה על מצע אגר (Viable Count / Plate Count)</h4>
+                <p>שיטה זו סופרת רק חיידקים חיים המסוגלים להתרבות וליצור מושבה (Colony) נראית לעין על מצע גידול מוצק (אגר) בתנאים מסוימים. מניחים כי כל מושבה מקורה מיחידה אחת יוצרת מושבה (Colony Forming Unit - CFU), שיכולה להיות חיידק בודד, זוג, שרשרת או צבר קטן.</p>
+                 <p><strong>תהליך:</strong>
+                    1.  מבצעים סדרת מיהולים עשרוניים (1:10, 1:100 וכו') של הדגימה הנוזלית.
+                    2.  זורעים נפח ידוע (לרוב 0.1 מ"ל) מכל מיהול על צלחת פטרי עם אגר מתאים. ניתן להשתמש בשיטת פיזור (Spread Plate) או יציקה (Pour Plate).
+                    3.  מדגירים את הצלחות בתנאים אופטימליים (טמפרטורה, זמן, אטמוספירה).
+                    4.  סופרים את המושבות בצלחות המכילות מספר מושבות בתחום הניתן לספירה (בדרך כלל 30-300 CFU).
+                    5.  מחשבים את הריכוז המקורי ביחידות CFU/ml (לנוזל) או CFU/gr (למוצק), תוך התחשבות בנפח שנזרע ובמיהול.
+                 </p>
+                <ul>
+                    <li><strong>יתרונות:</strong> סופרת רק תאים חיים ובעלי יכולת התרבות (רלוונטי לבטיחות מזון, יעילות חיטוי וכו'). שיטה זולה ופשוטה יחסית לביצוע. מאפשרת להבחין במורפולוגיה של המושבות ולקבל מושג על סוגי החיידקים הקיימים. ניתן לבודד מושבות לבדיקות נוספות (זיהוי, עמידות לאנטיביוטיקה). יעילה גם לדגימות עכורות או המכילות חלקיקים.</li>
+                    <li><strong>חסרונות:</strong> סופרת רק חיידקים המסוגלים לגדול בתנאי המעבדה הספציפיים (מצע, טמפ', חמצן) - אחוז קטן מכלל החיידקים בטבע. התוצאות תלויות מאוד בתנאי הגידול ובזמן ההדגרה. זמן קבלת התוצאות ארוך (שעות עד ימים). רגישות מוגבלת (קשה לספור ריכוזים נמוכים מ-300 CFU/ml ללא שלב ריכוז). חשופה לשגיאות טכניות במהולים ובזריעה. ההנחה שכל מושבה מגיעה מתא בודד לא תמיד נכונה (CFU).</li>
+                </ul>
+                <p><strong>חשוב לזכור:</strong> התוצאה המתקבלת בספירה חיה מייצגת את מספר החיידקים שהצליחו לגדול וליצור מושבות *בתנאים הספציפיים* של הבדיקה, ולא בהכרח את כלל החיידקים החיים בדגימה המקורית.</p>
+            </div>
+        </details>
+
+        <!-- Flashcard Section -->
+        <div class="flashcard-section">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="card-face card-front">לחץ עליי כדי להתחיל</div>
+                    <div class="card-face card-back"></div>
+                </div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prevCardBtn">הקודם</button>
+                <span class="counter" id="cardCounter">כרטיסיה 0 / 0</span>
+                <button id="nextCardBtn">הבא</button>
+            </div>
+        </div>
+
+        <!-- MCQ Section -->
+        <div class="question-section mcq-section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcqSingleView">
+                <div class="question-display">
+                    <div class="question-text" id="mcqQuestionText">טוען שאלה...</div>
+                    <ul class="options-list" id="mcqOptionsList"></ul>
+                    <div class="feedback" id="mcqFeedback"></div>
+                    <div class="explanation" id="mcqExplanation"></div>
+                </div>
+                <div class="navigation-controls">
+                    <button id="prevMCQBtn">הקודם</button>
+                    <span class="counter" id="mcqCounter">שאלה 0 / 0</span>
+                    <button id="nextMCQBtn">הבא</button>
+                </div>
+                <div class="view-all-container">
+                    <button id="viewAllMCQsBtn">הצג את כל השאלות</button>
+                </div>
+            </div>
+            <div class="all-questions-container" id="allMCQsContainer">
+                 <!-- All MCQs will be populated here by JS -->
+                 <!-- Back button and title are added dynamically by JS -->
+            </div>
+        </div>
+
+        <!-- True/False Section -->
+        <div class="question-section tf-section">
+            <h2>שאלות נכון / לא נכון</h2>
+             <div id="tfSingleView">
+                <div class="question-display">
+                    <div class="question-text" id="tfQuestionText">טוען שאלה...</div>
+                    <div class="tf-buttons">
+                        <button id="trueBtn">נכון</button>
+                        <button id="falseBtn">לא נכון</button>
+                    </div>
+                    <div class="feedback" id="tfFeedback"></div>
+                    <div class="explanation" id="tfExplanation"></div>
+                </div>
+                <div class="navigation-controls">
+                    <button id="prevTFBtn">הקודם</button>
+                    <span class="counter" id="tfCounter">שאלה 0 / 0</span>
+                    <button id="nextTFBtn">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                    <button id="viewAllTFsBtn">הצג את כל השאלות</button>
+                </div>
+            </div>
+             <div class="all-questions-container" id="allTFsContainer">
+                 <!-- All T/F Questions will be populated here by JS -->
+                 <!-- Back button and title are added dynamically by JS -->
+            </div>
+        </div>
+
+    </div><!-- End Container -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Data ---
+            const flashcards = [
+                { front: "אומדן כמותי", back: "הערכה של מספר התאים (למשל חיידקים) בדגימה." },
+                { front: "שיטות ספירה ישירות", back: "שיטות המונות את התאים עצמם באופן ישיר (מיקרוסקופ, קאולטר, ציטומטריה, ספירה חיה)." },
+                { front: "שיטות ספירה עקיפות", back: "שיטות המודדות פרמטר שקשור למספר התאים, אך לא את התאים עצמם (למשל עכירות, מדידת תוצר מטבולי)." },
+                { front: "תא ספירה (למשל פטרוף-האוזר)", back: "לוחית זכוכית עם שקע בעל נפח ידוע ומדויק ורשת חרוטה, המשמש לספירת תאים במיקרוסקופ." },
+                { front: "מונה קאולטר (Coulter Counter)", back: "מכשיר הסופר תאים על ידי מדידת שינויים בהתנגדות חשמלית כאשר הם עוברים דרך נקב זעיר." },
+                { front: "ציטומטריית זרימה (Flow Cytometry)", back: "שיטה המודדת תכונות פיזור אור ופלורסנציה של תאים בודדים הזורמים במהירות דרך קרן לייזר." },
+                { front: "FACS", back: "סוג של ציטומטר זרימה המאפשר גם מיון פיזי של תאים על סמך תכונותיהם הנמדדות (Fluorescence-Activated Cell Sorting)." },
+                { front: "פיזור אור קדמי (FSC)", back: "מדד בציטומטריית זרימה הקשור לגודל התא." },
+                { front: "פיזור אור צידי (SSC)", back: "מדד בציטומטריית זרימה הקשור למורכבות הפנימית או הגרנולריות של התא." },
+                { front: "פלורסנציה", back: "פליטת אור מחומר (או תא) לאחר שעורר על ידי בליעת אור באורך גל מסוים." },
+                { front: "ספירה חיה (Viable Count)", back: "שיטת ספירה המבוססת על זריעת דגימה על מצע אגר וספירת המושבות שנוצרו מחיידקים חיים." },
+                { front: "מושבה (Colony)", back: "צבר נראה לעין של מיליוני חיידקים על מצע מוצק, שמקורו (בתיאוריה) מחיידק בודד או יחידה יוצרת מושבה." },
+                { front: "CFU (Colony Forming Unit)", back: "יחידה יוצרת מושבה. משמשת לכימות בספירה חיה, מכיוון שמושבה יכולה להיווצר מחיידק בודד או מקבוצת חיידקים." },
+                { front: "מצע אגר (Agar Medium)", back: "מצע גידול מוצק המכיל חומרי הזנה ואגר (מקריש), המשמש לגידול מיקרואורגניזמים בצלחות פטרי." },
+                { front: "מיהול עשרוני (Serial Dilution)", back: "סדרה של מיהולים בפקטור קבוע (לרוב 10), המשמשת להורדת ריכוז החיידקים לרמה שניתן לספור בשיטת הספירה החיה." },
+                { front: "שיטת פיזור (Spread Plate)", back: "טכניקה בספירה חיה בה נפח קטן של דגימה מונח על פני האגר המוצק ומפוזר באופן אחיד." },
+                { front: "שיטת יציקה (Pour Plate)", back: "טכניקה בספירה חיה בה הדגימה מעורבבת עם אגר מותך ואז נמזגת לצלחת פטרי להתמצקות." }
+            ];
+
+            const mcqs = [
+                 {
+                    question: "מהי המטרה העיקרית של שימוש בתא ספירה מסוג פטרוף-האוזר?",
+                    options: [
+                        "לספור תאי דם אדומים בלבד",
+                        "לאפשר ספירה של חיידקים בנפח ידוע ומדויק תחת מיקרוסקופ",
+                        "למדוד את עכירות התמיסה",
+                        "להפריד בין חיידקים חיים למתים ללא צביעה"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "תא פטרוף-האוזר תוכנן במיוחד לספירת פרוקריוטים (חיידקים) בנפח מוגדר תחת מיקרוסקופ."
+                },
+                {
+                    question: "על איזה עיקרון פיזיקלי מבוסס מונה הקאולטר (Coulter Counter)?",
+                    options: [
+                        "פיזור אור",
+                        "פליטת פלורסנציה",
+                        "שינוי בהתנגדות חשמלית",
+                        "יצירת מושבות על אגר"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "מונה קאולטר מודד את השינוי הרגעי בהתנגדות החשמלית כאשר חלקיק עובר דרך נקב זעיר."
+                },
+                {
+                    question: "בציטומטריית זרימה, איזה פרמטר משמש בעיקר כמדד לגודל התא?",
+                    options: [
+                        "פיזור אור צידי (SSC)",
+                        "עוצמת פלורסנציה ירוקה",
+                        "פיזור אור קדמי (FSC)",
+                        "זמן המעבר בקרן הלייזר"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "פיזור אור קדמי (Forward Scatter - FSC) הוא המדד העיקרי לגודל התא בציטומטריית זרימה."
+                },
+                {
+                    question: "מהו החיסרון המרכזי והמהותי ביותר של שיטת הספירה החיה על מצע אגר?",
+                    options: [
+                        "היא סופרת גם תאים מתים",
+                        "היא סופרת רק את החיידקים המסוגלים לגדול בתנאי המעבדה הספציפיים שסופקו",
+                        "היא דורשת מכשור יקר ומסובך",
+                        "היא מהירה מאוד ונותנת תוצאות תוך דקות"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "החיסרון העיקרי הוא שרוב החיידקים בטבע אינם גדלים בתנאי מעבדה סטנדרטיים, ולכן השיטה סופרת רק חלק קטן מהאוכלוסייה החיה."
+                },
+                {
+                    question: "מדוע מבצעים מיהולים עשרוניים לפני זריעה בשיטת הספירה החיה?",
+                    options: [
+                        "כדי להרוג חיידקים לא רצויים",
+                        "כדי להגיע לריכוז חיידקים שיניב מספר מושבות שניתן לספור (30-300)",
+                        "כדי לזרז את קצב גדילת המושבות",
+                        "כדי למדוד את גודל החיידקים"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "מטרת המיהולים היא להוריד את ריכוז החיידקים כך שבצלחת הפטרי יתקבל מספר מושבות אופטימלי לספירה אמינה."
+                },
+                 {
+                    question: "מה מייצג המונח CFU בספירה חיה?",
+                    options: [
+                        "ריכוז חיידקים כולל (חיים ומתים)",
+                        "מספר התאים הממוצע בכל מושבה",
+                        "יחידה יוצרת מושבה (שיכולה להיות תא בודד או קבוצת תאים)",
+                        "מהירות הגדילה של החיידק"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "CFU (Colony Forming Unit) משמש כיחידה בספירה חיה מכיוון שמושבה יכולה להתפתח לא רק מחיידק בודד אלא גם מצבר או שרשרת."
+                },
+                 {
+                    question: "איזו שיטת ספירה ישירה היא הרגישה והמהירה ביותר, ומספקת הכי הרבה מידע על כל תא בודד?",
+                    options: [
+                        "ספירה במיקרוסקופ עם תא פטרוף-האוזר",
+                        "ספירה חיה על מצע אגר",
+                        "מונה קאולטר",
+                        "ציטומטריית זרימה (Flow Cytometry)"
+                    ],
+                    correctAnswer: 3,
+                    explanation: "ציטומטריית זרימה היא המהירה ביותר (אלפי תאים בשנייה), רגישה מאוד, ומספקת מידע מפורט על גודל, מורכבות ופלורסנציה של כל תא."
+                },
+                {
+                    question: "מהו יתרון משמעותי של שיטת הספירה החיה על פני ספירה במיקרוסקופ?",
+                    options: [
+                        "היא מהירה יותר",
+                        "היא סופרת רק חיידקים חיים ובעלי יכולת התרבות",
+                        "היא דורשת פחות ציוד",
+                        "היא לא דורשת מיהולים"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "היתרון המרכזי של ספירה חיה הוא שהיא מתמקדת בחיידקים החיים והפעילים, בעוד שספירה במיקרוסקופ ללא צביעה מיוחדת סופרת גם מתים."
+                },
+                {
+                    question: "איזו שיטה אינה מאפשרת להבדיל בקלות בין חיידקים לחלקיקים אחרים בגודל דומה בדגימה?",
+                    options: [
+                        "ספירה חיה על אגר",
+                        "ציטומטריית זרימה עם סימון פלורסנטי ספציפי",
+                        "מונה קאולטר",
+                        "ספירה במיקרוסקופ (אם החלקיקים נראים שונה)"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "מונה קאולטר סופר כל חלקיק שעובר בנקב ומשנה את ההתנגדות, ללא יכולת להבדיל בין חיידק לחלקיק דומם באותו גודל."
+                },
+                 {
+                    question: "מה עלול לקרות אם משתמשים בשיטת היציקה (Pour Plate) עם אגר חם מדי?",
+                    options: [
+                        "החיידקים יגדלו מהר יותר",
+                        "האגר לא יתמצק כראוי",
+                        "חלק מהחיידקים עלולים למות מהחום",
+                        "רק חיידקים עמידים לחום יגדלו"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "יציקת אגר חם מדי עלולה להרוג חיידקים רגישים לחום, ולכן יש לקרר את האגר לטמפרטורה מתאימה לפני הערבוב עם הדגימה."
+                 },
+                 {
+                     question: "מדוע תוצאה של '0 מושבות' בספירה חיה אינה מעידה בהכרח על דגימה סטרילית?",
+                     options: [
+                        "כי השיטה סופרת רק חיידקים גדולים",
+                        "כי תמיד יש טעויות ספירה",
+                        "כי ייתכן שריכוז החיידקים נמוך מסף הרגישות של הבדיקה, או שהם לא גדלו בתנאים שסופקו",
+                        "כי השיטה אינה מבחינה בין חיים למתים"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "אי-צמיחה יכולה לנבוע מריכוז נמוך מאוד (מתחת לגבול הזיהוי של השיטה, למשל פחות מ-10-30 CFU/ml אם זרענו 0.1ml), או מכך שתנאי הגידול (מצע, טמפ') לא התאימו לחיידקים שבדגימה."
+                 },
+                 {
+                     question: "איזו שיטה מאפשרת למיין פיזית אוכלוסיות תאים שונות לדוגמאות נפרדות?",
+                     options: [
+                        "מיקרוסקופ עם תא ספירה",
+                        "ספירה חיה בשיטת פיזור",
+                        "מונה קאולטר",
+                        "FACS (Fluorescence-Activated Cell Sorting)"
+                     ],
+                     correctAnswer: 3,
+                     explanation: "FACS היא טכניקה המבוססת על ציטומטריית זרימה שמאפשרת לא רק לספור ולאפיין תאים, אלא גם למיין אותם פיזית."
+                 },
+                 {
+                     question: "מה נכון לגבי השוואת תוצאות בין שיטות ספירה שונות לאותה דגימה?",
+                     options: [
+                         "תמיד ניתן להשוות ישירות כי כל השיטות מודדות ריכוז",
+                         "מומלץ להימנע מהשוואה ישירה כי כל שיטה סופרת אוכלוסייה שונה (למשל חיים/מתים, ניתנים לגידול/כללי) ויש לה מגבלות שונות",
+                         "רק ספירה חיה ומיקרוסקופ נותנות תוצאות דומות",
+                         "השוואה אפשרית רק אם משתמשים באותו גורם מיהול"
+                     ],
+                     correctAnswer: 1,
+                     explanation: "בשל ההבדלים במה שכל שיטה סופרת (למשל, רק חיידקים ניתנים לגידול בספירה חיה, כל החלקיקים בגודל מסוים בקאולטר) והמגבלות של כל שיטה, השוואה ישירה של תוצאות עלולה להיות מטעה."
+                 },
+                 {
+                     question: "באיזו שיטה סביר להניח שנשתמש כדי לספור חיידקים בדגימת קרקע מורכבת, תוך התמקדות בחיידקים חיים המסוגלים לפרק צלולוז?",
+                     options: [
+                         "מונה קאולטר סטנדרטי",
+                         "מיקרוסקופ עם תא פטרוף-האוזר",
+                         "ספירה חיה על מצע אגר סלקטיבי המכיל צלולוז כמקור פחמן יחיד",
+                         "ציטומטריית זרימה ללא סימון פלורסנטי"
+                     ],
+                     correctAnswer: 2,
+                     explanation: "ספירה חיה על מצע סלקטיבי (שמעודד גדילה של קבוצה מסוימת ומעכב אחרים) היא הדרך המקובלת לספור אוכלוסייה פונקציונלית ספציפית (כמו מפרקי צלולוז) מתוך סביבה מורכבת."
+                 },
+                  {
+                     question: "סטודנט ספר 62 מושבות בצלחת שנזרעה מ-0.1 מל של מיהול 10 בחזקת מינוס 5. מה ריכוז ה-CFU במל בדגימה המקורית?",
+                     options: [
+                        "6.2 כפול 10 בחזקת 5",
+                        "6.2 כפול 10 בחזקת 6",
+                        "6.2 כפול 10 בחזקת 7",
+                        "620"
+                     ],
+                     correctAnswer: 2,
+                     explanation: "החישוב הוא: (מספר מושבות / נפח שנזרע במל) * (1 / גורם המיהול) = (62 / 0.1) * (1 / 10^-5) = 620 * 10^5 = 6.2 * 10^7 CFU/ml."
+                 }
+            ];
+
+            const trueFalseQuestions = [
+                { statement: "ספירה באמצעות מיקרוסקופ מאפשרת תמיד להבחין בבירור בין תאים חיים לתאים מתים ללא צורך בצביעה.", answer: false, explanation: "ספירת מיקרוסקופ סטנדרטית אינה מבחינה בין חיים למתים; נדרשת צביעה מיוחדת (כמו צבעי חיוניות) לשם כך." },
+                { statement: "שיטת הספירה החיה על מצע אגר סופרת את כל החיידקים הנוכחים בדגימה המקורית.", answer: false, explanation: "ספירה חיה סופרת רק חיידקים חיים המסוגלים לגדול וליצור מושבה בתנאי המעבדה הספציפיים שסופקו." },
+                { statement: "ציטומטריית זרימה (FACS) יכולה לספק מידע על גודל התא ומורכבותו הפנימית.", answer: true, explanation: "פיזור אור קדמי (FSC) קשור לגודל, ופיזור אור צידי (SSC) קשור למורכבות הפנימית." },
+                { statement: "המונח CFU מתייחס תמיד לחיידק בודד שהתפתח למושבה.", answer: false, explanation: "CFU (יחידה יוצרת מושבה) יכולה להיות חיידק בודד, אך גם זוג, שרשרת או צבר קטן של חיידקים שיוצרים יחד מושבה אחת." },
+                { statement: "מונה קאולטר מתאים במיוחד לספירת חיידקים בריכוזים נמוכים מאוד (פחות מ-100 תאים למל).", answer: false, explanation: "מונה קאולטר פחות מדויק בריכוזים נמוכים מאוד. שיטות כמו ספירה חיה (עם ריכוז) או ציטומטריה עשויות להיות מתאימות יותר." },
+                { statement: "בשיטת היציקה (Pour Plate), החיידקים גדלים רק על פני שטח האגר.", answer: false, explanation: "בשיטת היציקה, החיידקים מעורבבים בתוך האגר הנוזלי לפני התמצקותו, ולכן מושבות יכולות להתפתח גם בתוך האגר ולא רק על פני השטח." },
+                { statement: "ביצוע מיהולים עשרוניים בספירה חיה נועד להגביר את רגישות השיטה.", answer: false, explanation: "מיהולים נועדו להוריד את ריכוז החיידקים לתחום שניתן לספור (30-300 מושבות), אך הם למעשה *מורידים* את רגישות השיטה (מעלים את הגבול התחתון לזיהוי)." },
+                { statement: "ציטומטריית זרימה היא שיטה זולה ופשוטה שאינה דורשת הכשרה מיוחדת.", answer: false, explanation: "ציטומטריית זרימה דורשת מכשור יקר והכשרה ומיומנות גבוהה להפעלה וניתוח נתונים." },
+                { statement: "ניתן להשתמש בספירה חיה כדי לאמוד את כמות החיידקים בדגימות מזון מוצקות.", answer: true, explanation: "כן, לאחר המסה וריסוק של הדגימה המוצקה בנוזל סטרילי וביצוע מיהולים, ניתן לבצע ספירה חיה. התוצאה תבוטא ב-CFU לגרם." },
+                { statement: "תא ספירה פטרוף-האוזר מיועד בעיקר לספירת תאים אאוקריוטים גדולים כמו תאי דם.", answer: false, explanation: "תא פטרוף-האוזר מיועד לספירת פרוקריוטים (חיידקים) בשל עומקו הרדוד. תאי דם נספרים בתאים עמוקים יותר (כמו המוציטומטר)." },
+                { statement: "זמן הדגרה ארוך יותר בספירה חיה תמיד יביא לתוצאה מדויקת יותר.", answer: false, explanation: "זמן הדגרה ארוך מדי עלול לגרום להתמזגות מושבות או למוות של חיידקים עקב דלדול נוטריינטים, מה שפוגע בדיוק. נדרש זמן אופטימלי." },
+                { statement: "FACS מאפשר לא רק לספור תאים אלא גם למיין אותם פיזית.", answer: true, explanation: "האות S ב-FACS מייצגת Sorting (מיון). המכשיר יכול להפריד פיזית תאים בעלי מאפיינים שונים." },
+                { statement: "אם דגימה עכורה מאוד, ספירה במיקרוסקופ תהיה השיטה המדויקת ביותר.", answer: false, explanation: "עכירות גבוהה וחלקיקים מפריעים לספירה מדויקת במיקרוסקופ. ספירה חיה עשויה להיות עדיפה במקרה זה, כי החלקיקים לא יצמחו." },
+                { statement: "בחירת מצע הגידול ותנאי ההדגרה משפיעה באופן משמעותי על תוצאת הספירה החיה.", answer: true, explanation: "תנאים שונים (מצע, טמפ', חמצן) יעודדו גדילה של חיידקים שונים, ולכן התוצאה תלויה מאוד בתנאים שנבחרו." },
+                 { statement: "כל השיטות הישירות לאומדן כמותי נותנות תוצאות תוך דקות ספורות.", answer: false, explanation: "רק ספירה במיקרוסקופ, קאולטר וציטומטריה הן מהירות יחסית. ספירה חיה דורשת זמן הדגרה ארוך (שעות עד ימים)." }
+            ];
+
+
+            // --- Flashcard Logic ---
+            const flashcardElement = document.getElementById('flashcard'); // Renamed to avoid conflict
+            const cardFront = flashcardElement.querySelector('.card-front');
+            const cardBack = flashcardElement.querySelector('.card-back');
+            const prevCardBtn = document.getElementById('prevCardBtn');
+            const nextCardBtn = document.getElementById('nextCardBtn');
+            const cardCounter = document.getElementById('cardCounter');
+            let currentCardIndex = 0;
+
+            function displayCard(index) {
+                if (flashcards.length === 0) {
+                     cardFront.textContent = "אין כרטיסיות";
+                     cardBack.textContent = "";
+                     cardCounter.textContent = "כרטיסיה 0 / 0";
+                     prevCardBtn.disabled = true;
+                     nextCardBtn.disabled = true;
+                     return;
+                };
+                const card = flashcards[index];
+                cardFront.textContent = card.front;
+                cardBack.textContent = card.back;
+                flashcardElement.classList.remove('is-flipped');
+                cardCounter.textContent = `כרטיסיה ${index + 1} / ${flashcards.length}`;
+                prevCardBtn.disabled = index === 0;
+                nextCardBtn.disabled = index === flashcards.length - 1;
+            }
+
+            flashcardElement.addEventListener('click', () => {
+                 if (flashcards.length > 0) { // Only flip if there are cards
+                     flashcardElement.classList.toggle('is-flipped');
+                 }
+            });
+
+            prevCardBtn.addEventListener('click', () => {
+                if (currentCardIndex > 0) {
+                    currentCardIndex--;
+                    displayCard(currentCardIndex);
+                }
+            });
+
+            nextCardBtn.addEventListener('click', () => {
+                if (currentCardIndex < flashcards.length - 1) {
+                    currentCardIndex++;
+                    displayCard(currentCardIndex);
+                }
+            });
+
+
+            // --- MCQ Logic ---
+            const mcqQuestionText = document.getElementById('mcqQuestionText');
+            const mcqOptionsList = document.getElementById('mcqOptionsList');
+            // Feedback/Explanation elements are selected within displayMCQ/showMCQFeedback
+            const prevMCQBtn = document.getElementById('prevMCQBtn');
+            const nextMCQBtn = document.getElementById('nextMCQBtn');
+            const mcqCounter = document.getElementById('mcqCounter');
+            const viewAllMCQsBtn = document.getElementById('viewAllMCQsBtn');
+            const allMCQsContainer = document.getElementById('allMCQsContainer');
+            const mcqSingleView = document.getElementById('mcqSingleView');
+            // Back button is created dynamically
+
+            let currentMCQIndex = 0;
+            let mcqAnswers = new Array(mcqs.length).fill(null); // Store user answers {selectedIndex: index, correct: bool}
+
+            function displayMCQ(index, container = mcqSingleView, renderAll = false) {
+                if (mcqs.length === 0) return;
+
+                const questionData = mcqs[index];
+                // Find elements within the correct container (single view or specific item in all view)
+                const questionTextEl = container.querySelector('.question-text');
+                const optionsListEl = container.querySelector('.options-list');
+                const feedbackEl = container.querySelector('.feedback');
+                const explanationEl = container.querySelector('.explanation');
+
+                if (!questionTextEl || !optionsListEl || !feedbackEl || !explanationEl) {
+                    console.error("Error finding MCQ elements in container for index:", index, container);
+                    return; // Prevent errors if elements aren't found
+                }
+
+                questionTextEl.textContent = questionData.question;
+                optionsListEl.innerHTML = ''; // Clear previous options
+
+                questionData.options.forEach((option, i) => {
+                    const li = document.createElement('li');
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.dataset.index = i;
+                    // Add event listener only in single view or if not already answered in all view
+                    if (!renderAll || (renderAll && mcqAnswers[index] === null)) {
+                        button.onclick = () => checkMCQAnswer(index, i, container);
+                    } else {
+                        button.onclick = null; // Remove listener if already answered
+                    }
+                    li.appendChild(button);
+                    optionsListEl.appendChild(li);
+                });
+
+                 // Update counter only for single view
+                if (container === mcqSingleView) {
+                    mcqCounter.textContent = `שאלה ${index + 1} / ${mcqs.length}`;
+                    prevMCQBtn.disabled = index === 0;
+                    nextMCQBtn.disabled = index === mcqs.length - 1;
+                }
+
+                 // Reset feedback and explanation visibility
+                 feedbackEl.style.display = 'none'; // Use style for initial hide
+                 explanationEl.style.display = 'none'; // Use style for initial hide
+                 feedbackEl.className = 'feedback'; // Reset classes
+
+
+                // Restore state if already answered
+                if (mcqAnswers[index] !== null) {
+                    const { selectedIndex, correct } = mcqAnswers[index];
+                    const buttons = optionsListEl.querySelectorAll('button');
+                    buttons.forEach(btn => {
+                        btn.disabled = true; // Disable all buttons
+                        const btnIndex = parseInt(btn.dataset.index);
+                        if (btnIndex === selectedIndex) {
+                            btn.classList.add(correct ? 'correct' : 'incorrect');
+                         }
+                         // Highlight the correct answer if the user was wrong
+                         if (!correct && btnIndex === questionData.correctAnswer) {
+                             btn.classList.add('correct');
+                         }
+                    });
+                    showMCQFeedback(index, correct, container); // Show stored feedback/explanation
+                } else {
+                     // Ensure buttons are enabled if not answered
+                     const buttons = optionsListEl.querySelectorAll('button');
+                     buttons.forEach(btn => btn.disabled = false);
+                }
+            }
+
+            function checkMCQAnswer(questionIndex, selectedIndex, container = mcqSingleView) {
+                 if (mcqAnswers[questionIndex] !== null) return; // Already answered
+
+                 const questionData = mcqs[questionIndex];
+                 const correct = selectedIndex === questionData.correctAnswer;
+                 mcqAnswers[questionIndex] = { selectedIndex, correct };
+
+                 const optionsListEl = container.querySelector('.options-list');
+                 const buttons = optionsListEl.querySelectorAll('button');
+
+                 buttons.forEach(button => {
+                     button.disabled = true; // Disable all buttons after selection
+                     const buttonIndex = parseInt(button.dataset.index);
+
+                     if (buttonIndex === selectedIndex) {
+                         button.classList.add(correct ? 'correct' : 'incorrect');
+                     }
+                     // Highlight the correct answer if the user was wrong
+                     if (!correct && buttonIndex === questionData.correctAnswer) {
+                          button.classList.add('correct');
+                     }
+                 });
+                 // Show feedback and explanation immediately
+                 showMCQFeedback(questionIndex, correct, container);
+            }
+
+             function showMCQFeedback(questionIndex, correct, container) {
+                const questionData = mcqs[questionIndex];
+                const feedbackEl = container.querySelector('.feedback');
+                const explanationEl = container.querySelector('.explanation');
+
+                if (!feedbackEl || !explanationEl) return; // Safety check
+
+                 feedbackEl.textContent = correct ? "נכון!" : "לא נכון.";
+                 feedbackEl.className = `feedback visible ${correct ? 'correct' : 'incorrect'}`; // Add 'visible' class
+                 explanationEl.textContent = `הסבר: ${questionData.explanation}`;
+                 explanationEl.className = 'explanation visible'; // Add 'visible' class
+
+                 // Ensure display is set to block via CSS .visible rule
+                 feedbackEl.style.display = ''; // Let CSS handle display
+                 explanationEl.style.display = ''; // Let CSS handle display
+            }
+
+            prevMCQBtn.addEventListener('click', () => {
+                if (currentMCQIndex > 0) {
+                    currentMCQIndex--;
+                    displayMCQ(currentMCQIndex, mcqSingleView); // Explicitly pass container
+                }
+            });
+
+            nextMCQBtn.addEventListener('click', () => {
+                if (currentMCQIndex < mcqs.length - 1) {
+                    currentMCQIndex++;
+                    displayMCQ(currentMCQIndex, mcqSingleView); // Explicitly pass container
+                }
+            });
+
+             viewAllMCQsBtn.addEventListener('click', () => {
+                mcqSingleView.style.display = 'none';
+                allMCQsContainer.style.display = 'block';
+                allMCQsContainer.innerHTML = ''; // Clear previous content
+
+                // Add Back Button
+                const backButton = document.createElement('button');
+                backButton.textContent = 'חזור לתצוגה רגילה';
+                backButton.onclick = () => {
+                    allMCQsContainer.style.display = 'none';
+                    mcqSingleView.style.display = 'block';
+                     displayMCQ(currentMCQIndex, mcqSingleView); // Re-display current single question
+                };
+                 allMCQsContainer.appendChild(backButton);
+
+                 // Add Title
+                 const title = document.createElement('h3');
+                 title.textContent = 'כל השאלות הרב-ברירה';
+                 allMCQsContainer.appendChild(title);
+
+
+                mcqs.forEach((q, index) => {
+                    const itemContainer = document.createElement('div');
+                    itemContainer.className = 'question-item';
+                    // Simplified innerHTML, elements are found later
+                    itemContainer.innerHTML = `
+                        <div class="question-text"></div>
+                        <ul class="options-list"></ul>
+                        <div class="feedback"></div>
+                        <div class="explanation"></div>
+                    `;
+                     // Set question number separately for clarity
+                     const qTextEl = itemContainer.querySelector('.question-text');
+                     if(qTextEl) qTextEl.innerHTML = `<strong>${index + 1}.</strong> `; // Number added before text
+
+                    allMCQsContainer.appendChild(itemContainer);
+                    // Pass itemContainer to displayMCQ so it knows where to render
+                    displayMCQ(index, itemContainer, true); // Pass true for renderAll flag
+                });
+             });
+
+
+            // --- True/False Logic ---
+            const tfQuestionText = document.getElementById('tfQuestionText');
+            const trueBtn = document.getElementById('trueBtn');
+            const falseBtn = document.getElementById('falseBtn');
+            // Feedback/Explanation elements are selected within displayTF/showTFFeedback
+            const prevTFBtn = document.getElementById('prevTFBtn');
+            const nextTFBtn = document.getElementById('nextTFBtn');
+            const tfCounter = document.getElementById('tfCounter');
+            const viewAllTFsBtn = document.getElementById('viewAllTFsBtn');
+            const allTFsContainer = document.getElementById('allTFsContainer');
+            const tfSingleView = document.getElementById('tfSingleView');
+            // Back button created dynamically
+
+            let currentTFIndex = 0;
+            let tfAnswers = new Array(trueFalseQuestions.length).fill(null); // Store user answers {choice: bool, correct: bool}
+
+            function displayTF(index, container = tfSingleView, renderAll = false) {
+                if (trueFalseQuestions.length === 0) return;
+
+                const questionData = trueFalseQuestions[index];
+                 const questionTextEl = container.querySelector('.question-text');
+                 const feedbackEl = container.querySelector('.feedback');
+                 const explanationEl = container.querySelector('.explanation');
+
+                 // Button elements need careful handling for single vs all view
+                 let currentTrueBtn, currentFalseBtn;
+                 if (renderAll) {
+                     // Find buttons within this specific item container
+                     currentTrueBtn = container.querySelector(`button[data-choice='true']`);
+                     currentFalseBtn = container.querySelector(`button[data-choice='false']`);
+                 } else {
+                     currentTrueBtn = trueBtn; // Use the single view buttons
+                     currentFalseBtn = falseBtn;
+                 }
+
+                  if (!questionTextEl || !currentTrueBtn || !currentFalseBtn || !feedbackEl || !explanationEl) {
+                     console.error("Error finding T/F elements in container for index:", index, container);
+                     return; // Prevent errors
+                 }
+
+                questionTextEl.textContent = questionData.statement;
+
+                 // Update counter only for single view
+                 if (!renderAll) {
+                     tfCounter.textContent = `שאלה ${index + 1} / ${trueFalseQuestions.length}`;
+                     prevTFBtn.disabled = index === 0;
+                     nextTFBtn.disabled = index === trueFalseQuestions.length - 1;
+                 }
+
+                // Reset button states and feedback
+                currentTrueBtn.disabled = false;
+                currentFalseBtn.disabled = false;
+                currentTrueBtn.className = ''; // Remove previous result classes
+                currentFalseBtn.className = ''; // Remove previous result classes
+                 feedbackEl.style.display = 'none'; // Use style for initial hide
+                 explanationEl.style.display = 'none'; // Use style for initial hide
+                feedbackEl.className = 'feedback';
+
+                 // Add event listeners only in single view or if not already answered in all view
+                 if (!renderAll || (renderAll && tfAnswers[index] === null)) {
+                     currentTrueBtn.onclick = () => checkTFAnswer(index, true, container);
+                     currentFalseBtn.onclick = () => checkTFAnswer(index, false, container);
+                 } else {
+                     currentTrueBtn.onclick = null; // Remove listener if already answered
+                     currentFalseBtn.onclick = null;
+                 }
+
+
+                // Restore state if already answered
+                if (tfAnswers[index] !== null) {
+                    const { choice, correct } = tfAnswers[index];
+                    currentTrueBtn.disabled = true;
+                    currentFalseBtn.disabled = true;
+                    if (choice === true) {
+                        currentTrueBtn.classList.add(correct ? 'correct' : 'incorrect');
+                    } else {
+                        currentFalseBtn.classList.add(correct ? 'correct' : 'incorrect');
+                    }
+                     // Highlight correct button if user was wrong
+                     if (!correct) {
+                         if (questionData.answer === true) {
+                             currentTrueBtn.classList.add('correct');
+                         } else {
+                             currentFalseBtn.classList.add('correct');
+                         }
+                     }
+                    showTFFeedback(index, correct, container); // Show stored feedback/explanation
+                }
+            }
+
+            function checkTFAnswer(questionIndex, choice, container = tfSingleView) {
+                 if (tfAnswers[questionIndex] !== null) return; // Already answered
+
+                const questionData = trueFalseQuestions[questionIndex];
+                const correct = choice === questionData.answer;
+                tfAnswers[questionIndex] = { choice, correct };
+
+                 let currentTrueBtn, currentFalseBtn;
+                  if (container === tfSingleView) {
+                       currentTrueBtn = trueBtn;
+                       currentFalseBtn = falseBtn;
+                  } else {
+                      // Find buttons within the specific item container in 'all view'
+                      currentTrueBtn = container.querySelector(`button[data-choice='true']`);
+                      currentFalseBtn = container.querySelector(`button[data-choice='false']`);
+                  }
+
+                  if (!currentTrueBtn || !currentFalseBtn) return; // Safety check
+
+                currentTrueBtn.disabled = true;
+                currentFalseBtn.disabled = true;
+
+                if (choice === true) {
+                    currentTrueBtn.classList.add(correct ? 'correct' : 'incorrect');
+                } else {
+                    currentFalseBtn.classList.add(correct ? 'correct' : 'incorrect');
+                }
+
+                 // Highlight correct button if user was wrong
+                if (!correct) {
+                     if (questionData.answer === true) {
+                         currentTrueBtn.classList.add('correct');
+                     } else {
+                         currentFalseBtn.classList.add('correct');
+                     }
+                 }
+                 // Show feedback and explanation immediately
+                 showTFFeedback(questionIndex, correct, container);
+            }
+
+            function showTFFeedback(questionIndex, correct, container) {
+                 const questionData = trueFalseQuestions[questionIndex];
+                 const feedbackEl = container.querySelector('.feedback');
+                 const explanationEl = container.querySelector('.explanation');
+
+                 if (!feedbackEl || !explanationEl) return; // Safety check
+
+                feedbackEl.textContent = correct ? "נכון!" : "לא נכון.";
+                feedbackEl.className = `feedback visible ${correct ? 'correct' : 'incorrect'}`; // Add 'visible' class
+                explanationEl.textContent = `הסבר: ${questionData.explanation}`;
+                explanationEl.className = 'explanation visible'; // Add 'visible' class
+
+                // Ensure display is set to block via CSS .visible rule
+                feedbackEl.style.display = ''; // Let CSS handle display
+                explanationEl.style.display = ''; // Let CSS handle display
+             }
+
+
+            prevTFBtn.addEventListener('click', () => {
+                if (currentTFIndex > 0) {
+                    currentTFIndex--;
+                    displayTF(currentTFIndex, tfSingleView); // Explicitly pass container
+                }
+            });
+
+            nextTFBtn.addEventListener('click', () => {
+                if (currentTFIndex < trueFalseQuestions.length - 1) {
+                    currentTFIndex++;
+                    displayTF(currentTFIndex, tfSingleView); // Explicitly pass container
+                }
+            });
+
+             viewAllTFsBtn.addEventListener('click', () => {
+                 tfSingleView.style.display = 'none';
+                 allTFsContainer.style.display = 'block';
+                 allTFsContainer.innerHTML = ''; // Clear previous
+
+                // Add Back button
+                 const backButton = document.createElement('button');
+                 backButton.textContent = 'חזור לתצוגה רגילה';
+                 backButton.onclick = () => {
+                     allTFsContainer.style.display = 'none';
+                     tfSingleView.style.display = 'block';
+                     displayTF(currentTFIndex, tfSingleView); // Re-display current single question
+                 };
+                 allTFsContainer.appendChild(backButton);
+
+                // Add Title
+                 const title = document.createElement('h3');
+                 title.textContent = 'כל שאלות הנכון / לא נכון';
+                 allTFsContainer.appendChild(title);
+
+                 trueFalseQuestions.forEach((q, index) => {
+                     const itemContainer = document.createElement('div');
+                     itemContainer.className = 'question-item';
+                     // Include buttons inside each item for 'all view'
+                     itemContainer.innerHTML = `
+                         <div class="question-text"></div>
+                         <div class="tf-buttons">
+                             <button data-choice="true">נכון</button>
+                             <button data-choice="false">לא נכון</button>
+                         </div>
+                         <div class="feedback"></div>
+                         <div class="explanation"></div>
+                     `;
+                     // Set question number separately for clarity
+                     const qTextEl = itemContainer.querySelector('.question-text');
+                     if(qTextEl) qTextEl.innerHTML = `<strong>${index + 1}.</strong> `; // Number added before text
+
+                     allTFsContainer.appendChild(itemContainer);
+                     // Pass itemContainer to displayTF
+                     displayTF(index, itemContainer, true); // Pass true for renderAll flag
+                 });
+             });
+
+
+            // --- Initialization ---
+            if (flashcards.length > 0) {
+                 displayCard(0);
+            } else {
+                 // Handle no flashcards case
+                 displayCard(0); // Will show "No flashcards" message inside the function
+            }
+
+             if (mcqs.length > 0) {
+                 displayMCQ(0, mcqSingleView); // Initial display in single view
+             } else {
+                 mcqQuestionText.textContent = "אין שאלות רב-ברירה להצגה";
+                 mcqCounter.textContent = "שאלה 0 / 0";
+                 prevMCQBtn.disabled = true;
+                 nextMCQBtn.disabled = true;
+                 viewAllMCQsBtn.disabled = true;
+                 mcqOptionsList.innerHTML = ''; // Clear any potential list items
+             }
+
+             if (trueFalseQuestions.length > 0) {
+                 displayTF(0, tfSingleView); // Initial display in single view
+             } else {
+                 tfQuestionText.textContent = "אין שאלות נכון/לא נכון להצגה";
+                 tfCounter.textContent = "שאלה 0 / 0";
+                 trueBtn.disabled = true;
+                 falseBtn.disabled = true;
+                 prevTFBtn.disabled = true;
+                 nextTFBtn.disabled = true;
+                 viewAllTFsBtn.disabled = true;
+             }
+        });
+    </script>
+
+</body>
+</html>

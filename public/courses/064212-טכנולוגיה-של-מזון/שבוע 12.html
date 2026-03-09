@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 12: ריכוז, ייבוש וניקוי במקום (CIP)</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 12: ריכוז, ייבוש וניקוי במקום (CIP)</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 12 ---
+
+        const flashcardData = [
+            { term: "ריכוז מזון", definition: "תהליך הוצאת חלק מהמים ממזון נוזלי, במטרה להעלות את אחוז המוצקים." },
+            { term: "ייבוש מזון", definition: "תהליך הוצאת רוב המים ממזון (נוזלי או מוצק) עד לרמת לחות נמוכה מאוד (לרוב מתחת ל-5-15%), המאפשר שימור לטווח ארוך." },
+            { term: "מטרות הריכוז", definition: "הקטנת משקל ונפח (חיסכון לוגיסטי), הכנה לעיבוד נוסף (כמו ייבוש), שימור חלקי (בשל ירידת aw), שיפור תכונות סנסוריות (טעם מרוכז)." },
+            { term: "שיטות ריכוז", definition: "איוד (Evaporation), סינון ממברנלי (אולטרה פילטרציה, אוסמוזה הפוכה), ריכוז בהקפאה (Freeze Concentration)." },
+            { term: "איוד (Evaporation)", definition: "שיטת ריכוז המבוססת על הרתחת הנוזל ואידוי המים, לרוב בתת-לחץ (ואקום) כדי לאפשר רתיחה בטמפרטורה נמוכה יותר." },
+            { term: "Fouling (באיוד)", definition: "הצטברות משקעים של חומר (חלבונים, סוכרים, מינרלים) על דפנות המאייד, הפוגעת ביעילות מעבר החום." },
+            { term: "איוד רב-דרגי (Multi-effect Evaporation)", definition: "שיטה חסכונית באנרגיה שבה האדים היוצאים מדרגת איוד אחת משמשים לחימום דרגת האיוד הבאה, הפועלת בלחץ (וטמפרטורה) נמוכים יותר." },
+            { term: "Rising Film Evaporator", definition: "מאייד שבו הנוזל עולה כלפי מעלה בצינורות חימום והאדים דוחפים אותו למעלה." },
+            { term: "Falling Film Evaporator", definition: "מאייד שבו הנוזל מוזן לחלק העליון של צינורות חימום וזורם מטה כפילם דק על הדופן הפנימית." },
+            { term: "השבת ארומה (Aroma Recovery)", definition: "תהליך זיקוק או ספיחה של רכיבי ארומה נדיפים שהתנדפו יחד עם המים בתהליך הריכוז, במטרה להחזירם למוצר המרוכז." },
+            { term: "אולטרה-פילטרציה (UF)", definition: "שיטת סינון ממברנלית המפרידה מולקולות גדולות (חלבונים, עמילנים) ממים ומולקולות קטנות (מלחים, סוכרים)." },
+            { term: "אוסמוזה הפוכה (RO - Reverse Osmosis)", definition: "שיטת סינון ממברנלית המפרידה כמעט את כל המומסים (מלחים, סוכרים) ממים, באמצעות לחץ גבוה כנגד ממברנה חדירה למחצה." },
+            { term: "ריכוז בהקפאה (Freeze Concentration)", definition: "שיטת ריכוז עדינה שבה מקפיאים חלק מהמים במזון לגבישי קרח טהורים, ואז מפרידים את הקרח מהתרכיז הנוזלי. שומרת היטב על איכות." },
+            { term: "שיטות ייבוש", definition: "ייבוש באוויר חם, ייבוש במגע עם משטח חם, ייבוש בהתזה (Spray Drying), ייבוש בהקפאה (Freeze Drying / Lyophilization)." },
+            { term: "ייבוש באוויר חם", definition: "העברת אוויר חם ויבש על פני המזון (במגשים, תוף מסתובב, מצע מרחף) הגורם לאידוי המים מפני השטח ודיפוזיה של מים מבפנים." },
+            { term: "ייבוש במגע עם משטח חם", definition: "הנחת המזון על משטח מחומם (למשל תוף מסתובב - Drum Dryer) והולכת חום מהמשטח למזון הגורמת לאידוי המים." },
+            { term: "ייבוש בהתזה (Spray Drying)", definition: "התזת המזון הנוזלי כטיפות זעירות לתוך זרם אוויר חם. המים מתאדים במהירות ומתקבלת אבקה דקה. נפוץ לחלב, קפה נמס." },
+            { term: "ייבוש בהקפאה (Freeze Drying)", definition: "תהליך המראה (סובלימציה) - הקפאת המזון ואז הוצאת הקרח כאדים ישירות ממצב מוצק לגז, על ידי הפעלת ואקום גבוה. שומר על מבנה ואיכות בצורה הטובה ביותר." },
+            { term: "שינויים פיזיקליים בייבוש", definition: "התכווצות, שינוי צורה, התקשות פני השטח, פגיעה ביכולת ספיחת מים מחדש (Rehydration)." },
+            { term: "שינויים כימיים/אנזימטיים בייבוש", definition: "השחמה (מייארד, קרמליזציה), חמצון ליפידים, איבוד ויטמינים ורכיבי ארומה, דנטורציית חלבונים." },
+            { term: "ניקוי (Cleaning)", definition: "הסרה מוחלטת של משקעים ושאריות מזון (לכלוך) מהמשטחים." },
+            { term: "חיטוי (Sanitation/Disinfection)", definition: "הפחתת כמות המיקרואורגניזמים על משטח לרמה בטוחה שאינה מסכנת את בריאות הציבור או את איכות המוצר." },
+            { term: "סטריליזציה (ציוד)", definition: "הרס מוחלט של כל צורות החיים המיקרוביאליות, כולל נבגים עמידים." },
+            { term: "CIP (Cleaning In Place)", definition: "ניקוי וחיטוי של ציוד וצנרת ללא צורך בפירוק או פתיחה, תוך שימוש בזרימה של חומרי ניקוי וחיטוי." },
+            { term: "יתרונות CIP", definition: "אמינות וחזרתיות גבוהות יותר מניקוי ידני, בטיחות לעובדים, יעילות (חיסכון בזמן, מים, חומרים)." },
+            { term: "TACT (עקרונות הניקוי)", definition: "ארבעת הגורמים הקריטיים ליעילות הניקוי: Time (זמן מגע), Action (פעולה מכנית/זרימה), Concentration (ריכוז חומר הניקוי), Temperature (טמפרטורה)." },
+            { term: "Action (ב-CIP)", definition: "האנרגיה המכנית המופעלת על ידי זרימת נוזל הניקוי (מהירות וטורבולנציה בצנרת) או התזה (במכלים - Spray Balls) להסרת הלכלוך." },
+            { term: "מהירות זרימה מינימלית (CIP)", definition: "בצנרת, נדרשת מהירות זרימה מינימלית (לרוב 1.5 מטר לשנייה) להבטחת זרימה טורבולנטית ויעילות ניקוי." },
+            { term: "חומרי ניקוי בסיסיים (CIP)", definition: "לרוב סודה קאוסטית (NaOH), יעילים בהמסת חלבונים ושומנים." },
+            { term: "חומרי ניקוי חומציים (CIP)", definition: "לרוב חומצה חנקתית (HNO3) או זרחתית (H3PO4), יעילים בהמסת משקעי אבנית ומינרלים." },
+            { term: "חומרי חיטוי (CIP)", definition: "לרוב חומצה פראצטית (תערובת חומצה אצטית ומי חמצן) או היפוכלוריט (אקונומיקה, פחות נפוץ). לעיתים משתמשים בחיטוי תרמי (מים חמים)." },
+            { term: "שלבי CIP טיפוסיים", definition: "שטיפה ראשונית (מים), ניקוי בסיסי, שטיפת ביניים (מים), ניקוי חומצי (לסירוגין או לפי צורך), שטיפה סופית (מים), חיטוי (לרוב לפני ייצור)." },
+            { term: "Spray Ball", definition: "מתז כדורי קבוע המותקן במכלים ומפזר את נוזל הניקוי על הדפנות בזרימה למינרית (פילם)." },
+            { term: "מתזים דינמיים (Rotary Jet Heads)", definition: "מתזים מסתובבים במכלים היוצרים סילוני ניקוי חזקים הפוגעים בדפנות ומספקים פעולה מכנית יעילה יותר מ-Spray Ball." },
+            { term: "קצה עיוור (Dead End/Leg)", definition: "קטע צנרת ללא זרימה (למשל, הסתעפות T ארוכה מדי), שבו נוזל הניקוי אינו מגיע או אינו מתחלף ביעילות, ועלול להיווצר זיהום." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מה ההבדל העיקרי בין ריכוז לייבוש?",
+                options: ["ריכוז מסיר את כל המים, ייבוש רק חלק", "ריכוז נעשה רק על מוצקים, ייבוש על נוזלים", "ייבוש מסיר את רוב המים (ל-aw נמוך מאוד), ריכוז מסיר רק חלק מהמים (מנוזל)", "ייבוש תמיד מהיר יותר מריכוז"],
+                correctIndex: 2,
+                explanation: "ריכוז מקטין את כמות המים בנוזל אך משאיר אותו נוזלי או סמיך, בעוד ייבוש מסיר כמעט את כל המים לקבלת מוצר יבש בעל פעילות מים נמוכה מאוד."
+            },
+            {
+                question: "באיזו שיטת ריכוז משתמשים בחום לאידוי המים?",
+                options: ["אוסמוזה הפוכה", "אולטרה-פילטרציה", "איוד (Evaporation)", "ריכוז בהקפאה"],
+                correctIndex: 2,
+                explanation: "איוד היא שיטת הריכוז המבוססת על הרתחה ואידוי של מים מהמוצר באמצעות אנרגיית חום."
+            },
+            {
+                question: "מדוע איוד מתבצע לרוב בתת-לחץ (ואקום)?",
+                options: ["כדי להעלות את טמפרטורת הרתיחה", "כדי להאיץ הצטברות משקעים (Fouling)", "כדי לאפשר רתיחה ואידוי בטמפרטורה נמוכה יותר", "כדי להוסיף אוויר למוצר"],
+                correctIndex: 2,
+                explanation: "הורדת הלחץ מורידה את נקודת הרתיחה של המים, ומאפשרת לבצע את האיוד בטמפרטורה נמוכה יותר, מה שמפחית נזקי חום למוצר."
+            },
+            {
+                question: "מהו החיסרון העיקרי של Fouling במאיידים?",
+                options: ["הוא משפר את טעם המוצר", "הוא מגביר את יעילות מעבר החום", "הוא פוגע ביעילות מעבר החום ומצריך ניקוי תכוף", "הוא מחזק את מבנה המאייד"],
+                correctIndex: 2,
+                explanation: "שכבת המשקעים (Fouling) מבודדת ומפריעה למעבר החום מדופן המאייד לנוזל, מורידה את יעילות התהליך ומחייבת עצירה וניקוי."
+            },
+            {
+                question: "מה היתרון העיקרי של איוד רב-דרגי?",
+                options: ["הוא מהיר יותר מאיוד חד-דרגי", "הוא דורש ציוד פשוט יותר", "הוא חוסך משמעותית באנרגיית חימום (קיטור)", "הוא מונע לחלוטין Fouling"],
+                correctIndex: 2,
+                explanation: "באיוד רב-דרגי, האדים מדרגה אחת משמשים לחימום הדרגה הבאה, מה שמפחית משמעותית את כמות הקיטור הראשוני הנדרש ומביא לחיסכון גדול באנרגיה."
+            },
+            {
+                question: "איזו שיטת ריכוז מבוססת על הפרדה באמצעות ממברנה ולחץ גבוה?",
+                options: ["איוד", "ריכוז בהקפאה", "אוסמוזה הפוכה (RO)", "ייבוש בהתזה"],
+                correctIndex: 2,
+                explanation: "אוסמוזה הפוכה משתמשת בלחץ גבוה כדי 'לדחוף' מים דרך ממברנה חדירה למחצה, תוך השארת המומסים מאחור."
+            },
+            {
+                question: "מהו היתרון המרכזי של ריכוז בהקפאה?",
+                options: ["תהליך מהיר וזול", "שמירה טובה על איכות המוצר (טעם, ארומה) עקב טמפ' נמוכות", "מתאים לריכוז מוצקים", "דורש מעט אנרגיה"],
+                correctIndex: 1,
+                explanation: "הטמפרטורות הנמוכות בתהליך ממזערות נזקי חום ואיבוד רכיבים נדיפים, ולכן שיטה זו נחשבת לשומרת איכות בצורה הטובה ביותר, אם כי היא יקרה."
+            },
+            {
+                question: "איזו שיטת ייבוש מתאימה ביותר לחומרים נוזליים או משחתיים ליצירת אבקה?",
+                options: ["ייבוש באוויר חם במגשים", "ייבוש במגע (Drum Dryer)", "ייבוש בהתזה (Spray Drying)", "ייבוש בהקפאה"],
+                correctIndex: 2,
+                explanation: "ייבוש בהתזה הופך נוזל ישירות לאבקה על ידי התזתו לתוך אוויר חם. שיטה נפוצה לחלב, קפה נמס, מיצים ועוד."
+            },
+             {
+                question: "מהו העיקרון הפיזיקלי בבסיס הייבוש בהקפאה (ליופיליזציה)?",
+                options: ["אידוי מים נוזליים", "המראה (סובלימציה) - מעבר ישיר של קרח לאדים", "ספיחת מים על ידי מלח", "סינון המים החוצה"],
+                correctIndex: 1,
+                explanation: "בייבוש בהקפאה, המזון מוקפא והלחץ מורד לרמה נמוכה מאוד, מה שמאפשר לקרח לעבור ישירות למצב גז (אדים) מבלי להפוך לנוזל."
+            },
+            {
+                question: "איזו שיטת ייבוש שומרת בצורה הטובה ביותר על מבנה ואיכות המוצר?",
+                options: ["ייבוש באוויר חם", "ייבוש במגע (Drum Dryer)", "ייבוש בהתזה", "ייבוש בהקפאה"],
+                correctIndex: 3,
+                explanation: "ייבוש בהקפאה מתבצע בטמפרטורות נמוכות ומונע התכווצות משמעותית של המוצר (כי הקרח תומך במבנה ואז מסולק), ולכן שומר בצורה מיטבית על המבנה, הטעם, הארומה והיכולת לספוח מים מחדש."
+            },
+             {
+                question: "מה ההבדל בין ניקוי לחיטוי?",
+                options: ["ניקוי מסיר לכלוך, חיטוי הורג חיידקים", "חיטוי מסיר לכלוך, ניקוי הורג חיידקים", "אין הבדל", "ניקוי משתמש במים, חיטוי בסבון"],
+                correctIndex: 0,
+                explanation: "ניקוי הוא הסרת לכלוך ושאריות מזון פיזיות מהמשטח. חיטוי הוא הפחתת כמות המיקרואורגניזמים לרמה בטוחה, ומתבצע לרוב לאחר הניקוי."
+            },
+             {
+                question: "מהי מטרת CIP?",
+                options: ["לפרק את הציוד לחלקים קטנים", "לנקות ולחטא ציוד וצנרת ללא פירוק", "לקרר את הציוד במהירות", "לצפות את הציוד בחומר מגן"],
+                correctIndex: 1,
+                explanation: "CIP (Cleaning In Place) היא מערכת המאפשרת ניקוי וחיטוי פנימי של ציוד (מכלים, צנרת) מבלי לפרק אותו."
+            },
+            {
+                question: "מה מייצגות האותיות TACT בהקשר לניקוי?",
+                options: ["Temperature, Acidity, Cleaning, Time", "Time, Action, Concentration, Temperature", "Turbulence, Action, Caustic, Temperature", "Tank, Agitation, Circulation, Treatment"],
+                correctIndex: 1,
+                explanation: "TACT מייצג את ארבעת הפרמטרים הקריטיים המשפיעים על יעילות הניקוי: Time (זמן), Action (פעולה מכנית), Concentration (ריכוז), Temperature (טמפרטורה)."
+            },
+            {
+                question: "איזה חומר ניקוי משמש בעיקר להמסת משקעי חלבון ושומן ב-CIP?",
+                options: ["חומצה חנקתית", "סודה קאוסטית (NaOH)", "חומצה פראצטית", "אלכוהול"],
+                correctIndex: 1,
+                explanation: "סודה קאוסטית היא חומר בסיסי חזק היעיל בפירוק (ספוניפיקציה והידרוליזה) של שומנים וחלבונים."
+            },
+            {
+                question: "מהי המטרה העיקרית של ניקוי חומצי ב-CIP?",
+                options: ["הסרת שומנים", "הסרת חלבונים", "הסרת משקעי אבנית ומינרלים", "חיטוי המערכת"],
+                correctIndex: 2,
+                explanation: "חומצות יעילות בהמסת משקעים מינרליים ('אבן חלב', אבנית ממים קשים) שאינם מוסרים היטב על ידי ניקוי בסיסי."
+            },
+             {
+                question: "מהי מהירות הזרימה המינימלית המומלצת בצנרת לניקוי CIP יעיל?",
+                options: ["0.1 מטר/שנייה", "0.5 מטר/שנייה", "1.5 מטר/שנייה", "5.0 מטר/שנייה"],
+                correctIndex: 2,
+                explanation: "מהירות של 1.5 מטר/שנייה נחשבת לרוב כסף מינימלי להבטחת זרימה טורבולנטית מספקת להסרת משקעים מהדופן הפנימית של הצינור."
+            },
+             {
+                question: "מה תפקידו של Spray Ball במכל CIP?",
+                options: ["לערבב את הנוזל במכל", "לחמם את דפנות המכל", "לפזר את נוזל הניקוי על דפנות המכל בזרימה", "לרוקן את המכל"],
+                correctIndex: 2,
+                explanation: "ה-Spray Ball מרסס ומפזר את נוזל הניקוי בצורה אחידה יחסית על כל המשטחים הפנימיים של המכל."
+            },
+             {
+                question: "מהו 'קצה עיוור' בצנרת CIP?",
+                options: ["צינור ללא יציאה שבו הזרימה מוגבלת או לא קיימת", "חיבור מיוחד בין שני צינורות", "שסתום בקרה אוטומטי", "חיישן טמפרטורה"],
+                correctIndex: 0,
+                explanation: "קצה עיוור (Dead End) הוא קטע צנרת שאינו חלק ממעגל הזרימה הראשי, ולכן נוזל הניקוי אינו מגיע אליו או אינו מתחלף בו ביעילות, מה שמהווה נקודת כשל פוטנציאלית בניקוי."
+            },
+            {
+                question: "באיזה שלב מתבצע לרוב החיטוי בתהליך CIP?",
+                options: ["בתחילת התהליך, לפני השטיפה הראשונית", "בין הניקוי הבסיסי לניקוי החומצי", "בסוף תהליך הניקוי, לאחר השטיפה הסופית", "החיטוי אינו חלק מ-CIP"],
+                correctIndex: 2,
+                explanation: "החיטוי מתבצע על משטח נקי, ולכן הוא מגיע לאחר כל שלבי הניקוי והשטיפה. לעיתים קרובות הוא מתבצע ממש לפני תחילת הייצור הבא."
+            },
+            {
+                question: "איזה פרמטר מה-TACT מתייחס לכוח המכני המופעל להסרת הלכלוך?",
+                options: ["Time", "Action", "Concentration", "Temperature"],
+                correctIndex: 1,
+                explanation: "Action מתייחס לפעולה המכנית, בין אם מדובר במהירות וטורבולנציה של הזרימה בצנרת או בעוצמת ההתזה במכלים."
+            },
+            {
+                question: "מה החיסרון העיקרי של ריכוז בהקפאה?",
+                options: ["פגיעה רבה באיכות המוצר", "תהליך מהיר מאוד", "עלות גבוהה וקצב ייצור נמוך", "לא מתאים לנוזלים"],
+                correctIndex: 2,
+                explanation: "ריכוז בהקפאה הוא תהליך יקר יחסית מבחינת השקעה ואנרגיה, וקצב הייצור שלו נמוך בהשוואה לאיוד."
+            },
+             {
+                question: "ייבוש במגע (Drum Drying) מתאים במיוחד ל:",
+                options: ["אבקות עדינות", "מוצרים רגישים מאוד לחום", "נוזלים או משחות שניתן למרוח כשכבה דקה", "פירות שלמים"],
+                correctIndex: 2,
+                explanation: "השיטה יעילה לנוזלים או משחות שניתן למרוח כשכבה דקה על התוף החם לצורך אידוי מהיר."
+            },
+             {
+                question: "מה היתרון של ייבוש בהקפאה מבחינת מבנה המוצר?",
+                options: ["הוא גורם להתכווצות משמעותית", "הוא שומר על מבנה תלת-ממדי נקבובי ומונע התכווצות", "הוא יוצר אבקה דחוסה מאוד", "הוא ממיס את המוצר"],
+                correctIndex: 1,
+                explanation: "הקרח שנוצר בהקפאה תומך במבנה. כשהקרח מסולק בסובלימציה, נשאר מבנה נקבובי הדומה למבנה המקורי, מה שמאפשר ספיחת מים טובה (Rehydration)."
+            },
+            {
+                question: "מדוע חשובה שטיפה ראשונית (Pre-rinse) בתחילת CIP?",
+                options: ["כדי לחטא את המערכת", "כדי להסיר את עיקר הלכלוך הגס ולחסוך בחומרי ניקוי", "כדי לחמם את המערכת", "כדי לקרר את המערכת"],
+                correctIndex: 1,
+                explanation: "השטיפה הראשונית מסירה לכלוך רופף ושאריות מוצר, מפחיתה את העומס על שלב הניקוי הכימי וחוסכת בחומרי ניקוי."
+            },
+             {
+                question: "מה ההבדל בין חיטוי לסטריליזציה בהקשר לציוד?",
+                options: ["חיטוי הורג גם נבגים, סטריליזציה לא", "סטריליזציה הורגת את כל החיים המיקרוביאליים (כולל נבגים), חיטוי מפחית לרמה בטוחה", "חיטוי משתמש בחום, סטריליזציה בכימיקלים", "אין הבדל"],
+                correctIndex: 1,
+                explanation: "סטריליזציה היא תהליך מוחלט יותר שמטרתו להרוג את כל צורות החיים, כולל נבגים עמידים. חיטוי מפחית את העומס המיקרוביאלי לרמה בטוחה אך לא בהכרח הורג את כל הנבגים."
+            },
+            {
+                question: "כיצד טמפרטורה משפיעה על יעילות הניקוי ב-CIP?",
+                options: ["טמפ' גבוהה תמיד פוגעת בניקוי", "טמפ' גבוהה מזרזת תגובות כימיות ומגבירה מסיסות לכלוך", "טמפ' נמוכה תמיד יעילה יותר", "לטמפרטורה אין השפעה"],
+                correctIndex: 1,
+                explanation: "טמפרטורה גבוהה יותר מגבירה את קצב התגובות הכימיות של חומרי הניקוי, מגבירה את מסיסות הלכלוך (במיוחד שומנים) ומורידה צמיגות, ובכך משפרת את יעילות הניקוי (עד גבול מסוים)."
+            },
+             {
+                question: "מהו החיסרון הפוטנציאלי של שימוש ב-Spray Ball במכלים גדולים או עם לכלוך קשה?",
+                options: ["הוא מספק יותר מדי פעולה מכנית", "הוא אינו מכסה את כל שטח הפנים", "הוא מספק פעולה מכנית חלשה יחסית (בעיקר זרימת פילם)", "הוא יקר מאוד להתקנה"],
+                correctIndex: 2,
+                explanation: "Spray Ball סטטי מספק בעיקר שטיפה על ידי זרימת נוזל (פילם) על הדפנות, ופחות פעולה מכנית של התזה חזקה (Impingement) הנדרשת לעיתים להסרת לכלוך עיקש או במכלים גדולים מאוד."
+            },
+             {
+                question: "איזה סוג ריכוז אינו מסיר מים מהמוצר?",
+                options: ["איוד", "אוסמוזה הפוכה", "אולטרה-פילטרציה (בהקשר ריכוז חלבונים)", "ריכוז בהקפאה"],
+                correctIndex: 2,
+                explanation: "אולטרה-פילטרציה משמשת להפרדת מולקולות גדולות (כמו חלבון) מהנוזל, כלומר המים עוברים דרך הממברנה יחד עם מומסים קטנים, והחלבון נשאר מאחור בריכוז גבוה יותר. היא אינה מסירה 'מים נטו' כמו RO או איוד."
+            },
+             {
+                question: "השבת ארומה רלוונטית בעיקר לאיזו שיטת ריכוז?",
+                options: ["אוסמוזה הפוכה", "אולטרה-פילטרציה", "ריכוז בהקפאה", "איוד"],
+                correctIndex: 3,
+                explanation: "באיוד, רכיבי ארומה נדיפים מתנדפים יחד עם המים. לכן, לעיתים קרובות משלבים מערכת להשבת ארומה (לכידה ועיבוי) כדי להחזירם לתרכיז."
+            },
+            {
+                question: "מדוע חשוב לנקות ציוד לפני החיטוי?",
+                options: ["כדי לחסוך בחומרי חיטוי", "כי חומרי חיטוי אינם יעילים בנוכחות לכלוך אורגני", "כדי לחמם את הציוד", "גם וגם (א+ב)"],
+                correctIndex: 3, // Both reasons are valid
+                explanation: "לכלוך אורגני מגן על מיקרואורגניזמים מפני חומר החיטוי ומנטרל חלק מפעילותו. ניקוי יעיל חושף את המיקרואורגניזמים ומאפשר חיטוי יעיל יותר תוך שימוש בכמות נדרשת של חומר חיטוי."
+            }
+        ];
+
+
+        const tfData = [
+             { question: "ריכוז וייבוש הם תהליכים זהים לחלוטין.", answer: false, explanation: "ייבוש מסיר כמעט את כל המים, ריכוז מסיר רק חלק מהמים מנוזל." },
+             { question: "איוד תמיד מתבצע בטמפרטורת הרתיחה של מים בלחץ אטמוספרי (100°C).", answer: false, explanation: "איוד תעשייתי מתבצע לרוב בתת-לחץ (ואקום) כדי לאפשר רתיחה בטמפרטורות נמוכות יותר." },
+             { question: "Fouling משפר את מעבר החום במאיידים.", answer: false, explanation: "Fouling (הצטברות משקעים) פוגע במעבר החום ומוריד את יעילות המאייד." },
+             { question: "אוסמוזה הפוכה משתמשת בחום לריכוז.", answer: false, explanation: "אוסמוזה הפוכה משתמשת בלחץ גבוה וממברנה חצי חדירה להפרדת מים ממומסים." },
+             { question: "ריכוז בהקפאה הוא שיטה מהירה וזולה.", answer: false, explanation: "ריכוז בהקפאה הוא תהליך איטי ויקר יחסית, אך שומר היטב על איכות." },
+             { question: "ייבוש בהתזה מתאים לייבוש פירות שלמים.", answer: false, explanation: "ייבוש בהתזה מתאים לנוזלים או משחות המותזים כטיפות זעירות ליצירת אבקה." },
+             { question: "ייבוש בהקפאה כולל שלב של המראה (סובלימציה).", answer: true, explanation: "בייבוש בהקפאה, הקרח עובר ישירות ממצב מוצק לגז (אדים) בתהליך סובלימציה." },
+             { question: "התכווצות היא תופעה נדירה בייבוש מזון.", answer: false, explanation: "התכווצות היא תופעה נפוצה בייבוש עקב איבוד המים והתמוטטות המבנה הפנימי." },
+             { question: "חיטוי וסטריליזציה של ציוד הם מושגים נרדפים.", answer: false, explanation: "סטריליזציה היא תהליך מוחלט יותר ההורג גם נבגים, בעוד חיטוי מפחית את העומס המיקרוביאלי לרמה בטוחה." },
+             { question: "CIP דורש פירוק מלא של הציוד.", answer: false, explanation: "CIP (Cleaning In Place) מיועד לניקוי ללא פירוק." },
+             { question: "טמפרטורה אינה פרמטר חשוב בניקוי CIP.", answer: false, explanation: "טמפרטורה היא אחד מארבעת עקרונות TACT ומשפיעה רבות על יעילות הניקוי." },
+             { question: "סודה קאוסטית יעילה בהסרת אבנית.", answer: false, explanation: "סודה קאוסטית (בסיס) יעילה נגד שומנים וחלבונים. חומצות יעילות נגד אבנית (מינרלים)." },
+             { question: "מהירות זרימה נמוכה בצנרת CIP מבטיחה ניקוי טוב יותר.", answer: false, explanation: "נדרשת מהירות זרימה מינימלית (כ-1.5 מטר/שנייה) להבטחת זרימה טורבולנטית ופעולה מכנית יעילה." },
+             { question: "חיטוי תרמי (מים חמים) הוא שיטת חיטוי אפשרית ב-CIP.", answer: true, explanation: "חיטוי יכול להתבצע באמצעים כימיים או באמצעות חום (מים חמים או קיטור)." },
+             { question: "שלב הניקוי החומצי תמיד מבוצע לפני הניקוי הבסיסי ב-CIP.", answer: false, explanation: "סדר השלבים הטיפוסי הוא ניקוי בסיסי ואז ניקוי חומצי (לאחר שטיפת ביניים)." },
+             { question: "ייבוש במגע מתאים לנוזלים רגישים מאוד לחום.", answer: false, explanation: "ייבוש במגע משתמש במשטח חם ויכול לגרום לנזקי חום מסוימים. ייבוש בהקפאה עדין יותר." },
+             { question: "ריכוז תמיד משפר את הארומה של המוצר.", answer: false, explanation: "תהליכי ריכוז, במיוחד איוד, עלולים לגרום לאיבוד רכיבי ארומה נדיפים." },
+             { question: "אולטרה-פילטרציה יכולה לשמש לריכוז חלבוני מי גבינה.", answer: true, explanation: "UF מאפשרת להפריד את חלבוני מי הגבינה הגדולים מהמים, הלקטוז והמלחים הקטנים יותר." },
+             { question: "חומצה פראצטית היא חומר ניקוי בסיסי.", answer: false, explanation: "חומצה פראצטית היא חומר חיטוי מחמצן." },
+             { question: "ניקוי יעיל אינו תנאי הכרחי לחיטוי יעיל.", answer: false, explanation: "חיטוי יעיל דורש משטח נקי, שכן לכלוך מגן על חיידקים ומנטרל חומרי חיטוי." }
+        ];
+
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללמידה: תגובות לאפיון וזיהוי סוכרים</title>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams' 
+            },
+            chtml: {
+                matchFontHeight: true 
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        /* General page styling */
+        body {
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            font-family: 'Arial', sans-serif; /* Standard font */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Main container for content */
+        .container {
+            width: 90%;
+            max-width: 1000px; /* Max width for very large screens */
+            margin: 20px auto; /* Center content */
+            padding: 20px;
+            background-color: #444; /* Slightly lighter than body for content area distinction */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Headings */
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents */
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-top: 30px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; }
+        h3 { font-size: 1.2em; }
+
+        /* General content styling */
+        p, ul, li {
+            margin-bottom: 15px; /* Vertical spacing */
+            text-align: justify; /* Justify text for better readability in Hebrew */
+        }
+        ul {
+            padding-right: 20px; /* Indent list for RTL */
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7; /* Blue accents/buttons */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2a7cb0; /* Darker blue on hover */
+        }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Navigation elements styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        /* Counters for questions/cards */
+        .counter {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* Study Cards Styling */
+        .study-card-container {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px; /* Vertical spacing */
+            perspective: 1000px; /* For 3D flip effect */
+        }
+        .study-card {
+            width: 100%;
+            min-height: 200px; /* Ensure card has some height */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            display: flex; /* Using flex to center content */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            text-align: center; /* Center text */
+        }
+        .study-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .study-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide the back of the face during flip */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box; /* Include padding in width/height */
+            border-radius: 8px; /* Match container */
+        }
+        .study-card-front {
+            background-color: #777;
+            color: #E0E0E0;
+        }
+        .study-card-back {
+            background-color: #888;
+            color: #E0E0E0;
+            transform: rotateY(180deg);
+        }
+        .study-card-term {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        .study-card-definition {
+            font-size: 1.1em;
+        }
+
+        /* MCQ and True/False Question Styling */
+        .question-item {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px; /* Vertical spacing */
+        }
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        .options-container button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: right; /* Align text to the right for Hebrew options */
+            background-color: #587894; /* A slightly different blue for options */
+        }
+        .options-container button:hover:not(:disabled) {
+            background-color: #3D90D7;
+        }
+        .options-container button.correct {
+            background-color: #4CAF50 !important; /* Green for correct */
+            color: white !important;
+        }
+        .options-container button.incorrect {
+            background-color: #F44336 !important; /* Red for incorrect */
+            color: white !important;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            background-color: #4CAF50; /* Green correct */
+            color: white;
+        }
+        .feedback.incorrect {
+            background-color: #F44336; /* Red incorrect */
+            color: white;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #555;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        /* "View All" sections */
+        .view-all-container {
+            margin-top: 20px;
+            border-top: 1px solid #3D90D7;
+            padding-top: 20px;
+        }
+        .safety-warning {
+            color: #F44336; /* Red for warnings */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: תגובות לאפיון וזיהוי סוכרים</h1>
+        <p>מסמך זה מבוסס על חומר הקורס מהטכניון, הפקולטה להנדסת-מזון וביוטכנולוגיה, מעבדה בביוכימיה וכימיה של מזון.</p>
+        <p class="safety-warning">לתשומת לב: לפני ביצוע כל ניסוי במעבדה, חובה לקרוא בעיון את דפי ה-MSDS של כל החומרים הרלוונטיים!</p>
+
+        <!-- Theory Section -->
+        <section id="theory">
+            <h2>חומר תיאורטי</h2>
+            <div id="theory-content">
+                <!-- Theory content will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Study Cards Section -->
+        <section id="study-cards">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="study-card-container">
+                <div id="study-card" class="study-card" onclick="flipCard()">
+                    <div class="study-card-face study-card-front">
+                        <p id="current-card-front" class="study-card-term"></p>
+                    </div>
+                    <div class="study-card-face study-card-back">
+                        <p id="current-card-back" class="study-card-definition"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button id="prev-card-button" onclick="prevCard()">הקודם</button>
+                <span id="card-counter" class="counter"></span>
+                <button id="next-card-button" onclick="nextCard()">הבא</button>
+            </div>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq">
+            <h2>שאלות רב-ברירה (MCQ)</h2>
+            <div id="mcq-single-view">
+                <div class="question-item">
+                    <p id="mcq-question-text" class="question-text"></p>
+                    <div id="mcq-options-container" class="options-container">
+                        <!-- MCQ options will be populated here -->
+                    </div>
+                    <div id="mcq-feedback" class="feedback" style="display:none;"></div>
+                    <div id="mcq-explanation" class="explanation" style="display:none;"></div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-mcq-button" onclick="prevMcq()">הקודם</button>
+                    <span id="mcq-counter" class="counter"></span>
+                    <button id="next-mcq-button" onclick="nextMcq()">הבא</button>
+                </div>
+            </div>
+            <button onclick="toggleViewAllMcqs()" id="view-all-mcqs-button">הצג/הסתר את כל השאלות</button>
+            <div id="mcq-view-all-container" class="view-all-container" style="display:none;">
+                <!-- All MCQs will be populated here when "View All" is clicked -->
+            </div>
+        </section>
+
+        <!-- True/False Questions Section -->
+        <section id="tf">
+            <h2>שאלות נכון/לא נכון</h2>
+            <div id="tf-single-view">
+                 <div class="question-item">
+                    <p id="tf-question-text" class="question-text"></p>
+                    <div id="tf-options-container" class="options-container">
+                        <!-- True/False options will be populated here -->
+                    </div>
+                    <div id="tf-feedback" class="feedback" style="display:none;"></div>
+                    <div id="tf-explanation" class="explanation" style="display:none;"></div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-tf-button" onclick="prevTf()">הקודם</button>
+                    <span id="tf-counter" class="counter"></span>
+                    <button id="next-tf-button" onclick="nextTf()">הבא</button>
+                </div>
+            </div>
+            <button onclick="toggleViewAllTfs()" id="view-all-tfs-button">הצג/הסתר את כל השאלות</button>
+            <div id="tf-view-all-container" class="view-all-container" style="display:none;">
+                <!-- All T/F questions will be populated here when "View All" is clicked -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- DATA ---
+
+        // Theory Content
+        const theoryContent = `
+            <h3>מטרות הניסוי</h3>
+            <p>הניסוי נועד להקנות הבנה של העקרונות העומדים בבסיס זיהוי איכותי של סוגי סוכרים שונים. מטרה נוספת היא יישום עקרונות אלו לשם זיהוי של תמיסת סוכר נעלמה אחת, מתוך קבוצת סוכרים ידועים.</p>
+            
+            <h3>חומרים ותמיסות עיקריים</h3>
+            <p>בניסוי משתמשים בתמיסות $0.1\\text{M}$ של הסוכרים הבאים: גלוקוז, פרוקטוז, גלקטוז, לקטוז, סוכרוז, ארבינוז, ורפינוז. אחת מתמיסות אלו תשמש כנעלם לזיהוי.</p>
+            <p>בנוסף, נעשה שימוש בריאגנטים ספציפיים לכל בדיקה:</p>
+            <ul>
+                <li><strong>חומצה פיקרית רוויה:</strong> מומסת במים ($1.3 \\text{ g } / 100 \\text{ mL}$).</li>
+                <li><strong>נתרן קרבונט $1\\text{M}$:</strong> $106 \\text{ g}$ מלח אנהידרי בליטר מים.</li>
+                <li><strong>ריאגנט בנדיקט:</strong> מכיל נתרן ציטרט ($197 \\text{ g}$), נתרן קרבונט ($100 \\text{ g}$), ו-$CuSO_4$ ($17.5 \\text{ g}$) בנפח סופי של ליטר מים.</li>
+                <li><strong>ריאגנט סליואנוף:</strong> $0.05 \\text{ g}$ רסורצינול בליטר חומצה הידרוכלורית מהולה (חלק אחד $HCl$ מרוכז ל-2 חלקי מים). <span class="safety-warning">עבודה במנדף ובכפפות כפולות חובה!</span></li>
+                <li><strong>ריאגנט ביאל:</strong> $3 \\text{ g}$ אורצינול בליטר חומצה הידרוכלורית מהולה (1:1 עם מים), בתוספת $0.045 \\text{ mL}$ תמיסת $FeCl_3$ בריכוז $60\\%$. <span class="safety-warning">עבודה במנדף ובכפפות כפולות חובה!</span></li>
+                <li><strong>ריאגנט פניל הידרזין:</strong> $2 \\text{ g}$ פנילהידרזין הידרוכלוריד ב-$30 \\text{ mL}$ מים, אליהם מוסיפים $3 \\text{ g}$ נתרן אצטט. <span class="safety-warning">פניל הידרזין רעיל, עבודה במנדף ובכפפות כפולות חובה!</span></li>
+            </ul>
+
+            <h3>עקרונות הבדיקות השונות</h3>
+            <p><strong>1. בדיקת חומצה פיקרית (Picric acid test):</strong><br>
+            מזהה סוכרים מחזרים. בסביבה בסיסית (המסופקת על ידי נתרן קרבונט) ובחימום, סוכרים מחזרים מחזרים את החומצה הפיקרית הצהובה לחומצה פיקרמית בעלת צבע אדום-חום.</p>
+
+            <p><strong>2. בדיקת בנדיקט (Benedict test):</strong><br>
+            מזהה סוכרים מחזרים. בסביבה בסיסית (נתרן קרבונט) ובחימום, יוני $Cu^{2+}$ (כחולים) מריאגנט בנדיקט מחוזרים על ידי הסוכר ל-$Cu_2O$ (תחמוצת נחושת (I)), שהוא משקע שצבעו משתנה מירוק לצהוב, כתום ואדום, בהתאם לכמות הסוכר המחזר. נתרן ציטרט מונע שיקוע של $Cu(OH)_2$ על ידי יצירת קומפלקס עם יוני הנחושת.</p>
+
+            <p><strong>3. בדיקת סליואנוף (Seliwanoff test):</strong><br>
+            מבדילה בין אלדוזות לקטוזות. קטוזות (כמו פרוקטוז) עוברות דהידרציה מהירה יותר בחומצה חזקה ובחימום ליצירת פורפורלים, המגיבים עם רסורצינול ונותנים צבע אדום-דובדבן עז בזמן קצר. אלדוזות מגיבות לאט יותר או נותנות צבע חלש יותר. סוכרוז, לאחר הידרוליזה חומצית לפרוקטוז וגלוקוז, ייתן גם הוא תגובה חיובית.</p>
+
+            <p><strong>4. בדיקת ביאל (Bial's test):</strong><br>
+            מזהה פנטוזות (סוכרים בעלי 5 פחמנים, כמו ארבינוז). פנטוזות עוברות דהידרציה בחומצה חזקה ובחימום ליצירת פורפורל, המגיב עם אורצינול ויוני $Fe^{3+}$ (מ-$FeCl_3$, המשמש כקטליזטור) ליצירת תרכובת צבעונית כחולה-ירוקה. הקסוזות עשויות לתת צבע חום או ירוק-מלוכלך.</p>
+
+            <p><strong>5. בדיקת פניל הידרזין (Phenylhydrazine test - יצירת אוסזונים):</strong><br>
+            סוכרים מחזרים (בעלי קבוצת קרבוניל חופשית או פוטנציאלית) מגיבים עם פניל הידרזין בעודף ובחימום ליצירת גבישים צהובים הנקראים אוסזונים. צורת הגבישים וקצב היווצרותם אופייניים לסוכרים שונים וניתן לצפות בהם במיקרוסקופ. סוכרים הנבדלים זה מזה רק בפחמנים C1 ו-C2 (למשל גלוקוז ופרוקטוז, או גלוקוז ומנוז) יתנו אוסזונים זהים.</p>
+        `;
+        
+        // Study Cards Data
+        const studyCardsData = [
+            { term: "מטרות הניסוי", definition: "לימוד עקרונות הקביעה האיכותית של סוכרים וזיהוי נעלם אחד." },
+            { term: "סוכרים נבדקים ($0.1\\text{M}$)", definition: "גלוקוז, פרוקטוז, גלקטוז, לקטוז, סוכרוז, ארבינוז, רפינוז. אחד מהם משמש כנעלם." },
+            { term: "בדיקת חומצה פיקרית", definition: "מזהה סוכרים מחזרים. חומצה פיקרית (צהובה) מחוזרת לחומצה פיקרמית (אדומה-חומה) בסביבה בסיסית ובחימום. רכיבים: תמיסת סוכר, חומצה פיקרית רוויה, נתרן קרבונט $1\\text{M}$." },
+            { term: "בדיקת בנדיקט", definition: "מזהה סוכרים מחזרים. יוני $Cu^{2+}$ (כחולים) מחוזרים ל-$Cu_2O$ (משקע ירוק/צהוב/כתום/אדום). רכיבים: תמיסת סוכר, ריאגנט בנדיקט (מכיל $CuSO_4$, נתרן קרבונט, נתרן ציטרט)." },
+            { term: "תפקיד נתרן ציטרט בבנדיקט", definition: "מונע שיקוע של $Cu(OH)_2$ על ידי יצירת קומפלקס עם יוני $Cu^{2+}$, ושומר אותם זמינים לתגובה עם הסוכר המחזר." },
+            { term: "בדיקת סליואנוף", definition: "מבדילה בין קטוזות לאלדוזות. קטוזות מגיבות מהר יותר ליצירת צבע אדום-דובדבן עם רסורצינול בחומצה חזקה ובחימום. <span class='safety-warning'>חובה לעבוד במנדף ובכפפות כפולות.</span> רכיבים: תמיסת סוכר, ריאגנט סליואנוף (רסורצינול ב-$HCl$ מהול)." },
+            { term: "בדיקת ביאל", definition: "מזהה פנטוזות. פנטוזות יוצרות צבע כחול-ירוק עם אורצינול ו-$FeCl_3$ בחומצה חזקה ובחימום. <span class='safety-warning'>חובה לעבוד במנדף ובכפפות כפולות.</span> רכיבים: תמיסת סוכר, ריאגנט ביאל (אורצינול ו-$FeCl_3$ ב-$HCl$ מהול)." },
+            { term: "בדיקת פניל הידרזין", definition: "יצירת אוסזונים. סוכרים מחזרים יוצרים גבישי אוסזון צהובים עם פניל הידרזין בעודף ובחימום. צורת הגבישים אופיינית. <span class='safety-warning'>פניל הידרזין רעיל, חובה לעבוד במנדף ובכפפות כפולות.</span> רכיבים: תמיסת סוכר (ספציפיות: ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז, נעלם), ריאגנט פניל הידרזין (פנילהידרזין הידרוכלוריד ונתרן אצטט)." },
+            { term: "אוסזון", definition: "תרכובת גבישית צהובה הנוצרת מתגובה בין סוכר מחזר לעודף פניל הידרזין בחימום. צורת הגבישים מסייעת בזיהוי הסוכר." },
+            { term: "סוכרים הנותנים אוסזונים זהים", definition: "סוכרים הנבדלים במבנם רק בפחמנים C1 ו-C2 (למשל, גלוקוז ופרוקטוז; גלוקוז ומנוז) יתנו גבישי אוסזון זהים." },
+            { term: "סוכר מחזר", definition: "סוכר בעל קבוצת אלדהיד או קטון חופשית (או שיכול ליצור כזו בשיווי משקל), המסוגל לחזר חומרים אחרים כגון יוני מתכת ($Cu^{2+}$) או חומצה פיקרית." },
+            { term: "סוכר לא מחזר", definition: "סוכר שאין לו קבוצת אלדהיד או קטון חופשית, למשל סוכרוז ורפינוז, שבהם הפחמנים האנומריים המעורבים בקשר הגליקוזידי חוסמים את יכולת החיזור." },
+            { term: "אלדוז", definition: "חד-סוכר המכיל קבוצת אלדהיד $(-CHO)$. לדוגמה: גלוקוז, גלקטוז, ארבינוז." },
+            { term: "קטוז", definition: "חד-סוכר המכיל קבוצת קטון ($C=O$) שאינה בקצה המולקולה. לדוגמה: פרוקטוז." },
+            { term: "פנטוז", definition: "חד-סוכר המכיל חמישה אטומי פחמן. לדוגמה: ארבינוז." },
+            { term: "הקסוז", definition: "חד-סוכר המכיל שישה אטומי פחמן. לדוגמה: גלוקוז, פרוקטוז, גלקטוז." },
+            { term: "גלוקוז", definition: "אלדוהקסוז, סוכר מחזר. אחד הסוכרים הנפוצים ביותר בטבע." },
+            { term: "פרוקטוז", definition: "קטוהקסוז, סוכר מחזר. ידוע גם כסוכר פירות." },
+            { term: "גלקטוז", definition: "אלדוהקסוז, סוכר מחזר. מרכיב בלקטוז." },
+            { term: "לקטוז", definition: "דו-סוכר (גלוקוז + גלקטוז), סוכר מחזר. ידוע כסוכר החלב." },
+            { term: "סוכרוז", definition: "דו-סוכר (גלוקוז + פרוקטוז), סוכר שאינו מחזר. ידוע כסוכר שולחן." },
+            { term: "ארבינוז", definition: "אלדופנטוז, סוכר מחזר." },
+            { term: "רפינוז", definition: "טרי-סוכר (גלקטוז + גלוקוז + פרוקטוז), סוכר שאינו מחזר." },
+            { term: "MSDS (גיליון בטיחות חומרים)", definition: "מסמך המספק מידע על סיכונים, אמצעי זהירות וטיפול בחומרים כימיים. חובה לקרוא לפני שימוש בחומרים." },
+            { term: "מנדף", definition: "תא עבודה מאוורר במעבדה, המיועד לעבודה עם חומרים נדיפים או רעילים, כדי למנוע חשיפה של המשתמש." },
+            { term: "חימום באמבט מים רותחים", definition: "שיטת חימום נפוצה בניסויים אלו, המספקת טמפרטורה של כ-$100^{\\circ}C$ להאצת התגובות." },
+            { term: "פינוי פסולת", definition: "יש לפנות מבחנות וטיפים המכילים ריאגנטים מסוכנים (כגון חומצה פיקרית, ריאגנטים חומציים, פניל הידרזין) למיכלי פסולת ייעודיים בהתאם להנחיות הבטיחות." }
+        ];
+
+        // MCQ Data
+        const mcqData = [
+            { question: "מהי המטרה העיקרית של בדיקת בנדיקט?", options: ["זיהוי ספציפי של פנטוזות בתמיסה", "הבחנה בין אלדוזות לקטוזות על פי מהירות התגובה", "זיהוי נוכחות של סוכרים מחזרים", "קביעת ריכוז מדויק של סוכרוז בדגימה ביולוגית"], answer: 2, explanation: "בדיקת בנדיקט משמשת לזיהוי כללי של סוכרים מחזרים, הנותנים משקע צבעוני עם הריאגנט." },
+            { question: "איזה צבע מאפיין תגובה חיובית מהירה בבדיקת סליואנוף, המצביע על נוכחות קטוז?", options: ["כחול-ירוק עמוק", "אדום-דובדבן עז", "משקע צהוב בהיר", "חום כהה עד שחור"], answer: 1, explanation: "קטוזות מגיבות מהר בבדיקת סליואנוף ליצירת צבע אדום-דובדבן עז עם רסורצינול." },
+            { question: "מה תפקידו של נתרן קרבונט ($Na_2CO_3$) בבדיקת בנדיקט ובבדיקת חומצה פיקרית?", options: ["לשמש כחומר מחזר עיקרי בתגובה", "לספק סביבה בסיסית הדרושה לתגובת החיזור", "לזרז את הידרוליזת הסוכרים הלא-מחזרים", "לשמש כאינדיקטור צבע לזיהוי סוף התגובה"], answer: 1, explanation: "נתרן קרבונט יוצר סביבה בסיסית, החיונית לפעילותם של סוכרים כמחזרים בבדיקות אלו." },
+            { question: "איזה מהסוכרים הבאים ייתן את התגובה החיובית הברורה ביותר בבדיקת ביאל?", options: ["גלוקוז (הקסוז)", "פרוקטוז (קטוהקסוז)", "ארבינוז (פנטוז)", "לקטוז (דו-סוכר מחזר המכיל הקסוזות)"], answer: 2, explanation: "בדיקת ביאל ספציפית לפנטוזות כמו ארבינוז, הנותנות צבע כחול-ירוק. הקסוזות עשויות לתת צבעים אחרים (חום, ירוק-מלוכלך)." },
+            { question: "מדוע יש לעבוד במנדף בעת ביצוע בדיקת סליואנוף ובדיקת ביאל?", options: ["הריאגנטים מכילים חומצה הידרוכלורית בריכוז גבוה, ואדיה מסוכנים", "התגובה משחררת גזים רעילים בעלי ריח חריף במיוחד", "נדרשת טמפרטורה גבוהה במיוחד שניתן להשיג רק במנדף סגור", "הצבעים המתקבלים רגישים מאוד לאור ויש לבצע את הבדיקה בחושך יחסי הקיים במנדף"], answer: 0, explanation: "ריאגנט סליואנוף וריאגנט ביאל מכילים חומצה הידרוכלורית בריכוז גבוה, שהיא חומר מאכל ונדיף. לכן, חובה לעבוד במנדף." },
+            { question: "מהו החומר הרעיל העיקרי בבדיקת פניל הידרזין המחייב עבודה במנדף וכפפות?", options: ["נתרן אצטט", "האוסזונים הנוצרים", "פנילהידרזין הידרוכלוריד", "הסוכר הנבדק עצמו אם הוא מרוכז מאוד"], answer: 2, explanation: "פנילהידרזין הידרוכלוריד הוא חומר רעיל, ולכן יש לנקוט באמצעי זהירות מחמירים בעת השימוש בו." },
+            { question: "אילו שני סוכרים מהרשימה הבאה יתנו גבישי אוסזון זהים בבדיקת פניל הידרזין?", options: ["גלוקוז וגלקטוז", "פרוקטוז וסוכרוז", "גלוקוז ופרוקטוז", "לקטוז וארבינוז"], answer: 2, explanation: "גלוקוז (אלדוהקסוז) ופרוקטוז (קטוהקסוז) נבדלים רק בפחמנים C1 ו-C2, ולכן יתנו את אותו אוסזון (גלוקוסזון/פרוקטוסזון)." },
+            { question: "כמה מיליליטר של תמיסת סוכר מעבירים למבחנה בבדיקת חומצה פיקרית?", options: ["$0.1 \\text{ mL}$", "$0.5 \\text{ mL}$", "$1.0 \\text{ mL}$", "$2.0 \\text{ mL}$"], answer: 3, explanation: "לפי ההנחיות, מעבירים $2 \\text{ mL}$ של תמיסת סוכר למבחנה בבדיקת חומצה פיקרית." },
+            { question: "בבדיקת בנדיקט, מהו נפח ריאגנט בנדיקט שמוסיפים ל-$1 \\text{ mL}$ תמיסת סוכר?", options: ["$1 \\text{ mL}$", "$2 \\text{ mL}$", "$5 \\text{ mL}$", "$0.5 \\text{ mL}$ ריאגנט מרוכז במיוחד"], answer: 2, explanation: "מוסיפים $5 \\text{ mL}$ של ריאגנט בנדיקט ל-$1 \\text{ mL}$ תמיסת סוכר." },
+            { question: "מהו ריכוז תמיסות הסוכר הסטנדרטיות המשמשות בניסוי?", options: ["$1.0 \\text{ M}$", "$0.5 \\text{ M}$", "$0.1 \\text{ M}$", "$0.01 \\text{ M}$ לצורך רגישות מרבית של הבדיקות"], answer: 2, explanation: "כל תמיסות הסוכר (גלוקוז, פרוקטוז, וכו) הן בריכוז $0.1\\text{M}$." },
+            { question: "איזה מהבאים אינו סוכר מחזר?", options: ["גלוקוז", "פרוקטוז", "לקטוז", "סוכרוז, אלא אם עובר הידרוליזה חומצית"], answer: 3, explanation: "סוכרוז הוא דו-סוכר לא מחזר מכיוון שהפחמנים האנומריים של גלוקוז ופרוקטוז קשורים זה לזה בקשר גליקוזידי." },
+            { "question": "בבדיקת פניל הידרזין, כמה סוגי סוכרים ידועים נבדקים בנוסף לנעלם?", "options": ["שלושה סוגים: גלוקוז, פרוקטוז ולקטוז בלבד", "ארבעה סוגים: כל החד-סוכרים המחזרים מהרשימה", "חמישה סוגים: ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז", "שבעה סוגים: כל הסוכרים המפורטים בתחילת הניסוי"], "answer": 2, "explanation": "בבדיקת פניל הידרזין נבדקים חמישה סוכרים ידועים (ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז) ותמיסת נעלם אחת, סהכ 6 מבחנות." },
+            { question: "מהו תפקיד הוספת $FeCl_3$ לריאגנט ביאל?", options: ["לשמש כחומר מחזר חזק", "לשמש כקטליזטור בתגובת יצירת הצבע", "לספק סביבה חומצית לתגובה", "לשקע חלבונים העלולים להפריע לבדיקה"], answer: 1, explanation: "$FeCl_3$ (ברזל כלוריד) פועל כקטליזטור בתגובת הדחיסה בין הפורפורל (הנוצר מפנטוזות) לאורצינול, ליצירת התרכובת הצבעונית." },
+            { question: "באיזו טמפרטורה מתבצע החימום ברוב הבדיקות המתוארות?", options: ["טמפרטורת החדר, כ-$25^{\\circ}C$", "$37^{\\circ}C$, טמפרטורת גוף אופטימלית לאנזימים", "$60^{\\circ}C$, חימום מתון למניעת פירוק סוכרים", "אמבט מים רותחים, כ-$100^{\\circ}C$"], answer: 3, explanation: "רוב הבדיקות (חומצה פיקרית, בנדיקט, סליואנוף, ביאל, פניל הידרזין) דורשות חימום באמבט מים רותחים." },
+            { question: "למשך כמה זמן מחממים את המבחנות בבדיקת בנדיקט?", options: ["דקה אחת בלבד", "5 דקות", "15 דקות", "עד 40 דקות, תלוי בסוג הסוכר הנבדק"], answer: 1, explanation: "בבדיקת בנדיקט, המבחנות מושהות באמבט מים רותחים למשך 5 דקות." },
+            { question: "לאחר הוספת ריאגנט פניל הידרזין וערבוב, מהי הפעולה הבאה לפני ההסתכלות במיקרוסקופ?", options: ["קירור מיידי במי קרח לעצירת התגובה", "חימום באמבט מים רותחים למשך חצי שעה והנחה להתקררות", "הוספת חומצה חזקה לנטרול עודפי הריאגנט", "צנטריפוגציה להפרדת הגבישים מהתמיסה העליונה"], answer: 1, explanation: "לאחר הוספת הריאגנט וערבוב, המבחנות מונחות באמבט מים רותחים למשך חצי שעה, ולאחר מכן מאפשרים להן להתקרר כדי שהאוסזונים ישקעו ויתגבשו." },
+            { question: "כמה מיקרוליטר (${\\mu}L$) של תמיסה המכילה גבישי אוסזון מעבירים לזכוכית נושאת לבדיקה במיקרוסקופ?", options: ["$0.5 \\text{ } {\\mu}L$", "$5 \\text{ } {\\mu}L$", "$50 \\text{ } {\\mu}L$", "$100 \\text{ } {\\mu}L$ כדי להבטיח כמות מספקת של גבישים"], answer: 1, explanation: "מעבירים $5 \\text{ } {\\mu}L$ (מיקרוליטר) של תמיסה עם גבישים לזכוכית נושאת." },
+            { question: "הוראות פינוי הפסולת עבור בדיקת חומצה פיקרית מציינות:", options: ["ניתן לשפוך לכיור עם הרבה מים זורמים", "לפנות למיכל פסולת של חומצה פיקרית", "לנטרל עם בסיס חזק לפני השפיכה לכיור", "לאדות את הנוזלים במנדף ולפנות את המוצק כפסולת רגילה"], answer: 1, explanation: "ההערה מציינת: בתם הניסוי, יש לפנות את המבחנות, והטיפים למיכל פסולת של חומצה פיקרית." },
+            { question: "איזה מהסוכרים הבאים הוא טרי-סוכר שאינו מחזר?", options: ["לקטוז", "סוכרוז", "רפינוז", "ארבינוז המורכב משלוש יחידות זהות"], answer: 2, explanation: "רפינוז הוא טרי-סוכר המורכב מגלקטוז, גלוקוז ופרוקטוז, והוא אינו מחזר." },
+            { question: "מהו מספר המבחנות הכולל (כולל נעלם) המוכנות לבדיקת סליואנוף?", options: ["6 מבחנות, אחת לכל סוכר מחזר", "7 מבחנות, אחת לכל סוכר ידוע", "8 מבחנות, אחת לכל סוכר ידוע (7) ואחת לנעלם", "10 מבחנות, כולל ביקורות חיוביות ושליליות מרובות"], answer: 2, explanation: "ההנחיה היא לבדוק את כל 7 הסוכרים הידועים וגם את הנעלם, לכן מכינים 8 מבחנות לבדיקת סליואנוף (וגם לבנדיקט, פיקרית וביאל)." },
+            { question: "מהי כמות הרסורצינול המשמשת להכנת ליטר אחד של ריאגנט סליואנוף?", options: ["$5.0 \\text{ g}$", "$0.5 \\text{ g}$", "$0.05 \\text{ g}$", "$0.005 \\text{ g}$ כיוון שהוא חומר פעיל מאוד בריכוזים נמוכים"], answer: 2, explanation: "להכנת ליטר ריאגנט סליואנוף משתמשים ב-$0.05 \\text{ g}$ רסורצינול." },
+            { question: "מהו היחס בין חומצה הידרוכלורית מרוכזת למים בהכנת ריאגנט סליואנוף?", options: ["יחס 1:1 (חומצה:מים)", "יחס 1:2 (חומצה:מים)", "יחס 2:1 (חומצה:מים)", "יחס 1:5 (חומצה:מים) לדילול משמעותי של החומצה"], answer: 1, explanation: "ריאגנט סליואנוף מוכן עם חומצה הידרוכלורית מהולה: חלק אחד חומצה מרוכזת לשני חלקי מים." },
+            { question: "מהי הסיבה להוספת נתרן אצטט לריאגנט פניל הידרזין?", options: ["לשמש כחומר משמר המונע פירוק של פניל הידרזין", "לשמש כבופר לשמירה על $pH$ אופטימלי ליצירת אוסזונים", "להגביר את מסיסות גבישי האוסזון בתמיסה", "לזרז את תגובת החיזור של הסוכר על ידי פניל הידרזין"], answer: 1, explanation: "נתרן אצטט משמש כבופר. פנילהידרזין הידרוכלוריד הוא מלח של בסיס חלש וחומצה חזקה. הנתרן אצטט מגיב עם ה-$HCl$ ומשחרר חומצה אצטית, מה שמביא את ה-$pH$ לערך מתאים (סביב 4-5) ליצירת אוסזונים." },
+            { question: "בבדיקת חומצה פיקרית, כמה זמן יש לחמם את המבחנות עד להופעת צבע?", options: ["בדיוק 5 דקות", "עד 15 דקות", "30 שניות בלבד", "שעה שלמה למיצוי מלא של התגובה"], answer: 1, explanation: "מחממים באמבט מים רותחים עד להיווצרות צבע, עד 15 דקות." },
+            { question: "איזה סוכר אינו נבדק בבדיקת פניל הידרזין על פי הפרוטוקול?", options: ["ארבינוז", "פרוקטוז", "סוכרוז", "לקטוז שהוא דו סוכר מחזר"], answer: 2, explanation: "בדיקת פניל הידרזין מיועדת לסוכרים מחזרים. סוכרוז (וגם רפינוז) הם סוכרים לא מחזרים ולכן אינם נבדקים ישירות בפרוטוקול זה (נבדקים רק ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז, ונעלם)." },
+            { question: "מהי פעולת הוורטקס המוזכרת בהנחיות?", options: ["חימום מהיר של הדגימה באמצעות גלי קול", "ערבוב יסודי של תוכן המבחנה", "מדידת רמת ה-$pH$ של התמיסה", "הפרדת משקעים מהנוזל העליון"], answer: 1, explanation: "ורטקס הוא מכשיר מעבדה המשמש לערבוב מהיר ויסודי של נוזלים במבחנות." },
+            { question: "כמה גרם של $CuSO_4$ (נחושת גופרתית) דרושים להכנת ליטר ריאגנט בנדיקט?", options: ["$1.75 \\text{ g}$", "$17.5 \\text{ g}$", "$100 \\text{ g}$", "$197 \\text{ g}$ כיוון שהוא המרכיב הפעיל העיקרי בריאגנט"], answer: 1, explanation: "להכנת ליטר ריאגנט בנדיקט דרושים $17.5 \\text{ g}$ של $CuSO_4$." },
+            { question: "מהי חומצה פיקרית מבחינה כימית?", options: ["חומצה חלשה המשמשת כאינדיקטור $pH$", "חומצה אורגנית בעלת טבעות ארומטיות וקבוצות ניטרו, המשמשת גם כחומר נפץ", "חומצה אי-אורגנית חזקה המשמשת לפירוק סוכרים", "פוליסכריד טבעי בעל תכונות צבעוניות"], answer: 1, explanation: "חומצה פיקרית, או 2,4,6-טריניטרופנול, היא תרכובת אורגנית צהובה וגבישית. היא משמשת במעבדה אך ידועה גם כחומר נפץ (כשהיא יבשה)." },
+            { question: "אילו אמצעי בטיחות מיוחדים נדרשים בעבודה עם ריאגנט סליואנוף וריאגנט ביאל?", options: ["משקפי מגן בלבד, אין צורך באמצעים נוספים", "עבודה במנדף ולבישת שתי זוגות כפפות", "מסכת פנים מלאה וחליפת מגן אטומה לנוזלים", "אין צורך באמצעי בטיחות מיוחדים, אלו ריאגנטים עדינים"], answer: 1, explanation: "ההנחיות מדגישות: יש לעבוד במנדף בלבד וללבוש שתי זוגות כפפות בעת שימוש בריאגנט סליואנוף ובריאגנט ביאל, בשל נוכחות חומצה הידרוכלורית מרוכזת." },
+            { question: "באיזו בדיקה חשוב במיוחד לעקוב אחר סדר הופעת הצבע כדי להבדיל בין סוגי סוכרים?", options: ["בדיקת בנדיקט, בה סדר הצבעים ירוק-צהוב-כתום-אדום מעיד על כמות", "בדיקת סליואנוף, בה מהירות הופעת הצבע האדום מבדילה קטוזות מאלדוזות", "בדיקת חומצה פיקרית, בה עוצמת הצבע האדום-חום קשורה לריכוז", "בדיקת ביאל, בה כל הפנטוזות מגיבות בדיוק באותו קצב ובאותו גוון כחול-ירוק"], answer: 1, explanation: "בבדיקת סליואנוף, קטוזות מגיבות מהר יותר מאלדוזות. לכן, מעקב אחר סדר הופעת הצבע האדום-דובדבן הוא קריטי להבחנה." }
+        ];
+
+        // True/False Data
+        const tfData = [
+            { question: "בדיקת בנדיקט מזהה ספציפית רק חד-סוכרים מחזרים.", answer: false, explanation: "בדיקת בנדיקט מזהה כל סוכר מחזר, כולל דו-סוכרים מחזרים כמו לקטוז." },
+            { question: "צבע אדום-דובדבן מהיר בבדיקת סליואנוף מעיד על נוכחות אלדוז.", answer: false, explanation: "צבע אדום-דובדבן מהיר בבדיקת סליואנוף מעיד על נוכחות קטוז (כמו פרוקטוז)." },
+            { question: "נתרן ציטרט בריאגנט בנדיקט מונע שיקוע של $CuSO_4$.", answer: false, explanation: "נתרן ציטרט מונע שיקוע של $Cu(OH)_2$ (נחושת הידרוקסיד) על ידי יצירת קומפלקס עם יוני $Cu^{2+}$, ולא מונע שיקוע של $CuSO_4$ שהוא מסיס במים." },
+            { question: "בדיקת ביאל משמשת לזיהוי הקסוזות.", answer: false, explanation: "בדיקת ביאל משמשת בעיקר לזיהוי פנטוזות (נותנות צבע כחול-ירוק). הקסוזות עשויות לתת צבעים אחרים (חום, ירוק עכור)." },
+            { question: "פניל הידרזין הוא חומר בטוח לשימוש ואין צורך באמצעי זהירות מיוחדים.", answer: false, explanation: "פניל הידרזין הוא חומר רעיל. חובה לעבוד איתו במנדף וללבוש שתי זוגות כפפות." },
+            { question: "גלוקוז וגלקטוז יתנו גבישי אוסזון זהים.", answer: false, explanation: "גלוקוז וגלקטוז הם C4 אפימרים, כלומר נבדלים בקונפיגורציה סביב פחמן 4. הם יתנו אוסזונים שונים. גלוקוז ופרוקטוז (או גלוקוז ומנוז) יתנו אוסזונים זהים." },
+            { question: "סוכרוז הוא סוכר מחזר חזק.", answer: false, explanation: "סוכרוז הוא סוכר שאינו מחזר, מכיוון שהפחמנים האנומריים שלו קשורים זה לזה." },
+            { question: "רפינוז הוא דו-סוכר מחזר.", answer: false, explanation: "רפינוז הוא טרי-סוכר (מורכב משלוש יחידות סוכר) והוא אינו מחזר." },
+            { question: "כל הבדיקות המתוארות דורשות חימום באמבט מים רותחים.", answer: true, explanation: "כל חמש הבדיקות (חומצה פיקרית, בנדיקט, סליואנוף, ביאל, פניל הידרזין) כוללות שלב חימום באמבט מים רותחים." },
+            { question: "בבדיקת פניל הידרזין, יש להוסיף $1 \\text{ mL}$ של ריאגנט פניל הידרזין לכל מבחנה.", answer: false, explanation: "לפי ההוראות, מוסיפים $1.25 \\text{ mL}$ של תמיסת פנילהידרזין לכל מבחנה בבדיקת פניל הידרזין." },
+            { question: "הנעלם לזיהוי בניסוי יכול להיות כל סוג של פחמימה.", answer: false, explanation: "הנעלם הוא אחת מתמיסות הסוכר $0.1\\text{M}$ שצוינו בתחילת הניסוי (גלוקוז, פרוקטוז, גלקטוז, לקטוז, סוכרוז, ארבינוז, רפינוז)." },
+            { question: "חומצה פיקרית משנה את צבעה מצהוב לאדום-חום בנוכחות סוכר מחזר.", answer: true, explanation: "סוכרים מחזרים מחזרים חומצה פיקרית (צהובה) לחומצה פיקרמית (אדומה-חומה) בסביבה בסיסית ובחימום." },
+            { question: "בדיקת סליואנוף דורשת $0.1 \\text{ mL}$ של תמיסת סוכר ו-$3 \\text{ mL}$ של ריאגנט.", answer: true, explanation: "מעבירים $0.1 \\text{ mL}$ תמיסת סוכר ומוסיפים $3 \\text{ mL}$ ריאגנט סליואנוף." },
+            { question: "ריאגנט ביאל מכיל רסורצינול כמרכיב עיקרי ליצירת צבע.", answer: false, explanation: "ריאגנט ביאל מכיל אורצינול (לא רסורצינול, שהוא בריאגנט סליואנוף) כמרכיב ליצירת צבע עם פורפורלים מפנטוזות." },
+            { "question": "תמיסת קרבונט הנתרן המשמשת בבדיקת חומצה פיקרית היא בריכוז $0.1\\text{M}$.", "answer": false, "explanation": "תמיסת קרבונט הנתרן המשמשת בבדיקת חומצה פיקרית היא בריכוז $1\\text{M}$." },
+            { question: "יש לקרר את המבחנות על השולחן לאחר החימום בבדיקת בנדיקט.", answer: true, explanation: "לאחר חימום של 5 דקות, יש לקרר את המבחנות על השולחן ולהשוות את הצבעים והמשקעים." },
+            { question: "בדיקת פניל הידרזין בודקת את כל שבעת הסוכרים הידועים בנוסף לנעלם.", answer: false, explanation: "בדיקת פניל הידרזין בודקת חמישה סוכרים ידועים (ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז) ואת הנעלם. סוכרוז ורפינוז אינם נבדקים בבדיקה זו." },
+            { question: "ניתן להבדיל בין פרוקטוז לסוכרוז באמצעות בדיקת סליואנוף על סמך מהירות התגובה.", answer: true, explanation: "פרוקטוז (קטוז חופשי) יגיב מהר מאוד. סוכרוז, לאחר הידרוליזה חומצית לפרוקטוז וגלוקוז, גם ייתן תגובה חיובית אך ייתכן שלאחר זמן ארוך יותר או בעוצמה שונה בהתחלה, מה שיכול לאפשר הבדלה." },
+            { question: "הכנת ריאגנט ביאל כוללת המס של $3 \\text{ g}$ אורצינול בליטר אחד של חומצה הידרוכלורית מהולה.", answer: true, explanation: "לפי ההוראות, ממיסים $3 \\text{ g}$ אורצינול בליטר חומצה הידרוכלורית מהולה פי 2 (1:1 עם מים) ומוסיפים $FeCl_3$." },
+            { question: "השימוש בכפפות כפולות מומלץ רק בעבודה עם פניל הידרזין.", answer: false, explanation: "השימוש בכפפות כפולות מומלץ (וחובה על פי הנוהל) גם בעבודה עם ריאגנט סליואנוף וריאגנט ביאל, בשל החומצה החזקה." }
+        ];
+        
+        // --- APPLICATION LOGIC (Identical to previous script, hence not repeated for brevity) ---
+        // Re-using the JS from the first response as it's generic.
+        // Current indices for navigation
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+
+        // DOM Elements
+        const theoryContentDiv = document.getElementById('theory-content');
+        
+        const cardFront = document.getElementById('current-card-front');
+        const cardBack = document.getElementById('current-card-back');
+        const cardCounterEl = document.getElementById('card-counter');
+        const studyCardEl = document.getElementById('study-card');
+
+        const mcqQuestionText = document.getElementById('mcq-question-text');
+        const mcqOptionsContainer = document.getElementById('mcq-options-container');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounterEl = document.getElementById('mcq-counter');
+        const mcqViewAllContainer = document.getElementById('mcq-view-all-container');
+
+        const tfQuestionText = document.getElementById('tf-question-text');
+        const tfOptionsContainer = document.getElementById('tf-options-container');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounterEl = document.getElementById('tf-counter');
+        const tfViewAllContainer = document.getElementById('tf-view-all-container');
+
+        // --- INITIALIZATION ---
+        function initApp() {
+            theoryContentDiv.innerHTML = theoryContent;
+            displayCard(currentCardIndex);
+            displayMcq(currentMcqIndex, false); 
+            displayTf(currentTfIndex, false);   
+            renderMath();
+        }
+
+        function renderMath() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch(function (err) {
+                    console.error('MathJax typesetting error: ' + err);
+                });
+            }
+        }
+
+        function displayCard(index) {
+            const card = studyCardsData[index];
+            cardFront.innerHTML = card.term; 
+            cardBack.innerHTML = card.definition; 
+            studyCardEl.classList.remove('is-flipped');
+            cardCounterEl.textContent = `כרטיסיה ${index + 1} / ${studyCardsData.length}`;
+            renderMath(); 
+        }
+
+        function flipCard() {
+            studyCardEl.classList.toggle('is-flipped');
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % studyCardsData.length;
+            displayCard(currentCardIndex);
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + studyCardsData.length) % studyCardsData.length;
+            displayCard(currentCardIndex);
+        }
+        
+        function displayMcq(index, isViewAll) {
+            const q = mcqData[index];
+            let questionTextEl, optionsContainerEl, feedbackEl, explanationEl, counterEl;
+
+            if (isViewAll) {
+                questionTextEl = document.getElementById(`mcq-all-question-text-${index}`);
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${index}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${index}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${index}`);
+            } else {
+                questionTextEl = mcqQuestionText;
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+                counterEl = mcqCounterEl;
+                if (counterEl) counterEl.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            }
+            
+            if (!questionTextEl) return; 
+
+            questionTextEl.innerHTML = q.question; 
+            optionsContainerEl.innerHTML = ''; 
+
+            q.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; 
+                button.onclick = () => selectMcqOption(index, i, isViewAll);
+                optionsContainerEl.appendChild(button);
+            });
+
+            if(feedbackEl) feedbackEl.style.display = 'none';
+            if(explanationEl) explanationEl.style.display = 'none';
+            
+            if (q.isAnswered) {
+                showMcqFeedback(index, q.selectedOption, isViewAll);
+            }
+            renderMath();
+        }
+
+        function selectMcqOption(questionIndex, optionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            if (q.isAnswered) return; 
+
+            q.selectedOption = optionIndex;
+            q.isAnswered = true;
+            
+            showMcqFeedback(questionIndex, optionIndex, isViewAll);
+
+            let currentOptionsContainer = isViewAll ? document.getElementById(`mcq-all-options-container-${questionIndex}`) : mcqOptionsContainer;
+            if (currentOptionsContainer) {
+                 const buttonsToDisable = currentOptionsContainer.getElementsByTagName('button');
+                for (let btn of buttonsToDisable) {
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        function showMcqFeedback(questionIndex, selectedOptionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            let optionsContainerEl, feedbackEl, explanationEl;
+
+            if (isViewAll) {
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${questionIndex}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${questionIndex}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${questionIndex}`);
+            } else {
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+            }
+            
+            if (!optionsContainerEl || !feedbackEl || !explanationEl) return; 
+
+            const buttons = optionsContainerEl.getElementsByTagName('button');
+            if (buttons[selectedOptionIndex]) { // Check if button exists
+                 buttons[selectedOptionIndex].classList.add(selectedOptionIndex === q.answer ? 'correct' : 'incorrect');
+            }
+            if (selectedOptionIndex !== q.answer && buttons[q.answer]) { // Check if button exists
+                buttons[q.answer].classList.add('correct'); 
+            }
+
+            for (let btn of buttons) {
+                btn.disabled = true; 
+            }
+
+            feedbackEl.textContent = selectedOptionIndex === q.answer ? 'נכון!' : 'לא נכון.';
+            feedbackEl.className = `feedback ${selectedOptionIndex === q.answer ? 'correct' : 'incorrect'}`;
+            feedbackEl.style.display = 'block';
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`; 
+            explanationEl.style.display = 'block';
+            renderMath();
+        }
+
+        function nextMcq() {
+            currentMcqIndex = (currentMcqIndex + 1) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function prevMcq() {
+            currentMcqIndex = (currentMcqIndex - 1 + mcqData.length) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function toggleViewAllMcqs() {
+            const btn = document.getElementById('view-all-mcqs-button');
+            if (mcqViewAllContainer.style.display === 'none') {
+                mcqViewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל השאלות';
+                if (mcqViewAllContainer.innerHTML.trim() === '') { 
+                    mcqData.forEach((q, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'question-item';
+                        itemDiv.innerHTML = `
+                            <p id="mcq-all-question-text-${index}" class="question-text"></p>
+                            <div id="mcq-all-options-container-${index}" class="options-container"></div>
+                            <div id="mcq-all-feedback-${index}" class="feedback" style="display:none;"></div>
+                            <div id="mcq-all-explanation-${index}" class="explanation" style="display:none;"></div>
+                        `;
+                        mcqViewAllContainer.appendChild(itemDiv);
+                        displayMcq(index, true); 
+                    });
+                }
+            } else {
+                mcqViewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל השאלות';
+            }
+            renderMath();
+        }
+
+        function displayTf(index, isViewAll) {
+            const q = tfData[index];
+            let questionTextEl, optionsContainerEl, feedbackEl, explanationEl, counterEl;
+
+            if (isViewAll) {
+                questionTextEl = document.getElementById(`tf-all-question-text-${index}`);
+                optionsContainerEl = document.getElementById(`tf-all-options-container-${index}`);
+                feedbackEl = document.getElementById(`tf-all-feedback-${index}`);
+                explanationEl = document.getElementById(`tf-all-explanation-${index}`);
+            } else {
+                questionTextEl = tfQuestionText;
+                optionsContainerEl = tfOptionsContainer;
+                feedbackEl = tfFeedback;
+                explanationEl = tfExplanation;
+                counterEl = tfCounterEl;
+                if(counterEl) counterEl.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            }
+
+            if (!questionTextEl) return;
+
+            questionTextEl.innerHTML = q.question; 
+            optionsContainerEl.innerHTML = '';
+
+            const trueButton = document.createElement('button');
+            trueButton.textContent = 'נכון';
+            trueButton.onclick = () => selectTfOption(index, true, isViewAll);
+            optionsContainerEl.appendChild(trueButton);
+
+            const falseButton = document.createElement('button');
+            falseButton.textContent = 'לא נכון';
+            falseButton.onclick = () => selectTfOption(index, false, isViewAll);
+            optionsContainerEl.appendChild(falseButton);
+            
+            if(feedbackEl) feedbackEl.style.display = 'none';
+            if(explanationEl) explanationEl.style.display = 'none';
+
+            if (q.isAnswered) {
+                showTfFeedback(index, q.selectedOption, isViewAll);
+            }
+            renderMath();
+        }
+
+        function selectTfOption(questionIndex, chosenAnswer, isViewAll) {
+            const q = tfData[questionIndex];
+            if (q.isAnswered) return;
+
+            q.selectedOption = chosenAnswer;
+            q.isAnswered = true;
+
+            showTfFeedback(questionIndex, chosenAnswer, isViewAll);
+            
+            let currentOptionsContainer = isViewAll ? document.getElementById(`tf-all-options-container-${questionIndex}`) : tfOptionsContainer;
+            if (currentOptionsContainer) {
+                const buttonsToDisable = currentOptionsContainer.getElementsByTagName('button');
+                for (let btn of buttonsToDisable) {
+                    btn.disabled = true;
+                }
+            }
+        }
+        
+        function showTfFeedback(questionIndex, chosenAnswer, isViewAll) {
+            const q = tfData[questionIndex];
+            let optionsContainerEl, feedbackEl, explanationEl;
+
+            if (isViewAll) {
+                optionsContainerEl = document.getElementById(`tf-all-options-container-${questionIndex}`);
+                feedbackEl = document.getElementById(`tf-all-feedback-${questionIndex}`);
+                explanationEl = document.getElementById(`tf-all-explanation-${questionIndex}`);
+            } else {
+                optionsContainerEl = tfOptionsContainer;
+                feedbackEl = tfFeedback;
+                explanationEl = tfExplanation;
+            }
+
+            if (!optionsContainerEl || !feedbackEl || !explanationEl) return;
+
+            const buttons = optionsContainerEl.getElementsByTagName('button'); 
+            const correctButtonIndex = q.answer ? 0 : 1;
+            const chosenButtonIndex = chosenAnswer ? 0 : 1;
+
+            if (buttons[chosenButtonIndex]) { // Check if button exists
+                buttons[chosenButtonIndex].classList.add(chosenAnswer === q.answer ? 'correct' : 'incorrect');
+            }
+            if (chosenAnswer !== q.answer && buttons[correctButtonIndex]) { // Check if button exists
+                buttons[correctButtonIndex].classList.add('correct');
+            }
+            
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+
+            feedbackEl.textContent = chosenAnswer === q.answer ? 'נכון!' : 'לא נכון.';
+            feedbackEl.className = `feedback ${chosenAnswer === q.answer ? 'correct' : 'incorrect'}`;
+            feedbackEl.style.display = 'block';
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`; 
+            explanationEl.style.display = 'block';
+            renderMath();
+        }
+
+
+        function nextTf() {
+            currentTfIndex = (currentTfIndex + 1) % tfData.length;
+            displayTf(currentTfIndex, false);
+        }
+
+        function prevTf() {
+            currentTfIndex = (currentTfIndex - 1 + tfData.length) % tfData.length;
+            displayTf(currentTfIndex, false);
+        }
+
+        function toggleViewAllTfs() {
+            const btn = document.getElementById('view-all-tfs-button');
+            if (tfViewAllContainer.style.display === 'none') {
+                tfViewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל השאלות';
+                if (tfViewAllContainer.innerHTML.trim() === '') { 
+                    tfData.forEach((q, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'question-item';
+                        itemDiv.innerHTML = `
+                            <p id="tf-all-question-text-${index}" class="question-text"></p>
+                            <div id="tf-all-options-container-${index}" class="options-container"></div>
+                            <div id="tf-all-feedback-${index}" class="feedback" style="display:none;"></div>
+                            <div id="tf-all-explanation-${index}" class="explanation" style="display:none;"></div>
+                        `;
+                        tfViewAllContainer.appendChild(itemDiv);
+                        displayTf(index, true); 
+                    });
+                }
+            } else {
+                tfViewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל השאלות';
+            }
+            renderMath();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללימוד - מיקרוביולוגיה: מיקרוסקופ וצביעה</title>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Define inline math delimiters
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Define display math delimiters
+            processEscapes: true // Allows \$ to represent a literal dollar sign
+          },
+          svg: {
+            fontCache: 'global' // Use global font cache for SVG output
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] // Tags to ignore during processing
+          }
+        };
+    </script>
+    <!-- Load MathJax 3 from CDN using tex-svg preset -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <style>
+        /* Basic Reset & Dark Mode Palette */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #333;
+            color: #E0E0E0;
+            direction: rtl; /* Ensure RTL direction */
+            line-height: 1.6;
+        }
+
+        /* Container */
+        .container {
+            max-width: 90%;
+            margin: 20px auto;
+            padding: 25px;
+            background-color: #4a4a4a; /* Slightly lighter than #666 for better contrast with #333 */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Headings */
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accent for headings */
+            margin-bottom: 15px;
+            border-bottom: 1px solid #666;
+            padding-bottom: 5px;
+        }
+         h1 { font-size: 1.8em; }
+         h2 { font-size: 1.5em; }
+         h3 { font-size: 1.2em; margin-top: 25px; }
+
+        /* Paragraphs and Lists */
+        p, ul {
+            margin-bottom: 15px;
+        }
+        ul {
+            padding-right: 20px; /* Indentation for RTL lists */
+        }
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Buttons */
+        button, .button {
+            background-color: #3D90D7; /* Blue accent */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        button:hover, .button:hover {
+            background-color: #2a7ab0; /* Darker blue on hover */
+        }
+        button:active, .button:active {
+            transform: scale(0.98); /* Slight shrink on click */
+        }
+        button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Interactive Element Sections (Cards, Questions) */
+        .interactive-section {
+            background-color: #5f5f5f; /* Slightly lighter gray for sections */
+            padding: 20px;
+            margin-top: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            border: 1px solid #777;
+        }
+
+        /* Navigation Area */
+        .navigation {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Counters */
+        .counter {
+            margin: 0 20px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* Study Cards */
+        .card-container {
+            perspective: 1000px; /* For 3D flip effect */
+            min-height: 150px; /* Ensure minimum height */
+            margin-bottom: 20px; /* Spacing below card */
+        }
+        .card {
+            position: relative;
+            width: 100%;
+            min-height: 150px;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Safari */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #666;
+            border: 1px solid #777;
+            border-radius: 5px;
+        }
+        .card-front {
+            /* Styles for front face */
+            font-weight: bold;
+        }
+        .card-back {
+            /* Styles for back face */
+            transform: rotateY(180deg);
+        }
+
+        /* MCQ and True/False Styling */
+        .question-area {
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #555;
+            border-radius: 5px;
+        }
+        .question-text {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Space between options */
+        }
+        .option, .tf-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px; /* Consistent spacing */
+            text-align: right; /* Align text to the right for Hebrew */
+            background-color: #666;
+            border: 1px solid #888;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .option:hover, .tf-button:hover {
+            background-color: #777;
+            border-color: #999;
+        }
+        .option.selected {
+             /* Style remains neutral until correctness is known */
+             border-width: 2px;
+        }
+        .option.correct, .tf-button.correct {
+            background-color: #4CAF50; /* Green */
+            border-color: #388E3C;
+            color: white;
+            font-weight: bold;
+        }
+        .option.incorrect, .tf-button.incorrect {
+            background-color: #F44336; /* Red */
+            border-color: #D32F2F;
+            color: white;
+        }
+        .option.disabled, .tf-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+            pointer-events: none; /* Prevent further clicks */
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #505050; /* Slightly darker background for explanation */
+            border-radius: 5px;
+            border: 1px dashed #777;
+        }
+        .explanation p {
+            margin: 0;
+        }
+
+        /* View All Section */
+        .all-questions-container {
+            margin-top: 20px;
+            border-top: 2px solid #3D90D7;
+            padding-top: 20px;
+        }
+        .all-questions-container .question-block {
+             background-color: #5f5f5f; /* Same as interactive section */
+             padding: 15px;
+             margin-bottom: 20px;
+             border-radius: 8px;
+             border: 1px solid #777;
+        }
+        .all-questions-container .question-block .options-container .option {
+             background-color: #666; /* Ensure options have correct background */
+        }
+        .all-questions-container .question-block .options-container .option:hover {
+             background-color: #777;
+        }
+
+        /* Ensure MathJax SVG renders correctly */
+        mjx-container svg {
+            display: inline-block; /* Prevent block behavior */
+            direction: ltr; /* Ensure math renders LTR */
+        }
+
+        /* Add clear separation between main interactive elements and navigation */
+        .interactive-section + .navigation {
+            margin-top: 25px; /* Increased spacing */
+        }
+        .navigation + .view-all-button-container {
+            margin-top: 25px; /* Spacing before View All button */
+        }
+        .view-all-button-container {
+            text-align: center;
+            margin-bottom: 25px; /* Spacing after View All button */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>כלי עזר ללימוד - מיקרוביולוגיה: מיקרוסקופ וצביעה</h1>
+        <p>מבוסס על חומר מעבדה מס' 2 (מבוא למיקרוסקופ ומורפולוגיה)</p>
+
+        <!-- Theory Section -->
+        <section id="theory">
+            <h2>תאוריה מרכזית</h2>
+            <p>המיקרוסקופ הוא כלי חיוני במיקרוביולוגיה המאפשר צפייה באובייקטים זעירים, כגון חיידקים. קיימים סוגים שונים, ביניהם מיקרוסקופ אור רגיל ומיקרוסקופ פאזות (Phase Contrast).</p>
+            <p><strong>מיקרוסקופ אור רגיל:</strong> דורש לרוב צביעה של הדגימה כדי להבחין במבנים, תהליך שלרוב הורג את התאים.</p>
+            <p><strong>מיקרוסקופ פאזות:</strong> מאפשר צפייה בתאים חיים ללא צביעה. הוא מנצל הבדלים במקדמי שבירת האור בין חלקי התא השונים לסביבה המימית, ומתרגם הזזות מופע (phase shifts) להבדלי ניגוד (contrast) בתמונה הנראית. שימוש בפילטר פאזות מתאים לאובייקטיב הוא הכרחי.</p>
+            <p><strong>מבנה בסיסי של מיקרוסקופ אור:</strong></p>
+            <ul>
+                <li><strong>מערכת אופטית:</strong> מורכבת משתי מערכות עדשות עיקריות:
+                    <ul>
+                        <li><strong>אובייקטיב (Objective):</strong> מערכת עדשות הקרובה לדגימה (פרפרט). לרוב כוללת מספר עדשות עם הגדלות שונות (למשל, $10 \times$, $40 \times$, $100 \times$).</li>
+                        <li><strong>אוקולר (Ocular/Eyepiece):</strong> מערכת עדשות הקרובה לעין הצופה. מגדילה את התמונה שנוצרה על ידי האובייקטיב (לרוב פי $10 \times$).</li>
+                    </ul>
+                </li>
+                <li><strong>מערכת מכנית:</strong> במה (Stage) להנחת הפרפרט, ברגי מיקוד (גס ועדין - Coarse/Fine focus), מקור אור, קונדנסור (מרכז אור), דיאפרגמה (מווסתת כמות אור).</li>
+            </ul>
+            <p><strong>הגדלה כוללת:</strong> ההגדלה הסופית של הדגימה היא מכפלת ההגדלה של האובייקטיב בהגדלה של האוקולר:</p>
+            $$ \text{Total Magnification} = \text{Objective Magnification} \times \text{Ocular Magnification} $$
+            <p>לדוגמה, עם אובייקטיב $40 \times$ ואוקולר $10 \times$, ההגדלה הכוללת היא $400 \times$.</p>
+
+            <p><strong>שימוש במיקרוסקופ:</strong></p>
+            <ol>
+                <li>ניקוי עדשות (במידת הצורך, בנייר עדשות ייעודי ואתנול $96\%$).</li>
+                <li>הדלקת מקור האור וויסות עוצמתו.</li>
+                <li>התחלה עם האובייקטיב בעל ההגדלה הנמוכה ביותר ($10 \times$) ובמת המיקרוסקופ במצב הנמוך ביותר.</li>
+                <li>הנחת הפרפרט על הבמה וקיבועו.</li>
+                <li>מיקוד ראשוני בעזרת בורג המיקוד הגס, ולאחר מכן מיקוד עדין בעזרת בורג המיקוד העדין עד לקבלת תמונה חדה.</li>
+                <li>מעבר להגדלות גבוהות יותר ($40 \times$, $100 \times$). בהגדלות אלו, יש להשתמש <strong>רק</strong> בבורג המיקוד העדין.</li>
+                <li><strong>שמן אימרסיה (Immersion Oil):</strong> נדרש רק עבור אובייקטיב $100 \times$. מניחים טיפה קטנה על הפרפרט לפני סיבוב האובייקטיב למקומו. השמן בעל מקדם שבירה דומה לזכוכית ומשפר את הרזולוציה על ידי מניעת פיזור קרני אור. חשוב: אין לחזור להגדלות נמוכות יותר לאחר שימוש בשמן ללא ניקוי יסודי, ואין להביא עדשות אחרות למגע עם השמן.</li>
+            </ol>
+             <p><strong>טיפול ואחזקה:</strong> יש לשמור על ניקיון העדשות (ניקוי באתנול $96\%$ ונייר עדשות), במיוחד לאחר שימוש בשמן אימרסיה. בסיום העבודה, יש להשאיר את המיקרוסקופ כשהאובייקטיב בעל ההגדלה הנמוכה ביותר (או ללא אובייקטיב בנתיב האור) נמצא מול הבמה, לכבות את האור ולכסות את המיקרוסקופ.</p>
+            <p><strong>מדידה מיקרוסקופית:</strong> ניתן למדוד גודל של אובייקטים באמצעות שילוב של אוקולר מיקרומטרי (סרגל בעין) ואובייקט מיקרומטרי (סרגל על זכוכית נושאת - slide) לכיול.</p>
+
+            <h3>מורפולוגיה וצביעה של חיידקים</h3>
+            <p><strong>מורפולוגיה חיידקית:</strong> תיאור המראה של תא חיידק יחיד או קבוצת תאים. כולל:</p>
+            <ul>
+                <li><strong>גודל:</strong> רוב החיידקים הם בקוטר של $0.2 \, \mu m$ עד $5 \, \mu m$.</li>
+                <li><strong>צורה:</strong> קוקוס (Coccus - כדורי), מתג (Rod/Bacillus - מקלון), ספירילום (Spirillum - סלילני), מתג מכופף (Vibrio).</li>
+                <li><strong>סידור תאים:</strong> בודדים, זוגות (diplo-), שרשראות (strepto-), אשכולות (staphylo-), צברים.</li>
+                <li><strong>מבנים נוספים:</strong> ספורות (נבגים - עמידים לתנאי סביבה קשים), קפסולה (שכבה רירית חיצונית), פלגלות (שוטונים - לתנועה).</li>
+                <li><strong>תנועה:</strong> נוכחות או היעדר תנועה עצמית.</li>
+            </ul>
+             <p><strong>צביעה ביולוגית:</strong> טכניקה לשיפור הניגודיות והדגשת מבנים תאיים לצפייה במיקרוסקופ אור.</p>
+            <ul>
+                <li><strong>חומר צבע:</strong> תרכובת כימית המכילה קבוצת כרומופור (Chromophore - בולעת אור ומקנה צבע) וקבוצת אוקסוכרום (Auxochrome - מאפשרת קישור לחומר הנצבע).</li>
+                <li><strong>סוגי צבעים:</strong>
+                    <ul>
+                        <li><strong>צבעים בסיסיים:</strong> טעונים חיובית. נקשרים למבנים טעונים שלילית בתא (כמו חומצות גרעין, דופן תא). דוגמאות: מתילן בלו, קריסטל ויולט, ספרנין.</li>
+                        <li><strong>צבעים חומציים:</strong> טעונים שלילית. נקשרים למבנים טעונים חיובית או משמשים לצביעת הרקע (צביעה שלילית). דוגמאות: ניגרוזין, קונגו רד.</li>
+                    </ul>
+                </li>
+            </ul>
+            <p><strong>תהליך צביעה פשוטה (Simple Staining):</strong></p>
+            <ol>
+                <li><strong>פיקסציה (קיבוע):</strong> הרג החיידקים והצמדתם לזכוכית הנושאת. נעשה לרוב בחום (העברת הזכוכית מעל להבה) או באמצעים כימיים (כגון פורמלין, מתנול). מונע שטיפה של החיידקים בשלבים הבאים ושומר על המבנה.</li>
+                <li><strong>צביעה:</strong> כיסוי הפרפרט בצבע (לרוב בסיסי) למשך זמן קצוב.</li>
+                <li><strong>שטיפה:</strong> הסרת עודפי צבע בעזרת ממס מתאים (לרוב מים).</li>
+            </ol>
+
+            <p><strong>צביעה דיפרנציאלית (Differential Staining):</strong> שיטה המבדילה בין קבוצות חיידקים שונות או בין מבנים שונים בתא על בסיס תגובתם לסדרת צבעים וממסים. דוגמאות עיקריות:</p>
+            <ul>
+                <li><strong>צביעת גרם (Gram Stain):</strong> הצביעה הדיפרנציאלית החשובה ביותר, מחלקת חיידקים לגרם-חיוביים (Gram-positive) וגרם-שליליים (Gram-negative) על בסיס הבדלים במבנה דופן התא.
+                    <ol>
+                        <li>צביעה ראשונית ב<strong>קריסטל ויולט</strong> (Crystal Violet - צבע סגול-כחול). כל התאים נצבעים.</li>
+                        <li>הוספת <strong>תמיסת יוד (Iodine)</strong>. היוד משמש כ-mordant, יוצר קומפלקס גדול (CV-I) עם הקריסטל ויולט בתוך התאים.</li>
+                        <li><strong>דקולוריזציה (Decolorization)</strong> - שטיפה בממס אורגני (לרוב אתנול או תערובת אתנול-אצטון). זהו השלב המבדיל:
+                            <ul>
+                                <li><strong>חיידקים גרם-חיוביים:</strong> בעלי דופן עבה של פפטידוגליקן. הממס גורם להתייבשות הדופן, כיווץ הנקבוביות, ולכידת קומפלקס ה-CV-I הגדול בתוך התא. הם נשארים צבועים בסגול/כחול.</li>
+                                <li><strong>חיידקים גרם-שליליים:</strong> בעלי דופן דקה של פפטידוגליקן וממברנה חיצונית עשירה בליפידים. הממס ממיס את הליפידים בממברנה החיצונית וחושף את הפפטידוגליקן הדק, מה שמאפשר שטיפה קלה של קומפלקס ה-CV-I מהתא. הם הופכים לחסרי צבע.</li>
+                            </ul>
+                        </li>
+                        <li><strong>צביעה נגדית (Counterstain)</strong> ב<strong>ספרנין</strong> (Safranin - צבע אדום/ורוד). החיידקים הגרם-שליליים חסרי הצבע נצבעים באדום/ורוד, בעוד שהגרם-חיוביים נשארים סגולים/כחולים מכיוון שהצבע הכהה ממסך את הספרנין.</li>
+                    </ol>
+                     תוצאה סופית: גרם-חיוביים נראים סגולים/כחולים, גרם-שליליים נראים אדומים/ורודים.
+                </li>
+                <li><strong>צביעת קפסולה (Capsule Stain):</strong> לרוב צביעה שלילית. הקפסולה היא שכבה חיצונית רירית (לרוב פוליסכרידית), הידרופילית, שאינה נצבעת בקלות בצבעים רגילים. בשיטה זו צובעים את רקע הפרפרט (למשל עם קונגו רד או ניגרוזין - צבע חומצי) ואת גוף החיידק (למשל עם מתילן בלו - צבע בסיסי, לעיתים לאחר טיפול מקדים ב-HCl לפגיעה בממברנה). הקפסולה נותרת חסרת צבע ונראית כ"הילה" שקופה סביב התא הצבוע על רקע כהה.</li>
+             </ul>
+
+        </section>
+
+        <!-- Study Cards Section -->
+        <section id="study-cards" class="interactive-section">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="card-container">
+                <div class="card" id="study-card">
+                    <div class="card-face card-front" id="card-front"></div>
+                    <div class="card-face card-back" id="card-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button id="next-card">הבא</button>
+            </div>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq" class="interactive-section">
+            <h2>שאלות רב-ברירה (MCQ)</h2>
+            <div id="mcq-single-view">
+                <div class="question-area" id="mcq-question-area">
+                    <p class="question-text" id="mcq-question-text"></p>
+                    <div class="options-container" id="mcq-options"></div>
+                    <div class="feedback" id="mcq-feedback" style="display: none;">
+                        <div class="explanation" id="mcq-explanation"></div>
+                    </div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button id="next-mcq">הבא</button>
+                </div>
+            </div>
+             <div class="view-all-button-container">
+                 <button id="view-all-mcq-btn">הצג את כל שאלות ה-MCQ</button>
+            </div>
+            <div id="mcq-all-view" class="all-questions-container" style="display: none;">
+                <h3>כל שאלות ה-MCQ</h3>
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- True/False Questions Section -->
+        <section id="tf" class="interactive-section">
+            <h2>שאלות נכון / לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-area" id="tf-question-area">
+                    <p class="question-text" id="tf-question-text"></p>
+                    <div class="options-container" id="tf-options">
+                        <button class="tf-button" data-answer="true">נכון</button>
+                        <button class="tf-button" data-answer="false">לא נכון</button>
+                    </div>
+                     <div class="feedback" id="tf-feedback" style="display: none;">
+                         <div class="explanation" id="tf-explanation"></div>
+                    </div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button id="next-tf">הבא</button>
+                </div>
+             </div>
+             <div class="view-all-button-container">
+                 <button id="view-all-tf-btn">הצג את כל שאלות הנכון/לא נכון</button>
+            </div>
+             <div id="tf-all-view" class="all-questions-container" style="display: none;">
+                 <h3>כל שאלות הנכון / לא נכון</h3>
+                 <!-- All T/F questions will be dynamically inserted here -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- Data ---
+
+        // Study Cards Data
+        const studyCards = [
+            { front: "מיקרוסקופ אור רגיל", back: "מיקרוסקופ הדורש לרוב צביעה של הדגימה לצורך הבחנה במבנים, תהליך שלרוב הורג את התאים." },
+            { front: "מיקרוסקופ פאזות (Phase Contrast)", back: "מיקרוסקופ המאפשר צפייה בתאים חיים ללא צביעה, על ידי תרגום הזזות מופע של אור העובר דרך הדגימה להבדלי ניגודיות. מצריך פילטר פאזות מתאים." },
+            { front: "אובייקטיב (Objective Lens)", back: "מערכת העדשות במיקרוסקופ הקרובה ביותר לדגימה (פרפרט), קובעת את ההגדלה הראשונית (למשל $10 \\times, 40 \\times, 100 \\times$)." },
+            { front: "אוקולר (Ocular/Eyepiece)", back: "מערכת העדשות במיקרוסקופ הקרובה לעין הצופה, מגדילה את התמונה הנוצרת על ידי האובייקטיב (לרוב $10 \\times$)." },
+            { front: "הגדלה כוללת (Total Magnification)", back: "מכפלת ההגדלה של עדשת האובייקטיב בהגדלה של עדשת האוקולר. נוסחה: $\\text{הגדלה כוללת} = \\text{הגדלת אובייקטיב} \\times \\text{הגדלת אוקולר}$." },
+            { front: "בורג מיקוד גס (Coarse Focus)", back: "בורג המשמש לתנועה גדולה של הבמה או האובייקטיב לצורך מיקוד ראשוני, בעיקר בהגדלה הנמוכה ($10 \\times$)." },
+            { front: "בורג מיקוד עדין (Fine Focus)", back: "בורג המשמש לתנועה קטנה ומדויקת לצורך חידוד התמונה, והוא הבורג היחיד שיש להשתמש בו בהגדלות גבוהות ($40 \\times, 100 \\times$)." },
+            { front: "שמן אימרסיה (Immersion Oil)", back: "שמן בעל מקדם שבירה דומה לזכוכית, שמים טיפה ממנו בין עדשת האובייקטיב $100 \\times$ לפרפרט כדי למנוע פיזור אור ולשפר רזולוציה. חובה להשתמש בו עם אובייקטיב $100 \\times$." },
+            { front: "רזולוציה (Resolution)", back: "היכולת של המיקרוסקופ להבחין בין שתי נקודות קרובות כשתי נקודות נפרדות. שימוש בשמן אימרסיה בהגדלה גבוהה משפר את הרזולוציה." },
+            { front: "ניקוי עדשות", back: "יש לנקות עדשות אופטיות רק עם נייר עדשות מיוחד ולעיתים עם אתנול $96\\%$. חשוב במיוחד לאחר שימוש בשמן אימרסיה." },
+            { front: "מורפולוגיה (Morphology)", back: "תיאור צורתם ומבנם של תאים או אורגניזמים. בחיידקים, כולל צורה (קוקוס, מתג), סידור, גודל ומבנים פנימיים/חיצוניים." },
+            { front: "קוקוס (Coccus)", back: "חיידק בעל צורה כדורית." },
+            { front: "מתג (Rod/Bacillus)", back: "חיידק בעל צורה דמוית מקלון." },
+            { front: "ספירילום (Spirillum)", back: "חיידק בעל צורה סלילנית." },
+            { front: "סידור תאים", back: "האופן בו תאי חיידקים מתקבצים לאחר חלוקה (בודדים, זוגות, שרשראות, אשכולות)." },
+            { front: "קפסולה (Capsule)", back: "שכבה רירית חיצונית, לרוב פוליסכרידית, המקיפה תאי חיידקים מסוימים ומסייעת בהגנה ובהיצמדות." },
+            { front: "צביעה ביולוגית", back: "תהליך שימוש בחומרי צבע כדי להגביר ניגודיות ולהבליט מבנים תאיים לצפייה במיקרוסקופ." },
+            { front: "כרומופור (Chromophore)", back: "הקבוצה הכימית במולקולת הצבע האחראית על בליעת אור באורכי גל מסוימים, ולכן מקנה למולקולה את צבעה." },
+            { front: "אוקסוכרום (Auxochrome)", back: "הקבוצה הכימית במולקולת הצבע המאפשרת לה להיקשר כימית לחומר הנצבע (למשל, רכיבים בתא)." },
+            { front: "צבע בסיסי", back: "חומר צבע בעל מטען חיובי, הנוטה להיקשר למבנים טעונים שלילית בתא, כמו חומצות גרעין ודופן התא (למשל, קריסטל ויולט, ספרנין)." },
+            { front: "צבע חומצי", back: "חומר צבע בעל מטען שלילי, הנוטה להיקשר למבנים טעונים חיובית או משמש לצביעת רקע בצביעה שלילית (למשל, קונגו רד)." },
+            { front: "פיקסציה (Fixation)", back: "תהליך קיבוע החיידקים לזכוכית הנושאת, תוך כדי הרג התאים ושמירה על מבנם. מונע את שטיפתם בתהליך הצביעה. יכול להתבצע בחום או באמצעים כימיים." },
+            { front: "צביעה פשוטה (Simple Stain)", back: "שימוש בצבע אחד (לרוב בסיסי) כדי לצבוע את כל התאים באופן אחיד ולהבליט את צורתם וסידורם." },
+            { front: "צביעה דיפרנציאלית (Differential Stain)", back: "שימוש בסדרת צבעים וממסים כדי להבדיל בין קבוצות חיידקים שונות או בין מבנים שונים בתא. דוגמה עיקרית: צביעת גרם." },
+            { front: "צביעת גרם (Gram Stain)", back: "צביעה דיפרנציאלית מרכזית המחלקת חיידקים לגרם-חיוביים (נצבעים סגול) וגרם-שליליים (נצבעים ורוד/אדום) על בסיס הבדלים במבנה דופן התא." },
+            { front: "קריסטל ויולט (Crystal Violet)", back: "הצבע הראשוני בצביעת גרם, צבע בסיסי סגול/כחול הנקשר לכל תאי החיידקים." },
+            { front: "יוד (Iodine)", back: "משמש כ-Mordant בצביעת גרם. יוצר קומפלקס גדול (CV-I) עם הקריסטל ויולט בתוך התאים, המסייע בקיבוע הצבע." },
+            { front: "דקולוריזציה (Decolorization)", back: "שלב השטיפה בממס אורגני (אלכוהול/אצטון) בצביעת גרם. שלב זה מבדיל בין גרם-חיוביים (שומרים על צבע סגול) לגרם-שליליים (מאבדים את הצבע)." },
+            { front: "ספרנין (Safranin)", back: "הצבע הנגדי (counterstain) בצביעת גרם, צבע בסיסי אדום/ורוד. צובע את החיידקים הגרם-שליליים שאיבדו את צבעם בשלב הדקולוריזציה." },
+            { front: "גרם-חיובי (Gram-positive)", back: "חיידקים שנצבעים בסגול/כחול בצביעת גרם. בעלי דופן עבה של פפטידוגליקן הלוכדת את קומפלקס הצבע הראשוני." },
+            { front: "גרם-שלילי (Gram-negative)", back: "חיידקים שנצבעים באדום/ורוד בצביעת גרם. בעלי דופן דקה של פפטידוגליקן וממברנה חיצונית, מהם קומפלקס הצבע הראשוני נשטף בקלות בשלב הדקולוריזציה." },
+            { front: "צביעה שלילית (Negative Stain)", back: "טכניקת צביעה בה הרקע נצבע ולא התא עצמו (או מבנה ספציפי כמו קפסולה). משתמשים לרוב בצבעים חומציים (כמו קונגו רד, ניגרוזין) שנדחים מפני השטח של התא." },
+            { front: "צביעת קפסולה (Capsule Stain)", back: "טכניקה (לרוב צביעה שלילית משולבת) המדגימה קפסולה חיידקית כ'הילה' שקופה סביב התא הצבוע, על רקע כהה." },
+            { front: "פפטידוגליקן (Peptidoglycan)", back: "פולימר ייחודי המרכיב את דופן התא של רוב החיידקים. עובי שכבת הפפטידוגליקן הוא ההבדל המבני העיקרי בין חיידקים גרם-חיוביים לגרם-שליליים." }
+        ];
+
+
+        // MCQ Data (Constraint: No single/double quotes in questions/options)
+        const mcqData = [
+            {
+                question: "מה ההבדל העיקרי בין מיקרוסקופ אור רגיל למיקרוסקופ פאזות לפי הטקסט?",
+                options: [
+                    "מיקרוסקופ פאזות משתמש באור לייזר במקום נורה רגילה להארה",
+                    "מיקרוסקופ אור רגיל מאפשר הגדלה גבוהה יותר באופן משמעותי",
+                    "מיקרוסקופ פאזות מאפשר צפייה בתאים חיים ללא צביעה על ידי ניצול הבדלי מקדמי שבירה",
+                    "מיקרוסקופ אור רגיל אינו דורש שימוש בעדשות אובייקטיב מיוחדות"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שמיקרוסקופ פאזות מאפשר צפייה בתאים חיים ללא צביעה ומנצל הזזות מופע הנגרמות מהבדלי מקדמי שבירה. מיקרוסקופ אור רגיל לרוב דורש צביעה."
+            },
+            {
+                question: "כיצד מחושבת ההגדלה הכוללת במיקרוסקופ אור?",
+                options: [
+                    "חיבור ההגדלה של האובייקטיב וההגדלה של האוקולר",
+                    "מכפלת ההגדלה של האובייקטיב בהגדלה של האוקולר",
+                    "ההגדלה הגבוהה מבין האובייקטיב או האוקולר",
+                    "ממוצע ההגדלות של כל האובייקטיבים הזמינים כפול הגדלת האוקולר"
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט והנוסחה המצורפת מראים בבירור שההגדלה הכוללת היא מכפלת הגדלת האובייקטיב בהגדלת האוקולר ($ \\text{Total Mag} = \\text{Objective Mag} \\times \\text{Ocular Mag} $)."
+            },
+            {
+                question: "באיזו הגדלה של אובייקטיב חובה להשתמש בשמן אימרסיה לפי ההוראות?",
+                options: [
+                    "אובייקטיב $10 \\times$",
+                    "אובייקטיב $40 \\times$",
+                    "אובייקטיב $100 \\times$",
+                    "בכל ההגדלות הגבוהות מ $20 \\times$ כולל"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מדגיש שיש להשתמש בשמן אימרסיה רק לפני המעבר לאובייקטיב $100 \\times$ כדי לשפר רזולוציה."
+            },
+             {
+                question: "מהי מטרת השימוש בשמן אימרסיה?",
+                options: [
+                    "לשמן את מנגנון סיבוב האובייקטיבים",
+                    "לקרר את עדשת האובייקטיב הגבוהה מהחום של הנורה",
+                    "להגדיל את מרחק העבודה בין העדשה לפרפרט",
+                    "לשפר את הרזולוציה על ידי מניעת פיזור קרני אור בין העדשה לפרפרט"
+                ],
+                correctIndex: 3,
+                explanation: "הטקסט מציין שהשמן משפר רזולוציה בכך שהוא בעל מקדם שבירה דומה לזכוכית ומונע פיזור אור, ומאפשר ליותר אור להיכנס לעדשת האובייקטיב."
+            },
+            {
+                question: "לאחר קבלת תמונה חדה עם אובייקטיב $10 \\times$, ועברת לאובייקטיב $40 \\times$, באיזה בורג מיקוד יש להשתמש לחידוד התמונה?",
+                options: [
+                    "בורג המיקוד הגס בלבד, בתנועה מינימלית",
+                    "בורג המיקוד העדין בלבד",
+                    "שילוב של תנועות קטנות בשני ברגי המיקוד, גס ועדין",
+                    "אין צורך לחדד את התמונה, המיקרוסקופ אמור להיות פרפוקלי"
+                ],
+                correctIndex: 1,
+                explanation: "ההוראות מציינות שלאחר המיקוד הראשוני עם $10 \\times$, יש להשתמש *רק* בבורג המיקוד העדין לחידוד התמונה בהגדלות הבאות ($40 \\times$ ו-$100 \\times$)."
+            },
+             {
+                question: "מהי מטרת שלב הפיקסציה (Fixation) בתהליך צביעה?",
+                options: [
+                    "להגדיל את החיידקים לפני הצביעה",
+                    "להרוג את החיידקים ולהצמידם לזכוכית הנושאת (slide)",
+                    "לנקות את הזכוכית הנושאת משאריות מדיום גידול",
+                    "לשנות את צבע החיידקים באופן כימי לפני הוספת הצבען"
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין שתפקידי הפיקסציה הם הרג החיידקים, קיבועם במצב טבעי, והצמדתם לזכוכית למניעת שטיפתם."
+            },
+             {
+                question: "בצביעת גרם, איזה רכיב גורם להבדל העיקרי בין חיידקים גרם-חיוביים לגרם-שליליים?",
+                options: [
+                    "נוכחות או היעדר קפסולה חיצונית גדולה",
+                    "היכולת של החיידק לנוע באמצעות פלגלות רבות",
+                    "ההבדל בעובי שכבת הפפטידוגליקן והרכב המעטפת החיצונית",
+                    "גודל התא הממוצע של החיידקים בקבוצות השונות"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מסביר שההבדל המרכזי הוא בדופן התא: גרם-חיוביים עם דופן עבה של פפטידוגליקן, וגרם-שליליים עם דופן דקה וממברנה חיצונית."
+            },
+            {
+                question: "מה תפקיד תמיסת היוד (Iodine) בצביעת גרם?",
+                options: [
+                    "לצבוע את החיידקים הגרם-שליליים בצבע ורוד עדין",
+                    "לשטוף את עודפי הקריסטל ויולט מהרקע של הדגימה",
+                    "לשמש כ-mordant היוצר קומפלקס גדול עם הקריסטל ויולט בתוך התאים",
+                    "לגרום לדקולוריזציה מהירה יותר של חיידקים גרם-חיוביים"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שהיוד מגיב עם הקריסטל ויולט ויוצר קומפלקס גדול (CV-I) שמסייע בקיבוע הצבע בתאים, במיוחד בגרם-חיוביים."
+            },
+             {
+                question: "לאחר השלמת צביעת גרם, באיזה צבע ייראו חיידקים גרם-שליליים?",
+                options: [
+                    "כחול כהה או סגול",
+                    "אדום או ורוד",
+                    "ירוק בהיר או צהוב",
+                    "חסרי צבע או שקופים לחלוטין"
+                ],
+                correctIndex: 1,
+                explanation: "החיידקים הגרם-שליליים מאבדים את הצבע הסגול בשלב הדקולוריזציה ונצבעים בצבע הנגדי, ספרנין, שצבעו אדום/ורוד."
+            },
+             {
+                question: "איזה סוג צבע משמש בדרך כלל לצביעת הרקע בצביעה שלילית (לדוגמה, צביעת קפסולה)?",
+                options: [
+                    "צבע בסיסי כמו מתילן בלו",
+                    "צבע חומצי כמו קונגו רד או ניגרוזין",
+                    "שילוב של קריסטל ויולט ויוד",
+                    "צבע ניטרלי שאינו מגיב עם רכיבי התא כלל"
+                ],
+                correctIndex: 1,
+                explanation: "צביעה שלילית צובעת את הרקע. צבעים חומציים (טעונים שלילית) נדחים מפני שטח התא (שגם הוא לרוב טעון שלילית) ולכן צובעים את הרקע סביבו. דוגמאות מהטקסט הן קונגו רד וניגרוזין."
+            },
+            {
+                question: "מהי קפסולה של חיידק לפי ההסבר?",
+                options: [
+                    "גרעין התא המכיל את החומר הגנטי המרכזי שלו",
+                    "מבנה פנימי קשיח המשמש לאגירת חומרי מזון חיוניים",
+                    "שכבה רירית הידרופילית חיצונית לתא, לרוב פוליסכרידית, המסייעת בהגנה ובהיצמדות",
+                    "האזור בציטופלסמה בו מתבצע תהליך הנשימה התאית המרכזי"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מתאר את הקפסולה כשכבה רירית, הידרופילית, פוליסכרידית חיצונית, שתפקידיה העיקריים הם הגנה והיצמדות."
+            },
+             {
+                question: "בצביעת קפסולה בשיטת הצביעה השלילית המתוארת, כיצד תיראה הקפסולה?",
+                options: [
+                    "צבועה בצבע כחול עז על רקע אדום",
+                    "צבועה בצבע אדום כהה על רקע כחול",
+                    "כאזור כהה מאוד סביב תא בהיר יחסית",
+                    "כהילה שקופה או בהירה סביב התא הצבוע, על רקע כהה"
+                ],
+                correctIndex: 3,
+                explanation: "בצביעה שלילית לקפסולה, הרקע נצבע (למשל באדום עם קונגו רד), התא נצבע (למשל בכחול עם מתילן בלו), והקפסולה עצמה נותרת ללא צבע ונראית כהילה שקופה ביניהם."
+            },
+             {
+                question: "מהו טווח הגדלים הנפוץ של תאי חיידקים לפי הטקסט?",
+                options: [
+                    "בין 10 ל 100 מילימטרים",
+                    "בין 0.2 ל 5 מיקרומטרים ($ \\mu m $)",
+                    "בין 50 ל 200 ננומטרים",
+                    "קטן מ 0.1 מיקרומטר באופן קבוע"
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין במפורש שקוטרם של רוב תאי החיידקים נע בין $0.2 \, \\mu m$ לבין $5 \, \\mu m$."
+            },
+             {
+                question: "איזו צורת חיידק מתוארת כ-Coccus?",
+                options: [
+                    "צורה דמוית מקלון ארוך ודק",
+                    "צורה סלילנית או מסולסלת",
+                    "צורה כדורית או אליפטית קצרה",
+                    "צורה לא רגולרית ומשתנה תדיר"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מגדיר קוקוס (Coccus) כצורה כדורית של תא חיידק."
+            },
+            {
+                question: "מהו תפקיד קבוצת ה-Auxochrome במולקולת צבע ביולוגי?",
+                options: [
+                    "לקבוע את הצבע הנראה של המולקולה על ידי בליעת אור סלקטיבית",
+                    "להקנות למולקולה יכולת תנועה בתוך התא הנצבע",
+                    "לאפשר למולקולת הצבע להיקשר כימית לחומר הנצבע (רכיבי התא)",
+                    "לנטרל את המטען החשמלי של קבוצת הכרומופור במולקולה"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מגדיר את האוקסוכרום כקבוצה הגורמת להתקשרות התרכובת עם החומר הנצבע."
+            },
+            {
+                question: "לאיזה סוג רכיבים בתא נוטים להיקשר צבעים בסיסיים?",
+                options: [
+                    "למבנים טעונים חיובית כמו חלבונים מסוימים בממברנה",
+                    "למבנים ניטרליים כמו טיפות שומן או גרנולות אגירה פולימריות",
+                    "למבנים טעונים שלילית כמו חומצות גרעין (DNA, RNA) ורכיבי דופן תא רבים",
+                    "למים חופשיים הנמצאים בתוך הציטופלזמה של התא החיידקי"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שצבעים בסיסיים טעונים חיובית ונקשרים לחומרים טעונים שלילית בתא."
+            },
+             {
+                question: "מדוע שלב הדקולוריזציה בצביעת גרם הוא השלב המבדיל?",
+                options: [
+                    "כי רק בשלב זה משתמשים בצבע שונה לחלוטין משאר השלבים",
+                    "כי רק חיידקים חיים מגיבים לשלב זה על ידי שינוי צבע הדופן שלהם",
+                    "כי שלב זה גורם לחיידקים מסוג אחד (גרם שלילי) לאבד את הצבע הראשוני בעוד שהסוג האחר (גרם חיובי) שומר עליו",
+                    "כי שלב זה הורג את כל החיידקים שלא מתו בשלב הפיקסציה הראשוני"
+                ],
+                correctIndex: 2,
+                explanation: "שלב הדקולוריזציה הוא קריטי מכיוון שההבדלים במבנה הדופן גורמים לתגובה שונה: גרם-שליליים מאבדים את צבע הקריסטל ויולט-יוד, בעוד שגרם-חיוביים שומרים עליו. זה מה שמאפשר את ההבחנה ביניהם."
+            },
+            {
+                question: "איזה מכשיר עזר מוזכר בטקסט לצורך קביעת גדלים ממשיים של אובייקטים במיקרוסקופ?",
+                options: [
+                    "פילטר פאזות מתכוונן המאפשר כיול סקלה",
+                    "בורג מיקוד עדין בעל סקלה מילימטרית מדויקת",
+                    "שילוב של אוקולר מיקרומטרי (סרגל בעין) ואובייקט מיקרומטרי (סרגל על זכוכית נושאת)",
+                    "תוכנת מחשב המחוברת למצלמת המיקרוסקופ ומנתחת את התמונה המתקבלת"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט בסעיף 5 (אמצעי עזר) מתאר שימוש באוקולר מיקרומטרי ואובייקט מיקרומטרי לצורך כיול וקביעת גדלים ממשיים."
+            },
+            {
+                question: "מה יכולה להיות תוצאה של אי שימוש בשמן אימרסיה עם אובייקטיב $100 \\times$?",
+                options: [
+                    "קבלת תמונה חדה וברורה יותר מהרגיל עקב פיזור אור מוגבר",
+                    "סיכון לשריטת עדשת האובייקטיב עקב חיכוך ישיר בזכוכית הנושאת",
+                    "קבלת תמונה חשוכה יותר ובעלת רזולוציה נמוכה משמעותית",
+                    "הגדלה כוללת נמוכה יותר מהצפוי עבור שילוב האובייקטיב והאוקולר"
+                ],
+                correctIndex: 2,
+                explanation: "שמן האימרסיה נועד למנוע פיזור אור בין העדשה לדגימה. ללא השמן, חלק ניכר מהאור יתפזר ולא יגיע לעדשה, מה שיפגע ברזולוציה (ירידה בפרטים) ויכול לגרום לתמונה להיראות חשוכה יותר."
+            },
+             {
+                question: "איזו פעולה אסור לבצע לאחר שהוספת שמן אימרסיה על הפרפרט, לפי האזהרה בטקסט?",
+                options: [
+                    "לגעת בבורג המיקוד העדין",
+                    "להזיז את הפרפרט על הבמה",
+                    "לחזור לצפות באותו פרפרט עם אובייקטיבים בעלי הגדלה נמוכה יותר ($40 \\times$ או $10 \\times$)",
+                    "לכבות את מקור האור של המיקרוסקופ"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מזהיר במפורש: 'אם שמתם שמן אימרסיה לא תוכלו לחזור אחורה להגדלות הקטנות יותר, לכן הוסיפו אותו רק כשהתמונה בהגדלה x40 חדה וברורה'. הסיבה היא שהשמן עלול ללכלך ולפגוע בעדשות שאינן מיועדות למגע עמו."
+            },
+             {
+                question: "כיצד יש לנקות עדשות מיקרוסקופ שזוהמו בשמן אימרסיה?",
+                options: [
+                    "בעזרת מטלית לחה עם מי ברז רגילים בלבד",
+                    "בעזרת נייר עדשות מיוחד ואתנול $96\\%$ בלבד",
+                    "על ידי טבילת קצה העדשה בתמיסת ניקוי חומצית חזקה",
+                    "אין צורך לנקות, השמן מתנדף מעצמו לאחר מספר שעות"
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין שיש לנקות עדשות (ובפרט לאחר שימוש בשמן) בעזרת נייר עדשות מיוחד, ובמקרה של לכלוך כמו שמן, יש להשתמש באתנול $96\\%$ ולנגב בנייר העדשות."
+            },
+            {
+                question: "איזה סידור תאים מתואר על ידי הקידומת 'strepto'?",
+                options: [
+                    "תאים בודדים המפוזרים באופן אקראי",
+                    "תאים המסודרים בזוגות צמודים זה לזה",
+                    "תאים המסודרים באשכולות דמויי ענבים",
+                    "תאים המסודרים בשרשראות ארוכות"
+                ],
+                correctIndex: 3,
+                explanation: "הטקסט מציין 'שרשרות' כאחד מסידורי התאים האפשריים, והקידומת 'strepto' (כמו ב-Streptococcus או Streptobacillus) משמשת במיקרוביולוגיה לתיאור סידור בשרשראות."
+            },
+             {
+                question: "בצביעת גרם, מדוע חיידקים גרם חיוביים נשארים סגולים לאחר שטיפה באלכוהול?",
+                options: [
+                    "כי האלכוהול מגיב כימית עם דופן התא שלהם ויוצר צבע סגול חדש",
+                    "כי דופן התא העבה שלהם מתייבשת וכולאת את קומפלקס הצבע הגדול בפנים",
+                    "כי הממברנה החיצונית שלהם אינה חדירה כלל לאלכוהול או לצבעים",
+                    "כי הם מייצרים באופן פעיל פיגמנט סגול כתגובה לחשיפה לאלכוהול"
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מסביר שהדופן העבה של חיידקים גרם-חיוביים עוברת דהידרציה (התייבשות) על ידי האלכוהול, מה שגורם לסגירת הנקבוביות וללכידת קומפלקס הקריסטל ויולט-יוד הגדול בתוך התא."
+            },
+            {
+                question: "בצביעת גרם, מדוע חיידקים גרם שליליים מאבדים את הצבע הסגול בשלב הדקולוריזציה?",
+                options: [
+                    "כי הצבע הסגול רעיל להם והם מפרקים אותו באופן אנזימטי",
+                    "כי אין להם כלל דופן תא ולכן הצבע נשטף החוצה בקלות רבה",
+                    "כי האלכוהול ממיס את הליפידים בממברנה החיצונית שלהם וחושף דופן דקה, מה שמאפשר לקומפלקס הצבע להישטף החוצה",
+                    "כי הצבע הסגול נקשר רק לקפסולה שלהם, והקפסולה מתמוססת באלכוהול"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מסביר שהממס (אלכוהול/אצטון) ממיס ליפידים בממברנה החיצונית של גרם-שליליים והופך את המעטפת ליותר פורוזיבית (חדירה), מה שמאפשר לקומפלקס הצבע הגדול (CV-I) להישטף החוצה דרך דופן הפפטידוגליקן הדקה."
+            },
+            {
+                question: "איזה רכיב כימי עיקרי מוזכר כשונה באופן משמעותי בין דופן תא גרם-חיובי לגרם-שלילי?",
+                options: [
+                    "כמות הכולסטרול המשולבת בממברנה הציטופלסמטית",
+                    "נוכחות או היעדר ריבוזומים גדולים הקשורים לדופן",
+                    "עובי שכבת הפפטידוגליקן ונוכחות ממברנה חיצונית (בגרם-שליליים)",
+                    "סוג חומצות האמינו המרכיבות את חלבוני הדופן"
+                ],
+                correctIndex: 2,
+                explanation: "ההסבר המרכזי להבדל בצביעת גרם נשען על ההבדל המבני: דופן עבה של פפטידוגליקן בגרם-חיוביים, לעומת דופן דקה של פפטידוגליקן וממברנה חיצונית (הכוללת ליפופוליסכריד - LPS, לא מוזכר ישירות אך משתמע) בגרם-שליליים."
+            },
+             {
+                question: "כאשר מתחילים התבוננות במיקרוסקופ, באיזו הגדרה של אובייקטיב ובאיזה מצב של הבמה מומלץ להתחיל?",
+                options: [
+                    "אובייקטיב $100 \\times$ והבמה במצב הגבוה ביותר",
+                    "אובייקטיב $40 \\times$ והבמה באמצע הגובה",
+                    "אובייקטיב $10 \\times$ והבמה במצב הנמוך ביותר",
+                    "אובייקטיב כלשהו, אך הבמה תמיד צמודה לעדשה בהתחלה"
+                ],
+                correctIndex: 2,
+                explanation: "סעיף 2.4 בהוראות השימוש מציין להתחיל 'כשהאובייקטיב בעל ההגדלה הקטנה ביותר (x10) מכוון לנתיב האור וכאשר במת המיקרוסקופ במיקומה הנמוך ביותר'."
+            },
+            {
+                question: "מה עלול לקרות אם מנסים למקד תמונה בהגדלה גבוהה ($100 \\times$) באמצעות בורג המיקוד הגס?",
+                options: [
+                    "התמונה תתמקד מהר יותר אך תהיה פחות חדה",
+                    "בורג המיקוד הגס ייתקע ולא יזוז בהגדלה זו",
+                    "קיים סיכון גבוה לפגוע בעדשת האובייקטיב או לשבור את הזכוכית הנושאת (slide)",
+                    "ההגדלה הכוללת של המיקרוסקופ תשתנה באופן זמני"
+                ],
+                correctIndex: 2,
+                explanation: "בורג המיקוד הגס מזיז את הבמה (או העדשה) למרחקים גדולים יחסית. בהגדלה גבוהה, מרחק העבודה (המרחק בין העדשה ל-slide) קטן מאוד. שימוש בבורג הגס עלול בקלות לגרום להתנגשות בין העדשה ל-slide."
+            },
+            {
+                 question: "איזו טכניקה מתוארת בטקסט כמתאימה במיוחד להדגמת קפסולה של חיידק?",
+                 options: [
+                    "צביעה פשוטה עם מתילן בלו למשך זמן ארוך מאוד",
+                    "צביעת גרם סטנדרטית עם זמן דקולוריזציה מופחת משמעותית",
+                    "שימוש במיקרוסקופ פאזות ללא כל צביעה נוספת",
+                    "צביעה שלילית, בה צובעים את הרקע ואת התא אך לא את הקפסולה"
+                 ],
+                 correctIndex: 3,
+                 explanation: "הטקסט מתאר את צביעת הקפסולה כדוגמה לשימוש בשיטת צביעה שלילית, בה הקפסולה ההידרופילית אינה נצבעת ונראית כהילה שקופה על רקע כהה ותא צבוע."
+             },
+              {
+                 question: "מה תפקיד ה-Condenser (קונדנסור) במיקרוסקופ אור?",
+                 options: [
+                    "להגדיל את התמונה הנוצרת על ידי האובייקטיב",
+                    "לקרר את נורת התאורה של המיקרוסקופ",
+                    "לרכז את קרני האור ממקור האור אל הדגימה",
+                    "לסובב את עדשות האובייקטיב השונות למקומן"
+                 ],
+                 correctIndex: 2,
+                 explanation: "אף שהטקסט לא מרחיב על הקונדנסור, תפקידו הסטנדרטי במיקרוסקופ הוא לאסוף ולרכז את האור ממקור התאורה דרך הדגימה ואל עדשת האובייקטיב, ובכך לשפר את איכות התאורה והרזולוציה. הוא מופיע בתמונה המבנה."
+             },
+              {
+                 question: "לפי הטקסט, איזו שיטת פיקסציה עדיפה כאשר רוצים לבצע צביעה עדינה כמו צביעת שוטונים (פלגלות)?",
+                 options: [
+                    "פיקסציה בחום על ידי העברה מהירה מעל להבה חזקה",
+                    "השריה ממושכת בתמיסת יוד מרוכזת לפני הצביעה",
+                    "שימוש בחומרים כימיים כמו פורמלין או כהל מתילי במקום חום",
+                    "אין צורך בפיקסציה כלל בצביעות עדינות מסוג זה"
+                 ],
+                 correctIndex: 2,
+                 explanation: "הטקסט מציין שבצביעות עדינות, כמו צביעת שוטונים, אי אפשר לערוך פיקסציה בחום (כי היא עלולה להרוס את המבנים העדינים), ובמקרים כאלו משתמשים בפיקסציה כימית עם חומרים כמו פורמלין, כהל מתילי ועוד."
+             }
+        ];
+
+        // True/False Data (Constraint: No single/double quotes in questions)
+        const tfData = [
+            { question: "מיקרוסקופ פאזות דורש תמיד צביעה של הדגימה לצורך קבלת תמונה ברורה.", correctAnswer: false, explanation: "מיקרוסקופ פאזות נועד במיוחד לצפייה בתאים חיים ללא צביעה, על ידי ניצול הבדלי מקדמי שבירה." },
+            { question: "ההגדלה הכוללת של המיקרוסקופ היא סכום ההגדלות של האובייקטיב והאוקולר.", correctAnswer: false, explanation: "ההגדלה הכוללת היא מכפלת ההגדלות של האובייקטיב והאוקולר." },
+            { question: "יש להשתמש בשמן אימרסיה עם עדשת אובייקטיב $40 \\times$.", correctAnswer: false, explanation: "שמן אימרסיה מיועד לשימוש רק עם עדשת אובייקטיב $100 \\times$." },
+            { question: "לאחר שימוש באובייקטיב $100 \\times$ עם שמן, ניתן לחזור להשתמש באובייקטיב $40 \\times$ באותו פרפרט ללא ניקוי מקדים.", correctAnswer: false, explanation: "הטקסט מזהיר שאסור לחזור להגדלות נמוכות יותר לאחר שימוש בשמן, כיוון שהשמן עלול לזהם את העדשות האחרות." },
+            { question: "בורג המיקוד העדין משמש לחידוד התמונה בהגדלות גבוהות ($40 \\times, 100 \\times$).", correctAnswer: true, explanation: "ההוראות מדגישות שיש להשתמש רק בבורג המיקוד העדין לחידוד התמונה בהגדלות גבוהות." },
+            { question: "פיקסציה בחום הורגת את החיידקים ומצמידה אותם לזכוכית הנושאת.", correctAnswer: true, explanation: "אלו שני התפקידים העיקריים של פיקסציה בחום המתוארים בטקסט." },
+            { question: "צביעה פשוטה משתמשת במספר צבעים כדי להבדיל בין סוגי חיידקים שונים.", correctAnswer: false, explanation: "צביעה פשוטה משתמשת בצבע אחד בלבד כדי לצבוע את כל התאים באופן אחיד." },
+            { question: "צבעים בסיסיים הם בעלי מטען שלילי ונקשרים למבנים חיוביים בתא.", correctAnswer: false, explanation: "צבעים בסיסיים הם בעלי מטען חיובי ונקשרים למבנים טעונים שלילית בתא (כמו DNA)." },
+            { question: "בצביעת גרם, כל החיידקים נצבעים בתחילה בסגול על ידי קריסטל ויולט.", correctAnswer: true, explanation: "השלב הראשון בצביעת גרם הוא צביעה בקריסטל ויולט, הצובע את כל התאים." },
+            { question: "חיידקים גרם שליליים שומרים על צבע הקריסטל ויולט לאחר שלב הדקולוריזציה.", correctAnswer: false, explanation: "חיידקים גרם שליליים מאבדים את צבע הקריסטל ויולט בשלב הדקולוריזציה עקב מבנה הדופן שלהם." },
+            { question: "ספרנין הוא הצבע הראשוני המשמש בצביעת גרם.", correctAnswer: false, explanation: "ספרנין הוא הצבע הנגדי (counterstain) בצביעת גרם, המשמש בשלב האחרון." },
+            { question: "חיידקים גרם חיוביים נצבעים באדום או ורוד בסוף צביעת גרם.", correctAnswer: false, explanation: "חיידקים גרם חיוביים נשארים סגולים/כחולים מצבע הקריסטל ויולט." },
+            { question: "קפסולה של חיידק היא מבנה פנימי המשמש לאגירת חומר גנטי.", correctAnswer: false, explanation: "קפסולה היא שכבה רירית חיצונית לתא, המסייעת בהגנה והיצמדות." },
+            { question: "צביעת קפסולה היא בדרך כלל סוג של צביעה שלילית.", correctAnswer: true, explanation: "הטקסט מתאר את צביעת הקפסולה כשימוש בצביעה שלילית, בה הרקע ו/או התא נצבעים, אך הקפסולה נשארת שקופה." },
+            { question: "ניתן להשתמש בנייר סופג רגיל לניקוי עדשות המיקרוסקופ.", correctAnswer: false, explanation: "יש להשתמש רק בנייר עדשות מיוחד כדי למנוע שריטות בעדשות האופטיות הרגישות." },
+            { question: "האות $\\mu m$ מייצגת מילימטר.", correctAnswer: false, explanation: "האות $\\mu m$ מייצגת מיקרומטר, שהוא מיליונית המטר (או אלפית המילימטר)." },
+            { question: "במיקרוסקופ פאזות משתמשים בפילטר מיוחד המתאים לאובייקטיב.", correctAnswer: true, explanation: "הטקסט מציין שיש להקפיד על כיוון הפאזה המתאימה לאובייקטיב לקבלת תמונה טובה." },
+            { question: "כרומופור הוא החלק במולקולת הצבע שנקשר לתא.", correctAnswer: false, explanation: "הכרומופור הוא החלק שקולט אור ומקנה את הצבע. האוקסוכרום הוא החלק שמאפשר את הקישור לתא." },
+            { question: "צביעת גרם פותחה על ידי המדען הדני כריסטיאן גרם.", correctAnswer: true, explanation: "הטקסט מציין שצביעת גרם נקראת על שם הבקטריולוג הדני Christian Gram." },
+            { question: "חיידקים בצורת מתג נקראים בלועזית Cocci.", correctAnswer: false, explanation: "חיידקים בצורת מתג נקראים Rods או Bacilli. חיידקים כדוריים נקראים Cocci." }
+        ];
+
+
+        // --- State Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+
+        // --- DOM Elements ---
+        // Cards
+        const studyCard = document.getElementById('study-card');
+        const cardFront = document.getElementById('card-front');
+        const cardBack = document.getElementById('card-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        // MCQ Single View
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqQuestionText = document.getElementById('mcq-question-text');
+        const mcqOptionsContainer = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const mcqQuestionArea = document.getElementById('mcq-question-area'); // For MathJax updates
+
+        // MCQ All View
+        const viewAllMCQBtn = document.getElementById('view-all-mcq-btn');
+        const mcqAllViewContainer = document.getElementById('mcq-all-view');
+
+        // TF Single View
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfQuestionText = document.getElementById('tf-question-text');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const tfQuestionArea = document.getElementById('tf-question-area'); // For MathJax updates
+
+         // TF All View
+        const viewAllTFBtn = document.getElementById('view-all-tf-btn');
+        const tfAllViewContainer = document.getElementById('tf-all-view');
+
+        // --- Functions ---
+
+        // Render MathJax content safely
+        function typesetMathJax(element) {
+            if (window.MathJax && element) {
+                 try {
+                     MathJax.typesetPromise([element]).catch((err) => console.error('MathJax Typesetting Error:', err));
+                 } catch (e) {
+                     console.error("Error calling MathJax:", e);
+                 }
+            }
+        }
+
+        // Study Cards Logic
+        function displayCard(index) {
+            const card = studyCards[index];
+            cardFront.textContent = card.front;
+            cardBack.innerHTML = card.back; // Use innerHTML for potential LaTeX
+            cardCounter.textContent = `כרטיסיה ${index + 1} / ${studyCards.length}`;
+            studyCard.classList.remove('flipped'); // Reset flip state
+            // Typeset MathJax for front and back
+            typesetMathJax(cardFront);
+            typesetMathJax(cardBack);
+        }
+
+        function flipCard() {
+            studyCard.classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % studyCards.length;
+            displayCard(currentCardIndex);
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + studyCards.length) % studyCards.length;
+            displayCard(currentCardIndex);
+        }
+
+        // MCQ Logic (Single View)
+        function displayMCQ(index) {
+            const mcq = mcqData[index];
+            mcqQuestionText.innerHTML = mcq.question; // Use innerHTML for potential LaTeX
+            mcqOptionsContainer.innerHTML = ''; // Clear previous options
+            mcqFeedback.style.display = 'none'; // Hide feedback initially
+            mcqExplanation.innerHTML = ''; // Clear explanation
+
+            mcq.options.forEach((optionText, optionIndex) => {
+                const optionElement = document.createElement('button');
+                optionElement.classList.add('option');
+                optionElement.innerHTML = optionText; // Use innerHTML for potential LaTeX
+                optionElement.dataset.index = optionIndex; // Store option index
+                optionElement.addEventListener('click', () => handleMCQSelection(index, optionIndex));
+                mcqOptionsContainer.appendChild(optionElement);
+            });
+
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            // Update MathJax for the entire question area
+            typesetMathJax(mcqQuestionArea);
+        }
+
+        function handleMCQSelection(questionIndex, selectedOptionIndex) {
+            const mcq = mcqData[questionIndex];
+            const options = mcqOptionsContainer.querySelectorAll('.option');
+            const isCorrect = selectedOptionIndex === mcq.correctIndex;
+
+            // Disable all options after selection
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+                 opt.disabled = true; // Also set disabled attribute for accessibility/styling
+            });
+
+            // Highlight selected option and correct option
+            options[selectedOptionIndex].classList.add('selected');
+            if (isCorrect) {
+                options[selectedOptionIndex].classList.add('correct');
+            } else {
+                options[selectedOptionIndex].classList.add('incorrect');
+                // Also highlight the correct answer if the wrong one was chosen
+                options[mcq.correctIndex].classList.add('correct');
+            }
+
+            // Display explanation
+            mcqExplanation.innerHTML = `<p><strong>הסבר:</strong> ${mcq.explanation}</p>`;
+            mcqFeedback.style.display = 'block';
+
+            // Update MathJax for the explanation
+            typesetMathJax(mcqExplanation);
+        }
+
+        function nextMCQ() {
+            currentMCQIndex = (currentMCQIndex + 1) % mcqData.length;
+            displayMCQ(currentMCQIndex);
+        }
+
+        function prevMCQ() {
+            currentMCQIndex = (currentMCQIndex - 1 + mcqData.length) % mcqData.length;
+            displayMCQ(currentMCQIndex);
+        }
+
+        // MCQ Logic (All View)
+        function displayAllMCQs() {
+            mcqSingleView.style.display = 'none'; // Hide single view elements container
+            prevMCQBtn.style.display = 'none'; // Hide single view nav
+            nextMCQBtn.style.display = 'none';
+            mcqCounter.style.display = 'none';
+            viewAllMCQBtn.style.display = 'none'; // Hide the "View All" button itself
+
+            mcqAllViewContainer.innerHTML = '<h3>כל שאלות ה-MCQ</h3>'; // Reset and add title
+
+            mcqData.forEach((mcq, index) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.classList.add('question-block');
+                questionBlock.id = `mcq-all-${index}`; // Unique ID for each block
+
+                const questionP = document.createElement('p');
+                questionP.classList.add('question-text');
+                questionP.innerHTML = `<strong>שאלה ${index + 1}:</strong> ${mcq.question}`;
+                questionBlock.appendChild(questionP);
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.classList.add('options-container');
+
+                mcq.options.forEach((optionText, optionIndex) => {
+                    const optionElement = document.createElement('button');
+                    optionElement.classList.add('option');
+                    optionElement.innerHTML = optionText;
+                    optionElement.dataset.index = optionIndex; // Store option index
+                    // Attach listener specific to this question block
+                    optionElement.addEventListener('click', () => handleMCQAllViewSelection(index, optionIndex));
+                    optionsDiv.appendChild(optionElement);
+                });
+                questionBlock.appendChild(optionsDiv);
+
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.classList.add('feedback');
+                feedbackDiv.style.display = 'none'; // Initially hidden
+
+                const explanationDiv = document.createElement('div');
+                explanationDiv.classList.add('explanation');
+                feedbackDiv.appendChild(explanationDiv);
+                questionBlock.appendChild(feedbackDiv);
+
+                mcqAllViewContainer.appendChild(questionBlock);
+            });
+
+            mcqAllViewContainer.style.display = 'block';
+             // Update MathJax for the entire container after adding all questions
+            typesetMathJax(mcqAllViewContainer);
+        }
+
+        function handleMCQAllViewSelection(questionIndex, selectedOptionIndex) {
+            const mcq = mcqData[questionIndex];
+            const questionBlock = document.getElementById(`mcq-all-${questionIndex}`);
+            if (!questionBlock) return;
+
+            const options = questionBlock.querySelectorAll('.option');
+            const feedbackDiv = questionBlock.querySelector('.feedback');
+            const explanationDiv = questionBlock.querySelector('.explanation');
+            const isCorrect = selectedOptionIndex === mcq.correctIndex;
+
+            // Check if already answered (by checking if any option is disabled)
+            if (options[0] && options[0].classList.contains('disabled')) {
+                return; // Already answered
+            }
+
+            // Disable all options
+             options.forEach(opt => {
+                 opt.classList.add('disabled');
+                 opt.disabled = true;
+             });
+
+            // Highlight selected and correct options
+            options[selectedOptionIndex].classList.add('selected');
+            if (isCorrect) {
+                options[selectedOptionIndex].classList.add('correct');
+            } else {
+                options[selectedOptionIndex].classList.add('incorrect');
+                options[mcq.correctIndex].classList.add('correct');
+            }
+
+            // Display explanation
+            explanationDiv.innerHTML = `<p><strong>הסבר:</strong> ${mcq.explanation}</p>`;
+            feedbackDiv.style.display = 'block';
+
+            // Update MathJax for the explanation within this block
+             typesetMathJax(explanationDiv);
+        }
+
+        // True/False Logic (Single View)
+        function displayTF(index) {
+            const tf = tfData[index];
+            tfQuestionText.innerHTML = tf.question; // Use innerHTML for potential LaTeX
+            tfFeedback.style.display = 'none'; // Hide feedback initially
+            tfExplanation.innerHTML = ''; // Clear explanation
+
+            // Reset button states and re-attach listeners
+            const buttons = tfOptionsContainer.querySelectorAll('.tf-button');
+            buttons.forEach(button => {
+                button.classList.remove('correct', 'incorrect', 'disabled', 'selected');
+                button.disabled = false; // Re-enable button
+                 // Clone and replace to remove old listeners cleanly
+                 const newButton = button.cloneNode(true);
+                 button.parentNode.replaceChild(newButton, button);
+                 // Add new listener
+                 newButton.addEventListener('click', () => handleTFSelection(index, newButton.dataset.answer === 'true'));
+            });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+             // Update MathJax for the entire question area
+             typesetMathJax(tfQuestionArea);
+        }
+
+         function handleTFSelection(questionIndex, selectedAnswer) {
+            const tf = tfData[questionIndex];
+            const buttons = tfOptionsContainer.querySelectorAll('.tf-button');
+            const correctButton = tfOptionsContainer.querySelector(`.tf-button[data-answer="${tf.correctAnswer}"]`);
+            const incorrectButton = tfOptionsContainer.querySelector(`.tf-button[data-answer="${!tf.correctAnswer}"]`);
+            const selectedButton = tfOptionsContainer.querySelector(`.tf-button[data-answer="${selectedAnswer}"]`);
+
+            // Disable buttons
+             buttons.forEach(button => {
+                 button.classList.add('disabled');
+                 button.disabled = true;
+             });
+
+            // Highlight selection and correctness
+            selectedButton.classList.add('selected');
+            if (selectedAnswer === tf.correctAnswer) {
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                correctButton.classList.add('correct'); // Highlight the correct one too
+            }
+
+            // Display explanation
+            tfExplanation.innerHTML = `<p><strong>הסבר:</strong> ${tf.explanation}</p>`;
+            tfFeedback.style.display = 'block';
+             // Update MathJax for the explanation
+             typesetMathJax(tfExplanation);
+        }
+
+        function nextTF() {
+            currentTFIndex = (currentTFIndex + 1) % tfData.length;
+            displayTF(currentTFIndex);
+        }
+
+        function prevTF() {
+            currentTFIndex = (currentTFIndex - 1 + tfData.length) % tfData.length;
+            displayTF(currentTFIndex);
+        }
+
+         // TF Logic (All View)
+         function displayAllTFs() {
+            tfSingleView.style.display = 'none'; // Hide single view elements container
+            prevTFBtn.style.display = 'none'; // Hide single view nav
+            nextTFBtn.style.display = 'none';
+            tfCounter.style.display = 'none';
+            viewAllTFBtn.style.display = 'none'; // Hide the "View All" button itself
+
+            tfAllViewContainer.innerHTML = '<h3>כל שאלות הנכון / לא נכון</h3>'; // Reset and add title
+
+            tfData.forEach((tf, index) => {
+                 const questionBlock = document.createElement('div');
+                 questionBlock.classList.add('question-block');
+                 questionBlock.id = `tf-all-${index}`; // Unique ID
+
+                 const questionP = document.createElement('p');
+                 questionP.classList.add('question-text');
+                 questionP.innerHTML = `<strong>שאלה ${index + 1}:</strong> ${tf.question}`;
+                 questionBlock.appendChild(questionP);
+
+                 const optionsDiv = document.createElement('div');
+                 optionsDiv.classList.add('options-container');
+
+                 const trueButton = document.createElement('button');
+                 trueButton.classList.add('tf-button');
+                 trueButton.dataset.answer = 'true';
+                 trueButton.textContent = 'נכון';
+                 trueButton.addEventListener('click', () => handleTFAllViewSelection(index, true));
+                 optionsDiv.appendChild(trueButton);
+
+                 const falseButton = document.createElement('button');
+                 falseButton.classList.add('tf-button');
+                 falseButton.dataset.answer = 'false';
+                 falseButton.textContent = 'לא נכון';
+                 falseButton.addEventListener('click', () => handleTFAllViewSelection(index, false));
+                 optionsDiv.appendChild(falseButton);
+
+                 questionBlock.appendChild(optionsDiv);
+
+                 const feedbackDiv = document.createElement('div');
+                 feedbackDiv.classList.add('feedback');
+                 feedbackDiv.style.display = 'none'; // Initially hidden
+
+                 const explanationDiv = document.createElement('div');
+                 explanationDiv.classList.add('explanation');
+                 feedbackDiv.appendChild(explanationDiv);
+                 questionBlock.appendChild(feedbackDiv);
+
+                 tfAllViewContainer.appendChild(questionBlock);
+            });
+
+             tfAllViewContainer.style.display = 'block';
+             // Update MathJax for the entire container
+             typesetMathJax(tfAllViewContainer);
+        }
+
+         function handleTFAllViewSelection(questionIndex, selectedAnswer) {
+             const tf = tfData[questionIndex];
+             const questionBlock = document.getElementById(`tf-all-${questionIndex}`);
+             if (!questionBlock) return;
+
+             const buttons = questionBlock.querySelectorAll('.tf-button');
+             const feedbackDiv = questionBlock.querySelector('.feedback');
+             const explanationDiv = questionBlock.querySelector('.explanation');
+             const correctButton = questionBlock.querySelector(`.tf-button[data-answer="${tf.correctAnswer}"]`);
+             const selectedButton = questionBlock.querySelector(`.tf-button[data-answer="${selectedAnswer}"]`);
+
+            // Check if already answered
+             if (buttons[0] && buttons[0].classList.contains('disabled')) {
+                 return; // Already answered
+             }
+
+             // Disable buttons
+             buttons.forEach(button => {
+                 button.classList.add('disabled');
+                 button.disabled = true;
+             });
+
+             // Highlight selection and correctness
+             selectedButton.classList.add('selected');
+             if (selectedAnswer === tf.correctAnswer) {
+                 selectedButton.classList.add('correct');
+             } else {
+                 selectedButton.classList.add('incorrect');
+                 correctButton.classList.add('correct'); // Also highlight the correct one
+             }
+
+             // Display explanation
+             explanationDiv.innerHTML = `<p><strong>הסבר:</strong> ${tf.explanation}</p>`;
+             feedbackDiv.style.display = 'block';
+
+             // Update MathJax for the explanation in this block
+             typesetMathJax(explanationDiv);
+        }
+
+
+        // --- Initialization ---
+        function initializeApp() {
+            // Cards
+            displayCard(currentCardIndex);
+            studyCard.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', prevCard);
+            nextCardBtn.addEventListener('click', nextCard);
+
+            // MCQs
+            displayMCQ(currentMCQIndex);
+            prevMCQBtn.addEventListener('click', prevMCQ); // Operates only on single view
+            nextMCQBtn.addEventListener('click', nextMCQ); // Operates only on single view
+            viewAllMCQBtn.addEventListener('click', displayAllMCQs);
+
+            // True/False
+            displayTF(currentTFIndex);
+            prevTFBtn.addEventListener('click', prevTF); // Operates only on single view
+            nextTFBtn.addEventListener('click', nextTF); // Operates only on single view
+            viewAllTFBtn.addEventListener('click', displayAllTFs);
+
+            // Initial MathJax typesetting for the theory section
+             const theorySection = document.getElementById('theory');
+             typesetMathJax(theorySection);
+
+             console.log("Study tool initialized.");
+        }
+
+        // Wait for the DOM to be fully loaded before initializing
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללמידה: זיהוי סוכרים באמצעות מבחנים כימיים</title>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams' 
+            },
+            chtml: {
+                matchFontHeight: true 
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        /* General page styling */
+        body {
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            font-family: 'Arial', sans-serif; /* Standard font */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Main container for content */
+        .container {
+            width: 90%;
+            max-width: 1200px; /* Adjusted for wider table */
+            margin: 20px auto; /* Center content */
+            padding: 20px;
+            background-color: #444; /* Slightly lighter than body for content area distinction */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Headings */
+        h1, h2 {
+            color: #3D90D7; /* Blue accents */
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-top: 30px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.5em; }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            background-color: #555; /* Darker background for table */
+        }
+        th, td {
+            border: 1px solid #777; /* Lighter border for contrast */
+            padding: 10px;
+            text-align: right;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #3D90D7; /* Blue for headers */
+            color: white;
+            font-weight: bold;
+        }
+        td {
+            color: #E0E0E0;
+        }
+        tr:nth-child(even) {
+            background-color: #4a4a4a; /* Slightly different for even rows */
+        }
+        .positive-result { color: #81C784; /* Light Green for positive */ }
+        .negative-result { color: #E57373; /* Light Red for negative */ }
+        .variable-result { color: #FFB74D; /* Orange for variable/conditional */ }
+        .safety-warning-inline { color: #F44336; font-weight: bold; }
+
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7; /* Blue accents/buttons */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2a7cb0; /* Darker blue on hover */
+        }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Navigation elements styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        /* Counters for questions/cards */
+        .counter {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* MCQ and True/False Question Styling */
+        .question-item {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px; /* Vertical spacing */
+        }
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        .options-container button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: right; /* Align text to the right for Hebrew options */
+            background-color: #587894; /* A slightly different blue for options */
+        }
+        .options-container button:hover:not(:disabled) {
+            background-color: #3D90D7;
+        }
+        .options-container button.correct {
+            background-color: #4CAF50 !important; /* Green for correct */
+            color: white !important;
+        }
+        .options-container button.incorrect {
+            background-color: #F44336 !important; /* Red for incorrect */
+            color: white !important;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .feedback.correct {
+            background-color: #4CAF50; /* Green correct */
+            color: white;
+        }
+        .feedback.incorrect {
+            background-color: #F44336; /* Red incorrect */
+            color: white;
+        }
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #555;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+
+        /* "View All" sections */
+        .view-all-container {
+            margin-top: 20px;
+            border-top: 1px solid #3D90D7;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: זיהוי סוכרים באמצעות מבחנים כימיים</h1>
+        <p>עמוד זה מסכם את תכונותיהם של סוכרים שונים והתנהגותם במבחני זיהוי כימיים, ומציע שאלות תרגול לזיהויים.</p>
+        <p class="safety-warning-inline">לתשומת לב: בעבודה עם ריאגנטים מסוימים (כגון סליואנוף, ביאל, פניל הידרזין) חובה לנקוט באמצעי זהירות מחמירים, כולל עבודה במנדף ולבישת כפפות כפולות, בהתאם להנחיות ה-MSDS והפרוטוקול.</p>
+
+        <!-- Sugar Properties Table -->
+        <section id="sugar-properties">
+            <h2>טבלת תכונות סוכרים ותגובותיהם</h2>
+            <section id="sugar-properties">
+                <h2>טבלת תכונות סוכרים ותגובותיהם</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>שם הסוכר</th>
+                            <th>סוג (אלדוז/קטוז)</th>
+                            <th>קטגוריה (פנטוז/הקסוז/רב-סוכר)</th>
+                            <th>הרכב חד-סוכרים (לרב-סוכרים)</th>
+                            <th>סוכר מחזר?</th>
+                            <th>יוצר אוסזונים? (עם פניל הידרזין)</th>
+                            <th>בנדיקט</th>
+                            <th>חומצה פיקרית</th>
+                            <th>סליואנוף</th>
+                            <th>ביאל</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>גלוקוז (Glucose)</td>
+                            <td>אלדוז</td>
+                            <td>הקסוז</td>
+                            <td>- (חד-סוכר)</td>
+                            <td class="positive-result">כן</td>
+                            <td class="positive-result">כן (צורת מחטים/מטאטא)</td>
+                            <td class="positive-result">חיובי (משקע ירוק-אדום)</td>
+                            <td class="positive-result">חיובי (אדום-חום)</td>
+                            <td class="variable-result">ורוד חלש/איטי</td>
+                            <td class="variable-result">חום/ירקרק</td>
+                        </tr>
+                        <tr>
+                            <td>פרוקטוז (Fructose)</td>
+                            <td>קטוז</td>
+                            <td>הקסוז</td>
+                            <td>- (חד-סוכר)</td>
+                            <td class="positive-result">כן</td>
+                            <td class="positive-result">כן (זהה לגלוקוז)</td>
+                            <td class="positive-result">חיובי (משקע ירוק-אדום)</td>
+                            <td class="positive-result">חיובי (אדום-חום)</td>
+                            <td class="positive-result">אדום-דובדבן (מהיר)</td>
+                            <td class="variable-result">חום/ירקרק</td>
+                        </tr>
+                        <tr>
+                            <td>גלקטוז (Galactose)</td>
+                            <td>אלדוז</td>
+                            <td>הקסוז</td>
+                            <td>- (חד-סוכר)</td>
+                            <td class="positive-result">כן</td>
+                            <td class="positive-result">כן (צורת לוחיות מעוינות/מחטים קצרות)</td>
+                            <td class="positive-result">חיובי (משקע ירוק-אדום)</td>
+                            <td class="positive-result">חיובי (אדום-חום)</td>
+                            <td class="variable-result">ורוד חלש/איטי</td>
+                            <td class="variable-result">חום/ירקרק</td>
+                        </tr>
+                        <tr>
+                            <td>לקטוז (Lactose)</td>
+                            <td>אלדוז (קצה מחזר)</td>
+                            <td>דו-סוכר</td>
+                            <td>גלוקוז + גלקטוז</td>
+                            <td class="positive-result">כן</td>
+                            <td class="positive-result">כן (צורת "כדור צמר"/קיפוד)</td>
+                            <td class="positive-result">חיובי (משקע ירוק-אדום)</td>
+                            <td class="positive-result">חיובי (אדום-חום)</td>
+                            <td class="variable-result">ורוד חלש/איטי (לאחר הידרוליזה חלקית)</td>
+                            <td class="variable-result">חום</td>
+                        </tr>
+                        <tr>
+                            <td>סוכרוז (Sucrose)</td>
+                            <td>- (לא מחזר ישירות)</td>
+                            <td>דו-סוכר</td>
+                            <td>גלוקוז + פרוקטוז</td>
+                            <td class="negative-result">לא (אלא אם עובר הידרוליזה)</td>
+                            <td class="negative-result">לא (ישירות)</td>
+                            <td class="negative-result">שלילי (אלא אם עובר הידרוליזה)</td>
+                            <td class="negative-result">שלילי (אלא אם עובר הידרוליזה)</td>
+                            <td class="variable-result">אדום-דובדבן (לאחר הידרוליזה, עקב פרוקטוז)</td>
+                            <td class="variable-result">חום (או תגובה לפרוקטוז לאחר הידרוליזה)</td>
+                        </tr>
+                        <tr>
+                            <td>ארבינוז (Arabinose)</td>
+                            <td>אלדוז</td>
+                            <td>פנטוז</td>
+                            <td>- (חד-סוכר)</td>
+                            <td class="positive-result">כן</td>
+                            <td class="positive-result">כן (צורת מחטים עדינות/צברים צפופים)</td>
+                            <td class="positive-result">חיובי (משקע ירוק-אדום)</td>
+                            <td class="positive-result">חיובי (אדום-חום)</td>
+                            <td class="negative-result">אין צבע משמעותי/איטי</td>
+                            <td class="positive-result">כחול-ירוק</td>
+                        </tr>
+                        <tr>
+                            <td>רפינוז (Raffinose)</td>
+                            <td>- (לא מחזר ישירות)</td>
+                            <td>טרי-סוכר</td>
+                            <td>גלקטוז + גלוקוז + פרוקטוז</td>
+                            <td class="negative-result">לא (אלא אם עובר הידרוליזה)</td>
+                            <td class="negative-result">לא (ישירות)</td>
+                            <td class="negative-result">שלילי (אלא אם עובר הידרוליזה)</td>
+                            <td class="negative-result">שלילי (אלא אם עובר הידרוליזה)</td>
+                            <td class="variable-result">אדום-דובדבן (לאחר הידרוליזה, עקב פרוקטוז)</td>
+                            <td class="variable-result">חום (או תגובה לפרוקטוז לאחר הידרוליזה)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq">
+            <h2>שאלות רב-ברירה (MCQ) לזיהוי סוכרים</h2>
+            <div id="mcq-single-view">
+                <div class="question-item">
+                    <p id="mcq-question-text" class="question-text"></p>
+                    <div id="mcq-options-container" class="options-container">
+                        <!-- MCQ options will be populated here -->
+                    </div>
+                    <div id="mcq-feedback" class="feedback" style="display:none;"></div>
+                    <div id="mcq-explanation" class="explanation" style="display:none;"></div>
+                </div>
+                <div class="navigation">
+                    <button id="prev-mcq-button" onclick="prevMcq()">הקודם</button>
+                    <span id="mcq-counter" class="counter"></span>
+                    <button id="next-mcq-button" onclick="nextMcq()">הבא</button>
+                </div>
+            </div>
+            <button onclick="toggleViewAllMcqs()" id="view-all-mcqs-button">הצג/הסתר את כל השאלות</button>
+            <div id="mcq-view-all-container" class="view-all-container" style="display:none;">
+                <!-- All MCQs will be populated here when "View All" is clicked -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // --- MCQ DATA ---
+        const mcqData = [
+            { question: "סוכר נעלם נתן תגובה חיובית מהירה (צבע אדום-דובדבן) בבדיקת סליואנוף ותגובה חיובית (משקע אדום) בבדיקת בנדיקט. איזה סוכר זה יכול להיות?", options: ["גלוקוז", "פרוקטוז", "ארבינוז", "סוכרוז (ללא הידרוליזה)"], answer: 1, explanation: "פרוקטוז הוא קטוהקסוז מחזר. הוא יגיב מהר בסליואנוף (קטוז) וחיובית בבנדיקט (מחזר)." },
+            { question: "איזו בדיקה תהיה היעילה ביותר להבדיל באופן ישיר בין גלוקוז לפרוקטוז?", options: ["בדיקת בנדיקט", "בדיקת חומצה פיקרית", "בדיקת סליואנוף", "בדיקת ביאל"], answer: 2, explanation: "בדיקת סליואנוף מבדילה בין קטוזות (כמו פרוקטוז, תגובה מהירה ואדומה) לאלדוזות (כמו גלוקוז, תגובה איטית או חלשה)." },
+            { question: "סוכר נעלם נתן תגובה חיובית (צבע כחול-ירוק) בבדיקת ביאל ותגובה חיובית בבדיקת בנדיקט. מהו הסוכר הנעלם הסביר ביותר?", options: ["פרוקטוז", "לקטוז", "ארבינוז", "גלקטוז"], answer: 2, explanation: "ארבינוז הוא אלדופנטוז מחזר. הוא ייתן תגובה חיובית בביאל (פנטוז) ותגובה חיובית בבנדיקט (מחזר)." },
+            { question: "בהינתן תמיסת סוכרוז, אילו תוצאות צפויות בבדיקת בנדיקט ובבדיקת סליואנוף אם לא בוצעה הידרוליזה מוקדמת?", options: ["בנדיקט: חיובי, סליואנוף: חיובי מהיר", "בנדיקט: שלילי, סליואנוף: שלילי או חלש מאוד", "בנדיקט: חיובי, סליואנוף: שלילי", "בנדיקט: שלילי, סליואנוף: חיובי מהיר (עקב נוכחות פרוקטוז קשור)"], answer: 1, explanation: "סוכרוז הוא סוכר לא מחזר, ולכן ייתן תוצאה שלילית בבנדיקט. ללא הידרוליזה, גם תגובת סליואנוף תהיה שלילית או חלשה מאוד מכיוון שהפרוקטוז קשור ואינו חופשי להגיב." },
+            { question: "איזה מהסוכרים הבאים הוא אלדוהקסוז מחזר ?", options: ["ארבינוז", "סוכרוז", "גלוקוז", "רפינוז"], answer: 2, explanation: "גלוקוז הוא אלדוהקסוז (אלדוז בעל 6 פחמנים) והוא סוכר מחזר. פרוקטוז הוא קטוהקסוז." },
+            { question: "סטודנט קיבל תוצאה שלילית בבדיקת בנדיקט אך תוצאה חיובית (אדום-דובדבן) בבדיקת סליואנוף לאחר חימום ממושך. איזה סוכר עשוי להיות הנעלם, בהנחה שחלה הידרוליזה במהלך בדיקת סליואנוף?", options: ["גלוקוז", "לקטוז", "ארבינוז", "סוכרוז"], answer: 3, explanation: "סוכרוז הוא לא מחזר (שלילי בבנדיקט). בבדיקת סליואנוף (סביבה חומצית וחימום), סוכרוז יכול לעבור הידרוליזה לפרוקטוז וגלוקוז. הפרוקטוז המשוחרר ייתן תגובה חיובית בסליואנוף." },
+            { question: "איזה סוכר ייתן גבישי אוסזון בצורת 'כדור צמר' או 'קיפוד' בבדיקת פניל הידרזין?", options: ["גלוקוז", "פרוקטוז", "לקטוז", "ארבינוז"], answer: 2, explanation: "לקטוז מאופיין ביצירת גבישי אוסזון בצורת 'כדור צמר' (powder-puff) או 'קיפוד'." },
+            { question: "סוכר נעלם הגיב חיובית בבדיקת חומצה פיקרית, אך לא נתן צבע כחול-ירוק בבדיקת ביאל ולא צבע אדום-דובדבן מהיר בסליואנוף. איזה מהבאים יכול להיות הסוכר?", options: ["פרוקטוז", "ארבינוז", "גלוקוז", "סוכרוז"], answer: 2, explanation: "גלוקוז הוא סוכר מחזר (חיובי בפיקרית), אינו פנטוז (לא כחול-ירוק בביאל) ואינו קטוז (לא אדום מהיר בסליואנוף)." },
+            { question: "מדוע חשוב לציין את מהירות התגובה בבדיקת סליואנוף?", options: ["כדי להעריך את ריכוז הסוכר", "כדי להבדיל בין קטוזות (מהירות) לאלדוזות (איטיות)", "כדי לוודא שהריאגנט טרי", "כדי למנוע חימום יתר של הדגימה"], answer: 1, explanation: "קטוזות מגיבות מהר יותר מאלדוזות בבדיקת סליואנוף, ולכן מהירות הופעת הצבע האדום היא קריטריון חשוב להבחנה." },
+            { question: "איזה מהסוכרים הבאים הוא פנטוז?", options: ["גלוקוז", "פרוקטוז", "ארבינוז", "לקטוז"], answer: 2, explanation: "ארבינוז הוא סוכר בעל חמישה אטומי פחמן (פנטוז)." },
+            { question: "תמיסה של סוכר לא ידוע נתנה צבע כחול-ירוק בבדיקת ביאל. איזו קטגוריה של סוכרים סביר להניח שנמצאת בתמיסה?", options: ["הקסוזות", "קטוזות", "פנטוזות", "דו-סוכרים לא מחזרים"], answer: 2, explanation: "בדיקת ביאל ספציפית לזיהוי פנטוזות, הנותנות צבע כחול-ירוק." },
+            { question: "אם ידוע שתמיסה מכילה גלקטוז, איזו תוצאה צפויה בבדיקת בנדיקט?", options: ["שלילית (אין שינוי צבע)", "חיובית (משקע ירוק/צהוב/כתום/אדום)", "צבע סגול עמוק", "צבע כחול-ירוק"], answer: 1, explanation: "גלקטוז הוא אלדוהקסוז מחזר, ולכן ייתן תגובה חיובית בבדיקת בנדיקט." },
+            { question: "סטודנט בודק תמיסת פרוקטוז. איזה צבע הוא צפוי לראות בבדיקת סליואנוף ובאיזו מהירות יחסית?", options: ["ורוד חלש, לאחר חימום ממושך", "אדום-דובדבן עז, תוך זמן קצר", "כחול-ירוק, תוך זמן קצר", "ללא שינוי צבע משמעותי"], answer: 1, explanation: "פרוקטוז (קטוז) מגיב מהר בבדיקת סליואנוף ונותן צבע אדום-דובדבן עז." },
+            { question: "איזה מהבאים אינו סוכר מחזר?", options: ["גלוקוז", "פרוקטוז", "ארבינוז", "סוכרוז"], answer: 3, explanation: "סוכרוז הוא דו-סוכר לא מחזר (אלא אם עובר הידרוליזה)." },
+            { question: "בדיקת פניל הידרזין משמשת ל:", options: ["קביעת ריכוז הסוכר", "הבחנה בין סוכרים מחזרים ללא-מחזרים בלבד", "יצירת גבישי אוסזון בעלי צורה אופיינית המסייעת בזיהוי סוכרים מחזרים", "זיהוי ספציפי של פנטוזות על פי צבע התגובה"], answer: 2, explanation: "בדיקת פניל הידרזין מאפשרת יצירת אוסזונים, שצורתם תחת המיקרוסקופ יכולה לסייע בזיהוי סוכרים מחזרים שונים." },
+            { question: "סוכר נעלם נתן תוצאה שלילית בבדיקת בנדיקט ושלילית בבדיקת ביאל. איזו אפשרות היא הסבירה ביותר, בהנחה שלא חלה הידרוליזה?", options: ["ארבינוז", "פרוקטוז", "סוכרוז", "גלוקוז"], answer: 2, explanation: "סוכרוז הוא לא מחזר (שלילי בבנדיקט) ואינו פנטוז (שלילי בביאל). ארבינוז, פרוקטוז וגלוקוז הם כולם מחזרים." },
+            { question: "מהי התוצאה הצפויה עבור לקטוז בבדיקת חומצה פיקרית?", options: ["שלילית, צבע צהוב נשאר", "חיובית, צבע אדום-חום מתפתח", "צבע כחול עז", "שקיעת גבישים לבנים"], answer: 1, explanation: "לקטוז הוא סוכר מחזר, ולכן ייתן תגובה חיובית (צבע אדום-חום) בבדיקת חומצה פיקרית." },
+            { question: "סטודנט מבצע בדיקת ביאל על תמיסת גלוקוז. איזה צבע הוא צפוי לראות?", options: ["אדום-דובדבן עז", "כחול-ירוק ברור", "חום או ירקרק-עכור", "ללא שינוי צבע"], answer: 2, explanation: "גלוקוז הוא הקסוז. בבדיקת ביאל, הקסוזות בדרך כלל נותנות צבע חום או ירקרק-עכור, בניגוד לפנטוזות הנותנות כחול-ירוק." },
+            { question: "איזה מהסוכרים הבאים יגיב עם פניל הידרזין ליצירת אוסזון זהה לזה של גלוקוז?", options: ["גלקטוז", "ארבינוז", "פרוקטוז", "לקטוז"], answer: 2, explanation: "פרוקטוז וגלוקוז נבדלים רק בפחמנים C1 ו-C2, ולכן יוצרים את אותו אוסזון." },
+            { question: "מה ההבדל העיקרי בין תגובת סוכרוז לתגובת פרוקטוז בבדיקת בנדיקט (ללא הידרוליזה מוקדמת)?", options: ["סוכרוז נותן צבע אדום יותר מהר", "פרוקטוז נותן צבע כחול, סוכרוז ירוק", "פרוקטוז נותן תגובה חיובית (משקע), סוכרוז שלילית (אין משקע/שינוי)", "אין הבדל משמעותי, שניהם מגיבים חיובית"], answer: 2, explanation: "פרוקטוז הוא סוכר מחזר ויתן תגובה חיובית (משקע). סוכרוז הוא סוכר לא מחזר ולכן ייתן תגובה שלילית (התמיסה תישאר כחולה) אם לא עבר הידרוליזה." },
+            { question: "איזה מהבאים מתאר נכונה את ארבינוז?", options: ["קטוהקסוז מחזר", "אלדופנטוז מחזר", "אלדוהקסוז לא מחזר", "קטופנטוז לא מחזר"], answer: 1, explanation: "ארבינוז הוא אלדוז (מכיל קבוצת אלדהיד), פנטוז (בעל 5 פחמנים), והוא סוכר מחזר." },
+            { question: "כאשר בודקים תמיסת רפינוז שלא עברה הידרוליזה, איזו תוצאה צפויה בבדיקת חומצה פיקרית?", options: ["חיובית חזקה (אדום כהה)", "חיובית חלשה (ורוד)", "שלילית (צהוב נשאר)", "משקע לבן"], answer: 2, explanation: "רפינוז הוא סוכר לא מחזר, ולכן לא יחזר את החומצה הפיקרית. התמיסה תישאר צהובה." },
+            { question: "סוכר X נותן תוצאה חיובית בבנדיקט, שלילית בביאל, ותגובה איטית/חלשה בסליואנוף. הוא גם יוצר אוסזונים. מה יכול להיות סוכר X?", options: ["ארבינוז", "פרוקטוז", "סוכרוז", "גלוקוז או גלקטוז"], answer: 3, explanation: "גלוקוז וגלקטוז הם אלדוהקסוזים מחזרים. הם יגיבו חיובית בבנדיקט, שלילית בביאל (אינם פנטוזות), יגיבו לאט בסליואנוף (אלדוזות), ויוצרים אוסזונים." },
+            { question: "מהי מטרת השימוש בבדיקת ביאל?", options: ["להבדיל בין אלדוזות לקטוזות", "לזהות נוכחות של סוכרים מחזרים באופן כללי", "לזהות ספציפית פנטוזות", "לזהות ספציפית הקסוזות"], answer: 2, explanation: "בדיקת ביאל משמשת בעיקר לזיהוי פנטוזות, הנותנות צבע כחול-ירוק אופייני." },
+            { question: "אם תמיסת סוכר נעלם נתנה תוצאה שלילית בכל הבדיקות הבאות (בנדיקט, חומצה פיקרית, סליואנוף, ביאל) ללא הידרוליזה, מהי האפשרות הסבירה ביותר מבין הבאים?", options: ["גלוקוז", "פרוקטוז", "ארבינוז", "סוכרוז או רפינוז"], answer: 3, explanation: "סוכרוז ורפינוז הם סוכרים לא מחזרים, אינם פנטוזות, ואינם קטוזות חופשיות. לכן, ללא הידרוליזה, הם יתנו תוצאות שליליות במבחנים אלו." }
+        ];
+        
+        // --- APPLICATION LOGIC ---
+        let currentMcqIndex = 0;
+
+        const mcqQuestionText = document.getElementById('mcq-question-text');
+        const mcqOptionsContainer = document.getElementById('mcq-options-container');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounterEl = document.getElementById('mcq-counter');
+        const mcqViewAllContainer = document.getElementById('mcq-view-all-container');
+
+        function initApp() {
+            displayMcq(currentMcqIndex, false); 
+            renderMath();
+        }
+
+        function renderMath() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch(function (err) {
+                    console.error('MathJax typesetting error: ' + err);
+                });
+            }
+        }
+        
+        function displayMcq(index, isViewAll) {
+            const q = mcqData[index];
+            let questionTextEl, optionsContainerEl, feedbackEl, explanationEl, counterEl;
+
+            if (isViewAll) {
+                questionTextEl = document.getElementById(`mcq-all-question-text-${index}`);
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${index}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${index}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${index}`);
+            } else {
+                questionTextEl = mcqQuestionText;
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+                counterEl = mcqCounterEl;
+                if (counterEl) counterEl.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            }
+            
+            if (!questionTextEl) return; 
+
+            questionTextEl.innerHTML = q.question; 
+            optionsContainerEl.innerHTML = ''; 
+
+            q.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; 
+                button.onclick = () => selectMcqOption(index, i, isViewAll);
+                optionsContainerEl.appendChild(button);
+            });
+
+            if(feedbackEl) feedbackEl.style.display = 'none';
+            if(explanationEl) explanationEl.style.display = 'none';
+            
+            if (q.isAnswered) {
+                showMcqFeedback(index, q.selectedOption, isViewAll);
+            }
+            renderMath();
+        }
+
+        function selectMcqOption(questionIndex, optionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            if (q.isAnswered) return; 
+
+            q.selectedOption = optionIndex;
+            q.isAnswered = true;
+            
+            showMcqFeedback(questionIndex, optionIndex, isViewAll);
+
+            let currentOptionsContainer = isViewAll ? document.getElementById(`mcq-all-options-container-${questionIndex}`) : mcqOptionsContainer;
+            if (currentOptionsContainer) {
+                 const buttonsToDisable = currentOptionsContainer.getElementsByTagName('button');
+                for (let btn of buttonsToDisable) {
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        function showMcqFeedback(questionIndex, selectedOptionIndex, isViewAll) {
+            const q = mcqData[questionIndex];
+            let optionsContainerEl, feedbackEl, explanationEl;
+
+            if (isViewAll) {
+                optionsContainerEl = document.getElementById(`mcq-all-options-container-${questionIndex}`);
+                feedbackEl = document.getElementById(`mcq-all-feedback-${questionIndex}`);
+                explanationEl = document.getElementById(`mcq-all-explanation-${questionIndex}`);
+            } else {
+                optionsContainerEl = mcqOptionsContainer;
+                feedbackEl = mcqFeedback;
+                explanationEl = mcqExplanation;
+            }
+            
+            if (!optionsContainerEl || !feedbackEl || !explanationEl) return; 
+
+            const buttons = optionsContainerEl.getElementsByTagName('button');
+            if (buttons[selectedOptionIndex]) { 
+                 buttons[selectedOptionIndex].classList.add(selectedOptionIndex === q.answer ? 'correct' : 'incorrect');
+            }
+            if (selectedOptionIndex !== q.answer && buttons[q.answer]) { 
+                buttons[q.answer].classList.add('correct'); 
+            }
+
+            for (let btn of buttons) {
+                btn.disabled = true; 
+            }
+
+            feedbackEl.textContent = selectedOptionIndex === q.answer ? 'נכון!' : 'לא נכון.';
+            feedbackEl.className = `feedback ${selectedOptionIndex === q.answer ? 'correct' : 'incorrect'}`;
+            feedbackEl.style.display = 'block';
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`; 
+            explanationEl.style.display = 'block';
+            renderMath();
+        }
+
+        function nextMcq() {
+            currentMcqIndex = (currentMcqIndex + 1) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function prevMcq() {
+            currentMcqIndex = (currentMcqIndex - 1 + mcqData.length) % mcqData.length;
+            displayMcq(currentMcqIndex, false);
+        }
+
+        function toggleViewAllMcqs() {
+            const btn = document.getElementById('view-all-mcqs-button');
+            if (mcqViewAllContainer.style.display === 'none') {
+                mcqViewAllContainer.style.display = 'block';
+                btn.textContent = 'הסתר את כל השאלות';
+                if (mcqViewAllContainer.innerHTML.trim() === '') { 
+                    mcqData.forEach((q, index) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'question-item';
+                        itemDiv.innerHTML = `
+                            <p id="mcq-all-question-text-${index}" class="question-text"></p>
+                            <div id="mcq-all-options-container-${index}" class="options-container"></div>
+                            <div id="mcq-all-feedback-${index}" class="feedback" style="display:none;"></div>
+                            <div id="mcq-all-explanation-${index}" class="explanation" style="display:none;"></div>
+                        `;
+                        mcqViewAllContainer.appendChild(itemDiv);
+                        displayMcq(index, true); 
+                    });
+                }
+            } else {
+                mcqViewAllContainer.style.display = 'none';
+                btn.textContent = 'הצג את כל השאלות';
+            }
+            renderMath();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>

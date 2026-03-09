@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: תגובות השחמה בכימיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            // AI will populate this array
+            { term: "Polyphenol Oxidase (PPO)", definition: "משפחת אנזימים האחראית להשחמה אנזימטית. מכילה יוני נחושת באתר הפעיל ומזרזת חמצון של תרכובות פנוליות בנוכחות חמצן." },
+            { term: "o-Quinone (אורתו-קינון)", definition: "תוצר ביניים צבעוני וריאקטיבי מאוד, הנוצר מחמצון של פנולים על ידי PPO. קינונים אלו עוברים פולימריזציה ליצירת מלנין, הפיגמנט החום." },
+            { term: "מעכבי השחמה - חומרים מחזרים", definition: "כמו חומצה אסקורבית (ויטמין C) וסולפיטים. הם מונעים השחמה על ידי חיזור של האורתו-קינונים הצבעוניים חזרה לפנולים חסרי צבע." },
+            { term: "מעכבי השחמה - סוכני כלאציה", definition: "כמו EDTA. הם נקשרים ליון הנחושת החיוני באתר הפעיל של PPO ובכך משביתים את האנזים." },
+            { term: "מעכבי השחמה - מחמיצים (Acidulants)", definition: "כמו חומצת לימון. הם מורידים את ה-pH של המזון מתחת לרמה האופטימלית לפעילות PPO, ובכך מאטים מאוד את קצב ההשחמה." },
+            { term: "סובסטרטים להשחמה אנזימטית", definition: "תרכובות פנוליות טבעיות הנמצאות בפירות וירקות, כגון טירוזין, קטכינים, חומצה כלורוגנית ופלבונואידים." },
+            { term: "השחמה רצויה", definition: "תהליך השחמה אנזימטית התורם באופן חיובי לתכונות האורגנולפטיות (צבע, טעם, ארומה) של מוצרי מזון כמו תה, קפה ופירות יבשים." },
+            { term: "RNA interference (RNAi)", definition: "טכניקה ביוטכנולוגית המשמשת בתפוחים מהונדסים גנטית (Arctic Apples) כדי להשתיק את הגן המקודד ל-PPO, ובכך למנוע מהם להשחים לאחר חיתוך." },
+            { term: "ציסטאין (Cysteine)", definition: "חומצת אמינו המכילה גופרית (תיול) שיכולה לעכב השחמה על ידי תגובה עם אורתו-קינונים ליצירת תרכובות חסרות צבע, או על ידי חיזורם." },
+            { term: "טיפולים טכנולוגיים למניעת השחמה", definition: "שיטות פיזיקליות כמו חליטה (טיפול בחום), קירור, ייבוש (הורדת פעילות מים) ואריזת ואקום (סילוק חמצן)." },
+            { term: "פלבונואידים", definition: "קבוצה גדולה של פיטונוטריינטים הנמצאים בפירות וירקות רבים. חלקם, כמו קוורצטין, יכולים לשמש כסובסטרטים להשחמה אנזימטית." },
+            { term: "מלנין", definition: "התוצר הפולימרי הסופי, בעל צבע חום-שחור, של תגובת ההשחמה האנזימטית. נוצר מפולימריזציה של אורתו-קינונים." }
+        ];
+
+        const mcqData = [
+            // AI will populate this array
+            { question: "איזה מהבאים אינו מהווה תנאי הכרחי להתרחשות תגובת השחמה אנזימטית טיפוסית בפירות?", options: ["נוכחות האנזים פוליפנול אוקסידאז (PPO)", "נוכחות חמצן", "נוכחות סוכר מחזר", "נוכחות סובסטרט פנולי"], correctIndex: 2, explanation: "השחמה אנזימטית אינה תלויה בנוכחות סוכר מחזר. סוכר מחזר וחומצות אמינו הם המגיבים בתגובת מייאר, שהיא סוג של השחמה לא-אנזימטית." },
+            { question: "מהו תפקידו העיקרי של יון הנחושת (Cu2+) באנזים פוליפנול אוקסידאז?", options: ["לייצב את מבנה הטטרמר של האנזים", "לשמש כקופקטור חיוני באתר הפעיל המשתתף בתגובת החמצון", "להיקשר לסובסטרט הפנולי ולהגביר את מסיסותו", "לווסת את ה-pH האופטימלי לפעילות האנזים"], correctIndex: 1, explanation: "האנזים PPO הוא מטאלופרוטאין המכיל נחושת באתר הפעיל. יוני הנחושת חיוניים לקטליזה של חמצון הפנולים לקינונים." },
+            { question: "יצרן מזון מעוניין למנוע השחמה בפירה תפוחי אדמה המיועד לאריזה. איזה טיפול טכנולוגי הוא היעיל ביותר למטרה זו?", options: ["הוספת ריכוז גבוה של מלח", "חליטה (Blanching) באדים חמים לפני הטחינה", "אחסון בטמפרטורת החדר באריזה אטומה", "הוספת צבע מאכל צהוב למיסוך הצבע החום"], correctIndex: 1, explanation: "חליטה היא טיפול בחום הגורם לדנטורציה בלתי הפיכה של האנזים PPO, ובכך משבית את פעילותו ומונע השחמה באופן יעיל." },
+            { question: "איזה מהמשפטים הבאים אינו מתאר נכונה את מנגנון הפעולה של מעכבי השחמה?", options: ["חומצה אסקורבית מחזרת קינונים צבעוניים חזרה לפנולים חסרי צבע.", "EDTA נקשר ליוני הנחושת באתר הפעיל של PPO.", "חומצת לימון פועלת בעיקר על ידי יצירת קומפלקס עם הסובסטרט הפנולי.", "סולפיטים יכולים להגיב עם קינונים וליצור תרכובות חסרות צבע."], correctIndex: 2, explanation: "חומצת לימון פועלת בעיקר כ-acidulant, כלומר מורידה את ה-pH לסביבה חומצית שבה פעילות ה-PPO נמוכה מאוד. היא יכולה גם לפעול כסוכן כלאציה חלש, אך זו אינה פעולתה העיקרית." },
+            { question: "באיזה מהמוצרים הבאים תהליך ההשחמה האנזימטית נחשב לרצוי ותורם לאיכות המוצר הסופי?", options: ["פרוסות תפוחים טריות", "עלי חסה חתוכים", "תה שחור", "שרימפס גולמי"], correctIndex: 2, explanation: "בתהליך ייצור תה שחור, ההשחמה האנזימטית של עלי התה (חמצון הקטכינים) היא שלב חיוני לפיתוח הצבע, הטעם והארומה האופייניים." },
+            { question: "מהי הסיבה המולקולרית לכך שתפוחי 'Arctic Apples' המהונדסים גנטית אינם משחימים?", options: ["הם מייצרים באופן טבעי רמות גבוהות של חומצה אסקורבית.", "הגן המקודד לאנזים PPO הושתק באמצעות טכנולוגיית RNAi.", "הסובסטרטים הפנוליים בתפוחים אלו הוחלפו בתרכובות שאינן מגיבות עם PPO.", "הם מכילים אנזים נוסף המפרק את הקינונים הצבעוניים מייד עם היווצרם."], correctIndex: 1, explanation: "תפוחים אלו פותחו תוך שימוש ב-RNA interference כדי לדכא באופן משמעותי את הביטוי של גן ה-PPO, מה שמוביל לכמות נמוכה מאוד של אנזים פעיל ולמניעת השחמה." },
+            { question: "איזה מהבאים אינו סובסטרט טיפוסי לתגובת השחמה אנזימטית המזורזת על ידי PPO?", options: ["טירוזין", "קוורצטין", "חומצה כלורוגנית", "ליקופן"], correctIndex: 3, explanation: "טירוזין, קוורצטין וחומצה כלורוגנית הם כולם תרכובות פנוליות המשמשות כסובסטרטים ל-PPO. ליקופן הוא פיגמנט קרוטנואידי ואינו מכיל קבוצה פנולית." },
+            { question: "מהי התוצאה של השלב הראשון בתגובת ה-PPO על סובסטרט מסוג מונו-פנול (כמו טירוזין)?", options: ["יצירה ישירה של פולימר חום", "דה-קרבוקסילציה של הסובסטרט", "הידרוקסילציה ליצירת די-פנול (o-diphenol)", "חיזור של הסובסטרט על ידי חמצן"], correctIndex: 2, explanation: "ל-PPO יש שתי פעילויות: הראשונה (cresolase activity) היא הידרוקסילציה של מונו-פנול לדי-פנול. השנייה (catecholase activity) היא חמצון של הדי-פנול לקינון." },
+            { question: "איזו קבוצת מעכבים פועלת על ידי סילוק אחד המגיבים (cofactor) החיוניים מהאנזים PPO?", options: ["חומרים מחזרים", "סוכני כלאציה", "מחמיצים (acidulants)", "מעכבים אנזימטיים תחרותיים"], correctIndex: 1, explanation: "סוכני כלאציה, כמו EDTA ופוספטים, פועלים על ידי קשירה (כליאה) של יוני הנחושת, שהם קופקטור חיוני לפעילות הקטליטית של PPO, ובכך משביתים את האנזים." },
+            { question: "מה ההבדל המהותי בין השחמה אנזימטית לקרמליזציה?", options: ["השחמה אנזימטית דורשת חום גבוה, בעוד קרמליזציה מתרחשת בטמפרטורת החדר.", "השחמה אנזימטית מערבת חלבונים, וקרמליזציה מערבת שומנים.", "השחמה אנזימטית דורשת אנזים וחמצן, בעוד קרמליזציה היא פירוק סוכר בחום גבוה ללא צורך באנזים.", "השחמה אנזימטית יוצרת טעמים רצויים, וקרמליזציה יוצרת טעמי לוואי."], correctIndex: 2, explanation: "השחמה אנזימטית היא תגובה ביוכימית המזורזת על ידי אנזים. קרמליזציה היא תגובה כימית (פירוליזה) המתרחשת כאשר סוכרים מחוממים לטמפרטורות גבוהות, ואינה מערבת אנזימים או חלבונים." },
+            { question: "באיזה סביבת pH צפויה פעילות מירבית של האנזים PPO ברוב הפירות והירקות?", options: ["pH 2-3 (חומצי חזק)", "pH 5-7 (חומצי חלש עד ניטרלי)", "pH 9-10 (בסיסי)", "הפעילות אינה תלויה ב-pH"], correctIndex: 1, explanation: "ל-PPO ברוב הצמחים יש pH אופטימלי לפעילות בטווח שבין 5 ל-7. זו הסיבה שהחמצת המזון (הורדת ה-pH) היא שיטה יעילה לעיכוב ההשחמה." },
+            { question: "מהי הסיבה לכך שאריזת ואקום יעילה במניעת השחמה של ירקות חתוכים?", options: ["הוואקום גורם לדנטורציה של האנזים PPO.", "הוואקום מוריד את פעילות המים מתחת לסף הנדרש לתגובה.", "הוואקום מסלק את החמצן, שהוא סובסטרט חיוני לתגובה.", "הוואקום מעלה את ריכוז הפנולים וגורם לעיכוב על ידי עודף סובסטרט."], correctIndex: 2, explanation: "תגובת החמצון המזורזת על ידי PPO דורשת חמצן מולקולרי (O2) כמגיב. סילוק החמצן מהסביבה על ידי אריזת ואקום עוצר את התגובה לחלוטין." },
+            { question: "איזה מהמשפטים הבאים אינו נכון לגבי ציסטאין (cysteine) כמעכב השחמה?", options: ["הוא יכול לחזר אורתו-קינונים חזרה לדי-פנולים.", "הוא יכול להגיב עם אורתו-קינונים וליצור תוצרי ספיחה (adducts) חסרי צבע.", "הוא פועל כסוכן כלאציה חזק הנקשר לנחושת ב-PPO.", "שימוש בריכוזים גבוהים שלו עלול להשפיע לרעה על טעם המוצר."], correctIndex: 2, explanation: "ציסטאין הוא חומצת אמינו המכילה תיול. הוא פועל כחומר מחזר ועל ידי יצירת תוצרי ספיחה עם קינונים. הוא אינו נחשב לסוכן כלאציה משמעותי במנגנון פעולתו העיקרי נגד השחמה." },
+            { question: "מדוע השחמה אנזימטית נחשבת לגורם קלקול משמעותי בפירות וירקות טריים?", options: ["היא יוצרת תרכובות רעילות המסוכנות למאכל.", "היא פוגעת במראה, בטעם ובערך התזונתי של המוצר.", "היא מעלה את רמת הסוכר במוצר.", "היא גורמת לאובדן מוחלט של ויטמינים מסיסי שומן."], correctIndex: 1, explanation: "הפיגמנטים החומים והתרכובות הנלוות פוגעים במראה ובטעם, ויכולים להגיב עם רכיבי תזונה חיוניים כמו ויטמין C וחומצות אמינו, ובכך לפגוע בערך התזונתי." },
+            { question: "מהו התוצר הסופי, הפולימרי והצבעוני של תגובת ההשחמה האנזימטית?", options: ["קטכין", "קרמל", "מלנין", "קוורצטין"], correctIndex: 2, explanation: "האורתו-קינונים הריאקטיביים עוברים סדרה של תגובות פולימריזציה ספונטניות ליצירת מבנים פולימריים גדולים ומורכבים בעלי צבע חום-שחור, הידועים בשם הכולל מלנינים." },
+            { question: "איזו תכונה של פנולים אינה רלוונטית ישירות לתפקידם כסובסטרטים להשחמה אנזימטית?", options: ["הימצאות קבוצת הידרוקסיל (-OH) הקשורה לטבעת ארומטית.", "יכולתם לעבור חמצון.", "מסיסותם הגבוהה יותר במים מאשר כהלים מקבילים.", "היותם מוצקים לבנים או נוזלים חסרי צבע במצבם הטבעי."], correctIndex: 3, explanation: "בעוד שמסיסותם במים היא תכונה פיזיקלית חשובה, התכונות הכימיות הקריטיות להשתתפותם בתגובה הן המבנה הפנולי (הידרוקסיל על טבעת ארומטית) ויכולתם להתחמצן. המסיסות עצמה אינה תנאי לתגובה." },
+            { question: "איזו קבוצת חומרים מהרשימה מכילה רק מעכבים הפועלים במנגנון של חיזור?", options: ["EDTA, חומצת לימון, פוספטים", "סולפיטים, חומצה אסקורבית, גלוטטיון", "חומצות קרבוקסיליות ארומטיות, פפטידים, אניונים", "פרוטאזות, אוקסיגנאזות, מתיל-טרנספראזות"], correctIndex: 1, explanation: "סולפיטים, חומצה אסקורבית וגלוטטיון הם כולם חומרים מחזרים (reducing agents) המונעים הצטברות של קינונים צבעוניים. שאר הקבוצות מכילות סוכני כלאציה, מחמיצים או מעכבי אנזים ישירים." },
+            { question: "מלבד פגיעה אסתטית, כיצד תהליך ההשחמה בצמחים מועיל לצמח עצמו?", options: ["הוא מושך מאביקים על ידי יצירת צבעים עזים.", "הוא משמש כמנגנון הגנה מפני חרקים ומיקרואורגניזמים.", "הוא מגביר את קצב הפוטוסינתזה בכלורופלסטים.", "הוא משפר את יכולת ספיגת המים מהקרקע."], correctIndex: 1, explanation: "הקינונים הנוצרים בתהליך ההשחמה הם חומרים אנטי-מיקרוביאליים ודוחים חרקים. התהליך מופעל בעת פציעה של הרקמה ומהווה קו הגנה כימי של הצמח." },
+            { question: "איזה מהבאים אינו שם נרדף או אנזים קשור למשפחת ה-Polyphenol Oxidase?", options: ["Tyrosinase", "Phenolase", "Lipase", "Diphenol oxidase"], correctIndex: 2, explanation: "Tyrosinase, Phenolase ו-Diphenol oxidase הם כולם שמות שונים או אנזימים ספציפיים בתוך משפחת ה-PPO הרחבה. Lipase הוא אנזים המפרק שומנים (ליפידים) ואינו קשור להשחמה אנזימטית." },
+            { question: "מהי אחת הסיבות לכך שייבוש פירות (כמו הכנת צימוקים) מונע קלקול נוסף עקב השחמה, למרות שההשחמה הראשונית רצויה?", options: ["הייבוש מסלק את כל הסובסטרטים הפנוליים.", "הייבוש גורם לדנטורציה מלאה של PPO.", "הייבוש מוריד את פעילות המים (aw) לרמה שבה האנזים אינו יכול לתפקד.", "הייבוש מעלה את ריכוז הסוכר, המעכב את האנזים."], correctIndex: 2, explanation: "אנזימים, כמו PPO, דורשים סביבה מימית כדי להיות פעילים. הורדת פעילות המים על ידי ייבוש מפחיתה באופן דרסטי את הניידות של המגיבים ואת היכולת של האנזים לקשור אותם, ובכך עוצרת את התגובה." },
+            { question: "חיתוך תפוח חושף את האנזים לסובסטרט. היכן ממוקמים האנזים (PPO) והסובסטרטים הפנוליים בתא הצמחי השלם, לפני הפציעה?", options: ["שניהם נמצאים יחד בציטופלזמה, אך מופרדים על ידי מעכב.", "האנזים בציטופלזמה והסובסטרטים בווקואולה (חלולית).", "הסובסטרטים בציטופלזמה והאנזים בדופן התא.", "שניהם מאוחסנים יחד בכלורופלסט."], correctIndex: 1, explanation: "בתא צמחי שלם, האנזים PPO נמצא בציטופלזמה, בעוד שהסובסטרטים הפנוליים שלו מאוחסנים בנפרד בווקואולה. פציעה של התא (חיתוך, מכה) גורמת להרס הממברנות, למפגש ביניהם ולהתחלת תגובת ההשחמה." },
+            { question: "איזה מהטיפולים הבאים אינו שיטה טכנולוגית ישירה למניעת השחמה אנזימטית?", options: ["שימוש באדים חמים", "הקפאה מהירה", "אריזה תחת ואקום", "הוספת גלוטן לשיפור המרקם"], correctIndex: 3, explanation: "טיפול בחום, קור ואריזת ואקום הם כולם טיפולים טכנולוגיים המיועדים לעכב או למנוע השחמה אנזימטית. הוספת גלוטן קשורה למאפים ואינה מנגנון למניעת השחמה זו." },
+            { question: "במסלול יצירת המלנין מטירוזין, איזה שלב הוא המהיר ביותר?", options: ["הפיכת טירוזין ל-Dopa", "הפיכת Dopa ל-Dopa Quinone", "הפיכת 5,6-Dihydroxyindole ל-Indole 5,6-Quinone", "הפיכת Dopa Quinone ל-Leuco Compound"], correctIndex: 1, explanation: "לפי התרשים, חמצון הדי-פנול (Dopa) לקינון (Dopa Quinone) על ידי PPO הוא שלב מהיר (Fast), בעוד שהידרוקסילצית המונו-פנול (Tyrosine) לדי-פנול (Dopa) היא שלב איטי (Slow)." },
+            { question: "מלנין, התוצר הסופי של ההשחמה, אחראי גם לצבע העור והשיער בבני אדם. איזה מהגורמים הבאים אינו משפיע על ייצור המלנין בבני אדם?", options: ["גנטיקה", "צריכה מספקת של ויטמין D", "צריכה גבוהה של חומצה אסקורבית", "חשיפה מבוקרת לקרינה אולטרה סגולה (UV)"], correctIndex: 2, explanation: "גנטיקה, ויטמין D וחשיפה ל-UV הם גורמים המשפיעים על ייצור המלנין בעור. חומצה אסקורבית היא חומר מחזר שיכול להפריע לתגובת החמצון, אך אינה נחשבת לגורם פיזיולוגי מרכזי המווסת את ייצור המלנין בגוף." },
+            { question: "איזה מהבאים מתאר באופן הטוב ביותר את ההבדל בין תפקיד החמצן בתגובת מייאר ובתגובת השחמה אנזימטית?", options: ["בשתי התגובות החמצן אינו חיוני.", "בתגובת מייאר החמצן חיוני, ובהשחמה אנזימטית הוא מעכב.", "בשתי התגובות החמצן הוא סובסטרט חיוני.", "בהשחמה אנזימטית החמצן הוא סובסטרט חיוני, ובתגובת מייאר הוא יכול להשפיע אך אינו הכרחי לשלבים הראשונים."], correctIndex: 3, explanation: "השחמה אנזימטית דורשת חמצן מולקולרי באופן מוחלט כסובסטרט. תגובת מייאר יכולה להתרחש גם בסביבה דלת חמצן, אם כי נוכחות חמצן יכולה להאיץ שלבים מאוחרים יותר של יצירת הצבע." },
+            { question: "חברה מפתחת ציפוי אכיל לפירות חתוכים. איזה רכיב מהבאים יהיה הפחות יעיל כמעכב השחמה בציפוי זה?", options: ["חומצת לימון", "סידן אסקורבט (מלח של ויטמין C)", "EDTA", "שמן צמחי"], correctIndex: 3, explanation: "שמן צמחי יכול ליצור מחסום פיזי בפני חמצן, אך הוא אינו מעכב כימי. חומצת לימון (מחמיץ), סידן אסקורבט (מחזר) ו-EDTA (כלאטור) הם כולם מעכבים כימיים פעילים ויעילים יותר במניעת התגובה עצמה." },
+            { question: "איזו תופעה אינה תוצאה של השחמה אנזימטית בלתי רצויה?", options: ["פגיעה בערך התזונתי של המוצר", "יצירת פיגמנטים חומים-שחורים", "התפתחות טעמי לוואי", "יצירת מלנואידינים פלואורסצנטיים"], correctIndex: 3, explanation: "מלנואידינים הם הפיגמנטים החומים הנוצרים בתגובת מייאר (השחמה לא-אנזימטית), ולא בהשחמה אנזימטית. הפיגמנטים של השחמה אנזימטית נקראים מלנינים." },
+            { question: "מהי הפעולה הראשונה של PPO על סובסטרט מסוג o-diphenol כמו Catechol?", options: ["הידרוקסילציה", "חיזור", "חמצון ל-o-benzoquinone", "פולימריזציה"], correctIndex: 2, explanation: "כאשר הסובסטרט הוא כבר די-פנול, PPO מזרז ישירות את חמצונו ליצירת אורתו-קינון (o-quinone) המקביל. שלב ההידרוקסילציה נדרש רק עבור סובסטרטים מסוג מונו-פנול." },
+            { question: "איזו מהתרכובות הבאות, הנמצאת בתה, היא גם סובסטרט חשוב להשחמה אנזימטית וגם תורמת לצבע ולתכונות בריאותיות?", options: ["קפאין", "טאנינים (כמו קטכינים)", "L-תיאנין", "כלורופיל"], correctIndex: 1, explanation: "קטכינים הם סוג של פלבנואידים (הנכללים בקבוצת הטאנינים) הנמצאים בשפע בעלי תה. חמצונם על ידי PPO הוא הבסיס ליצירת תה אולונג ותה שחור." },
+            { question: "מדוע פגיעה פיזית (טראומה) בפרי גורמת להשחמה?", options: ["הטראומה מכניסה חמצן לרקמה.", "הטראומה מייצרת חום המפעיל את האנזים.", "הטראומה גורמת להרס הקומפרטמנטציה התאית ומפגישה בין האנזים לסובסטרט.", "הטראומה משחררת יוני נחושת המפעילים את ה-PPO."], correctIndex: 2, explanation: "במצב תקין, PPO והסובסטרטים הפנוליים מופרדים במדורים שונים בתא. פגיעה פיזית הורסת את הממברנות המפרידות, מאפשרת להם להיפגש, ובנוכחות חמצן, מתחילה תגובת ההשחמה." },
+            { question: "איזה מהבאים אינו מעכב אנזימטי ישיר של PPO לפי הרשימות המצורפות?", options: ["פפטידים", "פוספטים", "חומצות קרבוקסיליות ארומטיות", "כהלים אליפטיים"], correctIndex: 1, explanation: "לפי הרשימות, פוספטים מסווגים כסוכני כלאציה. פפטידים, חומצות קרבוקסיליות ארומטיות וכהלים אליפטיים מופיעים תחת הקטגוריה 'מעכבי אנזים' (Enzyme inhibitors), הפועלים כנראה על האנזים עצמו." },
+            { question: "מהי מטרת השימוש בטיפול אנזימטי עם פרוטאזות למניעת השחמה?", options: ["לפרק את הסובסטרטים הפנוליים", "לפרק את האנזים PPO עצמו", "להוריד את רמת החמצן", "לשנות את ה-pH של המזון"], correctIndex: 1, explanation: "PPO הוא חלבון (אנזים). פרוטאזות הם אנזימים המפרקים חלבונים. הוספת פרוטאזות יכולה לפרק את אנזים ה-PPO ובכך למנוע את פעילותו." },
+            { question: "על פי התרשימים, מהו ההבדל המרכזי בין מנגנון העיכוב של ציסטאין ושל חומצה אסקורבית?", options: ["אין הבדל, שניהם מחזרים את הקינון.", "ציסטאין יוצר תוצר ספיחה (adduct) בעוד חומצה אסקורבית מבצעת חיזור מחזורי.", "חומצה אסקורבית היא כלאטור וציסטאין הוא מחזר.", "ציסטאין מעכב את האנזים ישירות וחומצה אסקורבית מגיבה עם הסובסטרט."], correctIndex: 1, explanation: "התרשים בעמוד 23 מראה שחומר מחזר (כמו חומצה אסקורבית) מחזיר את הקינון הצבעוני לדיפנול חסר צבע. התרשים בעמוד 26 מראה שתיול (כמו ציסטאין) יכול להגיב עם הקינון וליצור 'sulfur-adduct' חסר צבע, מנגנון שונה מחיזור פשוט." },
+            { question: "מדוע השחמה אנזימטית נפוצה יותר בפירות וירקות ופחות במוצרי בשר?", options: ["בבשר אין אנזימים.", "בבשר אין חמצן זמין.", "בשר מכיל ריכוז נמוך משמעותית של סובסטרטים פנוליים.", "ה-pH של בשר נמוך מדי לפעילות PPO."], correctIndex: 2, explanation: "התגובה תלויה בריכוז גבוה של סובסטרטים פנוליים, המצויים בשפע ברקמות צמחיות אך כמעט ואינם קיימים ברקמות שריר של בעלי חיים." },
+            { question: "מה מהבאים אינו תוצר של חמצון על ידי PPO?", options: ["אורתו-קינונים", "פיגמנטים חומים", "די-פנולים (ממונו-פנולים)", "מלנואידינים"], correctIndex: 3, explanation: "PPO מייצר די-פנולים, אורתו-קינונים ובעקבותיהם פיגמנטים חומים (מלנינים). מלנואידינים הם תוצרים של תגובת מייאר הלא-אנזימטית." }
+        ];
+
+        const tfData = [
+            // AI will populate this array
+            { question: "תגובת מייאר והשחמה אנזימטית דורשות שתיהן נוכחות של חומצות אמינו כדי להתרחש.", answer: false, explanation: "רק תגובת מייאר דורשת חומצות אמינו (או קבוצת אמין חופשית) כמגיב. השחמה אנזימטית דורשת סובסטרט פנולי." },
+            { question: "הוספת EDTA לתמיסת מיץ תפוחים תמנע השחמה על ידי הורדת ה-pH של התמיסה.", answer: false, explanation: "EDTA פועל כסוכן כלאציה הקושר את יוני הנחושת באתר הפעיל של PPO. חומצת לימון היא דוגמה לחומר הפועל על ידי הורדת ה-pH." },
+            { question: "התהליך הגורם להשחמת בננה חתוכה והתהליך היוצר מלנין בעור האדם מזורזים על ידי אנזימים דומים ממשפחת הפוליפנול אוקסידאז.", answer: true, explanation: "בשני המקרים, אנזימים ממשפחה זו (הידועים גם כטירוסינאז) מזרזים חמצון של תרכובות פנוליות (כמו טירוזין) ליצירת פיגמנטים של מלנין." },
+            { question: "השחמה אנזימטית היא תמיד תופעה בלתי רצויה בתעשיית המזון.", answer: false, explanation: "השחמה אנזימטית היא תהליך רצוי וחיוני בפיתוח הצבע והטעם של מוצרים כמו תה שחור, קפה, קקאו ופירות יבשים מסוימים (תמרים, צימוקים)." },
+            { question: "הקפאת פירות תעצור לחלוטין ובאופן בלתי הפיך את תגובת ההשחמה האנזימטית.", answer: false, explanation: "הקפאה מאטה מאוד את פעילות האנזים, אך אינה גורמת לדנטורציה. לאחר הפשרה, האנזים יחזור לפעילות מלאה, ולעיתים אף מואצת עקב נזק לרקמות." },
+            { question: "אריזת ירקות חתוכים באטמוספירה של חנקן טהור תהיה יעילה במניעת השחמה אנזימטית.", answer: true, explanation: "השחמה אנזימטית דורשת חמצן. החלפת האוויר (המכיל חמצן) בחנקן אינרטי תמנע מהתגובה להתרחש." },
+            { question: "חומצה אסקורבית (ויטמין C) מונעת השחמה על ידי קשירה ישירה לאתר הפעיל של האנזים PPO.", answer: false, explanation: "חומצה אסקורבית היא חומר מחזר. היא פועלת על ידי חיזור תוצר התגובה (הקינון הצבעוני) חזרה לסובסטרט (הפנול חסר הצבע), ולא על ידי עיכוב ישיר של האנזים." },
+            { question: "כל התרכובות הפנוליות הן סובסטרטים יעילים באותה מידה עבור האנזים PPO.", answer: false, explanation: "ל-PPO יש אפיניות (זיקה) שונה לסובסטרטים פנוליים שונים. המבנה המדויק של הפנול משפיע על קצב התגובה." },
+            { question: "טיפול בחום (חליטה) הוא שיטה יעילה למניעת השחמה מכיוון שהוא מסלק את הסובסטרטים הפנוליים מהמזון.", answer: false, explanation: "חליטה פועלת על ידי דנטורציה של האנזים PPO באמצעות חום, מה שהופך אותו לבלתי פעיל. היא אינה מסלקת את הסובסטרטים." },
+            { question: "נוכחות פלבונואידים כמו קוורצטין בתפוחים יכולה לתרום לפוטנציאל ההשחמה שלהם.", answer: true, explanation: "פלבונואידים הם קבוצה של תרכובות פנוליות. ככאלה, הם יכולים לשמש כסובסטרטים עבור PPO ולהשתתף בתגובת ההשחמה." },
+            { question: "ניתן למנוע השחמה אנזימטית על ידי הוספת אנזים אחר, כמו פרוטאז.", answer: true, explanation: "PPO הוא חלבון. פרוטאז הוא אנזים המפרק חלבונים. הוספת פרוטאז יכולה לגרום לפירוק של PPO ובכך למנוע את פעילותו." },
+            { question: "קרמליזציה היא סוג של השחמה אנזימטית המתרחשת בסוכר בטמפרטורות גבוהות.", answer: false, explanation: "קרמליזציה היא תהליך השחמה לא-אנזימטי. היא אינה מערבת אנזימים כלל, אלא פירוק של סוכר בחום." },
+            { question: "ציסטאין וסולפיטים שניהם מעכבים את PPO על ידי קשירת יון הנחושת באתר הפעיל.", answer: false, explanation: "שניהם פועלים בעיקר כחומרים מחזרים או על ידי יצירת תוצרי ספיחה עם הקינונים. EDTA הוא הדוגמה הקלאסית לחומר הפועל על ידי קשירת נחושת (כלאציה)." },
+            { question: "תגובת ההשחמה האנזימטית תתרחש גם בהיעדר מוחלט של אור.", answer: true, explanation: "התגובה היא אנזימטית ודורשת אנזים, סובסטרט וחמצן. היא אינה תגובה פוטוכימית ואינה תלויה בנוכחות אור." },
+            { question: "בצמח השלם והבריא, האנזים PPO והסובסטרטים הפנוליים שלו מאוחסנים יחד באותו אברון תאי.", answer: false, explanation: "הם מופרדים פיזית במדורים שונים (קומפרטמנטציה). האנזים בציטופלזמה והסובסטרטים לרוב בווקואולה. הפגיעה ברקמה גורמת למפגש ביניהם." },
+            { question: "שמות האנזים 'פנולאז' ו'טירוסינאז' מתייחסים לאנזימים המעורבים בהשחמה אנזימטית.", answer: true, explanation: "אלו שמות נרדפים או שמות של אנזימים ספציפיים בתוך משפחת העל של פוליפנול אוקסידאז (PPO), כולם מעורבים בתהליך." },
+            { question: "שימוש בטכנולוגיית RNAi בתפוחי 'Arctic' מונע השחמה על ידי הוספת גן המייצר ויטמין C.", answer: false, explanation: "טכנולוגיית RNAi משתיקה את הגן הקיים המייצר PPO, היא אינה מוסיפה גן חדש המייצר ויטמין C." },
+            { question: "היווצרות של o-benzoquinone היא השלב הראשון והאיטי ביותר בתגובת ההשחמה מ-Catechol.", answer: false, explanation: "היווצרות o-benzoquinone מ-Catechol (שהוא o-diphenol) היא אכן השלב הראשון, אך הוא מהיר. השלב האיטי הוא בדרך כלל ההידרוקסילציה של מונו-פנול לדי-פנול." },
+            { question: "השחמה אנזימטית אחראית ליצירת פיגמנטים חומים בצמחים, אך גם מסייעת בהקשחת השריון של סרטנים.", answer: true, explanation: "תהליך דומה של חמצון פנולים ופולימריזציה (sclerotization) משמש פרוקי רגליים, כולל סרטנים וחרקים, להקשחת הקוטיקולה שלהם." },
+            { question: "הורדת טמפרטורה וייבוש הן שתי שיטות המעכבות השחמה על ידי דנטורציה של האנזים PPO.", answer: false, explanation: "רק טיפול בחום גבוה (כמו חליטה) גורם לדנטורציה. קירור וייבוש מעכבים את פעילות האנזים על ידי האטת הקינטיקה או הורדת פעילות המים, אך האנזים נשאר פעיל מבחינה מבנית." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

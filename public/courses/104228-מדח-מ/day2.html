@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 2</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 2: Characteristics & Classification (Practice)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus (Recap)</h2>
+            <p><strong>Method of Characteristics Recap:</strong></p>
+            <p>For $a u_x + b u_y = c$, solve the ODE system $\frac{dx}{a} = \frac{dy}{b} = \frac{du}{c}$ to find two independent characteristics $\phi_1(x,y,u)=C_1$, $\phi_2(x,y,u)=C_2$. The general solution is $F(\phi_1, \phi_2)=0$ or $\phi_2 = f(\phi_1)$. Use initial conditions to find the specific function $f$. Remember $a, b, c$ can depend on $x, y, u$.</p>
+            <p><strong>Classification Recap:</strong></p>
+            <p>For $Au_{xx} + Bu_{xy} + Cu_{yy} + \dots = 0$, calculate $\Delta = B^2 - 4AC$.</p>
+            <ul>
+                <li>$\Delta > 0 \implies$ Hyperbolic</li>
+                <li>$\Delta = 0 \implies$ Parabolic</li>
+                <li>$\Delta < 0 \implies$ Elliptic</li>
+            </ul>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Method of Characteristics -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the general solution to $u_x - x u_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-x} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{-x}$, $-xdx = dy \implies -\frac{x^2}{2} = y + C_2'$. So $y + x^2/2 = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(y + x^2/2)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Solve the IVP: $2u_x + 3u_y = 1$, $u(x,0) = x^2$.</p>
+                <button onclick="toggleSolution('sol-d2-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{2} = \frac{dy}{3} = \frac{du}{1}$.</p>
+                    <p>From $\frac{dx}{2} = \frac{dy}{3}$, $3dx = 2dy \implies 3x - 2y = C_1$.</p>
+                    <p>From $\frac{dx}{2} = \frac{du}{1}$, $dx = 2du \implies x = 2u + C_2$. So $u - x/2 = C_2'$.</p>
+                    <p>General solution: $u - x/2 = F(3x - 2y)$.</p>
+                    <p>Apply IVP: $u(x,0) - x/2 = F(3x - 2(0)) \implies x^2 - x/2 = F(3x)$.</p>
+                    <p>Let $z = 3x$, so $x = z/3$. Then $F(z) = (z/3)^2 - (z/3)/2 = z^2/9 - z/6$.</p>
+                    <p>The solution is $u - x/2 = (3x-2y)^2/9 - (3x-2y)/6$.</p>
+                    <p>$u(x,y) = \frac{x}{2} + \frac{(3x-2y)^2}{9} - \frac{3x-2y}{6}$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Find the general solution to $u_x + (x+y)u_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q3">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{x+y} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dy}{dx} = x+y$. This is a linear ODE for $y(x)$: $y' - y = x$.</p>
+                    <p>Integrating factor $I(x) = e^{\int -1 dx} = e^{-x}$.</p>
+                    <p>$(e^{-x}y)' = x e^{-x}$.</p>
+                    <p>$e^{-x}y = \int x e^{-x} dx = -xe^{-x} - e^{-x} + C_2$ (using integration by parts).</p>
+                    <p>$y = -x - 1 + C_2 e^x$. So $(y+x+1)e^{-x} = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F((y+x+1)e^{-x})$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Solve the IVP: $x u_x + y u_y = 2u$, $u(x,1) = x^3$.</p>
+                <button onclick="toggleSolution('sol-d2-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{x} = \frac{dy}{y} = \frac{du}{2u}$.</p>
+                    <p>From $\frac{dx}{x} = \frac{dy}{y}$, $\ln|x| = \ln|y| + C_1' \implies x/y = C_1$.</p>
+                    <p>From $\frac{dy}{y} = \frac{du}{2u}$, $\ln|y| = \frac{1}{2}\ln|u| + C_2' \implies 2\ln|y| = \ln|u| + C_2'' \implies \ln(y^2/u) = C_2''$. So $y^2/u = C_2$.</p>
+                    <p>General solution: $y^2/u = F(x/y)$.</p>
+                    <p>Apply IVP: $1^2 / u(x,1) = F(x/1) \implies 1/x^3 = F(x)$.</p>
+                    <p>So $F(z) = 1/z^3$.</p>
+                    <p>The solution is $y^2/u = (x/y)^{-3} = y^3/x^3$.</p>
+                    <p>$u(x,y) = \frac{y^2 x^3}{y^3} = x^3/y$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Find the general solution to $u_x + u_y = u+x$.</p>
+                <button onclick="toggleSolution('sol-d2-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{u+x}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{1}$, $y-x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u+x}$, we get $\frac{du}{dx} = u+x$. This is a linear ODE: $u' - u = x$.</p>
+                    <p>Integrating factor $I(x) = e^{\int -1 dx} = e^{-x}$.</p>
+                    <p>$(e^{-x} u)' = x e^{-x}$.</p>
+                    <p>$e^{-x} u = \int x e^{-x} dx = -xe^{-x} - e^{-x} + C_2$.</p>
+                    <p>$u = -x - 1 + C_2 e^x$. So $(u+x+1)e^{-x} = C_2$.</p>
+                    <p>The general solution is $F(y-x, (u+x+1)e^{-x}) = 0$, or $(u+x+1)e^{-x} = f(y-x)$.</p>
+                    <p>$u(x,y) = -x-1 + e^x f(y-x)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Solve the IVP: $u_t + u u_x = 0$, $u(x,0) = x$.</p>
+                <button onclick="toggleSolution('sol-d2-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. Characteristic equations: $\frac{dt}{1} = \frac{dx}{u} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dt}{1} = \frac{dx}{u}$, substitute $u=C_1$: $dt = dx/C_1 \implies C_1 dt = dx \implies C_1 t = x + C_2$.</p>
+                    <p>Substitute back $u=C_1$: $ut - x = C_2$.</p>
+                    <p>General solution: $u = F(x-ut)$.</p>
+                    <p>Apply IVP $u(x,0) = x$: $u(x,0) = F(x - u(x,0)\cdot 0) = F(x) = x$.</p>
+                    <p>So $F(z)=z$.</p>
+                    <p>The solution is $u = x-ut \implies u(1+t) = x \implies u(x,t) = \frac{x}{1+t}$.</p>
+                    <p>Note: This solution breaks down as $t \to -1$. The method describes characteristics, which can cross for non-linear equations, leading to shock waves.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Find the general solution to $(y+u)u_x + yu_y = x-y$.</p>
+                <button onclick="toggleSolution('sol-d2-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q7">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{y+u} = \frac{dy}{y} = \frac{du}{x-y}$.</p>
+                    <p>Consider $\frac{dy}{y} = \frac{du}{x-y}$. Also, try adding/subtracting components. Consider $\frac{dx+dy+du}{(y+u)+y+(x-y)} = \frac{dx+dy+du}{x+y+u}$.</p>
+                    <p>Consider $\frac{dy-du}{y-(x-y)} = \frac{dy-du}{2y-x}$. This doesn't seem to simplify easily.</p>
+                    <p>Let's look for simpler combinations. Try $\frac{ydx - (y+u)dy}{0} = \frac{ydu - (x-y)dy}{y(x-y)}$. Not helpful.</p>
+                    <p>Try using the exact differential idea: $d(x+y+u) = dx+dy+du$. Can we relate this? From $\frac{dy}{y} = \frac{dx+dy+du}{x+y+u}$.</p>
+                    <p>Let $S = x+y+u$. Then $\frac{dy}{y} = \frac{dS}{S}$. Integrating gives $\ln|y| = \ln|S| + C_1' \implies S/y = C_1$. So $(x+y+u)/y = C_1$.</p>
+                    <p>Now consider $d(x-y-u) = dx-dy-du$. From $\frac{dx}{y+u} = \frac{dy}{y} = \frac{du}{x-y}$, consider $\frac{dx-dy-du}{(y+u)-y-(x-y)} = \frac{dx-dy-du}{u-x+y}$.</p>
+                    <p>So $\frac{d(x-y-u)}{-(x-y-u)} = \frac{dy}{y}$.</p>
+                    <p>Integrating: $-\ln|x-y-u| = \ln|y| + C_2' \implies \ln(y|x-y-u|) = -C_2'$. So $y(x-y-u) = C_2$.</p>
+                    <p>The general solution is $F\left( \frac{x+y+u}{y}, y(x-y-u) \right) = 0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Find the general solution to $u_x + 3y^{2/3} u_y = 2$.</p>
+                <button onclick="toggleSolution('sol-d2-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q8">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{3y^{2/3}} = \frac{du}{2}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{3y^{2/3}}$, $dx = \frac{1}{3}y^{-2/3}dy$. Integrating gives $x = y^{1/3} + C_1$. So $x - y^{1/3} = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{2}$, $2dx = du$. Integrating gives $2x = u + C_2$. So $u - 2x = C_2$.</p>
+                    <p>The general solution is $F(x-y^{1/3}, u-2x)=0$, or $u-2x = f(x-y^{1/3})$.</p>
+                    <p>$u(x,y) = 2x + f(x-y^{1/3})$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Solve the IVP: $u_x + u_y = 0$, $u(x,x) = \cos(x)$.</p>
+                <button onclick="toggleSolution('sol-d2-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{0}$.</p>
+                    <p>$u=C_1$. $y-x=C_2$. General solution $u(x,y) = F(y-x)$.</p>
+                    <p>Initial curve: $x_0 = s, y_0 = s$. $u(s,s) = F(s-s) = F(0)$.</p>
+                    <p>We are given $u(s,s) = \cos(s)$.</p>
+                    <p>So we require $F(0) = \cos(s)$ for all $s$. This is only possible if $\cos(s)$ is a constant, which it is not. Therefore, there is **no solution** to this IVP as posed. The initial condition must be constant along the characteristics intersecting the initial curve. Here, the characteristic $y-x=0$ *is* the initial curve, and the solution must be constant on it, but $u$ is specified non-constantly as $\cos(x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Find the general solution to $e^x u_x + e^y u_y = e^{x+y}$.</p>
+                <button onclick="toggleSolution('sol-d2-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{e^x} = \frac{dy}{e^y} = \frac{du}{e^{x+y}}$.</p>
+                    <p>From $\frac{dx}{e^x} = \frac{dy}{e^y}$, $e^{-x}dx = e^{-y}dy$. Integrating gives $-e^{-x} = -e^{-y} + C_1$. So $e^{-y} - e^{-x} = C_1$.</p>
+                    <p>From $\frac{dy}{e^y} = \frac{du}{e^{x+y}} = \frac{du}{e^x e^y}$, we get $\frac{dy}{1} = \frac{du}{e^x}$.</p>
+                    <p>We need $e^x$ in terms of $y$ or a constant. From $e^{-y} - e^{-x} = C_1$, $e^{-x} = e^{-y} - C_1$, so $e^x = 1 / (e^{-y} - C_1)$.</p>
+                    <p>Then $du = e^x dy = \frac{dy}{e^{-y} - C_1}$. This looks hard.</p>
+                    <p>Alternative: Try $\frac{dx}{e^x} = \frac{du}{e^x e^y}$. This gives $dx = \frac{du}{e^y}$. We need $e^y$. From $e^{-y} = C_1 + e^{-x}$, $e^y = 1 / (C_1 + e^{-x})$.</p>
+                    <p>$du = e^y dx = \frac{dx}{C_1 + e^{-x}} = \frac{e^x dx}{C_1 e^x + 1}$. Let $v = C_1 e^x + 1$, $dv = C_1 e^x dx$. Then $du = \frac{1}{C_1} \frac{dv}{v}$.</p>
+                    <p>$u = \frac{1}{C_1} \ln|v| + C_2 = \frac{1}{C_1} \ln|C_1 e^x + 1| + C_2$.</p>
+                    <p>$u(e^{-y}-e^{-x}) = \ln|(e^{-y}-e^{-x})e^x + 1| + C_2 (e^{-y}-e^{-x}) = \ln|e^{x-y}-1+1| + C_2' = \ln(e^{x-y}) = x-y + C_2''$.</p>
+                    <p>This seems overly complex. Let's re-check the setup. $\frac{dx}{e^x} = \frac{dy}{e^y} = \frac{du}{e^{x}e^y}$.</p>
+                    <p>Maybe $u = e^x + e^y$? $u_x = e^x, u_y = e^y$. Then $e^x(e^x) + e^y(e^y) \neq e^{x+y}$.</p>
+                    <p>Maybe $u = e^x e^y$? $u_x = e^x e^y, u_y = e^x e^y$. Then $e^x(e^x e^y) + e^y(e^x e^y) = e^{2x+y} + e^{x+2y} \neq e^{x+y}$.</p>
+                    <p>Let's retry $du = e^x dy$. From $e^{-y} - e^{-x} = C_1$. Let's integrate along $y$. $x$ is not constant. Parameterize: $dx = e^x dt, dy = e^y dt$. $u$ changes by $du = e^{x+y} dt$.</p>
+                    <p>$e^{-x}dx = dt, e^{-y}dy = dt$. So $-e^{-x} = t+k_1, -e^{-y}=t+k_2$. $e^{-y}-e^{-x} = k_1-k_2 = C_1$. Okay.</p>
+                    <p>$du = e^x e^y dt = e^x e^y (e^{-y} dy) = e^x dy$. Or $du = e^x e^y (e^{-x} dx) = e^y dx$.</p>
+                    <p>$du = e^y dx + e^x dy - e^y dx = d(e^y x) + (du - d(e^y x))$. No.</p>
+                    <p>$du = e^y dx + e^x dy$. This is $d(u - e^x - e^y)$? No. $d(e^x e^y) = e^y e^x dx + e^x e^y dy$. No.</p>
+                    <p>Is there a simpler integral? What about $u = e^x + C_2$? Then $du = e^x dx$. $\frac{du}{e^x} = \frac{dy}{e^y}$. $\ln|u-C_2| = \ln|e^x|$.</p>
+                    <p>Let's check $u = \frac{1}{C_1} (x-y) + C_2$. No.</p>
+                    <p>What if we use $C_1 = e^{-y}-e^{-x}$ and find another one. $du = e^x dy$. From $e^{-x} = e^{-y}-C_1$, $e^x = 1/(e^{-y}-C_1)$. $du = \frac{dy}{e^{-y}-C_1}$. This is $\int \frac{e^y dy}{1-C_1 e^y}$. Let $v=1-C_1e^y, dv=-C_1 e^y dy$. Integral is $-\frac{1}{C_1} \ln|v| = -\frac{1}{C_1} \ln|1-C_1 e^y|$.</p>
+                    <p>So $u + \frac{1}{C_1} \ln|1-C_1 e^y| = C_2$. Substituting $C_1 = e^{-y}-e^{-x}$.</p>
+                    <p>$u + \frac{\ln|1-(e^{-y}-e^{-x})e^y|}{e^{-y}-e^{-x}} = C_2 \implies u + \frac{\ln|1-(1-e^{y-x})|}{e^{-y}-e^{-x}} = u + \frac{\ln|e^{y-x}|}{e^{-y}-e^{-x}} = u + \frac{y-x}{e^{-y}-e^{-x}} = C_2$.</p>
+                    <p>General Solution: $F(e^{-y}-e^{-x}, u + \frac{y-x}{e^{-y}-e^{-x}}) = 0$.</p>
+                 </div>
+            </article>
+
+            <!-- Mix -->
+             <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Classify the PDE $u_{tt} + u_{tx} - 2u_{xx} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q11">
+                     <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. $A=-2, B=1, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 1^2 - 4(-2)(1) = 1 + 8 = 9$.</p>
+                    <p>Since $\Delta > 0$, the PDE is <strong>Hyperbolic</strong>.</p>
+               </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Solve the IVP: $u_x - 3u_y = 0$, $u(x,0) = e^{-x^2}$.</p>
+                <button onclick="toggleSolution('sol-d2-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-3} = \frac{du}{0}$.</p>
+                    <p>$u=C_1$. From $\frac{dx}{1} = \frac{dy}{-3}$, $-3dx = dy \implies y+3x = C_2$.</p>
+                    <p>General solution: $u(x,y) = F(y+3x)$.</p>
+                    <p>Apply IVP: $u(x,0) = F(0+3x) = F(3x) = e^{-x^2}$.</p>
+                    <p>Let $z=3x$, so $x=z/3$. Then $F(z) = e^{-(z/3)^2} = e^{-z^2/9}$.</p>
+                    <p>The solution is $u(x,y) = e^{-(y+3x)^2/9}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + 2 u_{xy} + u_{yy} + u_{x} + u_{y} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=2, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 2^2 - 4(1)(1) = 4 - 4 = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong>.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Find the general solution to $u_x - u_y = y$.</p>
+                <button onclick="toggleSolution('sol-d2-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-1} = \frac{du}{y}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{-1}$, $-dx=dy \implies y+x=C_1$.</p>
+                    <p>From $\frac{dy}{-1} = \frac{du}{y}$, $y dy = -du$. Integrating gives $\frac{y^2}{2} = -u + C_2$. So $u + y^2/2 = C_2$.</p>
+                    <p>The general solution is $F(y+x, u+y^2/2) = 0$, or $u+y^2/2 = f(x+y)$.</p>
+                    <p>$u(x,y) = f(x+y) - y^2/2$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Classify the PDE $(1+x^2)u_{xx} + (1+y^2)u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1+x^2, B=0, C=1+y^2$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(1+x^2)(1+y^2)$.</p>
+                    <p>Since $1+x^2 > 0$ and $1+y^2 > 0$ for all real $x, y$, the product $(1+x^2)(1+y^2)$ is always positive.</p>
+                    <p>Therefore, $\Delta = -4(\text{positive number}) < 0$.</p>
+                    <p>The PDE is <strong>Elliptic</strong> everywhere.</p>
+                </div>
+            </article>
+
+            <!-- More Questions 16-30 following similar patterns -->
+
+             <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Solve the IVP: $u_t + 2u_x = -3u$, $u(x,0) = e^x$.</p>
+                <button onclick="toggleSolution('sol-d2-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q16">
+                     <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. Characteristic equations: $\frac{dt}{1} = \frac{dx}{2} = \frac{du}{-3u}$.</p>
+                    <p>From $\frac{dt}{1} = \frac{dx}{2}$, $2dt = dx \implies x - 2t = C_1$.</p>
+                    <p>From $\frac{dt}{1} = \frac{du}{-3u}$, $dt = -\frac{1}{3} \frac{du}{u} \implies -3dt = \frac{du}{u}$. Integrating gives $-3t = \ln|u| + C_2' \implies u e^{3t} = C_2$.</p>
+                    <p>General solution: $u e^{3t} = F(x-2t)$.</p>
+                    <p>Apply IVP: $u(x,0) e^{3(0)} = F(x-2(0)) \implies e^x = F(x)$.</p>
+                    <p>So $F(z) = e^z$.</p>
+                    <p>The solution is $u e^{3t} = e^{x-2t}$.</p>
+                    <p>$u(x,t) = e^{x-2t} e^{-3t} = e^{x-5t}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Classify the PDE $u_{xx} - 2u_{xy} + 5u_{yy} + \cos(x) u_x = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=-2, C=5$.</p>
+                    <p>$\Delta = B^2 - 4AC = (-2)^2 - 4(1)(5) = 4 - 20 = -16$.</p>
+                    <p>Since $\Delta < 0$, the PDE is <strong>Elliptic</strong>.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Find the general solution to $u_x + e^x u_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{e^x} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{e^x}$, $e^x dx = dy$. Integrating gives $e^x = y + C_2$. So $y - e^x = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(y - e^x)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Classify the PDE $u_{tx} = 0$ (often written $u_{xt}=0$).</p>
+                <button onclick="toggleSolution('sol-d2-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. The equation is $u_{xy} = 0$.</p>
+                    <p>$A=0, B=1, C=0$.</p>
+                    <p>$\Delta = B^2 - 4AC = 1^2 - 4(0)(0) = 1$.</p>
+                    <p>Since $\Delta > 0$, the PDE is <strong>Hyperbolic</strong>.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Solve the IVP: $u_x - u_y = u$, $u(x,x) = 1$.</p>
+                <button onclick="toggleSolution('sol-d2-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q20">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-1} = \frac{du}{u}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{-1}$, $y+x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u}$, $x = \ln|u| + C_2' \implies u e^{-x} = C_2$.</p>
+                    <p>General solution: $u e^{-x} = F(x+y)$.</p>
+                    <p>Apply IVP: $u(x,x) e^{-x} = F(x+x) \implies 1 \cdot e^{-x} = F(2x)$.</p>
+                    <p>Let $z=2x$, so $x=z/2$. Then $F(z) = e^{-z/2}$.</p>
+                    <p>The solution is $u e^{-x} = e^{-(x+y)/2}$.</p>
+                    <p>$u(x,y) = e^x e^{-(x+y)/2} = e^{x - x/2 - y/2} = e^{(x-y)/2}$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Classify the PDE $2u_{xx} + 8u_{xy} + 8u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q21">
+                     <p><strong>Solution:</strong></p>
+                    <p>$A=2, B=8, C=8$.</p>
+                    <p>$\Delta = B^2 - 4AC = 8^2 - 4(2)(8) = 64 - 64 = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong>.</p>
+               </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Find the general solution to $u_t + x u_x = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. Characteristic equations: $\frac{dt}{1} = \frac{dx}{x} = \frac{du}{0}$.</p>
+                    <p>$u=C_1$.</p>
+                    <p>From $\frac{dt}{1} = \frac{dx}{x}$, $dt = \frac{dx}{x} \implies t = \ln|x| + C_2' \implies t - \ln|x| = C_2'$. So $x e^{-t} = C_2$.</p>
+                    <p>The general solution is $u(x,t) = F(xe^{-t})$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Classify the PDE $\cosh(y) u_{xx} + u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q23">
+                     <p><strong>Solution:</strong></p>
+                    <p>$A=\cosh(y), B=0, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(\cosh y)(1) = -4 \cosh y$.</p>
+                    <p>Since $\cosh y = \frac{e^y + e^{-y}}{2}$ is always positive (minimum value is 1 at y=0), $\Delta = -4(\text{positive}) < 0$.</p>
+                    <p>The PDE is <strong>Elliptic</strong> everywhere.</p>
+               </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Solve the IVP: $u_x - 2u_y = u$, $u(0,y) = y$.</p>
+                <button onclick="toggleSolution('sol-d2-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-2} = \frac{du}{u}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{-2}$, $y+2x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u}$, $x = \ln|u| + C_2' \implies u e^{-x} = C_2$.</p>
+                    <p>General solution: $u e^{-x} = F(y+2x)$.</p>
+                    <p>Apply IVP: $u(0,y) e^{-0} = F(y+2(0)) \implies y = F(y)$.</p>
+                    <p>So $F(z)=z$.</p>
+                    <p>The solution is $u e^{-x} = y+2x$.</p>
+                    <p>$u(x,y) = (y+2x)e^x$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Classify the PDE $u_{xx} - 2u_{xy} - 3u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q25">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=-2, C=-3$.</p>
+                    <p>$\Delta = B^2 - 4AC = (-2)^2 - 4(1)(-3) = 4 + 12 = 16$.</p>
+                    <p>Since $\Delta > 0$, the PDE is <strong>Hyperbolic</strong>.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Find the general solution to $u_t + u_x = x$. (Let $y \to t$).</p>
+                <button onclick="toggleSolution('sol-d2-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q26">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dt}{1} = \frac{dx}{1} = \frac{du}{x}$.</p>
+                    <p>From $\frac{dt}{1} = \frac{dx}{1}$, $x-t = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{x}$, $du = x dx \implies u = \frac{x^2}{2} + C_2$. So $u - x^2/2 = C_2$.</p>
+                    <p>The general solution is $F(x-t, u - x^2/2) = 0$, or $u - x^2/2 = f(x-t)$.</p>
+                    <p>$u(x,t) = \frac{x^2}{2} + f(x-t)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">Classify the PDE $\sin^2(x) u_{xx} + \sin(2x) u_{xy} + \cos^2(x) u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q27">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=\sin^2 x, B=\sin(2x) = 2\sin x \cos x, C=\cos^2 x$.</p>
+                    <p>$\Delta = B^2 - 4AC = (2\sin x \cos x)^2 - 4(\sin^2 x)(\cos^2 x) = 4\sin^2 x \cos^2 x - 4\sin^2 x \cos^2 x = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong> (provided $\sin x \neq 0$ and $\cos x \neq 0$, otherwise coefficients vanish).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">Solve the IVP: $u_x + 2 u_y = 0$, $u(x, 2x) = \sin(x)$.</p>
+                <button onclick="toggleSolution('sol-d2-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q28">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{2} = \frac{du}{0}$.</p>
+                    <p>$u=C_1$. $y-2x=C_2$. General solution $u(x,y) = F(y-2x)$.</p>
+                    <p>Apply IVP: $u(x, 2x) = F(2x - 2x) = F(0) = \sin(x)$.</p>
+                    <p>This requires $F(0)$ to be equal to $\sin(x)$, which is not a constant. Similar to Q9, there is **no solution**. The initial curve $y=2x$ is itself a characteristic curve ($y-2x=0$), and the initial data must be constant along it.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">Classify the PDE $u_{rr} - \frac{1}{c^2} u_{tt} = 0$ (Wave Eq in radial coords, ignoring lower order terms).</p>
+                <button onclick="toggleSolution('sol-d2-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q29">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $x=r, y=t$. $A=1, B=0, C=-1/c^2$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(1)(-1/c^2) = 4/c^2$.</p>
+                    <p>Since $c \neq 0$, $\Delta > 0$. The PDE is <strong>Hyperbolic</strong>.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">Find the general solution to $u_x - y u_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d2-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2-q30">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{-y} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{-y}$, $dx = -dy/y$. Integrating gives $x = -\ln|y| + C_2'$. So $x + \ln|y| = C_2'$. Or $y e^x = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(ye^x)$.</p>
+                </div>
+            </article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

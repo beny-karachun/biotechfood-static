@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 3: אבות המזון - חלבונים</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; 
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 3: אבות המזון - חלבונים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 3 ---
+
+        const flashcardData = [
+            { term: "חלבונים", definition: "מקרומולקולות ביולוגיות הבנויות משרשראות של חומצות אמינו הקשורות בקשרים פפטידיים." },
+            { term: "חומצת אמינו", definition: "אבן הבניין של החלבון. מכילה קבוצה אמינית (NH2), קבוצה קרבוקסילית (COOH), אטום מימן, וקבוצת צד (R) ייחודית, הקשורים לפחמן מרכזי (אלפא)." },
+            { term: "קשר פפטידי (Peptide bond)", definition: "קשר קוולנטי הנוצר בין הקבוצה הקרבוקסילית של חומצת אמינו אחת לקבוצה האמינית של חומצת אמינו אחרת, תוך שחרור מולקולת מים." },
+            { term: "שייר צד (R)", definition: "החלק המשתנה בין חומצות האמינו השונות, הקובע את תכונותיה הייחודיות של כל חומצת אמינו (גודל, מטען, קוטביות)." },
+            { term: "פפטיד", definition: "שרשרת קצרה של חומצות אמינו (עד כ-50)." },
+            { term: "פוליפפטיד", definition: "שרשרת ארוכה יותר של חומצות אמינו (כ-50 עד 100)." },
+            { term: "חלבון (Protein)", definition: "מולקולה המורכבת מיחידה אחת או יותר של פוליפפטידים (לרוב מעל 100 חומצות אמינו), בעלת מבנה תלת-ממדי מוגדר ותפקיד ביולוגי." },
+            { term: "מבנה ראשוני (Primary Structure)", definition: "רצף חומצות האמינו הספציפי בשרשרת הפוליפפטידית." },
+            { term: "מבנה שניוני (Secondary Structure)", definition: "סידור מרחבי מקומי של השרשרת הפוליפפטידית, הנוצר בעיקר מקשרי מימן בין קבוצות השלד הפפטידי. דוגמאות: סליל אלפא, משטח בטא." },
+            { term: "סליל אלפא (Alpha Helix)", definition: "מבנה שניוני נפוץ דמוי סליל, מיוצב על ידי קשרי מימן." },
+            { term: "משטח בטא (Beta Sheet)", definition: "מבנה שניוני נפוץ דמוי משטח מקופל, מיוצב על ידי קשרי מימן בין קטעים שונים של השרשרת." },
+            { term: "מבנה שלישוני (Tertiary Structure)", definition: "הסידור המרחבי התלת-ממדי הכולל של שרשרת פוליפפטידית אחת, הנובע מאינטראקציות בין שיירי הצד (R) ומייצב את המבנה הפעיל של החלבון." },
+            { term: "חלבונים סיביים (Fibrous Proteins)", definition: "חלבונים בעלי מבנה מוארך, לרוב לא מסיסים במים, יציבים יחסית, ובעלי תפקיד מבני. (דוגמה: קולגן, קרטין, מיוזין בבשר)" },
+            { term: "חלבונים גלובולריים (Globular Proteins)", definition: "חלבונים בעלי מבנה כדורי קומפקטי, לרוב מסיסים במים (הודות לקצוות פולריים הפונים החוצה), רגישים יחסית לשינויי טמפרטורה ו-pH. (דוגמה: אנזימים, נוגדנים, המוגלובין, חלבוני חלב)." },
+            { term: "דנטורציה (Denaturation)", definition: "תהליך של שינוי המבנה המרחבי הטבעי (שניוני, שלישוני) של חלבון, הנגרם על ידי גורמים כמו חום, pH קיצוני, מלחים או כוחות מכניים. גורם לרוב לאובדן הפעילות הביולוגית ויכול לשנות את תכונות המזון." },
+            { term: "תכונות פונקציונליות של חלבונים במזון", definition: "יכולת קשירת מים, ג'לציה, הקצפה, יצירת אמולסיות (חומרים פעילי שטח), יצירת מבנה, תרומה לצמיגות, ערך תזונתי." },
+            { term: "חומרים פעילי שטח (אמולסיפיירים)", definition: "חומרים (כמו חלבונים מסוימים) בעלי אזורים הידרופיליים והידרופוביים, המאפשרים להם לייצב תערובות של שמן ומים (אמולסיות)." },
+            { term: "אנקפסולציה (Encapsulation)", definition: "תהליך 'עטיפה' של רכיבים רגישים (כמו ויטמינים או טעמים) בתוך מבנה מגן (למשל, מטריצת חלבון) כדי לשפר את יציבותם." },
+            { term: "חומצות אמינו חיוניות", definition: "חומצות אמינו שהגוף אינו יכול לייצר בעצמו וחייב לקבל מהמזון (בטקסט מוזכרות 9 כאלה)." },
+            { term: "אלרגניות של חלבונים", definition: "חלבונים רבים (כמו חלבוני חלב, ביצה, סויה, בוטנים) הם אלרגנים נפוצים ויכולים לגרום לתגובות אלרגיות אצל אנשים רגישים." },
+            { term: "נקודה איזואלקטרית (Isoelectric Point - pI)", definition: "ערך ה-pH שבו המטען החשמלי הכולל של מולקולת חלבון (או חומצת אמינו) הוא ניטרלי (אפס). בנקודה זו, המסיסות של החלבון היא לרוב מינימלית." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהן אבני הבניין הבסיסיות של חלבונים?",
+                options: ["נוקלאוטידים", "חד סוכרים", "חומצות שומן", "חומצות אמינו"],
+                correctIndex: 3,
+                explanation: "חלבונים הם פולימרים הבנויים ממונומרים הנקראים חומצות אמינו."
+            },
+            {
+                question: "איזה קשר מחבר בין חומצות אמינו בשרשרת חלבון?",
+                options: ["קשר יוני", "קשר מימן", "קשר פפטידי", "קשר דיסולפידי"],
+                correctIndex: 2,
+                explanation: "הקשר הפפטידי הוא הקשר הקוולנטי הספציפי הנוצר בין חומצות אמינו ליצירת שרשרת פוליפפטידית."
+            },
+            {
+                question: "מהו המבנה הראשוני של חלבון?",
+                options: ["הסידור המרחבי התלת ממדי", "צורת סליל אלפא", "רצף חומצות האמינו", "מספר תת היחידות בחלבון"],
+                correctIndex: 2,
+                explanation: "המבנה הראשוני מתאר את סדר (רצף) חומצות האמינו הספציפי לאורך השרשרת הפוליפפטידית."
+            },
+            {
+                question: "סליל אלפא ומשטח בטא הם דוגמאות ל:",
+                options: ["מבנה ראשוני", "מבנה שניוני", "מבנה שלישוני", "מבנה רביעוני"],
+                correctIndex: 1,
+                explanation: "אלו הם סידורים מרחביים מקומיים החוזרים על עצמם בשרשרת הפוליפפטידית, המוגדרים כמבנים שניוניים."
+            },
+            {
+                question: "מה מייצב בעיקר את המבנה השניוני של חלבונים?",
+                options: ["קשרים דיסולפידיים", "אינטראקציות הידרופוביות", "קשרי מימן בין קבוצות השלד הפפטידי", "קשרים יוניים בין שיירי צד"],
+                correctIndex: 2,
+                explanation: "קשרי מימן הנוצרים בין אטומי החמצן הקרבונילי לאטומי המימן האמידי לאורך השלד הפפטידי הם הכוח המייצב העיקרי של מבנים שניוניים."
+            },
+            {
+                question: "איזה מבנה מתאר את הסידור המרחבי הכולל של שרשרת פוליפפטידית אחת?",
+                options: ["מבנה ראשוני", "מבנה שניוני", "מבנה שלישוני", "מבנה רביעוני"],
+                correctIndex: 2,
+                explanation: "המבנה השלישוני מתאר את הקיפול התלת-ממדי השלם של שרשרת פוליפפטידית בודדת."
+            },
+            {
+                question: "מה מאפיין חלבונים סיביים (Fibrous proteins)?",
+                options: ["מבנה כדורי ומסיסות גבוהה במים", "מבנה מוארך, אי מסיסות במים ותפקיד מבני", "רגישות גבוהה לחום ופעילות אנזימטית", "מורכבים בעיקר מסוכרים"],
+                correctIndex: 1,
+                explanation: "חלבונים סיביים כמו קולגן או מיוזין מאופיינים במבנה מוארך, לרוב אינם מסיסים במים ומשמשים לתפקידים מבניים."
+            },
+            {
+                question: "מה מאפיין חלבונים גלובולריים (Globular proteins)?",
+                options: ["מבנה מוארך ואי מסיסות במים", "מבנה כדורי, מסיסות במים ורגישות לשינויים", "יציבות גבוהה מאוד לחום", "תפקיד מבני עיקרי"],
+                correctIndex: 1,
+                explanation: "חלבונים גלובולריים מאופיינים במבנה קומפקטי, מסיסות במים (בדרך כלל) ורגישות לתנאי סביבה כמו חום ו-pH."
+            },
+            {
+                question: "מהי דנטורציה של חלבון?",
+                options: ["פירוק החלבון לחומצות אמינו בודדות", "יצירת קשרים פפטידיים חדשים", "שינוי המבנה המרחבי הטבעי של החלבון", "חיבור חלבון לסוכר"],
+                correctIndex: 2,
+                explanation: "דנטורציה היא איבוד המבנה התלת-ממדי המסודר (שניוני ושלישוני) של החלבון, מה שמוביל לרוב לאובדן תפקודו."
+            },
+            {
+                question: "איזה גורם אינו גורם לדנטורציה של חלבונים לפי הטקסט?",
+                options: ["חום", "קירור עמוק (הקפאה)", "pH קיצוני", "ריכוז מלחים גבוה"],
+                correctIndex: 1,
+                explanation: "הטקסט מציין חום, pH, ריכוז מלחים ואמצעים מכניים כגורמי דנטורציה. קירור או הקפאה לרוב אינם גורמים לדנטורציה בלתי הפיכה באותה מידה."
+            },
+            {
+                question: "מהי אחת התכונות הפונקציונליות החשובות של חלבונים בייצוב אמולסיות (כמו חלב)?",
+                options: ["יכולת לספוח צבע", "פעילות כחומרים פעילי שטח", "מסיסות נמוכה בשומן", "משקל מולקולרי נמוך"],
+                correctIndex: 1,
+                explanation: "לחלבונים יש אזורים הידרופיליים והידרופוביים המאפשרים להם להתמקם בממשק שמן-מים ולייצב אמולסיות."
+            },
+            {
+                question: "מדוע חלב הוא נוזל לבן ואטום?",
+                options: ["בגלל ריכוז גבוה של סידן", "בגלל שהחלבונים צבועים בלבן", "בגלל פיזור (פיזור אור) של טיפות שומן ומיצלות קזאין", "בגלל שהמים בחלב לבנים"],
+                correctIndex: 2,
+                explanation: "הצבע הלבן נובע מפיזור אור על ידי החלקיקים הגדולים יחסית המרחפים בחלב - טיפות השומן (הגלובולות) ומיצלות הקזאין (צברי חלבון)."
+            },
+            {
+                question: "מדוע יוגורט נקרש?",
+                options: ["בגלל הוספת חומר מקריש חיצוני", "בגלל חימום החלב לטמפרטורה גבוהה מאוד", "בגלל ירידת ה-pH הנגרמת מתסיסת החיידקים, המובילה להתקרבות החלבונים לנקודה האיזואלקטרית שלהם", "בגלל אידוי המים מהחלב"],
+                correctIndex: 2,
+                explanation: "החיידקים ביוגורט מייצרים חומצה לקטית, המורידה את ה-pH. כשה-pH מתקרב לנקודה האיזואלקטרית של חלבוני הקזאין, מסיסותם יורדת, הם עוברים אגרגציה ויוצרים רשת ג'ל – הקריש."
+            },
+            {
+                question: "מה הגורם לכך שבשר הוא סיבי?",
+                options: ["ריכוז גבוה של עמילן", "נוכחות חלבונים סיביים כמו מיוזין", "מבנה גבישי של שומן", "פעילות אנזימטית גבוהה"],
+                correctIndex: 1,
+                explanation: "המרקם הסיבי של הבשר נובע בעיקר מחלבוני השריר הסיביים, ובראשם מיוזין ואקטין."
+            },
+            {
+                question: "כמה חומצות אמינו חיוניות מוזכרות בטקסט?",
+                options: ["20", "כל חומצות האמינו", "9", "אין חומצות אמינו חיוניות"],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שישנן 9 חומצות אמינו הנחשבות חיוניות לאדם."
+            },
+             {
+                question: "האם כל החלבונים במזון הם אלרגנים?",
+                options: ["כן, כל החלבונים גורמים לאלרגיה", "לא, רק חלבונים מהצומח", "לא, רוב החלבונים אינם אלרגנים, אך ישנם חלבונים נפוצים שהם אלרגנים", "כן, אבל רק לאחר בישול"],
+                correctIndex: 2,
+                explanation: "הטקסט מציין ש'רוב החלבונים הם אלרגניים', אך הכוונה היא כנראה שחלבונים רבים יכולים להיות אלרגניים, לא שכל חלבון הוא אלרגן לכל אדם. ישנם אלרגנים חלבוניים נפוצים (חלב, ביצה, סויה וכו')."
+            },
+            {
+                question: "מה קורה למסיסות החלבון בנקודה האיזואלקטרית שלו?",
+                options: ["המסיסות מקסימלית", "המסיסות מינימלית", "המסיסות אינה מושפעת מה-pH", "החלבון מתפרק"],
+                correctIndex: 1,
+                explanation: "בנקודה האיזואלקטרית, המטען הכולל של החלבון הוא אפס, האינטראקציות בין מולקולות החלבון גוברות על האינטראקציות עם המים, ולכן המסיסות היא הנמוכה ביותר."
+            },
+             {
+                question: "איזו תכונה של חלבונים מאפשרת 'אנקפסולציה'?",
+                options: ["צבעם הלבן", "יכולתם ליצור מבנה מרחבי מורכב", "טעמם המתוק", "משקלם המולקולרי הנמוך"],
+                correctIndex: 1,
+                explanation: "היכולת של חלבונים ליצור מבנים תלת-ממדיים מאפשרת 'לכלוא' או 'לעטוף' רכיבים אחרים בתוך המבנה החלבוני."
+            },
+             {
+                question: "מדוע שכבת המים שנוצרת מעל יוגורט במקרר?",
+                options: ["זוהי תוספת מים מכוונת", "זהו שומן שהופרש", "זה נובע מהמשך תהליך הדנטורציה של החלבונים וירידה ביכולתם לקשור מים", "זהו תוצר לוואי של החיידקים"],
+                correctIndex: 2,
+                explanation: "הפרשת המים (סינרזיס) נובעת מהתכווצות רשת הג'ל החלבונית, תהליך שיכול לנבוע מהמשך הדנטורציה והאגרגציה, הגורם לירידה ביכולת החלבונים לקשור מים."
+            },
+             {
+                question: "ממה נובעת השונות הגדולה בתכונות ובפונקציות של חלבונים שונים?",
+                options: ["מההבדלים באורך השרשרת הפפטידית בלבד", "מההבדלים ברצף ובסוגי חומצות האמינו (ובשיירי הצד שלהן)", "מההבדלים בטמפרטורה שבה נוצרו", "מההבדלים בכמות המים שהם קושרים"],
+                correctIndex: 1,
+                explanation: "רצף חומצות האמינו (מבנה ראשוני) והשיירים הצדדיים השונים שלהן קובעים את הקיפול המרחבי (מבנים שניוני, שלישוני, רביעוני) ואת התכונות הכימיות, הפיזיקליות והביולוגיות של כל חלבון."
+            },
+            {
+                question: "איזה סוג אינטראקציה אינו תורם למבנה השלישוני?",
+                options: ["קשרים יוניים (גשרי מלח)", "קשרי מימן", "אינטראקציות הידרופוביות", "קשרים פפטידיים"],
+                correctIndex: 3,
+                explanation: "קשרים פפטידיים מגדירים את המבנה הראשוני (רצף). המבנה השלישוני מיוצב על ידי אינטראקציות בין שיירי הצד, כולל קשרי מימן, קשרים יוניים, אינטראקציות הידרופוביות וקשרים דיסולפידיים."
+            },
+             {
+                question: "מהי דוגמה לחלבון גלובולרי הנפוץ במזון?",
+                options: ["קולגן", "קרטין", "מיוזין", "חלבוני מי גבינה"],
+                correctIndex: 3,
+                explanation: "חלבוני מי גבינה (כמו בטא-לקטוגלובולין ואלפא-לקטלבומין) הם דוגמאות לחלבונים גלובולריים המצויים בחלב."
+            },
+            {
+                question: "כיצד דנטורציה יכולה לשנות את אופי המזון?",
+                options: ["היא תמיד הופכת את המזון ליותר נוזלי", "היא יכולה לגרום להתמצקות (כמו בביצה קשה) או שינוי מרקם", "היא תמיד משפרת את הטעם", "היא הופכת כל מזון לשקוף"],
+                correctIndex: 1,
+                explanation: "דנטורציה משנה את מבנה החלבון ויכולה להוביל לאגרגציה ויצירת רשתות (התמצקות, ג'לציה) או לשינויים אחרים במרקם, בטעם ובמראה."
+            },
+            {
+                question: "מה היתרון בבחירה נרחבת של חלבונים מהצומח או ממקורות מיקרוביאליים?",
+                options: ["הם תמיד זולים יותר מחלבונים מהחי", "ניתן לבחור חלבון עם תכונות פונקציונליות ספציפיות הנדרשות למוצר", "הם תמיד בריאים יותר מחלבונים מהחי", "אין להם ערך תזונתי"],
+                correctIndex: 1,
+                explanation: "המגוון מאפשר בחירת חלבונים בעלי תכונות רצויות כמו מסיסות, יכולת הקצפה, ג'לציה וכו, בהתאם למוצר הסופי."
+            },
+             {
+                question: "מדוע חשוב לדעת אילו חומצות אמינו הן חיוניות?",
+                options: ["כי הגוף מייצר אותן בעודף", "כי יש לצרוך אותן בכמות מדויקת כל יום", "כי הגוף אינו יכול לייצרן ויש לקבלן מהמזון", "כי הן רעילות בכמויות גדולות"],
+                correctIndex: 2,
+                explanation: "חומצות אמינו חיוניות אינן מסונתזות בגוף האדם ולכן אספקתן מהתזונה הכרחית לתפקוד תקין."
+            },
+            {
+                question: "מהו צוויטריון (Zwitterion)?",
+                options: ["סוג של קשר פפטידי", "מבנה שניוני של חלבון", "מצב שבו לחומצת אמינו יש מטען חיובי ושלילי בו זמנית (מטען כולל ניטרלי)", "חלבון המורכב רק מחומצות אמינו חיוניות"],
+                correctIndex: 2,
+                explanation: "ב-pH פיזיולוגי, הקבוצה האמינית נוטה להיות פרוטונירנית (NH3+) והקבוצה הקרבוקסילית נוטה להיות דה-פרוטונירנית (COO-). מולקולה כזו, עם מטען חיובי ושלילי, נקראת צוויטריון."
+            },
+             {
+                question: "האם חומצות אמינו יכולות לקשור חומצות אמינו נוספות רק מקצה אחד?",
+                options: ["כן, רק מהקצה האמיני", "כן, רק מהקצה הקרבוקסילי", "לא, הן יכולות להגיב ולהיקשר משני הקצוות (האמיני והקרבוקסילי)", "לא, הן אינן יכולות להיקשר כלל"],
+                correctIndex: 2,
+                explanation: "חומצת אמינו יכולה ליצור קשר פפטידי דרך הקבוצה האמינית שלה עם קבוצה קרבוקסילית של חומצה אחרת, ודרך הקבוצה הקרבוקסילית שלה עם קבוצה אמינית של חומצה אחרת, מה שמאפשר יצירת שרשראות."
+            },
+             {
+                question: "איזה סוג חלבון רגיש יותר לשינויים ב-pH ובטמפרטורה?",
+                options: ["חלבונים סיביים", "חלבונים גלובולריים", "שניהם רגישים באותה מידה", "אף אחד מהם אינו רגיש"],
+                correctIndex: 1,
+                explanation: "המבנה התלת-ממדי המורכב והעדין של חלבונים גלובולריים, המוחזק על ידי אינטראקציות רבות, רגיש יותר לשיבוש על ידי שינויים סביבתיים כמו חום ו-pH קיצוני."
+            },
+             {
+                question: "מדוע חשובה הבנת הנקודה האיזואלקטרית של חלבונים בתהליכים כמו ייצור יוגורט או גבינה?",
+                options: ["כי בנקודה זו החלבון הכי טעים", "כי בנקודה זו החלבון הכי יציב לחום", "כי בנקודה זו מסיסות החלבון מינימלית, מה שמאפשר אגרגציה והפרדה/התגבנות", "כי בנקודה זו החלבון פעיל ביותר"],
+                correctIndex: 2,
+                explanation: "הורדת ה-pH לנקודה האיזואלקטרית (או קרוב אליה) היא עיקרון מרכזי בהתגבנות חלבונים בתהליכי ייצור יוגורט וגבינות מסוימות, שכן היא גורמת לירידה במסיסות ולאגרגציה."
+            },
+             {
+                question: "איזה סוג קשרים כימיים אינו מעורב בייצוב המבנה השלישוני של חלבונים?",
+                options: ["קשרי מימן", "קשרים פפטידיים", "קשרים יוניים", "קשרים דיסולפידיים"],
+                correctIndex: 1,
+                explanation: "קשרים פפטידיים יוצרים את השלד של המבנה הראשוני. המבנה השלישוני מיוצב על ידי אינטראקציות בין שיירי הצד, כולל קשרי מימן, קשרים יוניים, אינטראקציות הידרופוביות וקשרים דיסולפידיים."
+            }
+        ];
+
+
+        const tfData = [
+            { question: "כל חומצות האמינו זהות לחלוטין במבנה שלהן.", answer: false, explanation: "חומצות האמינו נבדלות זו מזו בקבוצת הצד (R) שלהן." },
+            { question: "קשר פפטידי נוצר בין שתי קבוצות אמיניות.", answer: false, explanation: "קשר פפטידי נוצר בין קבוצה אמינית לקבוצה קרבוקסילית." },
+            { question: "מבנה ראשוני של חלבון קובע את רצף חומצות האמינו.", answer: true, explanation: "זהו בדיוק ההגדרה של מבנה ראשוני." },
+            { question: "סליל אלפא הוא דוגמה למבנה שלישוני.", answer: false, explanation: "סליל אלפא הוא דוגמה למבנה שניוני." },
+            { question: "המבנה השלישוני מיוצב בעיקר על ידי קשרים פפטידיים.", answer: false, explanation: "המבנה השלישוני מיוצב על ידי אינטראקציות בין שיירי הצד (קשרי מימן, יוניים, הידרופוביים, דיסולפידיים)." },
+            { question: "חלבונים סיביים לרוב מסיסים היטב במים.", answer: false, explanation: "חלבונים סיביים מאופיינים באי-מסיסות במים." },
+            { question: "חלבונים גלובולריים רגישים בדרך כלל לשינויי טמפרטורה ו-pH.", answer: true, explanation: "המבנה המורכב שלהם הופך אותם לרגישים יותר לתנאי הסביבה." },
+            { question: "דנטורציה היא תהליך הפיך תמיד.", answer: false, explanation: "דנטורציה יכולה להיות בלתי הפיכה, במיוחד אם נגרמה על ידי חום גבוה או גורמים כימיים חזקים." },
+            { question: "חימום חלבון תמיד גורם לדנטורציה.", answer: true, explanation: "חימום מספק אנרגיה שמשבשת את האינטראקציות המייצבות את המבנה המרחבי, ולכן גורם לדנטורציה." },
+            { question: "חלבונים יכולים לשמש כאמולסיפיירים במזון.", answer: true, explanation: "בזכות האופי האמפיפילי שלהם (אזורים הידרופיליים והידרופוביים), חלבונים רבים יכולים לייצב אמולסיות." },
+            { question: "כל 20 חומצות האמינו הנפוצות הן חיוניות לאדם.", answer: false, explanation: "רק 9 מתוכן נחשבות חיוניות, כלומר הגוף אינו יכול לייצרן." },
+            { question: "בשר מקבל את מרקמו הסיבי מחלבונים גלובולריים.", answer: false, explanation: "המרקם הסיבי נובע מחלבונים סיביים כמו מיוזין ואקטין." },
+            { question: "יוגורט נקרש בגלל עלייה ב-pH.", answer: false, explanation: "יוגורט נקרש בגלל ירידה ב-pH הנגרמת מיצירת חומצה לקטית על ידי חיידקים." },
+            { question: "הנקודה האיזואלקטרית היא ה-pH שבו מסיסות החלבון היא מקסימלית.", answer: false, explanation: "בנקודה האיזואלקטרית המסיסות היא מינימלית." },
+            { question: "קשרי מימן אינם משתתפים בייצוב מבנה החלבון.", answer: false, explanation: "קשרי מימן חיוניים לייצוב המבנים השניוניים והשלישוניים." },
+            { question: "חלבונים מהצומח אינם יכולים להיות אלרגנים.", answer: false, explanation: "חלבונים רבים מהצומח, כמו אלו שבסויה, בוטנים ואגוזים, הם אלרגנים נפוצים." },
+            { question: "דנטורציה תמיד משפרת את הערך התזונתי של החלבון.", answer: false, explanation: "דנטורציה יכולה לפגוע בזמינות של חומצות אמינו מסוימות או לא להשפיע, אך היא לא תמיד משפרת את הערך התזונתי." },
+            { question: "הלבן של הביצה מתמצק בחימום עקב דנטורציה של החלבונים שבו.", answer: true, explanation: "החלבון העיקרי בלבן הביצה, אלבומין, עובר דנטורציה ואגרגציה בחום, מה שגורם להתמצקות." },
+            { question: "לחלבונים אין תפקיד ביצירת קצף.", answer: false, explanation: "חלבונים מסוימים (כמו אלו בחלבון ביצה) הם מקציפים מצוינים בזכות יכולתם להיפרש בממשק אוויר-מים וליצור מבנה יציב." },
+            { question: "המבנה הראשוני של חלבון קובע את המבנים הגבוהים יותר (שניוני, שלישוני).", answer: true, explanation: "רצף חומצות האמינו (מבנה ראשוני) מכיל את המידע המכתיב כיצד החלבון יתקפל למבנה התלת-ממדי הפונקציונלי שלו." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

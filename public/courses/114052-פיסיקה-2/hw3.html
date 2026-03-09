@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>כלי למידה: חוק גאוס - אלקטרוסטטיקה</title>
+    <!-- MathJax 3 Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimiters for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Delimiters for display math
+            processEscapes: true,
+            tags: 'ams' // Use AMS numbering
+          },
+          svg: {
+            fontCache: 'global' // Use global font cache for SVG output
+          },
+          options: {
+             ignoreHtmlClass: 'tex2jax_ignore',
+             processHtmlClass: 'tex2jax_process'
+          }
+        };
+    </script>
+    <!-- Load MathJax 3 from CDN -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <!-- Embedded CSS for Styling -->
+    <style>
+        /* General Styles */
+        body {
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            direction: rtl; /* Right-to-left */
+            line-height: 1.6;
+        }
+
+        /* Main Container */
+        #app-container {
+            max-width: 85%; /* Slightly wider container */
+            margin: 20px auto;
+            padding: 25px;
+            background-color: #444; /* Slightly lighter dark background for main container */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Theory Section */
+        #theory-section {
+            background-color: #555; /* Medium-dark Gray */
+            padding: 20px;
+            margin-bottom: 30px; /* More spacing below theory */
+            border-radius: 5px;
+            border: 1px solid #777;
+        }
+        #theory-section h2 {
+             color: #5DB0F7; /* Lighter blue for main theory heading */
+             border-bottom: 2px solid #5DB0F7;
+             padding-bottom: 5px;
+             margin-bottom: 15px;
+        }
+         #theory-section h3 {
+             color: #7DC0F9; /* Slightly different blue for subheadings */
+             margin-top: 20px;
+             margin-bottom: 10px;
+        }
+        #theory-section p, #theory-section ul {
+            margin-bottom: 12px;
+        }
+        #theory-section ul {
+            padding-right: 20px; /* Indentation for lists in RTL */
+        }
+        #theory-section li {
+            margin-bottom: 8px;
+        }
+        #theory-section code {
+            background-color: #666;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+
+        /* Interactive Area */
+        #interactive-area {
+            background-color: #4F4F4F; /* Container for questions */
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #6a6a6a;
+        }
+
+        /* Question Pair Styling */
+        .question-pair {
+            margin-bottom: 25px; /* Spacing between elements */
+            padding: 15px;
+            background-color: #5C5C5C; /* Background for each pair section */
+            border-radius: 6px;
+            border: 1px solid #777;
+        }
+        .question-pair h4 {
+            color: #A0D0FF; /* Light Blue accents for titles */
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #777;
+            padding-bottom: 8px;
+        }
+        .question-text {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #666; /* Slightly different background for text */
+            border-radius: 4px;
+        }
+
+        /* Solution Styling */
+        .solution {
+            background-color: #505050; /* Darker gray for solutions */
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px dashed #888; /* Dashed border for visibility */
+            display: none; /* Initially hidden */
+        }
+         .solution h5 {
+             color: #B0E0FF;
+             margin-top: 0;
+             margin-bottom: 10px;
+         }
+         .solution p {
+            margin-bottom: 10px;
+         }
+         .solution strong { /* Make steps stand out */
+            color: #E8E8E8;
+         }
+
+
+        /* Buttons and Controls */
+        button {
+            background-color: #3D90D7; /* Blue accents/buttons */
+            color: white;
+            border: none;
+            padding: 10px 18px; /* Slightly larger buttons */
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #2A7AB0; /* Darker blue on hover */
+        }
+        button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .toggle-solution {
+            margin-top: 5px;
+            margin-bottom: 10px;
+            background-color: #5a9bd5; /* Slightly different blue for toggles */
+        }
+         .toggle-solution:hover {
+            background-color: #4a8ac5;
+         }
+
+        #navigation-controls {
+            text-align: center;
+            margin-top: 30px; /* More spacing above navigation */
+            padding-top: 20px;
+            border-top: 1px solid #777;
+        }
+        #question-counter {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #C0C0C0;
+        }
+
+        /* MathJax Specific Adjustments */
+        .MathJax_Preview { display: none; } /* Hide MathJax preview spans */
+        mjx-container[jax="SVG"] > svg {
+            fill: #E0E0E0; /* Ensure SVG math text is light */
+        }
+        /* Ensure math itself renders LTR even in RTL page */
+        mjx-math {
+             direction: ltr;
+             display: inline-block; /* Prevents weird line breaks sometimes */
+        }
+        /* Adjust spacing for display math */
+        mjx-display {
+             display: block;
+             margin: 1em 0;
+             text-align: center; /* Center display math */
+         }
+
+         /* Comments for clarity */
+         /* End of CSS */
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+
+        <!-- Theory Section -->
+        <div id="theory-section">
+            <h2>תקציר תיאורטי: חוק גאוס באלקטרוסטטיקה</h2>
+            <p>
+                חוק גאוס הוא אחד העקרונות הבסיסיים באלקטרומגנטיות, המקשר בין השטף החשמלי דרך מעטפת סגורה כלשהי לבין המטען החשמלי הכולל הכלוא בתוך אותה מעטפת. חוק זה שימושי במיוחד לחישוב שדות חשמליים במקרים של סימטריה גבוהה (כדורית, גלילית, מישורית).
+            </p>
+
+            <h3>חוק גאוס (צורה אינטגרלית)</h3>
+            <p>
+                החוק מנוסח מתמטית כך:
+                $$ \oint_S \vec{E} \cdot d\vec{A} = \frac{Q_{enc}}{\varepsilon_0} $$
+                כאשר:
+                <ul>
+                    <li>$\oint_S$ מסמן אינטגרל משטחי על פני מעטפת סגורה דמיונית $S$ (הנקראת "מעטפת גאוסית").</li>
+                    <li>$\vec{E}$ הוא וקטור השדה החשמלי.</li>
+                    <li>$d\vec{A}$ הוא וקטור אלמנט שטח על המעטפת, שכיוונו ניצב למשטח ופונה החוצה.</li>
+                    <li>האגף השמאלי, $\Phi_E = \oint_S \vec{E} \cdot d\vec{A}$, נקרא **השטף החשמלי** הכולל דרך המעטפת $S$.</li>
+                    <li>$Q_{enc}$ הוא **המטען החשמלי הכולל** הכלוא בתוך נפח המעטפת $S$.</li>
+                    <li>$\varepsilon_0$ הוא קבוע דיאלקטריות הריק (פרמיטיביות של הריק), $\varepsilon_0 \approx 8.854 \times 10^{-12} \frac{C^2}{N \cdot m^2}$.</li>
+                </ul>
+            </p>
+
+            <h3>חישוב מטען כלוא ($Q_{enc}$)</h3>
+            <p>המטען הכלוא מחושב על פי סוג התפלגות המטען:</p>
+            <ul>
+                <li>**מטענים נקודתיים:** $Q_{enc} = \sum q_i$, סכום המטענים הנקודתיים בתוך המעטפת.</li>
+                <li>**צפיפות מטען נפחית $\rho(\vec{r})$:** $Q_{enc} = \int_V \rho(\vec{r}) dV$, כאשר האינטגרל הוא על הנפח $V$ הכלוא בתוך המעטפת $S$.</li>
+                <li>**צפיפות מטען משטחית $\sigma(\vec{r})$:** $Q_{enc} = \int_A \sigma(\vec{r}) dA$, כאשר האינטגרל הוא על השטח $A$ של המשטח הטעון הנמצא בתוך המעטפת $S$.</li>
+                <li>**צפיפות מטען אורכית $\lambda(\vec{r})$:** $Q_{enc} = \int_L \lambda(\vec{r}) dl$, כאשר האינטגרל הוא על אורך הקו $L$ הטעון הנמצא בתוך המעטפת $S$.</li>
+            </ul>
+
+             <h3>שימוש בחוק גאוס לחישוב שדה חשמלי</h3>
+            <p>
+                השיטה מתבססת על בחירת מעטפת גאוסית $S$ כך שתנצל את סימטריית הבעיה ותפשט את חישוב אינטגרל השטף:
+            </p>
+            <ol>
+                <li><strong>זיהוי הסימטריה:</strong> קבעו את הסימטריה של התפלגות המטען (כדורית, גלילית, מישורית). כיוון השדה החשמלי $\vec{E}$ יהיה בהתאם לסימטריה (למשל, רדיאלי בסימטריה כדורית).</li>
+                <li><strong>בחירת מעטפת גאוסית:</strong> בחרו מעטפת $S$ שעל פניה גודל השדה $E = |\vec{E}|$ קבוע (או אפס), ושהוקטור $\vec{E}$ מקביל או ניצב לוקטור $d\vec{A}$ בכל נקודה על המעטפת.
+                    <ul>
+                        <li>סימטריה כדורית: מעטפת כדורית קונצנטרית.</li>
+                        <li>סימטריה גלילית: מעטפת גלילית קואקסיאלית (עם בסיסים ניצבים לציר).</li>
+                        <li>סימטריה מישורית: מעטפת בצורת "קופסת גפרורים" (Pillbox) או קוביה החוצה את המישור.</li>
+                    </ul>
+                </li>
+                <li><strong>חישוב השטף $\Phi_E$:</strong> בזכות הבחירה הנכונה, האינטגרל $\oint_S \vec{E} \cdot d\vec{A}$ יפשט לביטוי מהצורה $E \times A_{eff}$, כאשר $A_{eff}$ הוא שטח (או חלק מהשטח) של המעטפת הגאוסית דרכו עובר השטף (החלקים שבהם $\vec{E}$ מקביל ל-$d\vec{A}$).</li>
+                <li><strong>חישוב $Q_{enc}$:</strong> חשבו את המטען הכולל הכלוא בתוך המעטפת הגאוסית שנבחרה, באמצעות אינטגרציה על הצפיפות המתאימה (או סכימה).</li>
+                <li><strong>הצבה בחוק גאוס ופתרון:</strong> הציבו את תוצאות השטף והמטען הכלוא בחוק גאוס וחלצו את גודל השדה $E$. קבעו את כיוון השדה $\hat{r}$ (או $\hat{x}$, $\hat{z}$, etc.) על פי הסימטריה.</li>
+            </ol>
+
+            <h3>עקרון הסופרפוזיציה</h3>
+            <p>
+                כאשר קיימים מספר מקורות מטען, השדה החשמלי הכולל בנקודה כלשהי הוא הסכום הווקטורי של השדות החשמליים שכל אחד מהמקורות היה יוצר בנפרד באותה נקודה:
+                $$ \vec{E}_{total} = \sum_i \vec{E}_i $$
+                עיקרון זה שימושי במיוחד בבעיות עם מספר מישורים, קליפות או גופים טעונים.
+            </p>
+
+            <h3>תוצאות חשובות מחוק גאוס</h3>
+             <ul>
+                 <li><strong>שדה של מישור אינסופי טעון אחיד ($\sigma$):</strong> $E = \frac{|\sigma|}{2\varepsilon_0}$, כיוון השדה ניצב למישור, והוא קבוע בכל המרחב (פונה החוצה ממטענים חיוביים, פנימה לשליליים).</li>
+                <li><strong>שדה מחוץ לכדור/קליפה כדורית טעונים בסימטריה כדורית (מטען כולל $Q$):</strong> $E = \frac{1}{4\pi\varepsilon_0} \frac{Q}{r^2}$ (כמו מטען נקודתי $Q$ במרכז).</li>
+                <li><strong>שדה בתוך קליפה כדורית מוליכה או טעונה אחיד:</strong> $E = 0$.</li>
+                <li><strong>שדה מחוץ לגליל/קליפה גלילית אינסופיים טעונים בסימטריה גלילית (מטען ליחידת אורך $\lambda$):</strong> $E = \frac{\lambda}{2\pi\varepsilon_0 r}$.</li>
+                 <li><strong>שדה בתוך מוליך במצב אלקטרוסטטי:</strong> $E = 0$.</li>
+             </ul>
+        </div>
+
+        <!-- Interactive Study Area -->
+        <div id="interactive-area">
+            <div id="question-counter">שאלה X / Y</div>
+
+            <div id="question-pair-display">
+                <!-- Content will be loaded here by JavaScript -->
+                <div class="question-pair">
+                    <h4>שאלה מקורית</h4>
+                    <div class="question-text original-question">
+                        <!-- Original question text goes here -->
+                    </div>
+                    <button class="toggle-solution" data-target="original-solution">הצג פתרון לשאלה המקורית</button>
+                    <div class="solution original-solution" id="original-solution">
+                         <h5>פתרון מפורט (שאלה מקורית):</h5>
+                        <!-- Original solution text goes here -->
+                    </div>
+                </div>
+
+                <div class="question-pair">
+                     <h4>שאלה דומה</h4>
+                    <div class="question-text similar-question">
+                        <!-- Similar question text goes here -->
+                    </div>
+                    <button class="toggle-solution" data-target="similar-solution">הצג פתרון לשאלה הדומה</button>
+                    <div class="solution similar-solution" id="similar-solution">
+                        <h5>פתרון מפורט (שאלה דומה):</h5>
+                        <!-- Similar solution text goes here -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="navigation-controls">
+                <button id="prev-button" disabled>הקודם</button>
+                <button id="next-button">הבא</button>
+            </div>
+        </div>
+
+    </div> <!-- End of app-container -->
+
+    <!-- Embedded JavaScript -->
+    <script>
+        // Data extracted and processed from temp.html
+        // NOTE: Quotes (' and ") are avoided in the generated strings below.
+        const questionsData = [
+            // Question 1 Data
+            {
+                original: {
+                    text: `<p style="text-align: right;" dir="rtl">מטען נקודתי, q, ממוקם במרכז קוביה שאורך המקצוע שלה a. מרכז הקוביה הוא נקודת מפגש האלכסונים. מתואר מטען נקודתי q במרכז קובייה עם צלע באורך a.</p><p style="text-align: right;" dir="rtl">חשבו את השטף החשמלי הכולל דרך פאות הקוביה, כאשר נתונים הגדלים הבאים:</p><p style="text-align: right;" dir="rtl">$a=0.1m, q=3 \\cdot 10^{-12} C$</p><p style="text-align: right;" dir="rtl">יש להביע את התשובה ביחידות M.K.S.</p>`,
+                    solution: `<p><strong>עיקרון:</strong> חוק גאוס קובע שהשטף החשמלי הכולל $\\Phi_E$ דרך מעטפת סגורה שווה למטען הכולל $Q_{enc}$ הכלוא בתוכה, חלקי $\\varepsilon_0$.</p><p>$$ \\oint_S \\vec{E} \\cdot d\\vec{A} = \\frac{Q_{enc}}{\\varepsilon_0} $$</p><p><strong>יישום:</strong></p><ol><li>המעטפת הסגורה במקרה זה היא הקוביה עצמה.</li><li>המטען הכלוא בתוך הקוביה הוא המטען הנקודתי $q$. לכן, $Q_{enc} = q$.</li><li>נציב בחוק גאוס: $$ \\Phi_E = \\frac{q}{\\varepsilon_0} $$</li><li>ערך אורך המקצוע $a$ אינו רלוונטי לחישוב השטף הכולל דרך הקוביה (כל עוד המטען בפנים).</li><li>נציב את הערכים המספריים: $q = 3 \\times 10^{-12} C$ ו $\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$.</li><li>$$ \\Phi_E = \\frac{3 \\times 10^{-12} C}{8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}} \\approx 0.339 \\frac{N \\cdot m^2}{C} $$</li></ol><p><strong>תשובה סופית:</strong> השטף החשמלי הכולל דרך פאות הקוביה הוא בקירוב $0.339 \\frac{N \\cdot m^2}{C}$.</p>`
+                },
+                similar: {
+                    text: `<p style="text-align: right;" dir="rtl">מטען נקודתי $q_s = -5 \\times 10^{-9} C$ ממוקם במרכז מעטפת כדורית בעלת רדיוס $R = 0.25 m$.</p><p style="text-align: right;" dir="rtl">חשבו את השטף החשמלי הכולל דרך פני המעטפת הכדורית.</p><p style="text-align: right;" dir="rtl">יש להביע את התשובה ביחידות M.K.S.</p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס: $\\Phi_E = Q_{enc} / \\varepsilon_0$.</p><p><strong>יישום:</strong></p><ol><li>המעטפת הסגורה היא המעטפת הכדורית.</li><li>המטען הכלוא בתוך המעטפת הכדורית הוא המטען הנקודתי $q_s$. לכן, $Q_{enc} = q_s$.</li><li>נציב בחוק גאוס: $$ \\Phi_E = \\frac{q_s}{\\varepsilon_0} $$</li><li>ערך הרדיוס $R$ אינו משפיע על השטף הכולל כל עוד המטען נמצא בפנים.</li><li>נציב את הערכים המספריים: $q_s = -5 \\times 10^{-9} C$ ו $\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$.</li><li>$$ \\Phi_E = \\frac{-5 \\times 10^{-9} C}{8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}} \\approx -564.7 \\frac{N \\cdot m^2}{C} $$</li></ol><p><strong>תשובה סופית:</strong> השטף החשמלי הכולל דרך פני המעטפת הכדורית הוא בקירוב $-564.7 \\frac{N \\cdot m^2}{C}$.</p>`
+                }
+            },
+            // Question 2 Data
+            {
+                original: {
+                    text: `<p>מטען נקודתי $q=-3 \\cdot 10^{-12} C$ ממוקם על פני מעטפת גלילית שרדיוסה R שווה לגובה שלה h. נתון כי $h=R=0.05m$.</p><p>המטען מונח על הבסיס העליון של המעטפת הגלילית, במרכזו. התיאור מתאר גליל עם רדיוס R וגובה h=R, כאשר מטען q נמצא במרכז הבסיס העליון.</p><p><strong>מהו השטף החשמלי דרך המעטפת? (יש לתת את התשובה ביחידות הסטנדרטיות בקורס, M.K.S)</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> כאשר מטען נמצא על פני שטח של מעטפת גאוסית, פורמלית, השטף אינו מוגדר היטב באמצעות חוק גאוס בצורתו הפשוטה. עם זאת, בדרך כלל הכוונה בשאלות כאלה היא לשטף דרך *שאר* המעטפת, או להשתמש בסימטריה.</p><p><strong>פתרון באמצעות סימטריה:</strong></p><ol><li>נדמיין מעטפת גאוסית כדורית קטנה מאוד סביב המטען $q$. השטף הכולל דרך מעטפת זו הוא $\\Phi_{total} = q / \\varepsilon_0$.</li><li>כאשר המטען נמצא על משטח (כמו בסיס הגליל), בדיוק מחצית מקווי השדה יוצאים אל תוך הגליל (או לתוך החומר ממנו עשוי המשטח), ומחציתם יוצאים החוצה ממנו.</li><li>בבעיה זו, המטען נמצא על הבסיס העליון. נניח שהוא נמצא ממש על פני השטח. השדה החשמלי בנקודה זו הוא אינסופי, אך אם נחשוב על המטען כנמצא *בדיוק* על הגבול, נוכל לטעון משיקולי סימטריה שמחצית מהשטף הכולל $q/\\varepsilon_0$ תעבור דרך הנפח הכלוא על ידי המעטפת הגלילית והבסיס התחתון.</li><li>כלומר, השטף היוצא דרך *כל* הפתחים של הגליל (מעטפת + בסיס תחתון) שווה ל- $\\frac{1}{2} \\frac{q}{\\varepsilon_0}$.</li><li>השאלה מבקשת את השטף דרך *המעטפת הגלילית בלבד* (החלק העקום). זו רק חלק מהשטף הכולל היוצא. לא ניתן לחשב זאת ישירות מחוק גאוס ללא אינטגרציה ישירה מסובכת.</li></ol><p><strong>פרשנות נפוצה לבעיות מסוג זה:</strong> לעיתים, למרות הניסוח, השאלה מתכוונת לשטף הכולל דרך מעטפת *סגורה* הדומה למערך. אם נניח שהכוונה היא לשטף דרך *כל* הגליל (מעטפת + 2 בסיסים), והמטען נמצא בפנים (לא על השפה), אז $\\Phi = q / \\varepsilon_0$. אם המטען בחוץ, $\\Phi = 0$. אם המטען על השפה, התשובה המקובלת משיקולי סימטריה היא חצי מהשטף הכולל, כלומר $\\Phi = q / (2\\varepsilon_0)$.</p><p><strong>חישוב לפי הפרשנות של $q / (2\\varepsilon_0)$:</strong></p><ol><li>$Q_{enc-effective} = q/2$.</li><li>$\\Phi_E = \\frac{q/2}{\\varepsilon_0} = \\frac{q}{2\\varepsilon_0}$.</li><li>נציב ערכים: $q = -3 \\times 10^{-12} C$.</li><li>$$ \\Phi_E = \\frac{-3 \\times 10^{-12} C}{2 \\times 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}} \\approx -0.169 \\frac{N \\cdot m^2}{C} $$</li></ol><p><strong>הערה חשובה:</strong> הניסוח של השאלה המקורית בעייתי. הפתרון המובא כאן מבוסס על פרשנות נפוצה לבעיות מסוג זה. אם הכוונה הייתה ממש לשטף רק דרך המעטפת העקומה, החישוב מסובך בהרבה ולא ניתן לביצוע קל בעזרת חוק גאוס.</p><p><strong>תשובה סופית (תחת הפרשנות של $q / (2\\varepsilon_0)$):</strong> השטף החשמלי הוא בקירוב $-0.169 \\frac{N \\cdot m^2}{C}$.</p>`
+                },
+                similar: {
+                    text: `<p>מטען נקודתי $q = +2 \\times 10^{-10} C$ ממוקם במרכז גליל סגור שרדיוסו $R = 0.1 m$ וגובהו $h = 0.3 m$.</p><p><strong>מהו השטף החשמלי הכולל דרך כל המעטפת הסגורה של הגליל (שני הבסיסים והמשטח העקום)?</strong></p><p>יש לתת את התשובה ביחידות M.K.S.</p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס עבור מעטפת סגורה: $\\Phi_E = Q_{enc} / \\varepsilon_0$.</p><p><strong>יישום:</strong></p><ol><li>המעטפת הסגורה היא הגליל כולו (בסיסים + משטח עקום).</li><li>המטען $q$ נמצא במרכז הגליל, כלומר הוא כלוא בתוך המעטפת הסגורה. $Q_{enc} = q$.</li><li>נציב בחוק גאוס: $$ \\Phi_E = \\frac{q}{\\varepsilon_0} $$</li><li>מימדי הגליל (R ו-h) אינם רלוונטיים לחישוב השטף הכולל דרך המעטפת הסגורה.</li><li>נציב את הערכים המספריים: $q = +2 \\times 10^{-10} C$ ו $\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$.</li><li>$$ \\Phi_E = \\frac{2 \\times 10^{-10} C}{8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}} \\approx 22.59 \\frac{N \\cdot m^2}{C} $$</li></ol><p><strong>תשובה סופית:</strong> השטף החשמלי הכולל דרך המעטפת הסגורה של הגליל הוא בקירוב $22.59 \\frac{N \\cdot m^2}{C}$.</p>`
+                }
+            },
+            // Question 3 Data
+            {
+                 original: {
+                    text: `<p>במרחב מתקיים השדה החשמלי הבא:</p><p style="text-align: center;">$\\vec{E} = k x^2 \\hat{x} + \\sigma y \\hat{y}$</p><p>כאשר k ו-$\sigma$ הם קבועים.</p><p>חשבו מהו המטען הכולל הכלוא בתוך קוביה שאורך הצלע שלה הוא $a$. הקוביה מתוארת כך שאחד מקודקודיה בראשית (0,0,0) והיא נפרסת לאורך הצירים החיוביים, כך שקודקודיה הם (0,0,0), (a,0,0), (0,a,0), (0,0,a), (a,a,0), (a,0,a), (0,a,a), (a,a,a).</p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס $\\oint_S \\vec{E} \\cdot d\\vec{A} = Q_{enc} / \\varepsilon_0$. נחשב את השטף דרך כל אחת משש פאות הקוביה ונחבר אותם כדי לקבל את השטף הכולל, ואז נחלץ את $Q_{enc}$.</p><p><strong>המעטפת הגאוסית:</strong> הקוביה הנתונה.</p><p><strong>חישוב השטף דרך כל פאה:</strong></p><ol><li><strong>פאה קדמית (x=a):</strong> $d\\vec{A} = dy dz \\hat{x}$. כאן $x=a$.<br>$\\Phi_1 = \\int_0^a \\int_0^a (k a^2 \\hat{x} + \\sigma y \\hat{y}) \\cdot (dy dz \\hat{x}) = \\int_0^a dy \\int_0^a dz (k a^2) = k a^2 (a)(a) = k a^4$.</li><li><strong>פאה אחורית (x=0):</strong> $d\\vec{A} = -dy dz \\hat{x}$. כאן $x=0$.<br>$\\Phi_2 = \\int_0^a \\int_0^a (k (0)^2 \\hat{x} + \\sigma y \\hat{y}) \\cdot (-dy dz \\hat{x}) = \\int_0^a dy \\int_0^a dz (0) = 0$.</li><li><strong>פאה ימנית (y=a):</strong> $d\\vec{A} = dx dz \\hat{y}$. כאן $y=a$.<br>$\\Phi_3 = \\int_0^a \\int_0^a (k x^2 \\hat{x} + \\sigma a \\hat{y}) \\cdot (dx dz \\hat{y}) = \\int_0^a dx \\int_0^a dz (\\sigma a) = \\sigma a (a)(a) = \\sigma a^3$.</li><li><strong>פאה שמאלית (y=0):</strong> $d\\vec{A} = -dx dz \\hat{y}$. כאן $y=0$.<br>$\\Phi_4 = \\int_0^a \\int_0^a (k x^2 \\hat{x} + \\sigma (0) \\hat{y}) \\cdot (-dx dz \\hat{y}) = \\int_0^a dx \\int_0^a dz (0) = 0$.</li><li><strong>פאה עליונה (z=a):</strong> $d\\vec{A} = dx dy \\hat{z}$. השדה $\\vec{E}$ אינו תלוי ב-z ואין לו רכיב z, לכן $\\vec{E} \\cdot d\\vec{A} = 0$.<br>$\\Phi_5 = 0$.</li><li><strong>פאה תחתונה (z=0):</strong> $d\\vec{A} = -dx dy \\hat{z}$. גם כאן $\\vec{E} \\cdot d\\vec{A} = 0$.<br>$\\Phi_6 = 0$.</li></ol><p><strong>שטף כולל:</strong><br>$\\Phi_{total} = \\Phi_1 + \\Phi_2 + \\Phi_3 + \\Phi_4 + \\Phi_5 + \\Phi_6 = k a^4 + 0 + \\sigma a^3 + 0 + 0 + 0 = k a^4 + \\sigma a^3$.</p><p><strong>חישוב המטען הכלוא:</strong><br> מתוך חוק גאוס: $Q_{enc} = \\varepsilon_0 \\Phi_{total}$.<br>$$ Q_{enc} = \\varepsilon_0 (k a^4 + \\sigma a^3) $$</p><p><strong>הערה:</strong> התשובות המוצעות בשאלה המקורית היו במבנה של $C \cdot k a^2 \sigma$ או $C \cdot a^2 \sigma$. ייתכן שיש טעות בשאלה המקורית או בתשובות המוצעות בה, כיוון שהתשובה תלויה גם ב-$k$ וגם ב-$\sigma$ וגם ב-$a$ בחזקות שונות. אם נניח שהיה צריך להיות $E = kx\hat{x} + \sigma \hat{y}$, אז פאה קדמית תיתן $ka^3$, אחורית 0, ימנית $\sigma a^2$, שמאלית 0, עליונה/תחתונה 0. סהכ $ka^3 + \sigma a^2$. אם $E=k \hat{x} + \sigma y \hat{y}$, אז פאה קדמית $ka^2$, אחורית $-ka^2$, ימנית $\sigma a^3$, שמאלית 0. סהכ $\sigma a^3$. אם $E=k x^2 \hat{x}$, אז שטף $ka^4$. אף אחד מאלו לא מתאים בדיוק לתשובות. נלך לפי החישוב המדויק עבור השדה הנתון.</p><p><strong>תשובה סופית (בהתבסס על החישוב הישיר):</strong> $Q_{enc} = \\varepsilon_0 (k a^4 + \\sigma a^3)$. אף אחת מהאפשרויות המקוריות אינה מתאימה.</p>`
+                 },
+                 similar: {
+                    text: `<p>במרחב מתקיים השדה החשמלי הבא: $\\vec{E} = \\beta z^3 \\hat{z}$, כאשר $\\beta$ הוא קבוע.</p><p>חשבו מהו המטען הכולל הכלוא בתוך תיבה שקודקודיה ממוקמים בנקודות $(\\pm L/2, \\pm W/2, \\pm H/2)$. כלומר, מרכזה בראשית, אורכה L (בכיוון x), רוחבה W (בכיוון y) וגובהה H (בכיוון z).</p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס $\\oint_S \\vec{E} \\cdot d\\vec{A} = Q_{enc} / \\varepsilon_0$. נחשב את השטף דרך שש פאות התיבה.</p><p><strong>המעטפת הגאוסית:</strong> התיבה הנתונה.</p><p><strong>חישוב השטף דרך כל פאה:</strong></p><ol><li><strong>פאה עליונה (z = +H/2):</strong> $d\\vec{A} = dx dy \\hat{z}$. כאן $z = H/2$.<br>$\\vec{E} = \\beta (H/2)^3 \\hat{z}$.<br>$\\Phi_{top} = \\int_{-L/2}^{L/2} dx \\int_{-W/2}^{W/2} dy (\\beta (H/2)^3) = \\beta (H/2)^3 \\times (L) \\times (W) = \\beta L W (H/2)^3$.</li><li><strong>פאה תחתונה (z = -H/2):</strong> $d\\vec{A} = -dx dy \\hat{z}$. כאן $z = -H/2$.<br>$\\vec{E} = \\beta (-H/2)^3 \\hat{z} = -\\beta (H/2)^3 \\hat{z}$.<br>$\\Phi_{bottom} = \\int_{-L/2}^{L/2} dx \\int_{-W/2}^{W/2} dy ( -\\beta (H/2)^3 \\hat{z} ) \\cdot (-dx dy \\hat{z}) = \\int_{-L/2}^{L/2} dx \\int_{-W/2}^{W/2} dy (\\beta (H/2)^3) = \\beta L W (H/2)^3$.</li><li><strong>ארבע הפאות האנכיות (ב-x=$\pm$L/2, y=$\pm$W/2):</strong> עבור פאות אלו, וקטורי השטח $d\\vec{A}$ הם בכיווני $\\pm\\hat{x}$ או $\\pm\\hat{y}$. כיוון שהשדה $\\vec{E}$ הוא בכיוון $\\hat{z}$ בלבד, המכפלה הסקלרית $\\vec{E} \\cdot d\\vec{A}$ היא אפס לכל הפאות האנכיות. לכן, השטף דרך כל אחת מהן הוא 0.</li></ol><p><strong>שטף כולל:</strong><br>$\\Phi_{total} = \\Phi_{top} + \\Phi_{bottom} + 0 + 0 + 0 + 0 = \\beta L W (H/2)^3 + \\beta L W (H/2)^3 = 2 \\beta L W (H/2)^3 = \\frac{\\beta L W H^3}{4}$.</p><p><strong>חישוב המטען הכלוא:</strong><br> מתוך חוק גאוס: $Q_{enc} = \\varepsilon_0 \\Phi_{total}$.<br>$$ Q_{enc} = \\frac{\\varepsilon_0 \\beta L W H^3}{4} $$</p><p><strong>תשובה סופית:</strong> המטען הכולל הכלוא בתיבה הוא $Q_{enc} = \\frac{\\varepsilon_0 \\beta L W H^3}{4}$.</p>`
+                }
+            },
+            // Question 4 Data
+            {
+                original: {
+                    text: `<p>רוצים ליצור במרחב את השדה החשמלי הבא:</p><ul><li>עבור $x < 0$, שדה חשמלי $\\vec{E}=\\frac{\\sigma}{\\varepsilon_0}\\hat{x}$.</li><li>עבור $0 < x < L$, שדה חשמלי $\\vec{E}=0$.</li><li>עבור $L < x$, שדה חשמלי $\\vec{E}=-\\frac{\\sigma}{\\varepsilon_0}\\hat{x}$.</li></ul><p>כאשר $\sigma > 0$ הוא קבוע.</p><p><strong>איזה סידור של מטענים במרחב ייתן את השדה המבוקש?</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בעקרון הסופרפוזיציה ובנוסחה לשדה של מישור אינסופי. מישור אינסופי הטעון בצפיפות $\\sigma_{plane}$ יוצר שדה $E = \\frac{|\\sigma_{plane}|}{2\\varepsilon_0}$ הניצב למישור, פונה החוצה ממנו אם $\\sigma_{plane}>0$ ופנימה אם $\\sigma_{plane}<0$.</p><p><strong>ניתוח השדה הנדרש:</strong></p><ul><li>עבור $x<0$, השדה הוא $\\frac{\\sigma}{\\varepsilon_0}\\hat{x}$ (ימינה, גודל $\\sigma/\\varepsilon_0$).</li><li>בין $0$ ל-$L$, השדה הוא $0$.</li><li>עבור $x>L$, השדה הוא $-\\frac{\\sigma}{\\varepsilon_0}\\hat{x}$ (שמאלה, גודל $\\sigma/\\varepsilon_0$).</li></ul><p><strong>בניית הפתרון:</strong></p><ol><li>שים לב שהשדה קופץ ב-$x=0$ וב-$x=L$. זה מרמז על קיום משטחי מטען במיקומים אלו.</li><li>נניח מישור ב-$x=0$ עם צפיפות $\\sigma_1$ ומישור ב-$x=L$ עם צפיפות $\\sigma_2$.</li><li>נחשב את השדה הכולל בכל אזור בעזרת סופרפוזיציה:<ul><li><strong>אזור $x<0$:</strong> השדה מ-$\sigma_1$ הוא $-\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{x}$. השדה מ-$\sigma_2$ הוא $-\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{x}$.<br>סהכ: $\\vec{E}_{x<0} = -\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2)\\hat{x}$.</li><li><strong>אזור $0 < x < L$:</strong> השדה מ-$\sigma_1$ הוא $+\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{x}$. השדה מ-$\sigma_2$ הוא $-\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{x}$.<br>סהכ: $\\vec{E}_{0<x<L} = +\\frac{1}{2\\varepsilon_0}(\\sigma_1 - \\sigma_2)\\hat{x}$.</li><li><strong>אזור $x > L$:</strong> השדה מ-$\sigma_1$ הוא $+\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{x}$. השדה מ-$\sigma_2$ הוא $+\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{x}$.<br>סהכ: $\\vec{E}_{x>L} = +\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2)\\hat{x}$.</li></ul></li><li><strong>השוואת השדות:</strong> נשווה את השדות המחושבים לשדות הנדרשים:<ul><li>$x<0$: $-\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2) = \\frac{\\sigma}{\\varepsilon_0} \\implies \\sigma_1 + \\sigma_2 = -2\\sigma$.</li><li>$0<x<L$: $+\\frac{1}{2\\varepsilon_0}(\\sigma_1 - \\sigma_2) = 0 \\implies \\sigma_1 = \\sigma_2$.</li><li>$x>L$: $+\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2) = -\\frac{\\sigma}{\\varepsilon_0} \\implies \\sigma_1 + \\sigma_2 = -2\\sigma$.</li></ul></li><li><strong>פתרון המערכת:</strong> מהתנאי השני $\\sigma_1 = \\sigma_2$. נציב זאת בתנאי הראשון (או השלישי): $\\sigma_1 + \\sigma_1 = -2\\sigma \\implies 2\\sigma_1 = -2\\sigma \\implies \\sigma_1 = -\\sigma$.<br>לכן, $\\sigma_1 = -\\sigma$ וגם $\\sigma_2 = -\\sigma$.</li></ol><p><strong>מסקנה:</strong> דרושים שני מישורים אינסופיים: אחד ב-$x=0$ עם צפיפות מטען $-\\sigma$, ואחד ב-$x=L$ עם צפיפות מטען $-\\sigma$.</p><p><strong>תשובה סופית:</strong> מישור אינסופי ב-$x=0$ הטעון בצפיפות מטען משטחית $-\\sigma$, ומישור אינסופי ב-$x=L$ הטעון בצפיפות מטען משטחית $-\\sigma$.</p>`
+                },
+                similar: {
+                    text: `<p>רוצים ליצור במרחב את השדה החשמלי הבא:</p><ul><li>עבור $z < -d$, שדה חשמלי $\\vec{E}=0$.</li><li>עבור $-d < z < d$, שדה חשמלי $\\vec{E}= E_0 \\hat{z}$.</li><li>עבור $z > d$, שדה חשמלי $\\vec{E}=0$.</li></ul><p>כאשר $E_0 > 0$ ו-$d > 0$ הם קבועים.</p><p><strong>איזה סידור של מטענים במרחב ייתן את השדה המבוקש? בטאו את צפיפויות המטען באמצעות $E_0$ ו-$\varepsilon_0$.</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בעקרון הסופרפוזיציה ובנוסחה לשדה של מישור אינסופי $E = \\frac{|\\sigma_{plane}|}{2\\varepsilon_0}$.</p><p><strong>ניתוח השדה הנדרש:</strong></p><ul><li>עבור $z<-d$, השדה הוא $0$.</li><li>בין $-d$ ל-$d$, השדה הוא $E_0\\hat{z}$ (למעלה, גודל $E_0$).</li><li>עבור $z>d$, השדה הוא $0$.</li></ul><p><strong>בניית הפתרון:</strong></p><ol><li>השינויים בשדה מתרחשים ב-$z=-d$ וב-$z=d$. נניח מישורים אינסופיים במיקומים אלו עם צפיפויות $\\sigma_1$ (ב-$z=-d$) ו-$\sigma_2$ (ב-$z=d$).</li><li>נחשב את השדה הכולל בכל אזור:<ul><li><strong>אזור $z < -d$:</strong> שדה מ-$\sigma_1$: $+\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{z}$ (אם $\sigma_1<0$, אחרת כיוון הפוך). שדה מ-$\sigma_2$: $+\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{z}$ (אם $\sigma_2<0$).<br>עדיף לרשום כיוונים: שדה מ-$\sigma_1$ הוא $-\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{z}$. שדה מ-$\sigma_2$ הוא $-\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{z}$.<br>סהכ: $\\vec{E}_{z<-d} = -\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2)\\hat{z}$.</li><li><strong>אזור $-d < z < d$:</strong> שדה מ-$\sigma_1$: $+\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{z}$. שדה מ-$\sigma_2$: $-\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{z}$.<br>סהכ: $\\vec{E}_{-d<z<d} = +\\frac{1}{2\\varepsilon_0}(\\sigma_1 - \\sigma_2)\\hat{z}$.</li><li><strong>אזור $z > d$:</strong> שדה מ-$\sigma_1$: $+\\frac{\\sigma_1}{2\\varepsilon_0}\\hat{z}$. שדה מ-$\sigma_2$: $+\\frac{\\sigma_2}{2\\varepsilon_0}\\hat{z}$.<br>סהכ: $\\vec{E}_{z>d} = +\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2)\\hat{z}$.</li></ul></li><li><strong>השוואת השדות:</strong><ul><li>$z<-d$: $-\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2) = 0 \\implies \\sigma_1 + \\sigma_2 = 0 \\implies \\sigma_2 = -\\sigma_1$.</li><li>$-d<z<d$: $+\\frac{1}{2\\varepsilon_0}(\\sigma_1 - \\sigma_2) = E_0$.</li><li>$z>d$: $+\\frac{1}{2\\varepsilon_0}(\\sigma_1 + \\sigma_2) = 0 \\implies \\sigma_1 + \\sigma_2 = 0$.</li></ul></li><li><strong>פתרון המערכת:</strong> מהתנאי הראשון (או השלישי), $\\sigma_2 = -\\sigma_1$. נציב זאת בתנאי השני: $\\frac{1}{2\\varepsilon_0}(\\sigma_1 - (-\\sigma_1)) = E_0 \\implies \\frac{1}{2\\varepsilon_0}(2\\sigma_1) = E_0 \\implies \\frac{\\sigma_1}{\\varepsilon_0} = E_0 \\implies \\sigma_1 = \\varepsilon_0 E_0$.<br>מכאן, $\\sigma_2 = -\\sigma_1 = -\\varepsilon_0 E_0$.</li></ol><p><strong>מסקנה:</strong> דרוש מישור אינסופי ב-$z=-d$ עם צפיפות מטען $\\sigma_1 = +\\varepsilon_0 E_0$, ומישור אינסופי ב-$z=d$ עם צפיפות מטען $\\sigma_2 = -\\varepsilon_0 E_0$. זהו סידור הדומה לקבל לוחות.</p><p><strong>תשובה סופית:</strong> מישור אינסופי ב-$z=-d$ עם צפיפות $\\sigma_1 = \\varepsilon_0 E_0$, ומישור אינסופי ב-$z=d$ עם צפיפות $\\sigma_2 = -\\varepsilon_0 E_0$.</p>`
+                }
+            },
+            // Question 5 Data
+            {
+                original: {
+                     text: `<p>נתונים שלושה מישורים אינסופיים (אינסופיים בכיוונים xy) הממוקמים ב-$z=0$, $z=-b$, $z=+b$.</p><p>כל אחד מהמישורים טעון בצפיפות מטען משטחית אחידה $\\sigma$ (חיובית).</p><p><strong>מצאו את השדה החשמלי בתחום $z > b$.</strong></p>`,
+                     solution: `<p><strong>עיקרון:</strong> נשתמש בעקרון הסופרפוזיציה ובנוסחה לשדה של מישור אינסופי $E = \\frac{\\sigma_{plane}}{2\\varepsilon_0}$. כיוון השדה ניצב למישור ונקבע לפי סימן המטען $\\sigma_{plane}$.</p><p><strong>ניתוח השדות בתחום $z > b$:</strong></p><p>נמצאים בנקודה $z > b$. נחשב את תרומת כל מישור לשדה בנקודה זו:</p><ol><li><strong>מישור ב-$z=+b$:</strong> טעון ב-$\sigma > 0$. הנקודה $z>b$ נמצאת מעל המישור. השדה שהוא יוצר פונה למעלה (כיוון $+z$). גודלו $\\frac{\\sigma}{2\\varepsilon_0}$. לכן, $\\vec{E}_1 = +\\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$.</li><li><strong>מישור ב-$z=0$:</strong> טעון ב-$\sigma > 0$. הנקודה $z>b$ נמצאת מעל המישור ($z>0$). השדה שהוא יוצר פונה למעלה (כיוון $+z$). גודלו $\\frac{\\sigma}{2\\varepsilon_0}$. לכן, $\\vec{E}_2 = +\\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$.</li><li><strong>מישור ב-$z=-b$:</strong> טעון ב-$\sigma > 0$. הנקודה $z>b$ נמצאת מעל המישור ($z>-b$). השדה שהוא יוצר פונה למעלה (כיוון $+z$). גודלו $\\frac{\\sigma}{2\\varepsilon_0}$. לכן, $\\vec{E}_3 = +\\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$.</li></ol><p><strong>השדה הכולל (סופרפוזיציה):</strong><br>$\\vec{E}_{total}(z > b) = \\vec{E}_1 + \\vec{E}_2 + \\vec{E}_3 = \\frac{\\sigma}{2\\varepsilon_0}\\hat{z} + \\frac{\\sigma}{2\\varepsilon_0}\\hat{z} + \\frac{\\sigma}{2\\varepsilon_0}\\hat{z} = \\frac{3\\sigma}{2\\varepsilon_0}\\hat{z}$.</p><p><strong>תשובה סופית:</strong> השדה החשמלי בתחום $z > b$ הוא $\\vec{E}(z > b) = \\frac{3\\sigma}{2\\varepsilon_0}\\hat{z}$.</p>`
+                 },
+                 similar: {
+                     text: `<p>נתונים שלושה מישורים אינסופיים (אינסופיים בכיוונים xy) הממוקמים ב-$z=0$, $z=-b$, $z=+b$.</p><p>המישור ב-$z=+b$ טעון בצפיפות $+\\sigma$.</p><p>המישור ב-$z=0$ טעון בצפיפות $-2\\sigma$.</p><p>המישור ב-$z=-b$ טעון בצפיפות $+\\sigma$.</p><p>כאשר $\\sigma > 0$.</p><p><strong>מצאו את השדה החשמלי בתחום $-b < z < 0$.</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בעקרון הסופרפוזיציה ובנוסחה לשדה של מישור אינסופי $E = \\frac{\\sigma_{plane}}{2\\varepsilon_0}$. כיוון השדה ניצב למישור ונקבע לפי סימן המטען $\\sigma_{plane}$.</p><p><strong>ניתוח השדות בתחום $-b < z < 0$:</strong></p><p>נמצאים בנקודה $z$ המקיימת $-b < z < 0$. נחשב את תרומת כל מישור לשדה בנקודה זו:</p><ol><li><strong>מישור ב-$z=+b$:</strong> טעון ב-$+\sigma$. הנקודה $z$ נמצאת מתחת למישור ($z<b$). השדה שהוא יוצר פונה למטה (כיוון $-z$). גודלו $\\frac{\\sigma}{2\\varepsilon_0}$. לכן, $\\vec{E}_1 = -\\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$.</li><li><strong>מישור ב-$z=0$:</strong> טעון ב-$-2\\sigma$. הנקודה $z$ נמצאת מתחת למישור ($z<0$). השדה שהוא יוצר פונה לכיוון המישור (כלומר, למעלה, כיוון $+z$). גודלו $\\frac{|-2\\sigma|}{2\\varepsilon_0} = \\frac{2\\sigma}{2\\varepsilon_0} = \\frac{\\sigma}{\\varepsilon_0}$. לכן, $\\vec{E}_2 = +\\frac{\\sigma}{\\varepsilon_0}\\hat{z}$.</li><li><strong>מישור ב-$z=-b$:</strong> טעון ב-$+\sigma$. הנקודה $z$ נמצאת מעל המישור ($z>-b$). השדה שהוא יוצר פונה למעלה (כיוון $+z$). גודלו $\\frac{\\sigma}{2\\varepsilon_0}$. לכן, $\\vec{E}_3 = +\\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$.</li></ol><p><strong>השדה הכולל (סופרפוזיציה):</strong><br>$\\vec{E}_{total}(-b < z < 0) = \\vec{E}_1 + \\vec{E}_2 + \\vec{E}_3 = -\\frac{\\sigma}{2\\varepsilon_0}\\hat{z} + \\frac{\\sigma}{\\varepsilon_0}\\hat{z} + \\frac{\\sigma}{2\\varepsilon_0}\\hat{z}$</p><p>$\\vec{E}_{total}(-b < z < 0) = (-\\frac{\\sigma}{2\\varepsilon_0} + \\frac{2\\sigma}{2\\varepsilon_0} + \\frac{\\sigma}{2\\varepsilon_0})\\hat{z} = \\frac{-1+2+1}{2\\varepsilon_0}\\sigma \\hat{z} = \\frac{2\\sigma}{2\\varepsilon_0}\\hat{z} = \\frac{\\sigma}{\\varepsilon_0}\\hat{z}$.</p><p><strong>תשובה סופית:</strong> השדה החשמלי בתחום $-b < z < 0$ הוא $\\vec{E}(-b < z < 0) = \\frac{\\sigma}{\\varepsilon_0}\\hat{z}$.</p>`
+                 }
+            },
+            // Question 6 Data
+            {
+                original: {
+                    text: `<div style="text-align: right; direction: rtl;">נתונה טבלה אינסופית (Slab) בכיוונים y ו-z ובעלת רוחב סופי $d = 3 m$ בכיוון x. הטבלה ממורכזת סביב $x=0$ (כלומר, משתרעת מ-$x=-d/2$ עד $x=+d/2$). הטבלה טעונה בצפיפות מטען נפחית אחידה: $\\rho = 7 \\times 10^{-12} C/m^3$. חשבו את גודל השדה החשמלי במרחק $x = 9 m$ ממרכז הטבלה.</div><div style="text-align: right;">יש להביע את התשובה ביחידות M.K.S (כלומר V/m או N/C).</div>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס לחישוב השדה מחוץ לטבלה אינסופית. עקב הסימטריה המישורית, השדה יהיה בכיוון $\\hat{x}$ בלבד וגודלו יהיה תלוי רק ב-$x$.</p><p><strong>בחירת מעטפת גאוסית:</strong> נבחר מעטפת גאוסית בצורת תיבה (Pillbox) סימטרית סביב מרכז הטבלה ($x=0$). נניח שלתיבה יש שטח פאה A והיא משתרעת מ-$-x$ עד $+x$, כאשר $x > d/2$ (כלומר, הפאות הניצבות לציר x נמצאות מחוץ לטבלה). במקרה שלנו, $x=9m$ ו-$d/2 = 1.5m$, אז אנחנו מחוץ לטבלה.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>השדה ניצב לפאות ב-$x=\pm x$ וגודלו שווה $E(x)$ בשתי הפאות (בגלל הסימטריה). השדה פונה החוצה מהטבלה (כי $\\rho>0$).</li><li>השטף דרך הפאה ב-$+x$: $\\vec{E} \\cdot d\\vec{A} = E(x) A$.</li><li>השטף דרך הפאה ב-$-x$: $\\vec{E} \\cdot d\\vec{A} = E(x) A$ (כי $\\vec{E}$ פונה שמאלה וגם $d\\vec{A}$ פונה שמאלה).</li><li>השטף דרך הפאות המקבילות לציר x הוא אפס, כי $\\vec{E}$ מקביל לפאות אלו ($\vec{E} \\cdot d\\vec{A} = 0$).</li><li>השטף הכולל: $\\Phi_E = E(x)A + E(x)A = 2 E(x) A$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>המטען כלוא רק בתוך החלק של הטבלה שנמצא בתוך התיבה הגאוסית. חלק זה הוא תיבה עם שטח בסיס A ורוחב $d$ (מ-$x=-d/2$ עד $x=+d/2$).</li><li>הנפח של חלק זה הוא $V_{enc} = A \\times d$.</li><li>המטען הכלוא הוא $Q_{enc} = \\rho \\times V_{enc} = \\rho A d$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$2 E(x) A = \\frac{\\rho A d}{\\varepsilon_0}$</li><li>נצמצם את A: $2 E(x) = \\frac{\\rho d}{\\varepsilon_0}$</li><li>לכן, גודל השדה מחוץ לטבלה ($|x| > d/2$) הוא: $$ E(x) = \\frac{\\rho d}{2\\varepsilon_0} $$</li><li>שים לב שהשדה מחוץ לטבלה אינו תלוי במרחק $x$, כל עוד $|x| > d/2$.</li></ul><p><strong>הצבת ערכים:</strong></p><ul><li>$\\rho = 7 \\times 10^{-12} C/m^3$</li><li>$d = 3 m$</li><li>$\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$</li><li>$$ E(x=9m) = \\frac{(7 \\times 10^{-12} C/m^3) \\times (3 m)}{2 \\times (8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2})} $$</li><li>$$ E(x=9m) = \\frac{21}{2 \\times 8.854} \\frac{N}{C} \\approx \\frac{21}{17.708} \\frac{N}{C} \\approx 1.186 \\frac{N}{C} $$</li></ul><p><strong>תשובה סופית:</strong> גודל השדה החשמלי במרחק $x=9m$ הוא בקירוב $1.186 N/C$.</p>`
+                },
+                similar: {
+                     text: `<div style="text-align: right; direction: rtl;">נתונה טבלה אינסופית (Slab) בכיוונים y ו-z המשתרעת מ-$x=-d/2$ עד $x=+d/2$, כאשר $d=2m$. הטבלה טעונה בצפיפות מטען נפחית **לא אחידה**: $\\rho(x) = \\beta x^2$, כאשר $\\beta = 5 \\times 10^{-11} C/m^5$. חשבו את גודל השדה החשמלי בנקודה $x = d/4 = 0.5 m$ (בתוך הטבלה).</div><div style="text-align: right;">יש להביע את התשובה ביחידות M.K.S.</div>`,
+                     solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס. עקב הסימטריה המישורית, השדה $\\vec{E}$ יהיה בכיוון $\\hat{x}$ וגודלו $E(x)$ יהיה תלוי רק ב-$x$. כמו כן, $E(0)=0$ מסימטריה.</p><p><strong>בחירת מעטפת גאוסית:</strong> נבחר תיבה (Pillbox) סימטרית סביב $x=0$. הפעם נחשב שדה *בתוך* הטבלה, בנקודה $x_{target} = d/4$. נבחר תיבה המשתרעת מ-$-x_{target}$ עד $+x_{target}$, עם שטח פאה A.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>השדה ב-$+x_{target}$ הוא $E(x_{target})\\hat{x}$. השדה ב-$-x_{target}$ הוא $E(-x_{target})(-\\hat{x})$. מסימטריה, $E(-x_{target}) = -E(x_{target})$, או שנגדיר את הגודל $E(x)$ כחיובי עבור $x>0$, אז $E(-x) = -E(x)$.</li><li>השטף דרך הפאה ב-$+x_{target}$ ($d\\vec{A} = A\\hat{x}$): $\\Phi_+ = \\vec{E}(x_{target}) \\cdot A\\hat{x} = E(x_{target}) A$.</li><li>השטף דרך הפאה ב-$-x_{target}$ ($d\\vec{A} = -A\\hat{x}$): $\\Phi_- = \\vec{E}(-x_{target}) \\cdot (-A\\hat{x})$. מכיוון ש-$\vec{E}(-x_{target}) = -E(x_{target})\\hat{x}$, נקבל $\\Phi_- = (-E(x_{target})\\hat{x}) \\cdot (-A\\hat{x}) = E(x_{target}) A$.</li><li>השטף דרך הפאות הצדדיות הוא אפס.</li><li>השטף הכולל: $\\Phi_E = \\Phi_+ + \\Phi_- = 2 E(x_{target}) A$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>המטען כלוא בתוך התיבה הגאוסית, שנפחה $V_{enc}$ הוא מ-$-x_{target}$ עד $+x_{target}$ עם שטח בסיס A.</li><li>$Q_{enc} = \\int_{V_{enc}} \\rho(x) dV = \\int_{-x_{target}}^{x_{target}} dx \\int_{Area} dA (\\beta x^2) = A \\int_{-x_{target}}^{x_{target}} \\beta x^2 dx$.</li><li>$Q_{enc} = A \\beta \\left[ \\frac{x^3}{3} \\right]_{-x_{target}}^{x_{target}} = A \\beta \\left( \\frac{x_{target}^3}{3} - \\frac{(-x_{target})^3}{3} \\right) = A \\beta \\left( \\frac{x_{target}^3}{3} + \\frac{x_{target}^3}{3} \\right) = \\frac{2 A \\beta x_{target}^3}{3}$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$2 E(x_{target}) A = \\frac{1}{\\varepsilon_0} \\left( \\frac{2 A \\beta x_{target}^3}{3} \\right)$</li><li>נצמצם $2A$: $E(x_{target}) = \\frac{\\beta x_{target}^3}{3\\varepsilon_0}$.</li></ul><p><strong>הצבת ערכים:</strong></p><ul><li>$x_{target} = d/4 = 2m / 4 = 0.5 m$.</li><li>$\\beta = 5 \\times 10^{-11} C/m^5$.</li><li>$\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$.</li><li>$$ E(0.5m) = \\frac{(5 \\times 10^{-11} C/m^5) \\times (0.5 m)^3}{3 \\times (8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2})} $$</li><li>$$ E(0.5m) = \\frac{5 \\times 10^{-11} \\times 0.125}{3 \\times 8.854 \\times 10^{-12}} \\frac{N}{C} = \\frac{0.625 \\times 10^{-11}}{26.562 \\times 10^{-12}} \\frac{N}{C} $$</li><li>$$ E(0.5m) = \\frac{6.25}{26.562} \\frac{N}{C} \\approx 0.235 \\frac{N}{C} $$</li></ul><p><strong>תשובה סופית:</strong> גודל השדה החשמלי בנקודה $x=0.5m$ הוא בקירוב $0.235 N/C$.</p>`
+                 }
+            },
+            // Question 7 Data
+            {
+                original: {
+                    text: `<p style="text-align: right;" dir="rtl">נתון גליל מלא אינסופי (בכיוון z) בעל רדיוס R, שציר הסימטריה שלו מתלכד עם ציר z. צפיפות המטען הנפחית של הגליל נתונה על ידי הפונקציה: $\\rho(r)=A\\frac{\\rho_0}{r}$ כאשר A הוא קבוע בעל מימדים של אורך, $\rho_0$ קבוע, ו-r מתאר את המרחק הרדיאלי מציר הסימטריה של הגליל. אין מטענים נוספים מחוץ לגליל. תיאור: גליל אינסופי ברדיוס R לאורך ציר z עם צפיפות מטען תלוית רדיוס.</p><p style="text-align: right;" dir="rtl"><strong>מה הגודל של השדה החשמלי במרחק $r=3R$ מציר הסימטריה של הגליל?</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס עקב הסימטריה הגלילית. השדה $\\vec{E}$ יהיה רדיאלי וגודלו תלוי רק ב-$r$, $\\vec{E} = E(r)\\hat{r}$.</p><p><strong>בחירת מעטפת גאוסית:</strong> נחשב את השדה מחוץ לגליל ($r=3R > R$). נבחר מעטפת גאוסית בצורת גליל קואקסיאלי באורך L ורדיוס $r=3R$.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>השטף דרך הבסיסים העליון והתחתון של הגליל הגאוסי הוא אפס, כיוון ש-$\vec{E}$ רדיאלי ומאונך ל-$d\vec{A}$ של הבסיסים ($\vec{E} \cdot d\vec{A}_{bases} = 0$).</li><li>השטף דרך המעטפת העקומה של הגליל הגאוסי (ששטחה $A_{curved} = 2\pi r L = 2\pi (3R) L = 6\pi R L$): $\\vec{E}$ מקביל ל-$d\vec{A}$ וגודלו $E(r)$ קבוע על המעטפת.</li><li>$\\Phi_E = E(r) \times A_{curved} = E(3R) \times (6\pi R L)$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>המטען כלוא כולו בתוך הגליל המקורי (ברדיוס R), כיוון ש-$r=3R > R$.</li><li>נחשב את המטען הכולל ליחידת אורך $\lambda$ של הגליל המקורי. המטען בתוך קטע באורך L הוא $Q_{enc} = \\lambda L$.</li><li>$Q_{enc} = \\int_{V_{cylinder}} \\rho(r') dV = \\int_0^L dz \\int_0^{2\pi} d\phi \\int_0^R r' dr' \\rho(r')$</li><li>$Q_{enc} = L \\int_0^{2\pi} d\phi \\int_0^R r' dr' (A\\frac{\\rho_0}{r'}) = L \times (2\pi) \\times \\int_0^R A \\rho_0 dr'$</li><li>$Q_{enc} = 2\pi L A \\rho_0 [r']_0^R = 2\pi L A \\rho_0 R$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$E(3R) \times (6\pi R L) = \\frac{2\pi L A \\rho_0 R}{\\varepsilon_0}$</li><li>נצמצם $2\pi L R$: $E(3R) \times 3 = \\frac{A \\rho_0}{\\varepsilon_0}$</li><li>$$ E(3R) = \\frac{A \\rho_0}{3\\varepsilon_0} $$</li></ul><p><strong>תשובה סופית:</strong> גודל השדה החשמלי במרחק $r=3R$ הוא $E = \\frac{A\\rho_0}{3\\varepsilon_0}$.</p>`
+                },
+                similar: {
+                     text: `<p style="text-align: right;" dir="rtl">נתון גליל מלא אינסופי (בכיוון z) בעל רדיוס R, שציר הסימטריה שלו מתלכד עם ציר z. צפיפות המטען הנפחית של הגליל נתונה על ידי הפונקציה: $\\rho(r) = B r^2$ עבור $r \\le R$, ו-$\rho=0$ עבור $r > R$. B הוא קבוע חיובי. אין מטענים נוספים מחוץ לגליל.</p><p style="text-align: right;" dir="rtl"><strong>מה הגודל של השדה החשמלי במרחק $r = R/2$ מציר הסימטריה של הגליל?</strong></p>`,
+                     solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס עקב הסימטריה הגלילית. $\\vec{E} = E(r)\\hat{r}$.</p><p><strong>בחירת מעטפת גאוסית:</strong> נחשב את השדה בתוך הגליל ($r_{target}=R/2 < R$). נבחר מעטפת גאוסית בצורת גליל קואקסיאלי באורך L ורדיוס $r = r_{target} = R/2$.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>השטף דרך הבסיסים אפס.</li><li>השטף דרך המעטפת העקומה (ששטחה $A_{curved} = 2\pi r L = 2\pi (R/2) L = \pi R L$): $\\Phi_E = E(r) \times A_{curved} = E(R/2) \times (\pi R L)$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>המטען כלוא בתוך הגליל הגאוסי (ברדיוס $r=R/2$).</li><li>$Q_{enc} = \\int_{V_{gaussian}} \\rho(r') dV = \\int_0^L dz \\int_0^{2\pi} d\phi \\int_0^{R/2} r' dr' \\rho(r')$</li><li>$Q_{enc} = L \\times (2\pi) \\times \\int_0^{R/2} r' dr' (B (r')^2) = 2\pi L B \\int_0^{R/2} (r')^3 dr'$</li><li>$Q_{enc} = 2\pi L B \\left[ \\frac{(r')^4}{4} \\right]_0^{R/2} = 2\pi L B \\left( \\frac{(R/2)^4}{4} - 0 \\right) = 2\pi L B \\frac{R^4}{16 \times 4} = \\frac{2\pi L B R^4}{64} = \\frac{\pi L B R^4}{32}$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$E(R/2) \times (\pi R L) = \\frac{1}{\\varepsilon_0} \\left( \\frac{\pi L B R^4}{32} \\right)$</li><li>נצמצם $\pi L R$: $E(R/2) = \\frac{B R^3}{32\\varepsilon_0}$</li></ul><p><strong>תשובה סופית:</strong> גודל השדה החשמלי במרחק $r=R/2$ הוא $E = \\frac{B R^3}{32\\varepsilon_0}$.</p>`
+                }
+            },
+            // Question 8 Data
+            {
+                original: {
+                    text: `<div style="text-align: right; direction: rtl;">נתונות שתי קליפות דקות וגליליות אינסופיות בעלות רדיוסים $a$ ו-$b$ (כאשר $a < b$) וציר משותף (ציר z). הקליפה הפנימית (ברדיוס $a$) טעונה בצפיפות מטען משטחית אחידה $\\sigma_1$. הקליפה החיצונית (ברדיוס $b$) טעונה בצפיפות מטען משטחית אחידה $\\sigma_2$. התיאור הוא של שתי קליפות גליליות קואקסיאליות דקות וארוכות מאוד. חשבו את השדה החשמלי בכל המרחב.</div>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס לכל אזור במרחב, תוך ניצול הסימטריה הגלילית ($\vec{E}=E(r)\hat{r}$) ועקרון הסופרפוזיציה (למעשה, חוק גאוס כבר כולל סופרפוזיציה דרך $Q_{enc}$). נבחר מעטפת גאוסית גלילית באורך L ורדיוס r.</p><p><strong>חישוב שטף (זהה לכל האזורים):</strong> $\\Phi_E = E(r) \times (2\pi r L)$.</p><p><strong>חישוב $Q_{enc}$ ושדה בכל אזור:</strong></p><ol><li><strong>אזור $r < a$:</strong><ul><li>המעטפת הגאוסית (עם $r<a$) אינה כולאת אף מטען. $Q_{enc} = 0$.</li><li>$E(r) (2\pi r L) = 0 / \\varepsilon_0 = 0$.</li><li>$E(r) = 0$.</li></ul></li><li><strong>אזור $a < r < b$:</strong><ul><li>המעטפת הגאוסית (עם $a<r<b$) כולאת רק את המטען שעל הקליפה הפנימית ברדיוס $a$.</li><li>המטען על קטע באורך L של הקליפה הפנימית הוא $Q_{enc} = \\sigma_1 \times (\text{שטח פנים של גליל ברדיוס a ואורך L}) = \\sigma_1 (2\pi a L)$.</li><li>$E(r) (2\pi r L) = \\frac{\\sigma_1 (2\pi a L)}{\\varepsilon_0}$.</li><li>נצמצם $2\pi L$: $E(r) r = \\frac{\\sigma_1 a}{\\varepsilon_0}$.</li><li>$E(r) = \\frac{a \\sigma_1}{\\varepsilon_0 r}$.</li></ul></li><li><strong>אזור $r > b$:</strong><ul><li>המעטפת הגאוסית (עם $r>b$) כולאת את המטען שעל שתי הקליפות.</li><li>מטען על קליפה a (אורך L): $Q_a = \\sigma_1 (2\pi a L)$.</li><li>מטען על קליפה b (אורך L): $Q_b = \\sigma_2 (2\pi b L)$.</li><li>$Q_{enc} = Q_a + Q_b = 2\pi L (a\\sigma_1 + b\\sigma_2)$.</li><li>$E(r) (2\pi r L) = \\frac{2\pi L (a\\sigma_1 + b\\sigma_2)}{\\varepsilon_0}$.</li><li>נצמצם $2\pi L$: $E(r) r = \\frac{a\\sigma_1 + b\\sigma_2}{\\varepsilon_0}$.</li><li>$E(r) = \\frac{a\\sigma_1 + b\\sigma_2}{\\varepsilon_0 r}$.</li></ul></li></ol><p><strong>סיכום השדה (וקטורית):</strong></p><p>$$ \\vec{E}(r) = \\begin{cases} 0 & r < a \\\\ \\frac{a\\sigma_1}{\\varepsilon_0 r}\\hat{r} & a < r < b \\\\ \\frac{a\\sigma_1 + b\\sigma_2}{\\varepsilon_0 r}\\hat{r} & r > b \\end{cases} $$</p><p><strong>תשובה סופית:</strong> הביטוי המלא לשדה הוא כפי שסוכם לעיל.</p>`
+                },
+                similar: {
+                    text: `<div style="text-align: right; direction: rtl;">נתון תיל ישר, דק וארוך מאוד לאורך ציר z, הטעון בצפיפות מטען אורכית אחידה $\\lambda$. מסביבו, באופן קואקסיאלי, נמצאת קליפה גלילית דקה וארוכה מאוד ברדיוס R, הטעונה בצפיפות מטען משטחית אחידה $\\sigma$. חשבו את השדה החשמלי בכל המרחב.</div>`,
+                     solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס לכל אזור, תוך ניצול הסימטריה הגלילית ($\vec{E}=E(r)\hat{r}$). נבחר מעטפת גאוסית גלילית באורך L ורדיוס r.</p><p><strong>חישוב שטף (זהה לכל האזורים):</strong> $\\Phi_E = E(r) \times (2\pi r L)$.</p><p><strong>חישוב $Q_{enc}$ ושדה בכל אזור:</strong></p><ol><li><strong>אזור $r < R$ (בין התיל לקליפה):</strong><ul><li>המעטפת הגאוסית (עם $r<R$) כולאת רק את המטען שעל קטע באורך L של התיל המרכזי.</li><li>$Q_{enc} = \\lambda L$.</li><li>$E(r) (2\pi r L) = \\frac{\\lambda L}{\\varepsilon_0}$.</li><li>נצמצם L: $E(r) (2\pi r) = \\frac{\\lambda}{\\varepsilon_0}$.</li><li>$E(r) = \\frac{\\lambda}{2\pi \\varepsilon_0 r}$.</li></ul></li><li><strong>אזור $r > R$ (מחוץ לקליפה):</strong><ul><li>המעטפת הגאוסית (עם $r>R$) כולאת את המטען על קטע L של התיל וגם את המטען על קטע L של הקליפה.</li><li>מטען התיל: $Q_{wire} = \\lambda L$.</li><li>מטען הקליפה: $Q_{shell} = \\sigma \times (\text{שטח פנים של גליל רדיוס R, אורך L}) = \\sigma (2\pi R L)$.</li><li>$Q_{enc} = Q_{wire} + Q_{shell} = \\lambda L + 2\pi R L \\sigma = L (\\lambda + 2\pi R \\sigma)$.</li><li>$E(r) (2\pi r L) = \\frac{L (\\lambda + 2\pi R \\sigma)}{\\varepsilon_0}$.</li><li>נצמצם L: $E(r) (2\pi r) = \\frac{\\lambda + 2\pi R \\sigma}{\\varepsilon_0}$.</li><li>$E(r) = \\frac{\\lambda + 2\pi R \\sigma}{2\pi \\varepsilon_0 r}$.</li></ul></li></ol><p><strong>סיכום השדה (וקטורית):</strong></p><p>$$ \\vec{E}(r) = \\begin{cases} \\frac{\\lambda}{2\\pi \\varepsilon_0 r}\\hat{r} & 0 < r < R \\\\ \\frac{\\lambda + 2\\pi R \\sigma}{2\\pi \\varepsilon_0 r}\\hat{r} & r > R \\end{cases} $$</p><p>(עבור r=0 השדה מהתיל אינסופי, ועבור r=R השדה אינו מוגדר היטב על הקליפה הדקה).</p><p><strong>תשובה סופית:</strong> הביטוי המלא לשדה הוא כפי שסוכם לעיל.</p>`
+                }
+            },
+            // Question 9 Data
+            {
+                original: {
+                    text: `<p>נתונה קליפה כדורית עבה בעלת רדיוס פנימי a ורדיוס חיצוני b. תיאור: קליפה כדורית עם חלל פנימי ברדיוס a וחומר עד רדיוס b.</p><p>הקליפה טעונה בצפיפות מטען נפחית $\\rho(r)=\\frac{A}{r^2}$ בתחום $a \\le r \\le b$, כאשר A קבוע חיובי בעל יחידות של $C/m$, ו-$r$ מתאר את המרחק ממרכז הכדור. עבור $r<a$ ו-$r>b$, $\rho=0$.</p><p><strong>מצאו את הביטוי לשדה החשמלי בנקודות בתחום $a < r < b$.</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס עקב הסימטריה הכדורית. $\\vec{E} = E(r)\\hat{r}$.</p><p><strong>בחירת מעטפת גאוסית:</strong> נחשב שדה בתחום $a < r < b$. נבחר מעטפת גאוסית כדורית ברדיוס $r$ כך ש- $a < r < b$.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>השדה $E(r)$ קבוע בגודלו על פני המעטפת הגאוסית ומקביל ל-$d\\vec{A}$.</li><li>שטח המעטפת הגאוסית הוא $A_{gaussian} = 4\pi r^2$.</li><li>$\\Phi_E = E(r) \times A_{gaussian} = E(r) (4\pi r^2)$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>המטען כלוא בתוך הנפח שבין הרדיוס הפנימי $a$ לבין רדיוס המעטפת הגאוסית $r$.</li><li>$Q_{enc} = \\int_{V_{enclosed}} \\rho(r') dV$. נשתמש בקואורדינטות כדוריות, $dV = (r')^2 \sin\\theta dr' d\\theta d\\phi$.</li><li>$Q_{enc} = \\int_a^r dr' \\int_0^{\\pi} d\\theta \\int_0^{2\pi} d\phi (r')^2 \\sin\\theta \\rho(r')$</li><li>$Q_{enc} = \\int_a^r dr' (r')^2 \\rho(r') \\left( \\int_0^{\\pi} \\sin\\theta d\\theta \\right) \\left( \\int_0^{2\pi} d\phi \\right)$</li><li>האינטגרלים הזוויתיים נותנים $([-\cos\\theta]_0^{\\pi}) \times (2\pi) = (-(-1) - (-1)) \times 2\pi = 2 \times 2\pi = 4\pi$.</li><li>$Q_{enc} = 4\pi \\int_a^r (r')^2 \\left( \\frac{A}{(r')^2} \\right) dr' = 4\pi \\int_a^r A dr'$</li><li>$Q_{enc} = 4\pi A [r']_a^r = 4\pi A (r - a)$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$E(r) (4\pi r^2) = \\frac{4\pi A (r - a)}{\\varepsilon_0}$</li><li>נצמצם $4\pi$: $E(r) r^2 = \\frac{A (r - a)}{\\varepsilon_0}$</li><li>$$ E(r) = \\frac{A(r-a)}{\\varepsilon_0 r^2} $$</li></ul><p><strong>סיכום וקטורי:</strong> $\\vec{E}(r) = \\frac{A(r-a)}{\\varepsilon_0 r^2} \\hat{r}$ עבור $a < r < b$.</p><p><strong>תשובה סופית:</strong> השדה החשמלי בתחום $a < r < b$ הוא $\\vec{E}=\\frac{A(r-a)}{\\varepsilon_0 r^2}\\hat{r}$.</p>`
+                },
+                similar: {
+                    text: `<p>נתונה קליפה כדורית עבה בעלת רדיוס פנימי a ורדיוס חיצוני b.</p><p>הקליפה טעונה בצפיפות מטען נפחית $\\rho(r)=C r$ בתחום $a \\le r \\le b$, כאשר C קבוע חיובי, ו-$r$ מתאר את המרחק ממרכז הכדור. עבור $r<a$ ו-$r>b$, $\rho=0$.</p><p><strong>מצאו את הביטוי לשדה החשמלי בנקודות בתחום $r > b$.</strong></p>`,
+                    solution: `<p><strong>עיקרון:</strong> נשתמש בחוק גאוס עקב הסימטריה הכדורית. $\\vec{E} = E(r)\\hat{r}$.</p><p><strong>בחירת מעטפת גאוסית:</strong> נחשב שדה בתחום $r > b$. נבחר מעטפת גאוסית כדורית ברדיוס $r$ כך ש- $r > b$.</p><p><strong>חישוב השטף $\\Phi_E$:</strong></p><ul><li>$A_{gaussian} = 4\pi r^2$.</li><li>$\\Phi_E = E(r) \times A_{gaussian} = E(r) (4\pi r^2)$.</li></ul><p><strong>חישוב המטען הכלוא $Q_{enc}$:</strong></p><ul><li>כאשר $r>b$, כל המטען של הקליפה כלוא בתוך המעטפת הגאוסית.</li><li>$Q_{enc} = Q_{total} = \\int_{V_{shell}} \\rho(r') dV$. האינטגרציה היא על נפח הקליפה, מ-$a$ עד $b$.</li><li>$Q_{enc} = 4\pi \\int_a^b (r')^2 \\rho(r') dr' = 4\pi \\int_a^b (r')^2 (C r') dr'$</li><li>$Q_{enc} = 4\pi C \\int_a^b (r')^3 dr' = 4\pi C \\left[ \\frac{(r')^4}{4} \\right]_a^b$</li><li>$Q_{enc} = 4\pi C \\left( \\frac{b^4}{4} - \\frac{a^4}{4} \\right) = \\pi C (b^4 - a^4)$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$\\Phi_E = Q_{enc} / \\varepsilon_0$</li><li>$E(r) (4\pi r^2) = \\frac{\\pi C (b^4 - a^4)}{\\varepsilon_0}$</li><li>נצמצם $\pi$: $E(r) (4 r^2) = \\frac{C (b^4 - a^4)}{\\varepsilon_0}$</li><li>$$ E(r) = \\frac{C(b^4 - a^4)}{4 \\varepsilon_0 r^2} $$</li></ul><p><strong>סיכום וקטורי:</strong> $\\vec{E}(r) = \\frac{C(b^4 - a^4)}{4 \\varepsilon_0 r^2} \\hat{r}$ עבור $r > b$.</p><p><strong>תשובה סופית:</strong> השדה החשמלי בתחום $r > b$ הוא $\\vec{E}=\\frac{C(b^4 - a^4)}{4 \\varepsilon_0 r^2} \\hat{r}$.</p>`
+                }
+            },
+            // Question 10 Data
+            {
+                 original: {
+                    text: `<div style="text-align: right; direction: rtl;">נתונה קליפה כדורית עבה עם רדיוס פנימי $a=1.5m$ ורדיוס חיצוני $b=7.1m$. הקליפה טעונה בצפיפות מטען נפחית $\\rho(r) = A/r$ בתחום $a \\le r \\le b$. בראשית ($r=0$) נמצא מטען נקודתי $Q = 77 C$. תיאור: קליפה כדורית עבה בין רדיוס a לרדיוס b, עם צפיפות מטען $\rho=A/r$, ומטען נקודתי Q בראשית. <br><strong>חשבו את הערך של הקבוע $A$ (ביחידות $C/m^2$) הדרוש על מנת שגודל השדה החשמלי בתוך עובי הקליפה (כלומר, בתחום $a < r < b$) יהיה קבוע ובלתי תלוי ב-$r$.</strong></div>`,
+                    solution: `<p><strong>עיקרון:</strong> נחשב את הביטוי הכללי לשדה $E(r)$ בתחום $a < r < b$ באמצעות חוק גאוס, ואז נדרוש שהביטוי הזה לא יהיה תלוי ב-$r$.</p><p><strong>בחירת מעטפת גאוסית:</strong> כדור ברדיוס $r$ כאשר $a < r < b$.</p><p><strong>חישוב שטף:</strong> $\\Phi_E = E(r) (4\pi r^2)$.</p><p><strong>חישוב מטען כלוא $Q_{enc}$:</strong></p><ul><li>המטען הכלוא כולל את המטען הנקודתי בראשית $Q$, וגם את המטען בחלק של הקליפה העבה שבין רדיוס $a$ לרדיוס $r$.</li><li>$Q_{enc} = Q + \\int_{V_{shell: a \\to r}} \\rho(r') dV$.</li><li>$Q_{shell: a \\to r} = 4\pi \\int_a^r (r')^2 \\rho(r') dr' = 4\pi \\int_a^r (r')^2 \\left( \\frac{A}{r'} \\right) dr' = 4\pi A \\int_a^r r' dr'$.</li><li>$Q_{shell: a \\to r} = 4\pi A \\left[ \\frac{(r')^2}{2} \\right]_a^r = 4\pi A \\left( \\frac{r^2}{2} - \\frac{a^2}{2} \\right) = 2\pi A (r^2 - a^2)$.</li><li>לכן, $Q_{enc}(r) = Q + 2\pi A (r^2 - a^2)$.</li></ul><p><strong>הצבה בחוק גאוס:</strong></p><ul><li>$E(r) (4\pi r^2) = \\frac{Q_{enc}(r)}{\\varepsilon_0} = \\frac{Q + 2\pi A (r^2 - a^2)}{\\varepsilon_0}$.</li><li>$E(r) = \\frac{1}{4\pi \\varepsilon_0 r^2} [Q + 2\pi A (r^2 - a^2)]$.</li><li>$E(r) = \\frac{Q}{4\pi \\varepsilon_0 r^2} + \\frac{2\pi A r^2}{4\pi \\varepsilon_0 r^2} - \\frac{2\pi A a^2}{4\pi \\varepsilon_0 r^2}$.</li><li>$$ E(r) = \\frac{Q - 2\pi A a^2}{4\pi \\varepsilon_0 r^2} + \\frac{A}{2\\varepsilon_0} $$</li></ul><p><strong>דרישה לשדה קבוע:</strong></p><ul><li>כדי ש-$E(r)$ יהיה קבוע ובלתי תלוי ב-$r$ בתחום $a < r < b$, המקדם של האיבר $\\frac{1}{r^2}$ חייב להתאפס.</li><li>כלומר, נדרוש: $Q - 2\pi A a^2 = 0$.</li><li>מכאן ניתן לחלץ את A: $2\pi A a^2 = Q \\implies A = \\frac{Q}{2\pi a^2}$.</li></ul><p><strong>הצבת ערכים:</strong></p><ul><li>$Q = 77 C$.</li><li>$a = 1.5 m$.</li><li>$A = \\frac{77 C}{2\pi (1.5 m)^2} = \\frac{77}{2\pi (2.25)} \\frac{C}{m^2} = \\frac{77}{4.5\pi} \\frac{C}{m^2}$.</li><li>$A \\approx \\frac{77}{14.137} \\frac{C}{m^2} \\approx 5.446 C/m^2$.</li></ul><p><strong>תשובה סופית:</strong> הערך הדרוש לקבוע A הוא $A = \\frac{Q}{2\pi a^2} \\approx 5.446 C/m^2$.</p>`
+                 },
+                 similar: {
+                     text: `<div style="text-align: right; direction: rtl;">במערך מהשאלה המקורית (קליפה עבה $a \\le r \\le b$ עם $\\rho=A/r$ ומטען $Q$ בראשית), אם נבחר $A = \\frac{Q}{2\pi a^2}$ כפי שחושב כדי שהשדה יהיה קבוע בתחום $a < r < b$. <br><strong>מהו ערכו הקבוע של גודל השדה החשמלי $E_0$ בתחום זה ($a < r < b$)?</strong><br>השתמשו בנתונים: $Q=77 C$, $a=1.5 m$, $b=7.1 m$, $\\varepsilon_0 \\approx 8.854 \\times 10^{-12} C^2/(N m^2)$.</div>`,
+                    solution: `<p><strong>עיקרון:</strong> מצאנו בפתרון לשאלה המקורית שהשדה בתחום $a < r < b$ נתון על ידי:</p><p>$$ E(r) = \\frac{Q - 2\pi A a^2}{4\pi \\varepsilon_0 r^2} + \\frac{A}{2\\varepsilon_0} $$</p><p>כדי שהשדה יהיה קבוע, דרשנו שהמקדם של $1/r^2$ יתאפס, כלומר $Q - 2\pi A a^2 = 0$.</p><p><strong>חישוב ערך השדה הקבוע $E_0$:</strong></p><ul><li>כאשר המקדם של $1/r^2$ מתאפס, השדה שנותר הוא: $$ E_0 = E(r) = \\frac{A}{2\\varepsilon_0} $$</li><li>מצאנו גם שערך ה-A הדרוש לאיפוס המקדם הוא $A = \\frac{Q}{2\pi a^2}$.</li><li>נציב את הביטוי עבור A בנוסחה ל-$E_0$: $$ E_0 = \\frac{1}{2\\varepsilon_0} \\left( \\frac{Q}{2\pi a^2} \\right) = \\frac{Q}{4\pi \\varepsilon_0 a^2} $$</li><li>זהו למעשה השדה החשמלי שהיה נוצר על ידי המטען $Q$ בלבד במרחק $a$ מהראשית (כלומר, על פני המשטח הפנימי של הקליפה).</li></ul><p><strong>הצבת ערכים:</strong></p><ul><li>$Q = 77 C$.</li><li>$a = 1.5 m$.</li><li>$\\varepsilon_0 \\approx 8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}$.</li><li>$E_0 = \\frac{77 C}{4\pi (8.854 \\times 10^{-12} \\frac{C^2}{N \\cdot m^2}) (1.5 m)^2}$.</li><li>$E_0 = \\frac{77}{4\pi (8.854 \\times 10^{-12}) (2.25)} \\frac{N}{C}$.</li><li>$E_0 \\approx \\frac{77}{(12.566) (8.854 \\times 10^{-12}) (2.25)} \\frac{N}{C}$.</li><li>$E_0 \\approx \\frac{77}{250.7 \\times 10^{-12}} \\frac{N}{C} \\approx 0.307 \\times 10^{12} N/C = 3.07 \\times 10^{11} N/C$.</li></ul><p><strong>תשובה סופית:</strong> ערכו הקבוע של גודל השדה החשמלי בתחום $a < r < b$ הוא $E_0 = \\frac{Q}{4\pi \\varepsilon_0 a^2} \\approx 3.07 \\times 10^{11} N/C$.</p>`
+                 }
+            }
+        ];
+
+        // State
+        let currentQuestionIndex = 0;
+
+        // Elements
+        const questionCounterElement = document.getElementById('question-counter');
+        const questionPairDisplayElement = document.getElementById('question-pair-display');
+        const originalQuestionElement = questionPairDisplayElement.querySelector('.original-question');
+        const originalSolutionElement = questionPairDisplayElement.querySelector('.original-solution');
+        const originalToggleButton = questionPairDisplayElement.querySelector('.toggle-solution[data-target="original-solution"]'); // More specific selector
+        const similarQuestionElement = questionPairDisplayElement.querySelector('.similar-question');
+        const similarSolutionElement = questionPairDisplayElement.querySelector('.similar-solution');
+        const similarToggleButton = questionPairDisplayElement.querySelector('.toggle-solution[data-target="similar-solution"]'); // More specific selector
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+
+        // Function to display a question pair
+        function displayQuestion(index) {
+            const data = questionsData[index];
+
+            // Update content
+            originalQuestionElement.innerHTML = data.original.text;
+            originalSolutionElement.innerHTML = `<h5>פתרון מפורט (שאלה מקורית):</h5>${data.original.solution}`;
+            similarQuestionElement.innerHTML = data.similar.text;
+            similarSolutionElement.innerHTML = `<h5>פתרון מפורט (שאלה דומה):</h5>${data.similar.solution}`;
+
+             // Update button targets and solution IDs dynamically IF NEEDED (less crucial if only one pair shown at a time)
+            // Example: originalToggleButton.dataset.target = `original-solution-${index}`;
+            // Example: originalSolutionElement.id = `original-solution-${index}`;
+
+            // Hide solutions initially
+            originalSolutionElement.style.display = 'none';
+            similarSolutionElement.style.display = 'none';
+            originalToggleButton.textContent = 'הצג פתרון לשאלה המקורית';
+            similarToggleButton.textContent = 'הצג פתרון לשאלה הדומה';
+
+
+            // Update counter
+            questionCounterElement.textContent = `שאלה ${index + 1} / ${questionsData.length}`;
+
+            // Update navigation buttons state
+            prevButton.disabled = (index === 0);
+            nextButton.disabled = (index === questionsData.length - 1);
+
+            // IMPORTANT: Typeset MathJax *after* updating the DOM
+            // Ensure MathJax is loaded before trying to typeset
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                 MathJax.typesetPromise([questionPairDisplayElement])
+                   .catch((err) => console.log('MathJax Typesetting failed: ', err));
+             } else {
+                console.log("MathJax not ready yet");
+             }
+        }
+
+        // Function to toggle solution visibility
+        function toggleSolution(button) {
+            const targetId = button.dataset.target;
+            const solutionElement = document.getElementById(targetId); // Assuming IDs match data-target
+
+            if (solutionElement) {
+                const isHidden = solutionElement.style.display === 'none';
+                solutionElement.style.display = isHidden ? 'block' : 'none';
+                button.textContent = isHidden ? 'הסתר פתרון' : (targetId.startsWith('original') ? 'הצג פתרון לשאלה המקורית' : 'הצג פתרון לשאלה הדומה');
+            } else {
+                 console.error(`Solution element with ID ${targetId} not found`);
+            }
+        }
+
+        // Event Listeners
+        prevButton.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex < questionsData.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+        // Use event delegation for toggle buttons
+        questionPairDisplayElement.addEventListener('click', (event) => {
+            if (event.target.classList.contains('toggle-solution')) {
+                toggleSolution(event.target);
+            }
+        });
+
+
+        // Initial display
+        // Wait for MathJax to be ready before the initial typesetting
+        window.addEventListener('load', () => {
+             if (typeof MathJax !== 'undefined' && MathJax.startup) {
+                MathJax.startup.promise.then(() => {
+                    console.log('MathJax is ready. Initializing display.');
+                    displayQuestion(currentQuestionIndex); // Initial display after MathJax is ready
+                });
+             } else {
+                 console.error('MathJax startup object not found. Trying delayed display.');
+                 // Fallback if MathJax setup is unusual
+                 setTimeout(() => displayQuestion(currentQuestionIndex), 1000);
+             }
+        });
+
+        // If MathJax loads very fast, the 'load' event might fire too early
+        // A potentially more robust way (though the above usually works):
+        // document.addEventListener('DOMContentLoaded', () => {
+        //    displayQuestion(currentQuestionIndex);
+        // });
+
+    </script>
+
+</body>
+</html>

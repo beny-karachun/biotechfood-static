@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 3</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 3: D'Alembert's Formula (Wave Equation)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>D'Alembert's Formula for the 1D Wave Equation:</strong></p>
+            <p>Solves the Initial Value Problem (IVP) for the homogeneous wave equation on an infinite domain $(-\infty < x < \infty, t > 0)$:
+            $$ u_{tt} - c^2 u_{xx} = 0 $$
+            with initial conditions:
+            $$ u(x,0) = f(x) \quad \text{(initial displacement)} $$
+            $$ u_t(x,0) = g(x) \quad \text{(initial velocity)} $$
+            The solution is given by the direct formula:
+            $$ u(x,t) = \frac{1}{2}[f(x+ct) + f(x-ct)] + \frac{1}{2c} \int_{x-ct}^{x+ct} g(s) \, ds $$
+            </p>
+            <p><strong>Key Concepts:</strong></p>
+            <ul>
+                <li>The solution $u(x,t)$ depends only on the initial values $f$ at points $x \pm ct$ and the initial values $g$ on the interval $[x-ct, x+ct]$. This interval is called the <strong>domain of dependence</strong> for the point $(x,t)$.</li>
+                <li>The formula represents the solution as the superposition of two waves traveling in opposite directions (related to $f$) plus an effect from the initial velocity integrated over the domain of dependence (related to $g$).</li>
+                <li>To apply the formula, simply substitute the given $f(x)$, $g(x)$, and $c$ into the formula and evaluate the terms and the integral.</li>
+            </ul>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Solve $u_{tt} - 9u_{xx} = 0$ with $u(x,0) = \cos(x)$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $c^2 = 9 \implies c=3$. $f(x) = \cos(x)$, $g(x) = 0$.</p>
+                    <p>Using D'Alembert's formula:</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+3t) + f(x-3t)] + \frac{1}{2(3)} \int_{x-3t}^{x+3t} 0 \, ds $$
+                    $$ u(x,t) = \frac{1}{2}[\cos(x+3t) + \cos(x-3t)] + 0 $$
+                    <p>Using the identity $\cos A + \cos B = 2 \cos(\frac{A+B}{2})\cos(\frac{A-B}{2})$:</p>
+                    $$ u(x,t) = \frac{1}{2}[2 \cos(\frac{x+3t+x-3t}{2}) \cos(\frac{x+3t-(x-3t)}{2})] $$
+                    $$ u(x,t) = \cos(\frac{2x}{2}) \cos(\frac{6t}{2}) = \cos(x)\cos(3t) $$
+                    <p>So, $u(x,t) = \cos(x)\cos(3t)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Solve $u_{tt} - 4u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = \sin(x)$.</p>
+                <button onclick="toggleSolution('sol-d3-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $c^2 = 4 \implies c=2$. $f(x) = 0$, $g(x) = \sin(x)$.</p>
+                    <p>Using D'Alembert's formula:</p>
+                    $$ u(x,t) = \frac{1}{2}[0 + 0] + \frac{1}{2(2)} \int_{x-2t}^{x+2t} \sin(s) \, ds $$
+                    $$ u(x,t) = \frac{1}{4} [-\cos(s)]_{x-2t}^{x+2t} $$
+                    $$ u(x,t) = \frac{1}{4} [-\cos(x+2t) - (-\cos(x-2t))] $$
+                    $$ u(x,t) = \frac{1}{4} [\cos(x-2t) - \cos(x+2t)] $$
+                     <p>Using the identity $\cos A - \cos B = -2 \sin(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                    $$ u(x,t) = \frac{1}{4} [-2 \sin(\frac{x-2t+x+2t}{2}) \sin(\frac{x-2t-(x+2t)}{2})] $$
+                    $$ u(x,t) = \frac{1}{4} [-2 \sin(x) \sin(-2t)] = \frac{1}{4} [2 \sin(x) \sin(2t)] $$
+                    <p>So, $u(x,t) = \frac{1}{2}\sin(x)\sin(2t)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = x^2$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $c=1$. $f(x) = x^2$, $g(x) = 0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + \frac{1}{2(1)} \int_{x-t}^{x+t} 0 \, ds $$
+                    $$ u(x,t) = \frac{1}{2}[(x+t)^2 + (x-t)^2] $$
+                    $$ u(x,t) = \frac{1}{2}[x^2 + 2xt + t^2 + x^2 - 2xt + t^2] $$
+                    $$ u(x,t) = \frac{1}{2}[2x^2 + 2t^2] = x^2 + t^2 $$
+                    <p>So, $u(x,t) = x^2 + t^2$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Solve $u_{tt} - 16u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = 1$.</p>
+                <button onclick="toggleSolution('sol-d3-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $c=4$. $f(x) = 0$, $g(x) = 1$.</p>
+                    $$ u(x,t) = \frac{1}{2}[0 + 0] + \frac{1}{2(4)} \int_{x-4t}^{x+4t} 1 \, ds $$
+                    $$ u(x,t) = \frac{1}{8} [s]_{x-4t}^{x+4t} $$
+                    $$ u(x,t) = \frac{1}{8} [(x+4t) - (x-4t)] $$
+                    $$ u(x,t) = \frac{1}{8} [8t] = t $$
+                    <p>So, $u(x,t) = t$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = e^x$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x) = e^x$, $g(x) = 0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+ct) + f(x-ct)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2}[e^{x+ct} + e^{x-ct}] $$
+                    $$ u(x,t) = \frac{1}{2}[e^x e^{ct} + e^x e^{-ct}] = e^x \frac{e^{ct} + e^{-ct}}{2} $$
+                    <p>So, $u(x,t) = e^x \cosh(ct)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = e^x$.</p>
+                <button onclick="toggleSolution('sol-d3-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x) = 0$, $g(x) = e^x$.</p>
+                    $$ u(x,t) = 0 + \frac{1}{2c} \int_{x-ct}^{x+ct} e^s \, ds $$
+                    $$ u(x,t) = \frac{1}{2c} [e^s]_{x-ct}^{x+ct} $$
+                    $$ u(x,t) = \frac{1}{2c} [e^{x+ct} - e^{x-ct}] $$
+                    $$ u(x,t) = \frac{1}{c} e^x \frac{e^{ct} - e^{-ct}}{2} $$
+                    <p>So, $u(x,t) = \frac{1}{c} e^x \sinh(ct)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = x$ and $u_t(x,0) = 1$.</p>
+                <button onclick="toggleSolution('sol-d3-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. $f(x) = x$, $g(x) = 1$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + \frac{1}{2(1)} \int_{x-t}^{x+t} 1 \, ds $$
+                    $$ u(x,t) = \frac{1}{2}[(x+t) + (x-t)] + \frac{1}{2} [s]_{x-t}^{x+t} $$
+                    $$ u(x,t) = \frac{1}{2}[2x] + \frac{1}{2}[(x+t) - (x-t)] $$
+                    $$ u(x,t) = x + \frac{1}{2}[2t] = x + t $$
+                    <p>So, $u(x,t) = x+t$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Find the value of $u(0, 2)$ for $u_{tt} - 4u_{xx} = 0$ with $u(x,0) = x^3$ and $u_t(x,0) = 6x$.</p>
+                <button onclick="toggleSolution('sol-d3-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=2$. $f(x) = x^3$, $g(x) = 6x$. We want $u(0, 2)$.</p>
+                    <p>$x=0, t=2$. $x+ct = 0+2(2)=4$. $x-ct = 0-2(2)=-4$.</p>
+                    $$ u(0,2) = \frac{1}{2}[f(4) + f(-4)] + \frac{1}{2(2)} \int_{-4}^{4} g(s) \, ds $$
+                    $$ u(0,2) = \frac{1}{2}[4^3 + (-4)^3] + \frac{1}{4} \int_{-4}^{4} 6s \, ds $$
+                    $$ u(0,2) = \frac{1}{2}[64 - 64] + \frac{1}{4} [3s^2]_{-4}^{4} $$
+                    $$ u(0,2) = 0 + \frac{1}{4} [3(4)^2 - 3(-4)^2] = \frac{1}{4} [48 - 48] = 0 $$
+                    <p>So, $u(0,2) = 0$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = \sin(\pi x)$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. $f(x)=\sin(\pi x), g(x)=0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2}[\sin(\pi(x+t)) + \sin(\pi(x-t))] $$
+                    <p>Using $\sin A + \sin B = 2 \sin(\frac{A+B}{2})\cos(\frac{A-B}{2})$:</p>
+                    $$ u(x,t) = \frac{1}{2} [2 \sin(\frac{\pi x+\pi t+\pi x-\pi t}{2}) \cos(\frac{\pi x+\pi t-(\pi x-\pi t)}{2})] $$
+                    $$ u(x,t) = \sin(\frac{2\pi x}{2}) \cos(\frac{2\pi t}{2}) = \sin(\pi x) \cos(\pi t) $$
+                    <p>So, $u(x,t) = \sin(\pi x) \cos(\pi t)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve $u_{tt} - 9u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = x^2$.</p>
+                <button onclick="toggleSolution('sol-d3-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=3$. $f(x)=0, g(x)=x^2$.</p>
+                    $$ u(x,t) = 0 + \frac{1}{2(3)} \int_{x-3t}^{x+3t} s^2 \, ds $$
+                    $$ u(x,t) = \frac{1}{6} [\frac{s^3}{3}]_{x-3t}^{x+3t} $$
+                    $$ u(x,t) = \frac{1}{18} [(x+3t)^3 - (x-3t)^3] $$
+                    <p>Recall $(A+B)^3 = A^3+3A^2B+3AB^2+B^3$ and $(A-B)^3 = A^3-3A^2B+3AB^2-B^3$.</p>
+                    <p>$(x+3t)^3 - (x-3t)^3 = (x^3+9x^2t+27xt^2+27t^3) - (x^3-9x^2t+27xt^2-27t^3)$</p>
+                    <p>$= 18x^2t + 54t^3$.</p>
+                    $$ u(x,t) = \frac{1}{18} [18x^2t + 54t^3] = x^2t + 3t^3 $$
+                    <p>So, $u(x,t) = x^2t + 3t^3$.</p>
+                </div>
+            </article>
+
+            <!-- Questions 11-30 continue -->
+
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = A \sin(kx)$ and $u_t(x,0) = B \cos(kx)$.</p>
+                <button onclick="toggleSolution('sol-d3-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x)=A\sin(kx), g(x)=B\cos(kx)$.</p>
+                    <p>Term 1: $\frac{1}{2}[A\sin(k(x+ct)) + A\sin(k(x-ct))]$</p>
+                    <p>$= \frac{A}{2}[2\sin(\frac{k(x+ct)+k(x-ct)}{2})\cos(\frac{k(x+ct)-k(x-ct)}{2})]$</p>
+                    <p>$= A\sin(kx)\cos(kct)$.</p>
+                    <p>Term 2: $\frac{1}{2c} \int_{x-ct}^{x+ct} B\cos(ks) \, ds = \frac{B}{2c} [\frac{\sin(ks)}{k}]_{x-ct}^{x+ct}$</p>
+                    <p>$= \frac{B}{2ck} [\sin(k(x+ct)) - \sin(k(x-ct))]$</p>
+                    <p>Using $\sin A - \sin B = 2 \cos(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                    <p>$= \frac{B}{2ck} [2 \cos(\frac{k(x+ct)+k(x-ct)}{2})\sin(\frac{k(x+ct)-k(x-ct)}{2})]$</p>
+                    <p>$= \frac{B}{ck} [\cos(kx)\sin(kct)]$.</p>
+                    <p>Combining: $u(x,t) = A\sin(kx)\cos(kct) + \frac{B}{ck}\cos(kx)\sin(kct)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Find $u(1, 3)$ for $u_{tt} - u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = x^3$.</p>
+                <button onclick="toggleSolution('sol-d3-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. $f(x)=0, g(x)=x^3$. We want $u(1, 3)$.</p>
+                    <p>$x=1, t=3$. $x+ct = 1+1(3)=4$. $x-ct = 1-1(3)=-2$.</p>
+                    $$ u(1,3) = 0 + \frac{1}{2(1)} \int_{-2}^{4} s^3 \, ds $$
+                    $$ u(1,3) = \frac{1}{2} [\frac{s^4}{4}]_{-2}^{4} $$
+                    $$ u(1,3) = \frac{1}{8} [4^4 - (-2)^4] = \frac{1}{8} [256 - 16] = \frac{240}{8} = 30 $$
+                    <p>So, $u(1,3) = 30$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Solve $u_{tt} - 4u_{xx} = 0$ with $u(x,0) = e^{-x^2}$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=2$. $f(x)=e^{-x^2}, g(x)=0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+2t) + f(x-2t)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2}[e^{-(x+2t)^2} + e^{-(x-2t)^2}] $$
+                    <p>So, $u(x,t) = \frac{1}{2}(e^{-(x+2t)^2} + e^{-(x-2t)^2})$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = \cosh(x)$.</p>
+                <button onclick="toggleSolution('sol-d3-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>$c=1$. $f(x)=0, g(x)=\cosh(x)$.</p>
+                    $$ u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} \cosh(s) \, ds $$
+                    $$ u(x,t) = \frac{1}{2} [\sinh(s)]_{x-t}^{x+t} $$
+                    $$ u(x,t) = \frac{1}{2} [\sinh(x+t) - \sinh(x-t)] $$
+                    <p>Using $\sinh A - \sinh B = 2 \cosh(\frac{A+B}{2})\sinh(\frac{A-B}{2})$:</p>
+                    $$ u(x,t) = \frac{1}{2} [2 \cosh(\frac{x+t+x-t}{2}) \sinh(\frac{x+t-(x-t)}{2})] $$
+                    $$ u(x,t) = \cosh(x) \sinh(t) $$
+                    <p>So, $u(x,t) = \cosh(x) \sinh(t)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = x^4$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x)=x^4, g(x)=0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+ct) + f(x-ct)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2}[(x+ct)^4 + (x-ct)^4] $$
+                    <p>Expand using binomial theorem:</p>
+                    <p>$(x+ct)^4 = x^4 + 4x^3(ct) + 6x^2(ct)^2 + 4x(ct)^3 + (ct)^4$</p>
+                    <p>$(x-ct)^4 = x^4 - 4x^3(ct) + 6x^2(ct)^2 - 4x(ct)^3 + (ct)^4$</p>
+                    <p>Sum $= 2x^4 + 12x^2(ct)^2 + 2(ct)^4 = 2x^4 + 12c^2x^2t^2 + 2c^4t^4$.</p>
+                    $$ u(x,t) = \frac{1}{2}[2x^4 + 12c^2x^2t^2 + 2c^4t^4] $$
+                    <p>So, $u(x,t) = x^4 + 6c^2x^2t^2 + c^4t^4$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = x$.</p>
+                <button onclick="toggleSolution('sol-d3-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q16">
+                    <p><strong>Solution:</strong></p>
+                     <p>$f(x)=0, g(x)=x$.</p>
+                     $$ u(x,t) = 0 + \frac{1}{2c} \int_{x-ct}^{x+ct} s \, ds $$
+                     $$ u(x,t) = \frac{1}{2c} [\frac{s^2}{2}]_{x-ct}^{x+ct} $$
+                     $$ u(x,t) = \frac{1}{4c} [(x+ct)^2 - (x-ct)^2] $$
+                     $$ u(x,t) = \frac{1}{4c} [(x^2+2xct+c^2t^2) - (x^2-2xct+c^2t^2)] $$
+                     $$ u(x,t) = \frac{1}{4c} [4xct] = xt $$
+                     <p>So, $u(x,t) = xt$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Find $u(\pi, 1)$ for $u_{tt} - u_{xx} = 0$ with $u(x,0) = \sin x$ and $u_t(x,0) = \cos x$.</p>
+                <button onclick="toggleSolution('sol-d3-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q17">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $f(x)=\sin x, g(x)=\cos x$. We want $u(\pi, 1)$.</p>
+                     <p>$x=\pi, t=1$. $x+ct = \pi+1$. $x-ct = \pi-1$.</p>
+                     $$ u(\pi,1) = \frac{1}{2}[f(\pi+1) + f(\pi-1)] + \frac{1}{2(1)} \int_{\pi-1}^{\pi+1} g(s) \, ds $$
+                     $$ u(\pi,1) = \frac{1}{2}[\sin(\pi+1) + \sin(\pi-1)] + \frac{1}{2} \int_{\pi-1}^{\pi+1} \cos s \, ds $$
+                     <p>Use $\sin(\pi+\theta)=-\sin\theta$ and $\sin(\pi-\theta)=\sin\theta$.</p>
+                     $$ u(\pi,1) = \frac{1}{2}[-\sin(1) + \sin(1)] + \frac{1}{2} [\sin s]_{\pi-1}^{\pi+1} $$
+                     $$ u(\pi,1) = 0 + \frac{1}{2} [\sin(\pi+1) - \sin(\pi-1)] $$
+                     $$ u(\pi,1) = \frac{1}{2} [-\sin(1) - \sin(1)] = \frac{1}{2} [-2\sin(1)] = -\sin(1) $$
+                     <p>So, $u(\pi,1) = -\sin(1)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = 1/(1+x^2)$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x)=1/(1+x^2), g(x)=0$.</p>
+                    $$ u(x,t) = \frac{1}{2}[f(x+ct) + f(x-ct)] + 0 $$
+                    $$ u(x,t) = \frac{1}{2} \left[ \frac{1}{1+(x+ct)^2} + \frac{1}{1+(x-ct)^2} \right] $$
+                    <p>So, $u(x,t) = \frac{1}{2} \left( \frac{1}{1+(x+ct)^2} + \frac{1}{1+(x-ct)^2} \right)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Solve $u_{tt} - 4u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = x e^{-x^2}$.</p>
+                <button onclick="toggleSolution('sol-d3-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q19">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=2$. $f(x)=0, g(x)=x e^{-x^2}$.</p>
+                     $$ u(x,t) = 0 + \frac{1}{2(2)} \int_{x-2t}^{x+2t} s e^{-s^2} \, ds $$
+                     <p>Let $v = -s^2$, then $dv = -2s ds$, so $s ds = -dv/2$.</p>
+                     $$ u(x,t) = \frac{1}{4} \int_{-(x-2t)^2}^{-(x+2t)^2} e^v (-\frac{1}{2} dv) = -\frac{1}{8} \int_{-(x-2t)^2}^{-(x+2t)^2} e^v dv $$
+                     $$ u(x,t) = -\frac{1}{8} [e^v]_{-(x-2t)^2}^{-(x+2t)^2} $$
+                      $$ u(x,t) = -\frac{1}{8} [e^{-(x+2t)^2} - e^{-(x-2t)^2}] $$
+                     <p>So, $u(x,t) = \frac{1}{8} [e^{-(x-2t)^2} - e^{-(x+2t)^2}]$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = |x|$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q20">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $f(x)=|x|, g(x)=0$.</p>
+                     $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + 0 $$
+                     $$ u(x,t) = \frac{1}{2}[|x+t| + |x-t|] $$
+                     <p>So, $u(x,t) = \frac{1}{2}(|x+t| + |x-t|)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Solve $u_{tt} - c^2 u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = \sin^2(x)$.</p>
+                <button onclick="toggleSolution('sol-d3-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q21">
+                    <p><strong>Solution:</strong></p>
+                     <p>$f(x)=0, g(x)=\sin^2(x) = \frac{1-\cos(2x)}{2}$.</p>
+                     $$ u(x,t) = 0 + \frac{1}{2c} \int_{x-ct}^{x+ct} \frac{1-\cos(2s)}{2} \, ds $$
+                     $$ u(x,t) = \frac{1}{4c} \int_{x-ct}^{x+ct} (1-\cos(2s)) \, ds $$
+                     $$ u(x,t) = \frac{1}{4c} [s - \frac{\sin(2s)}{2}]_{x-ct}^{x+ct} $$
+                     $$ u(x,t) = \frac{1}{4c} \left[ (x+ct - \frac{\sin(2(x+ct))}{2}) - (x-ct - \frac{\sin(2(x-ct))}{2}) \right] $$
+                     $$ u(x,t) = \frac{1}{4c} \left[ 2ct - \frac{1}{2}(\sin(2x+2ct) - \sin(2x-2ct)) \right] $$
+                     <p>Using $\sin A - \sin B = 2\cos(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                     $$ u(x,t) = \frac{1}{4c} \left[ 2ct - \frac{1}{2}(2\cos(2x)\sin(2ct)) \right] $$
+                     $$ u(x,t) = \frac{1}{4c} [ 2ct - \cos(2x)\sin(2ct) ] = \frac{t}{2} - \frac{\cos(2x)\sin(2ct)}{4c} $$
+                      <p>So, $u(x,t) = \frac{t}{2} - \frac{\cos(2x)\sin(2ct)}{4c}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Find $u(0, \pi/2)$ for $u_{tt} - u_{xx} = 0$ with $u(x,0) = \cos x$ and $u_t(x,0) = \sin x$.</p>
+                <button onclick="toggleSolution('sol-d3-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q22">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $f(x)=\cos x, g(x)=\sin x$. We want $u(0, \pi/2)$.</p>
+                     <p>$x=0, t=\pi/2$. $x+ct = \pi/2$. $x-ct = -\pi/2$.</p>
+                      $$ u(0,\pi/2) = \frac{1}{2}[f(\pi/2) + f(-\pi/2)] + \frac{1}{2(1)} \int_{-\pi/2}^{\pi/2} g(s) \, ds $$
+                      $$ u(0,\pi/2) = \frac{1}{2}[\cos(\pi/2) + \cos(-\pi/2)] + \frac{1}{2} \int_{-\pi/2}^{\pi/2} \sin s \, ds $$
+                      $$ u(0,\pi/2) = \frac{1}{2}[0 + 0] + \frac{1}{2} [-\cos s]_{-\pi/2}^{\pi/2} $$
+                      $$ u(0,\pi/2) = 0 + \frac{1}{2} [-\cos(\pi/2) - (-\cos(-\pi/2))] = \frac{1}{2} [-0 - (-0)] = 0 $$
+                      <p>So, $u(0,\pi/2) = 0$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Solve $u_{tt} - 9u_{xx} = 0$ with $u(x,0) = x^2+1$ and $u_t(x,0) = 6x$.</p>
+                <button onclick="toggleSolution('sol-d3-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q23">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=3$. $f(x)=x^2+1, g(x)=6x$.</p>
+                     <p>Term 1: $\frac{1}{2}[f(x+3t) + f(x-3t)] = \frac{1}{2}[((x+3t)^2+1) + ((x-3t)^2+1)]$</p>
+                     <p>$= \frac{1}{2}[(x+3t)^2 + (x-3t)^2 + 2] = \frac{1}{2}[2x^2 + 2(3t)^2 + 2] = x^2 + 9t^2 + 1$. (From Q3 expansion)</p>
+                     <p>Term 2: $\frac{1}{2(3)} \int_{x-3t}^{x+3t} 6s \, ds = \frac{1}{6} [3s^2]_{x-3t}^{x+3t}$</p>
+                     <p>$= \frac{1}{2} [(x+3t)^2 - (x-3t)^2] = \frac{1}{2}[ (x^2+6xt+9t^2) - (x^2-6xt+9t^2) ]$</p>
+                     <p>$= \frac{1}{2}[12xt] = 6xt$.</p>
+                     <p>Combining: $u(x,t) = x^2 + 9t^2 + 1 + 6xt = (x+3t)^2 + 1$. Wait, check calculation.</p>
+                      <p>Term 2: $\frac{1}{6} [3s^2]_{x-3t}^{x+3t} = \frac{3}{6} [(x+3t)^2 - (x-3t)^2] = \frac{1}{2} [ 4 \cdot x \cdot 3t ] = 6xt$. Correct.</p>
+                     <p>Combine: $u(x,t) = (x^2 + 9t^2 + 1) + 6xt = x^2+6xt+9t^2+1 = (x+3t)^2 + 1$.</p>
+                     <p>So, $u(x,t) = (x+3t)^2 + 1$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = 1/(1+x^2)$.</p>
+                <button onclick="toggleSolution('sol-d3-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q24">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $f(x)=0, g(x)=1/(1+x^2)$.</p>
+                     $$ u(x,t) = 0 + \frac{1}{2(1)} \int_{x-t}^{x+t} \frac{1}{1+s^2} \, ds $$
+                     $$ u(x,t) = \frac{1}{2} [\arctan(s)]_{x-t}^{x+t} $$
+                     $$ u(x,t) = \frac{1}{2} [\arctan(x+t) - \arctan(x-t)] $$
+                     <p>So, $u(x,t) = \frac{1}{2}(\arctan(x+t) - \arctan(x-t))$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Solve $u_{tt} - 16u_{xx} = 0$ with $u(x,0) = \sin(2x)$ and $u_t(x,0) = 8\cos(2x)$.</p>
+                <button onclick="toggleSolution('sol-d3-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q25">
+                    <p><strong>Solution:</strong></p>
+                     <p>$c=4$. $f(x)=\sin(2x), g(x)=8\cos(2x)$. Let $k=2$.</p>
+                     <p>From Q11 with $A=1, B=8, k=2, c=4$: </p>
+                     <p>$u(x,t) = 1\cdot\sin(2x)\cos(2ct) + \frac{8}{c(2)}\cos(2x)\sin(2ct)$</p>
+                      <p>$u(x,t) = \sin(2x)\cos(8t) + \frac{8}{4(2)}\cos(2x)\sin(8t)$</p>
+                     <p>$u(x,t) = \sin(2x)\cos(8t) + \cos(2x)\sin(8t)$.</p>
+                     <p>Using $\sin(A+B) = \sin A \cos B + \cos A \sin B$:</p>
+                     <p>$u(x,t) = \sin(2x+8t)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Find $u(2, 1)$ for $u_{tt} - 9u_{xx} = 0$ with $u(x,0) = x$ and $u_t(x,0) = 3$.</p>
+                <button onclick="toggleSolution('sol-d3-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q26">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=3$. $f(x)=x, g(x)=3$. We want $u(2, 1)$.</p>
+                     <p>$x=2, t=1$. $x+ct = 2+3(1)=5$. $x-ct = 2-3(1)=-1$.</p>
+                     $$ u(2,1) = \frac{1}{2}[f(5) + f(-1)] + \frac{1}{2(3)} \int_{-1}^{5} g(s) \, ds $$
+                     $$ u(2,1) = \frac{1}{2}[5 + (-1)] + \frac{1}{6} \int_{-1}^{5} 3 \, ds $$
+                     $$ u(2,1) = \frac{1}{2}[4] + \frac{1}{6} [3s]_{-1}^{5} $$
+                     $$ u(2,1) = 2 + \frac{3}{6} [5 - (-1)] = 2 + \frac{1}{2}[6] = 2 + 3 = 5 $$
+                     <p>So, $u(2,1) = 5$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = \cos^2(x)$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q27">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $f(x)=\cos^2(x) = \frac{1+\cos(2x)}{2}, g(x)=0$.</p>
+                      $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + 0 $$
+                      $$ u(x,t) = \frac{1}{2} \left[ \frac{1+\cos(2(x+t))}{2} + \frac{1+\cos(2(x-t))}{2} \right] $$
+                      $$ u(x,t) = \frac{1}{4} [1+\cos(2x+2t) + 1+\cos(2x-2t)] $$
+                      $$ u(x,t) = \frac{1}{4} [2 + (\cos(2x+2t) + \cos(2x-2t))] $$
+                      <p>Using $\cos A + \cos B = 2\cos(\frac{A+B}{2})\cos(\frac{A-B}{2})$:</p>
+                      $$ u(x,t) = \frac{1}{4} [2 + 2\cos(2x)\cos(2t)] = \frac{1}{2}[1 + \cos(2x)\cos(2t)] $$
+                      <p>Alternatively, $\frac{1}{2}[f(x+t)+f(x-t)] = \frac{1}{2}[\cos^2(x+t)+\cos^2(x-t)]$.</p>
+                      <p>So, $u(x,t) = \frac{1}{2}(1 + \cos(2x)\cos(2t))$ or $\frac{1}{2}(\cos^2(x+t)+\cos^2(x-t))$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">Solve $u_{tt} - 16u_{xx} = 0$ with $u(x,0) = 0$ and $u_t(x,0) = \sin(x)\cos(x)$.</p>
+                <button onclick="toggleSolution('sol-d3-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q28">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=4$. $f(x)=0, g(x)=\sin x \cos x = \frac{1}{2}\sin(2x)$.</p>
+                     $$ u(x,t) = 0 + \frac{1}{2(4)} \int_{x-4t}^{x+4t} \frac{1}{2}\sin(2s) \, ds $$
+                     $$ u(x,t) = \frac{1}{16} \int_{x-4t}^{x+4t} \sin(2s) \, ds $$
+                     $$ u(x,t) = \frac{1}{16} [-\frac{\cos(2s)}{2}]_{x-4t}^{x+4t} $$
+                     $$ u(x,t) = -\frac{1}{32} [\cos(2(x+4t)) - \cos(2(x-4t))] $$
+                      <p>Using $\cos A - \cos B = -2\sin(\frac{A+B}{2})\sin(\frac{A-B}{2})$:</p>
+                      $$ u(x,t) = -\frac{1}{32} [-2\sin(\frac{2x+8t+2x-8t}{2})\sin(\frac{2x+8t-(2x-8t)}{2})] $$
+                      $$ u(x,t) = \frac{1}{16} [\sin(2x)\sin(8t)] $$
+                     <p>So, $u(x,t) = \frac{1}{16}\sin(2x)\sin(8t)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">Find $u(0, 1)$ for $u_{tt} - 4u_{xx} = 0$ with $u(x,0) = |x|$ and $u_t(x,0) = 0$.</p>
+                <button onclick="toggleSolution('sol-d3-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=2$. $f(x)=|x|, g(x)=0$. We want $u(0, 1)$.</p>
+                      <p>$x=0, t=1$. $x+ct = 0+2(1)=2$. $x-ct = 0-2(1)=-2$.</p>
+                      $$ u(0,1) = \frac{1}{2}[f(2) + f(-2)] + 0 $$
+                      $$ u(0,1) = \frac{1}{2}[|2| + |-2|] = \frac{1}{2}[2 + 2] = \frac{4}{2} = 2 $$
+                     <p>So, $u(0,1) = 2$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">Solve $u_{tt} - u_{xx} = 0$ with $u(x,0) = f(x)$ (general function) and $u_t(x,0) = 0$. What is the physical interpretation?</p>
+                <button onclick="toggleSolution('sol-d3-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d3-q30">
+                     <p><strong>Solution:</strong></p>
+                     <p>$c=1$. $g(x)=0$.</p>
+                      $$ u(x,t) = \frac{1}{2}[f(x+t) + f(x-t)] + 0 $$
+                     <p>$u(x,t) = \frac{1}{2}f(x+t) + \frac{1}{2}f(x-t)$.</p>
+                     <p>Physical Interpretation: The initial shape $f(x)$ splits into two identical waves, each with half the amplitude of the original shape. One wave $\frac{1}{2}f(x-t)$ travels to the right with speed $c=1$, and the other wave $\frac{1}{2}f(x+t)$ travels to the left with speed $c=1$. The solution at any time is the superposition of these two traveling waves.</p>
+                 </div>
+            </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

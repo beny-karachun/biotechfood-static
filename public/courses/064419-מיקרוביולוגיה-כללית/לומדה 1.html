@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי לימוד: מבנה התא הפרוקריוטי - חלק 1</title>
+
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Define inline math delimiters
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Define display math delimiters
+            processEscapes: true // Allow escaping $ signs
+          },
+          svg: {
+            fontCache: 'global' // Use global font cache for SVG output
+          }
+        };
+    </script>
+    <!-- Load MathJax 3 from CDN using tex-svg preset -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+
+    <style>
+        /* CSS Variables for Dark Mode Theme */
+        :root {
+            --bg-color: #333;
+            --container-bg-color: #666;
+            --text-color: #E0E0E0;
+            --accent-color: #3D90D7;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --button-text-color: #FFFFFF;
+            --card-front-bg: #555;
+            --card-back-bg: #777;
+        }
+
+        /* General Body Styling */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif; /* Basic font stack */
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            max-width: 66.67%; /* 2/3rds of screen width */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Headings */
+        h1, h2, h3 {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 25px; /* Vertical spacing */
+        }
+
+        /* Buttons */
+        button {
+            background-color: var(--accent-color);
+            color: var(--button-text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #357ab7; /* Slightly darker blue on hover */
+        }
+
+        button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+
+        /* Navigation controls */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            padding: 10px 0;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        /* Section Styling */
+        .section {
+            background-color: var(--container-bg-color); /* Use container bg for consistency */
+            padding: 20px;
+            margin-bottom: 25px; /* Vertical spacing */
+            border-radius: 8px;
+            border: 1px solid #444; /* Subtle border */
+        }
+
+        /* Theory Section (Collapsible) */
+        #theorySection details {
+            border: 1px solid #555;
+            border-radius: 5px;
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        #theorySection summary {
+            padding: 10px;
+            background-color: var(--accent-color);
+            color: var(--button-text-color);
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0; /* Rounded top corners */
+        }
+
+        #theorySection summary:hover {
+             background-color: #357ab7;
+        }
+
+        #theorySection .theory-content {
+            padding: 15px;
+            background-color: #5a5a5a; /* Slightly lighter than container */
+            border-top: none;
+            border-radius: 0 0 5px 5px; /* Rounded bottom corners */
+        }
+
+        #theorySection p {
+            margin-bottom: 1em;
+            text-align: justify; /* Justify text for readability */
+        }
+        #theorySection ul {
+            padding-right: 20px; /* Indentation for RTL */
+            list-style-position: outside;
+        }
+        #theorySection li {
+             margin-bottom: 0.5em;
+        }
+
+        /* Study Cards Section */
+        #studyCardsSection .card-container {
+            perspective: 1000px; /* For 3D flip effect */
+            min-height: 200px; /* Ensure container has height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        .card {
+            width: 80%;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hide the back side during flip */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 8px;
+            font-size: 1.2em;
+            text-align: center;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+        }
+
+        .card-front {
+            background-color: var(--card-front-bg);
+            color: var(--text-color);
+        }
+
+        .card-back {
+            background-color: var(--card-back-bg);
+            color: var(--text-color);
+            transform: rotateY(180deg); /* Position the back face */
+        }
+
+        /* MCQ and True/False Sections */
+        .question-container {
+            margin-bottom: 15px; /* Space below question text */
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #5a5a5a;
+        }
+
+        .options-container button, .tf-options button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: right; /* Align text to the right for RTL */
+            padding: 12px 15px;
+            background-color: #777; /* Default option background */
+            color: var(--text-color);
+            border: 1px solid #888;
+        }
+         .options-container button:not(:disabled):hover, .tf-options button:not(:disabled):hover {
+             background-color: #888;
+         }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            display: none; /* Hidden by default */
+            background-color: #444; /* Darker background for feedback */
+        }
+
+        .feedback.correct {
+            color: var(--text-color);
+            background-color: var(--correct-color);
+        }
+
+        .feedback.incorrect {
+            color: var(--text-color);
+            background-color: var(--incorrect-color);
+        }
+
+        .explanation {
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+         /* Correct/Incorrect button styling */
+        button.correct {
+            background-color: var(--correct-color) !important;
+            color: white !important;
+            border-color: #3a9d40 !important;
+        }
+
+        button.incorrect {
+            background-color: var(--incorrect-color) !important;
+            color: white !important;
+            border-color: #c3372c !important;
+        }
+
+        /* View All Questions Styling */
+        #mcqAllQuestions, #tfAllQuestions {
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .all-questions-item {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #5a5a5a;
+        }
+
+        .all-questions-item .question-text {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+         .all-questions-item .options-container button, .all-questions-item .tf-options button {
+            display: block;
+            width: 100%;
+            margin-bottom: 8px;
+            text-align: right;
+            padding: 8px 12px;
+            font-size: 0.9em; /* Slightly smaller for all view */
+        }
+
+        /* MathJax Specifics */
+        mjx-container[display="true"] {
+             margin: 1em 0; /* Add vertical space around display math */
+        }
+        /* Ensure math renders LTR */
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important;
+        }
+
+
+        /* Responsive adjustments (Optional but good practice) */
+        @media (max-width: 768px) {
+            .main-container {
+                max-width: 95%;
+                padding: 15px;
+            }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.5em; }
+            h3 { font-size: 1.2em; }
+            button { font-size: 0.9em; padding: 8px 15px; }
+            .card { width: 90%; height: 180px; }
+            .card-face { font-size: 1em; }
+        }
+
+
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+        <h1>כלי לימוד: מבנה התא הפרוקריוטי - חלק 1</h1>
+
+        <!-- 1. Theory Section -->
+        <section id="theorySection" class="section">
+            <details>
+                <summary>תקציר תיאוריה</summary>
+                <div class="theory-content">
+                    <h2>הבדלים בין התא הפרוקריוטי לתא האוקריוטי</h2>
+                    <p>
+                        כלל התאים באורגניזמים חיים חולקים דמיון כימי ותפקודי רב. הם עטופים בממברנה (קרום), מכילים חומצות גרעין (DNA ו-RNA), חלבונים, ליפידים ופחמימות, ומבצעים תהליכים מטבוליים דומים כגון סינתזת חלבונים, מטבוליזם של מזון ואגירת אנרגיה. למרות זאת, קיימים הבדלים מבניים מרכזיים כמו גודל התא, מבנה המעטפת, ונוכחות אברונים (אורגנולות). הבדלים אלו מבססים את החלוקה לשתי קבוצות עיקריות: <strong>אוקריוטים (Eukaryotes)</strong> ו<strong>פרוקריוטים (Prokaryotes)</strong>, חלוקה המחוזקת כיום על ידי הבדלים ברצפי ה-DNA.
+                    </p>
+                    <p>
+                        מאפיינים מבניים מרכזיים מבדילים בין הקבוצות:
+                        <ul>
+                            <li><strong>גודל:</strong> פרוקריוטים קטנים משמעותית מאוקריוטים (לרוב $0.5-5 \mu m$ לעומת $10-100 \mu m$). גודלם הקטן מקנה להם יחס שטח פנים לנפח גבוה יותר. יחס זה מחושב כ- $(4\pi R^2) / (4\pi R^3 / 3) = 3/R$. ככל שהרדיוס (R) קטן יותר, היחס גדול יותר, מה שמאפשר קליטת חומרי מזון יעילה יותר וקצב גידול מהיר.</li>
+                            <li><strong>גרעין ואברונים:</strong> לאוקריוטים יש גרעין תא מוגדר היטב העוטף את ה-DNA, ואברונים נוספים עטופי ממברנה (מיטוכונדריה, רשתית אנדופלסמטית וכו'). לפרוקריוטים אין גרעין אמיתי (ה-DNA נמצא באזור הנקרא נוקלאואיד) ואין להם אברונים פנימיים עטופי ממברנה.</li>
+                            <li><strong>ארגון גנטי:</strong> ה-DNA הפרוקריוטי הוא לרוב כרומוזום מעגלי יחיד, בעוד ה-DNA האוקריוטי מאורגן במספר כרומוזומים לינאריים בתוך הגרעין.</li>
+                            <li><strong>ריבוזומים:</strong> בשני סוגי התאים קיימים ריבוזומים האחראים לסינתזת חלבונים, אך הם שונים בגודלם ובהרכבם (70S בפרוקריוטים, 80S בציטופלסמה האוקריוטית).</li>
+                        </ul>
+                        הבנת הבדלים אלו חיונית, למשל, לפיתוח אנטיביוטיקות הפוגעות במבנים ייחודיים לפרוקריוטים (כמו דופן התא) מבלי לפגוע בתאי האדם (האוקריוטיים).
+                    </p>
+                     <p>
+                        חלוקת החיים מתבססת על רצפי DNA ומחלקת את היצורים לשלוש על-ממלכות: <strong>בקטריות (Bacteria)</strong>, <strong>ארכיאות (Archaea)</strong> ו<strong>אוקריוטים (Eukarya)</strong>. בקטריות וארכיאות הן פרוקריוטים, אך נבדלות זו מזו במאפיינים ביוכימיים ומבניים רבים (כפי שנראה בהמשך). משערים שהחיים התפתחו מאב קדמון פרוקריוטי משותף.
+                    </p>
+
+                    <h2>מבנה מעטפת התא הפרוקריוטי</h2>
+                    <p>
+                        מעטפת התא הפרוקריוטי מפרידה את הציטופלסמה (המכילה DNA, ריבוזומים, אנזימים וכו') מהסביבה החיצונית. המעטפת מורכבת ממספר שכבות, כאשר המרכזית היא ה<strong>ממברנה הציטופלסמית (קרום התא)</strong>. חיצונית לממברנה, ברוב הפרוקריוטים, נמצא <strong>דופן התא</strong>. לעיתים קיימות שכבות חיצוניות נוספות כמו <strong>קפסולה</strong>. כמו כן, למעטפת עשויים להיות קשורים אברונים חיצוניים כמו שוטונים (לתנועה) או פילי/פימבריה (להצמדה).
+                    </p>
+
+                    <h3>הממברנה הציטופלסמית: מבנה ותפקוד</h3>
+                    <p>
+                        לממברנה הציטופלסמית מספר תפקידים חיוניים:
+                        <ul>
+                            <li><strong>חומת גבול:</strong> תיחום פיזי של התא.</li>
+                            <li><strong>חדירות בררנית (Selective permeability):</strong> מאפשרת מעבר חופשי למולקולות קטנות ולא קוטביות (כמו מים, חמצן), אך מגבילה מעבר של יונים וחומרים קוטביים, הדורשים נשאים או תעלות ייעודיות.</li>
+                            <li><strong>עיגון חלבונים:</strong> משמשת כפלטפורמה לחלבונים רבים, כולל קולטנים, חיישנים, אנזימים המעורבים בנשימה תאית (בפרוקריוטים), חלבוני הובלה, ואברוני תנועה והצמדה.</li>
+                            <li><strong>יצירת אנרגיה:</strong> הממברנה חיונית ליצירת פוטנציאל פרוטונים (Proton Motive Force), המשמש להפקת ATP (מטבע האנרגיה התאי) בתהליך הנשימה התאית או הפוטוסינתזה (בחיידקים מסוימים). הפרשי מטענים וריכוזים של פרוטונים ($H^+$) משני צידי הממברנה יוצרים אנרגיה פוטנציאלית.</li>
+                        </ul>
+                        הממברנה אינה מבנה קשיח אלא בעלת אופי נוזלי וגמיש (מודל הפסיפס הנוזלי), המאפשר תנועה של חלבונים בתוכה ותיקון עצמי של פגמים קטנים.
+                    </p>
+                     <p>
+                        <strong>הבדלים במבנה הממברנה בין בקטריות לארכיאות:</strong>
+                        <ul>
+                            <li><strong>בקטריות (וחלק מהאוקריוטים):</strong> הממברנה בנויה מדו-שכבה של <strong>פוספוליפידים</strong>. כל פוספוליפיד מורכב מראש הידרופילי (גליצרול-פוספט) ושני זנבות הידרופוביים של <strong>חומצות שומן</strong>. הקישור בין הגליצרול לחומצות השומן הוא <strong>קשר אסתרי (Ester bond)</strong>. חומצות השומן יכולות להיות רוויות (ללא קשרים כפולים, מבנה ישר) או בלתי רוויות (עם קשרים כפולים, יוצרות 'כיפופים'). אחוז חומצות השומן הבלתי רוויות משפיע על נזילות הממברנה (פלואידיות); יותר קשרים כפולים = יותר נזילות, מה שחשוב להסתגלות לטמפרטורות נמוכות.</li>
+                            <li><strong>ארכיאות:</strong> בממברנת הארכיאות, הגליצרול קשור לשרשראות הידרופוביות של <strong>איזופרן (Isoprene)</strong>, היוצרות יחידות הנקראות <strong>פיטאניל (Phytanyl)</strong>. הקישור בין הגליצרול לפיטאניל הוא <strong>קשר אתרי (Ether bond)</strong>, שהוא יציב יותר כימית מקשר אסתרי, ומאפשר לארכיאות רבות לשרוד בתנאים קיצוניים. בחלק מהארכיאות, השרשראות ההידרופוביות משתי השכבות מתחברות ויוצרות <strong>ממברנה חד-שכבתית (Monolayer)</strong>, המקנה יציבות רבה עוד יותר, במיוחד בטמפרטורות גבוהות.</li>
+                        </ul>
+                    </p>
+                     <p>
+                        <strong>מרכיבים נוספים בממברנה:</strong>
+                        <ul>
+                             <li><strong>חלבונים ממברנליים:</strong> חלבונים אינטגרליים (חוצים את הממברנה) ופריפריאליים (קשורים לפני השטח).</li>
+                             <li><strong>גליקוליפידים וגליקופרוטאינים:</strong> ליפידים וחלבונים הקשורים לסוכרים, חשובים לזיהוי תאי ולאינטראקציות.</li>
+                            <li><strong>סטרולים והופנואידים:</strong> מולקולות דמויות כולסטרול המייצבות את הממברנה. <strong>סטרולים (Sterols)</strong> (כמו כולסטרול) נמצאים בעיקר בממברנות של תאים אוקריוטיים. <strong>הופנואידים (Hopanoids)</strong> נמצאים בממברנות של בקטריות רבות. בארכיאות לרוב אין סטרולים או הופנואידים.</li>
+                        </ul>
+                    </p>
+
+                    <h3>דופן התא הפרוקריוטי</h3>
+                     <p>
+                        רוב הפרוקריוטים מצוידים בדופן תא קשיחה הנמצאת מחוץ לממברנה הציטופלסמית. הדופן מספקת הגנה מכאנית ומונעת את התפוצצות התא (ליזיס) כתוצאה מלחץ אוסמוטי פנימי גבוה, הנובע מריכוז מומסים גבוה בציטופלסמה. הדופן גם קובעת את צורת התא (כדורית - coccus, מתגית - bacillus, סלילונית - spirillum, וכו').
+                     </p>
+                    <p>
+                        <strong>דופן של בקטריות - פפטידוגליקאן (Peptidoglycan):</strong>
+                         <ul>
+                             <li>המרכיב המרכזי והייחודי לדופן הבקטריאלית הוא ה<strong>פפטידוגליקאן</strong> (נקרא גם מוראין).</li>
+                             <li>הפפטידוגליקאן הוא פולימר ענק דמוי רשת, הבנוי משרשראות סוכריות ארוכות המקושרות ביניהן באמצעות פפטידים קצרים.</li>
+                             <li>השרשראות הסוכריות מורכבות מיחידות חוזרות של שני אמינו-סוכרים: <strong>N-acetylglucosamine (NAG או G)</strong> ו-<strong>N-acetylmuramic acid (NAM או M)</strong>. הסוכרים קשורים בקשר גליקוזידי מסוג $\beta(1-4)$.</li>
+                            <li>לכל יחידת NAM קשור פפטיד קצר (לרוב 4 חומצות אמינו), המכיל חומצות אמינו ייחודיות כמו איזומרים D (למשל D-alanine, D-glutamate) ו-diaminopimelic acid (DAP), שאינן נפוצות בחלבונים אחרים.</li>
+                             <li><strong>קשרי צילוב (Cross-linking):</strong> הפפטידים הקצרים משרשראות סוכר סמוכות נקשרים זה לזה, ישירות או דרך 'גשר' פפטידי קצר נוסף. תהליך זה, המבוצע על ידי אנזימים כמו <strong>טרנספפטידאז (Transpeptidase)</strong>, יוצר רשת תלת-ממדית חזקה אך גמישה. חוזק הדופן תלוי בצפיפות קשרי הצילוב ובמספר שכבות הפפטידוגליקאן.</li>
+                            <li>הייחודיות של הפפטידוגליקאן (קשרי $\beta(1-4)$, חומצות אמינו D, DAP) הופכת אותו למטרה מצוינת לאנטיביוטיקות (כמו פניצילין, שמעכב טרנספפטידאז) ולאנזימים כמו <strong>ליזוזים (Lysozyme)</strong>. ליזוזים, המצוי בנוזלי גוף כמו דמעות ורוק, מפרק את הקשר $\beta(1-4)$ בין NAG ל-NAM, מחליש את הדופן וגורם למות החיידק.</li>
+                        </ul>
+                    </p>
+                     <p>
+                         <strong>בקטריות חסרות דופן:</strong> קיימות בקטריות, כמו ה-<em>Mycoplasma</em>, שחסרות דופן באופן טבעי. הן שורדות בסביבות איזוטוניות (כמו בתוך תאי פונדקאי) ומחזקות את הממברנה שלהן באמצעות סטרולים (שנלקחים מהפונדקאי) ומולקולות נוספות. היעדר הדופן מגן עליהן מפני ליזוזים ואנטיביוטיקות הפועלות נגד הדופן.
+                     </p>
+                     <p>
+                        <strong>דופן של ארכיאות:</strong>
+                        <ul>
+                            <li>הדופן בארכיאות מגוונת יותר מאשר בבקטריות ו<strong>אינה מכילה פפטידוגליקאן</strong>.</li>
+                            <li>חלק מהארכיאות מייצרות דופן דמוית פפטידוגליקאן הנקראת <strong>פסאודופפטידוגליקאן (Pseudopeptidoglycan)</strong> או פסאודומוראין. היא מורכבת מ-NAG ומסוכר אחר, N-acetyltalosaminuronic acid (NAT), הקשורים בקשר $\beta(1-3)$. הפפטידים המצליבים מכילים רק חומצות אמינו L.</li>
+                            <li>ארכיאות אחרות בונות דופן מפוליסכרידים שונים, חלבונים, או גליקופרוטאינים.</li>
+                            <li>שכבה נפוצה בארכיאות (וגם בחלק מהבקטריות) היא ה-<strong>S-layer</strong>, שכבה מסודרת של חלבונים או גליקופרוטאינים היוצרת מבנה דמוי רשת קריסטלית על פני התא. היא יכולה להיות הדופן היחידה או שכבה נוספת מעל מבנים אחרים.</li>
+                             <li>מכיוון שאין להן פפטידוגליקאן עם קשרי $\beta(1-4)$, ארכיאות <strong>עמידות</strong> לפעולת הליזוזים ולאנטיביוטיקות כמו פניצילין.</li>
+                        </ul>
+                     </p>
+                </div>
+            </details>
+        </section>
+
+        <!-- 2. Study Cards Section -->
+        <section id="studyCardsSection" class="section">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="card-container">
+                <div class="card" id="studyCard">
+                    <div class="card-face card-front" id="cardFront"></div>
+                    <div class="card-face card-back" id="cardBack"></div>
+                </div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prevCardBtn">הקודם</button>
+                <span class="counter" id="cardCounter"></span>
+                <button id="nextCardBtn">הבא</button>
+            </div>
+        </section>
+
+        <!-- 3. Multiple Choice Questions Section -->
+        <section id="mcqSection" class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcqSingleQuestion">
+                <div class="question-container" id="mcqQuestionContainer">
+                    <p id="mcqQuestionText"></p>
+                </div>
+                <div class="options-container" id="mcqOptionsContainer">
+                    <!-- Options will be generated by JS -->
+                </div>
+                <div class="feedback" id="mcqFeedback">
+                    <span id="mcqFeedbackText"></span>
+                    <div class="explanation" id="mcqExplanation"></div>
+                </div>
+                 <div class="navigation-controls">
+                    <button id="prevMcqBtn">הקודם</button>
+                    <span class="counter" id="mcqCounter"></span>
+                    <button id="nextMcqBtn">הבא</button>
+                 </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                 <button id="viewAllMcqBtn">הצג את כל השאלות</button>
+            </div>
+            <div id="mcqAllQuestions">
+                <!-- All questions view generated by JS -->
+            </div>
+        </section>
+
+        <!-- 4. True/False Questions Section -->
+        <section id="tfSection" class="section">
+            <h2>שאלות נכון / לא נכון</h2>
+            <div id="tfSingleQuestion">
+                 <div class="question-container" id="tfQuestionContainer">
+                    <p id="tfQuestionText"></p>
+                </div>
+                <div class="tf-options" id="tfOptionsContainer">
+                    <button data-answer="true">נכון</button>
+                    <button data-answer="false">לא נכון</button>
+                </div>
+                <div class="feedback" id="tfFeedback">
+                     <span id="tfFeedbackText"></span>
+                     <div class="explanation" id="tfExplanation"></div>
+                </div>
+                 <div class="navigation-controls">
+                    <button id="prevTfBtn">הקודם</button>
+                    <span class="counter" id="tfCounter"></span>
+                    <button id="nextTfBtn">הבא</button>
+                </div>
+            </div>
+             <div style="text-align: center; margin-top: 20px;">
+                 <button id="viewAllTfBtn">הצג את כל השאלות</button>
+             </div>
+              <div id="tfAllQuestions">
+                <!-- All questions view generated by JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Data for the Study Tool
+
+        // --- Study Cards Data ---
+        const studyCards = [
+            { front: "פרוקריוט (Prokaryote)", back: "תא חסר גרעין מוגדר ואברונים עטופי ממברנה. כולל בקטריות וארכיאות." },
+            { front: "אוקריוט (Eukaryote)", back: "תא בעל גרעין מוגדר ואברונים עטופי ממברנה (כמו מיטוכונדריה). כולל בעלי חיים, צמחים, פטריות וחד-תאיים מסוימים." },
+            { front: "ציטופלסמה (Cytoplasm)", back: "התוכן הפנימי של התא, מוקף בממברנה הציטופלסמית. מכיל מים, מומסים, DNA (בנוקלאואיד הפרוקריוטי), ריבוזומים, אנזימים ועוד." },
+            { front: "ממברנה ציטופלסמית (קרום התא)", back: "שכבה דו-ליפידית המקיפה את הציטופלסמה. אחראית על חדירות בררנית, עיגון חלבונים ויצירת אנרגיה." },
+            { front: "פוספוליפיד (Phospholipid)", back: "מרכיב עיקרי בממברנות ביולוגיות. מורכב מראש הידרופילי (גליצרול-פוספט) ושני זנבות הידרופוביים (חומצות שומן בבקטריות, פיטאניל בארכיאות)." },
+            { front: "קשר אסתרי (Ester bond)", back: "סוג הקשר הכימי המחבר בין הגליצרול לחומצות השומן בפוספוליפידים של בקטריות ואוקריוטים." },
+            { front: "קשר אתרי (Ether bond)", back: "סוג הקשר הכימי המחבר בין הגליצרול לשרשראות איזופרן (פיטאניל) בפוספוליפידים של ארכיאות. יציב יותר מקשר אסתרי." },
+            { front: "חומצות שומן (Fatty acids)", back: "שרשראות פחמימניות הידרופוביות, מרכיבות את הזנבות של פוספוליפידים בבקטריות. יכולות להיות רוויות או בלתי רוויות." },
+            { front: "איזופרן (Isoprene)", back: "יחידה פחמימנית מסועפת ($C_5H_8$) המרכיבה את השרשראות ההידרופוביות (פיטאניל) בפוספוליפידים של ארכיאות." },
+             { front: "פיטאניל (Phytanyl)", back: "שרשרת הידרופובית המורכבת מיחידות איזופרן, נמצאת בפוספוליפידים של ארכיאות במקום חומצות שומן." },
+            { front: "ממברנה חד-שכבתית (Monolayer)", back: "מבנה ממברנה ייחודי לחלק מהארכיאות, בו שרשראות הפיטאניל משתי השכבות קשורות קוולנטית, יוצרות שכבה אחת יציבה במיוחד לחום." },
+            { front: "סטרולים (Sterols)", back: "מולקולות ליפידיות (כמו כולסטרול) המייצבות את הממברנה בתאים אוקריוטיים ובמספר קטן של בקטריות (כמו מיקופלסמה)." },
+            { front: "הופנואידים (Hopanoids)", back: "מולקולות דמויות סטרולים המייצבות את הממברנה בבקטריות רבות. אינן נמצאות בארכיאות וברוב האוקריוטים." },
+            { front: "דופן התא (Cell Wall)", back: "שכבה קשיחה חיצונית לממברנה ברוב הפרוקריוטים (ובצמחים/פטריות). מספקת הגנה אוסמוטית ומכאנית וקובעת את צורת התא." },
+            { front: "פפטידוגליקאן (Peptidoglycan / Murein)", back: "פולימר ייחודי לדופן התא של בקטריות. מורכב משרשראות סוכרים (NAG ו-NAM) הקשורים בקשרי $\\beta(1-4)$ ומקושרים ביניהם על ידי פפטידים קצרים." },
+            { front: "NAG (N-acetylglucosamine)", back: "אחד משני האמינו-סוכרים המרכיבים את שרשרת הפפטידוגליקאן." },
+            { front: "NAM (N-acetylmuramic acid)", back: "האמינו-סוכר השני בפפטידוגליקאן, אליו קשור הפפטיד הקצר. ייחודי לבקטריות." },
+            { front: "קשר $\\beta(1-4)$ גליקוזידי", back: "הקשר המחבר בין יחידות NAG ו-NAM בפפטידוגליקאן. מפורק על ידי האנזים ליזוזים." },
+            { front: "חומצות אמינו D", back: "איזומרים אופטיים של חומצות אמינו (כמו D-alanine, D-glutamate) הנמצאים בפפטידים של הפפטידוגליקאן. נדירים במערכות ביולוגיות אחרות." },
+            { front: "DAP (Diaminopimelic acid)", back: "חומצת אמינו ייחודית הנמצאת בפפטידים של הפפטידוגליקאן בחלק מהבקטריות." },
+            { front: "טרנספפטידאז (Transpeptidase)", back: "אנזים בקטריאלי האחראי ליצירת קשרי הצילוב הפפטידיים בין שרשראות הפפטידוגליקאן. מהווה מטרה לאנטיביוטיקות מסוג פניצילין." },
+            { front: "ליזוזים (Lysozyme)", back: "אנזים המפרק את הקשר $\\beta(1-4)$ בפפטידוגליקאן, ובכך מחליש את דופן החיידק. נמצא בהפרשות גוף רבות." },
+            { front: "פרוטופלסט (Protoplast)", back: "תא בקטריאלי שדופן התא שלו הוסרה (למשל ע'י ליזוזים). רגיש מאוד לשינויים אוסמוטיים ויכול לשרוד רק בתמיסה איזוטונית." },
+            { front: "Mycoplasma", back: "סוג של בקטריה חסרת דופן באופן טבעי. חיה כטפילה בסביבה איזוטונית ומחזקת את הממברנה שלה בעזרת סטרולים." },
+            { front: "פסאודופפטידוגליקאן (Pseudopeptidoglycan)", back: "פולימר דמוי פפטידוגליקאן המרכיב את הדופן בחלק מהארכיאות. מכיל NAT במקום NAM, קשרי $\\beta(1-3)$ וחומצות אמינו L בלבד." },
+            { front: "S-layer", back: "שכבה חיצונית מסודרת של חלבונים או גליקופרוטאינים, הנמצאת בדופן של ארכיאות רבות וגם בחלק מהבקטריות." },
+             { front: "יחס שטח פנים לנפח", back: "מדד ליעילות חילוף חומרים עם הסביבה. גבוה יותר בתאים קטנים (כמו פרוקריוטים). מחושב כ- $3/R$ לתא כדורי ברדיוס $R$." },
+             { front: "לחץ אוסמוטי", back: "הלחץ שיש להפעיל על תמיסה כדי למנוע זרימת ממס טהור אליה דרך ממברנה חדירה למחצה. הדופן מגינה מפני לחץ אוסמוטי גבוה בתוך התא." },
+             { front: "פלואידיות הממברנה", back: "מידת הנזילות של הממברנה. מושפעת מהרכב חומצות השומן (יותר בלתי רוויות = יותר נזילות) ומהימצאות סטרולים/הופנואידים. חשובה לתפקוד תקין בטמפרטורות שונות." }
+        ];
+
+        // --- MCQ Data ---
+        const mcqQuestions = [
+            {
+                question: "מהו ההבדל המרכזי בין תא פרוקריוטי לתא אוקריוטי מבחינת ארגון החומר התורשתי?",
+                options: [
+                    "בפרוקריוטים ה-DNA הוא לינארי ובאוקריוטים הוא מעגלי",
+                    "באוקריוטים ה-DNA נמצא בגרעין מוגדר, בפרוקריוטים הוא באזור הנקרא נוקלאואיד",
+                    "לפרוקריוטים יש יותר כרומוזומים מאשר לאוקריוטים",
+                    "לאוקריוטים אין ריבוזומים, לפרוקריוטים יש ריבוזומים מסוג 70S"
+                ],
+                correctIndex: 1,
+                explanation: "ההבדל העיקרי הוא קיום גרעין תא מוגדר באוקריוטים המכיל את ה-DNA, לעומת אזור נוקלאואיד לא מתוחם בממברנה בפרוקריוטים."
+            },
+             {
+                question: "מה היתרון העיקרי של יחס שטח פנים לנפח גבוה בתאים פרוקריוטיים?",
+                options: [
+                    "אפשרות ליצירת מושבות גדולות יותר",
+                    "הגנה טובה יותר מפני טורפים",
+                    "קליטה יעילה יותר של חומרי מזון וקצב גידול מהיר יותר",
+                    "יכולת תנועה מהירה יותר בסביבה נוזלית"
+                ],
+                correctIndex: 2,
+                explanation: "יחס שטח פנים/נפח גבוה ($3/R$) מאפשר חילוף חומרים יעיל יותר עם הסביבה, מה שתומך בקצב גידול מהיר יותר."
+            },
+            {
+                question: "איזה מהתפקידים הבאים אינו תפקיד ישיר של הממברנה הציטופלסמית בפרוקריוטים?",
+                options: [
+                    "חדירות בררנית וויסות מעבר חומרים",
+                    "עיגון חלבונים המעורבים בנשימה תאית",
+                    "קביעת צורת התא ושמירה עליה",
+                    "יצירת פוטנציאל פרוטונים להפקת אנרגיה"
+                ],
+                correctIndex: 2,
+                explanation: "קביעת צורת התא היא בעיקר תפקיד של דופן התא (אם קיימת) או השלד התאי (במידה מוגבלת), ולא של הממברנה."
+            },
+            {
+                question: "מהו סוג הקשר הליפידי האופייני לממברנות של בקטריות?",
+                options: [
+                    "קשר אתרי (Ether bond)",
+                    "קשר אסתרי (Ester bond)",
+                    "קשר פפטידי (Peptide bond)",
+                    "קשר גליקוזידי (Glycosidic bond)"
+                ],
+                correctIndex: 1,
+                explanation: "בממברנות של בקטריות (וגם אוקריוטים), חומצות השומן קשורות לגליצרול באמצעות קשר אסתרי."
+            },
+             {
+                question: "מהו סוג השרשראות ההידרופוביות האופייניות לממברנות של ארכיאות?",
+                options: [
+                    "חומצות שומן רוויות בלבד",
+                    "חומצות שומן בלתי רוויות בלבד",
+                    "שרשראות פיטאניל המבוססות על איזופרן",
+                    "סטרולים מסוג כולסטרול"
+                ],
+                correctIndex: 2,
+                explanation: "בממברנות ארכיאות, השרשראות ההידרופוביות הן מסוג פיטאניל, הבנויות מיחידות איזופרן, ולא חומצות שומן."
+            },
+             {
+                question: "איזו תכונה מאפשרת לארכיאות מסוימות לשרוד בטמפרטורות גבוהות במיוחד?",
+                options: [
+                    "נוכחות של הופנואידים בממברנה",
+                    "קשרי אסטר חזקים במיוחד בפוספוליפידים",
+                    "יכולת יצירת ממברנה חד-שכבתית (Monolayer) באמצעות קשרי אתר",
+                    "דופן תא גמישה במיוחד המבוססת על פפטידוגליקאן"
+                ],
+                correctIndex: 2,
+                explanation: "היכולת ליצור ממברנה חד-שכבתית, יחד עם יציבות קשרי האתר, מקנה עמידות גבוהה לחום בארכיאות תרמופיליות."
+            },
+            {
+                question: "איזו מולקולה מייצבת נמצאת לרוב בממברנות של בקטריות, אך לא בארכיאות?",
+                options: [
+                    "כולסטרול",
+                    "ארגוסטרול",
+                    "הופנואידים",
+                    "פיטוסטרול"
+                ],
+                correctIndex: 2,
+                explanation: "הופנואידים הם מולקולות דמויות סטרולים האופייניות לבקטריות רבות ומשמשות לייצוב הממברנה. הן אינן נמצאות בארכיאות."
+            },
+             {
+                question: "מהו תפקידו העיקרי של דופן התא בפרוקריוטים החיים בסביבה היפוטונית (דלילת מומסים)?",
+                options: [
+                    "לסייע בחלוקת התא",
+                    "למנוע כניסת מים עודפת והתפוצצות התא (ליזיס אוסמוטי)",
+                    "לעגן את השוטונים לתנועה",
+                    "לווסת את הטמפרטורה הפנימית של התא"
+                ],
+                correctIndex: 1,
+                explanation: "בסביבה היפוטונית, מים נוטים להיכנס לתא בגלל ריכוז המומסים הגבוה בפנים. הדופן הקשיחה מפעילה לחץ נגדי ומונעת מהתא להתפוצץ."
+            },
+            {
+                question: "מהם שני האמינו-סוכרים המרכיבים את השלד הפולימרי של הפפטידוגליקאן בבקטריות?",
+                options: [
+                    "גלוקוז ופרוקטוז",
+                    "N-acetylglucosamine (NAG) ו- N-acetylmuramic acid (NAM)",
+                    "N-acetylglucosamine (NAG) ו- N-acetyltalosaminuronic acid (NAT)",
+                    "גלקטוז וריבוז"
+                ],
+                correctIndex: 1,
+                explanation: "השלד הסוכרי של הפפטידוגליקאן מורכב מיחידות חוזרות של NAG ו-NAM."
+            },
+            {
+                question: "איזה סוג קשר גליקוזידי מחבר בין יחידות הסוכר בפפטידוגליקאן והוא רגיש לפירוק על ידי ליזוזים?",
+                options: [
+                    "קשר $\\alpha(1-4)$",
+                    "קשר $\\beta(1-4)$",
+                    "קשר $\\alpha(1-6)$",
+                    "קשר $\\beta(1-3)$"
+                ],
+                correctIndex: 1,
+                explanation: "הקשר בין NAG ל-NAM בפפטידוגליקאן הוא קשר $\\beta(1-4)$, והוא האתר המבוקע על ידי האנזים ליזוזים."
+            },
+            {
+                question: "איזו קבוצה של חומצות אמינו ייחודיות נמצאת לעיתים קרובות בפפטידים הקצרים של הפפטידוגליקאן?",
+                options: [
+                    "חומצות אמינו ארומטיות בלבד",
+                    "חומצות אמינו הידרופוביות בלבד",
+                    "חומצות אמינו מסוג D ו/או DAP",
+                    "חומצות אמינו המכילות גופרית בלבד"
+                ],
+                correctIndex: 2,
+                explanation: "הפפטידים בפפטידוגליקאן מכילים לעיתים קרובות איזומרים D של חומצות אמינו (כמו D-Ala, D-Glu) ו/או Diaminopimelic acid (DAP), שהם נדירים בחלבונים אחרים."
+            },
+             {
+                question: "מה תפקידו של האנזים טרנספפטידאז בסינתזת דופן התא הבקטריאלי?",
+                options: [
+                    "יצירת הקשר הגליקוזידי בין NAG ל-NAM",
+                    "פירוק הפפטידוגליקאן הישן בזמן גדילה",
+                    "יצירת קשרי הצילוב (cross-links) בין הפפטידים של שרשראות פפטידוגליקאן סמוכות",
+                    "הובלת יחידות הפפטידוגליקאן דרך הממברנה הציטופלסמית"
+                ],
+                correctIndex: 2,
+                explanation: "טרנספפטידאז אחראי ליצירת הקשרים הפפטידיים המחברים בין שרשראות פפטידוגליקאן סמוכות, ובכך מקנים לדופן את חוזקה."
+            },
+            {
+                question: "כיצד פועל האנזים ליזוזים נגד בקטריות?",
+                options: [
+                    "הוא מעכב את האנזים טרנספפטידאז",
+                    "הוא יוצר חורים בממברנה הציטופלסמית",
+                    "הוא מפרק את קשרי ה-$\beta(1-4)$ בפפטידוגליקאן",
+                    "הוא נקשר לריבוזומים ומעכב סינתזת חלבונים"
+                ],
+                correctIndex: 2,
+                explanation: "ליזוזים מפרק ספציפית את הקשר הגליקוזידי מסוג $\beta(1-4)$ בין NAG ל-NAM בפפטידוגליקאן, מה שמחליש את הדופן."
+            },
+            {
+                question: "מדוע בקטריות מסוג Mycoplasma עמידות לאנטיביוטיקות כמו פניצילין?",
+                options: [
+                    "כי יש להן דופן תא עבה במיוחד",
+                    "כי הן חסרות דופן תא המכילה פפטידוגליקאן",
+                    "כי הממברנה שלהן מכילה קשרי אתר במקום קשרי אסטר",
+                    "כי הן מייצרות אנזים המפרק פניצילין"
+                ],
+                correctIndex: 1,
+                explanation: "פניצילין פועל על ידי עיכוב סינתזת הפפטידוגליקאן. מאחר שלמיקופלסמה אין דופן פפטידוגליקנית, פניצילין אינו יעיל נגדה."
+            },
+            {
+                question: "מהו פסאודופפטידוגליקאן?",
+                options: [
+                    "שם נרדף לפפטידוגליקאן בבקטריות גראם-שליליות",
+                    "פולימר דמוי פפטידוגליקאן המצוי בדופן של חלק מהארכיאות",
+                    "שכבת ה-S-Layer המצויה על פני ארכיאות מסוימות",
+                    "מולקולה המעכבת את פעילות הליזוזים"
+                ],
+                correctIndex: 1,
+                explanation: "פסאודופפטידוגליקאן הוא מבנה דומה לפפטידוגליקאן הנמצא בדופן של ארכיאות מסוימות, אך נבדל ממנו בהרכבו הכימי (NAT במקום NAM, קשרי $\beta(1-3)$, חומצות אמינו L)."
+            },
+            {
+                question: "איזה מהמרכיבים הבאים אינו אופייני לדופן התא של ארכיאות?",
+                options: [
+                    "פסאודופפטידוגליקאן",
+                    "פפטידוגליקאן",
+                    "S-Layer המורכבת מחלבונים",
+                    "פוליסכרידים שונים"
+                ],
+                correctIndex: 1,
+                explanation: "פפטידוגליקאן הוא המרכיב הייחודי לדופן הבקטריאלית ואינו נמצא בדופן של ארכיאות."
+            },
+             {
+                question: "מדוע ארכיאות עמידות באופן טבעי לליזוזים?",
+                options: [
+                    "כי יש להן קפסולה עבה המונעת גישה לליזוזים",
+                    "כי הן מייצרות אנזים המנטרל ליזוזים",
+                    "כי הדופן שלהן אינה מכילה פפטידוגליקאן עם קשרי $\beta(1-4)$",
+                    "כי הממברנה שלהן מכילה קשרי אתר יציבים"
+                ],
+                correctIndex: 2,
+                explanation: "ליזוזים פועל על קשרי $\beta(1-4)$ בפפטידוגליקאן. מאחר שדופן הארכיאות אינה מכילה מבנה זה (גם בפסאודופפטידוגליקאן הקשר הוא $\beta(1-3)$), הליזוזים אינו יכול לפרק אותה."
+            },
+            {
+                question: "בקטריום הגדל בטמפרטורות נמוכות מאוד צפוי להכיל אחוז גבוה יותר של:",
+                options: [
+                    "חומצות שומן רוויות וארוכות בממברנה",
+                    "חומצות שומן בלתי רוויות וקצרות בממברנה",
+                    "הופנואידים בממברנה",
+                    "סטרולים מסוג כולסטרול בממברנה"
+                ],
+                correctIndex: 1,
+                explanation: "בטמפרטורות נמוכות, הממברנה נוטה להתמצק. הגדלת אחוז חומצות השומן הבלתי רוויות (היוצרות 'כיפופים') והקצרות מגבירה את נזילות הממברנה ושומרת על תפקודה."
+            },
+             {
+                question: "איזו מולקולה, אם תימצא בממברנה של תא לא ידוע, תעיד בסבירות הגבוהה ביותר שמדובר בתא אוקריוטי?",
+                options: [
+                    "פוספוליפיד עם קשר אסתרי",
+                    "חלבון טראנסממברנלי",
+                    "הופנואיד",
+                    "סטרול (כמו כולסטרול או ארגוסטרול)"
+                ],
+                correctIndex: 3,
+                explanation: "סטרולים הם סימן היכר מובהק של ממברנות אוקריוטיות (למעט חריגים נדירים). הופנואידים אופייניים לבקטריות, ופוספוליפידים עם קשרי אסטר וחלבונים קיימים גם בבקטריות."
+            },
+            {
+                question: "תהליך יצירת קשרי הצילוב בפפטידוגליקאן מתרחש:",
+                options: [
+                    "בתוך הציטופלסמה",
+                    "על פני הריבוזומים",
+                    "בתוך הממברנה הציטופלסמית",
+                    "מחוץ לממברנה הציטופלסמית, במרחב הפריפלסמטי או חיצונית לו"
+                ],
+                correctIndex: 3,
+                explanation: "יחידות הפפטידוגליקאן מסונתזות בציטופלסמה, מועברות דרך הממברנה, והפולימריזציה ויצירת קשרי הצילוב מתרחשות מחוץ לממברנה."
+            },
+             {
+                question: "מה יקרה לפרוטופלסט (תא בקטריאלי ללא דופן) אם יועבר מתמיסה איזוטונית למים מזוקקים (תמיסה היפוטונית)?",
+                options: [
+                    "הוא יתכווץ ויאבד מים",
+                    "הוא יתנפח ויתפוצץ (יעבור ליזיס)",
+                    "הוא ייצר דופן חדשה במהירות",
+                    "לא יחול שינוי משמעותי במבנה שלו"
+                ],
+                correctIndex: 1,
+                explanation: "בהיעדר דופן שתספק לחץ נגדי, כניסת מים מאסיבית לתא בסביבה היפוטונית תגרום לו להתנפח עד להתפוצצות הממברנה."
+            },
+             {
+                question: "מהו המבנה הבסיסי של S-Layer?",
+                options: [
+                    "רשת תלת-ממדית של פפטידוגליקאן",
+                    "שכבה דו-ליפידית נוספת מחוץ לממברנה",
+                    "שכבה מסודרת וסימטרית של יחידות חלבון או גליקופרוטאין",
+                    "פולימר של חומצות טיכואיות וליפוטכואיות"
+                ],
+                correctIndex: 2,
+                explanation: "S-Layer היא שכבה חיצונית המורכבת מיחידות חוזרות ומסודרות של חלבונים או גליקופרוטאינים, היוצרות מבנה דמוי קריסטל על פני התא."
+            },
+             {
+                question: "איזה מהבאים מהווה דוגמה להבדל מבני משמעותי בין דופן בקטריאלית לדופן של ארכיאה המכילה פסאודופפטידוגליקאן?",
+                options: [
+                    "נוכחות פפטידים קצרים הקשורים לסוכרים",
+                    "סוג הקשר הגליקוזידי בין האמינו-סוכרים",
+                    "היות הדופן שכבה חיצונית לממברנה",
+                    "נוכחות חומצות אמינו מסוג L בפפטידים"
+                ],
+                correctIndex: 1,
+                explanation: "ההבדלים העיקריים הם סוג הסוכר השני (NAM לעומת NAT), סוג הקשר הגליקוזידי ($\beta(1-4)$ לעומת $\beta(1-3)$), וסוג חומצות האמינו בפפטיד (D/L בבקטריות, רק L בארכיאות אלו)."
+            },
+            {
+                question: "מבין שלוש העל-ממלכות (Domains) של החיים, אילו הן פרוקריוטיות?",
+                options: [
+                    "בקטריה ואוקריה",
+                    "ארכיאה ואוקריה",
+                    "בקטריה וארכיאה",
+                    "רק בקטריה"
+                ],
+                correctIndex: 2,
+                explanation: "העל-ממלכות בקטריה וארכיאה כוללות אורגניזמים פרוקריוטיים, בעוד העל-ממלכה אוקריה כוללת אורגניזמים אוקריוטיים."
+            },
+             {
+                question: "איזה מאפיין של הממברנה הציטופלסמית מאפשר תנועה של חלבונים בתוכה?",
+                options: [
+                    "נוכחות קשרי אתר יציבים",
+                    "האופי הנוזלי (פלואידי) של דו-שכבת הפוספוליפידים",
+                    "הימצאות שכבת S-layer חיצונית",
+                    "מטען חשמלי שלילי חזק על פני השטח"
+                ],
+                correctIndex: 1,
+                explanation: "מודל הפסיפס הנוזלי מתאר את הממברנה כבעלת אופי נוזלי, המאפשר למרכיביה, כולל חלבונים, לנוע לרוחב הממברנה."
+            },
+            {
+                question: "באיזה אופן תורמת נוכחות של חומצות שומן בלתי רוויות לפלואידיות הממברנה?",
+                options: [
+                    "הן יוצרות קשרים חזקים יותר עם חומצות שומן שכנות",
+                    "הן ישרות ומאפשרות אריזה צפופה יותר של הממברנה",
+                    "הן יוצרות 'כיפופים' בשרשרת המונעים אריזה צפופה ומגבירים את המרווחים",
+                    "הן נקשרות לחלבונים ומגבירות את יציבותם"
+                ],
+                correctIndex: 2,
+                explanation: "הקשרים הכפולים בחומצות שומן בלתי רוויות גורמים לכיפוף במבנה השרשרת, מה שמפריע לאריזה צפופה של הפוספוליפידים ומגביר את נזילות (פלואידיות) הממברנה."
+            },
+             {
+                question: "איזה מהבאים אינו מרכיב ייחודי לפפטידוגליקאן הבקטריאלי בהשוואה למרכיבים הנמצאים בדרך כלל בתאים אנימליים?",
+                options: [
+                    "חומצה N-אצטילמורמית (NAM)",
+                    "חומצות אמינו D",
+                    "חומצה דיאמינופימלית (DAP)",
+                    "חומצת האמינו L-Alanine"
+                ],
+                correctIndex: 3,
+                explanation: "L-Alanine היא חומצת אמינו נפוצה מאוד בכל סוגי התאים, כולל תאים אנימליים. NAM, חומצות אמינו D ו-DAP הם ייחודיים (או נדירים מאוד מחוץ) לפפטידוגליקאן."
+            },
+            {
+                question: "אם מפיקים ממברנות מרקמת מעי של חיה המזוהמת גם בבקטריות וגם בארכיאות, איזה חומר לא צפוי להימצא בתערובת הממברנות?",
+                options: [
+                    "פוספוליפידים עם קשרי אסטר",
+                    "פוספוליפידים עם קשרי אתר",
+                    "כולסטרול",
+                    "פפטידוגליקאן",
+                    "הופנואידים"
+                ],
+                correctIndex: 3,
+                explanation: "פפטידוגליקאן הוא מרכיב של דופן התא הבקטריאלי, לא של הממברנה. ממברנות החיה (אוקריוט) יכילו פוספוליפידים עם קשרי אסטר וכולסטרול. ממברנות הבקטריות יכילו פוספוליפידים עם קשרי אסטר והופנואידים. ממברנות הארכיאות יכילו פוספוליפידים עם קשרי אתר."
+            },
+            {
+                question: "איזה חיידק צפוי לייצר דופן חזקה יותר ועמידה ללחצים אוסמוטיים?",
+                options: [
+                     "חיידק עם שכבת פפטידוגליקאן דקה ומעט קשרי צילוב",
+                     "חיידק עם שכבת פפטידוגליקאן עבה והרבה קשרי צילוב",
+                     "חיידק מסוג Mycoplasma",
+                     "חיידק ארכיאה עם S-layer בלבד"
+                ],
+                correctIndex: 1,
+                explanation: "חוזק דופן הפפטידוגליקאן תלוי גם בעובי השכבה (מספר השכבות) וגם בצפיפות קשרי הצילוב בין השרשראות הפפטידיות. שילוב של שכבה עבה וקשרי צילוב רבים יקנה את החוזק המרבי."
+            },
+            {
+                question: "מה ההבדל העיקרי בין בקטריה לארכיאה מבחינת הרכב הליפידים בממברנה?",
+                options: [
+                     "לבקטריה יש קשרי אתר ולארכיאה קשרי אסטר",
+                     "לבקטריה יש חומצות שומן ולארכיאה שרשראות איזופרן (פיטאניל)",
+                     "לבקטריה יש כולסטרול ולארכיאה הופנואידים",
+                     "לבקטריה יש ממברנה חד-שכבתית ולארכיאה דו-שכבתית"
+                ],
+                correctIndex: 1,
+                explanation: "ההבדל המרכזי הוא בסוג השרשראות ההידרופוביות: חומצות שומן בבקטריות ושרשראות איזופרן בארכיאות. כתוצאה מכך, גם סוג הקשר לגליצרול שונה (אסטר בבקטריות, אתר בארכיאות)."
+            }
+        ];
+
+        // --- True/False Data ---
+        const tfQuestions = [
+            { question: "כל התאים הפרוקריוטיים קטנים יותר מכל התאים האוקריוטיים.", answer: false, explanation: "למרות שפרוקריוטים לרוב קטנים יותר, ישנם אוקריוטים חד-תאיים קטנים מאוד וישנם גם פרוקריוטים גדולים יחסית. זהו כלל אצבע, לא חוק מוחלט." },
+            { question: "ה-DNA בתא פרוקריוטי נמצא תמיד ככרומוזום מעגלי יחיד בציטופלסמה.", answer: false, explanation: "לרוב ה-DNA הפרוקריוטי הוא כרומוזום מעגלי יחיד בנוקלאואיד, אך ישנם חיידקים עם כרומוזומים לינאריים או מספר כרומוזומים/פלסמידים." },
+            { question: "הממברנה הציטופלסמית של פרוקריוטים אינה מעורבת בייצור אנרגיה.", answer: false, explanation: "בפרוקריוטים, תהליכי יצירת אנרגיה מרכזיים (כמו שרשרת העברת אלקטרונים בנשימה) מתרחשים בממברנה הציטופלסמית." },
+            { question: "קשרי אתר בפוספוליפידים של ארכיאות יציבים יותר מבחינה כימית מקשרי אסטר.", answer: true, explanation: "קשרי האתר אכן עמידים יותר לפירוק כימי והידרוליטי, מה שתורם ליכולת הארכיאות לשרוד בתנאים קיצוניים." },
+            { question: "כל הבקטריות מכילות הופנואידים בממברנה שלהן.", answer: false, explanation: "הופנואידים נמצאים בבקטריות רבות, אך לא בכולן." },
+            { question: "סטרולים, כמו כולסטרול, הם מרכיב נפוץ בממברנות של ארכיאות.", answer: false, explanation: "סטרולים אופייניים לאוקריוטים ולמספר בקטריות חריגות. הם אינם נמצאים בארכיאות." },
+            { question: "דופן התא הפרוקריוטי מונעת לחלוטין מעבר של מולקולות אל התא וממנו.", answer: false, explanation: "הדופן מספקת חוזק מכאני, אך היא חדירה יחסית ומאפשרת מעבר של מולקולות קטנות. הממברנה היא זו שמווסתת את המעבר באופן בררני." },
+            { question: "הפפטידוגליקאן מורכב אך ורק מחלבונים.", answer: false, explanation: "הפפטידוגליקאן מורכב משרשראות סוכריות (גליקאן) המקושרות על ידי פפטידים קצרים (פפטידו)." },
+            { question: "האנזים ליזוזים יעיל באותה מידה נגד בקטריות ונגד ארכיאות.", answer: false, explanation: "ליזוזים פועל על קשר $\\beta(1-4)$ בפפטידוגליקאן הבקטריאלי. ארכיאות אינן מכילות מבנה זה ולכן עמידות לליזוזים." },
+            { question: "כל חומצות האמינו בפפטידים של הפפטידוגליקאן הן מסוג L.", answer: false, explanation: "הפפטידוגליקאן מכיל באופן ייחודי גם חומצות אמינו מסוג D." },
+            { question: "ניתן למצוא S-layer גם בבקטריות וגם בארכיאות.", answer: true, explanation: "S-layer היא שכבה חיצונית של חלבונים/גליקופרוטאינים הנמצאת על פני השטח של מינים רבים של ארכיאות וגם של בקטריות." },
+            { question: "בקטריות מסוג Mycoplasma מייצרות דופן תא דקה במיוחד.", answer: false, explanation: "Mycoplasma הן בקטריות שחסרות דופן תא לחלוטין." },
+            { question: "פרוטופלסט הוא תא אוקריוטי ללא גרעין.", answer: false, explanation: "פרוטופלסט הוא תא (בדרך כלל בקטריאלי או צמחי) שדופן התא שלו הוסרה." },
+            { question: "הרכב חומצות השומן בממברנה הבקטריאלית יכול להשתנות בתגובה לשינויים בטמפרטורת הסביבה.", answer: true, explanation: "חיידקים רבים יכולים לווסת את הרכב חומצות השומן (רוויות/בלתי רוויות) כדי לשמור על פלואידיות ממברנה אופטימלית בטמפרטורות שונות." },
+             { question: "ממברנה חד-שכבתית (Monolayer) נפוצה יותר בבקטריות מאשר בארכיאות.", answer: false, explanation: "ממברנה חד-שכבתית היא מאפיין ייחודי של ארכיאות מסוימות החיות בתנאים קיצוניים, ואינה נמצאת בבקטריות." },
+             { question: "העל-ממלכה אוקריה כוללת גם אורגניזמים חד-תאיים.", answer: true, explanation: "אוקריה כוללת אורגניזמים רב-תאיים (בעלי חיים, צמחים, פטריות מסוימות) וגם חד-תאיים (כמו שמרים, אמבות, אצות מסוימות)." },
+            { question: "האנזים טרנספפטידאז חיוני ליצירת הקשרים הגליקוזידיים בפפטידוגליקאן.", answer: false, explanation: "טרנספפטידאז אחראי ליצירת קשרי הצילוב הפפטידיים. אנזימים אחרים (גליקוזילטרנספראזות) אחראים ליצירת הקשרים הגליקוזידיים בין הסוכרים." },
+             { question: "קשרי הצילוב בפפטידוגליקאן תמיד נוצרים ישירות בין שתי חומצות אמינו סמוכות.", answer: false, explanation: "בחיידקים מסוימים, קשרי הצילוב נוצרים דרך 'גשר' המורכב ממספר חומצות אמינו נוספות המחברות בין שני הפפטידים." },
+             { question: "האזור הפנימי של הממברנה הציטופלסמית הוא הידרופילי.", answer: false, explanation: "האזור הפנימי של הממברנה, המורכב מהזנבות הליפידיים (חומצות שומן או פיטאניל), הוא הידרופובי (דוחה מים)." },
+            { question: "היעדר אברונים עטופי ממברנה בפרוקריוטים מונע מהם לבצע תהליכים מטבוליים מורכבים.", answer: false, explanation: "למרות היעדר אברונים, פרוקריוטים מסוגלים לבצע תהליכים מורכבים רבים, לעיתים קרובות באמצעות ארגון ייחודי בציטופלסמה או בממברנה." }
+        ];
+
+
+        // --- Global Variables for State ---
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+        let mcqUserAnswers = new Array(mcqQuestions.length).fill(null);
+        let tfUserAnswers = new Array(tfQuestions.length).fill(null);
+        let mcqCorrectAnswers = 0;
+        let tfCorrectAnswers = 0;
+
+        // --- DOM Element References ---
+        const cardElement = document.getElementById('studyCard');
+        const cardFront = document.getElementById('cardFront');
+        const cardBack = document.getElementById('cardBack');
+        const cardCounter = document.getElementById('cardCounter');
+        const prevCardBtn = document.getElementById('prevCardBtn');
+        const nextCardBtn = document.getElementById('nextCardBtn');
+
+        const mcqQuestionText = document.getElementById('mcqQuestionText');
+        const mcqOptionsContainer = document.getElementById('mcqOptionsContainer');
+        const mcqFeedback = document.getElementById('mcqFeedback');
+        const mcqFeedbackText = document.getElementById('mcqFeedbackText');
+        const mcqExplanation = document.getElementById('mcqExplanation');
+        const mcqCounter = document.getElementById('mcqCounter');
+        const prevMcqBtn = document.getElementById('prevMcqBtn');
+        const nextMcqBtn = document.getElementById('nextMcqBtn');
+        const viewAllMcqBtn = document.getElementById('viewAllMcqBtn');
+        const mcqAllQuestionsContainer = document.getElementById('mcqAllQuestions');
+        const mcqSingleQuestionContainer = document.getElementById('mcqSingleQuestion');
+
+
+        const tfQuestionText = document.getElementById('tfQuestionText');
+        const tfOptionsContainer = document.getElementById('tfOptionsContainer');
+        const tfFeedback = document.getElementById('tfFeedback');
+        const tfFeedbackText = document.getElementById('tfFeedbackText');
+        const tfExplanation = document.getElementById('tfExplanation');
+        const tfCounter = document.getElementById('tfCounter');
+        const prevTfBtn = document.getElementById('prevTfBtn');
+        const nextTfBtn = document.getElementById('nextTfBtn');
+        const viewAllTfBtn = document.getElementById('viewAllTfBtn');
+        const tfAllQuestionsContainer = document.getElementById('tfAllQuestions');
+        const tfSingleQuestionContainer = document.getElementById('tfSingleQuestion');
+
+
+        // --- Utility Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Call MathJax typesetting promise safely
+        function typesetMath(element) {
+             if (window.MathJax && window.MathJax.typesetPromise) {
+                 window.MathJax.typesetPromise([element]).catch((err) => console.error('MathJax Typesetting failed: ', err));
+             }
+        }
+
+        // --- Study Card Logic ---
+        function displayCard(index) {
+            if (index < 0 || index >= studyCards.length) return;
+            const card = studyCards[index];
+            cardFront.textContent = card.front;
+            cardBack.textContent = card.back;
+            cardCounter.textContent = `כרטיסייה ${index + 1} / ${studyCards.length}`;
+             cardElement.classList.remove('is-flipped'); // Reset flip state
+             // Typeset math on both faces
+            typesetMath(cardFront);
+            typesetMath(cardBack);
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % studyCards.length;
+            displayCard(currentCardIndex);
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + studyCards.length) % studyCards.length;
+            displayCard(currentCardIndex);
+        }
+
+        // --- MCQ Logic ---
+         function displayMcq(index, container = mcqSingleQuestionContainer, optionsTarget = mcqOptionsContainer, isSingleView = true) {
+            if (index < 0 || index >= mcqQuestions.length) return;
+            const questionData = mcqQuestions[index];
+
+             const questionTextElement = isSingleView ? mcqQuestionText : container.querySelector('.question-text');
+             const optionsContainerElement = isSingleView ? optionsTarget : container.querySelector('.options-container');
+             const feedbackElement = isSingleView ? mcqFeedback : container.querySelector('.feedback');
+             const feedbackTextElement = isSingleView ? mcqFeedbackText : container.querySelector('.feedback-text');
+             const explanationElement = isSingleView ? mcqExplanation : container.querySelector('.explanation');
+
+             questionTextElement.textContent = questionData.question;
+             optionsContainerElement.innerHTML = ''; // Clear previous options
+
+            questionData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.dataset.index = i;
+                button.onclick = () => checkMcqAnswer(index, i, container, isSingleView);
+                optionsContainerElement.appendChild(button);
+             });
+
+             if (isSingleView) {
+                 mcqCounter.textContent = `שאלה ${index + 1} / ${mcqQuestions.length}`;
+                 feedbackElement.style.display = 'none';
+                 feedbackElement.className = 'feedback'; // Reset feedback class
+                 prevMcqBtn.disabled = index === 0;
+                 nextMcqBtn.disabled = index === mcqQuestions.length - 1;
+             } else {
+                feedbackElement.style.display = 'none'; // Ensure feedback hidden initially in all-view
+                feedbackElement.className = 'feedback';
+             }
+
+             // Restore answered state if exists
+             if (mcqUserAnswers[index] !== null) {
+                 showMcqFeedback(index, mcqUserAnswers[index].selectedIndex, container, isSingleView, false); // Show feedback without animation/scoring
+             }
+
+             // Typeset math for the question and options
+            typesetMath(questionTextElement);
+            typesetMath(optionsContainerElement); // Typeset all buttons within the container
+         }
+
+        function checkMcqAnswer(questionIndex, selectedIndex, container, isSingleView = true, allowScore = true) {
+            if (mcqUserAnswers[questionIndex] !== null && allowScore) return; // Prevent re-answering in single view if already answered
+
+             const questionData = mcqQuestions[questionIndex];
+             const isCorrect = parseInt(selectedIndex) === questionData.correctIndex;
+
+             if (mcqUserAnswers[questionIndex] === null && allowScore) { // Only score first attempt
+                 mcqUserAnswers[questionIndex] = { selectedIndex, isCorrect };
+                 if (isCorrect) mcqCorrectAnswers++;
+            }
+
+            showMcqFeedback(questionIndex, selectedIndex, container, isSingleView, true); // Show feedback with styling
+        }
+
+         function showMcqFeedback(questionIndex, selectedIndex, container, isSingleView, applyStyles = true) {
+            const questionData = mcqQuestions[questionIndex];
+            const isCorrect = parseInt(selectedIndex) === questionData.correctIndex;
+
+            const optionsContainerElement = isSingleView ? mcqOptionsContainer : container.querySelector('.options-container');
+            const feedbackElement = isSingleView ? mcqFeedback : container.querySelector('.feedback');
+            const feedbackTextElement = isSingleView ? mcqFeedbackText : container.querySelector('.feedback-text');
+            const explanationElement = isSingleView ? mcqExplanation : container.querySelector('.explanation');
+            const buttons = optionsContainerElement.querySelectorAll('button');
+
+            buttons.forEach((button, i) => {
+                 if (applyStyles) {
+                    button.disabled = true; // Disable all options after selection
+                    if (i === questionData.correctIndex) {
+                        button.classList.add('correct');
+                    } else if (i === parseInt(selectedIndex)) {
+                        button.classList.add('incorrect');
+                     }
+                 } else { // Restoring state - just mark visually, don't disable again if in all-view maybe? Or keep disabled. Let's keep disabled.
+                     button.disabled = true;
+                     if (i === questionData.correctIndex) button.classList.add('correct');
+                     else if (i === parseInt(selectedIndex)) button.classList.add('incorrect');
+                 }
+            });
+
+            if (applyStyles || mcqUserAnswers[questionIndex] !== null) { // Show feedback if applying styles or restoring an answered question
+                 feedbackElement.style.display = 'block';
+                 feedbackElement.classList.add(isCorrect ? 'correct' : 'incorrect');
+                 feedbackTextElement.textContent = isCorrect ? 'נכון!' : 'לא נכון.';
+                 explanationElement.textContent = questionData.explanation;
+                 typesetMath(explanationElement); // Typeset math in explanation
+            } else {
+                 feedbackElement.style.display = 'none';
+            }
+         }
+
+
+        function nextMcq() {
+            if (currentMcqIndex < mcqQuestions.length - 1) {
+                currentMcqIndex++;
+                displayMcq(currentMcqIndex);
+            }
+        }
+
+        function prevMcq() {
+            if (currentMcqIndex > 0) {
+                currentMcqIndex--;
+                displayMcq(currentMcqIndex);
+            }
+        }
+
+        function viewAllMcq() {
+            mcqSingleQuestionContainer.style.display = 'none';
+            mcqAllQuestionsContainer.style.display = 'block';
+            viewAllMcqBtn.textContent = "הסתר את כל השאלות";
+            viewAllMcqBtn.onclick = hideAllMcq;
+
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+            mcqQuestions.forEach((q, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'all-questions-item';
+                itemDiv.innerHTML = `
+                    <div class="question-text"><b>שאלה ${index + 1}:</b> ${q.question}</div>
+                    <div class="options-container"></div>
+                    <div class="feedback">
+                        <span class="feedback-text"></span>
+                        <div class="explanation"></div>
+                    </div>
+                `;
+                mcqAllQuestionsContainer.appendChild(itemDiv);
+                displayMcq(index, itemDiv, itemDiv.querySelector('.options-container'), false); // Display each question in its container
+            });
+            // Typeset the whole container after adding all questions
+            // typesetMath(mcqAllQuestionsContainer); // This might be less efficient than typesetting each item
+        }
+
+        function hideAllMcq() {
+            mcqSingleQuestionContainer.style.display = 'block';
+            mcqAllQuestionsContainer.style.display = 'none';
+            viewAllMcqBtn.textContent = "הצג את כל השאלות";
+            viewAllMcqBtn.onclick = viewAllMcq;
+            // Refresh the current single question view
+            displayMcq(currentMcqIndex);
+        }
+
+
+        // --- True/False Logic ---
+        function displayTf(index, container = tfSingleQuestionContainer, isSingleView = true) {
+            if (index < 0 || index >= tfQuestions.length) return;
+            const questionData = tfQuestions[index];
+
+            const questionTextElement = isSingleView ? tfQuestionText : container.querySelector('.question-text');
+            const optionsContainerElement = isSingleView ? tfOptionsContainer : container.querySelector('.tf-options');
+            const feedbackElement = isSingleView ? tfFeedback : container.querySelector('.feedback');
+            const feedbackTextElement = isSingleView ? tfFeedbackText : container.querySelector('.feedback-text');
+            const explanationElement = isSingleView ? tfExplanation : container.querySelector('.explanation');
+            const buttons = optionsContainerElement.querySelectorAll('button');
+
+
+            questionTextElement.textContent = questionData.question;
+
+             if (isSingleView) {
+                 tfCounter.textContent = `שאלה ${index + 1} / ${tfQuestions.length}`;
+                 feedbackElement.style.display = 'none';
+                 feedbackElement.className = 'feedback'; // Reset feedback class
+                 buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('correct', 'incorrect');
+                    // Re-attach event listeners for single view
+                    const answerValue = btn.dataset.answer === 'true';
+                    btn.onclick = () => checkTfAnswer(index, answerValue, container, isSingleView);
+                 });
+                 prevTfBtn.disabled = index === 0;
+                 nextTfBtn.disabled = index === tfQuestions.length - 1;
+             } else {
+                 feedbackElement.style.display = 'none';
+                 feedbackElement.className = 'feedback';
+                 buttons.forEach(btn => { // Need to ensure buttons in all-view have correct listeners
+                     btn.disabled = false; // Start enabled
+                     btn.classList.remove('correct', 'incorrect');
+                     const answerValue = btn.dataset.answer === 'true';
+                     btn.onclick = () => checkTfAnswer(index, answerValue, container, isSingleView);
+                 });
+             }
+
+
+             // Restore answered state if exists
+            if (tfUserAnswers[index] !== null) {
+                 showTfFeedback(index, tfUserAnswers[index].selectedAnswer, container, isSingleView, false);
+             }
+
+             // Typeset math for the question
+            typesetMath(questionTextElement);
+        }
+
+         function checkTfAnswer(questionIndex, selectedAnswer, container, isSingleView = true, allowScore = true) {
+             if (tfUserAnswers[questionIndex] !== null && allowScore) return; // Prevent re-answering in single view
+
+             const questionData = tfQuestions[questionIndex];
+             const isCorrect = selectedAnswer === questionData.answer;
+
+             if (tfUserAnswers[questionIndex] === null && allowScore) { // Only score first attempt
+                 tfUserAnswers[questionIndex] = { selectedAnswer, isCorrect };
+                 if (isCorrect) tfCorrectAnswers++;
+             }
+
+            showTfFeedback(questionIndex, selectedAnswer, container, isSingleView, true);
+        }
+
+        function showTfFeedback(questionIndex, selectedAnswer, container, isSingleView, applyStyles = true) {
+             const questionData = tfQuestions[questionIndex];
+             const isCorrect = selectedAnswer === questionData.answer;
+
+             const optionsContainerElement = isSingleView ? tfOptionsContainer : container.querySelector('.tf-options');
+             const feedbackElement = isSingleView ? tfFeedback : container.querySelector('.feedback');
+             const feedbackTextElement = isSingleView ? tfFeedbackText : container.querySelector('.feedback-text');
+             const explanationElement = isSingleView ? tfExplanation : container.querySelector('.explanation');
+             const buttons = optionsContainerElement.querySelectorAll('button');
+
+             buttons.forEach(button => {
+                 if (applyStyles) {
+                     button.disabled = true;
+                     const buttonAnswer = button.dataset.answer === 'true';
+                     if (buttonAnswer === questionData.answer) {
+                         button.classList.add('correct');
+                     } else if (buttonAnswer === selectedAnswer) {
+                         button.classList.add('incorrect');
+                     }
+                 } else { // Restoring state
+                    button.disabled = true;
+                    const buttonAnswer = button.dataset.answer === 'true';
+                    if (buttonAnswer === questionData.answer) button.classList.add('correct');
+                    else if (buttonAnswer === selectedAnswer) button.classList.add('incorrect');
+                 }
+             });
+
+            if (applyStyles || tfUserAnswers[questionIndex] !== null) { // Show feedback if applying styles or restoring
+                 feedbackElement.style.display = 'block';
+                 feedbackElement.classList.add(isCorrect ? 'correct' : 'incorrect');
+                 feedbackTextElement.textContent = isCorrect ? 'נכון!' : 'לא נכון.';
+                 explanationElement.textContent = questionData.explanation;
+                 typesetMath(explanationElement); // Typeset math in explanation
+            } else {
+                 feedbackElement.style.display = 'none';
+            }
+         }
+
+        function nextTf() {
+            if (currentTfIndex < tfQuestions.length - 1) {
+                currentTfIndex++;
+                displayTf(currentTfIndex);
+            }
+        }
+
+        function prevTf() {
+            if (currentTfIndex > 0) {
+                currentTfIndex--;
+                displayTf(currentTfIndex);
+            }
+        }
+
+         function viewAllTf() {
+            tfSingleQuestionContainer.style.display = 'none';
+            tfAllQuestionsContainer.style.display = 'block';
+            viewAllTfBtn.textContent = "הסתר את כל השאלות";
+            viewAllTfBtn.onclick = hideAllTf;
+
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+             tfQuestions.forEach((q, index) => {
+                 const itemDiv = document.createElement('div');
+                 itemDiv.className = 'all-questions-item';
+                 itemDiv.innerHTML = `
+                    <div class="question-text"><b>שאלה ${index + 1}:</b> ${q.question}</div>
+                    <div class="tf-options">
+                         <button data-answer="true">נכון</button>
+                         <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback">
+                        <span class="feedback-text"></span>
+                        <div class="explanation"></div>
+                    </div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(itemDiv);
+                 displayTf(index, itemDiv, false); // Display each question in its container
+             });
+             // Typeset the whole container after adding all questions
+             // typesetMath(tfAllQuestionsContainer);
+         }
+
+         function hideAllTf() {
+             tfSingleQuestionContainer.style.display = 'block';
+             tfAllQuestionsContainer.style.display = 'none';
+             viewAllTfBtn.textContent = "הצג את כל השאלות";
+             viewAllTfBtn.onclick = viewAllTf;
+             // Refresh the current single question view
+            displayTf(currentTfIndex);
+         }
+
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Shuffle Questions (optional)
+            // shuffleArray(mcqQuestions);
+            // shuffleArray(tfQuestions);
+            // shuffleArray(studyCards); // Shuffle cards if desired
+
+            // Initialize Cards
+            displayCard(currentCardIndex);
+            cardElement.addEventListener('click', () => {
+                cardElement.classList.toggle('is-flipped');
+            });
+            nextCardBtn.addEventListener('click', nextCard);
+            prevCardBtn.addEventListener('click', prevCard);
+
+             // Initialize MCQs
+             displayMcq(currentMcqIndex);
+             nextMcqBtn.addEventListener('click', nextMcq);
+             prevMcqBtn.addEventListener('click', prevMcq);
+             viewAllMcqBtn.addEventListener('click', viewAllMcq);
+
+             // Initialize True/False
+             displayTf(currentTfIndex);
+             nextTfBtn.addEventListener('click', nextTf);
+             prevTfBtn.addEventListener('click', prevTf);
+             viewAllTfBtn.addEventListener('click', viewAllTf);
+
+            // Typeset any initial static math in the theory section once MathJax is ready
+            if (window.MathJax && window.MathJax.startup) {
+                window.MathJax.startup.promise.then(() => {
+                    const theoryContent = document.querySelector('#theorySection .theory-content');
+                    if (theoryContent) {
+                        typesetMath(theoryContent);
+                    }
+                });
+             } else {
+                // Fallback if MathJax loads very fast or setup changes
+                const theoryContent = document.querySelector('#theorySection .theory-content');
+                if (theoryContent) {
+                     typesetMath(theoryContent);
+                }
+             }
+        });
+
+    </script>
+
+</body>
+
+</html>

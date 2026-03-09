@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Laplace Eq. (Polar Coordinates)</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Laplace's Equation in Polar Coordinates</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p>Laplace's equation in polar coordinates $(r, \theta)$ is:</p>
+            $$ \Delta u = u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0 $$
+            <p>This is typically solved on domains like disks ($r \in [0, R]$), annuli ($r \in [R_1, R_2]$), or wedges ($\theta \in [0, \alpha]$).</p>
+            <p><strong>Separation of Variables:</strong> Assume $u(r, \theta) = R(r)\rho(\theta)$. Substitute into the PDE:</p>
+            $$ R''\rho + \frac{1}{r} R'\rho + \frac{1}{r^2} R\rho'' = 0 $$
+            Multiply by $r^2/(R\rho)$:
+            $$ \frac{r^2 R'' + r R'}{R} + \frac{\rho''}{\rho} = 0 $$
+            Separate variables:
+            $$ \frac{r^2 R'' + r R'}{R} = -\frac{\rho''}{\rho} = \lambda \quad (\text{separation constant}) $$
+            This gives two ODEs:
+            <ol>
+                <li>Angular ODE: $\rho'' + \lambda \rho = 0$</li>
+                <li>Radial ODE: $r^2 R'' + r R' - \lambda R = 0$ (This is a Cauchy-Euler equation)</li>
+            </ol>
+
+            <h3>1. Solving the Angular ODE ($\rho$)</h3>
+            <ul>
+                <li><strong>Full Disk/Annulus ($r \in [0,R]$ or $r \in [R_1, R_2]$):</strong> Requires periodicity in $\theta$. The boundary conditions are $\rho(0) = \rho(2\pi)$ and $\rho'(0) = \rho'(2\pi)$. Solving $\rho'' + \lambda \rho = 0$ with these BCs yields eigenvalues $\lambda_n = n^2$ for $n=0, 1, 2, \dots$.
+                    <ul>
+                        <li>For $\lambda_0 = 0$ ($n=0$): $\rho_0(\theta) = A_0$ (constant).</li>
+                        <li>For $\lambda_n = n^2$ ($n \ge 1$): $\rho_n(\theta) = A_n \cos(n\theta) + B_n \sin(n\theta)$.</li>
+                    </ul>
+                </li>
+                <li><strong>Wedge Domain ($\theta \in [0, \alpha]$):</strong> Typically involves Dirichlet or Neumann BCs at $\theta=0$ and $\theta=\alpha$. E.g., for $\rho(0)=0, \rho(\alpha)=0$, eigenvalues are $\lambda_n = (n\pi/\alpha)^2$ and eigenfunctions are $\rho_n(\theta) = B_n \sin(n\pi\theta/\alpha)$ for $n=1, 2, \dots$.</li>
+            </ul>
+
+            <h3>2. Solving the Radial ODE ($R$)</h3>
+            <p>This is the Cauchy-Euler equation $r^2 R'' + r R' - \lambda R = 0$. Assume solution $R(r) = r^k$. Substitute:</p>
+            $r^2 [k(k-1)r^{k-2}] + r [kr^{k-1}] - \lambda r^k = 0 \implies [k(k-1) + k - \lambda] r^k = 0 \implies (k^2 - \lambda) r^k = 0$.
+            <p>We need $k^2 - \lambda = 0$, so $k = \pm\sqrt{\lambda}$.</p>
+            <ul>
+                <li><strong>Case $\lambda = \lambda_n = n^2 > 0$ ($n \ge 1$):</strong> $k = \pm n$. General solution $R_n(r) = C_n r^n + D_n r^{-n}$.</li>
+                <li><strong>Case $\lambda = \lambda_0 = 0$ ($n = 0$):</strong> $k^2=0 \implies k=0$ is a repeated root. General solution $R_0(r) = C_0 r^0 + D_0 r^0 \ln r = C_0 + D_0 \ln r$.</li>
+            </ul>
+
+            <h3>General Solution & Boundary Conditions</h3>
+            <p>Combine solutions using superposition. For example, on a **disk** $r \in [0, R]$ (requiring solution to be bounded at $r=0$):</p>
+            <ul>
+                <li>Need $D_n=0$ in $R_n(r)$ to eliminate $r^{-n}$ term (unbounded as $r\to 0$).</li>
+                <li>Need $D_0=0$ in $R_0(r)$ to eliminate $\ln r$ term (unbounded as $r\to 0$).</li>
+                <li>Product solutions are $u_0(r,\theta)=A_0$ and $u_n(r,\theta)=r^n(A_n\cos(n\theta)+B_n\sin(n\theta))$.</li>
+                <li>General bounded solution on disk:
+                   $$ u(r, \theta) = \frac{A_0}{2} + \sum_{n=1}^\infty r^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                   (The $A_0/2$ is conventional for Fourier series).</li>
+                <li>Apply boundary condition, e.g., $u(R, \theta) = f(\theta)$:
+                   $$ f(\theta) = \frac{A_0}{2} + \sum_{n=1}^\infty R^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                   This is a Full Fourier Series for $f(\theta)$ on $[0, 2\pi]$ (or $[-\pi, \pi]$). The coefficients $A_n R^n$ and $B_n R^n$ are found using the standard formulas (with $L=\pi$ if using $[-\pi, \pi]$):
+                   $$ A_0 R^0 = A_0 = \frac{1}{\pi} \int_0^{2\pi} f(\theta) d\theta $$
+                   $$ A_n R^n = \frac{1}{\pi} \int_0^{2\pi} f(\theta) \cos(n\theta) d\theta \implies A_n = \frac{1}{\pi R^n} \int_0^{2\pi} f(\theta) \cos(n\theta) d\theta \quad (n \ge 1) $$
+                   $$ B_n R^n = \frac{1}{\pi} \int_0^{2\pi} f(\theta) \sin(n\theta) d\theta \implies B_n = \frac{1}{\pi R^n} \int_0^{2\pi} f(\theta) \sin(n\theta) d\theta \quad (n \ge 1) $$
+             </ul>
+             <p>For an **annulus** $r \in [R_1, R_2]$, both $r^n$ and $r^{-n}$ (and $\ln r$) terms are generally kept, and coefficients are determined by boundary conditions at $r=R_1$ and $r=R_2$.</p>
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the general solution to $\rho'' + 4\rho = 0$.</p>
+                <button onclick="toggleSolution('sol-lp-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equation $r^2+4=0 \implies r = \pm 2i$.</p>
+                    <p>General solution $\rho(\theta) = C_1 \cos(2\theta) + C_2 \sin(2\theta)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the general solution to $r^2 R'' + r R' - 9 R = 0$.</p>
+                <button onclick="toggleSolution('sol-lp-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Cauchy-Euler equation. Try $R=r^k$. Indicial equation $k^2 - \lambda = 0$. Here $\lambda=9$.</p>
+                    <p>$k^2 - 9 = 0 \implies k = \pm 3$.</p>
+                    <p>General solution $R(r) = C_1 r^3 + C_2 r^{-3}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Find the general solution to $r^2 R'' + r R' = 0$.</p>
+                <button onclick="toggleSolution('sol-lp-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>Cauchy-Euler equation with $\lambda=0$. Indicial equation $k^2 = 0 \implies k=0$ (repeated root).</p>
+                    <p>General solution $R(r) = C_1 r^0 + C_2 r^0 \ln r = C_1 + C_2 \ln r$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">What are the eigenvalues $\lambda_n$ and eigenfunctions $\rho_n(\theta)$ for $\rho''+\lambda\rho=0$ with periodic boundary conditions $\rho(0)=\rho(2\pi), \rho'(0)=\rho'(2\pi)$?</p>
+                 <button onclick="toggleSolution('sol-lp-q4')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q4">
+                     <p><strong>Solution:</strong></p>
+                     <p>Case $\lambda=0$: $\rho=A\theta+B$. $\rho(0)=B$. $\rho(2\pi)=2\pi A+B$. Need $B=2\pi A+B \implies A=0$. $\rho'(\theta)=A=0$. Periodic BCs are satisfied for $A=0$. Solution $\rho_0(\theta)=B$ (constant). Eigenvalue $\lambda_0=0$.</p>
+                     <p>Case $\lambda=\mu^2>0$: $\rho(\theta)=A\cos(\mu\theta)+B\sin(\mu\theta)$.</p>
+                     <p>$\rho(0)=A$. $\rho(2\pi)=A\cos(2\pi\mu)+B\sin(2\pi\mu)$. Need $A = A\cos(2\pi\mu)+B\sin(2\pi\mu)$ (Eq 1).</p>
+                     <p>$\rho'(\theta)=-A\mu\sin(\mu\theta)+B\mu\cos(\mu\theta)$. $\rho'(0)=B\mu$. $\rho'(2\pi)=-A\mu\sin(2\pi\mu)+B\mu\cos(2\pi\mu)$. Need $B\mu = -A\mu\sin(2\pi\mu)+B\mu\cos(2\pi\mu)$ (Eq 2).</p>
+                     <p>For non-trivial solution (A,B not both zero), the determinant of the system for A,B derived from Eq1 and Eq2 must be zero. This requires $\cos(2\pi\mu)=1$ and $\sin(2\pi\mu)=0$. This occurs when $2\pi\mu = 2n\pi$, so $\mu=n$ for $n=1, 2, 3, \dots$.</p>
+                     <p>Eigenvalues $\lambda_n = \mu^2 = n^2$ for $n=0, 1, 2, \dots$.</p>
+                     <p>Eigenfunctions: For $\lambda_0=0$, $\rho_0=A_0$. For $\lambda_n=n^2 (n\ge 1)$, $\rho_n(\theta)=A_n\cos(n\theta)+B_n\sin(n\theta)$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Write the general form of a bounded solution to Laplace's equation $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ inside a disk $r \in [0, R]$.</p>
+                 <button onclick="toggleSolution('sol-lp-q5')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>Separation leads to $\lambda_n=n^2$ and $\rho_n(\theta) = A_n\cos(n\theta)+B_n\sin(n\theta)$ (for $n\ge 1$) or $A_0$ (for $n=0$).</p>
+                     <p>The radial equation $r^2R''+rR' - n^2 R = 0$ has solutions $R_n(r)=C_n r^n + D_n r^{-n}$ for $n\ge 1$, and $R_0(r)=C_0 + D_0 \ln r$ for $n=0$.</p>
+                     <p>For the solution $u(r,\theta)=\sum R_n(r)\rho_n(\theta)$ to be bounded at $r=0$, we must discard the terms $r^{-n}$ (for $n\ge 1$) and $\ln r$ (for $n=0$). So $D_n=0$ for all $n \ge 0$.</p>
+                     <p>The bounded solution form is:</p>
+                     $$ u(r, \theta) = \frac{A_0}{2} + \sum_{n=1}^\infty r^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                     <p>(Constants absorbed, $A_0/2$ used for convention).</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 6:</p>
+                 <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 1]$, with $u(1, \theta) = 5$.</p>
+                 <button onclick="toggleSolution('sol-lp-q6')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>Use the general bounded solution form from Q5 with $R=1$.</p>
+                    $$ u(r, \theta) = \frac{A_0}{2} + \sum_{n=1}^\infty r^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                    <p>Apply BC $u(1, \theta) = 5$.</p>
+                    $$ 5 = \frac{A_0}{2} + \sum_{n=1}^\infty 1^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                    $$ 5 = \frac{A_0}{2} + \sum_{n=1}^\infty ( A_n \cos(n\theta) + B_n \sin(n\theta) ) $$
+                    <p>This is the Full Fourier Series for the constant function $f(\theta)=5$.</p>
+                    <p>The only non-zero coefficient is the constant term $A_0/2$.</p>
+                    <p>$A_0 = \frac{1}{\pi} \int_0^{2\pi} 5 d\theta = \frac{1}{\pi} [5\theta]_0^{2\pi} = \frac{1}{\pi}(10\pi) = 10$. So $A_0/2 = 5$.</p>
+                    <p>$A_n = \frac{1}{\pi 1^n} \int_0^{2\pi} 5 \cos(n\theta) d\theta = \frac{5}{\pi} [\frac{\sin(n\theta)}{n}]_0^{2\pi} = 0$ for $n \ge 1$.</p>
+                    <p>$B_n = \frac{1}{\pi 1^n} \int_0^{2\pi} 5 \sin(n\theta) d\theta = \frac{5}{\pi} [-\frac{\cos(n\theta)}{n}]_0^{2\pi} = -\frac{5}{n\pi}[\cos(2n\pi)-\cos(0)] = -\frac{5}{n\pi}[1-1]=0$ for $n \ge 1$.</p>
+                    <p>All coefficients except $A_0$ are zero.</p>
+                    <p>The solution is $u(r, \theta) = \frac{A_0}{2} = 5$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, R]$, with $u(R, \theta) = \cos(3\theta)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q7')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q7">
+                     <p><strong>Solution:</strong></p>
+                     <p>Use the general bounded solution form:</p>
+                     $$ u(r, \theta) = \frac{A_0}{2} + \sum_{n=1}^\infty r^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                     <p>Apply BC $u(R, \theta) = \cos(3\theta)$.</p>
+                      $$ \cos(3\theta) = \frac{A_0}{2} + \sum_{n=1}^\infty R^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                     <p>This is the Fourier Series for $\cos(3\theta)$. By matching coefficients:</p>
+                     <p>The constant term $A_0/2$ is 0, so $A_0=0$.</p>
+                     <p>All sine coefficients ($B_n R^n$) are 0, so $B_n=0$ for all $n$.</p>
+                     <p>For the cosine terms, only the $n=3$ term is non-zero.</p>
+                     <p>$R^3 A_3 = 1$. All other $A_n R^n = 0$ (for $n \neq 3$).</p>
+                     <p>So $A_3 = 1/R^3$, and $A_n=0$ for $n \neq 3$.</p>
+                     <p>The solution is $u(r, \theta) = r^3 (A_3 \cos(3\theta)) = r^3 (\frac{1}{R^3} \cos(3\theta))$.</p>
+                     <p>$u(r, \theta) = (\frac{r}{R})^3 \cos(3\theta)$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 8:</p>
+                 <p class="question-text">Write the general solution form for Laplace's equation in an annulus $r \in [R_1, R_2]$, assuming periodicity in $\theta$.</p>
+                 <button onclick="toggleSolution('sol-lp-q8')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q8">
+                     <p><strong>Solution:</strong></p>
+                     <p>Periodicity gives $\lambda_n = n^2$ and $\rho_n(\theta) = A_n \cos(n\theta) + B_n \sin(n\theta)$ ($n \ge 1$), $\rho_0 = A_0$.</p>
+                     <p>The radial equation $r^2R''+rR' - n^2 R = 0$ has solutions $R_n(r)=C_n r^n + D_n r^{-n}$ ($n \ge 1$) and $R_0(r)=C_0 + D_0 \ln r$.</p>
+                     <p>Since $r=0$ is *not* in the domain $r \in [R_1, R_2]$ (assuming $R_1>0$), we do not need to discard the $r^{-n}$ or $\ln r$ terms based on boundedness at the origin.</p>
+                     <p>Combining the product solutions $R_n(r)\rho_n(\theta)$ and using superposition:</p>
+                     $$ u(r, \theta) = (C_0 + D_0 \ln r) + \sum_{n=1}^\infty (C_n r^n + D_n r^{-n}) (A_n \cos(n\theta) + B_n \sin(n\theta)) $$
+                     <p>It's conventional to absorb constants and rewrite:</p>
+                     $$ u(r, \theta) = (C_0 + D_0 \ln r) + \sum_{n=1}^\infty \left[ (A_n r^n + B_n r^{-n})\cos(n\theta) + (C_n r^n + D_n r^{-n})\sin(n\theta) \right] $$
+                     <p>(The constants $A_n, B_n, C_n, D_n$ here are different from the intermediate ones).</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 9:</p>
+                 <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [1, 2]$, with $u(1, \theta) = 1$ and $u(2, \theta) = 3$.</p>
+                 <button onclick="toggleSolution('sol-lp-q9')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q9">
+                     <p><strong>Solution:</strong></p>
+                     <p>The boundary conditions are independent of $\theta$. This suggests the solution $u$ is also independent of $\theta$, i.e., $u=u(r)$.</p>
+                     <p>If $u=u(r)$, then $u_{\theta\theta}=0$. Laplace's equation becomes $u_{rr} + \frac{1}{r} u_r = 0$.</p>
+                     <p>This is $(r u_r)' = 0$. Integrating gives $r u_r = C_1$.</p>
+                     <p>$u_r = C_1/r$. Integrating again gives $u(r) = C_1 \ln r + C_2$.</p>
+                     <p>Apply BCs:</p>
+                     <p>$u(1) = C_1 \ln 1 + C_2 = C_1(0) + C_2 = C_2 = 1$.</p>
+                     <p>$u(2) = C_1 \ln 2 + C_2 = C_1 \ln 2 + 1 = 3$.</p>
+                     <p>$C_1 \ln 2 = 2 \implies C_1 = 2 / \ln 2$.</p>
+                     <p>The solution is $u(r, \theta) = u(r) = \frac{2 \ln r}{\ln 2} + 1$.</p>
+                     <p>(Alternatively, using the general annulus solution form from Q8, setting $f(\theta)=1, g(\theta)=3$. Only the $n=0$ term survives. $u(r,\theta)=C_0+D_0\ln r$. $u(1,\theta)=C_0+D_0\ln 1 = C_0 = 1$. $u(2,\theta)=C_0+D_0\ln 2 = 1+D_0\ln 2 = 3$. $D_0\ln 2 = 2 \implies D_0=2/\ln 2$. $u(r,\theta)=1+(2/\ln 2)\ln r$.)</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 10:</p>
+                 <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 1]$, with $u(1, \theta) = 4\sin(2\theta)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q10')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q10">
+                     <p><strong>Solution:</strong></p>
+                     <p>Bounded solution on disk $R=1$. General form:</p>
+                     $$ u(r, \theta) = \frac{A_0}{2} + \sum_{n=1}^\infty r^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                     <p>Apply BC $u(1, \theta) = 4\sin(2\theta)$.</p>
+                     $$ 4\sin(2\theta) = \frac{A_0}{2} + \sum_{n=1}^\infty 1^n \left( A_n \cos(n\theta) + B_n \sin(n\theta) \right) $$
+                     <p>Matching Fourier coefficients:</p>
+                     <p>$A_0/2 = 0 \implies A_0=0$. $A_n=0$ for all $n$.</p>
+                     <p>Only the $n=2$ sine term is non-zero. $B_2 (1^2) = 4 \implies B_2=4$. $B_n=0$ for $n \neq 2$.</p>
+                     <p>The solution is $u(r, \theta) = r^2 (B_2 \sin(2\theta)) = r^2 (4 \sin(2\theta))$.</p>
+                     <p>$u(r, \theta) = 4r^2 \sin(2\theta)$.</p>
+                 </div>
+             </article>
+
+            <!-- Questions 11-30 -->
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">What is the general solution to $\rho''=0$ satisfying periodic BCs $\rho(0)=\rho(2\pi), \rho'(0)=\rho'(2\pi)$?</p>
+                <button onclick="toggleSolution('sol-lp-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q11">
+                    <p><strong>Solution:</strong></p>
+                     <p>General solution $\rho(\theta)=A\theta+B$. $\rho'(\theta)=A$.</p>
+                     <p>$\rho(0)=B$. $\rho(2\pi)=2\pi A+B$. Need $B=2\pi A+B \implies A=0$.</p>
+                     <p>$\rho'(0)=A$. $\rho'(2\pi)=A$. Need $A=A$, which is always true.</p>
+                     <p>The condition requires $A=0$. So the solution is $\rho(\theta)=B$ (any constant).</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                 <p class="question-number">Question 12:</p>
+                 <p class="question-text">Find the specific solution to $r^2R''+rR'=0$ that satisfies $R(1)=5, R(e)=7$.</p>
+                 <button onclick="toggleSolution('sol-lp-q12')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q12">
+                     <p><strong>Solution:</strong></p>
+                     <p>General solution is $R(r)=C_1+C_2\ln r$.</p>
+                     <p>$R(1)=C_1+C_2\ln 1 = C_1+0 = 5 \implies C_1=5$.</p>
+                     <p>$R(e)=C_1+C_2\ln e = 5+C_2(1) = 7 \implies C_2=2$.</p>
+                     <p>Solution is $R(r)=5+2\ln r$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                 <p class="question-number">Question 13:</p>
+                 <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 2]$, with $u(2, \theta) = 1 + \cos(2\theta)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q13')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>Disk $R=2$. Bounded solution form: $u(r,\theta) = \frac{A_0}{2} + \sum r^n(A_n\cos n\theta + B_n\sin n\theta)$.</p>
+                    <p>$u(2,\theta) = \frac{A_0}{2} + \sum 2^n(A_n\cos n\theta + B_n\sin n\theta) = 1 + \cos(2\theta)$.</p>
+                    <p>Matching coefficients:</p>
+                    <p>Constant term: $A_0/2 = 1 \implies A_0=2$.</p>
+                    <p>$n=2$ cosine term: $2^2 A_2 = 1 \implies 4A_2=1 \implies A_2=1/4$.</p>
+                    <p>All other $A_n=0$. All $B_n=0$.</p>
+                    <p>$u(r,\theta) = \frac{A_0}{2} + r^2(A_2\cos 2\theta) = \frac{2}{2} + r^2(\frac{1}{4}\cos 2\theta) = 1 + \frac{r^2}{4}\cos(2\theta)$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Find the eigenvalues $\lambda_n$ for $\rho''+\lambda\rho=0$ with $\rho(0)=0, \rho(\pi/2)=0$.</p>
+                <button onclick="toggleSolution('sol-lp-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q14">
+                    <p><strong>Solution:</strong></p>
+                     <p>This is a standard Dirichlet problem on $[0, L]$ with $L=\pi/2$.</p>
+                     <p>The eigenvalues are $\lambda_n = (n\pi/L)^2 = (n\pi/(\pi/2))^2 = (2n)^2 = 4n^2$ for $n=1, 2, 3, \dots$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                 <p class="question-number">Question 15:</p>
+                 <p class="question-text">Write the general bounded solution form for Laplace's Eq. in a wedge $r \in [0, R], \theta \in [0, \alpha]$ with $u(r,0)=0, u(r,\alpha)=0$.</p>
+                 <button onclick="toggleSolution('sol-lp-q15')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q15">
+                     <p><strong>Solution:</strong></p>
+                     <p>Angular problem: $\rho''+\lambda\rho=0, \rho(0)=0, \rho(\alpha)=0$. Eigenvalues $\lambda_n=(n\pi/\alpha)^2$. Eigenfunctions $\rho_n(\theta)=\sin(n\pi\theta/\alpha)$, $n=1, 2, \dots$.</p>
+                     <p>Radial problem: $r^2 R''+rR'-\lambda_n R=0$. Since $\lambda_n>0$, $k=\pm\sqrt{\lambda_n}=\pm n\pi/\alpha$. Solution $R_n(r)=C_n r^{n\pi/\alpha} + D_n r^{-n\pi/\alpha}$.</p>
+                     <p>For boundedness at $r=0$, we need $D_n=0$.</p>
+                     <p>General bounded solution form:</p>
+                     $$ u(r,\theta) = \sum_{n=1}^\infty C_n r^{n\pi/\alpha} \sin\left(\frac{n\pi\theta}{\alpha}\right) $$
+                 </div>
+             </article>
+            <article class="question-block">
+                 <p class="question-number">Question 16:</p>
+                 <p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [1, e]$, $u(1,\theta)=0, u(e,\theta)=\sin(2\theta)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q16')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q16">
+                     <p><strong>Solution:</strong></p>
+                     <p>Annulus problem. General solution from Q8:</p>
+                      $$ u(r, \theta) = (C_0 + D_0 \ln r) + \sum_{n=1}^\infty \left[ (A_n r^n + B_n r^{-n})\cos(n\theta) + (C_n r^n + D_n r^{-n})\sin(n\theta) \right] $$
+                      <p>Apply $u(1,\theta)=0$:</p>
+                      $0 = (C_0+D_0\ln 1) + \sum [(A_n 1^n+B_n 1^{-n})\cos n\theta + (C_n 1^n+D_n 1^{-n})\sin n\theta]$.
+                      $0 = C_0 + \sum [(A_n+B_n)\cos n\theta + (C_n+D_n)\sin n\theta]$.
+                      This implies $C_0=0$, $A_n+B_n=0 \implies B_n=-A_n$, $C_n+D_n=0 \implies D_n=-C_n$.
+                      <p>Solution form becomes: $u(r,\theta) = D_0 \ln r + \sum [A_n(r^n-r^{-n})\cos n\theta + C_n(r^n-r^{-n})\sin n\theta]$.</p>
+                      <p>Apply $u(e,\theta)=\sin(2\theta)$:</p>
+                      $\sin(2\theta) = D_0 \ln e + \sum [A_n(e^n-e^{-n})\cos n\theta + C_n(e^n-e^{-n})\sin n\theta]$.
+                      $\sin(2\theta) = D_0 + \sum [2A_n\sinh(n)\cos n\theta + 2C_n\sinh(n)\sin n\theta]$.
+                      <p>Matching coefficients:</p>
+                      $D_0=0$. $A_n=0$ for all $n$.
+                      $n=2$ sine term: $2C_2\sinh(2)=1$. $C_n=0$ for $n\neq 2$.
+                      $C_2 = 1/(2\sinh 2)$. $D_2 = -C_2 = -1/(2\sinh 2)$.
+                      <p>Solution: $u(r,\theta) = C_2(r^2-r^{-2})\sin(2\theta) = \frac{r^2-r^{-2}}{2\sinh 2}\sin(2\theta)$.</p>
+                      <p>(Note: $r^n-r^{-n} = 2\sinh(n\ln r)$). $u(r,\theta)=\frac{\sinh(2\ln r)}{\sinh 2}\sin(2\theta)$ is equivalent.</p>
+                 </div>
+            </article>
+
+             <!-- Questions 17-30 More practice -->
+              <article class="question-block">
+                 <p class="question-number">Question 17:</p>
+                 <p class="question-text">What is the value of $u(0,0)$ if $u$ is harmonic in the disk $r<R$ and $u(R,\theta)=f(\theta)$?</p>
+                 <button onclick="toggleSolution('sol-lp-q17')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q17">
+                     <p><strong>Solution:</strong></p>
+                      <p>By the Mean Value Property, $u(0,0)$ is the average value of $u$ on the boundary circle $r=R$.</p>
+                      $$ u(0,0) = \frac{1}{2\pi R} \oint_{r=R} u \, ds = \frac{1}{2\pi} \int_0^{2\pi} u(R,\theta) \, d\theta = \frac{1}{2\pi} \int_0^{2\pi} f(\theta) \, d\theta $$
+                      <p>This is also $\frac{A_0}{2}$ from the Fourier series solution.</p>
+                  </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Find the coefficient $A_0$ for the bounded solution of Laplace's equation in the disk $r<3$ with $u(3,\theta)=\theta^2$ for $\theta \in [0, 2\pi)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-q18">
+                     <p><strong>Solution:</strong></p>
+                     <p>The coefficient $A_0/2$ is the average value of the boundary function.</p>
+                     <p>$A_0 = \frac{1}{\pi} \int_0^{2\pi} f(\theta) d\theta = \frac{1}{\pi} \int_0^{2\pi} \theta^2 d\theta$.</p>
+                     <p>$A_0 = \frac{1}{\pi} [\frac{\theta^3}{3}]_0^{2\pi} = \frac{1}{\pi} [\frac{(2\pi)^3}{3} - 0] = \frac{8\pi^3}{3\pi} = \frac{8\pi^2}{3}$.</p>
+                     <p>($A_0/2 = 4\pi^2/3$).</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Find the coefficient $A_1$ for the problem in Q18.</p>
+                 <button onclick="toggleSolution('sol-lp-q19')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q19">
+                     <p><strong>Solution:</strong></p>
+                     <p>$R=3$. $A_n = \frac{1}{\pi R^n} \int_0^{2\pi} f(\theta) \cos(n\theta) d\theta$.</p>
+                     <p>$A_1 = \frac{1}{\pi (3^1)} \int_0^{2\pi} \theta^2 \cos(\theta) d\theta$.</p>
+                     <p>Integrate $\int \theta^2 \cos \theta d\theta$ by parts twice.</p>
+                     <p>$u=\theta^2, dv=\cos\theta d\theta \implies du=2\theta d\theta, v=\sin\theta$.</p>
+                     <p>$\int = \theta^2\sin\theta - \int 2\theta\sin\theta d\theta$.</p>
+                     <p>$\int \theta\sin\theta d\theta$: $u=\theta, dv=\sin\theta d\theta \implies du=d\theta, v=-\cos\theta$.</p>
+                     <p>$\int = -\theta\cos\theta - \int (-\cos\theta)d\theta = -\theta\cos\theta + \sin\theta$.</p>
+                     <p>Overall integral: $[\theta^2\sin\theta - 2(-\theta\cos\theta + \sin\theta)]_0^{2\pi}$.</p>
+                     <p>$= [\theta^2\sin\theta + 2\theta\cos\theta - 2\sin\theta]_0^{2\pi}$.</p>
+                     <p>At $2\pi$: $0 + 2(2\pi)\cos(2\pi) - 0 = 4\pi$. At $0$: $0+0-0=0$. Value is $4\pi$.</p>
+                     <p>$A_1 = \frac{1}{3\pi} (4\pi) = 4/3$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                 <p class="question-number">Question 20:</p>
+                 <p class="question-text">Find the coefficient $B_1$ for the problem in Q18.</p>
+                 <button onclick="toggleSolution('sol-lp-q20')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q20">
+                     <p><strong>Solution:</strong></p>
+                      <p>$R=3$. $B_n = \frac{1}{\pi R^n} \int_0^{2\pi} f(\theta) \sin(n\theta) d\theta$.</p>
+                      <p>$B_1 = \frac{1}{3\pi} \int_0^{2\pi} \theta^2 \sin(\theta) d\theta$.</p>
+                      <p>Integrate $\int \theta^2 \sin \theta d\theta$ by parts twice.</p>
+                      <p>$u=\theta^2, dv=\sin\theta d\theta \implies du=2\theta d\theta, v=-\cos\theta$.</p>
+                      <p>$\int = -\theta^2\cos\theta - \int (-\cos\theta)(2\theta d\theta) = -\theta^2\cos\theta + 2\int \theta\cos\theta d\theta$.</p>
+                      <p>$\int \theta\cos\theta d\theta$: $u=\theta, dv=\cos\theta d\theta \implies du=d\theta, v=\sin\theta$.</p>
+                      <p>$\int = \theta\sin\theta - \int \sin\theta d\theta = \theta\sin\theta + \cos\theta$.</p>
+                      <p>Overall integral: $[-\theta^2\cos\theta + 2(\theta\sin\theta + \cos\theta)]_0^{2\pi}$.</p>
+                      <p>At $2\pi$: $-(2\pi)^2\cos(2\pi) + 2(0+\cos(2\pi)) = -4\pi^2 + 2$.</p>
+                      <p>At $0$: $-0 + 2(0+\cos(0)) = 2$.</p>
+                      <p>Value is $(-4\pi^2+2) - 2 = -4\pi^2$.</p>
+                      <p>$B_1 = \frac{1}{3\pi} (-4\pi^2) = -4\pi/3$.</p>
+                 </div>
+             </article>
+              <!-- Questions 21-30 -->
+             <article class="question-block"><p class="question-number">Question 21:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 1]$, $u(1,\theta) = \sin\theta$.</p><button onclick="toggleSolution('sol-lp-q21')">Show/Hide Solution</button><div class="solution" id="sol-lp-q21"><p><strong>Solution:</strong></p><p>$R=1$. $u(r,\theta) = \frac{A_0}{2} + \sum r^n(A_n \cos n\theta + B_n \sin n\theta)$. $u(1,\theta) = \frac{A_0}{2} + \sum (A_n \cos n\theta + B_n \sin n\theta) = \sin\theta$. Match coeff: $A_n=0$. $B_1 = 1$, $B_n=0$ for $n\neq 1$. $u(r,\theta) = r^1(B_1 \sin \theta) = r\sin\theta$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 22:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [1, 2]$, $u(1,\theta)=\cos\theta$, $u(2,\theta)=0$.</p><button onclick="toggleSolution('sol-lp-q22')">Show/Hide Solution</button><div class="solution" id="sol-lp-q22"><p><strong>Solution:</strong></p><p>Annulus. $u(r,\theta) = (C_0+D_0\ln r) + \sum [(A_n r^n+B_n r^{-n})\cos n\theta + (C_n r^n+D_n r^{-n})\sin n\theta]$. BCs only involve $n=1$ cosine term. $C_0=D_0=0$. $C_n=D_n=0$. $u(r,\theta)=(A_1 r + B_1 r^{-1})\cos\theta$. $u(1,\theta)=(A_1+B_1)\cos\theta = \cos\theta \implies A_1+B_1=1$. $u(2,\theta)=(2A_1+B_1/2)\cos\theta = 0 \implies 2A_1+B_1/2=0$. $B_1=1-A_1$. $2A_1+(1-A_1)/2=0 \implies 4A_1+1-A_1=0 \implies 3A_1=-1 \implies A_1=-1/3$. $B_1=1-(-1/3)=4/3$. $u(r,\theta)=(-\frac{1}{3}r+\frac{4}{3}r^{-1})\cos\theta = \frac{4-r^2}{3r}\cos\theta$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 23:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, R]$, $u(R,\theta)=100$.</p><button onclick="toggleSolution('sol-lp-q23')">Show/Hide Solution</button><div class="solution" id="sol-lp-q23"><p><strong>Solution:</strong></p><p>$u(r,\theta)=100$. (Constant function satisfies Laplace's Eq and BCs).</p></div></article>
+             <article class="question-block"><p class="question-number">Question 24:</p><p class="question-text">Find eigenvalues $\lambda_n$ for $\rho''+\lambda\rho=0$, $\rho'(0)=0, \rho'(\pi)=0$.</p><button onclick="toggleSolution('sol-lp-q24')">Show/Hide Solution</button><div class="solution" id="sol-lp-q24"><p><strong>Solution:</strong></p><p>Neumann on $[0, \pi]$. $\lambda_n = (n\pi/L)^2 = (n\pi/\pi)^2=n^2$, for $n=0, 1, 2, \dots$. Eigenfunctions $\cos(nx)$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 25:</p><p class="question-text">Solve $r^2R''+rR'-\frac{1}{4}R=0$.</p><button onclick="toggleSolution('sol-lp-q25')">Show/Hide Solution</button><div class="solution" id="sol-lp-q25"><p><strong>Solution:</strong></p><p>Euler Eq. $\lambda=1/4$. $k^2-\lambda=0 \implies k^2-1/4=0 \implies k=\pm 1/2$. $R(r)=C_1 r^{1/2} + C_2 r^{-1/2}$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 26:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 1]$, $u(1,\theta)=f(\theta)$. What is $u(0,\theta)$?</p><button onclick="toggleSolution('sol-lp-q26')">Show/Hide Solution</button><div class="solution" id="sol-lp-q26"><p><strong>Solution:</strong></p><p>The value at the center is the average value on the boundary. $u(0,\theta)=u(0,0)=\frac{1}{2\pi}\int_0^{2\pi} f(\theta) d\theta = A_0/2$. It's a constant.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 27:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [1, \infty)$, $u(1,\theta)=\cos(2\theta)$, $u$ bounded as $r\to\infty$.</p><button onclick="toggleSolution('sol-lp-q27')">Show/Hide Solution</button><div class="solution" id="sol-lp-q27"><p><strong>Solution:</strong></p><p>Exterior problem. General solution (from Q8). $u(r, \theta) = (C_0 + D_0 \ln r) + \sum [(A_n r^n + B_n r^{-n})\cos(n\theta) + (C_n r^n + D_n r^{-n})\sin(n\theta)]$. For boundedness as $r\to\infty$, we need $D_0=0$, $A_n=0$, $C_n=0$ for $n\ge 1$. Form is $u(r,\theta)=C_0 + \sum [B_n r^{-n}\cos n\theta + D_n r^{-n}\sin n\theta]$. Apply $u(1,\theta)=\cos(2\theta)$. $C_0=0$. $D_n=0$. $B_2(1^{-2})=1 \implies B_2=1$. $B_n=0$ for $n\neq 2$. $u(r,\theta)=B_2 r^{-2}\cos(2\theta) = r^{-2}\cos(2\theta)$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 28:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for $r \in [0, 1]$, $u(1, \theta) = \theta$ for $\theta \in [0, \pi]$, $u(1, \theta)=0$ for $\theta \in (\pi, 2\pi)$. Find $A_0$.</p><button onclick="toggleSolution('sol-lp-q28')">Show/Hide Solution</button><div class="solution" id="sol-lp-q28"><p><strong>Solution:</strong></p><p>$A_0 = \frac{1}{\pi}\int_0^{2\pi} f(\theta) d\theta = \frac{1}{\pi}[\int_0^\pi \theta d\theta + \int_\pi^{2\pi} 0 d\theta]$. $A_0 = \frac{1}{\pi}[\frac{\theta^2}{2}]_0^\pi = \frac{1}{\pi}[\frac{\pi^2}{2}-0]=\pi/2$. ($u(0,0)=A_0/2=\pi/4$).</p></div></article>
+             <article class="question-block"><p class="question-number">Question 29:</p><p class="question-text">Solve $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ for wedge $r \in [0, 1], \theta \in [0, \pi/2]$, $u(r,0)=0, u(r,\pi/2)=0, u(1,\theta)=\sin(2\theta)$.</p><button onclick="toggleSolution('sol-lp-q29')">Show/Hide Solution</button><div class="solution" id="sol-lp-q29"><p><strong>Solution:</strong></p><p>Wedge $\alpha=\pi/2$. $\rho(0)=\rho(\pi/2)=0 \implies \lambda_n=(n\pi/(\pi/2))^2 = (2n)^2$. $\rho_n(\theta)=\sin(2n\theta)$, $n=1, 2, \dots$. Radial part (bounded) $R_n(r)=C_n r^{\sqrt{\lambda_n}}=C_n r^{2n}$. General solution $u(r,\theta)=\sum C_n r^{2n} \sin(2n\theta)$. BC $u(1,\theta)=\sum C_n (1)^{2n}\sin(2n\theta) = \sin(2\theta)$. Match coeff: $n=1$. $C_1=1$. $C_n=0$ for $n\neq 1$. Solution $u(r,\theta)=C_1 r^{2(1)}\sin(2(1)\theta) = r^2\sin(2\theta)$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 30:</p><p class="question-text">What is the relation between Laplace's equation in polar coordinates and the Cauchy-Euler ODE?</p><button onclick="toggleSolution('sol-lp-q30')">Show/Hide Solution</button><div class="solution" id="sol-lp-q30"><p><strong>Solution:</strong></p><p>When separation of variables $u(r,\theta)=R(r)\rho(\theta)$ is applied to Laplace's equation in polar coordinates, the resulting ordinary differential equation for the radial part $R(r)$ is the Cauchy-Euler equation: $r^2 R'' + r R' - \lambda R = 0$, where $\lambda$ is the separation constant determined by the angular part $\rho(\theta)$ and its boundary conditions.</p></div></article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

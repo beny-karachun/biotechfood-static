@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+    <!-- MathJax for rendering math equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה של פטריות - מיקולוגיה</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "מיקולוגיה (Mycology)", definition: "חקר הפטריות, ענף בביולוגיה העוסק באורגניזמים אלו." },
+            { term: "הטרוטרוף (Heterotroph)", definition: "אורגניזם הדורש חומר אורגני לגידול ואינו מסוגל לקבע פחמן בעצמו, כמו פטריות." },
+            { term: "כיטין (Chitin)", definition: "פולימר של N-Acetylglucosamine המרכיב העיקרי של דופן התא בפטריות, אשר אינו מפורק על ידי אנזימים אנושיים." },
+            { term: "שמרים (Yeasts)", definition: "פטריות בדרך כלל חד תאיות, בעלות מבנה מעגלי או אליפטי, המתרבות לרוב על ידי הנצה או חלוקה." },
+            { term: "עובשים (Molds)", definition: "פטריות פילמנטיות רב תאיות, אירוביות, הגדלות לרוב על פני נוזלים או מזון." },
+            { term: "קורים (Hyphae)", definition: "פילמנטים של תאים המחוברים יחד ומהווים את יחידת המבנה הבסיסית של עובשים." },
+            { term: "תפטיר (Mycelium)", definition: "גודש של קורים (Hyphae) המחוברים יחד וניתנים לראייה בעין בלתי מזוינת." },
+            { term: "Septa", definition: "דפנות ממברנליות המפרידות בין התאים לאורך הקורים בפטריות מסוימות, דרכן יש מעבר של ציטופלסמה." },
+            { term: "Coenocytic hyphae", definition: "קורים ללא דפנות מפרידות (Septa) בין התאים, כך שהציטופלסמה רציפה." },
+            { term: "רבייה אסקסואלית בפטריות", definition: "תהליך המבוסס על מיטוזה בלבד, בו נוצרים תאי בת או ספורות הזהים גנטית לתא האם." },
+            { term: "רבייה סקסואלית בפטריות", definition: "תהליך הכולל מיוזה ויצירת ספורות הפלואידיות, המאפשר גיוון גנטי." },
+            { term: "Ascomycota", definition: "מערכה של פטריות המייצרות ספורות מיניות הנקראות אסקוספורות בתוך מבנה דמוי שק (אסקוס), וספורות אל-מיניות מסוג קונידיה." },
+            { term: "Zygomycota", definition: "מערכה של פטריות (כמו עובש הלחם) המייצרות זיגוספורות ברבייה מינית וספורנגיוספורות ברבייה אל-מינית." },
+            { term: "Fungi imperfecti", definition: "קבוצת פטריות שלא נמצאה להן רבייה מינית, מה שמקשה על שיוכן לקבוצה פילוגנטית ברורה." },
+            { term: "Saccharomyces", definition: "סוג של שמרים החשובים ביותר בתעשיית המזון (לחם, בירה, יין) ובמחקר." },
+            { term: "פסיכופילים", definition: "אורגניזמים (כולל סוגים מסוימים של עובשים) המסוגלים לגדול ולהתפתח בטמפרטורות נמוכות." },
+            { term: "פיטופטורה אינפסטנס (Phytophthora infestans)", definition: "פטרייה פתוגנית לצמחים שגרמה לכימשון תפוחי האדמה והובילה לרעב הגדול באירלנד במאה ה-19." }
+        ];
+
+        const mcqData = [
+            {
+                question: "חוקר בודד אורגניזם חדש תחת המיקרוסקופ. הוא מבחין בתאים בעלי גרעין מוגדר, חסרי כלורופיל, שאינם מסוגלים לקבע פחמן מהאוויר. לאיזו קבוצה סביר ביותר שהאורגניזם שייך?",
+                options: [
+                    "אצות ירוקות",
+                    "חיידקים",
+                    "פטריות",
+                    "וירוסים"
+                ],
+                correctIndex: 2,
+                explanation: "האורגניזם הוא אאוקריוטי (בעל גרעין), חסר כלורופיל והטרוטרוף (לא מקבע פחמן), תכונות המאפיינות פטריות."
+            },
+            {
+                question: "מהי הסיבה העיקרית לכך שפטריות אינן יכולות לבצע פוטוסינתיזה?",
+                options: [
+                    "הן גדלות רק בחושך",
+                    "חסר להן כלורופיל",
+                    "דופן התא שלהן חוסמת אור",
+                    "הן מנצלות רק חנקן ולא פחמן"
+                ],
+                correctIndex: 1,
+                explanation: "פטריות מוגדרות כחסרות כלורופיל, הפיגמנט ההכרחי לתהליך הפוטוסינתיזה וקליטת אנרגיית השמש."
+            },
+            {
+                question: "באיזה אופן מסייעים הפיגמנטים הקיימים בפטריות להישרדותן?",
+                options: [
+                    "הם קולטים אור ליצירת אנרגיה חלופית",
+                    "הם מספקים הגנה בפני קרינת על סגול ורדיקלים חופשיים",
+                    "הם ממיסים את דופן התא של צמחים פונדקאים",
+                    "הם מושכים חרקים המסייעים בהפצת נבגים בלבד"
+                ],
+                correctIndex: 1,
+                explanation: "למרות שאינן מבצעות פוטוסינתיזה, פטריות מכילות פיגמנטים שתפקידם להגן על התא מפני קרינת אולטרה סגול ורדיקלים חופשיים."
+            },
+            {
+                question: "אדם אכל פטרייה המכילה כמות גדולה של כיטין. מה צפוי לקרות לכיטין במערכת העיכול שלו?",
+                options: [
+                    "הוא יפורק במהירות לסוכרים פשוטים ויספק אנרגיה רבה",
+                    "הוא לא יפורק מכיוון שאנזימים אנושיים אינם מסוגלים לפרק כיטין",
+                    "הוא יומר לחומצות אמינו חיוניות",
+                    "הוא יספג בשלמותו למחזור הדם"
+                ],
+                correctIndex: 1,
+                explanation: "כיטין הוא הפולימר העיקרי המרכיב את דופן תא הפטרייה, והוא אינו מפורק על ידי אנזימים אנושיים."
+            },
+            {
+                question: "במעבדה נמדדו תאים של שני מיקרואורגניזמים שונים. אורגניזם א נמדד בגודל של 25 מיקרומטר ואורגניזם ב נמדד בגודל של 2 מיקרומטר. בהתבסס על גודלם בלבד, מהי ההשערה הסבירה ביותר?",
+                options: [
+                    "אורגניזם א הוא חיידק ואורגניזם ב הוא שמר",
+                    "אורגניזם א הוא שמר ואורגניזם ב הוא חיידק",
+                    "שני האורגניזמים הם וירוסים",
+                    "שני האורגניזמים הם פטריות פילמנטיות"
+                ],
+                correctIndex: 1,
+                explanation: "שמרים הם תאים אאוקריוטים שגודלם נע לרוב בין 10 ל-50 מיקרומטר, בעוד שחיידקים קטנים בהרבה וגודלם נע בין 0.5 ל-6 מיקרומטר."
+            },
+            {
+                question: "כיצד תוגדר פטרייה שאינה מסוגלת לשרוד ללא נוכחות חמצן כלל?",
+                options: [
+                    "אנאירובית אובליגטורית",
+                    "אירובית",
+                    "אירובית פקולטטיבית",
+                    "פסיכופילת"
+                ],
+                correctIndex: 1,
+                explanation: "פטריות הן ברובן אירוביות או אירוביות-פקולטטיביות. פטרייה שחייבת חמצן היא אירובית."
+            },
+            {
+                question: "מהו ההבדל המרכזי בין דופן התא של צמח לדופן התא של פטרייה?",
+                options: [
+                    "לפטריות אין דופן תא אלא רק ממברנה",
+                    "דופן צמחית מורכבת בעיקר מכיטין ודופן פטרייה מתאית",
+                    "הדפנות דומות מבנית, אך דופן הפטרייה מכילה בעיקר פולימר של אן אצטיל גלוקוזאמין",
+                    "דופן הפטרייה אינה מכילה פוליסוכרים כלל"
+                ],
+                correctIndex: 2,
+                explanation: "דופן התא הפטרייתית דומה מבנית לזו של צמחים אך שונה כימית, שכן היא מורכבת מכיטין (פולימר של אן אצטיל גלוקוזאמין) ולא מתאית."
+            },
+            {
+                question: "חוקר בוחן תרבית פטריות ורואה שהיא גדלה על פני הנוזל, בעלת מבנה רב תאי וסיבי. באיזה סוג פטרייה מדובר ככל הנראה?",
+                options: [
+                    "שמר",
+                    "וירוס",
+                    "עובש",
+                    "חיידק"
+                ],
+                correctIndex: 2,
+                explanation: "עובשים הם פטריות רב תאיות, פילמנטיות (מורכבות מסיבים/קורים), אירוביות הגדלות בדרך כלל על פני הנוזל."
+            },
+            {
+                question: "מה תהיה ההשפעה של פגיעה במבנה המחיצות (Septa) בקורים של פטרייה?",
+                options: [
+                    "הפטרייה תהפוך לשמר חד תאי",
+                    "תנועת הציטופלסמה בין התאים עלולה להיפגע או להשתנות",
+                    "הפטרייה תתחיל לבצע פוטוסינתיזה",
+                    "דופן התא החיצונית תתפרק לחלוטין"
+                ],
+                correctIndex: 1,
+                explanation: "המחיצות (Septa) מפרידות בין התאים בקורים, אך מאפשרות מעבר של ציטופלסמה. פגיעה בהן תשפיע על מעבר החומרים התוך-תאי."
+            },
+            {
+                question: "במה שונים קורים מסוג Coenocytic hyphae מקורים רגילים בעלי Septa?",
+                options: [
+                    "הם אינם מכילים ציטופלסמה",
+                    "אין להם דפנות ממברנליות המפרידות בין התאים",
+                    "הם קיימים רק בשמרים ולא בעובשים",
+                    "הם מורכבים מחלבונים בלבד ללא סוכרים"
+                ],
+                correctIndex: 1,
+                explanation: "קורים מסוג Coenocytic הם קורים רציפים ללא מחיצות (Septa) המפרידות בין התאים."
+            },
+            {
+                question: "מדוע גידול של פטריות פילמנטיות אינו נראה לרוב כבעל קצב גידול לוגריתמי קלאסי?",
+                options: [
+                    "מפני שהן מתחלקות רק פעם בשנה",
+                    "מפני שהגידול שלהן הוא לינארי ומתרחש מקצות הקורים",
+                    "מפני שהן מנצלות פחמן מהאוויר בקצב איטי",
+                    "מפני שאין להן מנגנוני רבייה אל-מינית"
+                ],
+                correctIndex: 1,
+                explanation: "ברוב הפטריות, הגידול של הקורים הוא לינארי ומתבצע מהקצוות, בניגוד לחיידקים ושמרים המראים גידול לוגריתמי בחלוקת תאים."
+            },
+            {
+                question: "מה מאפיין את תהליך ההנצה (Budding) בשמרים?",
+                options: [
+                    "זהו תהליך של רבייה מינית הדורש שני שמרים",
+                    "זהו תהליך של רבייה אל-מינית בו תא אם יוצר תא בת קטן יותר",
+                    "זהו תהליך בו נוצרות אסקוספורות",
+                    "זהו תהליך של התמזגות ציטופלסמה ללא חלוקת גרעין"
+                ],
+                correctIndex: 1,
+                explanation: "הנצה היא צורה של רבייה אל-מינית הנפוצה בשמרים, בה תא אם מפתח בליטה שהופכת לתא חדש (זהה גנטית)."
+            },
+            {
+                question: "בתהליך זיווג (Mating) של שמרים, מהו השלב המתרחש מיד לאחר התמזגות שני תאים?",
+                options: [
+                    "יצירת ספורות אל-מיניות",
+                    "יצירת זיגוטה דיפלואידית",
+                    "חלוקת מיטוזה מהירה",
+                    "הרס של דופן התא המשותף"
+                ],
+                correctIndex: 1,
+                explanation: "ברבייה מינית של שמרים, שני תאים הפלואידים מתמזגים ליצירת זיגוטה דיפלואידית, שלאחר מכן תעבור מיוזה."
+            },
+            {
+                question: "מהו מחזור חיים המשלב גם שלב הפלואידי וגם שלב דיפלואידי באותו אורגניזם מאפיין?",
+                options: [
+                    "רק חיידקים",
+                    "וירוסים של צמחים",
+                    "חלק מהפטריות, המקיימות רבייה סקסואלית",
+                    "אף אורגניזם אינו יכול להכיל את שני השלבים"
+                ],
+                correctIndex: 2,
+                explanation: "לפטריות רבות יש מחזור חיים מורכב הכולל גם שלב הפלואידי (עותק אחד של כרומוזומים) וגם שלב דיפלואידי (שני עותקים), במיוחד סביב תהליכי הרבייה המינית."
+            },
+            {
+                question: "פטרייה המייצרת את נבגיה המיניים בתוך מבנה דמוי שק המכיל שמונה נבגים, שייכת קרוב לוודאי למערכת ה:",
+                options: [
+                    "Zygomycota",
+                    "Basidiomycota",
+                    "Ascomycota",
+                    "Fungi imperfecti"
+                ],
+                correctIndex: 2,
+                explanation: "מערכת ה-Ascomycota (פטריות השק) מתאפיינת ביצירת אסקוספורות (לרוב 4 או 8) בתוך מבנה הנקרא אסקוס."
+            },
+            {
+                question: "איזה סוג של נבגים אל-מיניים מייצרות פטריות ממערכת ה-Ascomycota?",
+                options: [
+                    "Zygospores",
+                    "Basidiospores",
+                    "Conidia",
+                    "Sporangiospores"
+                ],
+                correctIndex: 2,
+                explanation: "פטריות Ascomycota מייצרות נבגים אל-מיניים הנקראים קונידיה (Conidia) בקצות קורים מיוחדים."
+            },
+            {
+                question: "מהו המאפיין הייחודי של פטריות המוגדרות כ-Fungi imperfecti?",
+                options: [
+                    "הן חסרות דופן תא לחלוטין",
+                    "לא נמצאה להן צורה של רבייה מינית",
+                    "הן אינן מסוגלות לנצל פחמימות",
+                    "הן מבצעות פוטוסינתיזה חלקית"
+                ],
+                correctIndex: 1,
+                explanation: "Fungi imperfecti היא קבוצה של פטריות שטרם זוהה אצלן שלב של רבייה מינית במחזור החיים, ולכן קשה לשייכן פילוגנטית."
+            },
+            {
+                question: "חקלאי מזהה ריקבון שחור על בצלים בחלקה שלו. בבדיקת מעבדה זוהתה פטרייה ממערכת ה-Ascomycota. מי מהבאים הוא החשוד העיקרי?",
+                options: [
+                    "Saccharomyces",
+                    "Aspergillus flavus או Aspergillus niger",
+                    "Rhizopus",
+                    "Phytophthora infestans"
+                ],
+                correctIndex: 1,
+                explanation: "אספרגילוס (כמו ניגר או פלאבוס) הן פטריות מקבוצת Ascomycota הידועות כגורמות למחלות לאחר הקטיף (Postharvest Diseases) בצמחים כמו בצל."
+            },
+            {
+                question: "עובש הלחם הנפוץ, Rhizopus, שייך לאיזו מערכה פילוגנטית?",
+                options: [
+                    "Ascomycota",
+                    "Zygomycota",
+                    "Basidiomycota",
+                    "Oomycetes"
+                ],
+                correctIndex: 1,
+                explanation: "ריזופוס הוא דוגמה קלאסית לפטרייה ממערכת ה-Zygomycota."
+            },
+            {
+                question: "כיצד נקראים הנבגים האל-מיניים של עובש הלחם (Rhizopus)?",
+                options: [
+                    "Ascospores",
+                    "Conidia",
+                    "Sporangiospores",
+                    "Zygospores"
+                ],
+                correctIndex: 2,
+                explanation: "במערכת ה-Zygomycota, הנבגים האל-מיניים נוצרים בתוך מבנה סגור הנקרא ספורנגיום ונקראים Sporangiospores."
+            },
+            {
+                question: "מה מציין המונח 'שלב דיקריוטי' במחזור החיים של פטריות מסוימות?",
+                options: [
+                    "תא ללא גרעין כלל",
+                    "תא בעל שני גרעינים הפלואידים נפרדים ($n+n$)",
+                    "תא שבו התרחשה מיוזה לפני מיטוזה",
+                    "תא המכיל כלורופלסטים כפולים"
+                ],
+                correctIndex: 1,
+                explanation: "שלב דיקריוטי ($n+n$) הוא מצב בו שני תאים התמזגו (פלזמוגמיה) אך הגרעינים שלהם טרם התמזגו (קריוגמיה), כך שהתא מכיל שני גרעינים נפרדים."
+            },
+            {
+                question: "איזו מהמחלות הבאות נגרמה על ידי פטרייה (או אורגניזם דמוי פטרייה) והובילה לאסון היסטורי משמעותי באירלנד?",
+                options: [
+                    "הרס עצי הערמון",
+                    "כימשון תפוחי האדמה",
+                    "מגפת החיטה השחורה",
+                    "ריקבון הבצל האדום"
+                ],
+                correctIndex: 1,
+                explanation: "הפטרייה Phytophthora infestans גרמה לכימשון תפוחי האדמה באירלנד בין השנים 1846-1849, אירוע שהוביל לרעב הגדול."
+            },
+            {
+                question: "איזו פטרייה גרמה להרס נרחב של עצי ערמונים במזרח ארצות הברית בתחילת המאה ה-20?",
+                options: [
+                    "Phytophthora infestans",
+                    "Cryphonectria parasitica",
+                    "Aspergillus niger",
+                    "Saccharomyces cerevisiae"
+                ],
+                correctIndex: 1,
+                explanation: "הפטרייה Cryphonectria parasitica אחראית למחלה שהשמידה את עצי הערמון במזרח ארהב בשנת 1904."
+            },
+            {
+                question: "מה משמעות המונח 'פסיכופילים' בהקשר של עובשים?",
+                options: [
+                    "עובשים המייצרים רעלנים הפוגעים במערכת העצבים",
+                    "עובשים המסוגלים לשרוד ולגדול בטמפרטורות נמוכות",
+                    "עובשים הגדלים רק בתנאי חומציות קיצוניים",
+                    "עובשים התוקפים חרקים בלבד"
+                ],
+                correctIndex: 1,
+                explanation: "פסיכופילים הם אורגניזמים, כולל סוגים מסוימים של עובשים, המותאמים לחיים בטמפרטורות קרות."
+            },
+            {
+                question: "אילו מהתנאים הבאים אינו נחשב לתנאי קיצון שפטריות רבות מסוגלות להיות עמידות אליו?",
+                options: [
+                    "חומציות גבוהה (pH נמוך)",
+                    "לחץ אוסמוטי גבוה",
+                    "חשיפה ממושכת לוואקום מוחלט בחלל",
+                    "יובש ולחות נמוכה"
+                ],
+                correctIndex: 2,
+                explanation: "החומר הנלמד מציין שפטריות עמידות לתנאי קיצון כמו חומציות גבוהה, יובש, ולחץ אוסמוטי, אך לא מוזכרת עמידות לוואקום."
+            },
+            {
+                question: "איזו השפעה יש לפטריות על תעשיית המזון, כפי שמשתקף במאפייניהן?",
+                options: [
+                    "הן משמשות רק לקלקול מזון ואין להן שימוש תעשייתי",
+                    "הן משמשות לייצור מזון (לחם, בירה, גבינות) אך גם גורמות לקלקול מזון",
+                    "הן משמשות רק כחומרי צבע טבעיים למזון בשל הפיגמנטים שלהן",
+                    "הן אינן מסוגלות לגדול על מזון בשל הלחץ האוסמוטי הגבוה שלו"
+                ],
+                correctIndex: 1,
+                explanation: "לפטריות תפקיד כפול: הן חיוניות בתעשיית המזון (שמרים ללחם ובירה, עובשים לגבינות) אך הן גם גורם מרכזי לקלקול מזון עקב יכולתן לנצל פחמימות מורכבות."
+            },
+            {
+                question: "מהו התפקיד האקולוגי/טפילי הנפוץ ביותר של פטריות על פי החומר הנלמד?",
+                options: [
+                    "רוב הפטריות הטפיליות פוגעות ביונקים ימיים",
+                    "רוב הפטריות הטפיליות הן פתוגניות לצמחים",
+                    "רוב הפטריות הן פתוגניות לבעלי חיים ובני אדם",
+                    "פטריות אינן מקיימות יחסי טפילות כלל"
+                ],
+                correctIndex: 1,
+                explanation: "מבחינת פרזיטיות, רוב הפטריות הטפיליות הן פתוגניות לצמחים, ורק בודדות פתוגניות לבעלי חיים."
+            },
+            {
+                question: "אם תא של פטרייה עובר מיטוזה בלבד, מה תהיה התוצאה הגנטית של נבגיו?",
+                options: [
+                    "הנבגים יהיו שונים גנטית מתא האם עקב שחלוף",
+                    "הנבגים יהיו זהים גנטית לחלוטין לתא האם",
+                    "הנבגים יכילו מחצית מכמות הכרומוזומים של תא האם",
+                    "הנבגים יכילו רק חומר גנטי מיטוכונדריאלי"
+                ],
+                correctIndex: 1,
+                explanation: "רבייה אסקסואלית (אל-מינית) מבוססת על מיטוזה, תהליך שבו תא האם מתחלק לתאי בת או נבגים בעלי זהות גנטית מלאה למקור."
+            },
+            {
+                question: "מהו ההבדל העיקרי בין Spores ברבייה מינית ל-Spores ברבייה אל-מינית בפטריות?",
+                options: [
+                    "נבגים מיניים נוצרים תמיד מחוץ לתא, ואל-מיניים בתוכו",
+                    "נבגים מיניים נוצרים בתהליך מיוזה והם הפלואידים, בעוד שאל-מיניים נוצרים במיטוזה",
+                    "נבגים אל-מיניים מסוגלים לשרוד רק במים",
+                    "אין הבדל, שניהם נוצרים בדיוק באותו מנגנון תאי"
+                ],
+                correctIndex: 1,
+                explanation: "רבייה סקסואלית מערבת מיוזה ויצירת ספורות הפלואידיות, בעוד רבייה אסקסואלית מערבת מיטוזה ליצירת ספורות זהות גנטית."
+            },
+            {
+                question: "באיזה תהליך תעשייתי נעשה שימוש בפטריות אכילות הגדלות על מצע מוצק?",
+                options: [
+                    "זיקוק נפט",
+                    "Solid-state fermentation",
+                    "פוטוסינתיזה מלאכותית",
+                    "הפקת פלסטיק מכיטין"
+                ],
+                correctIndex: 1,
+                explanation: "השקופית על פטריות בתעשייה מציינת פטריות אכילות ותהליכי תסיסה במצע מוצק (Solid-state fermentation)."
+            },
+            {
+                question: "מה מייצג המונח Thallus בהקשר של עובשים?",
+                options: [
+                    "הנבג המיני של הפטרייה",
+                    "גוף הפטרייה המורכב מפילמנטים (קורים)",
+                    "האנזים המפרק את דופן התא",
+                    "האברון האחראי על אגירת הפיגמנטים"
+                ],
+                correctIndex: 1,
+                explanation: "המונחים Thallus או Hyphae מתייחסים לפילמנטים של תאים המחוברים יחד ומהווים את גוף העובש."
+            },
+            {
+                question: "מה מאפיין את קבוצת ה-Basidiomycota מבחינת רבייה?",
+                options: [
+                    "הם מתרבים אך ורק ברבייה אל-מינית",
+                    "הם מייצרים נבגים מיניים הנקראים Basidiospores על גבי מבנה מיוחד",
+                    "הם מייצרים אסקוספורות בתוך שק מוגן",
+                    "הם חסרי יכולת לייצר נבגים כלל"
+                ],
+                correctIndex: 1,
+                explanation: "פטריות מקבוצת Basidiomycota (כמו פטריות כובע) מייצרות נבגים מיניים הנקראים Basidiospores."
+            },
+            {
+                question: "חוקר מעוניין לעכב גידול של פטריות מבלי לפגוע בחיידקים. איזה מנגנון מבין הבאים יהווה את המטרה הטובה ביותר לתרופה?",
+                options: [
+                    "עיכוב סינתזת חלבונים בריבוזום של חיידקים",
+                    "פגיעה במנגנון הפוטוסינתיזה",
+                    "עיכוב יצירת כיטין בדופן התא",
+                    "פירוק שכבת הפפטידוגליקן"
+                ],
+                correctIndex: 2,
+                explanation: "כיטין הוא מרכיב ייחודי לדופן התא של פטריות ואינו קיים בחיידקים, ולכן פגיעה בו תעכב פטריות באופן ספציפי."
+            },
+            {
+                question: "כיצד פטריות משיגות את הפחמן הדרוש להן למחיה?",
+                options: [
+                    "מקיבוע פחמן דו-חמצני מהאוויר",
+                    "על ידי סינתזה של אור השמש",
+                    "דרך קליטת חומר אורגני מהסביבה",
+                    "מפירוק מים לחמצן ומימן"
+                ],
+                correctIndex: 2,
+                explanation: "פטריות הן הטרוטרופיות, כלומר הן חייבות לקלוט חומר אורגני מוכן מהסביבה ואינן מסוגלות לקבע פחמן בעצמן."
+            },
+            {
+                question: "מדוע ישנם מינים של פטריות המוגדרים כטוקסיים לאדם?",
+                options: [
+                    "כי הם מתרבים בתוך זרם הדם וגורמים לחנק",
+                    "כי הם מייצרים חומרים (טוקסינים) העלולים להיות רעילים בעת בליעה או חשיפה",
+                    "כי דופן התא שלהם חותכת את רקמות המעי",
+                    "כי הם שואבים את כל החמצן מהריאות"
+                ],
+                correctIndex: 1,
+                explanation: "חלק מהעובשים והפטריות מייצרים חומרים משניים (מעכבי גידול או טוקסינים) שיכולים להיות רעילים לאדם."
+            },
+            {
+                question: "מהי הצורה המורפולוגית האופיינית של השמר Saccharomyces?",
+                options: [
+                    "חוטים ארוכים ומסועפים ללא מחיצות",
+                    "תא מעגלי או אליפטי, לרוב חד תאי",
+                    "מבנה דמוי כובע ובסיס בשרני",
+                    "צבר של נבגים שחורים הנישאים ברוח"
+                ],
+                correctIndex: 1,
+                explanation: "שמרים, ובתוכם סקרומיצס, הם בדרך כלל חד תאיים בעלי צורה מעגלית או אליפטית."
+            },
+            {
+                question: "באיזו רמת סיווג טקסונומית ניתן לבצע הבחנה ראשונית בין סוגי עובשים שונים באמצעות הסתכלות מיקרוסקופית?",
+                options: [
+                    "ברמת הממלכה (Kingdom)",
+                    "ברמת המערכה (Phylum)",
+                    "ברמת הסוג (Genus)",
+                    "ברמת המין הספציפי (Species) בלבד"
+                ],
+                correctIndex: 2,
+                explanation: "על פי החומר, הבחנה ראשונית בין עובשים ברמת הסוג (Genus) ניתנת לביצוע מיקרוסקופית."
+            },
+            {
+                question: "מה יקרה אם נחשוף פטרייה לריכוז גבוה של מלחים או סוכרים (לחץ אוסמוטי גבוה)?",
+                options: [
+                    "הפטרייה תתפוצץ מיד בגלל חדירת מים אלימה",
+                    "זנים רבים של פטריות ישרדו וימשיכו לגדול, שכן הם עמידים ללחץ אוסמוטי גבוה",
+                    "הפטרייה תהפוך לחיידק פסיכופיל",
+                    "דופן הכיטין תתמוסס לחלוטין"
+                ],
+                correctIndex: 1,
+                explanation: "מאפיין בולט של פטריות הוא עמידותן לתנאי קיצון, כולל לחץ אוסמוטי גבוה, מה שמאפשר להן לקלקל מזון משומר בסוכר או מלח."
+            },
+            {
+                question: "מהי המשמעות של Pseudo hyphae בשמרים?",
+                options: [
+                    "קורים אמיתיים לחלוטין המשמשים לרבייה מינית",
+                    "מצב בו התאים המנצים נשארים מחוברים ויוצרים שרשרת דמוית קור",
+                    "קורים שנוצרים רק כאשר הפטרייה נמצאת בחושך מוחלט",
+                    "אברוני תנועה המשמשים את השמר לשחייה בנוזל"
+                ],
+                correctIndex: 1,
+                explanation: "במצבים מסוימים (כמו הנצה בשמרים), התאים החדשים לא ניתקים מתא האם ונוצרת שרשרת תאים המדמה קור, הנקראת קור מדומה (Pseudo hyphae)."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר בצורה הנכונה ביותר את היחס בין פטריות לוירוסים מנקודת מבט ביולוגית?",
+                options: [
+                    "שניהם אורגניזמים פרוקריוטים חסרי גרעין",
+                    "פטריות הן תאים אאוקריוטים המסוגלים להתרבות בעצמם, בעוד וירוסים אינם תאים ודורשים פונדקאי",
+                    "וירוסים הם סוג של פטריות טפיליות זעירות",
+                    "שניהם מכילים כיטין במעטפת החיצונית שלהם"
+                ],
+                correctIndex: 1,
+                explanation: "פטריות הן אורגניזמים אאוקריוטים בעלי מבנה תאי מלא. וירוסים אינם תאים וזקוקים למערכות הפונדקאי כדי להתרבות."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "פטריות הן אורגניזמים פרוקריוטים, בדומה לחיידקים.",
+                answer: false,
+                explanation: "פטריות הן אורגניזמים אאוקריוטים, כלומר התאים שלהן מכילים גרעין מוגדר ואברונים, בניגוד לחיידקים שהם פרוקריוטים."
+            },
+            {
+                question: "כל הפטריות מסוגלות לבצע פוטוסינתיזה כאשר הן נחשפות לאור שמש מספיק.",
+                answer: false,
+                explanation: "פטריות חסרות כלורופיל ולכן אינן מסוגלות לבצע פוטוסינתיזה בשום תנאי. הן הטרוטרופיות."
+            },
+            {
+                question: "המרכיב העיקרי בדופן התא של פטריות הוא כיטין.",
+                answer: true,
+                explanation: "דופן התא הפטרייתית מכילה עד 90 אחוז פוליסוכרים, כאשר ברוב המקרים המרכיב העיקרי הוא הפולימר כיטין."
+            },
+            {
+                question: "אנזימי העיכול באדם מסוגלים לפרק בקלות את דופן התא הפטרייתית המורכבת מכיטין.",
+                answer: false,
+                explanation: "כיטין אינו מפורק על ידי אנזימים אנושיים."
+            },
+            {
+                question: "שמרים הם בדרך כלל פטריות חד-תאיות.",
+                answer: true,
+                explanation: "בניגוד לעובשים שהם רב-תאיים ופילמנטיים, שמרים הם לרוב אורגניזמים חד-תאיים מעגליים או אליפטיים."
+            },
+            {
+                question: "קורים (Hyphae) המוגדרים כ-Coenocytic מכילים מחיצות (Septa) ברורות בין כל תא ותא.",
+                answer: false,
+                explanation: "קורים מסוג Coenocytic הם קורים חסרי מחיצות (ללא דפנות) בין התאים."
+            },
+            {
+                question: "גם בקורים בעלי מחיצות (Septa), מתאפשר מעבר של ציטופלסמה בין התאים.",
+                answer: true,
+                explanation: "המחיצות אינן אטומות לחלוטין ויש דרכן מעבר של ציטופלסמה לאורך הקור."
+            },
+            {
+                question: "פטריות יכולות לשרוד רק בסביבות בעלות רמת חומציות ניטרלית ונוכחות מים גבוהה.",
+                answer: false,
+                explanation: "זנים רבים של פטריות עמידים לתנאי קיצון, כולל חומציות גבוהה, יובש ולחץ אוסמוטי גבוה."
+            },
+            {
+                question: "רבייה מינית בפטריות כוללת שלב של מיוזה ליצירת נבגים הפלואידים.",
+                answer: true,
+                explanation: "רבייה סקסואלית (מינית) מערבת מיוזה המייצרת ספורות הפלואידיות."
+            },
+            {
+                question: "הפטרייה Phytophthora infestans אחראית למחלת כימשון תפוחי האדמה שהובילה לרעב באירלנד.",
+                answer: true,
+                explanation: "זוהי דוגמה היסטורית מרכזית לנזק שפטריות פתוגניות לצמחים יכולות לגרום בחקלאות."
+            },
+            {
+                question: "פטריות מקבוצת Ascomycota מייצרות נבגים מיניים הנקראים Zygospores.",
+                answer: false,
+                explanation: "פטריות Ascomycota מייצרות Ascospores. נבגי Zygospores מיוצרים על ידי קבוצת ה-Zygomycota."
+            },
+            {
+                question: "הפיגמנטים בפטריות נועדו בעיקר למשוך חרקים מאביקים.",
+                answer: false,
+                explanation: "תפקיד הפיגמנטים בפטריות הוא לספק הגנה בפני קרינת אולטרה סגול ורדיקלים חופשיים."
+            },
+            {
+                question: "תפטיר (Mycelium) הוא למעשה צבר של קורים שניתן לראות בעין בלתי מזוינת.",
+                answer: true,
+                explanation: "התפטיר הוא הגוף הווגטטיבי הגדול של הפטרייה המורכב מרשת של קורים."
+            },
+            {
+                question: "רבייה על ידי הנצה (Budding) אופיינית בעיקר לפטריות הכובע (Mushrooms).",
+                answer: false,
+                explanation: "הנצה היא צורת רבייה אל-מינית הנפוצה בעיקר בשמרים."
+            },
+            {
+                question: "לרוב הפטריות יש קצב גידול לוגריתמי מהיר, בדומה לחיידקים.",
+                answer: false,
+                explanation: "ברוב הפטריות הגידול הוא לינארי מהקצוות של הקורים, ולכן לא נראה קצב גידול לוגריתמי קלאסי."
+            },
+            {
+                question: "הקבוצה Fungi imperfecti כוללת פטריות המתרבות ברבייה מינית בלבד.",
+                answer: false,
+                explanation: "ההפך הוא הנכון. קבוצה זו כוללת פטריות שלא נמצאה אצלן צורת רבייה מינית כלל."
+            },
+            {
+                question: "Saccharomyces הוא סוג של עובש מסוכן הגורם למחלות בדרכי הנשימה.",
+                answer: false,
+                explanation: "Saccharomyces הוא סוג של שמר החשוב ביותר בתעשיית המזון (לחם, בירה, יין) ונחשב בטוח ושימושי."
+            },
+            {
+                question: "רוב הפטריות הטפיליות בטבע הן פתוגניות לצמחים ולא לבעלי חיים.",
+                answer: true,
+                explanation: "רוב הפטריות הפרזיטיות תוקפות צמחים, ורק מיעוטן פתוגניות לבעלי חיים או לבני אדם."
+            },
+            {
+                question: "דופן התא של הפטרייה זהה לחלוטין מבחינה כימית לדופן התא של צמחים.",
+                answer: false,
+                explanation: "הן דומות מבחינה מבנית, אך שונות כימית. דופן פטרייה מכילה כיטין, בעוד דופן צמחית מכילה תאית."
+            },
+            {
+                question: "שלב הפלזמוגמיה (Plasmogamy) ברבייה מינית משמעותו התמזגות הציטופלסמה של שני התאים.",
+                answer: true,
+                explanation: "במחזור החיים המיני, פלזמוגמיה היא איחוד הציטופלסמות, מה שלעיתים מוביל לשלב דיקריוטי לפני איחוד הגרעינים (קריוגמיה)."
+            },
+            {
+                question: "קונידיה (Conidia) הם סוג של נבגים מיניים הנוצרים בתוך פטריות הבסיסה.",
+                answer: false,
+                explanation: "קונידיה הם נבגים אל-מיניים (Asexual spores), האופייניים למשל לפטריות מקבוצת Ascomycota."
+            },
+            {
+                question: "פטריות מוגדרות כאורגניזמים אוטוטרופיים.",
+                answer: false,
+                explanation: "פטריות מוגדרות כאורגניזמים הטרוטרופיים, כלומר הן צורכות תרכובות אורגניות מוכנות ואינן מקבעות פחמן."
+            },
+            {
+                question: "הפטרייה Cryphonectria parasitica אחראית להכחדה כמעט מוחלטת של עצי הערמון במזרח ארהב.",
+                answer: true,
+                explanation: "זהו פתוגן צמחי הרסני שגרם לנזק אקולוגי וכלכלי עצום בתחילת המאה ה-20."
+            },
+            {
+                question: "עובשים אינם מסוגלים לפרק פחמימות מורכבות, ולכן הם גדלים רק על סוכרים פשוטים.",
+                answer: false,
+                explanation: "עובשים מסוגלים בהחלט לנצל ולפרק פחמימות מורכבות, מה שהופך אותם לגורם מרכזי בקלקול מזון."
+            },
+            {
+                question: "כל הפטריות זקוקות לטמפרטורת חדר חמימה כדי לגדול, ואף פטרייה אינה יכולה לשרוד בקירור.",
+                answer: false,
+                explanation: "חלק מהפטריות (במיוחד עובשים מסוימים) הן פסיכופילות, כלומר מסוגלות לגדול בטמפרטורות נמוכות."
+            },
+            {
+                question: "בפטריות פילמנטיות, המונח Thallus הוא מילה נרדפת למבנה הקורים (Hyphae).",
+                answer: true,
+                explanation: "המונחים Thallus או Hyphae משמשים לתיאור הפילמנטים המרכיבים את הפטרייה."
+            },
+            {
+                question: "ריזופוס (Rhizopus) הוא עובש נפוץ המוכר לנו כעובש הלחם.",
+                answer: true,
+                explanation: "ריזופוס הוא אכן עובש הלחם הקלאסי, השייך למערכת ה-Zygomycota."
+            },
+            {
+                question: "פטריות הן מיקרואורגניזמים השייכים לקבוצת הפרוטוזואה.",
+                answer: false,
+                explanation: "פטריות מהוות ממלכה נפרדת (Fungi) ואינן שייכות לפרוטוזואה (שהם טפילים חד-תאיים אחרים)."
+            },
+            {
+                question: "אספרגילוס ניגר (Aspergillus niger) מתרבה אל-מינית על ידי ייצור קונידיה.",
+                answer: true,
+                explanation: "אספרגילוס שייך ל-Ascomycota ומייצר נבגים אל-מיניים מסוג קונידיה הנישאים על קונידיופור."
+            },
+            {
+                question: "השלב הדיקריוטי ($n+n$) מתקיים רק כאשר הפטרייה נמצאת במצב של עקה קיצונית ללא מזון.",
+                answer: false,
+                explanation: "השלב הדיקריוטי הוא חלק טבעי ממחזור החיים המיני של פטריות מסוימות, לאחר התמזגות התאים ולפני התמזגות הגרעינים."
+            }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            
+            // Re-render MathJax if present
+            if (window.MathJax) {
+                MathJax.typesetPromise([flashcardContent]);
+            }
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                
+                // Re-render MathJax if present
+                if (window.MathJax) {
+                    MathJax.typesetPromise([flashcardContent]);
+                }
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            
+            // Re-render MathJax if present
+            if (window.MathJax) {
+                MathJax.typesetPromise([mcqQuestion, mcqOptions]);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            
+            // Re-render MathJax if present
+            if (window.MathJax) {
+                MathJax.typesetPromise([explanationEl]);
+            }
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            
+            // Re-render MathJax if present
+            if (window.MathJax) {
+                MathJax.typesetPromise([mcqAllQuestionsContainer]);
+            }
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            
+            // Re-render MathJax if present
+            if (window.MathJax) {
+                MathJax.typesetPromise([tfQuestion]);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             
+             // Re-render MathJax if present
+             if (window.MathJax) {
+                 MathJax.typesetPromise([explanationEl]);
+             }
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             
+             // Re-render MathJax if present
+             if (window.MathJax) {
+                 MathJax.typesetPromise([tfAllQuestionsContainer]);
+             }
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

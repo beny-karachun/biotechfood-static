@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Fourier Transforms</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Fourier Transforms and PDEs</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+
+            <h3>Definition</h3>
+            <p>The Fourier Transform is used to analyze functions in terms of their frequency content. It's particularly useful for PDEs defined on infinite domains ($x \in (-\infty, \infty)$). A common definition is:</p>
+            <p><strong>Fourier Transform:</strong></p>
+            $$ \hat{f}(\omega) = \mathcal{F}\{f(x)\}(\omega) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} f(x) e^{-i\omega x} dx $$
+            <p><strong>Inverse Fourier Transform:</strong></p>
+            $$ f(x) = \mathcal{F}^{-1}\{\hat{f}(\omega)\}(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} \hat{f}(\omega) e^{i\omega x} d\omega $$
+            <p><em>Note: Different scaling factors ($1$, $1/(2\pi)$) and signs in the exponent ($e^{i\omega x}$ vs $e^{-i\omega x}$) exist in various definitions. Be consistent! The $\omega$ variable represents angular frequency. Sometimes $k$ or $\xi$ is used instead.</em></p>
+
+            <h3>Key Properties for PDEs</h3>
+            <ul>
+                <li><strong>Linearity:</strong> $\mathcal{F}\{af(x) + bg(x)\} = a\hat{f}(\omega) + b\hat{g}(\omega)$</li>
+                <li><strong>Transform of Derivatives (Spatial):</strong> Transforms spatial derivatives into multiplication by $i\omega$.
+                    $$ \mathcal{F}\{f'(x)\} = i\omega \hat{f}(\omega) $$
+                    $$ \mathcal{F}\{f''(x)\} = (i\omega)^2 \hat{f}(\omega) = -\omega^2 \hat{f}(\omega) $$
+                    $$ \mathcal{F}\{f^{(n)}(x)\} = (i\omega)^n \hat{f}(\omega) $$
+                    For a function $u(x,t)$, the transform is typically taken with respect to $x$:
+                     $$ \mathcal{F}\{u_x\} = i\omega \hat{u}(\omega, t) $$
+                     $$ \mathcal{F}\{u_{xx}\} = -\omega^2 \hat{u}(\omega, t) $$
+                </li>
+                <li><strong>Transform of Derivatives (Non-Spatial):</strong> The transform commutes with derivatives with respect to other variables (like time $t$):
+                    $$ \mathcal{F}\left\{\frac{\partial u}{\partial t}\right\} = \frac{d}{dt} \mathcal{F}\{u\} = \frac{d\hat{u}}{dt}(\omega, t) $$
+                </li>
+                 <li><strong>Convolution Theorem:</strong> Let $(f*g)(x) = \int_{-\infty}^{\infty} f(y)g(x-y)dy$. Then:
+                    $$ \mathcal{F}\{f*g\} = \sqrt{2\pi} \, \hat{f}(\omega) \hat{g}(\omega) $$
+                    Equivalently, $\mathcal{F}^{-1}\{\hat{f}(\omega)\hat{g}(\omega)\} = \frac{1}{\sqrt{2\pi}} (f*g)(x)$. This is crucial for inverting products in the frequency domain.</li>
+                <li><strong>Transform of a Gaussian:</strong> A very important pair:
+                    $$ \mathcal{F}\{e^{-ax^2}\} = \frac{1}{\sqrt{2a}} e^{-\omega^2/(4a)} $$
+                    $$ \mathcal{F}^{-1}\{e^{-b\omega^2}\} = \sqrt{\frac{1}{4\pi b}} e^{-x^2/(4b)} $$
+                </li>
+            </ul>
+
+            <h3>Application Strategy for PDEs on $\mathbb{R}$</h3>
+            <ol>
+                <li>Take the Fourier Transform (with respect to $x$) of the entire PDE and the initial condition(s).</li>
+                <li>Use the derivative properties to convert the PDE into an ODE (or algebraic equation) for the transformed function $\hat{u}(\omega, t)$. The spatial variable $x$ is eliminated.</li>
+                <li>Solve this ODE for $\hat{u}(\omega, t)$, using the transformed initial condition(s) to determine any integration constants (which will typically depend on $\omega$).</li>
+                <li>Take the Inverse Fourier Transform of $\hat{u}(\omega, t)$ to find the solution $u(x,t)$. This step often requires recognizing transforms (like the Gaussian) or using the Convolution Theorem.</li>
+            </ol>
+
+            <h3>Example: Heat Equation $u_t = k u_{xx}$ on $\mathbb{R}$</h3>
+             <ol>
+                 <li>PDE: $u_t = k u_{xx}$, $x \in (-\infty, \infty)$, $t>0$. IC: $u(x,0)=f(x)$.</li>
+                 <li>Transform PDE: $\mathcal{F}\{u_t\} = \mathcal{F}\{k u_{xx}\} \implies \frac{d\hat{u}}{dt} = k(-\omega^2)\hat{u} = -k\omega^2 \hat{u}$.</li>
+                 <li>Transform IC: $\mathcal{F}\{u(x,0)\} = \mathcal{F}\{f(x)\} \implies \hat{u}(\omega, 0) = \hat{f}(\omega)$.</li>
+                 <li>Solve ODE for $\hat{u}$: This is a first-order ODE in $t$. $\hat{u}(\omega, t) = C(\omega) e^{-k\omega^2 t}$. Using the IC, $C(\omega) = \hat{u}(\omega, 0) = \hat{f}(\omega)$. So, $\hat{u}(\omega, t) = \hat{f}(\omega) e^{-k\omega^2 t}$.</li>
+                 <li>Inverse Transform: We have a product in the frequency domain. We need the inverse transform of $e^{-k\omega^2 t}$. Using the Gaussian pair with $b=kt$, we get $\mathcal{F}^{-1}\{e^{-k\omega^2 t}\} = \sqrt{\frac{1}{4\pi kt}} e^{-x^2/(4kt)}$. Let $G(x,t) = \sqrt{\frac{1}{4\pi kt}} e^{-x^2/(4kt)}$ (the Heat Kernel). Note that $\hat{G}(\omega,t) = \frac{1}{\sqrt{2\pi}} e^{-k\omega^2 t}$.
+                 So, $\hat{u}(\omega, t) = \hat{f}(\omega) \cdot (\sqrt{2\pi} \hat{G}(\omega, t))$.
+                 Using the Convolution Theorem $\mathcal{F}^{-1}\{\hat{f}\hat{g}\} = \frac{1}{\sqrt{2\pi}}(f*g)$, we have:
+                 $u(x,t) = \mathcal{F}^{-1}\{\hat{f}(\omega) \cdot \sqrt{2\pi}\hat{G}(\omega, t)\} = \frac{1}{\sqrt{2\pi}} (f * (\sqrt{2\pi} G))(x) = (f*G)(x)$.
+                 $$ u(x,t) = \int_{-\infty}^{\infty} f(y) G(x-y, t) \, dy = \int_{-\infty}^{\infty} f(y) \frac{1}{\sqrt{4\pi kt}} e^{-(x-y)^2/(4kt)} \, dy $$
+            </ol>
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+             <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the Fourier Transform of $f(x) = e^{-a|x|}$ where $a>0$.</p>
+                <button onclick="toggleSolution('sol-ft-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-ft-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>$\hat{f}(\omega) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-a|x|} e^{-i\omega x} dx$.</p>
+                    <p>$= \frac{1}{\sqrt{2\pi}} \left[ \int_{-\infty}^{0} e^{ax} e^{-i\omega x} dx + \int_{0}^{\infty} e^{-ax} e^{-i\omega x} dx \right]$.</p>
+                    <p>$= \frac{1}{\sqrt{2\pi}} \left[ \int_{-\infty}^{0} e^{(a-i\omega)x} dx + \int_{0}^{\infty} e^{-(a+i\omega)x} dx \right]$.</p>
+                    <p>$= \frac{1}{\sqrt{2\pi}} \left[ \frac{e^{(a-i\omega)x}}{a-i\omega} \Big|_{-\infty}^0 + \frac{e^{-(a+i\omega)x}}{-(a+i\omega)} \Big|_0^\infty \right]$.</p>
+                    <p>Since $a>0$, $e^{(a-i\omega)x} \to 0$ as $x\to-\infty$ and $e^{-(a+i\omega)x} \to 0$ as $x\to\infty$.</p>
+                     <p>$= \frac{1}{\sqrt{2\pi}} \left[ (\frac{1}{a-i\omega} - 0) + (0 - \frac{1}{-(a+i\omega)}) \right] = \frac{1}{\sqrt{2\pi}} \left[ \frac{1}{a-i\omega} + \frac{1}{a+i\omega} \right]$.</p>
+                     <p>$= \frac{1}{\sqrt{2\pi}} \left[ \frac{(a+i\omega)+(a-i\omega)}{(a-i\omega)(a+i\omega)} \right] = \frac{1}{\sqrt{2\pi}} \frac{2a}{a^2 - (i\omega)^2} = \frac{1}{\sqrt{2\pi}} \frac{2a}{a^2 + \omega^2}$.</p>
+                     <p>$\hat{f}(\omega) = \sqrt{\frac{2}{\pi}} \frac{a}{a^2 + \omega^2}$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the Fourier Transform of the "box function" $f(x) = 1$ for |x| smaller than a and $f(x)=0$ for $|x| \ge a$.</p>
+                <button onclick="toggleSolution('sol-ft-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-ft-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>$\hat{f}(\omega) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} f(x) e^{-i\omega x} dx = \frac{1}{\sqrt{2\pi}} \int_{-a}^{a} 1 \cdot e^{-i\omega x} dx$.</p>
+                    <p>If $\omega=0$, $\hat{f}(0) = \frac{1}{\sqrt{2\pi}} \int_{-a}^a 1 dx = \frac{2a}{\sqrt{2\pi}} = \sqrt{\frac{2}{\pi}} a$.</p>
+                    <p>If $\omega \neq 0$: $\hat{f}(\omega) = \frac{1}{\sqrt{2\pi}} \left[ \frac{e^{-i\omega x}}{-i\omega} \right]_{-a}^a = \frac{1}{-i\omega\sqrt{2\pi}} [e^{-i\omega a} - e^{i\omega a}]$.</p>
+                    <p>Using $e^{i\theta}-e^{-i\theta} = 2i\sin\theta$: $\hat{f}(\omega) = \frac{1}{-i\omega\sqrt{2\pi}} [- (e^{i\omega a} - e^{-i\omega a})] = \frac{-1}{-i\omega\sqrt{2\pi}} [2i \sin(\omega a)]$.</p>
+                    <p>$\hat{f}(\omega) = \frac{2i}{i\omega\sqrt{2\pi}} \sin(\omega a) = \frac{2}{\omega\sqrt{2\pi}} \sin(\omega a) = \sqrt{\frac{2}{\pi}} \frac{\sin(\omega a)}{\omega}$.</p>
+                    <p>(Note: As $\omega\to 0$, $\frac{\sin(\omega a)}{\omega} \to a$, so the $\omega=0$ case is consistent).</p>
+                 </div>
+             </article>
+
+            <article class="question-block">
+                 <p class="question-number">Question 3:</p>
+                 <p class="question-text">If $\mathcal{F}\{f(x)\} = \hat{f}(\omega)$, what is $\mathcal{F}\{f''(x)\}$?</p>
+                 <button onclick="toggleSolution('sol-ft-q3')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q3">
+                     <p><strong>Solution:</strong></p>
+                     <p>Using the derivative property twice:</p>
+                     <p>$\mathcal{F}\{f'(x)\} = i\omega \hat{f}(\omega)$.</p>
+                     <p>$\mathcal{F}\{f''(x)\} = \mathcal{F}\{(f')'(x)\} = i\omega \mathcal{F}\{f'(x)\} = i\omega (i\omega \hat{f}(\omega)) = (i\omega)^2 \hat{f}(\omega) = -\omega^2 \hat{f}(\omega)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 4:</p>
+                 <p class="question-text">If $\mathcal{F}\{u(x,t)\} = \hat{u}(\omega, t)$, find $\mathcal{F}\{u_{xx} + u\}$.</p>
+                 <button onclick="toggleSolution('sol-ft-q4')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q4">
+                     <p><strong>Solution:</strong></p>
+                     <p>By linearity and the derivative property:</p>
+                     <p>$\mathcal{F}\{u_{xx} + u\} = \mathcal{F}\{u_{xx}\} + \mathcal{F}\{u\} = -\omega^2 \hat{u}(\omega, t) + \hat{u}(\omega, t) = (1-\omega^2)\hat{u}(\omega, t)$.</p>
+                 </div>
+             </article>
+
+            <article class="question-block">
+                 <p class="question-number">Question 5:</p>
+                 <p class="question-text">Find the Fourier Transform of the Heat Kernel $G(x,t) = \frac{1}{\sqrt{4\pi kt}} e^{-x^2/(4kt)}$.</p>
+                 <button onclick="toggleSolution('sol-ft-q5')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>We want $\mathcal{F}\{G(x,t)\}$. Use the Gaussian transform pair $\mathcal{F}\{e^{-ax^2}\} = \frac{1}{\sqrt{2a}} e^{-\omega^2/(4a)}$.</p>
+                     <p>Here, $a = \frac{1}{4kt}$.</p>
+                     <p>$\mathcal{F}\{e^{-x^2/(4kt)}\} = \frac{1}{\sqrt{2(1/(4kt))}} e^{-\omega^2/(4(1/(4kt)))} = \frac{1}{\sqrt{1/(2kt)}} e^{-\omega^2/(1/(kt))} = \sqrt{2kt} e^{-k t \omega^2}$.</p>
+                     <p>Now include the constant factor:</p>
+                     <p>$\hat{G}(\omega,t) = \mathcal{F}\{\frac{1}{\sqrt{4\pi kt}} e^{-x^2/(4kt)}\} = \frac{1}{\sqrt{4\pi kt}} \mathcal{F}\{e^{-x^2/(4kt)}\}$.</p>
+                     <p>$\hat{G}(\omega,t) = \frac{1}{\sqrt{4\pi kt}} \sqrt{2kt} e^{-k t \omega^2} = \frac{\sqrt{2kt}}{\sqrt{2}\sqrt{2\pi kt}} e^{-k t \omega^2} = \frac{1}{\sqrt{2\pi}} e^{-k\omega^2 t}$.</p>
+                     <p>(This matches the result used in the theory example).</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 6:</p>
+                 <p class="question-text">Use Fourier Transform to solve the ODE for $\hat{u}(\omega,t)$ derived from the heat equation $u_t = k u_{xx}$ with $u(x,0)=f(x)$.</p>
+                 <button onclick="toggleSolution('sol-ft-q6')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q6">
+                     <p><strong>Solution:</strong></p>
+                     <p>Transforming the PDE gives $\frac{d\hat{u}}{dt} = -k\omega^2 \hat{u}$.</p>
+                     <p>Transforming the IC gives $\hat{u}(\omega, 0) = \hat{f}(\omega)$.</p>
+                     <p>The ODE $\frac{d\hat{u}}{dt} + k\omega^2 \hat{u} = 0$ is a first-order linear ODE in $t$. The solution is $\hat{u}(\omega, t) = C(\omega) e^{-k\omega^2 t}$.</p>
+                     <p>Using the IC: $\hat{u}(\omega, 0) = C(\omega) e^0 = C(\omega) = \hat{f}(\omega)$.</p>
+                     <p>So, the solution for the transformed function is $\hat{u}(\omega, t) = \hat{f}(\omega) e^{-k\omega^2 t}$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 7:</p>
+                 <p class="question-text">Use Fourier Transform to solve Laplace's equation $u_{xx}+u_{yy}=0$ for $y \in (0, \infty)$, $x \in (-\infty, \infty)$ with $u(x,0)=f(x)$ and $u \to 0$ as $y \to \infty$.</p>
+                 <button onclick="toggleSolution('sol-ft-q7')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q7">
+                     <p><strong>Solution:</strong></p>
+                     <p>Transform with respect to $x$: $\mathcal{F}\{u_{xx}\} + \mathcal{F}\{u_{yy}\} = 0$.</p>
+                     <p>$-\omega^2 \hat{u}(\omega, y) + \frac{d^2 \hat{u}}{dy^2}(\omega, y) = 0$.</p>
+                     <p>This is an ODE for $\hat{u}$ in $y$: $\frac{d^2 \hat{u}}{dy^2} - \omega^2 \hat{u} = 0$.</p>
+                     <p>Characteristic equation $r^2 - \omega^2 = 0 \implies r = \pm \omega$.</p>
+                     <p>General solution $\hat{u}(\omega, y) = A(\omega)e^{\omega y} + B(\omega)e^{-\omega y}$.</p>
+                     <p>We need $u \to 0$ as $y\to\infty$. This implies $\hat{u} \to 0$ as $y\to\infty$.</p>
+                     <p>If $\omega > 0$, $e^{\omega y} \to \infty$, so we need $A(\omega)=0$. If $\omega < 0$, $e^{-\omega y} \to \infty$, so we need $B(\omega)=0$. A common way to handle this is to rewrite the solution using $|\omega|$: $\hat{u}(\omega, y) = C(\omega)e^{|\omega| y} + D(\omega)e^{-|\omega| y}$.</p>
+                     <p>For boundedness as $y\to\infty$, we require $C(\omega)=0$. So $\hat{u}(\omega, y) = D(\omega)e^{-|\omega| y}$.</p>
+                     <p>Apply BC at $y=0$: $u(x,0)=f(x) \implies \hat{u}(\omega, 0) = \hat{f}(\omega)$.</p>
+                     <p>$\hat{u}(\omega, 0) = D(\omega)e^0 = D(\omega) = \hat{f}(\omega)$.</p>
+                     <p>So, $\hat{u}(\omega, y) = \hat{f}(\omega) e^{-|\omega| y}$.</p>
+                     <p>To find $u(x,y)$, we need the inverse transform. Let $H(x,y) = \mathcal{F}^{-1}\{e^{-|\omega| y}\}$. From FT tables or derivation (like Q1), $\mathcal{F}\{ \frac{y}{\pi(x^2+y^2)} \} = \frac{1}{\sqrt{2\pi}}e^{-|\omega| y}$. So $H(x,y) = \sqrt{2\pi} \frac{y}{\pi(x^2+y^2)} = \sqrt{\frac{2}{\pi}}\frac{y}{x^2+y^2}$.</p>
+                     <p>Then $\hat{u} = \hat{f} \cdot \mathcal{F}\{H\}/\sqrt{2\pi} = \hat{f} \cdot \hat{H} \sqrt{2\pi}$. No, $\hat{u} = \hat{f} \cdot \mathcal{F}\{ \sqrt{\frac{1}{2\pi}} \frac{2y}{x^2+y^2} \}/\sqrt{2\pi}$ ?</p>
+                     <p>Let $h(\omega) = e^{-|\omega|y}$. We know $\mathcal{F}^{-1}\{h(\omega)\} = \sqrt{\frac{2}{\pi}} \frac{y}{x^2+y^2}$. Let $P(x,y) = \sqrt{\frac{2}{\pi}} \frac{y}{x^2+y^2}$.</p>
+                     <p>Using $\mathcal{F}^{-1}\{\hat{f} \hat{g}\} = \frac{1}{\sqrt{2\pi}}(f*g)$ and $\hat{h}=e^{-|\omega|y}$.</p>
+                     <p>$u(x,y) = \mathcal{F}^{-1}\{\hat{f}(\omega) h(\omega)\} = \frac{1}{\sqrt{2\pi}} (f * P)(x,y)$.</p>
+                     <p>$u(x,y) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} f(s) P(x-s, y) ds = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} f(s) \sqrt{\frac{2}{\pi}} \frac{y}{(x-s)^2+y^2} ds$.</p>
+                     <p>$u(x,y) = \frac{y}{\pi} \int_{-\infty}^{\infty} \frac{f(s)}{(x-s)^2+y^2} ds$. (Poisson Integral Formula for the half-plane).</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 8:</p>
+                 <p class="question-text">Find the inverse Fourier transform of $\hat{f}(\omega) = \frac{1}{a^2+\omega^2}$.</p>
+                 <button onclick="toggleSolution('sol-ft-q8')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q8">
+                     <p><strong>Solution:</strong></p>
+                      <p>From Q1, we found $\mathcal{F}\{e^{-a|x|}\} = \sqrt{\frac{2}{\pi}} \frac{a}{a^2+\omega^2}$.</p>
+                      <p>We want $\mathcal{F}^{-1}\{\frac{1}{a^2+\omega^2}\}$.</p>
+                      <p>Rearrange the forward transform: $\mathcal{F}\{\frac{\sqrt{\pi}}{\sqrt{2}a} e^{-a|x|}\} = \frac{1}{a^2+\omega^2}$.</p>
+                      <p>Therefore, by the definition of the inverse transform:</p>
+                      <p>$f(x) = \mathcal{F}^{-1}\{\frac{1}{a^2+\omega^2}\} = \sqrt{\frac{\pi}{2}} \frac{1}{a} e^{-a|x|}$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 9:</p>
+                 <p class="question-text">If $\hat{f}(\omega)$ is the FT of $f(x)$, what is the FT of $f(x-a)$ (translation)?</p>
+                 <button onclick="toggleSolution('sol-ft-q9')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q9">
+                     <p><strong>Solution:</strong></p>
+                      <p>$\mathcal{F}\{f(x-a)\} = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty f(x-a) e^{-i\omega x} dx$.</p>
+                      <p>Let $y=x-a$, so $x=y+a$, $dx=dy$.</p>
+                      <p>$= \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty f(y) e^{-i\omega (y+a)} dy = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty f(y) e^{-i\omega y} e^{-i\omega a} dy$.</p>
+                      <p>$= e^{-i\omega a} \left( \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty f(y) e^{-i\omega y} dy \right) = e^{-i\omega a} \hat{f}(\omega)$.</p>
+                 </div>
+             </article>
+
+              <article class="question-block">
+                 <p class="question-number">Question 10:</p>
+                 <p class="question-text">If $\hat{f}(\omega)$ is the FT of $f(x)$, what is the FT of $e^{iax} f(x)$ (modulation)?</p>
+                 <button onclick="toggleSolution('sol-ft-q10')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-ft-q10">
+                     <p><strong>Solution:</strong></p>
+                      <p>$\mathcal{F}\{e^{iax} f(x)\} = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty (e^{iax} f(x)) e^{-i\omega x} dx$.</p>
+                      <p>$= \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty f(x) e^{-i(\omega-a) x} dx$.</p>
+                      <p>This is the definition of the Fourier transform of $f(x)$, evaluated at frequency $(\omega-a)$.</p>
+                      <p>$= \hat{f}(\omega-a)$.</p>
+                 </div>
+             </article>
+
+            <!-- Questions 11-30 -->
+            <article class="question-block"><p class="question-number">Question 11:</p><p class="question-text">Find $\mathcal{F}\{f'(x)\}$ if $f(x)=e^{-x^2}$.</p><button onclick="toggleSolution('sol-ft-q11')">Show/Hide Solution</button><div class="solution" id="sol-ft-q11"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{e^{-x^2}\} = \frac{1}{\sqrt{2}}e^{-\omega^2/4}$ (Gaussian pair with $a=1$). $\mathcal{F}\{f'(x)\} = i\omega \hat{f}(\omega) = i\omega \frac{1}{\sqrt{2}}e^{-\omega^2/4}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 12:</p><p class="question-text">Find $\mathcal{F}\{xf(x)\}$ in terms of $\hat{f}(\omega)$.</p><button onclick="toggleSolution('sol-ft-q12')">Show/Hide Solution</button><div class="solution" id="sol-ft-q12"><p><strong>Solution:</strong></p><p>Start with $\hat{f}(\omega) = \frac{1}{\sqrt{2\pi}} \int f(x) e^{-i\omega x} dx$. Differentiate wrt $\omega$: $\frac{d\hat{f}}{d\omega} = \frac{1}{\sqrt{2\pi}} \int f(x) (-ix) e^{-i\omega x} dx = -i \mathcal{F}\{xf(x)\}$. So, $\mathcal{F}\{xf(x)\} = i \frac{d\hat{f}}{d\omega}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 13:</p><p class="question-text">Find the inverse FT of $\hat{g}(\omega) = e^{-|\omega|y}$ (from Laplace Eq.).</p><button onclick="toggleSolution('sol-ft-q13')">Show/Hide Solution</button><div class="solution" id="sol-ft-q13"><p><strong>Solution:</strong></p><p>From Q1, $\mathcal{F}\{e^{-a|x|}\} = \sqrt{\frac{2}{\pi}} \frac{a}{a^2 + \omega^2}$. We want $\mathcal{F}^{-1}\{e^{-y|\omega|}\}$. This looks like the transform of a Lorentzian/Cauchy distribution. From tables (or Q1 reversed, Q8): $\mathcal{F}^{-1}\{\sqrt{\frac{2}{\pi}}\frac{y}{y^2+\omega^2}\} = e^{-y|x|}$. This isn't quite it. Use $\mathcal{F}\{e^{-a|x|}\} = \sqrt{\frac{2}{\pi}}\frac{a}{a^2+\omega^2}$. Duality: $\mathcal{F}\{\hat{f}(x)\} = f(-\omega)/\sqrt{2\pi}$ (with factors). A simpler way is use known pair: $\mathcal{F}^{-1}\{e^{-a|\omega|}\} = \sqrt{\frac{2}{\pi}}\frac{a}{x^2+a^2}$. Here $a=y$. So, $\mathcal{F}^{-1}\{e^{-y|\omega|}\} = \sqrt{\frac{2}{\pi}}\frac{y}{x^2+y^2}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 14:</p><p class="question-text">If $\hat{u}(\omega, t) = \hat{f}(\omega)\cos(c\omega t)$, find $u(x,t)$ using $\cos z = (e^{iz}+e^{-iz})/2$.</p><button onclick="toggleSolution('sol-ft-q14')">Show/Hide Solution</button><div class="solution" id="sol-ft-q14"><p><strong>Solution:</strong></p><p>$\hat{u}(\omega,t) = \hat{f}(\omega) \frac{e^{ic\omega t}+e^{-ic\omega t}}{2} = \frac{1}{2}[\hat{f}(\omega)e^{i\omega(ct)} + \hat{f}(\omega)e^{-i\omega(ct)}]$. Use modulation property $\mathcal{F}^{-1}\{\hat{f}(\omega)e^{-i\omega a}\} = f(x-a)$. $\mathcal{F}^{-1}\{\hat{f}(\omega)e^{i\omega(ct)}\} = \mathcal{F}^{-1}\{\hat{f}(\omega)e^{-i\omega(-ct)}\} = f(x-(-ct)) = f(x+ct)$. $\mathcal{F}^{-1}\{\hat{f}(\omega)e^{-i\omega(ct)}\} = f(x-ct)$. So $u(x,t) = \frac{1}{2}[f(x+ct)+f(x-ct)]$. (Matches D'Alembert's first part).</p></div></article>
+            <article class="question-block"><p class="question-number">Question 15:</p><p class="question-text">Find the FT of Dirac delta function $\delta(x)$. ($\int \delta(x) \phi(x) dx = \phi(0)$).</p><button onclick="toggleSolution('sol-ft-q15')">Show/Hide Solution</button><div class="solution" id="sol-ft-q15"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{\delta(x)\} = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty \delta(x) e^{-i\omega x} dx$. Using the sifting property with $\phi(x)=e^{-i\omega x}$, the integral evaluates the function at $x=0$. So, $\mathcal{F}\{\delta(x)\} = \frac{1}{\sqrt{2\pi}} e^{-i\omega(0)} = \frac{1}{\sqrt{2\pi}}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 16:</p><p class="question-text">Find the FT of $\delta(x-a)$.</p><button onclick="toggleSolution('sol-ft-q16')">Show/Hide Solution</button><div class="solution" id="sol-ft-q16"><p><strong>Solution:</strong></p><p>Use translation property $\mathcal{F}\{f(x-a)\}=e^{-i\omega a}\hat{f}(\omega)$. Let $f(x)=\delta(x)$, so $\hat{f}(\omega)=1/\sqrt{2\pi}$. $\mathcal{F}\{\delta(x-a)\} = e^{-i\omega a} \frac{1}{\sqrt{2\pi}}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 17:</p><p class="question-text">Find the inverse FT of $\hat{f}(\omega)=1$.</p><button onclick="toggleSolution('sol-ft-q17')">Show/Hide Solution</button><div class="solution" id="sol-ft-q17"><p><strong>Solution:</strong></p><p>We know $\mathcal{F}\{\delta(x)\} = 1/\sqrt{2\pi}$. So $\mathcal{F}\{\sqrt{2\pi}\delta(x)\} = 1$. Therefore, $\mathcal{F}^{-1}\{1\} = \sqrt{2\pi}\delta(x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 18:</p><p class="question-text">Solve $u_t = u_{xx}$ with $u(x,0)=\delta(x)$.</p><button onclick="toggleSolution('sol-ft-q18')">Show/Hide Solution</button><div class="solution" id="sol-ft-q18"><p><strong>Solution:</strong></p><p>Transform: $\frac{d\hat{u}}{dt} = -\omega^2 \hat{u}$. $\hat{u}(\omega,0)=\mathcal{F}\{\delta(x)\} = 1/\sqrt{2\pi}$. Solution $\hat{u}(\omega,t) = \frac{1}{\sqrt{2\pi}} e^{-\omega^2 t}$. Inverse transform (Gaussian pair with $b=t$): $u(x,t) = \frac{1}{\sqrt{2\pi}} \mathcal{F}^{-1}\{e^{-\omega^2 t}\} = \frac{1}{\sqrt{2\pi}} \sqrt{\frac{1}{4\pi t}} e^{-x^2/(4t)} = \frac{1}{\sqrt{4\pi t}} e^{-x^2/(4t)}$. (This is the Heat Kernel $G(x,t)$ with $k=1$).</p></div></article>
+            <article class="question-block"><p class="question-number">Question 19:</p><p class="question-text">What is the convolution $(f*g)(x)$?</p><button onclick="toggleSolution('sol-ft-q19')">Show/Hide Solution</button><div class="solution" id="sol-ft-q19"><p><strong>Solution:</strong></p><p>$(f*g)(x) = \int_{-\infty}^{\infty} f(y)g(x-y)dy$. (It is also equal to $\int_{-\infty}^{\infty} f(x-y)g(y)dy$).</p></div></article>
+            <article class="question-block"><p class="question-number">Question 20:</p><p class="question-text">State the Convolution Theorem relating $\mathcal{F}\{f*g\}$ to $\hat{f}$ and $\hat{g}$.</p><button onclick="toggleSolution('sol-ft-q20')">Show/Hide Solution</button><div class="solution" id="sol-ft-q20"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{(f*g)(x)\} = \sqrt{2\pi} \hat{f}(\omega) \hat{g}(\omega)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 21:</p><p class="question-text">Find $\mathcal{F}\{u_{xxx}\}$.</p><button onclick="toggleSolution('sol-ft-q21')">Show/Hide Solution</button><div class="solution" id="sol-ft-q21"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{u_{xxx}\} = (i\omega)^3 \hat{u} = i^3 \omega^3 \hat{u} = -i \omega^3 \hat{u}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 22:</p><p class="question-text">Find $\mathcal{F}\{u_{xxxx}\}$.</p><button onclick="toggleSolution('sol-ft-q22')">Show/Hide Solution</button><div class="solution" id="sol-ft-q22"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{u_{xxxx}\} = (i\omega)^4 \hat{u} = i^4 \omega^4 \hat{u} = 1 \cdot \omega^4 \hat{u} = \omega^4 \hat{u}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 23:</p><p class="question-text">Transform the PDE $u_t + c u_x = 0$ with $u(x,0)=f(x)$.</p><button onclick="toggleSolution('sol-ft-q23')">Show/Hide Solution</button><div class="solution" id="sol-ft-q23"><p><strong>Solution:</strong></p><p>$\mathcal{F}\{u_t\} + c \mathcal{F}\{u_x\} = 0$. $\frac{d\hat{u}}{dt} + c(i\omega)\hat{u} = 0$. $\frac{d\hat{u}}{dt} + ic\omega \hat{u} = 0$. IC: $\hat{u}(\omega,0)=\hat{f}(\omega)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 24:</p><p class="question-text">Solve the ODE for $\hat{u}$ from Q23.</p><button onclick="toggleSolution('sol-ft-q24')">Show/Hide Solution</button><div class="solution" id="sol-ft-q24"><p><strong>Solution:</strong></p><p>ODE: $\frac{d\hat{u}}{dt} = -ic\omega \hat{u}$. Solution $\hat{u}(\omega, t) = C(\omega)e^{-ic\omega t}$. Apply IC: $\hat{u}(\omega,0)=C(\omega)e^0=C(\omega)=\hat{f}(\omega)$. So $\hat{u}(\omega,t)=\hat{f}(\omega)e^{-i(c t)\omega}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 25:</p><p class="question-text">Find $u(x,t)$ from $\hat{u}(\omega,t)=\hat{f}(\omega)e^{-i\omega (ct)}$.</p><button onclick="toggleSolution('sol-ft-q25')">Show/Hide Solution</button><div class="solution" id="sol-ft-q25"><p><strong>Solution:</strong></p><p>Use the translation property $\mathcal{F}^{-1}\{\hat{f}(\omega)e^{-i\omega a}\} = f(x-a)$. Here $a=ct$. So $u(x,t) = \mathcal{F}^{-1}\{\hat{f}(\omega)e^{-i\omega (ct)}\} = f(x-ct)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 26:</p><p class="question-text">Find the inverse FT of $\hat{f}(\omega) = \frac{\sin(a\omega)}{\omega}$.</p><button onclick="toggleSolution('sol-ft-q26')">Show/Hide Solution</button><div class="solution" id="sol-ft-q26"><p><strong>Solution:</strong></p><p>From Q2, $\mathcal{F}\{\text{box}_a(x)\} = \sqrt{\frac{2}{\pi}} \frac{\sin(a\omega)}{\omega}$, where $\text{box}_a(x)=1$ for $|x|<a$ and 0 otherwise. Therefore, $\mathcal{F}\{\sqrt{\frac{\pi}{2}}\text{box}_a(x)\} = \frac{\sin(a\omega)}{\omega}$. So $f(x) = \mathcal{F}^{-1}\{\frac{\sin(a\omega)}{\omega}\} = \sqrt{\frac{\pi}{2}}\text{box}_a(x) = \begin{cases} \sqrt{\pi/2} & |x|<a \\ 0 & |x| \ge a \end{cases}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 27:</p><p class="question-text">Transform the PDE $u_{xx}+u_{yy}=0$ for $y>0$ assuming $u \to 0$ as $x^2+y^2 \to \infty$.</p><button onclick="toggleSolution('sol-ft-q27')">Show/Hide Solution</button><div class="solution" id="sol-ft-q27"><p><strong>Solution:</strong></p><p>Transform wrt $x$: $\mathcal{F}\{u_{xx}\} + \mathcal{F}\{u_{yy}\} = 0$. $-\omega^2 \hat{u}(\omega,y) + \frac{d^2\hat{u}}{dy^2}(\omega,y) = 0$. $\frac{d^2\hat{u}}{dy^2} - \omega^2 \hat{u} = 0$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 28:</p><p class="question-text">What is the general solution to the ODE in Q27?</p><button onclick="toggleSolution('sol-ft-q28')">Show/Hide Solution</button><div class="solution" id="sol-ft-q28"><p><strong>Solution:</strong></p><p>$\frac{d^2\hat{u}}{dy^2} - \omega^2 \hat{u} = 0$. Characteristic equation $r^2-\omega^2=0 \implies r=\pm\omega$. General solution $\hat{u}(\omega,y) = A(\omega)e^{\omega y} + B(\omega)e^{-\omega y}$. Or $\hat{u}(\omega,y) = C(\omega)e^{|\omega| y} + D(\omega)e^{-|\omega| y}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 29:</p><p class="question-text">Apply the condition $u \to 0$ as $y \to \infty$ to the solution in Q28.</p><button onclick="toggleSolution('sol-ft-q29')">Show/Hide Solution</button><div class="solution" id="sol-ft-q29"><p><strong>Solution:</strong></p><p>Using $\hat{u}(\omega,y) = C(\omega)e^{|\omega| y} + D(\omega)e^{-|\omega| y}$. As $y\to\infty$, $e^{-|\omega|y} \to 0$. For $\hat{u}$ to go to 0, we need the $e^{|\omega|y}$ term to vanish (as it grows unboundedly). This requires $C(\omega)=0$. So the bounded solution is $\hat{u}(\omega,y)=D(\omega)e^{-|\omega|y}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 30:</p><p class="question-text">Find the solution $u(x,t)$ if $\hat{u}(\omega,t) = e^{-|\omega| - \omega^2 t}$.</p><button onclick="toggleSolution('sol-ft-q30')">Show/Hide Solution</button><div class="solution" id="sol-ft-q30"><p><strong>Solution:</strong></p><p>We have a product $\hat{u}(\omega,t) = h(\omega) k(\omega,t)$, where $h(\omega)=e^{-|\omega|}$ and $k(\omega,t)=e^{-\omega^2 t}$. We need to use the Convolution Theorem: $u(x,t) = \mathcal{F}^{-1}\{\hat{u}\} = \frac{1}{\sqrt{2\pi}} (\mathcal{F}^{-1}\{h\} * \mathcal{F}^{-1}\{k\})(x)$. $\mathcal{F}^{-1}\{h\} = \sqrt{\frac{2}{\pi}}\frac{1}{x^2+1}$ (from Q13 with $y=1$). $\mathcal{F}^{-1}\{k\} = \frac{1}{\sqrt{4\pi t}}e^{-x^2/(4t)}$ (Heat Kernel $G(x,t)$ with $k=1$). $u(x,t) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^\infty \left(\sqrt{\frac{2}{\pi}}\frac{1}{y^2+1}\right) \left(\frac{1}{\sqrt{4\pi t}}e^{-(x-y)^2/(4t)}\right) dy$. $u(x,t) = \frac{1}{\pi\sqrt{4\pi t}} \int_{-\infty}^\infty \frac{e^{-(x-y)^2/(4t)}}{y^2+1} dy$.</p></div></article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

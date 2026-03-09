@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 5: יסודות אבטחת איכות</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 5: יסודות אבטחת איכות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 5 ---
+
+        const flashcardData = [
+            { term: "ניהול איכות כוללת (TQM)", definition: "גישה ניהולית הממוקדת באיכות, המבוססת על השתתפות כל חברי הארגון ומכוונת להצלחה ארוכת טווח דרך שביעות רצון הלקוח ותועלת לכל חברי הארגון והחברה." },
+            { term: "גישת Farm to Fork (בהקשר לאיכות)", definition: "החלת עקרונות ניהול ובקרת איכות לאורך כל שרשרת המזון, מהשדה (חומרי גלם) ועד לצרכן הסופי (הצלחת)." },
+            { term: "איכות (Quality)", definition: "התאמה של המוצר לשימוש המיועד ולציפיות של הצרכן. זהו מושג דינמי המשתנה עם הזמן ודורש שיפור מתמיד." },
+            { term: "אבטחת איכות (Quality Assurance - QA)", definition: "מערכת של פעילויות מתוכננות ושיטתיות המיושמות במסגרת מערכת האיכות, אשר ניתן להוכיחן כנדרש, כדי לספק ביטחון הולם שיישות תקיים את דרישות האיכות." },
+            { term: "בקרת איכות (Quality Control - QC)", definition: "הטכניקות והפעילויות התפעוליות המשמשות למילוי דרישות האיכות; תהליך הכולל את כל הבדיקות המבוצעות למוצר להבטחת תקינותו." },
+            { term: "סיכוני איכות (במזון)", definition: "בעיות בטיחות, תלונות לקוח, תביעות משפטיות, פגיעה תדמיתית בתקשורת, השמדות מוצרים." },
+            { term: "תלונה (לקוח)", definition: "מדד לעקביות בטיחות ואיכות המוצר ועמידתו בציפיות הצרכן. מהווה כלי לבחינה ושיפור מוצרים." },
+            { term: "תביעה ייצוגית (בהקשר למזון)", definition: "הליך משפטי (בישראל מ-2006) המאפשר לאדם שנפגע ממוצר מזון להגיש תלונה בשם הציבור בתהליך פשוט יחסית, לעומת תביעה אישית." },
+            { term: "שיפור מתמיד", definition: "עיקרון מרכזי בניהול איכות, לפיו איכות אינה מצב סופי אלא תהליך מתמשך של שיפור והתאמה לציפיות משתנות." },
+            { term: "בקרת חומרי גלם", definition: "חלק מבקרת האיכות המתבצע בכניסה למפעל, לוודא שחומרי הגלם עומדים במפרטים הנדרשים לאיכות ובטיחות." },
+            { term: "בקרת תהליך", definition: "חלק מבקרת האיכות המתבצע במהלך הייצור, לוודא שהתהליכים מתבצעים לפי ההוראות והתקנים כדי להבטיח מוצר איכותי." },
+            { term: "בקרת מוצר סופי", definition: "חלק מבקרת האיכות המתבצע לפני שחרור המוצר לשוק, לוודא שהמוצר המוגמר עומד בכל דרישות האיכות והבטיחות." },
+            { term: "מפרט (Specification)", definition: "מסמך המגדיר את הדרישות והמאפיינים של חומר גלם, תהליך או מוצר סופי." },
+            { term: "מרכיבי אבטחת איכות", definition: "פיתוח, ניהול רכש וספקים, בקרת קבלה, הוראות עבודה ובקרת איכות, הדרכות והסמכות, תשתיות וציוד, שירות צרכנים, ניהול סטיות, תקינה." },
+            { term: "ציפיות הצרכן (מהמוצר)", definition: "טעם ומרקם מוכרים או רצויים, אחידות, טריות, חיי מדף ארוכים, בטיחות לצריכה, עמידה בתקנות, זמינות ומחיר הוגן." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי המטרה העיקרית של ניהול איכות כוללת (TQM) בשרשרת המזון?",
+                options: ["להוריד את מחיר המוצר הסופי", "להבטיח בטיחות ואיכות לאורך כל השלבים, מהשדה לצלחת", "לייצר רק מוצרים אורגניים", "להגדיל את מהירות הייצור"],
+                correctIndex: 1,
+                explanation: "גישת ה-Farm to Fork בניהול איכות מדגישה את הצורך לוודא בטיחות ואיכות בכל שלב, החל מחומר הגלם ועד למוצר המוגמר אצל הצרכן."
+            },
+            {
+                question: "מהי ההגדרה הטובה ביותר ל'איכות' בהקשר של מוצר מזון?",
+                options: ["המוצר הכי זול בקטגוריה", "התאמה לשימוש המיועד ולציפיות הצרכן", "אריזה בצבע אדום", "כמות הקלוריות הנמוכה ביותר"],
+                correctIndex: 1,
+                explanation: "איכות מוגדרת כיכולת המוצר לענות על הצרכים והציפיות של קהל היעד שלו."
+            },
+            {
+                question: "מדוע איכות היא מושג דינמי?",
+                options: ["כי היא תלויה במזג האוויר", "כי ציפיות הצרכנים והתקנים משתנים עם הזמן", "כי חומרי הגלם תמיד משתנים", "כי רק מכונות חדשות מייצרות איכות"],
+                correctIndex: 1,
+                explanation: "העדפות הצרכנים, הטכנולוגיה, התקנות והמתחרים משתנים כל הזמן, ולכן מה שנחשב איכותי היום עשוי לא להספיק מחר."
+            },
+            {
+                question: "מה ההבדל המרכזי בין אבטחת איכות (QA) לבקרת איכות (QC)?",
+                options: ["אין הבדל מהותי", "QA מתמקדת במניעה ובמערכת הכוללת, QC מתמקדת בבדיקות ובאיתור פגמים", "QA נעשית רק בסוף התהליך, QC רק בהתחלה", "QC היא חלק מפיתוח המוצר, QA היא חלק מהשיווק"],
+                correctIndex: 1,
+                explanation: "אבטחת איכות היא מערכתית ומטרתה למנוע בעיות איכות, בעוד בקרת איכות היא הפעילות התפעולית של בדיקת המוצר או התהליך כדי לוודא עמידה בדרישות."
+            },
+            {
+                question: "באיזה שלב מתבצעת בקרת איכות?",
+                options: ["רק על חומרי הגלם הנכנסים", "רק על המוצר הסופי לפני שיווק", "רק במהלך תהליך הייצור", "בכל השלבים: קבלת חומרי גלם, במהלך הייצור ועל המוצר הסופי"],
+                correctIndex: 3,
+                explanation: "הטקסט מחלק את בקרת האיכות לשלושה שלבים עיקריים: בקרת חומרי גלם, בקרת תהליך ובקרת מוצר סופי."
+            },
+            {
+                question: "מה ניתן ללמוד מהתפתחות יחס הלקוח לתקלות במוצר?",
+                options: ["לקוחות מתלוננים פחות מבעבר", "לקוחות כיום מצפים לפיצוי נמוך יותר", "לקוחות כיום נוטים יותר לתבוע ולפרסם תקלות בתקשורת", "חברות מתעלמות לחלוטין מתלונות לקוחות"],
+                correctIndex: 2,
+                explanation: "הטקסט מתאר התפתחות מיחס סלחני יחסית בעבר, דרך תלונה לחנות ולחברה, ועד למצב כיום שבו לקוחות תובעים (לרבות ייצוגית) ומפרסמים ברבים, מה שמגביר את הסיכון התדמיתי לחברות."
+            },
+            {
+                question: "מהי אחת הסיבות העיקריות לצורך בניהול איכות במפעל מזון?",
+                options: ["כדי להעסיק יותר עובדים", "כדי להגדיל רווחים ולחסוך בעלויות הנגרמות מאי-איכות", "כדי להשתמש ביותר חומרי גלם", "זה דרישה אופנתית בלבד"],
+                correctIndex: 1,
+                explanation: "איכות טובה מגדילה את אמון הלקוחות והמוניטין (פוטנציאל לרווח גבוה יותר) וחוסכת עלויות של החזרות, השמדות, תביעות ופגיעה במוניטין."
+            },
+            {
+                question: "איזה מהבאים אינו סיכון ישיר הנגרם מאיכות ירודה של מוצר מזון?",
+                options: ["פגיעה בבריאות הצרכן", "תלונות לקוח רבות", "עלייה במחיר חומרי הגלם", "פגיעה תדמיתית לחברה"],
+                correctIndex: 2,
+                explanation: "בעוד שאיכות ירודה יכולה לנבוע משימוש בחומרי גלם זולים, היא עצמה אינה גורמת לעליית מחיר חומרי הגלם. הסיכונים הישירים הם בטיחותיים, תפעוליים, משפטיים ותדמיתיים."
+            },
+            {
+                question: "מהו תפקידן של תלונות לקוח במערכת איכות?",
+                options: ["להוכיח שהלקוח טועה", "להוות מדד לאיכות ולסייע באיתור ושיפור בעיות", "להעמיס על שירות הלקוחות", "אין להן תפקיד משמעותי"],
+                correctIndex: 1,
+                explanation: "תלונות הן משוב חשוב המצביע על בעיות אפשריות במוצר או בתהליך, ומסייעות למפעל לשפר את איכותו."
+            },
+             {
+                question: "מה המשמעות של החוק משנת 2006 בנוגע לתביעות בתחום המזון בישראל?",
+                options: ["הוא אוסר לחלוטין הגשת תביעות על מזון", "הוא מאפשר תביעה רק לחברות גדולות", "הוא מקל על צרכנים להגיש תביעה ייצוגית במקרה של פגיעה ממוצר מזון", "הוא מחייב פיצוי כספי קבוע לכל תלונה"],
+                correctIndex: 2,
+                explanation: "החוק הקל על הגשת תביעות ייצוגיות, כלומר תביעה אחת בשם קבוצה גדולה של נפגעים, מה שמגביר את הסיכון המשפטי לחברות."
+            },
+            {
+                question: "מה נדרש מהחברה כדי לעמוד בציפיות הצרכן לאחידות המוצר?",
+                options: ["לשנות את המתכון כל הזמן", "להבטיח שתהליכי הייצור ובקרת האיכות עקביים", "להשתמש רק בחומרי גלם שונים בכל פעם", "לארוז את המוצר באריזות שונות"],
+                correctIndex: 1,
+                explanation: "אחידות מושגת על ידי תהליכי ייצור מבוקרים ועקביים, שימוש בחומרי גלם העומדים במפרט קבוע, ובקרת איכות יעילה."
+            },
+             {
+                question: "איזה גורם אינו מוזכר ישירות כחיוני לאספקת מוצר העונה על דרישות הצרכן (עמ' 46)?",
+                options: ["חומרי גלם איכותיים", "תהליכי ייצור מתאימים", "אנשים (עובדים) מיומנים ומבינים", "מיקום גיאוגרפי של המפעל"],
+                correctIndex: 3,
+                explanation: "הטקסט בעמוד 46 מדגיש את חשיבות חומרי הגלם, תהליכי הייצור, האנשים, מערכות האחסון וההפצה ומערכות בקרת האיכות. מיקום המפעל אינו מוזכר כגורם ישיר לאיכות המוצר עצמו בהקשר זה."
+            },
+             {
+                question: "מהי המטרה של 'הדרכות והסמכות של אנשים' באבטחת איכות?",
+                options: ["להעניש עובדים", "לוודא שהעובדים מבינים את תפקידם וחשיבות האיכות", "להוריד את שכר העובדים", "להחליף את כל העובדים באופן תדיר"],
+                correctIndex: 1,
+                explanation: "הדרכה והסמכה מבטיחות שהעובדים יודעים כיצד לבצע את עבודתם נכון, מבינים את נהלי האיכות והבטיחות, ומודעים לאחריותם."
+            },
+             {
+                question: "מה כוללת 'בקרת איכות חומרי גלם'?",
+                options: ["בדיקה ויזואלית בלבד", "בדיקה שהחומר עומד במפרט שהוגדר (פיזי, כימי, מיקרוביאלי)", "שקילת החומר בלבד", "טעימת חומר הגלם על ידי מנהל המפעל"],
+                correctIndex: 1,
+                explanation: "בקרת קבלה כוללת בדיקות שונות (בהתאם לחומר) כדי לוודא התאמה למפרט שנקבע מראש, כולל פרמטרים של איכות ובטיחות."
+            },
+             {
+                question: "מהי איכות הסביבה בהקשר לתעשיית המזון?",
+                options: ["הטעם של האוכל", "המודעות והפעולות של התעשייה לצמצום השפעתה השלילית על הסביבה", "צבע האריזה", "אין קשר בין השניים"],
+                correctIndex: 1,
+                explanation: "הטקסט בעמוד 11 מזכיר את העלייה במודעות לנושא, כולל ייצור מוצרים ממוחזרים או ניתנים למחזור, וניהול פסולת."
+            },
+             {
+                question: "מה מטרת 'מערכת לניהול התהליכים המלווים את המוצר' באבטחת איכות?",
+                options: ["לסבך את תהליך הייצור", "להבטיח עקביות, בקרה ויכולת מעקב אחר כל שלבי הייצור", "להאט את קצב הייצור", "לייקר את המוצר הסופי"],
+                correctIndex: 1,
+                explanation: "מערכת ניהול האיכות (כמו ISO 9001) מספקת מסגרת לניהול ובקרה שיטתיים של התהליכים כדי להבטיח איכות עקבית."
+            },
+            {
+                question: "איזה מהבאים הוא דוגמה לציפייה של צרכן ממוצר כמו חציל קלוי מוכן?",
+                options: ["שיהיה קשה כמו אבן", "שיהיה לו טעם שרוף מאוד", "שיהיה לו טעם ומרקם של חציל קלוי ביתי", "שיהיה בצבע ירוק זוהר"],
+                correctIndex: 2,
+                explanation: "הציפייה הצרכנית ממוצר מוכן היא לרוב שהוא יהיה דומה ככל האפשר למוצר המקורי או לגרסה הביתית המוכרת."
+            },
+             {
+                question: "מי אחראי על בקרת איכות במפעל?",
+                options: ["רק מנכל המפעל", "רק עובדי הייצור", "מחלקת בקרת איכות ייעודית, אך האחריות לאיכות מוטלת על כלל העובדים", "רק הלקוחות"],
+                correctIndex: 2,
+                explanation: "בעוד שיש מחלקה ייעודית ל-QC, גישת האיכות הכוללת מדגישה שכל עובד בכל שלב משפיע על האיכות הסופית."
+            },
+             {
+                question: "מהו 'מפרט חומר גלם'?",
+                options: ["הוראות איך לבשל את חומר הגלם", "רשימת הספקים האפשריים", "מסמך המגדיר את התכונות והדרישות מחומר הגלם", "חשבונית הקנייה"],
+                correctIndex: 2,
+                explanation: "המפרט קובע את הקריטריונים שחומר הגלם צריך לעמוד בהם כדי להתקבל ולהיכנס לתהליך הייצור."
+            },
+            {
+                question: "מה הקשר בין 'שיפור מתמיד' ל'איכות'?",
+                options: ["אין קשר", "איכות דורשת שיפור מתמיד כי הציפיות והתנאים משתנים", "ברגע שמגיעים לאיכות מסוימת, אין צורך לשפר", "שיפור מתמיד פוגע באיכות"],
+                correctIndex: 1,
+                explanation: "כיוון שאיכות היא דינמית, נדרש תהליך מתמיד של שיפור כדי לשמור על רלוונטיות ועמידה בציפיות המשתנות."
+            },
+            {
+                question: "באיזה שלב מתבצעת 'בקרת איכות של מוצר בתהליך'?",
+                options: ["לפני קבלת חומרי הגלם", "במהלך שלבי הייצור השונים", "לאחר שהמוצר נארז ונשלח", "רק במעבדה חיצונית"],
+                correctIndex: 1,
+                explanation: "בקרת תהליך נעשית תוך כדי הייצור, בנקודות קריטיות, כדי לוודא שהתהליך מתנהל כשורה ושהמוצר בשלב הביניים עומד בדרישות."
+            },
+             {
+                question: "מה יכולה להיות תוצאה של פגיעה תדמיתית לחברה עקב בעיית איכות?",
+                options: ["עלייה מיידית במכירות", "ירידה באמון הצרכנים ובמכירות", "קבלת פרס על שקיפות", "הוזלה של חומרי הגלם"],
+                correctIndex: 1,
+                explanation: "פרסום שלילי ותלונות רבות פוגעים במוניטין של החברה ועלולים להוביל לירידה משמעותית באמון הצרכנים ובביקוש למוצריה."
+            },
+            {
+                question: "מהי מטרת 'בקרת איכות של המוצר הסופי'?",
+                options: ["לוודא שחומרי הגלם היו תקינים", "לבדוק אם האריזה יפה מספיק", "לוודא שהמוצר המוגמר עומד בכל המפרטים והדרישות לפני יציאתו לשוק", "לקבוע את מחיר המוצר"],
+                correctIndex: 2,
+                explanation: "זוהי הבדיקה הסופית המאשרת שהמוצר עומד בכל הקריטריונים שהוגדרו עבורו לפני שהוא מגיע לצרכן."
+            },
+             {
+                question: "מהי 'אחידות' בהקשר לציפיות הצרכן ממוצר מזון?",
+                options: ["שכל המוצרים יהיו באותו מחיר", "שחווית הצריכה (טעם, מרקם וכו) תהיה זהה בכל פעם שרוכשים את המוצר", "שהאריזה תהיה תמיד באותו גודל", "שכל הרכיבים יהיו בצבע אחיד"],
+                correctIndex: 1,
+                explanation: "הצרכן מצפה לקבל את אותה חוויה מוכרת ואהובה בכל פעם שהוא קונה וצורך את המוצר."
+            },
+             {
+                question: "מדוע חשוב לנהל את הספקים כחלק מאבטחת איכות?",
+                options: ["כדי לשלם להם פחות", "כי איכות חומרי הגלם מהספקים משפיעה ישירות על איכות המוצר הסופי", "כדי לקבל מהם מתנות", "זה לא חשוב, אפשר לקנות מכל אחד"],
+                correctIndex: 1,
+                explanation: "איכות המוצר הסופי תלויה במידה רבה באיכות חומרי הגלם. ניהול ספקים ובקרת קבלה מבטיחים קבלת חומרים העומדים בדרישות."
+            },
+             {
+                question: "איזה סוג בדיקה פחות סביר שתתבצע ב'בקרת איכות חומרי גלם'?",
+                options: ["בדיקת מראה וריח", "בדיקה כימית של הרכב", "בדיקת שביעות רצון של הלקוח הסופי", "בדיקה מיקרוביאלית"],
+                correctIndex: 2,
+                explanation: "בדיקת שביעות רצון היא מדד הקשור למוצר הסופי ולחווית הלקוח, ואינה רלוונטית לבדיקת חומר הגלם עצמו בכניסה למפעל."
+            },
+            {
+                question: "מהי 'עמידה בתקנים ובתקנות' כציפיית צרכן?",
+                options: ["שהמוצר יהיה הכי טעים שיש", "שהמוצר מיוצר ונמכר בהתאם לחוקים ולתקנים המחייבים", "שהמוצר יכיל את כל אבות המזון", "שהמוצר יהיה זמין 24/7"],
+                correctIndex: 1,
+                explanation: "הצרכן מצפה שהמזון שהוא קונה בטוח לצריכה ומיוצר בהתאם לכל הדרישות החוקיות והתקניות הרלוונטיות."
+            },
+             {
+                question: "מי נושא באחריות על איכות המוצר במפעל מזון?",
+                options: ["רק מנהל בקרת האיכות", "רק מנכל החברה", "כלל העובדים, כל אחד בתחומו", "רק הצרכנים"],
+                correctIndex: 2,
+                explanation: "גישת האיכות המודרנית מטילה אחריות על איכות על כל עובד בארגון, שכן לכל אחד יש השפעה על התהליך או המוצר בשלב כלשהו."
+            },
+             {
+                question: "מה הקשר בין 'תשתיות וציוד' לאבטחת איכות?",
+                options: ["אין קשר", "ציוד תקין ומתוחזק ותשתיות נאותות חיוניים לייצור עקבי ובטוח", "ציוד ישן תמיד מייצר מוצר איכותי יותר", "ככל שיש יותר ציוד, האיכות יורדת"],
+                correctIndex: 1,
+                explanation: "ציוד לא תקין או תשתיות לקויות (כמו מבנה לא נקי) עלולים לפגוע בבטיחות ובאיכות המוצר."
+            },
+            {
+                question: "מהי חשיבות 'שירות צרכנים' בהקשר לאיכות?",
+                options: ["למנוע מלקוחות להתלונן", "לטפל בתלונות ובפניות ביעילות ולספק מידע", "למכור מוצרים נוספים", "להתעלם מפניות לקוחות"],
+                correctIndex: 1,
+                explanation: "שירות צרכנים יעיל הוא חלק מהממשק עם הלקוח, מאפשר טיפול בתלונות, מתן מידע ותרומה לתדמית החברה ולאמון הצרכנים."
+            }
+        ];
+
+        const tfData = [
+             { question: "איכות היא מושג קבוע שאינו משתנה.", answer: false, explanation: "איכות היא דינמית ומשתנה בהתאם לציפיות הצרכנים, טכנולוגיה ותקנים." },
+             { question: "אבטחת איכות ובקרת איכות הן אותו הדבר.", answer: false, explanation: "אבטחת איכות היא מערכתית ומונעת, בקרת איכות היא תפעולית ובודקת." },
+             { question: "בקרת איכות מתבצעת רק על המוצר הסופי.", answer: false, explanation: "בקרת איכות מתבצעת בשלבים שונים: קבלת חומרי גלם, במהלך הייצור ועל המוצר הסופי." },
+             { question: "תלונות לקוח הן מדד חשוב לאיכות המוצר.", answer: true, explanation: "תלונות מספקות משוב על פערים בין המוצר לציפיות הצרכן ויכולות להצביע על בעיות." },
+             { question: "ניהול איכות יעיל יכול לחסוך כסף לחברה בטווח הארוך.", answer: true, explanation: "מניעת תקלות, החזרות והשמדות חוסכת עלויות הנגרמות מאי-איכות." },
+             { question: "החוק בישראל מקשה כיום על הגשת תביעות ייצוגיות בתחום המזון.", answer: false, explanation: "החוק משנת 2006 דווקא הקל על הגשת תביעות כאלה." },
+             { question: "האחריות על איכות במפעל מוטלת רק על מנהל האיכות.", answer: false, explanation: "בגישה מודרנית, האחריות על האיכות מוטלת על כלל העובדים." },
+             { question: "ציפיות הצרכנים ממוצרי מזון נשארות זהות לאורך שנים.", answer: false, explanation: "ציפיות הצרכנים משתנות בהתאם למגמות בריאותיות, טכנולוגיות, סגנון חיים ועוד." },
+             { question: "בקרת תהליך כוללת בדיקה של חומרי הגלם הנכנסים למפעל.", answer: false, explanation: "בדיקת חומרי הגלם הנכנסים היא 'בקרת חומרי גלם' או 'בקרת קבלה'. בקרת תהליך מתבצעת במהלך הייצור." },
+             { question: "מערכת אבטחת איכות כוללת רק בדיקות מעבדה.", answer: false, explanation: "אבטחת איכות כוללת מגוון רחב של פעילויות, כולל ניהול ספקים, הדרכות, נהלים, בקרות ותשתיות." },
+             { question: "איכות הסביבה אינה רלוונטית לתעשיית המזון.", answer: false, explanation: "לתעשיית המזון יש השפעה סביבתית (אריזות, שפכים, אנרגיה) והיא נדרשת להתמודד עם אתגרים אלו." },
+             { question: "גישת Farm to Fork מתעלמת משלב חומרי הגלם.", answer: false, explanation: "הגישה מתחילה בשדה ('Farm') ומכסה את כל השרשרת, כולל חומרי הגלם." },
+             { question: "איכות ואמינות המוצר חשובות לאמון הצרכנים.", answer: true, explanation: "צרכנים נוטים לקנות שוב מוצר שהם סומכים על איכותו ועקביותו." },
+             { question: "שיפור מתמיד אינו נדרש במפעלים בעלי מערכת איכות טובה.", answer: false, explanation: "שיפור מתמיד הוא חלק אינהרנטי ממערכת איכות טובה ומהצורך להתאים לשינויים." },
+             { question: "תקשורת שלילית על מוצר פגום יכולה לפגוע במוניטין החברה.", answer: true, explanation: "פרסום שלילי יכול לגרום נזק תדמיתי משמעותי ולהשפיע על אמון הלקוחות." },
+             { question: "בקרת איכות מתמקדת במניעת תקלות עתידיות.", answer: false, explanation: "בקרת איכות מתמקדת באיתור תקלות קיימות במוצר או בתהליך. אבטחת איכות מתמקדת במניעה." },
+             { question: "עמידה בתקנות היא חלק מדרישות האיכות ממוצר מזון.", answer: true, explanation: "מוצר איכותי חייב לעמוד בכל הדרישות החוקיות והתקניות." },
+             { question: "טעם ומרקם אינם חלק מציפיות הצרכן לאיכות.", answer: false, explanation: "טעם, מרקם ומאפיינים סנסוריים אחרים הם חלק מרכזי מציפיות הצרכן." },
+             { question: "ניהול סיכונים הוא חלק מאבטחת איכות.", answer: true, explanation: "זיהוי והערכת סיכונים פוטנציאליים (בטיחותיים, איכותיים) וקביעת אמצעי בקרה הם חלק מהותי מ-QA." },
+             { question: "מטרת בקרת המוצר הסופי היא לתקן פגמים במוצר.", answer: false, explanation: "מטרת בקרת המוצר הסופי היא לוודא שהמוצר עומד בדרישות לפני יציאתו לשוק. אם מתגלים פגמים, המוצר עשוי להיפסל או לעבור טיפול נוסף, אך הבקרה עצמה אינה מתקנת." }
+         ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

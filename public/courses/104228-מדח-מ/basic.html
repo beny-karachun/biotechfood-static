@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Basic ODE Techniques</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Basic ODE Techniques for Simple PDEs</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p>Some simple PDEs can be solved by treating them as Ordinary Differential Equations (ODEs) with respect to one variable, while holding the other variable(s) constant. The key difference is that the "constants" of integration become arbitrary functions of the other variable(s).</p>
+            <p><strong>Example:</strong> To solve $u_x = 2xy$, treat $y$ as a constant and integrate with respect to $x$:
+            $$ u(x,y) = \int 2xy \, dx = 2y \int x \, dx = 2y \frac{x^2}{2} + C $$
+            Since $y$ was held constant, the integration "constant" $C$ can actually depend on $y$. So, the general solution is $u(x,y) = x^2y + f(y)$, where $f(y)$ is an arbitrary function.</p>
+            <p>This section reviews common ODE solution techniques needed for such problems and for steps within more complex PDE methods like Separation of Variables.</p>
+
+            <h3>ODE Techniques Review</h3>
+
+            <h4>1. Direct Integration</h4>
+             <p>If the equation involves only one derivative, integrate directly. For $u_x = F(x,y)$, $u = \int F(x,y) dx + f(y)$. For $u_{xx} = G(x,y)$, integrate twice wrt $x$, adding $x f(y) + g(y)$ as integration functions.</p>
+
+             <h4>2. Separable ODEs</h4>
+             <p>Applies to ODEs of the form $\frac{dy}{dx} = M(x)N(y)$. Separate variables and integrate: $\int \frac{1}{N(y)} dy = \int M(x) dx + C$.</p>
+
+             <h4>3. First-Order Linear ODEs</h4>
+             <p>Form: $y' + p(x)y = q(x)$.</p>
+             <ol>
+                <li>Find the integrating factor: $\mu(x) = e^{\int p(x) dx}$.</li>
+                <li>Multiply the ODE by $\mu(x)$: $\mu(x)y' + \mu(x)p(x)y = \mu(x)q(x)$.</li>
+                <li>The left side is the derivative of a product: $\frac{d}{dx}(\mu(x) y) = \mu(x)q(x)$.</li>
+                <li>Integrate: $\mu(x) y = \int \mu(x)q(x) dx + C$.</li>
+                <li>Solve for $y$: $y(x) = \frac{1}{\mu(x)} \left[ \int \mu(x)q(x) dx + C \right]$.</li>
+             </ol>
+
+             <h4>4. Second-Order Linear Homogeneous ODEs with Constant Coefficients</h4>
+             <p>Form: $ay'' + by' + cy = 0$.</p>
+             <ol>
+                <li>Write the characteristic (auxiliary) equation: $ar^2 + br + c = 0$.</li>
+                <li>Find the roots $r_1, r_2$.</li>
+                <li>General solution depends on roots:
+                    <ul>
+                        <li>Distinct Real Roots ($r_1 \neq r_2$): $y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x}$.</li>
+                        <li>Repeated Real Root ($r_1 = r_2 = r$): $y(x) = C_1 e^{rx} + C_2 x e^{rx}$.</li>
+                        <li>Complex Conjugate Roots ($r = \alpha \pm i\beta$): $y(x) = e^{\alpha x}(C_1 \cos(\beta x) + C_2 \sin(\beta x))$.</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4>5. Cauchy-Euler Equations</h4>
+            <p>Form: $ax^2 y'' + bxy' + cy = 0$.</p>
+            <ol>
+                <li>Assume solution $y = x^k$. Substitute into ODE: $ax^2 k(k-1)x^{k-2} + bx k x^{k-1} + c x^k = 0$.</li>
+                <li>Simplify to get the indicial equation: $a k(k-1) + bk + c = 0 \implies ak^2 + (b-a)k + c = 0$.</li>
+                <li>Solve for $k_1, k_2$.</li>
+                 <li>General solution depends on roots:
+                    <ul>
+                        <li>Distinct Real Roots ($k_1 \neq k_2$): $y(x) = C_1 x^{k_1} + C_2 x^{k_2}$.</li>
+                        <li>Repeated Real Root ($k_1 = k_2 = k$): $y(x) = C_1 x^k + C_2 x^k \ln|x|$.</li>
+                        <li>Complex Conjugate Roots ($k = \alpha \pm i\beta$): $y(x) = x^{\alpha}(C_1 \cos(\beta \ln|x|) + C_2 \sin(\beta \ln|x|))$.</li>
+                    </ul>
+                </li>
+                 <li>(Alternatively, substitute $x=e^t$ to transform into a constant coefficient ODE in $t$).</li>
+            </ol>
+
+             <h4>6. Exact ODEs</h4>
+             <p>Form: $M(x,y)dx + N(x,y)dy = 0$.</p>
+             <ol>
+                 <li>Test for Exactness: Check if $\frac{\partial M}{\partial y} = \frac{\partial N}{\partial x}$. If true, the equation is exact.</li>
+                 <li>If exact, there exists a potential function $\psi(x,y)$ such that $\frac{\partial \psi}{\partial x} = M$ and $\frac{\partial \psi}{\partial y} = N$.</li>
+                 <li>Find $\psi$:
+                     <ul>
+                         <li>Integrate $M$ with respect to $x$: $\psi(x,y) = \int M(x,y) dx + h(y)$.</li>
+                         <li>Differentiate this result with respect to $y$: $\frac{\partial \psi}{\partial y} = \frac{\partial}{\partial y}\left(\int M dx\right) + h'(y)$.</li>
+                         <li>Set this equal to $N$: $\frac{\partial}{\partial y}\left(\int M dx\right) + h'(y) = N(x,y)$.</li>
+                         <li>Solve for $h'(y)$. (Terms depending only on $x$ should cancel).</li>
+                         <li>Integrate $h'(y)$ to find $h(y)$ (set integration constant to 0).</li>
+                         <li>Substitute $h(y)$ back into the expression for $\psi$.</li>
+                     </ul>
+                 </li>
+                 <li>The general solution is given implicitly by $\psi(x,y) = C$.</li>
+             </ol>
+
+             <h4>7. The Wronskian and Linear Independence</h4>
+             <p>For two functions $y_1(x)$ and $y_2(x)$, the Wronskian is defined as:</p>
+             $$ W(y_1, y_2)(x) = \det \begin{pmatrix} y_1(x) & y_2(x) \\ y_1'(x) & y_2'(x) \end{pmatrix} = y_1(x) y_2'(x) - y_1'(x) y_2(x) $$
+             <p><strong>Linear Independence Test:</strong> If $y_1$ and $y_2$ are two solutions to the *second-order linear homogeneous* ODE $ay'' + by' + cy = 0$ on an interval $I$, then $y_1$ and $y_2$ are linearly independent (and form a fundamental set of solutions) on $I$ if and only if their Wronskian $W(y_1, y_2)(x)$ is non-zero for at least one point $x_0$ in $I$. (If it's non-zero at one point, it's non-zero everywhere $a(x)\neq 0$).</p>
+             <p><strong>Use in Variation of Parameters:</strong> The Wronskian appears in the formulas for $u_1'$ and $u_2'$ when finding a particular solution $y_p = u_1 y_1 + u_2 y_2$ for $ay''+by'+cy=R(x)$:
+             $$ u_1'(x) = -\frac{y_2(x) R(x)}{a(x) W(y_1, y_2)(x)}, \quad u_2'(x) = \frac{y_1(x) R(x)}{a(x) W(y_1, y_2)(x)} $$
+             </p>
+
+             <h4>8. Second-Order Linear Non-Homogeneous ODEs</h4>
+            <p>Form: $ay'' + by' + cy = R(x)$. General solution $y(x) = y_c(x) + y_p(x)$, where $y_c$ is the complementary solution (solving the homogeneous eq.) and $y_p$ is a particular solution.</p>
+            <ul>
+                <li><strong>Method of Undetermined Coefficients:</strong>
+                    <ul>
+                        <li>Guess the form of $y_p$ based on the form of $R(x)$ (polynomials, $e^{\alpha x}$, $\sin(\beta x)$, $\cos(\beta x)$, and sums/products thereof).</li>
+                        <li>Modify the guess (multiply by $x$ or $x^2$) if it overlaps with terms in $y_c$.</li>
+                        <li>Substitute the guess into the ODE and solve for the undetermined coefficients.</li>
+                    </ul>
+                </li>
+                <li><strong>Variation of Parameters:</strong> (More general, uses Wronskian)
+                     <ul>
+                        <li>Find $y_c(x) = C_1 y_1(x) + C_2 y_2(x)$.</li>
+                        <li>Calculate the Wronskian $W = W(y_1, y_2)$.</li>
+                        <li>Find $u_1 = \int -\frac{y_2(x) R(x)}{a(x) W(x)} dx$ and $u_2 = \int \frac{y_1(x) R(x)}{a(x) W(x)} dx$.</li>
+                        <li>The particular solution is $y_p(x) = u_1(x)y_1(x) + u_2(x)y_2(x)$.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Original Questions 1-20 -->
+            <article class="question-block"> <p class="question-number">Question 1:</p> <p class="question-text">Find the general solution: $u_x = 3x^2y^4$.</p> <button onclick="toggleSolution('sol-basic-q1')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q1"> <p><strong>Solution:</strong></p> <p>Integrate wrt $x$, treat $y$ as constant: $u(x,y) = \int 3x^2y^4 dx = y^4 \int 3x^2 dx = y^4 (x^3) + f(y)$. $u(x,y) = x^3y^4 + f(y)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 2:</p> <p class="question-text">Find the general solution: $u_y = \cos(y) + x$.</p> <button onclick="toggleSolution('sol-basic-q2')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q2"> <p><strong>Solution:</strong></p> <p>Integrate wrt $y$, treat $x$ as constant: $u(x,y) = \int (\cos y + x) dy = \sin y + xy + f(x)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 3:</p> <p class="question-text">Find the general solution: $u_{xx} = 6xy$.</p> <button onclick="toggleSolution('sol-basic-q3')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q3"> <p><strong>Solution:</strong></p> <p>Integrate wrt $x$: $u_x = \int 6xy dx = 3x^2y + f(y)$. Integrate again wrt $x$: $u(x,y) = \int (3x^2y + f(y)) dx = x^3y + xf(y) + g(y)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 4:</p> <p class="question-text">Find the general solution: $u_{yy} = e^y$.</p> <button onclick="toggleSolution('sol-basic-q4')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q4"> <p><strong>Solution:</strong></p> <p>Integrate wrt $y$: $u_y = \int e^y dy = e^y + f(x)$. Integrate again wrt $y$: $u(x,y) = \int (e^y + f(x)) dy = e^y + yf(x) + g(x)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 5:</p> <p class="question-text">Find the general solution: $u_{xy} = 1$. (Hint: $u_{xy} = (u_x)_y$).</p> <button onclick="toggleSolution('sol-basic-q5')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q5"> <p><strong>Solution:</strong></p> <p>Integrate wrt $y$: $u_x = \int 1 dy = y + f(x)$. Integrate wrt $x$: $u(x,y) = \int (y+f(x)) dx = xy + \int f(x)dx + g(y)$. Let $F(x) = \int f(x)dx$. $u(x,y) = xy + F(x) + g(y)$. (Alternatively, integrating wrt x first gives $u_y = x+h(y)$, then $u=xy+H(y)+k(x)$).</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 6:</p> <p class="question-text">Solve the ODE: $y' = 2x y^2$ (Separable).</p> <button onclick="toggleSolution('sol-basic-q6')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q6"> <p><strong>Solution:</strong></p> <p>$\frac{dy}{dx} = 2x y^2 \implies \frac{1}{y^2} dy = 2x dx$. Integrate: $\int y^{-2} dy = \int 2x dx$. $-y^{-1} = x^2 + C$. $-\frac{1}{y} = x^2 + C \implies y = -\frac{1}{x^2+C}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 7:</p> <p class="question-text">Solve the ODE: $y' + 3y = 0$.</p> <button onclick="toggleSolution('sol-basic-q7')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q7"> <p><strong>Solution:</strong></p> <p>Separable: $dy/dx = -3y \implies \frac{dy}{y}=-3dx$. $\ln|y|=-3x+C' \implies y=e^{-3x+C'} = Ce^{-3x}$. (Or use const. coeff. method: $r+3=0 \implies r=-3 \implies y=Ce^{-3x}$).</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 8:</p> <p class="question-text">Solve the ODE: $y' + 2xy = x$.</p> <button onclick="toggleSolution('sol-basic-q8')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q8"> <p><strong>Solution:</strong></p> <p>First-order linear. $p(x)=2x, q(x)=x$. Integrating factor $\mu(x) = e^{\int 2x dx} = e^{x^2}$. Multiply by $\mu$: $e^{x^2}y' + 2xe^{x^2}y = xe^{x^2}$. $\frac{d}{dx}(e^{x^2}y) = xe^{x^2}$. Integrate: $e^{x^2}y = \int xe^{x^2} dx$. Let $w=x^2, dw=2xdx$. $\int \frac{1}{2}e^w dw = \frac{1}{2}e^w + C = \frac{1}{2}e^{x^2}+C$. $e^{x^2}y = \frac{1}{2}e^{x^2}+C$. $y(x) = \frac{1}{2} + Ce^{-x^2}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 9:</p> <p class="question-text">Solve the ODE: $y'' - 5y' + 6y = 0$.</p> <button onclick="toggleSolution('sol-basic-q9')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q9"> <p><strong>Solution:</strong></p> <p>Const. coeff. Char. eq: $r^2-5r+6=0 \implies (r-2)(r-3)=0$. Roots $r_1=2, r_2=3$. Distinct real roots. $y(x) = C_1 e^{2x} + C_2 e^{3x}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 10:</p> <p class="question-text">Solve the ODE: $y'' + 4y' + 4y = 0$.</p> <button onclick="toggleSolution('sol-basic-q10')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q10"> <p><strong>Solution:</strong></p> <p>Const. coeff. Char. eq: $r^2+4r+4=0 \implies (r+2)^2=0$. Repeated real root $r=-2$. $y(x) = C_1 e^{-2x} + C_2 x e^{-2x}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 11:</p> <p class="question-text">Solve the ODE: $y'' + 9y = 0$.</p> <button onclick="toggleSolution('sol-basic-q11')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q11"> <p><strong>Solution:</strong></p> <p>Const. coeff. Char. eq: $r^2+9=0 \implies r^2=-9 \implies r=\pm 3i$. Complex roots $\alpha=0, \beta=3$. $y(x) = e^{0x}(C_1\cos(3x) + C_2\sin(3x)) = C_1\cos(3x) + C_2\sin(3x)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 12:</p> <p class="question-text">Solve the ODE: $y'' - 2y' + 5y = 0$.</p> <button onclick="toggleSolution('sol-basic-q12')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q12"> <p><strong>Solution:</strong></p> <p>Const. coeff. Char. eq: $r^2-2r+5=0$. Roots $r = \frac{2 \pm \sqrt{4-4(1)(5)}}{2} = \frac{2 \pm \sqrt{-16}}{2} = \frac{2 \pm 4i}{2} = 1 \pm 2i$. Complex roots $\alpha=1, \beta=2$. $y(x) = e^{1x}(C_1\cos(2x) + C_2\sin(2x)) = e^x(C_1\cos(2x) + C_2\sin(2x))$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 13:</p> <p class="question-text">Solve the ODE: $x^2 y'' + 5xy' + 3y = 0$.</p> <button onclick="toggleSolution('sol-basic-q13')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q13"> <p><strong>Solution:</strong></p> <p>Cauchy-Euler. $a=1, b=5, c=3$. Indicial eq: $ak^2+(b-a)k+c=0 \implies 1k^2+(5-1)k+3=0 \implies k^2+4k+3=0 \implies (k+1)(k+3)=0$. Roots $k_1=-1, k_2=-3$. Distinct real roots. $y(x) = C_1 x^{-1} + C_2 x^{-3}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 14:</p> <p class="question-text">Solve the ODE: $x^2 y'' - 3xy' + 4y = 0$.</p> <button onclick="toggleSolution('sol-basic-q14')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q14"> <p><strong>Solution:</strong></p> <p>Cauchy-Euler. $a=1, b=-3, c=4$. Indicial eq: $k^2+(-3-1)k+4=0 \implies k^2-4k+4=0 \implies (k-2)^2=0$. Repeated real root $k=2$. $y(x) = C_1 x^2 + C_2 x^2 \ln|x|$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 15:</p> <p class="question-text">Solve the ODE: $x^2 y'' + xy' + y = 0$.</p> <button onclick="toggleSolution('sol-basic-q15')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q15"> <p><strong>Solution:</strong></p> <p>Cauchy-Euler. $a=1, b=1, c=1$. Indicial eq: $k^2+(1-1)k+1=0 \implies k^2+1=0$. Roots $k=\pm i$. Complex roots $\alpha=0, \beta=1$. $y(x) = x^0(C_1\cos(1\ln|x|) + C_2\sin(1\ln|x|)) = C_1\cos(\ln|x|) + C_2\sin(\ln|x|)$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 16:</p> <p class="question-text">Find the general solution: $u_y - u = e^y \sin(x)$.</p> <button onclick="toggleSolution('sol-basic-q16')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q16"> <p><strong>Solution:</strong></p> <p>Treat as 1st order linear ODE in $y$ for $u$: $u_y - 1 \cdot u = e^y \sin(x)$. $p(y)=-1, q(y)=e^y\sin x$. Integrating factor $\mu(y)=e^{\int -1 dy} = e^{-y}$. Multiply: $e^{-y}u_y - e^{-y}u = e^{-y}e^y\sin x = \sin x$. $\frac{d}{dy}(e^{-y}u) = \sin x$. Integrate wrt $y$: $e^{-y}u = \int \sin(x) dy = y\sin x + f(x)$. $u(x,y) = e^y(y\sin x + f(x))$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 17:</p> <p class="question-text">Find the general solution: $u_{xx} + u = x$.</p> <button onclick="toggleSolution('sol-basic-q17')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q17"> <p><strong>Solution:</strong></p> <p>Treat as 2nd order linear non-homo ODE in $x$ for $u$. Complementary: $u_{xx}+u=0$. Char eq $r^2+1=0 \implies r=\pm i$. $u_c(x,y) = f(y)\cos x + g(y)\sin x$. Particular: Guess $u_p=Ax+B$. $u_{pxx}=0$. Substitute: $0+(Ax+B)=x$. Need $A=1, B=0$. So $u_p=x$. General solution $u(x,y)=u_c+u_p = f(y)\cos x + g(y)\sin x + x$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 18:</p> <p class="question-text">Find the general solution: $u_{yy} - u_y - 2u = 0$.</p> <button onclick="toggleSolution('sol-basic-q18')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q18"> <p><strong>Solution:</strong></p> <p>Treat as const. coeff. ODE in $y$. Char eq $r^2-r-2=0 \implies (r-2)(r+1)=0$. Roots $r_1=2, r_2=-1$. Distinct real. $u(x,y) = f(x)e^{2y} + g(x)e^{-y}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 19:</p> <p class="question-text">Find the general solution: $u_x + u/x = 1$.</p> <button onclick="toggleSolution('sol-basic-q19')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q19"> <p><strong>Solution:</strong></p> <p>Treat as 1st order linear ODE in $x$. $p(x)=1/x, q(x)=1$. Integrating factor $\mu(x)=e^{\int(1/x)dx} = e^{\ln|x|} = |x|$. Assume $x>0$, $\mu(x)=x$. Multiply: $xu_x+u=x$. Left side is $(xu)_x$. $(xu)_x = x$. Integrate wrt $x$: $xu = \int x dx = x^2/2 + f(y)$. $u(x,y) = x/2 + f(y)/x$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 20:</p> <p class="question-text">Find the general solution: $y^2 u_{yy} + 2y u_y - 6u = 0$.</p> <button onclick="toggleSolution('sol-basic-q20')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q20"> <p><strong>Solution:</strong></p> <p>Treat as Cauchy-Euler in $y$. $a=1, b=2, c=-6$. Indicial eq $k^2+(2-1)k-6=0 \implies k^2+k-6=0 \implies (k+3)(k-2)=0$. Roots $k_1=-3, k_2=2$. Distinct real. $u(x,y) = f(x)y^{-3} + g(x)y^2$.</p> </div> </article>
+            <article class="question-block"><p class="question-number">Question 21:</p><p class="question-text">Solve ODE: $y''+y=\sec x$ using Variation of Parameters.</p><button onclick="toggleSolution('sol-basic-q21')">Show/Hide Solution</button><div class="solution" id="sol-basic-q21"><p><strong>Solution:</strong></p><p>$y_c=C_1\cos x+C_2\sin x$. $y_1=\cos x, y_2=\sin x$. $R(x)=\sec x$. $a=1$. Wronskian $W=y_1y_2'-y_1'y_2 = \cos x(\cos x)-(-\sin x)(\sin x)=\cos^2x+\sin^2x=1$. $u_1'=-y_2 R/(aW)=-\sin x \sec x / 1 = -\tan x$. $u_1=\int-\tan x dx = \ln|\cos x|$. $u_2'=y_1 R/(aW)=\cos x \sec x / 1 = 1$. $u_2=\int 1 dx = x$. $y_p=u_1y_1+u_2y_2=\ln|\cos x|\cos x + x\sin x$. $y = C_1\cos x+C_2\sin x+\cos x \ln|\cos x|+x\sin x$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 22:</p><p class="question-text">Solve ODE: $y''-y=e^{2x}$ using Undetermined Coefficients.</p><button onclick="toggleSolution('sol-basic-q22')">Show/Hide Solution</button><div class="solution" id="sol-basic-q22"><p><strong>Solution:</strong></p><p>$y_c$: $r^2-1=0 \implies r=\pm 1$. $y_c=C_1e^x+C_2e^{-x}$. Guess $y_p=Ae^{2x}$. $y_p'=2Ae^{2x}, y_p''=4Ae^{2x}$. Substitute: $4Ae^{2x}-Ae^{2x}=e^{2x} \implies 3Ae^{2x}=e^{2x} \implies 3A=1 \implies A=1/3$. $y_p=\frac{1}{3}e^{2x}$. $y=C_1e^x+C_2e^{-x}+\frac{1}{3}e^{2x}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 23:</p><p class="question-text">Solve ODE: $y''-y=e^{x}$ using Undetermined Coefficients.</p><button onclick="toggleSolution('sol-basic-q23')">Show/Hide Solution</button><div class="solution" id="sol-basic-q23"><p><strong>Solution:</strong></p><p>$y_c=C_1e^x+C_2e^{-x}$. Initial guess $y_p=Ae^x$ overlaps $y_c$. Modify guess to $y_p=Axe^x$. $y_p'=A(e^x+xe^x)$. $y_p''=A(e^x+e^x+xe^x)=A(2e^x+xe^x)$. Substitute: $A(2e^x+xe^x) - (Axe^x)=e^x \implies 2Ae^x+Axe^x-Axe^x=e^x \implies 2Ae^x=e^x \implies 2A=1 \implies A=1/2$. $y_p=\frac{1}{2}xe^x$. $y=C_1e^x+C_2e^{-x}+\frac{1}{2}xe^x$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 24:</p><p class="question-text">Find general solution: $u_{xy} = x^2 + y$.</p><button onclick="toggleSolution('sol-basic-q24')">Show/Hide Solution</button><div class="solution" id="sol-basic-q24"><p><strong>Solution:</strong></p><p>Integrate wrt $y$: $u_x = x^2 y + y^2/2 + f(x)$. Integrate wrt $x$: $u(x,y) = x^3 y/3 + xy^2/2 + \int f(x)dx + g(y) = x^3 y/3 + xy^2/2 + F(x) + g(y)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 25:</p><p class="question-text">Solve ODE: $y' \tan x = y$.</p><button onclick="toggleSolution('sol-basic-q25')">Show/Hide Solution</button><div class="solution" id="sol-basic-q25"><p><strong>Solution:</strong></p><p>Separable: $\frac{dy}{dx} = \frac{y}{\tan x} = y \cot x$. $\frac{dy}{y} = \cot x dx = \frac{\cos x}{\sin x}dx$. Integrate: $\ln|y| = \ln|\sin x| + C' \implies y = C\sin x$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 26:</p><p class="question-text">Solve ODE: $y''+y=0, y(0)=2, y'(0)=3$.</p><button onclick="toggleSolution('sol-basic-q26')">Show/Hide Solution</button><div class="solution" id="sol-basic-q26"><p><strong>Solution:</strong></p><p>$y=C_1\cos x+C_2\sin x$. $y(0)=C_1\cos 0+C_2\sin 0 = C_1 = 2$. $y'= -C_1\sin x+C_2\cos x$. $y'(0)=-C_1\sin 0+C_2\cos 0 = C_2 = 3$. $y=2\cos x+3\sin x$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 27:</p><p class="question-text">Find general solution: $u_t = \sin t$.</p><button onclick="toggleSolution('sol-basic-q27')">Show/Hide Solution</button><div class="solution" id="sol-basic-q27"><p><strong>Solution:</strong></p><p>Integrate wrt $t$: $u(x,t) = \int \sin t dt = -\cos t + f(x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 28:</p><p class="question-text">Solve ODE: $xy'+y=x^2$.</p><button onclick="toggleSolution('sol-basic-q28')">Show/Hide Solution</button><div class="solution" id="sol-basic-q28"><p><strong>Solution:</strong></p><p>Recognize left side as $(xy)'$. $(xy)'=x^2$. Integrate: $xy = \int x^2 dx = x^3/3+C$. $y=x^2/3+C/x$. (Or use linear method: $y'+(1/x)y=x$).</p></div></article>
+            <article class="question-block"><p class="question-number">Question 29:</p><p class="question-text">Solve ODE: $y''-4y=0$.</p><button onclick="toggleSolution('sol-basic-q29')">Show/Hide Solution</button><div class="solution" id="sol-basic-q29"><p><strong>Solution:</strong></p><p>Char eq: $r^2-4=0 \implies r=\pm 2$. $y=C_1e^{2x}+C_2e^{-2x}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 30:</p><p class="question-text">Solve ODE: $y''+4y=0$.</p><button onclick="toggleSolution('sol-basic-q30')">Show/Hide Solution</button><div class="solution" id="sol-basic-q30"><p><strong>Solution:</strong></p><p>Char eq: $r^2+4=0 \implies r=\pm 2i$. $y=C_1\cos(2x)+C_2\sin(2x)$.</p></div></article>
+
+            <!-- New Questions: Exact ODEs -->
+            <article class="question-block"> <p class="question-number">Question 31:</p> <p class="question-text">Is the ODE $(2xy + y^3)dx + (x^2 + 3xy^2)dy = 0$ exact?</p> <button onclick="toggleSolution('sol-basic-q31')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q31"> <p><strong>Solution:</strong></p> <p>$M=2xy+y^3, N=x^2+3xy^2$. $\frac{\partial M}{\partial y} = 2x + 3y^2$. $\frac{\partial N}{\partial x} = 2x + 3y^2$. Since $\frac{\partial M}{\partial y} = \frac{\partial N}{\partial x}$, the equation is exact.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 32:</p> <p class="question-text">Solve the exact ODE from Q31: $(2xy + y^3)dx + (x^2 + 3xy^2)dy = 0$.</p> <button onclick="toggleSolution('sol-basic-q32')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q32"> <p><strong>Solution:</strong></p> <p>We need $\psi$ such that $\psi_x=M, \psi_y=N$. $\psi = \int M dx = \int (2xy+y^3) dx = x^2y + xy^3 + h(y)$. $\psi_y = x^2 + 3xy^2 + h'(y)$. Set $\psi_y = N$: $x^2 + 3xy^2 + h'(y) = x^2 + 3xy^2$. This gives $h'(y)=0$, so $h(y)=K$ (a constant). $\psi(x,y) = x^2y + xy^3 + K$. Solution is $\psi(x,y)=C$, or $x^2y + xy^3 = C$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 33:</p> <p class="question-text">Is the ODE $(y\cos x + e^y)dx + (\sin x + xe^y)dy = 0$ exact?</p> <button onclick="toggleSolution('sol-basic-q33')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q33"> <p><strong>Solution:</strong></p> <p>$M=y\cos x + e^y, N=\sin x + xe^y$. $\frac{\partial M}{\partial y} = \cos x + e^y$. $\frac{\partial N}{\partial x} = \cos x + e^y$. Yes, it is exact.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 34:</p> <p class="question-text">Solve the exact ODE from Q33.</p> <button onclick="toggleSolution('sol-basic-q34')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q34"> <p><strong>Solution:</strong></p> <p>$\psi = \int M dx = \int (y\cos x + e^y) dx = y\sin x + xe^y + h(y)$. $\psi_y = \sin x + xe^y + h'(y)$. Set $\psi_y = N$: $\sin x + xe^y + h'(y) = \sin x + xe^y$. $h'(y)=0 \implies h(y)=K$. Solution is $y\sin x + xe^y = C$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 35:</p> <p class="question-text">Is the ODE $(x+y)dx + x dy = 0$ exact?</p> <button onclick="toggleSolution('sol-basic-q35')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q35"> <p><strong>Solution:</strong></p> <p>$M=x+y, N=x$. $\frac{\partial M}{\partial y} = 1$. $\frac{\partial N}{\partial x} = 1$. Yes, it is exact.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 36:</p> <p class="question-text">Solve the exact ODE from Q35.</p> <button onclick="toggleSolution('sol-basic-q36')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q36"> <p><strong>Solution:</strong></p> <p>$\psi = \int M dx = \int (x+y) dx = x^2/2 + xy + h(y)$. $\psi_y = x + h'(y)$. Set $\psi_y = N$: $x + h'(y) = x$. $h'(y)=0 \implies h(y)=K$. Solution $x^2/2 + xy = C$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 37:</p> <p class="question-text">Is the ODE $ydx - xdy = 0$ exact?</p> <button onclick="toggleSolution('sol-basic-q37')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q37"> <p><strong>Solution:</strong></p> <p>$M=y, N=-x$. $\frac{\partial M}{\partial y} = 1$. $\frac{\partial N}{\partial x} = -1$. No, it is not exact.</p> </div> </article>
+
+            <!-- New Questions: Wronskian -->
+            <article class="question-block"> <p class="question-number">Question 38:</p> <p class="question-text">Calculate the Wronskian $W(e^{2x}, e^{3x})$.</p> <button onclick="toggleSolution('sol-basic-q38')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q38"> <p><strong>Solution:</strong></p> <p>$y_1=e^{2x}, y_1'=2e^{2x}$. $y_2=e^{3x}, y_2'=3e^{3x}$. $W = y_1y_2' - y_1'y_2 = e^{2x}(3e^{3x}) - (2e^{2x})(e^{3x}) = 3e^{5x} - 2e^{5x} = e^{5x}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 39:</p> <p class="question-text">Calculate the Wronskian $W(\cos x, \sin x)$.</p> <button onclick="toggleSolution('sol-basic-q39')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q39"> <p><strong>Solution:</strong></p> <p>$y_1=\cos x, y_1'=-\sin x$. $y_2=\sin x, y_2'=\cos x$. $W = y_1y_2' - y_1'y_2 = \cos x(\cos x) - (-\sin x)(\sin x) = \cos^2x + \sin^2x = 1$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 40:</p> <p class="question-text">Calculate the Wronskian $W(e^x, xe^x)$.</p> <button onclick="toggleSolution('sol-basic-q40')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q40"> <p><strong>Solution:</strong></p> <p>$y_1=e^x, y_1'=e^x$. $y_2=xe^x, y_2'=e^x+xe^x$. $W = e^x(e^x+xe^x) - e^x(xe^x) = e^{2x}+xe^{2x}-xe^{2x} = e^{2x}$.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 41:</p> <p class="question-text">$y_1=e^{2x}, y_2=e^{3x}$ are solutions to $y''-5y'+6y=0$. Are they linearly independent?</p> <button onclick="toggleSolution('sol-basic-q41')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q41"> <p><strong>Solution:</strong></p> <p>From Q38, $W(e^{2x}, e^{3x}) = e^{5x}$. Since $e^{5x}$ is never zero, the solutions are linearly independent.</p> </div> </article>
+            <article class="question-block"> <p class="question-number">Question 42:</p> <p class="question-text">$y_1=x, y_2=x^2$ are solutions to $x^2y''-2xy'+2y=0$. Are they linearly independent for $x>0$?</p> <button onclick="toggleSolution('sol-basic-q42')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q42"> <p><strong>Solution:</strong></p> <p>$y_1=x, y_1'=1$. $y_2=x^2, y_2'=2x$. $W = y_1y_2' - y_1'y_2 = x(2x) - 1(x^2) = 2x^2 - x^2 = x^2$. Since $x^2 \neq 0$ for $x>0$, the solutions are linearly independent.</p> </div> </article>
+             <article class="question-block"> <p class="question-number">Question 43:</p> <p class="question-text">Given $y_1=e^x, y_2=e^{-x}$ for $y''-y=R(x)$. Find $u_1'$ using Variation of Parameters.</p> <button onclick="toggleSolution('sol-basic-q43')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q43"> <p><strong>Solution:</strong></p> <p>$a=1$. $y_1=e^x, y_1'=e^x$. $y_2=e^{-x}, y_2'=-e^{-x}$. $W = e^x(-e^{-x})-e^x(e^{-x}) = -1-1 = -2$. $u_1' = -y_2 R/(aW) = -e^{-x}R(x)/(1(-2)) = \frac{1}{2}e^{-x}R(x)$.</p> </div> </article>
+              <article class="question-block"> <p class="question-number">Question 44:</p> <p class="question-text">Given $y_1=e^x, y_2=e^{-x}$ for $y''-y=R(x)$. Find $u_2'$ using Variation of Parameters.</p> <button onclick="toggleSolution('sol-basic-q44')">Show/Hide Solution</button> <div class="solution" id="sol-basic-q44"> <p><strong>Solution:</strong></p> <p>$a=1, W=-2$. $u_2' = y_1 R/(aW) = e^x R(x)/(1(-2)) = -\frac{1}{2}e^x R(x)$.</p> </div> </article>
+
+
+            <!-- Remaining Original Questions 45-60 (renumbered) -->
+            <article class="question-block"><p class="question-number">Question 45:</p><p class="question-text">Solve ODE: $x^2y''+xy'-y=0$.</p><button onclick="toggleSolution('sol-basic-q45')">Show/Hide Solution</button><div class="solution" id="sol-basic-q45"><p><strong>Solution:</strong></p><p>Cauchy-Euler. $a=1, b=1, c=-1$. Indicial: $k^2+(1-1)k-1=0 \implies k^2-1=0$. Roots $k=\pm 1$. $y=C_1x^1+C_2x^{-1}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 46:</p><p class="question-text">Find general solution: $u_{xxx}=0$.</p><button onclick="toggleSolution('sol-basic-q46')">Show/Hide Solution</button><div class="solution" id="sol-basic-q46"><p><strong>Solution:</strong></p><p>Integrate wrt $x$: $u_{xx}=f(y)$. Integrate wrt $x$: $u_x = xf(y)+g(y)$. Integrate wrt $x$: $u(x,y) = \frac{x^2}{2}f(y)+xg(y)+h(y)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 47:</p><p class="question-text">Solve ODE: $y''+y=1$. Find $y_p$.</p><button onclick="toggleSolution('sol-basic-q47')">Show/Hide Solution</button><div class="solution" id="sol-basic-q47"><p><strong>Solution:</strong></p><p>$y_c=C_1\cos x+C_2\sin x$. Guess $y_p=A$. $y_p''=0$. Substitute: $0+A=1 \implies A=1$. $y_p=1$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 48:</p><p class="question-text">Solve ODE: $y''+y=\sin(2x)$. Find $y_p$.</p><button onclick="toggleSolution('sol-basic-q48')">Show/Hide Solution</button><div class="solution" id="sol-basic-q48"><p><strong>Solution:</strong></p><p>$y_c=C_1\cos x+C_2\sin x$. Guess $y_p=A\cos(2x)+B\sin(2x)$. $y_p'=-2A\sin(2x)+2B\cos(2x)$. $y_p''=-4A\cos(2x)-4B\sin(2x)$. Substitute: $(-4A\cos(2x)-4B\sin(2x))+(A\cos(2x)+B\sin(2x))=\sin(2x)$. $(-3A)\cos(2x)+(-3B)\sin(2x)=\sin(2x)$. Match: $-3A=0 \implies A=0$. $-3B=1 \implies B=-1/3$. $y_p=-\frac{1}{3}\sin(2x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 49:</p><p class="question-text">Find general solution: $u_x + y u = 0$.</p><button onclick="toggleSolution('sol-basic-q49')">Show/Hide Solution</button><div class="solution" id="sol-basic-q49"><p><strong>Solution:</strong></p><p>Treat as ODE in $x$: $u_x = -yu$. Separable: $du/u = -ydx$. Integrate wrt $x$: $\ln|u| = -yx + f(y)$. $u(x,y) = e^{-yx+f(y)} = e^{f(y)}e^{-xy} = g(y)e^{-xy}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 50:</p><p class="question-text">Find general solution: $u_{yy} + 4u = 0$.</p><button onclick="toggleSolution('sol-basic-q50')">Show/Hide Solution</button><div class="solution" id="sol-basic-q50"><p><strong>Solution:</strong></p><p>ODE in $y$. Char eq $r^2+4=0 \implies r=\pm 2i$. $u(x,y)=f(x)\cos(2y)+g(x)\sin(2y)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 51:</p><p class="question-text">Solve ODE: $y' + y = e^{-x}$.</p><button onclick="toggleSolution('sol-basic-q51')">Show/Hide Solution</button><div class="solution" id="sol-basic-q51"><p><strong>Solution:</strong></p><p>Linear. $p=1, q=e^{-x}$. $\mu=e^{\int 1 dx}=e^x$. Multiply: $e^x y' + e^x y = e^x e^{-x} = 1$. $(e^x y)' = 1$. Integrate: $e^x y = x+C$. $y=(x+C)e^{-x}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 52:</p><p class="question-text">Solve ODE: $y'' - 3y' = 0$.</p><button onclick="toggleSolution('sol-basic-q52')">Show/Hide Solution</button><div class="solution" id="sol-basic-q52"><p><strong>Solution:</strong></p><p>Char eq $r^2-3r=0 \implies r(r-3)=0$. Roots $r=0, r=3$. $y=C_1e^{0x}+C_2e^{3x}=C_1+C_2e^{3x}$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 53:</p><p class="question-text">Solve ODE: $y'' + \omega^2 y = 0$.</p><button onclick="toggleSolution('sol-basic-q53')">Show/Hide Solution</button><div class="solution" id="sol-basic-q53"><p><strong>Solution:</strong></p><p>Char eq $r^2+\omega^2=0 \implies r=\pm i\omega$. $y=C_1\cos(\omega x)+C_2\sin(\omega x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 54:</p><p class="question-text">Solve ODE: $y'' - \omega^2 y = 0$.</p><button onclick="toggleSolution('sol-basic-q54')">Show/Hide Solution</button><div class="solution" id="sol-basic-q54"><p><strong>Solution:</strong></p><p>Char eq $r^2-\omega^2=0 \implies r=\pm \omega$. $y=C_1e^{\omega x}+C_2e^{-\omega x}$ or $y=A\cosh(\omega x)+B\sinh(\omega x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 55:</p><p class="question-text">Solve ODE: $x^2y''-2xy'+2y=0$.</p><button onclick="toggleSolution('sol-basic-q55')">Show/Hide Solution</button><div class="solution" id="sol-basic-q55"><p><strong>Solution:</strong></p><p>Cauchy-Euler. $a=1, b=-2, c=2$. Indicial: $k^2+(-2-1)k+2=0 \implies k^2-3k+2=0 \implies (k-1)(k-2)=0$. Roots $k=1, k=2$. $y=C_1x+C_2x^2$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 56:</p><p class="question-text">Find general solution: $u_{xy} = \sin x \cos y$.</p><button onclick="toggleSolution('sol-basic-q56')">Show/Hide Solution</button><div class="solution" id="sol-basic-q56"><p><strong>Solution:</strong></p><p>Integrate wrt $y$: $u_x = \int \sin x \cos y dy = \sin x \int \cos y dy = \sin x \sin y + f(x)$. Integrate wrt $x$: $u(x,y) = \int (\sin x \sin y + f(x)) dx = \sin y \int \sin x dx + \int f(x) dx + g(y) = \sin y (-\cos x) + F(x) + g(y) = -\cos x \sin y + F(x) + g(y)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 57:</p><p class="question-text">Solve ODE: $y''+2y'+2y=0$.</p><button onclick="toggleSolution('sol-basic-q57')">Show/Hide Solution</button><div class="solution" id="sol-basic-q57"><p><strong>Solution:</strong></p><p>Char eq $r^2+2r+2=0$. $r=\frac{-2\pm\sqrt{4-8}}{2}=\frac{-2\pm\sqrt{-4}}{2}=\frac{-2\pm 2i}{2}=-1\pm i$. Complex $\alpha=-1, \beta=1$. $y=e^{-x}(C_1\cos x+C_2\sin x)$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 58:</p><p class="question-text">Solve ODE: $y''-4y'+13y=0$.</p><button onclick="toggleSolution('sol-basic-q58')">Show/Hide Solution</button><div class="solution" id="sol-basic-q58"><p><strong>Solution:</strong></p><p>Char eq $r^2-4r+13=0$. $r=\frac{4\pm\sqrt{16-4(13)}}{2}=\frac{4\pm\sqrt{16-52}}{2}=\frac{4\pm\sqrt{-36}}{2}=\frac{4\pm 6i}{2}=2\pm 3i$. Complex $\alpha=2, \beta=3$. $y=e^{2x}(C_1\cos(3x)+C_2\sin(3x))$.</p></div></article>
+            <article class="question-block"><p class="question-number">Question 59:</p><p class="question-text">Solve ODE: $y''+y=x$ using Variation of Parameters. Find $y_p$.</p><button onclick="toggleSolution('sol-basic-q59')">Show/Hide Solution</button><div class="solution" id="sol-basic-q59"><p><strong>Solution:</strong></p><p>$y_c=C_1\cos x+C_2\sin x$. $y_1=\cos x, y_2=\sin x$. $R(x)=x, a=1$. $W=1$. $u_1'=-y_2 R/(aW)=-\sin x (x)/1 = -x\sin x$. $u_2'=y_1 R/(aW)=\cos x (x)/1 = x\cos x$. $u_1=\int -x\sin x dx$. (Parts: $u=-x, dv=\sin x dx \implies du=-dx, v=-\cos x$). $u_1= -(-x\cos x - \int(-\cos x)(-dx)) = x\cos x - \int \cos x dx = x\cos x - \sin x$. $u_2=\int x\cos x dx$. (Parts: $u=x, dv=\cos x dx \implies du=dx, v=\sin x$). $u_2 = x\sin x - \int \sin x dx = x\sin x + \cos x$. $y_p=u_1y_1+u_2y_2 = (x\cos x - \sin x)\cos x + (x\sin x + \cos x)\sin x = x\cos^2x - \sin x \cos x + x\sin^2 x + \cos x \sin x = x(\cos^2x+\sin^2x) = x$. (Matches undetermined coefficients result from Q17).</p></div></article>
+            <article class="question-block"><p class="question-number">Question 60:</p><p class="question-text">Find general solution: $y u_{xy} - u_x = 0$.</p><button onclick="toggleSolution('sol-basic-q60')">Show/Hide Solution</button><div class="solution" id="sol-basic-q60"><p><strong>Solution:</strong></p><p>Let $v=u_x$. PDE becomes $y v_y - v = 0$. Treat as ODE in $y$ for $v$: $v_y - (1/y)v = 0$. Separable: $dv/v = dy/y$. Integrate: $\ln|v|=\ln|y|+f(x)'$. $v = e^{\ln|y|+f(x)'} = y e^{f(x)'} = y f(x)$. So $u_x = y f(x)$. Integrate wrt $x$: $u(x,y) = y \int f(x)dx + g(y) = y F(x) + g(y)$.</p></div></article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

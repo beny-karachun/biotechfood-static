@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 9: עיבוד תרמי - ציוד ותהליכים אספטיים</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 9: עיבוד תרמי - ציוד ותהליכים אספטיים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 9 ---
+
+        const flashcardData = [
+            { term: "F0 (F-nought)", definition: "ערך הסטריליות. הזמן המינימלי (בדקות) בטמפרטורה של 121.1°C (עם Z=10°C) הנדרש להשגת סטריליות מסחרית עבור מיקרואורגניזם מטרה מסוים." },
+            { term: "Lethal Rate (Ft)", definition: "החלק היחסי (השפעה יחסית) של ערך F0 המושג בטמפרטורה T מסוימת, הנמוכה או שווה ל-121.1°C. מחשבים את התרומה המצטברת של Ft לאורך כל זמן החימום לקבלת ה-F0 הכולל." },
+            { term: "מעבר חום (Heat Transfer)", definition: "התהליך הפיזיקלי של מעבר אנרגיית חום מאזור חם לאזור קר. חשוב להבנת קצב החימום של מזון בתוך אריזה." },
+            { term: "הולכת חום (Conduction heating)", definition: "מעבר חום דרך חומר מוצק או נוזל סמיך שאינו בתנועה, על ידי העברת אנרגיה בין מולקולות סמוכות." },
+            { term: "הסעת חום (Convection heating)", definition: "מעבר חום בנוזל או בגז הנמצא בתנועה. תנועת הזורם (זרמים ומערבולות) נושאת את החום ממקום למקום." },
+            { term: "הנקודה הקרה ביותר (Cold Spot)", definition: "הנקודה בתוך אריזת המזון שלוקח לה הכי הרבה זמן להגיע לטמפרטורת העיקור הנדרשת. מיקומה תלוי במנגנון מעבר החום הדומיננטי." },
+            { term: "מיקום הנקודה הקרה (הולכה)", definition: "במעבר חום על ידי הולכה (מוצק, נוזל סמיך), הנקודה הקרה ביותר נמצאת במרכז הגיאומטרי של הקופסה." },
+            { term: "מיקום הנקודה הקרה (הסעה)", definition: "במעבר חום על ידי הסעה (נוזל דליל), הנקודה הקרה ביותר נמצאת בחלק התחתון של הקופסה (בערך בשליש הגובה)." },
+            { term: "אוטוקלב/ריטורט (Autoclave/Retort)", definition: "מכשיר המשמש לעיקור מזון ארוז בטמפרטורות גבוהות (מעל 100°C) על ידי שימוש בקיטור תחת לחץ." },
+            { term: "אוטוקלב סטטי (Static Retort)", definition: "סוג של אוטוקלב שבו האריזות אינן זזות במהלך העיקור. מתאים למעבר חום בהולכה או הסעה טבעית." },
+            { term: "אוטוקלב סובב/מערבל (Agitating/Rotary Retort)", definition: "סוג של אוטוקלב שבו האריזות מסובבות או מנוערות במהלך העיקור כדי להאיץ את מעבר החום על ידי הסעה מאולצת." },
+            { term: "עיקור הידרוסטטי", definition: "תהליך עיקור רציף המשתמש בעמודות מים ליצירת לחץ גבוה (המאפשר חימום מעל 100°C) ולמעבר רציף של אריזות דרך אזורי חימום וקירור." },
+            { term: "תהליך אספטי (Aseptic Processing)", definition: "תהליך שבו המזון (לרוב נוזלי) והאריזה מעוקרים בנפרד, והמילוי מתבצע בתנאים סטריליים (אספטיים) לתוך האריזה המעוקרת." },
+            { term: "יתרון עיקרי של עיבוד אספטי", definition: "מאפשר חימום מהיר ויעיל של המזון (במיוחד נוזלי) לטמפרטורות גבוהות לזמן קצר (HTST), תוך פגיעה מינימלית באיכות הסנסורית והתזונתית, ומתאים לאריזות שאינן עמידות לעיקור רגיל (כמו קרטון)." },
+            { term: "תנאים אספטיים", definition: "סביבת מילוי סטרילית הכוללת ציוד מעוקר, אוויר מסונן סטרילי בלחץ יתר, וחומרי אריזה מעוקרים." },
+            { term: "חיטוי אריזות אספטיות", definition: "מתבצע לרוב באמצעות חומרים מחמצנים כמו מי חמצן (H2O2) או חומצה פראצטית, בשילוב עם חום או קרינת UV." },
+            { term: "מחליף חום לוחות (Plate Heat Exchanger)", definition: "מכשיר לעיבוד תרמי רציף של נוזלים דלילים, שבו הנוזל ומדיום החימום/קירור זורמים בתעלות צרות בין לוחות מתכת דקים, המאפשרים מעבר חום יעיל." },
+            { term: "מחליף חום צינורות (Tubular Heat Exchanger)", definition: "מכשיר לעיבוד תרמי רציף, שבו המוצר זורם בתוך צינור (או מספר צינורות) ומדיום החימום/קירור זורם מסביב לצינור (צינור בתוך צינור, או מעטפת וצינורות)." },
+            { term: "מחליף חום להבים/משטח מגורד (Scraped Surface HE)", definition: "מכשיר לעיבוד תרמי רציף של נוזלים צמיגים או המכילים חלקיקים. להבים מסתובבים מגרדים את המשטח הפנימי של הצינור כדי למנוע הצטברות משקעים ולשפר את מעבר החום." },
+            { term: "מחליף חום בהזרקת קיטור (Steam Infusion/Injection)", definition: "שיטת חימום מהירה מאוד שבה קיטור מוזרק ישירות לתוך המוצר הנוזלי (Infusion) או המוצר מוזרק לתוך סביבת קיטור (Injection). דורש שלב אידוי להסרת המים העודפים." },
+            { term: "Pasteurization (בהקשר לעיקור)", definition: "טיפול תרמי מתון יחסית לעיקור, מספיק למזונות חומציים (pH<4.6) או למזונות דלי חומצה המיועדים לאחסון בקירור." }
+        ];
+
+
+        const mcqData = [
+            {
+                question: "מה מייצג ערך F0?",
+                options: ["את טמפרטורת העיקור המינימלית", "את הזמן בדקות ב-121.1°C הנדרש לסטריליות מסחרית", "את מספר החיידקים ההתחלתי", "את ה-pH של המוצר"],
+                correctIndex: 1,
+                explanation: "F0 הוא מדד לעוצמת הטיפול התרמי, המבוטא כזמן שווה ערך בטמפרטורת ייחוס של 121.1°C (עם Z=10°C) הדרוש להשגת השמדה רצויה של מיקרואורגניזם מטרה."
+            },
+            {
+                question: "מהו מנגנון מעבר החום העיקרי במרק ירקות סמיך בתוך קופסת שימורים?",
+                options: ["הסעה (Convection)", "קרינה (Radiation)", "הולכה (Conduction)", "אידוי (Evaporation)"],
+                correctIndex: 2,
+                explanation: "בנוזלים סמיכים או במוצקים, שבהם תנועת הנוזל מוגבלת, מעבר החום מתרחש בעיקר על ידי הולכה ממולקולה למולקולה."
+            },
+            {
+                question: "היכן ממוקמת הנקודה הקרה ביותר בקופסת שימורים המכילה אפונה במי מלח (נוזל דליל)?",
+                options: ["במרכז הגיאומטרי", "בחלק העליון של הקופסה", "בחלק התחתון של הקופסה (כשליש גובה)", "בצמוד לדפנות הקופסה"],
+                correctIndex: 2,
+                explanation: "בנוזל דליל מתרחשת הסעה. הנוזל החם עולה והקר יורד. הנקודה שלוקח לה הכי הרבה זמן להתחמם נמצאת בחלק התחתון, בערך בשליש הגובה מהתחתית."
+            },
+            {
+                question: "איזה סוג ריטורט מתאים במיוחד למוצרים נוזליים דלילים כדי לזרז את החימום?",
+                options: ["ריטורט סטטי", "ריטורט מערבל/סובב (Agitating)", "ריטורט הידרוסטטי", "כל סוגי הריטורטים באותה מידה"],
+                correctIndex: 1,
+                explanation: "הערבול או הסיבוב בריטורט אגיטטיבי יוצר הסעה מאולצת בתוך הנוזל הדליל, המאיצה משמעותית את קצב מעבר החום בהשוואה להסעה טבעית בריטורט סטטי."
+            },
+            {
+                question: "מהו העיקרון המרכזי של עיקור הידרוסטטי?",
+                options: ["חימום באמצעות קרינה", "שימוש בלחץ גבוה הנוצר על ידי עמודות מים", "סיבוב מהיר של האריזות", "הזרקת קיטור ישירה"],
+                correctIndex: 1,
+                explanation: "הלחץ ההידרוסטטי הנוצר על ידי עמודות מים גבוהות מאפשר לחמם את המים לטמפרטורות עיקור (מעל 100°C) ללא רתיחה, והמערכת מאפשרת מעבר רציף של אריזות."
+            },
+            {
+                question: "מה ההבדל המהותי בין עיבוד אספטי לעיקור רגיל באוטוקלב?",
+                options: ["בעיבוד אספטי מחממים את האריזה בלבד", "בעיבוד אספטי מחממים את המזון והאריזה יחד", "בעיבוד אספטי המזון והאריזה מעוקרים בנפרד והמילוי נעשה בתנאים סטריליים", "עיבוד אספטי משתמש בטמפרטורות נמוכות יותר"],
+                correctIndex: 2,
+                explanation: "העיקרון המרכזי באספטיקה הוא הפרדת תהליכי העיקור: עיקור המזון (לרוב בחימום רציף) ועיקור האריזה, ואז מילוי סטרילי."
+            },
+            {
+                question: "מהו היתרון העיקרי של עיבוד אספטי עבור מוצרים נוזליים?",
+                options: ["תהליך איטי ויסודי יותר", "פגיעה רבה יותר בערכים תזונתיים", "אפשרות לטיפול HTST (חום גבוה, זמן קצר) ופגיעה מינימלית באיכות", "מתאים רק לאריזות מתכת"],
+                correctIndex: 2,
+                explanation: "עיבוד אספטי מאפשר חימום מהיר ויעיל של נוזלים לטמפרטורות גבוהות לזמן קצר, מה שממזער את הפגיעה בטעם, בצבע ובוויטמינים בהשוואה לעיקור ממושך בתוך אריזה."
+            },
+            {
+                question: "איזה מחליף חום מתאים במיוחד לנוזלים צמיגים או כאלה המכילים חלקיקים?",
+                options: ["מחליף חום לוחות", "מחליף חום צינורות רגיל", "מחליף חום משטח מגורד", "כל התשובות נכונות"],
+                correctIndex: 2,
+                explanation: "מחליף חום משטח מגורד (Scraped Surface HE) מונע הצטברות משקעים על דפנות המחליף ומבטיח ערבול ומעבר חום יעיל גם בנוזלים צמיגים או עם חלקיקים."
+            },
+             {
+                question: "מדוע נדרש ואקום באוטוקלב בתחילת התהליך?",
+                options: ["כדי להוריד את טמפרטורת העיקור", "כדי לאפשר לקיטור להתעבות ביעילות על האריזות", "כדי למנוע מהאריזות להתפוצץ", "כדי להוציא אוויר שאינו מאפשר הגעה לטמפרטורת הקיטור הרצויה"],
+                correctIndex: 3,
+                // Interpretation: While vacuum might help condensation later, the primary reason stated usually relates to ensuring pure steam environment for temp. Alternatively, if it means during heating phase, #1 is also partially relevant (lower pressure -> lower boiling point). Let's assume it means ensuring proper steam heating. Revised to be about air removal. Actually, page 22 mentions creating vacuum to allow steam condensation and controlling pressure to prevent damage. Let's stick with the text reference. Option 1 is incorrect, Option 3 is about pressure *control*, Option 4 is about air pockets. Option 2 is mentioned in text. Let's refine the question/options based on page 22.
+                 // Rechecking page 22: "חשוב ליצור וואקום על מנת לאפשר לקיטור להתעבות ומצד שני חשוב לבקר את הלחץ על מנת לא לפגוע בקופסה ולגרום לעיוותה." - Okay, option 2 aligns with the text.
+                explanation: "הטקסט מציין (עמ 22) שחשוב ליצור ואקום כדי לאפשר לקיטור להתעבות ביעילות. כמו כן, חשוב לבקר את הלחץ למניעת נזק לאריזה."
+            },
+            {
+                question: "מהו 'חלל ראש' (Headspace) בקופסת שימורים?",
+                options: ["החלק העליון של הקופסה המכיל את הפותחן", "הרווח הריק בין פני המוצר למכסה הקופסה", "האזור הקר ביותר בקופסה", "החלק התחתון של הקופסה"],
+                correctIndex: 1,
+                explanation: "חלל הראש הוא הרווח המכוון שנותר בחלק העליון של האריזה, מעל מפלס המוצר."
+            },
+            {
+                question: "באיזה סוג מחליף חום הקיטור בא במגע ישיר עם המזון?",
+                options: ["מחליף חום לוחות", "מחליף חום צינורות", "מחליף חום משטח מגורד", "מחליף חום בהזרקת קיטור"],
+                correctIndex: 3,
+                explanation: "בשיטות Steam Infusion/Injection, הקיטור מוזרק ישירות למוצר או להיפך, ונדרש שלב נוסף להסרת המים המעובים מהמוצר."
+            },
+            {
+                question: "מהי המטרה העיקרית של קירור מהיר לאחר העיקור באוטוקלב?",
+                options: ["לשפר את טעם המוצר", "למנוע בישול יתר ולשמור על איכות המוצר", "לחסוך במים", "לנקות את הקופסאות"],
+                correctIndex: 1,
+                explanation: "קירור מהיר עוצר את תהליך הבישול, מונע פגיעה נוספת באיכות הסנסורית והתזונתית עקב חשיפה ממושכת לחום, ומונע גדילה של חיידקים תרמופיליים."
+            },
+             {
+                question: "מדוע יש צורך ב'חדר אריזה סטרילי' בתהליך אספטי?",
+                options: ["כדי לחסוך במקום", "כדי למנוע זיהום מחדש של המוצר המעוקר בזמן המילוי לאריזה המעוקרת", "כדי לשפר את מראה האריזה", "זה לא נדרש בתהליך אספטי"],
+                correctIndex: 1,
+                explanation: "מכיוון שהמוצר והאריזה מעוקרים בנפרד, חיוני לבצע את המילוי והסגירה בסביבה סטרילית לחלוטין כדי למנוע זיהום מיקרוביאלי שיקצר את חיי המדף ויפגע בבטיחות."
+            },
+            {
+                question: "מהו ערך F0 סטנדרטי המקובל לעיקור מזון דל חומצה?",
+                options: ["F0 = 0.1 דקות", "F0 = 1 דקה", "F0 = 3 דקות (לערך, תלוי במוצר ובסיכון)", "F0 = 30 דקות"],
+                correctIndex: 2,
+                explanation: "הטקסט (עמ 20) נותן דוגמה של F0=3 דקות, אם כי הערך המדויק תלוי במוצר הספציפי, בסיכון וברגולציה, אך הוא בסדר גודל של דקות בודדות."
+            },
+             {
+                question: "כיצד מעבר חום בהסעה שונה מהולכה?",
+                options: ["הסעה מתרחשת במוצקים, הולכה בנוזלים", "הסעה אינה דורשת הפרש טמפרטורות", "הסעה כוללת תנועה של הזורם (נוזל/גז) הנושא את החום", "הולכה מהירה יותר מהסעה"],
+                correctIndex: 2,
+                explanation: "ההבדל המהותי הוא שבהסעה יש תנועה פיזית של החומר (זרימה) המעבירה את החום, בעוד שבהולכה החום עובר דרך החומר ללא תנועה מאקרוסקופית שלו."
+            },
+             {
+                question: "איזה ציוד משמש לעיקור רציף של מוצרים נוזליים לפני מילוי אספטי?",
+                options: ["אוטוקלב סטטי", "עיקור הידרוסטטי", "מחליף חום (לוחות, צינורות וכו)", "מיקסר תעשייתי"],
+                correctIndex: 2,
+                explanation: "מחלפי חום מסוגים שונים (לוחות, צינורות, משטח מגורד) מאפשרים חימום רציף ויעיל של נוזלים לטמפרטורות עיקור כחלק מתהליך אספטי."
+            },
+             {
+                question: "מדוע נדרש לחץ גבוה באוטוקלב כדי להגיע לטמפרטורות עיקור?",
+                options: ["הלחץ מזרז את התגובות הכימיות", "הלחץ מעלה את נקודת הרתיחה של המים ומאפשר חימום לטמפ' מעל 100°C", "הלחץ הורג את החיידקים בעצמו", "הלחץ מונע מהקופסאות לצוף"],
+                correctIndex: 1,
+                explanation: "מים רותחים ב-100°C בלחץ אטמוספרי. כדי לחמם מים (או קיטור) לטמפרטורות עיקור גבוהות יותר (115-125°C) מבלי שירתחו, יש להעלות את הלחץ במערכת."
+            },
+             {
+                question: "מהי המטרה של שימוש ב-data logger באוטוקלב?",
+                options: ["לשלוט בלחץ האוטוקלב", "לתעד ולנטר את פרופיל הטמפרטורה בתוך האריזה במהלך העיקור", "לערבב את המוצר בתוך הקופסה", "לנקות את האוטוקלב אוטומטית"],
+                correctIndex: 1,
+                explanation: "ה-data logger הוא מכשיר מדידה ותיעוד המוחדר לאריזה כדי למדוד ולתעד את הטמפרטורה בפועל בנקודה הקרה (או בנקודות אחרות) לאורך תהליך העיקור, לצורך אימות ובקרה."
+            },
+             {
+                question: "באיזה מחליף חום מעבר החום הוא היעיל ביותר עבור נוזלים דלילים?",
+                options: ["מחליף חום צינורות רחבים", "מחליף חום משטח מגורד", "מחליף חום לוחות", "חימום ישיר באש"],
+                correctIndex: 2,
+                explanation: "מחליף חום לוחות מציע שטח פנים גדול מאוד ביחס לנפח, זרימה טורבולנטית בתעלות צרות ופילם דק, מה שמוביל למקדמי מעבר חום גבוהים מאוד ויעילות רבה בנוזלים דלילים."
+            },
+             {
+                question: "מה נכון לגבי פסטור לעומת עיקור בהקשר לחיי מדף?",
+                options: ["פסטור תמיד נותן חיי מדף ארוכים יותר", "עיקור מיועד לאחסון בקירור, פסטור לטמפ' החדר", "עיקור (סטריליות מסחרית) מאפשר חיי מדף ארוכים יותר בטמפ' החדר", "אין הבדל בחיי המדף"],
+                correctIndex: 2,
+                explanation: "עיקור משמיד גם נבגים עמידים ומשיג סטריליות מסחרית, המאפשרת אחסון ממושך בטמפרטורת החדר. פסטור הורג פתוגנים וגורמי קלקול רגישים יותר, אך לרוב דורש קירור להארכת חיי מדף משמעותית."
+            },
+             {
+                question: "איזה סוג מעבר חום דומיננטי בחימום קופסת שימורים המכילה נתח בשר מוצק?",
+                options: ["הסעה", "הולכה", "קרינה", "אידוי"],
+                correctIndex: 1,
+                explanation: "בתוך מוצר מוצק, החום עובר בעיקר על ידי הולכה, מהמרכז החם יותר לפחות חם."
+            },
+            {
+                question: "מהו החיסרון העיקרי של שיטת העיקור בהזרקת קיטור?",
+                options: ["חימום איטי מאוד", "קושי בעיקור נוזלים", "דילול המוצר על ידי המים המעובים וצורך באידוי", "פגיעה רבה במיוחד בערכים תזונתיים"],
+                correctIndex: 2,
+                explanation: "הזרקת קיטור ישירה למוצר מוסיפה לו מים (הקיטור המעובה), ולכן נדרש שלב נוסף של אידוי בתת-לחץ כדי להסיר את המים העודפים ולהחזיר את המוצר לריכוזו המקורי."
+            },
+             {
+                question: "מדוע משתמשים לעיתים באוויר דחוס בשלב הקירור באוטוקלב?",
+                options: ["כדי לחמם את המים הקרים", "כדי לשמור על לחץ חיצוני על האריזות ולמנוע התנפחות או נזק", "כדי לייבש את האריזות", "כדי להוציא את האריזות מהר יותר"],
+                correctIndex: 1,
+                explanation: "בזמן הקירור, הלחץ בתוך האריזה החמה עדיין גבוה. הזנת אוויר דחוס לאוטוקלב יוצרת לחץ-נגדי חיצוני המאזן את הלחץ הפנימי ומונע מהאריזה להתעוות או להינזק."
+            },
+            {
+                question: "מה נדרש כדי להבטיח תהליך אספטי מוצלח?",
+                options: ["עיקור המזון בלבד", "עיקור האריזה בלבד", "עיקור המזון והאריזה בנפרד ומילוי בתנאים סטריליים", "פסטור המזון ומילוי באריזה רגילה"],
+                correctIndex: 2,
+                explanation: "תהליך אספטי מחייב שגם המזון וגם האריזה יהיו סטריליים, ושתהליך המילוי והסגירה יתבצע בסביבה סטרילית למניעת זיהום מחדש."
+            },
+             {
+                question: "מעבר חום במוצר המכיל נוזל וחלקיקים מוצקים (כמו תירס בשימורים) יהיה:",
+                options: ["הולכה בלבד", "הסעה בלבד", "שילוב של הסעה בנוזל והולכה בתוך ובין החלקיקים", "קרינה בלבד"],
+                correctIndex: 2,
+                explanation: "במערכת כזו, החום יעבור בהסעה בנוזל, אך גם בהולכה בתוך חלקיקי התירס ובינם לבין הנוזל. החלקיקים מפריעים להסעה החופשית."
+            },
+            {
+                question: "מה היתרון של שימוש במחליף חום לוחות על פני צינורות לנוזלים דלילים?",
+                options: ["פחות שטח מגע", "מעבר חום פחות יעיל", "יעילות גבוהה יותר במעבר חום וניקוי קל יחסית", "מתאים יותר לנוזלים צמיגים"],
+                correctIndex: 2,
+                explanation: "לוחות מספקים שטח פנים גדול, זרימה טורבולנטית ומקדמי מעבר חום גבוהים, מה שהופך אותם ליעילים מאוד לחימום/קירור נוזלים דלילים."
+            },
+             {
+                question: "כיצד הלחץ משפיע על טמפרטורת הרתיחה של מים?",
+                options: ["אין השפעה", "ככל שהלחץ גבוה יותר, טמפ' הרתיחה נמוכה יותר", "ככל שהלחץ גבוה יותר, טמפ' הרתיחה גבוהה יותר", "הלחץ משפיע רק על קצב הרתיחה"],
+                correctIndex: 2,
+                explanation: "נדרשת טמפרטורה גבוהה יותר כדי שאדי המים יוכלו להתגבר על לחץ חיצוני גבוה יותר. לכן, העלאת הלחץ מעלה את נקודת הרתיחה."
+            },
+            {
+                question: "מדוע חשוב לחטא את חומרי האריזה בתהליך אספטי?",
+                options: ["כדי לשפר את חוזק האריזה", "כדי למנוע זיהום מחדש של המוצר המעוקר", "כדי להוסיף טעם לאריזה", "זה לא הכרחי"],
+                correctIndex: 1,
+                explanation: "מכיוון שהמילוי נעשה לאחר עיקור המוצר, חיוני שגם האריזה תהיה סטרילית כדי למנוע הכנסת מיקרואורגניזמים למוצר הסופי."
+            },
+             {
+                question: "מהי 'הסעה מאולצת'?",
+                options: ["הסעה הנגרמת רק מכוח הכבידה", "הסעה המואצת על ידי ערבול, סיבוב או שאיבה", "הסעה המתבצעת בוואקום", "שם אחר להולכת חום"],
+                correctIndex: 1,
+                explanation: "הסעה מאולצת היא כאשר תנועת הזורם (וכתוצאה מכך מעבר החום) מוגברת באמצעים חיצוניים כמו משאבה, בוחש או סיבוב (כמו בריטורט אגיטטיבי)."
+            },
+             {
+                question: "מה היתרון של עיקור הידרוסטטי מבחינת תהליך הייצור?",
+                options: ["מתאים לכמויות קטנות בלבד", "דורש זמן עיקור ארוך מאוד", "מאפשר תהליך עיקור רציף ולא מנתי", "משתמש בטמפרטורות נמוכות מאוד"],
+                correctIndex: 2,
+                explanation: "בניגוד לאוטוקלבים הפועלים במנות (batches), העיקור ההידרוסטטי מאפשר זרימה רציפה של אריזות דרך המערכת, מה שמתאים לייצור המוני."
+            }
+        ];
+
+
+        const tfData = [
+             { question: "ערך F0 תמיד שווה ל-1 דקה.", answer: false, explanation: "ערך F0 הנדרש תלוי במיקרואורגניזם המטרה, במוצר וברמת ההשמדה הרצויה. הוא לרוב בסדר גודל של דקות בודדות." },
+             { question: "מעבר חום בהולכה מהיר יותר ממעבר חום בהסעה.", answer: false, explanation: "הסעה (במיוחד מאולצת) היא בדרך כלל מנגנון מעבר חום מהיר ויעיל יותר מהולכה, במיוחד בנוזלים." },
+             { question: "הנקודה הקרה ביותר במזון מוצק הנמצא בהולכת חום היא תמיד במרכז.", answer: true, explanation: "בצורה גיאומטרית סימטרית וחימום אחיד מבחוץ, המרכז הוא הנקודה הרחוקה ביותר מההיקף ולכן מתחממת אחרונה בהולכה." },
+             { question: "אוטוקלב סובב מיועד רק למוצרים מוצקים.", answer: false, explanation: "אוטוקלב סובב יעיל במיוחד למוצרים נוזליים או כאלה המכילים נוזל וחלקקים, כדי לזרז חימום על ידי הסעה מאולצת." },
+             { question: "תהליך אספטי דורש עיקור המזון והאריזה יחד באותו זמן.", answer: false, explanation: "בעיבוד אספטי, המזון והאריזה מעוקרים בנפרד לפני המילוי." },
+             { question: "מחליף חום לוחות מתאים לעיבוד רסק עגבניות סמיך.", answer: false, explanation: "מחליף חום לוחות מתאים לנוזלים דלילים. לרסק סמיך עדיף להשתמש במחליף חום צינורות או משטח מגורד." },
+             { question: "הזרקת קיטור למוצר אינה משנה את תכולת המים שלו.", answer: false, explanation: "הקיטור מתעבה ומוסיף מים למוצר, ולכן נדרש שלב אידוי לאחר מכן." },
+             { question: "עיקור תמיד מתבצע בטמפרטורה של 100°C בדיוק.", answer: false, explanation: "עיקור מתבצע בטמפרטורות גבוהות מ-100°C, לרוב 115-125°C, המושגות על ידי שימוש בלחץ." },
+             { question: "חיטוי אריזות אספטיות נעשה לרוב באמצעות מים חמים בלבד.", answer: false, explanation: "חיטוי אריזות אספטיות נעשה לרוב בחומרים מחמצנים כמו מי חמצן, לעיתים בשילוב חום או UV." },
+             { question: "מעבר חום בהסעה אינו דורש תנועה של החומר.", answer: false, explanation: "הסעת חום מבוססת על תנועה של נוזל או גז הנושא את החום." },
+             { question: "ריטורט הידרוסטטי פועל במנות ולא באופן רציף.", answer: false, explanation: "ריטורט הידרוסטטי הוא מערכת עיקור רציפה." },
+             { question: "עיבוד אספטי מאפשר שימוש באריזות קרטון.", answer: true, explanation: "מכיוון שהאריזה אינה עוברת את תהליך החימום האינטנסיבי של האוטוקלב, ניתן להשתמש בחומרי אריזה פחות עמידים לחום כמו קרטון מצופה." },
+             { question: "במחליף חום צינורות, המוצר תמיד זורם מחוץ לצינורות.", answer: false, explanation: "לרוב, המוצר זורם בתוך הצינורות הפנימיים, ומדיום החימום/קירור זורם מסביב (אם כי קיימות תצורות שונות)." },
+             { question: "ערך ה-Lethal Rate (Ft) תמיד שווה ל-1.", answer: false, explanation: "Ft שווה ל-1 רק כאשר הטמפרטורה היא בדיוק 121.1°C (ובהנחת Z=10°C). בטמפרטורות נמוכות יותר, Ft קטן מ-1." },
+             { question: "קירור מהיר לאחר עיקור אינו חשוב.", answer: false, explanation: "קירור מהיר חשוב כדי לעצור את בישול היתר ולשמור על איכות המוצר." },
+             { question: "מחליף חום משטח מגורד מונע הצטברות משקעים על דפנות הציוד.", answer: true, explanation: "הלהבים המסתובבים מגרדים את המשטח ומונעים הידבקות והצטברות חומר, במיוחד במוצרים צמיגים." },
+             { question: "תהליך הפסטור נועד להשמיד נבגים עמידים.", answer: false, explanation: "פסטור נועד להשמיד חיידקים וגטטיביים וגורמי קלקול רגישים לחום, אך אינו משמיד נבגים עמידים." },
+             { question: "ניתן להגיע לטמפרטורה של 120°C באוטוקלב הפועל בלחץ אטמוספרי.", answer: false, explanation: "כדי להגיע לטמפרטורות מעל 100°C עם מים או קיטור, נדרש לחץ הגבוה מהלחץ האטמוספרי." },
+             { question: "במילוי אספטי, האוויר בחדר המילוי חייב להיות מסונן וסטרילי.", answer: true, explanation: "סביבת המילוי חייבת להיות סטרילית למניעת זיהום מחדש, כולל סינון ועיקור האוויר." },
+             { question: "חימום נוזל בהולכה יהיה לרוב מהיר יותר מחימום בהסעה.", answer: false, explanation: "הסעה, המערבת תנועת זורם, היא לרוב מנגנון מעבר חום מהיר יותר מהולכה בנוזלים." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעבדה אינטראקטיבית: השחמה לא אנזימטית</title>
+    <style>
+        body {
+            font-family: "Assistant", "Alef", "Open Sans Hebrew", sans-serif;
+            line-height: 1.8;
+            background-color: #333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: #444; /* Slightly lighter than body for contrast */
+            padding: 25px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        
+        .course-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3D90D7;
+            margin-bottom: 25px;
+        }
+
+        .course-header h1 {
+            font-size: 2.2em;
+            color: #3D90D7;
+            margin-bottom: 5px;
+        }
+
+        .course-header p {
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        h2 {
+            color: #3D90D7;
+            border-bottom: 1px solid #555;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #87CEEB; /* Lighter blue for subheadings */
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: disc; /* Default disc, will be on the right in RTL */
+            padding-right: 20px; /* Standard padding for RTL lists */
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .safety-warning {
+            background-color: #F44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .question-area {
+            background-color: #555; /* Darker container for questions */
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #E0E0E0;
+        }
+
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #666;
+            color: #E0E0E0;
+            border: 1px solid #777;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .options button:hover:not([disabled]) {
+            background-color: #777;
+            border-color: #888;
+        }
+        
+        .options button.selected {
+            background-color: #3D90D7;
+            color: white;
+            border-color: #3D90D7;
+        }
+
+        .options button.correct {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #307533;
+        }
+
+        .options button.incorrect {
+            background-color: #F44336;
+            color: white;
+            border-color: #b02c23;
+        }
+        
+        .options button[disabled] {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1.1em;
+        }
+
+        .feedback.correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .feedback.incorrect {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #404040;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 1em;
+        }
+        
+        .navigation-controls, .utility-controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navigation-controls button, .utility-controls button {
+            padding: 10px 20px;
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .navigation-controls button:hover, .utility-controls button:hover {
+            background-color: #2a7cb8;
+        }
+        
+        .navigation-controls button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        #question-counter {
+            font-size: 1em;
+            color: #ccc;
+        }
+        
+        .all-questions-container {
+            margin-top: 20px;
+            background-color: #4a4a4a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .all-questions-container .question-item {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+        .all-questions-container .question-item p {
+            margin: 5px 0;
+        }
+        .all-questions-container .correct-answer-display {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* MathJax specific styling */
+        mjx-container {
+            display: inline-block !important; /* Ensure it flows with text */
+            margin: 0 0.2em; /* Add slight horizontal spacing */
+            vertical-align: middle; /* Align better with surrounding text */
+        }
+
+        /* Ensure English text within primarily Hebrew paragraphs is LTR */
+        .ltr-text {
+            direction: ltr;
+            display: inline-block; /* Helps with layout sometimes */
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            .course-header h1 {
+                font-size: 1.8em;
+            }
+            .question-text {
+                font-size: 1.1em;
+            }
+            .options button {
+                font-size: 1em;
+                padding: 10px;
+            }
+            .navigation-controls, .utility-controls {
+                flex-direction: column;
+            }
+            .navigation-controls button, .utility-controls button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #question-counter {
+                margin-bottom: 10px;
+            }
+        }
+
+    </style>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          },
+          startup: {
+            ready: () => {
+              MathJax.startup.defaultReady();
+              // Custom ready signal or function call if needed after initial typeset
+            }
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="course-header">
+            
+            <h1>גורמים המשפיעים על השחמה לא אנזימטית</h1>
+            <p>עודכן $08.07.2024$‏ </p>
+        </header>
+
+        <section id="lab-overview">
+            <h2>סקירת המעבדה</h2>
+            <div class="safety-warning">
+                לפני המעבדה: יש לקרוא בקפידה את דפי ה‏ <span class="ltr-text">MSDS</span>‏ של כל החומרים אשר ישמשו אותך במעבדה!
+            </div>
+
+            <h3>עקרון הניסוי</h3>
+            <p>ריאקציות השחמה מתרחשות לעתים קרובות בזמן עיבוד ואחסון מזונות ומרכיבי מזון שונים. ריאקציות אלו משופעלות על ידי אנזימים ו/או על ידי חום. בתרגיל זה נבדוק השחמה לא אנזימטית (ריאקצית <span class="ltr-text">Maillard</span>‏) במערכות מודל המורכבות מסוכרים וחומצות אמינו. השלב ההתחלתי של הריאקציה הוא קישור בין הקבוצות הקרבוניליות (של הסוכר) והאמיניות (של חומצת האמינו). בשלב מאוחר יותר נוצרים מלנואידים בעלי משקל מולקולרי גבוה, המקנים צבע שחום לתערובת. הגורמים המשפיעים על קצב ההשחמה הם הטמפרטורה, ריכוז הסוכר, סוג הסוכר וה‏-$pH$. בניסוי זה תיבדק השפעת סוג הסוכר וריכוזו על מידת ההשחמה באופן כמותי.</p>
+
+            <h3>חומרים וציוד</h3>
+            <ul>
+                <li>בופר סורנסון $pH 8$.</li>
+                <li>תמיסת גליצין $0.1 M$‏ בבופר סורנסון $pH 8$.</li>
+                <li>תמיסת פרוקטוז בריכוז $0.25 M$‏ בתוך בופר סורנסון $pH 8$.</li>
+                <li>תמיסת לקטוז בריכוז $0.25 M$‏ בתוך בופר סורנסון $pH 8$.</li>
+                <li>תמיסת סוכרוז בריכוז $0.25 M$‏ בתוך בופר סורנסון $pH 8$.</li>
+                <li>אמבט מים רותחים ($100^{\circ}C$).</li>
+            </ul>
+
+            <h3>מהלך העבודה: אינדוקציה של השחמה לא אנזימטית</h3>
+            <h4>א. הכנת מיהולים של תמיסות הסוכרים</h4>
+            <p>יש למהול כל אחד מהסוכרים שנתקבלו (פרוקטוז, לקטוז וסוכרוז), אשר ריכוזם ההתחלתי הוא $0.25 M$, על מנת לקבל שתי תמיסות נוספות מכל סוכר בריכוזים של $0.125 M$‏ ו‏-$0.0625 M$. כל מיהול יבוצע לנפח סופי של $5 mL$. המיהול יתבצע באמצעות בופר סורנסון $pH 8$. בסך הכל יוכנו $6$‏ מבחנות של סוכרים מדוללים (שתי מבחנות מיהול לכל אחד משלושת סוגי הסוכרים).</p>
+            
+            <h4>ב. הכנת מערכי הריאקציה</h4>
+            <p>יש להכין $10$‏ מבחנות זכוכית חד פעמיות באופן הבא:</p>
+            <ul>
+                <li>לכל $10$‏ המבחנות (פרט למבחנת הבלאנק), יש להוסיף $2.5 mL$‏ של תמיסת גליצין $0.1 M$.</li>
+                <li><strong>מבחנת בלאנק (ביקורת):</strong> יש להוסיף $2.5 mL$‏ של בופר סורנסון $pH 8$. יש לערבב היטב (באמצעות וורטקס).</li>
+                <li><strong>מבחנות פרוקטוז ($3$‏ מבחנות):</strong> לכל אחת משלוש מבחנות המיועדות לפרוקטוז (שכבר מכילות גליצין), יש להוסיף $2.5 mL$‏ של תמיסת פרוקטוז באחד מהריכוזים הבאים: הריכוז המקורי ($0.25 M$), הריכוז המדולל הראשון ($0.125 M$), או הריכוז המדולל השני ($0.0625 M$). יש לערבב היטב (וורטקס) לאחר כל הוספה.</li>
+                <li><strong>מבחנות לקטוז ($3$‏ מבחנות):</strong> באופן דומה, יש להוסיף $2.5 mL$‏ של תמיסות לקטוז בריכוזים השונים (מקורי ושני המיהולים) לשלוש מבחנות המכילות גליצין. יש לערבב היטב (וורטקס).</li>
+                <li><strong>מבחנות סוכרוז ($3$‏ מבחנות):</strong> באופן דומה, יש להוסיף $2.5 mL$‏ של תמיסות סוכרוז בריכוזים השונים (מקורי ושני המיהולים) לשלוש מבחנות המכילות גליצין. יש לערבב היטב (וורטקס).</li>
+            </ul>
+            <p>סה"כ יהיו $10$‏ מבחנות: $1$‏ בלאנק, $3$‏ לפרוקטוז, $3$‏ ללקטוז, ו‏-$3$‏ לסוכרוז.</p>
+
+            <h4>ג. אינקובציה ומדידה</h4>
+            <p>יש להניח את כל המבחנות באמבט מים רותחים ($100^{\circ}C$). יש לעקוב במשך $20$‏ דקות אחר סדר התפתחות הצבע במבחנות (סדר המגיבים). לאחר מכן, יש לקרר את המבחנות על השולחן במשך $10$‏ דקות. לבסוף, יש לקרוא את הבליעה (אבסורבנציה) באורך גל של $420 nm$.</p>
+
+            <h3>פינוי פסולת</h3>
+            <p>יש לפנות את המבחנות לכלי המיועד לפסולת השחמה.</p>
+        </section>
+
+        <section id="interactive-quiz" class="question-area" aria-live="polite">
+            <h2>שאלות לתרגול</h2>
+            <div id="question-container">
+                <p id="question-text" class="question-text"></p>
+                <div id="options-container" class="options"></div>
+                <div id="feedback-container" class="feedback"></div>
+                <div id="explanation-container" class="explanation" style="display: none;"></div>
+            </div>
+            <div class="navigation-controls" role="navigation">
+                <button id="prev-btn">הקודם</button>
+                <span id="question-counter"></span>
+                <button id="next-btn">הבא</button>
+            </div>
+             <div class="utility-controls">
+                <button id="view-all-btn">הצג את כל השאלות והתשובות</button>
+            </div>
+            <div id="all-questions-summary" class="all-questions-container" style="display: none;">
+                <h3>סיכום כל השאלות והתשובות</h3>
+                <div id="all-questions-content"></div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>© קורס מעבדה אינטראקטיבי, הטכניון $2024$.</p>
+    </footer>
+
+    <script>
+        const questions = [
+            // General & Safety
+            {
+                question: "מהי התגובה העיקרית הנחקרת במעבדה זו?",
+                type: "mcq",
+                options: ["תסיסה כהלית", "ריאקצית מילארד (השחמה לא אנזימטית)", "הידרוליזה של עמילן", "סינתזת חלבונים"],
+                answer: 1,
+                explanation: "המעבדה בודקת השחמה לא אנזימטית, הידועה גם כריאקצית מילארד, במערכות מודל של סוכרים וחומצות אמינו."
+            },
+            {
+                question: "איזה אמצעי בטיחות חשוב יש לנקוט לפני תחילת העבודה עם החומרים במעבדה?",
+                type: "mcq",
+                options: ["לבישת כפפות בלבד", "קריאת דפי <span class='ltr-text'>MSDS</span>‏ של כל החומרים", "הרכבת משקפי מגן בלבד", "עבודה מתחת למנדף כימי"],
+                answer: 1,
+                explanation: "ההנחיה הראשונה והחשובה ביותר היא לקרוא בעיון את דפי ה‏-<span class='ltr-text'>MSDS</span> (<span class='ltr-text'>Material Safety Data Sheets</span>‏) של כל החומרים."
+            },
+            {
+                question: "אילו גורמים יכולים לשפעל (להפעיל) ריאקציות השחמה במזון?",
+                type: "mcq",
+                options: ["אור וחמצן בלבד", "אנזימים ו/או חום", "לחץ גבוה בלבד", "קרינת <span class='ltr-text'>UV</span>‏ בלבד"],
+                answer: 1,
+                explanation: "ריאקציות השחמה משופעלות על ידי אנזימים (השחמה אנזימטית) ו/או על ידי חום (השחמה לא אנזימטית, כמו ריאקצית מילארד)."
+            },
+            {
+                question: "אילו מהבאים אינו גורם המשפיע על קצב ההשחמה הלא אנזימטית לפי עקרון הניסוי?",
+                type: "mcq",
+                options: ["טמפרטורה", "ריכוז הסוכר", "סוג הסוכר", "נוכחות אנזימים"],
+                answer: 3,
+                explanation: "הגורמים המשפיעים על קצב ההשחמה הלא אנזימטית הם טמפרטורה, ריכוז סוכר, סוג סוכר, ו‏-$pH$. נוכחות אנזימים קשורה להשחמה אנזימטית."
+            },
+            {
+                question: "מהי מטרת הניסוי העיקרית כפי שמתוארת בעקרון הניסוי?",
+                type: "mcq",
+                options: ["לבדוק את השפעת ה‏-$pH$‏ על יציבות חלבונים", "לבדוק את השפעת סוג הסוכר וריכוזו על מידת ההשחמה", "לזהות את סוגי המלנואידים הנוצרים", "למדוד את קצב פעילות אנזים ספציפי"],
+                answer: 1,
+                explanation: "בניסוי זה תיבדק השפעת סוג הסוכר וריכוזו על מידת ההשחמה באופן כמותי."
+            },
+             // Materials
+            {
+                question: "מהו ה‏-$pH$‏ של בופר סורנסון המשמש בניסוי?",
+                type: "mcq",
+                options: ["$pH 6$", "$pH 7$", "$pH 8$", "$pH 9$"],
+                answer: 2,
+                explanation: "נעשה שימוש בבופר סורנסון $pH 8$."
+            },
+            {
+                question: "מהו ריכוז תמיסת הגליצין הניתנת לשימוש?",
+                type: "mcq",
+                options: ["$0.05 M$", "$0.1 M$", "$0.25 M$", "$1 M$"],
+                answer: 1,
+                explanation: "ריכוז תמיסת הגליצין הוא $0.1 M$‏ בבופר סורנסון $pH 8$."
+            },
+            {
+                question: "מהו הריכוז ההתחלתי של תמיסות הפרוקטוז, הלקטוז והסוכרוז הניתנות?",
+                type: "mcq",
+                options: ["$0.1 M$", "$0.125 M$", "$0.25 M$", "$0.5 M$"],
+                answer: 2,
+                explanation: "תמיסות הפרוקטוז, הלקטוז והסוכרוז ניתנות בריכוז התחלתי של $0.25 M$‏ כל אחת."
+            },
+            {
+                question: "מהי הטמפרטורה של אמבט המים הרותחים המשמש בניסוי?",
+                type: "mcq",
+                options: ["$80^{\\circ}C$", "$90^{\\circ}C$", "$100^{\\circ}C$", "$120^{\\circ}C$"],
+                answer: 2,
+                explanation: "אמבט המים הרותחים הוא בטמפרטורה של $100^{\\circ}C$."
+            },
+            {
+                question: "תמיסת הגליצין מוכנה בתוך איזה ממס/בופר?",
+                type: "mcq",
+                options: ["מים מזוקקים", "תמיסת סוכרוז", "בופר סורנסון $pH 8$", "אתנול"],
+                answer: 2,
+                explanation: "תמיסת הגליצין $0.1 M$‏ מוכנה בבופר סורנסון $pH 8$."
+            },
+             // Procedure - Part A: Sugar Dilutions
+            {
+                question: "אילו סוכרים יש למהול במסגרת חלק א' של הניסוי?",
+                type: "mcq",
+                options: ["גלוקוז, פרוקטוז, מלטוז", "פרוקטוז, לקטוז, סוכרוז", "גלקטוז, מנוז, סוכרוז", "רק פרוקטוז"],
+                answer: 1,
+                explanation: "יש למהול את הסוכרים פרוקטוז, לקטוז וסוכרוז."
+            },
+            {
+                question: "מהם ריכוזי היעד אליהם יש למהול את תמיסות הסוכרים?",
+                type: "mcq",
+                options: ["$0.1 M$‏ ו‏-$0.05 M$", "$0.125 M$‏ ו‏-$0.0625 M$", "$0.2 M$‏ ו‏-$0.1 M$", "$0.5 M$‏ ו‏-$0.25 M$"],
+                answer: 1,
+                explanation: "יש למהול את הסוכרים לריכוזים של $0.125 M$‏ ו‏-$0.0625 M$."
+            },
+            {
+                question: "מהו הנפח הסופי של כל תמיסת סוכר מדוללת המוכנה בחלק א'?",
+                type: "mcq",
+                options: ["$1 mL$", "$2.5 mL$", "$5 mL$", "$10 mL$"],
+                answer: 2,
+                explanation: "כל מיהול יבוצע לנפח סופי של $5 mL$."
+            },
+            {
+                question: "במה משתמשים לביצוע המיהולים של תמיסות הסוכרים?",
+                type: "mcq",
+                options: ["מים מזוקקים", "תמיסת גליצין", "בופר סורנסון $pH 8$", "תמיסת <span class='ltr-text'>NaCl</span>"],
+                answer: 2,
+                explanation: "המיהול יתבצע באמצעות בופר סורנסון $pH 8$."
+            },
+            {
+                question: "כמה מבחנות של סוכרים מדוללים יוכנו בסך הכל בחלק א'?",
+                type: "mcq",
+                options: ["$3$‏ מבחנות", "$6$‏ מבחנות", "$9$‏ מבחנות", "$12$‏ מבחנות"],
+                answer: 1,
+                explanation: "יוכנו $2$‏ מיהולים לכל אחד מ‏-$3$‏ סוגי הסוכרים, כלומר סך הכל $6$‏ מבחנות של סוכרים מדוללים."
+            },
+            // Procedure - Part B: Reaction Setup
+            {
+                question: "כמה מבחנות זכוכית חד פעמיות יש להכין בסך הכל עבור מערכי הריאקציה (כולל בלאנק)?",
+                type: "mcq",
+                options: ["$6$", "$9$", "$10$", "$12$"],
+                answer: 2,
+                explanation: "יש להכין $10$‏ מבחנות זכוכית חד פעמיות בסך הכל."
+            },
+            {
+                question: "מהו הנפח של תמיסת גליצין שיש להוסיף לכל מבחנת ריאקציה (לא כולל הבלאנק)?",
+                type: "mcq",
+                options: ["$1 mL$", "$2 mL$", "$2.5 mL$", "$5 mL$"],
+                answer: 2,
+                explanation: "יש להוסיף $2.5 mL$‏ של תמיסת גליצין לכל מבחנה המיועדת לריאקציה."
+            },
+            {
+                question: "מה מכילה מבחנת הבלאנק?",
+                type: "mcq",
+                options: ["$2.5 mL$‏ מים מזוקקים", "$2.5 mL$‏ תמיסת גליצין", "$2.5 mL$‏ בופר סורנסון $pH 8$", "$2.5 mL$‏ תמיסת סוכרוז"],
+                answer: 2,
+                explanation: "מבחנת הבלאנק מכילה $2.5 mL$‏ של בופר סורנסון $pH 8$."
+            },
+            {
+                question: "מהו הנפח של תמיסת סוכר (למשל, פרוקטוז) שמוסיפים לכל מבחנת ריאקציה מתאימה?",
+                type: "mcq",
+                options: ["$1 mL$", "$2.5 mL$", "$5 mL$", "$0.1 mL$"],
+                answer: 1,
+                explanation: "מוסיפים $2.5 mL$‏ מכל אחת מתמיסות הסוכרים (בריכוזים השונים) למבחנות המתאימות."
+            },
+            {
+                question: "כמה ריכוזים שונים של כל סוג סוכר (פרוקטוז, לקטוז, סוכרוז) נבדקים בניסוי?",
+                type: "mcq",
+                options: ["$1$", "$2$", "$3$", "$4$"],
+                answer: 2,
+                explanation: "לכל סוג סוכר נבדקים שלושה ריכוזים: הריכוז המקורי ($0.25 M$) ושני הריכוזים שהוכנו במיהול ($0.125 M$‏ ו‏-$0.0625 M$)."
+            },
+            {
+                question: "כמה מבחנות ריאקציה מוקדשות לבדיקת תמיסות פרוקטוז השונות?",
+                type: "mcq",
+                options: ["$1$‏ מבחנה", "$2$‏ מבחנות", "$3$‏ מבחנות", "$6$‏ מבחנות"],
+                answer: 2,
+                explanation: "מוקדשות $3$‏ מבחנות לבדיקת שלושת ריכוזי הפרוקטוז השונים (אחת לכל ריכוז)."
+            },
+            {
+                question: "לאחר הוספת כל המרכיבים למבחנה (למשל, גליצין וסוכר), איזו פעולה יש לבצע?",
+                type: "mcq",
+                options: ["לחמם מיד", "לקרר בקרח", "לערבב היטב (וורטקס)", "להוסיף אינדיקטור"],
+                answer: 2,
+                explanation: "לאחר הוספת המרכיבים, יש לערבב היטב כל מבחנה באמצעות וורטקס."
+            },
+             {
+                question: "הניסוי מציין הוספת תמיסות סוכר 'במונופליקט'. מה משמעות הדבר?",
+                type: "tf",
+                options: ["יש לבצע כל ריכוז סוכר בשלוש חזרות (טריפליקט).", "יש לבצע כל ריכוז סוכר בחזרה אחת בלבד."],
+                answer: true, // True if second option selected. The question structure means the answer is 'true' for the correct interpretation.
+                explanation: "במונופליקט משמעו שכל ריכוז של כל סוכר נבדק במבחנה אחת בלבד (חזרה יחידה)."
+            },
+            // Procedure - Incubation & Measurement
+            {
+                question: "באיזו טמפרטורה מתבצעת האינקובציה של המבחנות?",
+                type: "mcq",
+                options: ["$37^{\\circ}C$", "$60^{\\circ}C$", "$100^{\\circ}C$", "$25^{\\circ}C$ (טמפרטורת החדר)"],
+                answer: 2,
+                explanation: "האינקובציה מתבצעת באמבט מים רותחים, כלומר $100^{\\circ}C$."
+            },
+            {
+                question: "מהו משך זמן האינקובציה באמבט המים הרותחים?",
+                type: "mcq",
+                options: ["$5$‏ דקות", "$10$‏ דקות", "$20$‏ דקות", "$60$‏ דקות"],
+                answer: 2,
+                explanation: "האינקובציה נמשכת $20$‏ דקות."
+            },
+            {
+                question: "מה יש לעקוב אחריו במהלך $20$‏ דקות האינקובציה?",
+                type: "mcq",
+                options: ["שינויי $pH$", "סדר התפתחות הצבע במבחנות", "שקיעת משקעים", "פליטת גזים"],
+                answer: 1,
+                explanation: "במהלך האינקובציה, יש לעקוב אחר סדר המגיבים, כלומר התפתחות הצבע השחום במבחנות השונות."
+            },
+            {
+                question: "לאחר האינקובציה באמבט המים, מהו השלב הבא לפני מדידת הבליעה?",
+                type: "mcq",
+                options: ["הוספת חומצה לעצירת התגובה", "קירור המבחנות על השולחן", "סינון התמיסות", "ניעור נוסף בוורטקס"],
+                answer: 1,
+                explanation: "לאחר האינקובציה, יש לקרר את המבחנות על השולחן במשך $10$‏ דקות."
+            },
+            {
+                question: "באיזה אורך גל יש לקרוא את הבליעה (אבסורבנציה) של התמיסות?",
+                type: "mcq",
+                options: ["$280 nm$", "$340 nm$", "$420 nm$", "$595 nm$"],
+                answer: 2,
+                explanation: "יש לקרוא את הבליעה באורך גל של $420 nm$."
+            },
+            {
+                question: "האם יש לקרר את המבחנות לאחר הוצאתן מאמבט המים הרותחים ולפני הקריאה?",
+                type: "tf",
+                options: ["כן, יש לקרר על השולחן למשך $10$‏ דקות.", "לא, יש לקרוא מיד כשהן חמות."],
+                answer: true, // True if first option selected
+                explanation: "כן, הפרוטוקול מציין קירור על השולחן במשך $10$‏ דקות לפני קריאת הבליעה."
+            },
+            // Waste Disposal
+            {
+                question: "כיצד יש לפנות את הפסולת (המבחנות עם התמיסות) בסיום הניסוי?",
+                type: "mcq",
+                options: ["לשפוך לכיור עם הרבה מים", "לזרוק לפח האשפה הרגיל", "לפנות לכלי המיועד לפסולת השחמה", "לאטוקלב ולאחר מכן לכיור"],
+                answer: 2,
+                explanation: "יש לפנות את המבחנות לכלי המיועד לפסולת השחמה."
+            },
+            {
+                question: "האם מותר לשפוך את תכולת המבחנות לכיור בסיום הניסוי?",
+                type: "tf",
+                options: ["כן, אם מדללים עם הרבה מים.", "לא, יש לפנות לכלי ייעודי לפסולת השחמה."],
+                answer: false, // False if first option selected
+                explanation: "לא, אין לשפוך את הפסולת לכיור. יש להשליך אותה לכלי המיועד לפסולת השחמה."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let questionsAttempted = new Array(questions.length).fill(false);
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackContainerEl = document.getElementById('feedback-container');
+        const explanationContainerEl = document.getElementById('explanation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounterEl = document.getElementById('question-counter');
+        const viewAllBtn = document.getElementById('view-all-btn');
+        const allQuestionsSummaryEl = document.getElementById('all-questions-summary');
+        const allQuestionsContentEl = document.getElementById('all-questions-content');
+
+        function displayQuestion(index) {
+            const question = questions[index];
+            questionTextEl.innerHTML = question.question; // innerHTML used because questions can contain HTML (e.g. <span> for LTR)
+            optionsContainerEl.innerHTML = '';
+            feedbackContainerEl.innerHTML = '';
+            feedbackContainerEl.className = 'feedback'; // Reset class
+            explanationContainerEl.style.display = 'none';
+            explanationContainerEl.innerHTML = '';
+
+            question.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; // innerHTML for MathJax and spans
+                button.addEventListener('click', () => handleOptionClick(index, i));
+                
+                if (questionsAttempted[index]) {
+                    button.disabled = true;
+                    if (question.type === "mcq") {
+                        if (i === question.answer) button.classList.add('correct');
+                        if (userAnswers[index] === i && i !== question.answer) button.classList.add('incorrect');
+                        if (userAnswers[index] === i) button.classList.add('selected');
+                    } else { // tf
+                         // For T/F, the "answer" is true if the second option is correct.
+                         // So option 0 is "correct" if question.answer is false.
+                         // And option 1 is "correct" if question.answer is true.
+                        if ((i === 0 && !question.answer) || (i === 1 && question.answer)) {
+                            button.classList.add('correct');
+                        }
+                        if (userAnswers[index] === i && ((i===0 && question.answer) || (i===1 && !question.answer)) ) {
+                             button.classList.add('incorrect');
+                        }
+                         if (userAnswers[index] === i) button.classList.add('selected');
+                    }
+                }
+                optionsContainerEl.appendChild(button);
+            });
+
+            if (questionsAttempted[index]) {
+                showFeedback(index, userAnswers[index]);
+            }
+            
+            updateNavigationButtons();
+            updateQuestionCounter();
+            
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([questionTextEl, optionsContainerEl, explanationContainerEl]).catch(err => console.error('MathJax typesetting error:', err));
+            }
+        }
+
+        function handleOptionClick(questionIndex, optionIndex) {
+            if (questionsAttempted[questionIndex]) return;
+
+            userAnswers[questionIndex] = optionIndex;
+            questionsAttempted[questionIndex] = true;
+            
+            const buttons = optionsContainerEl.getElementsByTagName('button');
+            for (let btn of buttons) {
+                btn.disabled = true;
+            }
+            buttons[optionIndex].classList.add('selected');
+
+            showFeedback(questionIndex, optionIndex);
+            displayQuestion(questionIndex); // Re-display to show correct/incorrect states and disable all buttons
+        }
+
+        function showFeedback(qIndex, selectedOptIndex) {
+            const question = questions[qIndex];
+            let isCorrect;
+
+            if (question.type === "mcq") {
+                isCorrect = (selectedOptIndex === question.answer);
+            } else { // tf
+                // optionIndex 0 means user selected the first statement.
+                // question.answer is true if the second statement is the correct one.
+                // So, if user selected option 0 (first statement), it's correct if question.answer is false.
+                // If user selected option 1 (second statement), it's correct if question.answer is true.
+                isCorrect = (selectedOptIndex === 0 && !question.answer) || (selectedOptIndex === 1 && question.answer);
+            }
+
+            feedbackContainerEl.style.display = 'block';
+            if (isCorrect) {
+                feedbackContainerEl.textContent = 'נכון!';
+                feedbackContainerEl.className = 'feedback correct';
+            } else {
+                feedbackContainerEl.textContent = 'לא נכון.';
+                feedbackContainerEl.className = 'feedback incorrect';
+            }
+            
+            explanationContainerEl.innerHTML = question.explanation; // innerHTML for MathJax etc.
+            explanationContainerEl.style.display = 'block';
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([explanationContainerEl, feedbackContainerEl]).catch(err => console.error('MathJax typesetting error in feedback:', err));
+            }
+        }
+
+        function updateNavigationButtons() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+        }
+
+        function updateQuestionCounter() {
+            questionCounterEl.textContent = `שאלה ${currentQuestionIndex + 1} מתוך ${questions.length}`;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+        
+        viewAllBtn.addEventListener('click', () => {
+            if (allQuestionsSummaryEl.style.display === 'none') {
+                renderAllQuestionsSummary();
+                allQuestionsSummaryEl.style.display = 'block';
+                viewAllBtn.textContent = 'הסתר את כל השאלות והתשובות';
+            } else {
+                allQuestionsSummaryEl.style.display = 'none';
+                viewAllBtn.textContent = 'הצג את כל השאלות והתשובות';
+            }
+        });
+
+        function renderAllQuestionsSummary() {
+            allQuestionsContentEl.innerHTML = '';
+            questions.forEach((q, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('question-item');
+                
+                const qText = document.createElement('p');
+                qText.innerHTML = `<strong>שאלה ${index + 1}:</strong> ${q.question}`;
+                itemDiv.appendChild(qText);
+
+                const ul = document.createElement('ul');
+                q.options.forEach((opt, i) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = opt;
+                    if (q.type === "mcq") {
+                        if (i === q.answer) {
+                            li.classList.add('correct-answer-display');
+                            li.innerHTML += " (תשובה נכונה)";
+                        }
+                    } else { // tf
+                        if ((i === 0 && !q.answer) || (i === 1 && q.answer)) {
+                             li.classList.add('correct-answer-display');
+                             li.innerHTML += " (תשובה נכונה)";
+                        }
+                    }
+                    ul.appendChild(li);
+                });
+                itemDiv.appendChild(ul);
+
+                const explanation = document.createElement('p');
+                explanation.innerHTML = `<em>הסבר:</em> ${q.explanation}`;
+                itemDiv.appendChild(explanation);
+                
+                allQuestionsContentEl.appendChild(itemDiv);
+            });
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                 MathJax.typesetPromise([allQuestionsContentEl]).catch(err => console.error('MathJax typesetting error in summary:', err));
+            }
+        }
+
+        // Initial display
+        document.addEventListener('DOMContentLoaded', () => {
+             // Wait for MathJax to be ready before initial display
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => {
+                    console.log('MathJax is ready. Displaying first question.');
+                    displayQuestion(currentQuestionIndex);
+                }).catch(err => console.error('MathJax startup error:', err));
+            } else {
+                // Fallback if MathJax is not immediately available (should not happen with async script)
+                console.warn('MathJax not fully ready on DOMContentLoaded, attempting to display question anyway.');
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Laplace Eq. Properties</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Properties of Laplace's Equation</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p>This section covers fundamental properties of solutions to Laplace's Equation $\Delta u = u_{xx} + u_{yy} = 0$ (in 2D) or $\Delta u = u_{xx} + u_{yy} + u_{zz} = 0$ (in 3D). Solutions to Laplace's equation are called **harmonic functions**.</p>
+            <p>Let $D$ be a bounded domain in $\mathbb{R}^2$ or $\mathbb{R}^3$ with a piecewise smooth boundary $\partial D$. Let $\mathbf{n}$ be the outward unit normal vector on $\partial D$, and let $\frac{\partial u}{\partial n} = \nabla u \cdot \mathbf{n}$ be the normal derivative.</p>
+
+            <h3>Green's Identities</h3>
+            <p>These identities are derived from the Divergence Theorem and relate volume integrals involving Laplacians to boundary integrals involving normal derivatives.</p>
+            <ul>
+                <li><strong>Green's First Identity:</strong> For functions $u, v$ with sufficient smoothness:
+                    $$ \iiint_D (u \Delta v + \nabla u \cdot \nabla v) \, dV = \iint_{\partial D} u \frac{\partial v}{\partial n} \, dS $$
+                    (In 2D, use $\iint_D$ and $\oint_{\partial D}$).
+                    <p><em>Interpretation: Relates the integral of $u \Delta v$ over the domain to boundary information and the integral of the dot product of the gradients.</em></p>
+                </li>
+                <li><strong>Green's Second Identity:</strong> For functions $u, v$ with sufficient smoothness:
+                    $$ \iiint_D (u \Delta v - v \Delta u) \, dV = \iint_{\partial D} \left( u \frac{\partial v}{\partial n} - v \frac{\partial u}{\partial n} \right) \, dS $$
+                     (In 2D, use $\iint_D$ and $\oint_{\partial D}$).
+                     <p><em>Interpretation: Relates the difference between $u \Delta v$ and $v \Delta u$ over the domain solely to boundary information. If $u$ and $v$ are harmonic ($\Delta u = 0, \Delta v = 0$), the left side is zero.</em></p>
+                </li>
+                <li><strong>Important Consequence:</strong> If $u$ is harmonic ($\Delta u = 0$) in $D$, setting $v=1$ in Green's First Identity gives:
+                    $$ \iiint_D (\nabla u \cdot \nabla 1) \, dV = \iint_{\partial D} u \frac{\partial 1}{\partial n} \, dS \implies \iiint_D 0 \, dV = \iint_{\partial D} u \cdot 0 \, dS $$
+                    $$ \implies \iiint_D u \Delta 1 \, dV = \iint_{\partial D} u \frac{\partial 1}{\partial n} \, dS $$
+                    Setting $v=1$ in Green's Second Identity gives (if $\Delta u = 0$):
+                    $$ \iiint_D (u \cdot 0 - 1 \cdot 0) \, dV = \iint_{\partial D} \left( u \cdot 0 - 1 \frac{\partial u}{\partial n} \right) \, dS $$
+                    $$ 0 = -\iint_{\partial D} \frac{\partial u}{\partial n} \, dS \implies \iint_{\partial D} \frac{\partial u}{\partial n} \, dS = 0 $$
+                    <em>Interpretation: The total flux of a harmonic function across a closed boundary is zero. This leads to compatibility conditions for Neumann problems.</em>
+                </li>
+            </ul>
+
+             <h3>Mean Value Property</h3>
+             <p>If $u$ is harmonic in a domain $D$, then for any ball (or disk in 2D) $B_R(P)$ centered at $P$ such that $\bar{B}_R(P) \subset D$, the value of $u$ at the center $P$ is the average of its values on the boundary sphere (or circle) $\partial B_R(P)$.</p>
+             $$ u(P) = \frac{1}{|\partial B_R(P)|} \iint_{\partial B_R(P)} u \, dS \quad (\text{or } \oint \text{ in 2D}) $$
+             <p>It also equals the average over the volume (or area):</p>
+             $$ u(P) = \frac{1}{|B_R(P)|} \iiint_{B_R(P)} u \, dV \quad (\text{or } \iint \text{ in 2D}) $$
+
+            <h3>Maximum and Minimum Principles</h3>
+             <p>Let $u(x,y)$ be a harmonic function in a bounded domain $D$, continuous on the closure $\bar{D}$.</p>
+             <ul>
+                 <li><strong>Weak Maximum/Minimum Principle:</strong> The maximum and minimum values of $u$ on $\bar{D}$ are attained on the boundary $\partial D$.</li>
+                 <li><strong>Strong Maximum/Minimum Principle:</strong> If $D$ is connected, then unless $u$ is constant, $u$ attains its maximum and minimum values *only* on the boundary $\partial D$. An interior point cannot be a strict local maximum or minimum unless $u$ is constant.</li>
+             </ul>
+
+            <h3>Uniqueness of Dirichlet Problem (Recap)</h3>
+            <p>The maximum principle directly proves the uniqueness of the solution to the Dirichlet problem for Laplace's equation ($\Delta u = F$ in $D$, $u = g$ on $\partial D$) on a bounded domain.</p>
+            <p>If $u_1, u_2$ are solutions, $w = u_1 - u_2$ satisfies $\Delta w = 0$ in $D$ and $w = 0$ on $\partial D$. By the Weak Maximum/Minimum Principle, the max and min of $w$ are 0 (on the boundary). Thus $w=0$ everywhere, and $u_1=u_2$.</p>
+
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+             <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">State Green's First Identity in 2D.</p>
+                <button onclick="toggleSolution('sol-lp-prop-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-prop-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $D$ be a bounded domain in $\mathbb{R}^2$ with piecewise smooth boundary $\partial D$. For smooth functions $u, v$:</p>
+                     $$ \iint_D (u \Delta v + \nabla u \cdot \nabla v) \, dA = \oint_{\partial D} u \frac{\partial v}{\partial n} \, ds $$
+                     <p>where $\Delta v = v_{xx}+v_{yy}$ and $\frac{\partial v}{\partial n} = \nabla v \cdot \mathbf{n}$.</p>
+                 </div>
+             </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">State Green's Second Identity in 2D.</p>
+                <button onclick="toggleSolution('sol-lp-prop-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-prop-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $D$ be a bounded domain in $\mathbb{R}^2$ with piecewise smooth boundary $\partial D$. For smooth functions $u, v$:</p>
+                      $$ \iint_D (u \Delta v - v \Delta u) \, dA = \oint_{\partial D} \left( u \frac{\partial v}{\partial n} - v \frac{\partial u}{\partial n} \right) \, ds $$
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">If $u$ is harmonic in $D$ ($\Delta u = 0$), what does Green's Second Identity simplify to if we choose $v=1$?</p>
+                <button onclick="toggleSolution('sol-lp-prop-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-prop-q3">
+                     <p><strong>Solution:</strong></p>
+                     <p>If $\Delta u = 0$ and $v=1$ (so $\Delta v = 0$ and $\frac{\partial v}{\partial n} = 0$), Green's Second Identity becomes:</p>
+                     $$ \iint_D (u \cdot 0 - 1 \cdot 0) \, dA = \oint_{\partial D} \left( u \cdot 0 - 1 \frac{\partial u}{\partial n} \right) \, ds $$
+                     $$ 0 = \oint_{\partial D} \left( - \frac{\partial u}{\partial n} \right) \, ds $$
+                     $$ \implies \oint_{\partial D} \frac{\partial u}{\partial n} \, ds = 0 $$
+                     <p>The total flux across the boundary is zero.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">If $u$ is harmonic in the disk $x^2+y^2 < 9$ and $u(0,0)=7$. What is the average value of $u$ on the circle $x^2+y^2=1$?</p>
+                <button onclick="toggleSolution('sol-lp-prop-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-lp-prop-q4">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Mean Value Property, the value at the center $(0,0)$ is equal to the average value on any circle centered at $(0,0)$ that lies within the domain of harmonicity.</p>
+                     <p>The circle $x^2+y^2=1$ ($R=1$) is centered at $(0,0)$ and lies within the disk $x^2+y^2 < 9$.</p>
+                     <p>Therefore, the average value of $u$ on this circle is equal to $u(0,0)$, which is 7.</p>
+                     <p>Average value $= \frac{1}{2\pi(1)} \oint_{r=1} u \, ds = u(0,0) = 7$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Let $u$ solve $u_{xx}+u_{yy}=0$ in $D=(0,1)\times(0,1)$. If $u=3$ on $x=0$, $u=5$ on $x=1$, $u=2$ on $y=0$, and $u=4$ on $y=1$. What are the absolute minimum and maximum values of $u$ in the closed square $\bar{D}$?</p>
+                 <button onclick="toggleSolution('sol-lp-prop-q5')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-prop-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Weak Maximum/Minimum Principle, the maximum and minimum values of the harmonic function $u$ must occur on the boundary $\partial D$.</p>
+                     <p>The values on the boundary range from 2 to 5.</p>
+                     <p>Therefore, the absolute minimum value of $u$ in $\bar{D}$ is 2.</p>
+                     <p>The absolute maximum value of $u$ in $\bar{D}$ is 5.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">If $u$ is harmonic and non-constant in a connected bounded domain $D$, can $u(x,y) > \max_{\partial D} u$ for some point $(x,y)$ inside $D$?</p>
+                 <button onclick="toggleSolution('sol-lp-prop-q6')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-prop-q6">
+                     <p><strong>Solution:</strong></p>
+                     <p>No. The Weak Maximum Principle states that $\max_{\bar{D}} u = \max_{\partial D} u$. This means no value inside $D$ can be strictly greater than the maximum value on the boundary.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Use Green's second identity to show that if $\Delta u = 0$ in $D$ and $u=0$ on $\partial D$, then $\iiint_D |\nabla u|^2 dV = 0$.</p>
+                 <button onclick="toggleSolution('sol-lp-prop-q7')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-prop-q7">
+                     <p><strong>Solution:</strong></p>
+                     <p>Use Green's First Identity: $\iiint_D (v \Delta u + \nabla v \cdot \nabla u) dV = \iint_{\partial D} v \frac{\partial u}{\partial n} dS$.</p>
+                     <p>Let $v=u$. Then $\iiint_D (u \Delta u + \nabla u \cdot \nabla u) dV = \iint_{\partial D} u \frac{\partial u}{\partial n} dS$.</p>
+                     <p>We are given $\Delta u = 0$ in $D$, so $u \Delta u = 0$.</p>
+                     <p>We are given $u=0$ on $\partial D$.</p>
+                     <p>The identity becomes: $\iiint_D (0 + |\nabla u|^2) dV = \iint_{\partial D} 0 \cdot \frac{\partial u}{\partial n} dS$.</p>
+                     <p>Thus, $\iiint_D |\nabla u|^2 dV = 0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">What does the result of Q7 imply about the function $u$ if $u=0$ on the boundary?</p>
+                 <button onclick="toggleSolution('sol-lp-prop-q8')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-prop-q8">
+                     <p><strong>Solution:</strong></p>
+                     <p>We found $\iiint_D |\nabla u|^2 dV = 0$.</p>
+                     <p>Since $|\nabla u|^2 = u_x^2 + u_y^2 + u_z^2$ is non-negative, its integral can only be zero if the integrand itself is zero everywhere in $D$.</p>
+                     <p>So, $|\nabla u|^2 = 0$, which means $\nabla u = \vec{0}$. This implies $u_x=0, u_y=0, u_z=0$ everywhere in $D$.</p>
+                     <p>Therefore, $u(x,y,z)$ must be a constant in $D$.</p>
+                     <p>Since $u=0$ on the boundary $\partial D$ and $u$ is continuous, the constant must be 0.</p>
+                     <p>So, $u(x,y,z) = 0$ everywhere in $D$. (This is another way to see uniqueness for the Dirichlet problem with zero boundary data).</p>
+                 </div>
+             </article>
+
+              <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">If $u$ is harmonic in the disk $r<1$ and $u(1,\theta) = 3+2\cos\theta - \sin(2\theta)$. Find $u(0,0)$.</p>
+                 <button onclick="toggleSolution('sol-lp-q9')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q9">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Mean Value Property, $u(0,0)$ is the average value on the boundary $r=1$.</p>
+                     <p>$u(0,0) = \frac{1}{2\pi} \int_0^{2\pi} (3+2\cos\theta - \sin(2\theta)) d\theta$.</p>
+                     <p>The integral of $\cos\theta$ and $\sin(2\theta)$ over a full period $[0, 2\pi]$ is zero.</p>
+                     <p>$u(0,0) = \frac{1}{2\pi} \int_0^{2\pi} 3 d\theta = \frac{1}{2\pi} [3\theta]_0^{2\pi} = \frac{1}{2\pi} (6\pi) = 3$.</p>
+                     <p>(Alternatively, $A_0/2$ is the constant term in the Fourier series of the boundary data, which is 3).</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">True or False: If $u$ is harmonic in a bounded domain $D$, then $u$ must be constant.</p>
+                 <button onclick="toggleSolution('sol-lp-q10')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-lp-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>False. For example, $u(x,y)=x$ is harmonic ($u_{xx}+u_{yy}=0+0=0$) but is not constant. The maximum/minimum principles only state that *if* a non-constant harmonic function exists, its extrema occur on the boundary.</p>
+                 </div>
+             </article>
+
+             <!-- Questions 11-20 -->
+             <article class="question-block"><p class="question-number">Question 11:</p><p class="question-text">If $u$ is harmonic in $D$ and $\frac{\partial u}{\partial n}=0$ on $\partial D$. What can you conclude about $u$?</p><button onclick="toggleSolution('sol-lp-prop-q11')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q11"><p><strong>Solution:</strong></p><p>Use Green's First Identity with $v=u$: $\iiint_D (u \Delta u + |\nabla u|^2) dV = \iint_{\partial D} u \frac{\partial u}{\partial n} dS$. Since $\Delta u = 0$ and $\frac{\partial u}{\partial n} = 0$, this becomes $\iiint_D |\nabla u|^2 dV = 0$. This implies $\nabla u = \vec{0}$ inside $D$. Therefore, $u$ must be constant in $D$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 12:</p><p class="question-text">Let $u$ solve $u_{xx}+u_{yy}=0$ in the square $(0,\pi)\times(0,\pi)$ with $u=0$ on three sides and $u=\sin(x)$ on the side $y=\pi$. Where does $u$ attain its maximum and minimum?</p><button onclick="toggleSolution('sol-lp-prop-q12')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q12"><p><strong>Solution:</strong></p><p>By the Maximum/Minimum Principle, the max and min occur on the boundary. The boundary values are 0 (on three sides) and $\sin(x)$ for $x\in[0,\pi]$ (on the top). The maximum value of $\sin(x)$ on $[0,\pi]$ is 1 (at $x=\pi/2$). The minimum value is 0. Therefore, the maximum of $u$ is 1 (attained at $(\pi/2, \pi)$) and the minimum is 0 (attained on the other three sides).</p></div></article>
+             <article class="question-block"><p class="question-number">Question 13:</p><p class="question-text">Is $u(x,y) = e^x \sin(y)$ harmonic?</p><button onclick="toggleSolution('sol-lp-prop-q13')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q13"><p><strong>Solution:</strong></p><p>$u_x=e^x \sin y$, $u_{xx}=e^x \sin y$. $u_y=e^x \cos y$, $u_{yy}=-e^x \sin y$. $u_{xx}+u_{yy} = e^x \sin y - e^x \sin y = 0$. Yes, it is harmonic.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 14:</p><p class="question-text">If $u(x,y)=e^x \sin(y)$ solves Laplace's equation in the disk $x^2+y^2<1$. Find $u(0,0)$ using the Mean Value Property.</p><button onclick="toggleSolution('sol-lp-prop-q14')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q14"><p><strong>Solution:</strong></p><p>$u(0,0) = \frac{1}{2\pi}\int_0^{2\pi} u(\cos\theta, \sin\theta) d\theta = \frac{1}{2\pi}\int_0^{2\pi} e^{\cos\theta}\sin(\sin\theta) d\theta$. This integral is hard to evaluate directly. However, we know $u(x,y)=e^x \sin y$ satisfies $u(0,0)=e^0\sin 0 = 0$. By the Mean Value Property, the integral must equal $u(0,0)$, so the integral value is 0.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 15:</p><p class="question-text">If $u_1, u_2$ are harmonic in $D$, is $u_1 u_2$ also harmonic?</p><button onclick="toggleSolution('sol-lp-prop-q15')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q15"><p><strong>Solution:</strong></p><p>Not necessarily. Let $u=u_1 u_2$. $u_x = (u_1)_x u_2 + u_1 (u_2)_x$. $u_{xx} = (u_1)_{xx} u_2 + 2(u_1)_x (u_2)_x + u_1 (u_2)_{xx}$. Similarly $u_{yy} = (u_1)_{yy} u_2 + 2(u_1)_y (u_2)_y + u_1 (u_2)_{yy}$. $\Delta u = (\Delta u_1) u_2 + u_1 (\Delta u_2) + 2(\nabla u_1 \cdot \nabla u_2) = 0 + 0 + 2(\nabla u_1 \cdot \nabla u_2)$. This is only zero if $\nabla u_1 \cdot \nabla u_2 = 0$ or if $u_1$ or $u_2$ is constant. Example: $u_1=x, u_2=y$ are harmonic. $u=xy$. $\Delta u = 0+0=0$. Example: $u_1=x, u_2=x$. $u=x^2$. $\Delta u = 2+0=2 \neq 0$. So, False in general.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 16:</p><p class="question-text">If $u$ is harmonic in a domain $D$. Can the set $\{ (x,y) \in D \mid u(x,y)=0 \}$ contain an open disk within $D$, assuming $u$ is not identically zero?</p><button onclick="toggleSolution('sol-lp-prop-q16')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q16"><p><strong>Solution:</strong></p><p>No. If $u=0$ on an open disk, then all its partial derivatives are also zero there. Harmonic functions are analytic (infinitely differentiable and equal to their Taylor series). If an analytic function is zero on an open set, it must be identically zero throughout its connected domain of definition. Since we assumed $u$ is not identically zero, it cannot be zero on an open disk.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 17:</p><p class="question-text">Use Green's 2nd Identity to show that if $\Delta u = \lambda u$ and $\Delta v = \mu v$ in $D$, with $u=0, v=0$ on $\partial D$, then $\int_D uv dV = 0$ if $\lambda \neq \mu$.</p><button onclick="toggleSolution('sol-lp-prop-q17')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q17"><p><strong>Solution:</strong></p><p>Green's 2nd: $\iiint_D (u\Delta v - v\Delta u)dV = \iint_{\partial D}(u\frac{\partial v}{\partial n}-v\frac{\partial u}{\partial n})dS$. Substitute $\Delta v = \mu v$ and $\Delta u = \lambda u$. The boundary integral is zero because $u=0, v=0$ on $\partial D$. So $\iiint_D (u(\mu v) - v(\lambda u))dV = 0$. $\iiint_D (\mu - \lambda) uv dV = 0$. Since $\mu \neq \lambda$, $(\mu-\lambda)\neq 0$. Therefore, we must have $\iiint_D uv dV = 0$. This shows orthogonality of eigenfunctions of the Laplacian with Dirichlet BCs.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 18:</p><p class="question-text">If $u$ is harmonic in the unit disk and $u(1,\theta) = 2+3\sin\theta$. Find the maximum value of $u$.</p><button onclick="toggleSolution('sol-lp-prop-q18')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q18"><p><strong>Solution:</strong></p><p>Max occurs on boundary $r=1$. Max value of $f(\theta)=2+3\sin\theta$ occurs when $\sin\theta=1$ (at $\theta=\pi/2$). Max value is $2+3(1)=5$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 19:</p><p class="question-text">Find the minimum value of $u$ in Q18.</p><button onclick="toggleSolution('sol-lp-prop-q19')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q19"><p><strong>Solution:</strong></p><p>Min occurs on boundary $r=1$. Min value of $f(\theta)=2+3\sin\theta$ occurs when $\sin\theta=-1$ (at $\theta=3\pi/2$). Min value is $2+3(-1)=-1$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 20:</p><p class="question-text">Find the value $u(0,0)$ for the problem in Q18.</p><button onclick="toggleSolution('sol-lp-prop-q20')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q20"><p><strong>Solution:</strong></p><p>$u(0,0) = \text{Average value} = \frac{1}{2\pi}\int_0^{2\pi} (2+3\sin\theta) d\theta = \frac{1}{2\pi}[2\theta - 3\cos\theta]_0^{2\pi} = \frac{1}{2\pi}[(4\pi-3)-(0-3)] = \frac{4\pi}{2\pi} = 2$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 21:</p><p class="question-text">True or False: The uniqueness proof for the heat equation used the fact that the energy was conserved.</p><button onclick="toggleSolution('sol-lp-prop-q21')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q21"><p><strong>Solution:</strong></p><p>False. The energy $E(t)=\frac{1}{2}\int w^2 dx$ was shown to be non-increasing ($E'(t)\le 0$). Conservation ($E'(t)=0$) is typical for the wave equation.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 22:</p><p class="question-text">If $u$ is harmonic and $u=0$ on the boundary of a bounded domain $D$, what is $u$ in $D$?</p><button onclick="toggleSolution('sol-lp-prop-q22')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q22"><p><strong>Solution:</strong></p><p>By the Weak Maximum/Minimum Principle, the max and min values are 0 (attained on the boundary). Therefore $0 \le u(x,y) \le 0$ inside $D$, which means $u(x,y)=0$ everywhere in $D$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 23:</p><p class="question-text">If $u$ is harmonic in the region $x^2+y^2 > 1$ (exterior of unit disk) and $u \to 5$ as $r \to \infty$, and $u=0$ on $r=1$. Can you use the standard maximum principle?</p><button onclick="toggleSolution('sol-lp-prop-q23')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q23"><p><strong>Solution:</strong></p><p>No. The standard maximum/minimum principles apply to *bounded* domains. The exterior of a disk is unbounded. Special versions exist for exterior domains, often requiring conditions on the behavior at infinity.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 24:</p><p class="question-text">Let $u$ be harmonic in a disk $B_R(0)$. If $\int_0^{2\pi} u(R,\theta) d\theta = 0$, what is $u(0,0)$?</p><button onclick="toggleSolution('sol-lp-prop-q24')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q24"><p><strong>Solution:</strong></p><p>By the Mean Value Property, $u(0,0) = \frac{1}{2\pi}\int_0^{2\pi} u(R,\theta) d\theta$. Since the integral is given as 0, $u(0,0)=0$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 25:</p><p class="question-text">What is $\oint_{\partial D} \frac{\partial u}{\partial n} ds$ if $\Delta u = 5$ in $D$?</p><button onclick="toggleSolution('sol-lp-prop-q25')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q25"><p><strong>Solution:</strong></p><p>Use Green's second identity with $v=1$: $\iint_D (u \Delta 1 - 1 \Delta u) dA = \oint_{\partial D} (u \frac{\partial 1}{\partial n} - 1 \frac{\partial u}{\partial n}) ds$.</p><p>$\iint_D (0 - \Delta u) dA = \oint_{\partial D} (0 - \frac{\partial u}{\partial n}) ds$.</p><p>$\iint_D (-5) dA = -\oint_{\partial D} \frac{\partial u}{\partial n} ds$.</p><p>$\oint_{\partial D} \frac{\partial u}{\partial n} ds = 5 \iint_D dA = 5 \times (\text{Area of D})$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 26:</p><p class="question-text">If $u$ is harmonic in $D$ and $v$ is harmonic in $D$, is $u+v$ harmonic in $D$?</p><button onclick="toggleSolution('sol-lp-prop-q26')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q26"><p><strong>Solution:</strong></p><p>Yes. $\Delta(u+v) = \Delta u + \Delta v = 0 + 0 = 0$. This shows Laplace's equation is linear and homogeneous.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 27:</p><p class="question-text">Consider $u_{xx}+u_{yy}=0$ in $D$ with $u=g$ on $\partial D$. If $g \ge 0$ everywhere on $\partial D$, can $u(x,y)=-1$ at some point inside $D$?</p><button onclick="toggleSolution('sol-lp-prop-q27')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q27"><p><strong>Solution:</strong></p><p>No. By the Weak Minimum Principle, the minimum value of $u$ occurs on the boundary. Since $g\ge 0$ on the boundary, the minimum value is $\ge 0$. Therefore $u(x,y) \ge 0$ everywhere inside $D$. It cannot be -1.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 28:</p><p class="question-text">State the Strong Maximum Principle.</p><button onclick="toggleSolution('sol-lp-prop-q28')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q28"><p><strong>Solution:</strong></p><p>If $u$ is a non-constant harmonic function in a connected bounded domain $D$, continuous on $\bar{D}$, then $u$ attains its maximum and minimum values *only* on the boundary $\partial D$.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 29:</p><p class="question-text">If $u$ is harmonic in the unit disk $r<1$ and $u(r,\theta)=r^2\cos(2\theta)$. Does this violate the maximum principle?</p><button onclick="toggleSolution('sol-lp-prop-q29')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q29"><p><strong>Solution:</strong></p><p>Let's check if $u=r^2\cos(2\theta)$ is harmonic. In Cartesian, $u = r^2(\cos^2\theta-\sin^2\theta) = (r\cos\theta)^2-(r\sin\theta)^2 = x^2-y^2$. $u_{xx}=2, u_{yy}=-2$. $u_{xx}+u_{yy}=2-2=0$. Yes, it is harmonic.</p><p>On the boundary $r=1$, $u=\cos(2\theta)$. The max value on boundary is 1 (at $\theta=0, \pi$). The min value is -1 (at $\theta=\pi/2, 3\pi/2$). Inside the disk, for $r<1$, $|u|=|r^2\cos(2\theta)| \le r^2 < 1$. The maximum (1) and minimum (-1) are only attained on the boundary. This is consistent with the Maximum/Minimum Principles.</p></div></article>
+             <article class="question-block"><p class="question-number">Question 30:</p><p class="question-text">What is the key difference between the Weak and Strong Maximum Principles?</p><button onclick="toggleSolution('sol-lp-prop-q30')">Show/Hide Solution</button><div class="solution" id="sol-lp-prop-q30"><p><strong>Solution:</strong></p><p>The Weak Maximum Principle states that the maximum value *is attained* on the boundary (it could potentially also be attained inside). The Strong Maximum Principle states that, unless the function is constant, the maximum value is attained *only* on the boundary and *never* at an interior point.</p></div></article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

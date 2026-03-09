@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 1: מבוא לטכנולוגיה של מזון</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 1: מבוא לטכנולוגיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 1 ---
+
+        const flashcardData = [
+            { term: "טכנולוגיה של מזון", definition: "תחום מדעי ומקצועי העוסק בהכנה, עיבוד, שימור, אריזה, אחסנה, הפצה וצריכה של מזון, תוך עמידה בדרישות בטיחות, תזונה, תקנות, וצרכי הצרכן." },
+            { term: "מדעי המזון", definition: "התחום המקצועי המשתמש בביולוגיה, מדעי הטבע והנדסה לחקר תכונות המזון, סיבות לירידה באיכותו, ועקרונות עיבוד מזון." },
+            { term: "Farm to Fork", definition: "מסלול החיים המלא של המוצר, 'מהשדה לצלחת', המתאר את כל השלבים מגידול חומר הגלם ועד צריכתו." },
+            { term: "IFT", definition: "Institute of Food Technologists - ארגון מקצועי בינלאומי בתחום טכנולוגיה ומדעי המזון." },
+            { term: "יתרונות מזון מעובד", definition: "בטיחות, טעם, איכות, תחרותיות, מגוון, זמינות, חיסכון בזמן, נוחות, התאמה לצרכים תזונתיים." },
+            { term: "שלבי הכנה ראשוניים (תעשייה)", definition: "קניית חומרי גלם מהמגדלים, בחירת זנים, דרישות קטיף והובלה, תנאי אחסון מוגדרים, בחירת חומרי גלם לפי תכונות רצויות למוצר." },
+            { term: "שלבי עיבוד וייצור (תעשייה)", definition: "סילוק גופים זרים, רחיצה, הקטנת עומס מיקרוביאלי, שימור בחומרי חיטוי מותרים, שמירה על איכות, אריזה (הגנה פיזית, חיי מדף, הגנה סביבתית, שיווק, שקיפות מידע, תקנים)." },
+            { term: "שלבי שיווק ומכירה (תעשייה)", definition: "אחסנה, הובלה ומכירה בתנאים מוגדרים, חיי מדף, הוראות שימוש, שביעות רצון צרכן, ניתוח תלונות." },
+            { term: "תעשיית המזון הישראלית", definition: "מעסיקה כ-60 אלף איש (42 אלף בפריפריה), מהווה 17% מהמועסקים בתעשייה, המעסיק השלישי בגודלו בתעשייה, משקיעה במכונות וחדשנות." },
+            { term: "דינמיות שוק המזון הישראלי", definition: "כ-3,000 מוצרים חדשים מושקים בשנה וכ-3,000 יורדים מהמדף." },
+            { term: "אתגרי תעשיית המזון", definition: "איכות, חדשנות, קירבה לצרכן (אמון, שקיפות, אחריות), רגולציה גוברת, יעילות מול מחירים עולים, אקולוגיה ואיכות הסביבה." },
+            { term: "רגולציה בתעשיית המזון", definition: "תקנות וחוקים מחייבים הנוגעים לבטיחות, הרכב, סימון, שימור ואריזה של מזון (למשל שימוש בחומרי חיטוי מותרים, חוק האריזות)." },
+            { term: "מרקם של בשר (טכנולוגיה)", definition: "דוגמה לתחום בטכנולוגיית מזון המשלב ביולוגיה, פיזיולוגיה וחושים לבחינת תכונות פיזיקליות של מזון." },
+            { term: "הרכב מזונות (טכנולוגיה)", definition: "תחום המשלב כימיה וביוכימיה לחקר המרכיבים הכימיים של המזון ותכונותיהם הפונקציונליות." },
+            { term: "בטיחות מזון (טכנולוגיה)", definition: "תחום המשלב מיקרוביולוגיה לחקר תהליכי קלקול מזון ומניעתם, והבטחת המזון לצריכה." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי ההגדרה המדויקת ביותר ל'טכנולוגיה של מזון' לפי ה-IFT?",
+                options: [
+                    "יישום של ביולוגיה וכימיה לשיפור טעם המזון בלבד.",
+                    "תחום מדעי ומקצועי העוסק בכל שלבי שרשרת המזון תוך עמידה בדרישות שונות.",
+                    "הנדסת מכונות לייצור מזון בכמויות גדולות.",
+                    "בישול גורמה במסעדות יוקרה."
+                ],
+                correctIndex: 1,
+                explanation: "ההגדרה המלאה כוללת את כל השלבים מהכנה ועד צריכה, תוך התייחסות לבטיחות, תזונה, תקנות וצרכי הצרכן."
+            },
+            {
+                question: "מה מייצג המושג 'Farm to Fork'?",
+                options: [
+                    "שיטת בישול ספציפית.",
+                    "סוג של דשן אורגני.",
+                    "מסלול החיים המלא של מוצר מזון מהגידול ועד הצריכה.",
+                    "תוכנית ממשלתית לסבסוד חקלאים."
+                ],
+                correctIndex: 2,
+                explanation: "המושג מתאר את כל הדרך שהמזון עובר מהשדה (Farm) ועד שהוא מגיע לצרכן (Fork)."
+            },
+             {
+                question: "איזה תחום מדעי אינו משולב ישירות ב'מדעי המזון' לפי הטקסט?",
+                options: [
+                    "ביולוגיה",
+                    "הנדסה",
+                    "אסטרופיזיקה",
+                    "מדעי הטבע (כגון כימיה)"
+                ],
+                correctIndex: 2,
+                explanation: "מדעי המזון משלבים ביולוגיה, הנדסה ומדעי הטבע לחקר המזון. אסטרופיזיקה אינה קשורה ישירות לתחום זה."
+            },
+             {
+                question: "מהו אחד היתרונות המרכזיים של מזון מעובד המוזכר בטקסט?",
+                options: [
+                    "תמיד מכיל פחות קלוריות ממזון טרי.",
+                    "מגדיל את המגוון והזמינות של מזונות לאורך כל השנה.",
+                    "דורש פחות אנרגיה לייצור מאשר גידול חקלאי.",
+                    "מיוצר תמיד ללא חומרים משמרים."
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין שמזון מעובד מאפשר מגוון רחב וזמינות של מוצרים, כולל מזונות עונתיים, לאורך כל השנה."
+            },
+            {
+                question: "לפי הנתונים הסטטיסטיים, מה מאפיין את תעשיית המזון הישראלית?",
+                options: [
+                    "מעסיקה בעיקר במרכז הארץ.",
+                    "מהווה אחוז זניח מהתעסוקה בתעשייה.",
+                    "היא המעסיק השלישי בגודלו בתעשייה, עם דגש על הפריפריה.",
+                    "אינה משקיעה בחדשנות טכנולוגית."
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שתעשיית המזון היא המעסיק השלישי בגודלו, עם 17% מהמועסקים בתעשייה, כאשר 42 אלף מתוך 60 אלף מועסקים נמצאים בפריפריה."
+            },
+            {
+                question: "איזה מהבאים מהווה הבדל מרכזי בין הכנת סלט במטבח לבין ייצורו בתעשייה?",
+                options: [
+                    "בתעשייה לא שוטפים את הירקות.",
+                    "במטבח הביתי משתמשים רק בירקות אורגניים.",
+                    "בתעשייה יש תהליכי בקרת איכות, שימור ואריזה מורכבים.",
+                    "במטבח הביתי לא מתבלים את הסלט."
+                ],
+                correctIndex: 2,
+                explanation: "הטבלה מדגימה שבתעשייה קיימים שלבים נוספים ומורכבים כמו סילוק גופים זרים, הקטנת עומס מיקרוביאלי, שימור בחומרי חיטוי, אריזה מגינה, ועמידה בתקנים, שאינם קיימים באותה צורה במטבח הביתי."
+            },
+            {
+                question: "מהי אחת המטרות העיקריות של שלב האריזה בתעשיית המזון?",
+                options: [
+                    "להקטין את כמות המזון באריזה.",
+                    "להגן על המוצר פיזית ולהאריך את חיי המדף שלו.",
+                    "לייקר את המוצר הסופי.",
+                    "להסתיר מידע על הרכיבים מהצרכן."
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין שאריזה מספקת הגנה פיזית, מאריכה חיי מדף, מגינה מפני השפעות סביבה, ועונה על צרכים שיווקיים ושקיפות מידע."
+            },
+             {
+                question: "איזה מהבאים הוא אתגר מרכזי העומד בפני תעשיית המזון, לפי הטקסט?",
+                options: [
+                    "ירידה בדרישה למזון בעולם.",
+                    "רגולציה גוברת ותקנות מחמירות.",
+                    "עודף כוח אדם זול.",
+                    "חוסר בטכנולוגיות חדשות."
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מפרט 'רגולציה גוברת' כאחד האתגרים המשמעותיים של תעשיית המזון."
+            },
+             {
+                question: "איזה תחום משלב מיקרוביולוגיה במסגרת טכנולוגיית המזון?",
+                options: [
+                    "חקר מרקם הבשר.",
+                    "ניתוח צבעי מאכל.",
+                    "תהליכי תסיסה ובטיחות מזון.",
+                    "אופטיקה של מזון."
+                ],
+                correctIndex: 2,
+                explanation: "הטבלה בסוף עמוד 2 מציינת שמיקרוביולוגיה קשורה לתהליכי תסיסה, קלקול מזון ובטיחות מזון בטכנולוגיית המזון."
+            },
+             {
+                question: "מה המשמעות של 'שקיפות המידע על המוצר' בהקשר של אריזה?",
+                options: [
+                    "האריזה צריכה להיות שקופה פיזית.",
+                    "המידע על הרכיבים והערכים התזונתיים צריך להיות ברור ונגיש לצרכן.",
+                    "המחיר צריך להיות מודפס בצורה בולטת.",
+                    "המתכון לייצור המוצר צריך להיות גלוי."
+                ],
+                correctIndex: 1,
+                explanation: "שקיפות מידע בהקשר זה מתייחסת לחובת פירוט הרכיבים, ערכים תזונתיים, הוראות שימוש וכדומה על גבי האריזה עבור הצרכן."
+            },
+            {
+                question: "מה ההבדל העיקרי בין 'טכנולוגיה של מזון' ל'מדעי המזון'?",
+                options: [
+                    "אין הבדל, אלו מונחים נרדפים.",
+                    "טכנולוגיה מתמקדת ביישום וייצור, מדעי המזון מתמקדים במחקר בסיסי.",
+                    "מדעי המזון עוסקים רק בכימיה, טכנולוגיה עוסקת רק בהנדסה.",
+                    "טכנולוגיה עוסקת בבישול ביתי, מדעי המזון בתעשייה."
+                ],
+                correctIndex: 1,
+                explanation: "טכנולוגיית מזון היא התחום היישומי העוסק בכל שרשרת המזון, בעוד מדעי המזון הם הבסיס המדעי החוקר את תכונות המזון והעקרונות מאחורי העיבוד, תוך שימוש בדיסציפלינות שונות."
+            },
+            {
+                question: "איזו פעולה מתבצעת בתעשייה בשלב 'עיבוד וייצור' שאינה אופיינית למטבח הביתי?",
+                options: [
+                    "חיתוך ירקות.",
+                    "ערבוב מרכיבים.",
+                    "שימוש בחומרי חיטוי מותרים לשמירה על איכות.",
+                    "תיבול הסלט."
+                ],
+                correctIndex: 2,
+                explanation: "הטבלה מציינת שימוש בחומרי חיטוי מותרים (רגולציה) כאחד השלבים הייחודיים לתעשייה בשלב העיבוד, לצורך שמירה על איכות והקטנת עומס מיקרוביאלי."
+            },
+            {
+                question: "מהי מטרת ה'אחסנה בתנאים מוגדרים' המוזכרת בשלב השיווק והמכירה בתעשייה?",
+                options: [
+                    "להקשות על הגישה למוצר.",
+                    "להעלות את עלות ההובלה.",
+                    "לשמור על איכות המוצר וחיי המדף שלו.",
+                    "לספק מקום עבודה למחסנאים."
+                ],
+                correctIndex: 2,
+                explanation: "אחסנה בתנאים מבוקרים (טמפרטורה, לחות וכו') חיונית לשמירה על איכות המזון, בטיחותו וחיי המדף שלו עד להגעתו לצרכן."
+            },
+             {
+                question: "כמה אחוזים מהמועסקים בתעשייה הישראלית מועסקים בתעשיית המזון?",
+                options: [
+                    "5%",
+                    "50%",
+                    "17%",
+                    "2%"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין שתעשיית המזון מהווה 17% מהמועסקים בתעשייה בישראל."
+            },
+             {
+                question: "מהו אחד היעדים של הטיפול ב'ניתוח התלונות' המוזכר בשלב השיווק והמכירה?",
+                options: [
+                    "להתעלם מתלונות הצרכנים.",
+                    "לזהות בעיות במוצר או בתהליך ולשפרם.",
+                    "להעניש את הלקוח המתלונן.",
+                    "להוכיח שהלקוח תמיד טועה."
+                ],
+                correctIndex: 1,
+                explanation: "ניתוח תלונות הוא כלי חשוב לשיפור מתמיד, זיהוי כשלים במוצר או בתהליך, והגברת שביעות רצון הלקוחות."
+            },
+            {
+                question: "מהי אחת הסיבות לכך שיבוא המזון לישראל גדל משמעותית בין 2000 ל-2011?",
+                options: [
+                    "ירידה דרסטית באיכות התוצרת המקומית.",
+                    "התפתחות ענפי המזון הגלובליים והגדלת המגוון.",
+                    "איסור על ייצור מזון בישראל.",
+                    "מחסור עולמי במזון."
+                ],
+                correctIndex: 1,
+                explanation: "הגידול ביבוא קשור להתפתחות השוק הגלובלי, המאפשר זמינות ומגוון גדולים יותר של מוצרים לאורך השנה."
+            },
+             {
+                question: "איזה אתגר קשור ישירות לאקולוגיה ואיכות הסביבה בתעשיית המזון?",
+                options: [
+                    "העלאת שכר העובדים.",
+                    "יישום חוק האריזות ומניעת זיהום.",
+                    "פיתוח טעמים חדשים.",
+                    "הורדת מחירי המוצרים."
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מציין את יישום חוק האריזות, המחייב פינוי אריזות למניעת זיהום סביבתי, כדוגמה לאתגר אקולוגי."
+            },
+             {
+                question: "מהי המטרה העיקרית של תחום 'תזונה' בתוך טכנולוגיית המזון, לפי הטבלה?",
+                options: [
+                    "לוודא שהאוכל יהיה טעים.",
+                    "לקבוע את מחיר המזון.",
+                    "להבין את הקשר בין מזון ובריאות.",
+                    "לפתח אריזות חדשות."
+                ],
+                correctIndex: 2,
+                explanation: "הטבלה בסוף עמוד 2 מקשרת את תחום התזונה ל'מזון ובריאות' בהקשר של טכנולוגיית המזון."
+            },
+             {
+                question: "איזה שלב בהכנת סלט במטבח מקביל ל'בחירת הירקות לסלט לפי החשק'?",
+                options: [
+                    "קניית הירקות דרך המגדלים.",
+                    "אחסון בקירור תעשייתי.",
+                    "בחירת הירקות בהתאם לתכונות הרצויות למוצר הסופי.",
+                    "אריזת הסלט המוגמר."
+                ],
+                correctIndex: 2,
+                explanation: "במטבח הבחירה היא לפי רצון רגעי, בעוד בתעשייה הבחירה מבוססת על קריטריונים מוגדרים מראש להתאמה למוצר הסופי (גודל, צבע, מרקם וכו')."
+            },
+            {
+                question: "למה הכוונה ב'קירבה לצרכן' כאחד האתגרים של תעשיית המזון?",
+                options: [
+                    "הקמת מפעלים קרוב לבתי הלקוחות.",
+                    "בניית אמון, שקיפות ואחריות מול הצרכן.",
+                    "מכירת מוצרים רק במפעל עצמו.",
+                    "שליחת דוגמיות חינם לכל בית."
+                ],
+                correctIndex: 1,
+                explanation: "הטקסט מפרט שקירבה לצרכן כוללת אמון, שקיפות, אחריות ומענה לצרכים מיוחדים, כלומר בניית מערכת יחסים חיובית."
+            },
+            {
+                question: "מה משותף לכל שלבי הכנת הסלט, הן במטבח והן בתעשייה?",
+                options: [
+                    "שימוש במכונות אוטומטיות.",
+                    "תהליך כלשהו של הכנה ראשונית, עיבוד ושיווק/הגשה.",
+                    "אריזה בוואקום.",
+                    "בדיקות מעבדה קפדניות."
+                ],
+                correctIndex: 1,
+                explanation: "הטבלה מראה שקיימים שלבים מקבילים כלליים (הכנה ראשונית, עיבוד, הגשה/שיווק) בשני המקרים, גם אם הביצוע והמורכבות שונים."
+            },
+             {
+                question: "איזה מהמרכיבים הבאים אינו חלק מיתרונות המזון המעובד כפי שמוצג?",
+                options: [
+                    "בטיחות",
+                    "טעם",
+                    "מחיר נמוך תמיד",
+                    "איכות"
+                ],
+                correctIndex: 2,
+                explanation: "הטקסט מציין בטיחות, טעם, איכות ותחרותיות כיתרונות, אך אינו טוען שהמחיר תמיד נמוך יותר (התחרותיות מאפשרת מגוון מחירים)."
+            },
+            {
+                question: "האם מחירי המזון בישראל תמיד עולים בהשוואה להוצאות אחרות?",
+                options: [
+                    "כן, הם תמיד עולים בקצב מהיר יותר.",
+                    "לא, הטקסט מציין שהם יחסית יציבים.",
+                    "כן, אבל רק במוצרים מיובאים.",
+                    "לא, הם תמיד יורדים."
+                ],
+                correctIndex: 1,
+                explanation: "אחד הנתונים הסטטיסטיים המופיעים הוא 'לעומת הוצאות אחרות מחירי המזון יחסית יציבים'."
+            },
+             {
+                question: "מה הקשר בין הנדסה לטכנולוגיה של מזון?",
+                options: [
+                    "אין קשר.",
+                    "הנדסה משמשת לתכנון מכונות וקווי ייצור.",
+                    "הנדסה עוסקת רק בבניית המפעלים.",
+                    "הנדסה קובעת את טעם המוצר."
+                ],
+                correctIndex: 1,
+                explanation: "הטבלה בסוף עמוד 2 מציינת שהנדסה קשורה לזרימה, מעבר חום, מעבר חומר, מאזני חומר ואנרגיה – כולם רלוונטיים לתכנון וניהול תהליכי ייצור."
+            },
+             {
+                question: "מהי אחת הסיבות לחשיבות החדשנות בתעשיית המזון?",
+                options: [
+                    "כדי להשתמש במכונות ישנות יותר.",
+                    "כדי לענות על ציפיות משתנות של צרכנים ולשמור על תחרותיות.",
+                    "כדי להקטין את מגוון המוצרים.",
+                    "כדי להפחית את בטיחות המזון."
+                ],
+                correctIndex: 1,
+                explanation: "הדינמיות של השוק (מוצרים חדשים ויורדים) והאתגרים (כמו קירבה לצרכן) מחייבים חדשנות מתמדת כדי להישאר רלוונטיים ותחרותיים."
+            },
+             {
+                question: "מהי הדרישה העיקרית ממוצר מזון לפי הגדרת טכנולוגיית המזון?",
+                options: [
+                    "שיהיה זול.",
+                    "שיהיה ארוז יפה.",
+                    "שיעמוד בדרישות בטיחות, תזונה, תקנות וצרכי הצרכן.",
+                    "שיהיה מיוצר רק מחומרי גלם מקומיים."
+                ],
+                correctIndex: 2,
+                explanation: "ההגדרה המרכזית של טכנולוגיית מזון כוללת עמידה במגוון דרישות אלו כמכלול."
+            },
+            {
+                question: "מהי המטרה של 'שימור בחומרי חיטוי מותרים' בתהליך הייצור התעשייתי?",
+                options: [
+                    "להוסיף טעם למוצר.",
+                    "להאריך את חיי המדף ולשמור על איכות המוצר.",
+                    "לצבוע את המוצר.",
+                    "לייקר את תהליך הייצור."
+                ],
+                correctIndex: 1,
+                explanation: "חומרי חיטוי (במסגרת הרגולציה) משמשים להקטנת העומס המיקרוביאלי ובכך לשמור על איכות המוצר לאורך זמן."
+            },
+             {
+                question: "מהי דוגמה לתחום שבו משתמשים בפיזיקה בטכנולוגיית מזון?",
+                options: [
+                    "קביעת ערכים תזונתיים.",
+                    "חקר אופטיקה וצבעים במזון, ומרקם.",
+                    "זיהוי חיידקים.",
+                    "פיתוח מתכונים חדשים."
+                ],
+                correctIndex: 1,
+                explanation: "הטבלה בסוף עמוד 2 מציינת שפיזיקה קשורה לאופטיקה, צבעים ומרקם בטכנולוגיית המזון."
+            },
+             {
+                question: "מה ההבדל בין 'רחיצה' במטבח ל'רחיצה' בתעשייה?",
+                options: [
+                    "אין הבדל.",
+                    "בתעשייה הרחיצה כוללת גם הקטנת עומס מיקרוביאלי ושימוש אפשרי בחומרי חיטוי.",
+                    "במטבח שוטפים רק עם סבון.",
+                    "בתעשייה לא משתמשים במים."
+                ],
+                correctIndex: 1,
+                explanation: "בתעשייה, הרחיצה היא תהליך מבוקר יותר שמטרתו לא רק ניקוי פיזי אלא גם הפחתת הסיכון המיקרוביאלי."
+            },
+             {
+                question: "מהי 'יעילות לעומת המחירים העולים' המוזכרת כאתגר?",
+                options: [
+                    "צריך לייצר פחות מזון.",
+                    "הצורך לייעל תהליכים ולהפחית עלויות כדי להתמודד עם התייקרות תשומות.",
+                    "צריך להעלות מחירים לצרכן ללא קשר לעלויות.",
+                    "צריך להשתמש בחומרי גלם פחות איכותיים."
+                ],
+                correctIndex: 1,
+                explanation: "האתגר הוא למצוא דרכים לייצר בצורה יעילה יותר כדי שהתייקרות חומרי הגלם, האנרגיה וכו' לא תתגלגל כולה או בצורה מופרזת לצרכן."
+            }
+        ];
+
+        const tfData = [
+            { question: "טכנולוגיה של מזון עוסקת רק בשלב הייצור במפעל.", answer: false, explanation: "טכנולוגיית מזון עוסקת בכל השלבים, מהשדה ועד הצלחת (Farm to Fork)." },
+            { question: "IFT הוא שמו של תקן ישראלי לבטיחות מזון.", answer: false, explanation: "IFT הוא Institute of Food Technologists, ארגון מקצועי בינלאומי." },
+            { question: "אחד היתרונות של מזון מעובד הוא האפשרות לצרוך מזונות מחוץ לעונתם.", answer: true, explanation: "הטקסט מציין שמזון מעובד מאפשר זמינות של מזונות עונתיים לאורך כל השנה." },
+            { question: "תעשיית המזון בישראל אינה מעסיק משמעותי בפריפריה.", answer: false, explanation: "לפי הטקסט, 42 אלף מתוך 60 אלף המועסקים בתעשיית המזון עובדים בפריפריה." },
+            { question: "תהליך הכנת סלט בתעשייה זהה לחלוטין לתהליך במטבח הביתי.", answer: false, explanation: "הטבלה מראה הבדלים משמעותיים בשלבים כמו בחירה, רחיצה, שימור, אריזה ובקרת איכות." },
+            { question: "אריזת מזון בתעשייה נועדה רק למטרות שיווקיות.", answer: false, explanation: "האריזה נועדה גם להגנה פיזית, הארכת חיי מדף, הגנה סביבתית, שקיפות מידע ועמידה בתקנים." },
+            { question: "הרגולציה בתחום המזון נמצאת במגמת ירידה.", answer: false, explanation: "הטקסט מציין 'רגולציה גוברת' כאחד האתגרים המרכזיים של התעשייה." },
+            { question: "מדעי המזון אינם כוללים שימוש בעקרונות הנדסיים.", answer: false, explanation: "ההגדרה של מדעי המזון כוללת שימוש בביולוגיה, מדעי הטבע והנדסה." },
+            { question: "ניתוח תלונות צרכנים אינו חשוב לתעשיית המזון.", answer: false, explanation: "ניתוח תלונות הוא חלק משלב השיווק והמכירה והוא חשוב לשיפור המוצר ושביעות רצון הלקוח." },
+            { question: "יבוא המזון לישראל קטן משמעותית בתחילת המאה ה-21.", answer: false, explanation: "הטקסט מציין שיבוא המזון גדל בכ-180% בין השנים 2000-2011." },
+            { question: "חוק האריזות נועד להוזיל את עלויות האריזה.", answer: false, explanation: "חוק האריזות קשור לאקולוגיה ואיכות הסביבה, ומחייב פינוי אריזות למניעת זיהום." },
+            { question: "טכנולוגיית מזון מתעלמת משיקולי טעם ומרקם.", answer: false, explanation: "הטבלה בסוף עמוד 2 מראה שטכנולוגיית מזון עוסקת גם בחושים, טעימה, מרקם, אופטיקה וצבעים." },
+            { question: "מטרת 'הקטנת עומס מיקרוביאלי' בתעשייה היא להוסיף חיידקים למוצר.", answer: false, explanation: "המטרה היא להפחית את כמות המיקרואורגניזמים הלא רצויים כדי לשפר בטיחות וחיי מדף." },
+            { question: "המושג Farm to Fork מתייחס רק לשלב הגידול החקלאי.", answer: false, explanation: "המושג מתאר את כל המסלול, מהגידול ועד הצריכה." },
+            { question: "'שקיפות המידע' על האריזה פירושה שהאריזה חייבת להיות עשויה זכוכית.", answer: false, explanation: "שקיפות המידע מתייחסת לנגישות ובהירות המידע הכתוב על האריזה לצרכן." },
+            { question: "חדשנות אינה מהווה אתגר משמעותי בתעשיית המזון.", answer: false, explanation: "חדשנות מוזכרת כאחד האתגרים המרכזיים, יחד עם הצורך להתאים לצרכן המשתנה." },
+            { question: "תחום הבטיחות בטכנולוגיית מזון מתבסס בעיקר על מיקרוביולוגיה.", answer: true, explanation: "הטבלה מציינת שמיקרוביולוגיה קשורה לבטיחות מזון, קלקול ותסיסה." },
+            { question: "תעשיית המזון תורמת לשמירה על איכות הסביבה באופן אוטומטי.", answer: false, explanation: "איכות הסביבה מוצגת כאתגר, הדורש מאמצים כמו יישום חוק האריזות." },
+            { question: "ההבדל בין מטבח לתעשייה הוא רק בכמויות המזון.", answer: false, explanation: "קיימים הבדלים מהותיים בתהליכים, בציוד, בבקרת האיכות, ברגולציה ובשיקולים." },
+            { question: "ניתן להסתמך על טעם וריח בלבד כדי לקבוע בטיחות מזון.", answer: false, explanation: "בעוד שקלקול משפיע על טעם וריח, קיימים סיכונים בטיחותיים (כמו חיידקים פתוגניים) שלא תמיד ניתנים לזיהוי בחושים." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                mcqOptions.appendChild(button);
+            });
+
+             mcqFeedback.classList.add('hidden');
+             mcqExplanation.classList.add('hidden');
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

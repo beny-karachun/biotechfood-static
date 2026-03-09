@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>תגובות של מונוסכרידים, נגזרות סוכר וויטמין C</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "סוכר מחזר (Reducing Sugar)", definition: "סוכר בעל קבוצת המיאצטל חופשית, המאפשרת לו להיפתח לצורת שרשרת עם אלדהיד המסוגל לחזר חומרים אחרים (כמו Cu2+)." },
+            { term: "סוכר לא-מחזר (Non-reducing Sugar)", definition: "סוכר שהפחמן האנומרי שלו קשור בקשר גליקוזידי (אצטל), ולכן אינו יכול להיפתח לשרשרת ואינו מגיב במבחני חיזור כמו פהלינג." },
+            { term: "מבחן פהלינג (Fehling's Test)", definition: "מבחן לזיהוי סוכרים מחזרים, המשתמש בתמיסה בסיסית של יוני נחושת (II) עם טרטרט. תוצאה חיובית היא משקע אדום-כתום של Cu2O." },
+            { term: "מבחן בנדיקט (Benedict's Test)", definition: "מבחן רגיש יותר לזיהוי סוכרים מחזרים, המשתמש בתמיסה פחות בסיסית של יוני נחושת (II) עם ציטראט. צבע המשקע משתנה בהתאם לריכוז הסוכר." },
+            { term: "טאוטומריזציה (Tautomerization)", definition: "תהליך איזומריזציה הפיך הכרוך בהעברת פרוטון, למשל המעבר בין צורת קטו לצורת אנול. בסוכרים, זה מאפשר לפרוקטוז להפוך לגלוקוז בתנאים בסיסיים." },
+            { term: "אוזאזון (Osazone)", definition: "תוצר התגובה הגבישי הנוצר בין סוכר מחזר לעודף של פנילהידרזין. התגובה מתרחשת בפחמנים C1 ו-C2." },
+            { term: "חומצה אלדונית (Aldonic Acid)", definition: "חומצה קרבוקסילית הנוצרת מחמצון קבוצת האלדהיד של אלדוז. לדוגמה, חמצון גלוקוז נותן חומצה גלוקונית." },
+            { term: "חומצה אורונית (Uronic Acid)", definition: "חומצת סוכר הנוצרת מחמצון קבוצת ההידרוקסיל הראשונית (C6 בגלוקוז) לחומצה קרבוקסילית, בעוד קבוצת האלדהיד נשארת." },
+            { term: "גלוקוז אוקסידאז (GOx)", definition: "אנזים ספציפי המחמצן בטא-D-גלוקוז לגלוקונולקטון תוך יצירת מי חמצן (H2O2). משמש במדי סוכר ובשימור מזון." },
+            { term: "אלדיטול (Alditol)", definition: "כוהל-סוכר, פוליאול הנוצר מחיזור הקבוצה הקרבונילית של סוכר לכוהל. לדוגמה, חיזור גלוקוז נותן סורביטול." },
+            { term: "סורביטול (Sorbitol)", definition: "אלדיטול הנוצר מחיזור גלוקוז או פרוקטוז. משמש כממתיק, חומר הלחה (humectant) ואינו גורם לעששת." },
+            { term: "מניטול (Mannitol)", definition: "אלדיטול, אפימר של סורביטול. בעל אפקט קירור ומשמש ברפואה להפחתת לחץ תוך-גולגולתי." },
+            { term: "לקטוז (Lactose)", definition: "דיסכריד המצוי בחלב, מורכב מבטא-D-גלקטוז ו-D-גלוקוז המחוברים בקשר גליקוזידי בטא(1-4)." },
+            { term: "גלוקוזאמין (Glucosamine)", definition: "סוכר אמיני (נגזרת של גלוקוז) בו קבוצת הידרוקסיל בפחמן C2 מוחלפת בקבוצת אמינו. מהווה אבן בניין לכיטין." },
+            { term: "ויטמין C (חומצה אסקורבית)", definition: "נוגד חמצון מסיס במים, חיוני לסינתזת קולגן. מבנהו דומה לגלוקוז, אך בני אדם אינם יכולים לייצרו." },
+            { term: "צפדינה (Scurvy)", definition: "מחלת חסר הנגרמת ממחסור חמור בויטמין C, ומתבטאת בפגיעה ברקמות חיבור, דימומים וחולשה." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מדוע סוכרוז אינו נחשב סוכר מחזר ואינו נותן תוצאה חיובית במבחן פהלינג?",
+                options: [
+                    "מכיוון שהוא גדול מדי מכדי להגיב עם יוני הנחושת.",
+                    "מכיוון שהוא קטוז טהור ללא יכולת איזומריזציה.",
+                    "מכיוון שהפחמנים האנומריים של גלוקוז ופרוקטוז קשורים זה לזה בקשר גליקוזידי ואינם יכולים להיפתח לשרשרת.",
+                    "מכיוון שהקשר הגליקוזידי שלו מתפרק בסביבה בסיסית ויוצר שני סוכרים לא-מחזרים."
+                ],
+                correctIndex: 2,
+                explanation: "סוכר מחזר דורש קבוצת המיאצטל חופשיה כדי להיפתח. בסוכרוז, הפחמן האנומרי של גלוקוז (C1) והפחמן האנומרי של פרוקטוז (C2) נעולים בקשר גליקוזידי. לכן, אף אחת מהטבעות לא יכולה להיפתח, אין קבוצת אלדהיד חופשית, והסוכר אינו מחזר."
+            },
+            {
+                question: "כימאי מבצע חיזור של D-פרוקטוז באמצעות NaBH4. אילו תוצרים צפויים להתקבל?",
+                options: [
+                    "רק D-סורביטול.",
+                    "רק D-מניטול.",
+                    "תערובת של D-סורביטול ו-D-מניטול.",
+                    "תערובת של D-גלוקוז ו-D-מנוז."
+                ],
+                correctIndex: 2,
+                explanation: "חיזור קבוצת הקטון בפחמן C2 של פרוקטוז יוצר מרכז כיראלי חדש. ההתקפה של יון ההידריד יכולה להתרחש משני צדי המישור של קבוצת הקטון, ולכן נוצרים שני אפימרים: D-סורביטול (נקרא גם D-גלוציטול) ו-D-מניטול."
+            },
+            {
+                question: "איזה מהבאים מתאר באופן המדויק ביותר את תפקידו של ויטמין C במניעת צפדינה?",
+                options: [
+                    "הוא משמש כמקור אנרגיה ישיר לתאי רקמת החיבור.",
+                    "הוא פועל כקופקטור חיוני לאנזימים המבצעים הידרוקסילציה של פרולין וליזין בסינתזת קולגן.",
+                    "הוא נקשר ישירות לסיבי קולגן ומחזק אותם.",
+                    "הוא מנטרל את החומציות הגורמת לפירוק קולגן."
+                ],
+                correctIndex: 1,
+                explanation: "קולגן חזק ויציב דורש הידרוקסילציה של חומצות האמינו פרולין וליזין. ויטמין C חיוני לתפקודם של האנזימים האחראים לתהליך זה. במחסור בויטמין C, הקולגן הנוצר פגום וחלש, מה שמוביל לתסמיני הצפדינה."
+            },
+            {
+                question: "גלוקוז, פרוקטוז ומנוז מגיבים עם פנילהידרזין ליצירת אוזאזונים. מהי התוצאה של תגובה זו?",
+                options: [
+                    "כל אחד מהסוכרים יוצר אוזאזון בעל מבנה גבישי ייחודי המאפשר להבדיל ביניהם.",
+                    "רק גלוקוז, כאלדוז, יוצר אוזאזון.",
+                    "שלושת הסוכרים יוצרים את אותו האוזאזון.",
+                    "התגובה מתרחשת בפחמנים C3 ו-C4 ומשמרת את הכיראליות של C2."
+                ],
+                correctIndex: 2,
+                explanation: "תגובת האוזאזון מתרחשת בפחמנים C1 ו-C2. מכיוון שגלוקוז, פרוקטוז ומנוז נבדלים זה מזה רק בקונפיגורציה של פחמנים אלו, והתגובה 'מוחקת' את הכיראליות המקורית שלהם, שלושתם יוצרים תוצר סופי זהה."
+            },
+            {
+                question: "מדוע משתמשים בסורביטול ומניטול בממתקים ללא סוכר?",
+                options: [
+                    "הם מתוקים יותר מסוכרוז ולכן נדרשת כמות קטנה יותר.",
+                    "הם אינם נספגים כלל במערכת העיכול ולכן הם נטולי קלוריות.",
+                    "הם אינם עוברים פירוק על ידי חיידקי הפה ולכן אינם תורמים לעששת, ומספקים פחות קלוריות מסוכר.",
+                    "הם משפרים את צבע הממתק באמצעות תגובות השחמה מהירות."
+                ],
+                correctIndex: 2,
+                explanation: "כוהלי-סוכר כמו סורביטול ומניטול אינם מפורקים על ידי חיידקי הפה לחומצות, ולכן הם אינם קריוגניים (לא גורמים לעששת). בנוסף, הם נספגים חלקית ו/או לאט במעי, ולכן תרומתם הקלורית נמוכה מזו של סוכר."
+            },
+            {
+                question: "איזה מחמצן יגיב עם גלוקוז אך לא יגיב עם פרוקטוז בתנאים מתאימים?",
+                options: [
+                    "ריאגנט פהלינג (Cu2+/OH-)",
+                    "מים ברומיים (Br2/H2O)",
+                    "ריאגנט בנדיקט",
+                    "חומצה חנקתית מרוכזת (HNO3)"
+                ],
+                correctIndex: 1,
+                explanation: "מים ברומיים הם מחמצן עדין שיכול לחמצן אלדהידים אך אינו חזק מספיק כדי לחמצן קטונים או כהלים. לכן, הוא יגיב עם גלוקוז (אלדוז) אך לא עם פרוקטוז (קטוז). ריאגנטים כמו פהלינג ובנדיקט הם בסיסיים ומאפשרים לפרוקטוז לעבור טאוטומריזציה לגלוקוז, ולכן יגיבו עם שניהם."
+            },
+            {
+                question: "בני אדם אינם יכולים לסנתז ויטמין C. מהי הסיבה הביוכימית לכך?",
+                options: [
+                    "התזונה האנושית אינה כוללת את חומר המוצא, D-גלוקורונאט.",
+                    "לבני אדם חסר האנזים L-gulonolactone oxidase, השלב האחרון בנתיב הסינתזה.",
+                    "ויטמין C רעיל לגוף האדם ולכן אין מסלול לייצורו.",
+                    "הסינתזה דורשת אנרגיית אור שאינה זמינה בתאי אדם."
+                ],
+                correctIndex: 1,
+                explanation: "רוב בעלי החיים מסנתזים ויטמין C מגלוקוז. אולם, בני אדם (יחד עם פרימטים אחרים, חזירי ים ועטלפים מסוימים) חסרים את האנזים האחרון והקריטי במסלול, L-gulonolactone oxidase, ולכן חייבים לקבל ויטמין C מהמזון."
+            },
+            {
+                question: "כיצד פועל האנזים גלוקוז אוקסידאז (GOx) במדי סוכר ביוסנסוריים?",
+                options: [
+                    "הוא מפרק את הגלוקוז לחומצה לקטית, והשינוי ב-pH נמדד.",
+                    "הוא מגיב עם כל סוכר מחזר בדם ויוצר צבע הנמדד אופטית.",
+                    "הוא מחמצן ספציפית בטא-D-גלוקוז וצורך חמצן או מייצר מי חמצן, שינויים הנמדדים אלקטרוכימית.",
+                    "הוא גורם לגלוקוז לזהור, ועוצמת האור נמדדת."
+                ],
+                correctIndex: 2,
+                explanation: "מדי סוכר מנצלים את הספציפיות הגבוהה של GOx. האנזים מחמצן גלוקוז ובתהליך צורך חמצן מולקולרי ומייצר מי חמצן (H2O2) ואלקטרונים. החיישן האלקטרוכימי במכשיר מודד את השינוי בריכוז החמצן או את הזרם החשמלי הנוצר, שפרופורציונלי לריכוז הגלוקוז בדגימה."
+            },
+            {
+                question: "מהי חומצה גלוקורונית, ומה תפקידה העיקרי בגוף?",
+                options: [
+                    "תוצר חיזור של גלוקוז, המשמש לאגירת אנרגיה.",
+                    "תוצר חמצון של פחמן C1 בגלוקוז, המעורב בייצור ATP.",
+                    "תוצר חמצון של פחמן C6 בגלוקוז, המעורב בניטרול רעלים (דטוקסיפיקציה).",
+                    "איזומר של חומצה גלוקונית, בעל תכונות אנטי-בקטריאליות."
+                ],
+                correctIndex: 2,
+                explanation: "חומצה גלוקורונית נוצרת מחמצון קבוצת ה-OH הראשונית ב-C6 של גלוקוז. היא משחקת תפקיד מפתח בתהליך הדטוקסיפיקציה בכבד, שם היא נקשרת למולקולות שומניות (כמו תרופות, הורמונים ורעלים), הופכת אותן למסיסות במים ומאפשרת את הפרשתן מהגוף בשתן."
+            },
+            {
+                question: "מה ההבדל בין חומצה גלוקונית, חומצה גלוקורונית וחומצה גלוקארית?",
+                options: [
+                    "שלושתן הן תוצר של אותו תהליך חמצון עדין.",
+                    "גלוקונית מחומצנת ב-C1, גלוקורונית ב-C6, וגלוקארית בשני הקצוות (C1 ו-C6).",
+                    "גלוקונית מחומצנת ב-C1, גלוקורונית היא איזומר שלה, וגלוקארית היא תוצר חיזור.",
+                    "גלוקונית וגלוקורונית הן חומצות, וגלוקארית היא אלדיטול."
+                ],
+                correctIndex: 1,
+                explanation: "השמות השונים מתארים חמצון במיקומים שונים על מולקולת הגלוקוז. חומצה גלוקונית (אלדונית) - חמצון האלדהיד ב-C1. חומצה גלוקורונית (אורונית) - חמצון הכוהל ב-C6. חומצה גלוקארית (אלדארית) - חמצון בשני הקצוות, C1 ו-C6, באמצעות מחמצן חזק."
+            },
+            {
+                question: "ממה מופק רוב הגלוקוזאמין המסחרי?",
+                options: [
+                    "מסינתזה כימית מלאה של גלוקוז.",
+                    "ממיצוי של סחוס בקר.",
+                    "מעיבוד של כיטין, פולימר המצוי בשלדים חיצוניים של סרטנים וחרקים.",
+                    "מתסיסה בקטריאלית של פרוקטוז."
+                ],
+                correctIndex: 2,
+                explanation: "כיטין הוא פוליסכריד מבני, הדומה לצלולוז, אך יחידות המונומר שלו הן N-אצטילגלוקוזאמין. גלוקוזאמין מסחרי מופק בדרך כלל על ידי הידרוליזה של כיטין, המצוי בשפע בשריונות של שרימפס, סרטנים ומקורות ימיים אחרים."
+            },
+            {
+                question: "מהו ההיגיון מאחורי שימוש במניטול תוך-ורידי במצבים של בצקת מוחית?",
+                options: [
+                    "מניטול מספק אנרגיה לתאי המוח ומסייע להם להתכווץ.",
+                    "מניטול פותח את מחסום הדם-מוח ומאפשר לנוזלים לצאת.",
+                    "כחומר היפראוסמוטי, הוא מושך מים מחוץ לרקמת המוח אל כלי הדם, ובכך מקטין את הבצקת.",
+                    "הוא מגיב כימית עם המים העודפים במוח ומנטרל אותם."
+                ],
+                correctIndex: 2,
+                explanation: "מניטול המוזרק לזרם הדם אינו חוצה בקלות את מחסום הדם-מוח. הוא מעלה את האוסמולריות של הדם, ויוצר מפל ריכוזים הגורם למים לעבור בדיפוזיה מרקמת המוח (שם ריכוז המומסים נמוך יותר) אל תוך כלי הדם, מה שמפחית את הנפיחות והלחץ."
+            },
+            {
+                question: "מדוע קסילטול (Xylitol) נחשב יעיל במניעת עששת?",
+                options: [
+                    "הוא רעיל לחיידקי הפה והורג אותם במגע.",
+                    "הוא בעל pH בסיסי המנטרל את החומצות בפה.",
+                    "חיידקי העששת אינם יכולים לבצע בו תסיסה ליצירת חומצות המזיקות לזגוגית השן.",
+                    "הוא מכיל פלואוריד באופן טבעי."
+                ],
+                correctIndex: 2,
+                explanation: "עששת נגרמת כאשר חיידקים בפה, כמו Streptococcus mutans, מפרקים סוכרים (כמו סוכרוז) לחומצות הפוגעות באמייל השן. קסילטול, למרות טעמו המתוק, אינו יכול לשמש כמצע לתסיסה עבור חיידקים אלו, ולכן צריכתו אינה מובילה לייצור חומצה."
+            },
+            {
+                question: "השוואה בין סורביטול למניטול מגלה כי:",
+                options: [
+                    "סורביטול מתוק יותר ומניטול מתגבש בקלות רבה יותר.",
+                    "מניטול הוא חומר הלחה (humectant) טוב יותר מסורביטול.",
+                    "שניהם נוצרים אך ורק מחיזור של גלוקוז.",
+                    "סורביטול משמש לציפוי לא דביק של סוכריות בעוד מניטול לא."
+                ],
+                correctIndex: 0,
+                explanation: "סורביטול מתוק יותר (כ-60% ממתיקות סוכרוז) והוא חומר הלחה מצוין. מניטול פחות מתוק (כ-65% אבל מרגיש פחות) ופחות משמש כחומר הלחה מכיוון שהוא נוטה להתגבש בקלות. תכונת ההתגבשות של מניטול הופכת אותו למתאים לציפויים."
+            },
+            {
+                question: "מהו התהליך הבסיסי המאפשר לפרוקטוז (קטוז) להגיב במבחן בנדיקט, המיועד לאלדהידים?",
+                options: [
+                    "חיזור של הפרוקטוז לכוהל-סוכר.",
+                    "חמצון ישיר של קבוצת הקטון.",
+                    "טאוטומריזציית קטו-אנול בסביבה הבסיסית של המבחן, היוצרת אלדוז (גלוקוז/מנוז) שיכול להגיב.",
+                    "הידרוליזה של הפרוקטוז ליחידות גלוקוז קטנות יותר."
+                ],
+                correctIndex: 2,
+                explanation: "בתנאים הבסיסיים של מבחן בנדיקט (או פהלינג), קטוזים בעלי קבוצת הידרוקסיל על הפחמן הסמוך לקטון (אלפא-הידרוקסי-קטון) יכולים לעבור איזומריזציה דרך תוצר ביניים של אנדיול לאלדוזים המקבילים. אלדוזים אלו מגיבים במבחן, ולכן נראית תוצאה חיובית גם עבור פרוקטוז."
+            },
+            {
+                question: "חומצה L-אסקורבית (ויטמין C) פועלת כנוגד חמצון על ידי:",
+                options: [
+                    "קליטת אלקטרונים מרדיקלים חופשיים, ובכך הופכת למחומצנת.",
+                    "תרומת אלקטרונים לרדיקלים חופשיים, ובכך הופכת למחומצנת בעצמה.",
+                    "פירוק אנזימטי של רדיקלים חופשיים.",
+                    "יצירת מחסום פיזי המונע מרדיקלים לחדור לתא."
+                ],
+                correctIndex: 1,
+                explanation: "נוגד חמצון הוא חומר שמוסר אלקטרונים (עובר חמצון) כדי לחזר ולנטרל מולקולות מחמצנות ומזיקות כמו רדיקלים חופשיים. ויטמין C יכול למסור בקלות שני אלקטרונים ולהפוך לחומצה דהידרואסקורבית, מולקולה יציבה יחסית, ובכך להגן על רכיבי תא אחרים מפני נזק חמצוני."
+            },
+            {
+                question: "איזה מהבאים אינו שימוש ידוע של ויטמין C בתעשיית המזון?",
+                options: [
+                    "מניעת השחמה אנזימטית בתפוחים ואבוקדו חתוכים.",
+                    "הוספת טעם חמצמץ ורענן למוצרים.",
+                    "פעילות כממתיק עתיר קלוריות.",
+                    "פעילות כנוגד חמצון למניעת קלקול של שומנים."
+                ],
+                correctIndex: 2,
+                explanation: "ויטמין C (חומצה אסקורבית) הוא חומצי ואינו מתוק. הוא משמש כנוגד חמצון (מונע השחמה וקלקול שומנים) וכן כמוסיף טעם, אך אינו משמש כממתיק."
+            },
+            {
+                question: "מדוע לקטוז הוא סוכר מחזר, בניגוד לסוכרוז?",
+                options: [
+                    "כי הוא קטן יותר מסוכרוז.",
+                    "כי הוא מכיל גלקטוז, שהוא מחזר חזק יותר מגלוקוז.",
+                    "כי יחידת הגלוקוז בלקטוז שומרת על פחמן אנומרי חופשי (המיאצטל), המאפשר פתיחת טבעת.",
+                    "כי הקשר הגליקוזידי בלקטוז הוא מסוג אלפא, לעומת בטא בסוכרוז."
+                ],
+                correctIndex: 2,
+                explanation: "בלקטוז, הקשר הגליקוזידי הוא בין C1 של גלקטוז ל-C4 של גלוקוז. זה משאיר את הפחמן האנומרי (C1) של יחידת הגלוקוז חופשי. פחמן זה יכול להתקיים כמבנה המיאצטל, המאפשר לטבעת הגלוקוז להיפתח וליצור קבוצת אלדהיד מחזרת."
+            },
+            {
+                question: "מטופל מקבל תרופה העוברת פינוי מהגוף באמצעות צימוד לחומצה גלוקורונית בכבד. איזה תהליך ביוכימי עבר הגלוקוז כדי להפוך לחומצה גלוקורונית?",
+                options: [
+                    "חיזור של קבוצת האלדהיד שלו.",
+                    "חמצון של קבוצת האלדהיד שלו (C1).",
+                    "איזומריזציה לפרוקטוז.",
+                    "חמצון של קבוצת ההידרוקסיל הראשונית שלו (C6)."
+                ],
+                correctIndex: 3,
+                explanation: "יצירת חומצה גלוקורונית היא חמצון ספציפי של הפחמן השישי והאחרון (C6) בגלוקוז, שהופך מקבוצת כוהל ראשונית (CH2OH) לקבוצת חומצה קרבוקסילית (COOH). קבוצת האלדהיד ב-C1 נשארת ללא שינוי."
+            },
+            {
+                question: "באיזה אופן עיקרי נבדלת פעולת החמצון של גלוקוז אוקסידאז (GOx) מזו של ריאגנט פהלינג?",
+                options: [
+                    "GOx מחמצן את שני קצוות המולקולה, ופהלינג רק את C1.",
+                    "GOx הוא ספציפי לבטא-D-גלוקוז, בעוד פהלינג מגיב עם כל סוכר מחזר.",
+                    "GOx פועל רק בסביבה חומצית חזקה, ופהלינג בסביבה בסיסית.",
+                    "GOx הוא מחזר, ופהלינג הוא מחמצן."
+                ],
+                correctIndex: 1,
+                explanation: "ההבדל המהותי הוא בספציפיות. GOx הוא אנזים בעל ספציפיות גבוהה למצע שלו, בטא-D-גלוקוז. לעומתו, פהלינג הוא ריאגנט כימי כללי שיגיב עם כל מולקולה בעלת קבוצת אלדהיד חופשית (או כזו שיכולה להיווצר בתנאי המבחן), כולל אלדוזים וקטוזים רבים."
+            },
+            {
+                question: "מהי הסיבה לכך שממתקים המכילים מניטול או קסילטול מעניקים תחושת קרירות בפה?",
+                options: [
+                    "הם מפעילים קולטני קור על הלשון.",
+                    "הם גורמים לאידוי מהיר של רוק.",
+                    "תהליך ההמסה שלהם ברוק הוא אנדותרמי, כלומר הוא צורך חום מהסביבה (הפה).",
+                    "הם מכילים מולקולות מנטול כלואות."
+                ],
+                correctIndex: 2,
+                explanation: "חומרים מסוימים, כולל כוהלי סוכר כמו מניטול וקסילטול, הם בעלי 'חום המסה שלילי' (negative heat of solution), שזהו מונח אחר לתהליך המסה אנדותרמי. כאשר הם מתמוססים ברוק, הם סופגים אנרגיית חום מהפה, מה שיוצר תחושה פיזית של קרירות."
+            }
+        ];
+
+        const tfData = [
+            { question: "חיזור של D-פרוקטוז נותן תוצר יחיד, D-סורביטול.", answer: false, explanation: "חיזור D-פרוקטוז יוצר מרכז כיראלי חדש ב-C2, ולכן מתקבלת תערובת של שני אפימרים: D-סורביטול ו-D-מניטול." },
+            { question: "סוכרוז הוא דוגמה לסוכר לא-מחזר.", answer: true, explanation: "הפחמנים האנומריים של גלוקוז ופרוקטוז קשורים זה לזה בקשר גליקוזידי, ולכן הטבעות אינן יכולות להיפתח. כתוצאה מכך, סוכרוז אינו סוכר מחזר." },
+            { question: "מבחן אוזאזון מאפשר להבדיל בין D-גלוקוז ל-D-פרוקטוז.", answer: false, explanation: "D-גלוקוז, D-פרוקטוז ו-D-מנוז נותנים כולם את אותו גביש אוזאזון, מכיוון שהתגובה משנה את הכיראליות בפחמנים C1 ו-C2, שם הם נבדלים." },
+            { question: "ויטמין C חיוני לסינתזת קולגן מכיוון שהוא מהווה יחידת בניין בפולימר.", answer: false, explanation: "ויטמין C אינו חלק ממבנה הקולגן. הוא פועל כקופקטור חיוני לאנזימים המבצעים הידרוקסילציה של חומצות אמינו (פרולין וליזין) לאחר יצירת שרשרת הקולגן." },
+            { question: "גלוקוז אוקסידאז (GOx) יחמצן כל אלדוז, כולל גלקטוז ומנוז.", answer: false, explanation: "GOx הוא אנזים ספציפי מאוד למצע שלו, בטא-D-גלוקוז. הוא לא יגיב עם סוכרים אחרים או אפילו עם אלפא-D-גלוקוז באופן יעיל." },
+            { question: "סורביטול, בהיותו כוהל-סוכר, אינו תורם קלוריות לתזונה.", answer: false, explanation: "סורביטול נספג חלקית במעי ומכיל כ-2.6 קלוריות לגרם, בערך שני שליש מכמות הקלוריות בסוכר (כ-4 קלוריות לגרם)." },
+            { question: "טאוטומריזציה היא הסיבה שפרוקטוז (קטוז) נותן תוצאה חיובית במבחן פהלינג.", answer: true, explanation: "בתנאים הבסיסיים של מבחן פהלינג, פרוקטוז עובר טאוטומריזציה דרך אנדיול לאלדוזים (גלוקוז ומנוז), שהם סוכרים מחזרים המגיבים במבחן." },
+            { question: "חומצה גלוקורונית נוצרת על ידי חמצון קבוצת האלדהיד של גלוקוז.", answer: false, explanation: "חומצה גלוקורונית נוצרת מחמצון קבוצת ההידרוקסיל הראשונית ב-C6. חמצון קבוצת האלדהיד ב-C1 יוצר חומצה גלוקונית." },
+            { question: "כל סוכר המכיל קבוצת המיאצטל ייחשב כסוכר מחזר.", answer: true, explanation: "קבוצת ההמיאצטל נמצאת בשיווי משקל עם צורת השרשרת הפתוחה, המכילה קבוצת אלדהיד. נוכחות האלדהיד היא זו שמקנה לסוכר את תכונות החיזור שלו." },
+            { question: "מניטול מתוק יותר מסוכרוז.", answer: false, explanation: "מניטול הוא בעל מתיקות של כ-65% מזו של סוכרוז. קסילטול הוא כ-70%, וסורביטול כ-60%. פרוקטוז הוא היחיד מביניהם שמתוק יותר מסוכרוז." },
+            { question: "בני אדם, בניגוד לרוב בעלי החיים, חייבים לקבל ויטמין C מהתזונה.", answer: true, explanation: "לבני אדם חסר האנזים האחרון הדרוש לסינתזת ויטמין C מגלוקוז, ולכן הוא מהווה ויטמין חיוני שיש לצרוך במזון." },
+            { question: "חמצון גלוקוז עם מחמצן חזק כמו חומצה חנקתית (HNO3) ייתן חומצה גלוקונית.", answer: false, explanation: "מחמצן חזק יחמצן את שני קצוות המולקולה - האלדהיד ב-C1 והכוהל הראשוני ב-C6 - ליצירת חומצה אלדארית, במקרה זה חומצה גלוקארית." },
+            { question: "לקטוז, סוכר החלב, הוא סוכר לא-מחזר.", answer: false, explanation: "לקטוז הוא סוכר מחזר. הפחמן האנומרי של יחידת הגלוקוז שבו נותר חופשי (המיאצטל) ויכול להיפתח לשרשרת." },
+            { question: "כל נגזרות הסוכר הן פחות מתוקות מסוכרוז.", answer: false, explanation: "פרוקטוז הוא מונוסכריד והוא מתוק יותר מסוכרוז (מתיקות יחסית של 1.73). סוכרוז עצמו משמש כבסיס ההשוואה (1.00)." },
+            { question: "סורביטול הוא חומר הלחה (humectant) יעיל המשמש למניעת התייבשות מוצרי מזון.", answer: true, explanation: "אחת התכונות החשובות של סורביטול היא יכולתו לקשור מים, ולכן הוא משמש כחומר הלחה לשמירת לחות ומרקם במוצרים שונים." },
+            { a: "A glycoside, by definition, is a non-reducing sugar.", question: "גליקוזיד, על פי הגדרתו, הוא סוכר לא-מחזר.", answer: true, explanation: "גליקוזיד נוצר כאשר הפחמן האנומרי (ההמיאצטלי) מגיב ויוצר קשר אצטלי. קשר זה יציב ואינו נפתח בקלות, ולכן גליקוזידים הם לא-מחזרים." },
+            { question: "מניטול וסורביטול הם אננטיומרים.", answer: false, explanation: "מניטול וסורביטול הם אפימרים. הם נבדלים רק בקונפיגורציה של פחמן C2, אך אינם תמונות ראי זה של זה." },
+            { question: "צפדינה נגרמת ישירות מחוסר יכולת לחזר יוני ברזל (Fe3+) בגוף.", answer: false, explanation: "אף על פי שויטמין C מסייע בספיגת ברזל, הגורם הישיר לצפדינה הוא סינתזה פגומה של קולגן עקב חוסר בהידרוקסילציה של פרולין וליזין." },
+            { question: "האנזים קטלאז משתף פעולה עם גלוקוז אוקסידאז כדי לפרק את תוצר הלוואי הרעיל מי חמצן (H2O2).", answer: true, explanation: "תגובת הגלוקוז אוקסידאז מייצרת מי חמצן. לעיתים קרובות מוסיפים קטלאז, המפרק ביעילות מי חמצן למים וחמצן, כדי למנוע נזק מהתוצר." },
+            { question: "ויטמין C מסיס בשומן, בדומה לויטמין E.", answer: false, explanation: "ויטמין C הוא מסיס במים, בעוד ויטמין E הוא מסיס בשומן. ויטמין C מגן על הסביבה המימית בתא, בעוד ויטמין E מגן על ממברנות שומניות." },
+            { question: "הוספת קסילטול למשקאות ממותקים תורמת לעלייה בתכולת הקלוריות שלהם בדומה לסוכר.", answer: false, explanation: "קסילטול מכיל פחות קלוריות מסוכר (כ-2.4 לעומת 4 קק'ל/גרם) ואינו גורם לעלייה חדה ברמות הסוכר בדם." },
+            { question: "הידרוליזה של כיטין היא הדרך העיקרית להפקת גלוקוזאמין תעשייתי.", answer: true, explanation: "כיטין הוא פולימר של N-אצטילגלוקוזאמין, והוא המקור העיקרי לגלוקוזאמין המשמש בתוספי תזונה." },
+            { question: "מתיקות יחסית של 0.16 עבור לקטוז פירושה שהוא מתוק ב-84% פחות מסוכרוז.", answer: true, explanation: "מתיקות יחסית של 1.00 היא של סוכרוז. ערך של 0.16 פירושו שהוא 16% מתוק כמו סוכרוז, כלומר 1.00 - 0.16 = 0.84, או 84% פחות מתוק." },
+            { question: "חיזור של אלדהיד או קטון תמיד מוביל לירידה במספר קשרי הפחמן-מימן.", answer: false, explanation: "חיזור הוא תהליך של הוספת אלקטרונים. בכימיה אורגנית, זה מתבטא לרוב בעלייה במספר קשרי פחמן-מימן או ירידה במספר קשרי פחמן-חמצן." },
+            { question: "כל הסוכרים בעלי 6 פחמנים יוצרים גבישי אוזאזון בצורת מחט.", answer: false, explanation: "צורת הגבישים של אוזאזון יכולה להשתנות בין סוכרים שונים. למשל, גלוקוזאזון יוצר גבישים דמויי מחט, אך גלקטוזאזון יוצר לוחיות רומביות." },
+            { question: "מבחן בנדיקט פחות אלקליני (בסיסי) ממבחן פהלינג.", answer: true, explanation: "אחד ההבדלים בין המבחנים הוא שריאגנט בנדיקט (המכיל סודיום קרבונט) הוא פחות בסיסי מריאגנט פהלינג (המכיל סודיום הידרוקסיד), מה שהופך אותו ליציב יותר." },
+            { question: "תגובת אוזאזון היא כמותית ומשמשת לקבוע במדויק את ריכוז הסוכר בתמיסה.", answer: false, explanation: "תגובת אוזאזון היא בעיקר איכותית, ומשמשת לזיהוי והבחנה בין סוכרים על בסיס זמן התגובה וצורת הגבישים. קשה להפוך אותה לכמותית מדויקת." },
+            { question: "מניטול משמש לעיתים לפתיחה זמנית של מחסום הדם-מוח לצורך העברת תרופות.", answer: true, explanation: "על ידי יצירת סביבה היפראוסמוטית, מניטול גורם לתאי האנדותל המרכיבים את המחסום להתכווץ, מה שפותח זמנית את החיבורים ביניהם ומאפשר מעבר תרופות." },
+            { question: "מבנה ויטמין C דומה למבנה של פרוקטוז.", answer: false, explanation: "מבנה ויטמין C דומה למבנה של גלוקוז. למעשה, גלוקוז הוא חומר המוצא לסינתזה שלו בבעלי חיים שיכולים לייצרו." },
+            { question: "הידרוגנציה של D-קסילוז (aldopentose) תיצור קסילטול.", answer: true, explanation: "הידרוגנציה (חיזור) של קבוצת האלדהיד ב-D-קסילוז הופכת אותה לקבוצת כוהל ראשונית, ויוצרת את כוהל-הסוכר קסילטול." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

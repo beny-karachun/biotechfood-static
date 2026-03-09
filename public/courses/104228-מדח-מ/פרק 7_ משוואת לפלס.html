@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תרגול משוואות דיפרנציאליות חלקיות - פרק 7: משוואת לפלס</title>
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #444; /* Slightly lighter than body for contrast */
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+        h1 { text-align: center; }
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2a7aaf;
+        }
+        .problem-navigation, .view-all-controls {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .problem-container, .solution-container, .all-problems-item {
+            background-color: #555; /* Darker than main container for sectioning */
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: 1px solid #666;
+        }
+        .solution-container {
+            display: none; /* Initially hidden */
+            margin-top: 15px;
+            border-left: 4px solid #3D90D7;
+        }
+        .problem-counter {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 15px;
+        }
+        .theory-section, .all-problems-section {
+            margin-bottom: 30px;
+        }
+        .all-problems-item {
+            margin-bottom: 15px;
+        }
+        /* MathJax SVG alignment fix for RTL */
+        mjx-container svg {
+            display: inline-block;
+        }
+        .math-display {
+            direction: ltr; /* Ensure math displays LTR */
+            text-align: left;
+            overflow-x: auto; /* For very long equations */
+            padding: 10px 0;
+        }
+        .math-inline {
+            direction: ltr;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>תרגול משוואות דיפרנציאליות חלקיות - פרק 7: משוואת לפלס</h1>
+
+        <!-- Theory Section -->
+        <div class="theory-section">
+            <h2>תקציר תיאורטי: פרק 7 - משוואת לפלס</h2>
+            <p>פרק זה עוסק במשוואת לפלס, שהיא משוואה דיפרנציאלית חלקית (מד"ח) אליפטית יסודית, ובמקבילתה הלא-הומוגנית, משוואת פואסון.</p>
+
+            <h3>הגדרות יסוד</h3>
+            <p><strong>משוואת לפלס</strong> במישור מוגדרת כ- $\Delta u = u_{xx} + u_{yy} = 0$.</p>
+            <p>האופרטור $\Delta$ נקרא <strong>הלפלסיאן</strong>.</p>
+            <p>פונקציה המקיימת את משוואת לפלס נקראת <strong>פונקציה הרמונית</strong>.</p>
+            <p><strong>משוואת פואסון</strong> היא הצורה הלא-הומוגנית: $\Delta u = F(x,y)$.</p>
+
+            <h3>משמעות פיזיקלית</h3>
+            <ul>
+                <li>תיאור התפלגות טמפרטורה במצב יציב (פתרון למשוואת החום $u_t - k\Delta u = F$ כאשר $u_t=0$).</li>
+                <li>תיאור פוטנציאל אלקטרוסטטי או פוטנציאל כבידתי (כאשר $F$ מייצג צפיפות מטען/מסה).</li>
+            </ul>
+
+            <h3>7.1 זהויות גרין (Green's Identities)</h3>
+            <p>זהויות גרין הן כלי חשוב לניתוח בעיות אליפטיות. הן מקשרות אינטגרל על תחום $D$ לאינטגרל על שפת התחום $\partial D$.</p>
+            <p><strong>זהות גרין הראשונה:</strong>
+            $\displaystyle \int_D (\nabla u \cdot \nabla v + v\Delta u) dxdy = \int_{\partial D} v \frac{\partial u}{\partial n} ds$
+            כאשר $\frac{\partial u}{\partial n}$ היא הנגזרת הנורמלית.</p>
+            <p><strong>זהות גרין השנייה:</strong>
+            $\displaystyle \int_D (u\Delta v - v\Delta u) dxdy = \int_{\partial D} (u\frac{\partial v}{\partial n} - v\frac{\partial u}{\partial n}) ds$</p>
+            <p><strong>שימושים בזהויות גרין:</strong></p>
+            <ul>
+                <li><strong>תנאי הכרחי לפתרון בעיית נוימן:</strong> עבור $\Delta u = F$ בתחום $D$ ו-$\frac{\partial u}{\partial n} = g$ על $\partial D$, תנאי הכרחי לקיום פתרון הוא $\int_D F dxdy = \int_{\partial D} g ds$.</li>
+                <li><strong>יחידות פתרון לבעיית דיריכלה:</strong> לבעיית דיריכלה ($\Delta u = F$ ב-$D$, $u=g$ על $\partial D$) יש לכל היותר פתרון אחד.</li>
+                <li><strong>יחידות פתרון לבעיית נוימן:</strong> פתרונות לבעיית נוימן יחידים עד כדי קבוע.</li>
+            </ul>
+
+            <h3>7.2 משפט המקסימום ועיקרון הממוצע</h3>
+            <p><strong>משפט המקסימום החלש:</strong> אם $u$ הרמונית בתחום חסום $D$ ורציפה על $D \cup \partial D$, אז הערכים המקסימליים והמינימליים של $u$ מתקבלים על שפת התחום $\partial D$.</p>
+            <p><strong>משפט המקסימום החזק:</strong> אם $u$ הרמונית בתחום $D$ ומקבלת מקסימום (או מינימום) בנקודה פנימית של $D$, אז $u$ חייבת להיות קבועה בכל $D$.</p>
+            <p><strong>עיקרון הממוצע:</strong> אם $u$ הרמונית ב-$D$, אז לכל נקודה $(x,y) \in D$ ולכל עיגול $B_R$ שמרכזו $(x,y)$ ומוכל כולו ב-$D$:
+            $\displaystyle u(x,y) = \frac{1}{2\pi R} \int_{\partial B_R} u ds$.
+            ערך הפונקציה במרכז העיגול שווה לממוצע ערכיה על היקפו.</p>
+            <p><strong>הכיוון ההפוך לעיקרון הממוצע:</strong> אם $u \in C^2(D)$ מקיימת את תכונת הממוצע ב-$D$, אז $u$ הרמונית ב-$D$.</p>
+
+            <h3>7.3 הפרדת משתנים בקואורדינטות פולריות</h3>
+            <p>לפתרון משוואת לפלס בעיגול, נוח להשתמש בקואורדינטות פולריות $(r,\theta)$. משוואת לפלס בקואורדינטות פולריות היא:
+            $\displaystyle \Delta w = w_{rr} + \frac{1}{r}w_r + \frac{1}{r^2}w_{\theta\theta} = 0$.</p>
+            <p>בהנחת פתרון מהצורה $w(r,\theta) = R(r)\Theta(\theta)$ (הפרדת משתנים), מקבלים שתי משוואות דיפרנציאליות רגילות:</p>
+            <ul>
+                <li>עבור $\Theta(\theta)$: $\Theta''(\theta) + \lambda\Theta(\theta) = 0$, עם תנאי שפה מחזוריים. הפתרונות הם $\Theta_n(\theta) = A_n \cos(n\theta) + B_n \sin(n\theta)$ עבור $\lambda_n = n^2$, $n=0,1,2,\dots$.</li>
+                <li>עבור $R(r)$: $r^2R''(r) + rR'(r) - \lambda R(r) = 0$ (משוואת אוילר). הפתרונות הם $R_0(r) = C_0 + D_0 \ln r$ עבור $\lambda_0=0$, ו-$R_n(r) = C_n r^n + D_n r^{-n}$ עבור $\lambda_n=n^2 > 0$.</li>
+            </ul>
+            <p>עבור פתרון בעיגול הכולל את הראשית ($r=0$), דורשים שהפתרון יהיה חסום. לכן, המקדמים של $\ln r$ ושל $r^{-n}$ חייבים להתאפס ($D_0=0, D_n=0$). הפתרון הכללי החסום בעיגול הוא:
+            $\displaystyle w(r,\theta) = \frac{A_0}{2} + \sum_{n=1}^{\infty} r^n (A_n \cos(n\theta) + B_n \sin(n\theta))$.
+            המקדמים $A_n, B_n$ נקבעים מתנאי השפה $w(a,\theta)=g(\theta)$ באמצעות פיתוח טור פורייה של $g(\theta)$.</p>
+             <p><strong>חלקות הפתרון:</strong> פונקציות הרמוניות הן חלקות אינסוף ($C^\infty$) בתחום הגדרתן.</p>
+
+            <h3>7.4 נוסחת פואסון</h3>
+            <p>נוסחת פואסון מספקת פתרון אינטגרלי מפורש לבעיית דיריכלה עבור משוואת לפלס בעיגול ברדיוס $a$ עם תנאי שפה $u(a,\phi) = h(\phi)$:
+            $\displaystyle w(r,\theta) = \frac{1}{2\pi} \int_0^{2\pi} \frac{a^2-r^2}{a^2 - 2ar \cos(\theta-\phi) + r^2} h(\phi) d\phi$.</p>
+            <p>הביטוי $\displaystyle K(r,\theta; a,\phi) = \frac{a^2-r^2}{a^2 - 2ar \cos(\theta-\phi) + r^2}$ נקרא <strong>גרעין פואסון</strong>.</p>
+
+            <h3>7.5 עיקרון המקסימום למשוואת החום</h3>
+            <p>עבור משוואת החום $u_t - k u_{xx} = 0$ בתחום $a < x < b, 0 < t \le T$, המקסימום (והמינימום) של $u$ מתקבלים על <strong>השפה הפרבולית</strong> $\partial_p = ([a,b]\times\{0\}) \cup (\{a\}\times[0,T]) \cup (\{b\}\times[0,T])$. כלומר, בזמן ההתחלתי $t=0$ או על השפות המרחביות $x=a, x=b$.</p>
+        </div>
+
+        <!-- Problem Navigation -->
+        <div class="problem-navigation">
+            <button id="prev-problem-btn">הבעיה הקודמת</button>
+            <span id="problem-counter" class="problem-counter">בעיה 1 / 25</span>
+            <button id="next-problem-btn">הבעיה הבאה</button>
+        </div>
+
+        <!-- Single Problem Display -->
+        <div id="current-problem-area">
+            <div id="problem-statement" class="problem-container"></div>
+            <button id="show-solution-btn" class="show-solution-btn">הצג פתרון</button>
+            <div id="solution-area" class="solution-container"></div>
+        </div>
+
+        <!-- View All Problems Control -->
+        <div class="view-all-controls">
+            <button id="view-all-btn">הצג את כל הבעיות</button>
+        </div>
+
+        <!-- All Problems Display Area -->
+        <div id="all-problems-section" class="all-problems-section" style="display:none;">
+            <h2>כל הבעיות</h2>
+            <!-- Problems will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // --- Problem Definitions ---
+        const problems = [
+            // Problem 1: Definition and Verification
+            {
+                statement: "א. רשום את משוואת לפלס הדו-ממדית. \nב. הגדר מהי פונקציה הרמונית. \nג. בדוק האם הפונקציה $u(x,y) = x^2 - y^2 + 2xy$ היא הרמונית.",
+                solution: "א. משוואת לפלס הדו-ממדית היא: $$\\Delta u = \\frac{\\partial^2 u}{\\partial x^2} + \\frac{\\partial^2 u}{\\partial y^2} = 0$$ \nב. פונקציה $u(x,y)$ נקראת הרמונית בתחום מסוים אם היא מקיימת את משוואת לפלס באותו תחום, ונגזרותיה החלקיות מסדר שני רציפות.\nג. נחשב את הנגזרות החלקיות של $u(x,y) = x^2 - y^2 + 2xy$:\n$u_x = 2x + 2y$\n$u_{xx} = 2$\n$u_y = -2y + 2x$\n$u_{yy} = -2$\nכעת נציב במשוואת לפלס:\n$\\Delta u = u_{xx} + u_{yy} = 2 + (-2) = 0$\nמאחר ש-$\\Delta u = 0$, הפונקציה $u(x,y) = x^2 - y^2 + 2xy$ היא הרמונית."
+            },
+            // Problem 2: Poisson's Equation
+            {
+                statement: "מהי משוואת פואסון, ומהי משמעותה הפיזיקלית בהקשר של פוטנציאל אלקטרוסטטי?",
+                solution: "משוואת פואסון היא הצורה הלא-הומוגנית של משוואת לפלס, וצורתה הכללית היא: $$\\Delta u = F(x,y)$$\nבהקשר של פוטנציאל אלקטרוסטטי, $u$ מייצגת את הפוטנציאל החשמלי, ו-$F(x,y)$ פרופורציונלית (עם סימן הפוך) לצפיפות המטען $\\rho(x,y)$. כלומר, $$\\Delta u = -\\frac{\\rho}{\\epsilon_0}$$ כאשר $\\epsilon_0$ הוא קבוע הדיאלקטריות של הריק. המשוואה קושרת את התפלגות הפוטנציאל להתפלגות המטענים במרחב."
+            },
+            // Problem 3: Green's First Identity
+            {
+                statement: "רשום את זהות גרין הראשונה והסבר את משמעות כל איבר בה.",
+                solution: "זהות גרין הראשונה היא: $$\\iint_D (\\nabla u \\cdot \\nabla v + v\\Delta u) dxdy = \\oint_{\\partial D} v \\frac{\\partial u}{\\partial n} ds$$\nכאשר:\n<ul><li>$D$ הוא תחום מישורי חסום.</li><li>$\\partial D$ היא שפת התחום $D$.</li><li>$u, v$ הן פונקציות גזירות ברציפות בתחום ובשפתו.</li><li>$\\nabla u \\cdot \\nabla v$ הוא המכפלה הסקלרית של הגרדיאנטים של $u$ ו-$v$.</li><li>$v\\Delta u$ הוא מכפלת הפונקציה $v$ בלפלסיאן של $u$.</li><li>$\\frac{\\partial u}{\\partial n}$ היא הנגזרת הנורמלית של $u$ על שפת התחום $\\partial D$ (נגזרת בכיוון הנורמל החיצוני לשפה).</li><li>$ds$ הוא אלמנט אורך על השפה.</li></ul>הזהות מקשרת אינטגרל כפול על התחום $D$ לאינטגרל קווי על שפתו $\\partial D$."
+            },
+            // Problem 4: Application of Green's for Neumann
+            {
+                statement: "השתמש בזהות גרין הראשונה כדי להוכיח את התנאי ההכרחי לקיום פתרון לבעיית נוימן: $\\Delta u = F(x,y)$ בתחום $D$, עם תנאי שפה $\\frac{\\partial u}{\\partial n} = g(x,y)$ על $\\partial D$.",
+                solution: "זהות גרין הראשונה היא: $$\\iint_D (\\nabla u \\cdot \\nabla v + v\\Delta u) dxdy = \\oint_{\\partial D} v \\frac{\\partial u}{\\partial n} ds$$\nנבחר $v=1$. במקרה זה, $\\nabla v = \\nabla 1 = (0,0)$.\nהצבת $v=1$ בזהות גרין הראשונה נותנת:\n$$\\iint_D (\\nabla u \\cdot \\vec{0} + 1 \\cdot \\Delta u) dxdy = \\oint_{\\partial D} 1 \\cdot \\frac{\\partial u}{\\partial n} ds$$\n$$\\iint_D \\Delta u dxdy = \\oint_{\\partial D} \\frac{\\partial u}{\\partial n} ds$$\nנתון לנו מהבעיה כי $\\Delta u = F(x,y)$ ו- $\\frac{\\partial u}{\\partial n} = g(x,y)$. נציב זאת במשוואה:\n$$\\iint_D F(x,y) dxdy = \\oint_{\\partial D} g(x,y) ds$$\nזהו התנאי ההכרחי לקיום פתרון לבעיית נוימן."
+            },
+            // Problem 5: Uniqueness for Dirichlet
+            {
+                statement: "הוכח יחידות פתרון לבעיית דיריכלה: $\\Delta u = F$ ב-$D$, $u=g$ על $\\partial D$, באמצעות זהות גרין הראשונה.",
+                solution: "נניח בשלילה שקיימים שני פתרונות $u_1$ ו-$u_2$ לבעיית דיריכלה.\nנגדיר $w = u_1 - u_2$.\nאז $w$ מקיים:\n$\\Delta w = \\Delta (u_1 - u_2) = \\Delta u_1 - \\Delta u_2 = F - F = 0$ ב-$D$.\nועל השפה $\\partial D$: $w = u_1 - u_2 = g - g = 0$.\nנשתמש בזהות גרין הראשונה עבור $w$ (כלומר, נבחר $u=w$ ו-$v=w$ בזהות):\n$$\\iint_D (\\nabla w \\cdot \\nabla w + w\\Delta w) dxdy = \\oint_{\\partial D} w \\frac{\\partial w}{\\partial n} ds$$\n$$\\iint_D ( |\\nabla w|^2 + w \\cdot 0 ) dxdy = \\oint_{\\partial D} 0 \\cdot \\frac{\\partial w}{\\partial n} ds$$\n(השתמשנו בכך ש-$\\Delta w = 0$ ב-$D$ ו-$w=0$ על $\\partial D$).\nנקבל: $$\\iint_D |\\nabla w|^2 dxdy = 0$$\nמאחר ש-$|\\nabla w|^2 \\ge 0$ והאינטגרל מתאפס, בהכרח $|\\nabla w|^2 = 0$ בכל $D$.\nזה גורר ש-$\\nabla w = \\vec{0}$ בכל $D$, כלומר $w$ היא פונקציה קבועה ב-$D$.\nמכיוון ש-$w=0$ על $\\partial D$ ו-$w$ רציפה עד השפה, אזי $w=0$ בכל $D$.\nלכן, $u_1 - u_2 = 0$, כלומר $u_1 = u_2$. קיבלנו יחידות פתרון. מ.ש.ל."
+            },
+            // Problem 6: Weak Maximum Principle
+            {
+                statement: "הסבר את משפט המקסימום החלש עבור פונקציות הרמוניות.",
+                solution: "משפט המקסימום החלש קובע כי אם פונקציה $u(x,y)$ היא הרמונית בתחום חסום $D$ ורציפה על סגור התחום $D \\cup \\partial D$, אז הערכים המקסימליים והמינימליים של $u$ מתקבלים בהכרח על שפת התחום $\\partial D$.\nמשמעות הדבר היא שלפונקציה הרמונית (לא קבועה) אין נקודות קיצון (מקסימום או מינימום) מקומיות בתוך התחום $D$. אם יש נקודת קיצון פנימית, הפונקציה חייבת להיות קבועה."
+            },
+            // Problem 7: Mean Value Principle
+            {
+                statement: "רשום את עיקרון הממוצע לפונקציות הרמוניות והסבר אותו.",
+                solution: "עיקרון הממוצע קובע שאם פונקציה $u(x,y)$ היא הרמונית בתחום $D$, אז לכל נקודה $(x_0, y_0) \\in D$ ולכל עיגול $B_R$ שמרכזו $(x_0, y_0)$ ורדיוסו $R$, כך ש-$B_R$ מוכל כולו ב-$D$, מתקיים:\n$$u(x_0, y_0) = \\frac{1}{2\\pi R} \\oint_{\\partial B_R} u(s) ds$$\nאו בצורה פרמטרית:\n$$u(x_0, y_0) = \\frac{1}{2\\pi} \\int_0^{2\\pi} u(x_0 + R\\cos\\theta, y_0 + R\\sin\\theta) d\\theta$$\nהעיקרון אומר שערך הפונקציה ההרמונית במרכז עיגול כלשהו שווה לממוצע ערכיה על היקף אותו עיגול. תכונה זו ייחודית לפונקציות הרמוניות."
+            },
+            // Problem 8: Strong Maximum Principle
+            {
+                statement: "מה ההבדל בין משפט המקסימום החלש למשפט המקסימום החזק?",
+                solution: "משפט המקסימום החלש קובע שהמקסימום (והמינימום) של פונקציה הרמונית בתחום חסום מתקבל על השפה.\nמשפט המקסימום החזק הוא תוצאה חזקה יותר: הוא קובע שאם פונקציה הרמונית (לא בהכרח בתחום חסום) מקבלת מקסימום (או מינימום) בנקודה *פנימית* לתחום, אזי הפונקציה חייבת להיות קבועה בכל התחום (הקשיר) הזה.\nכלומר, החלש רק אומר איפה הקיצון *יכול* להיות (על השפה). החזק אומר שאם הקיצון הוא *בפנים*, זה גורר שהפונקציה כולה קבועה."
+            },
+            // Problem 9: Laplace in Polar Coordinates
+            {
+                statement: "רשום את משוואת לפלס בקואורדינטות פולריות $(r, \\theta)$ עבור פונקציה $w(r, \\theta)$.",
+                solution: "משוואת לפלס $$\\Delta u = u_{xx} + u_{yy} = 0$$ הופכת בקואורדינטות פולריות $x = r\\cos\\theta, y = r\\sin\\theta$ לצורה:\n$$\\Delta w = w_{rr} + \\frac{1}{r}w_r + \\frac{1}{r^2}w_{\\theta\\theta} = 0$$\nכאשר $w(r, \\theta) = u(r\\cos\\theta, r\\sin\\theta)$."
+            },
+            // Problem 10: ODE for Theta
+            {
+                statement: "בעת פתרון משוואת לפלס בקואורדינטות פולריות באמצעות הפרדת משתנים $w(r, \\theta) = R(r)\\Theta(\\theta)$, מהי המשוואה הדיפרנציאלית הרגילה (מד\"ר) המתקבלת עבור $\\Theta(\\theta)$ ומהם תנאי השפה המתאימים לה עבור פתרון בעיגול מלא?",
+                solution: "לאחר הפרדת משתנים $w(r, \\theta) = R(r)\\Theta(\\theta)$ והצבה במשוואת לפלס בקואורדינטות פולריות, מקבלים את המשוואה הבאה עבור $\\Theta(\\theta)$:\n$$\\Theta''(\\theta) + \\lambda\\Theta(\\theta) = 0$$\nכאשר $\\lambda$ הוא קבוע ההפרדה.\nעבור פתרון בעיגול מלא, הפונקציה $\\Theta(\\theta)$ חייבת להיות מחזורית עם מחזור $2\\pi$ (כי $\\theta$ ו- $\\theta + 2\\pi$ מייצגות אותה זווית). לכן, תנאי השפה המתאימים הם תנאי שפה מחזוריים:\n$$\\Theta(0) = \\Theta(2\\pi)$$\n$$\\Theta'(0) = \\Theta'(2\\pi)$$ (או $\\Theta(-\\pi) = \\Theta(\\pi)$ וכו', תלוי בטווח הזוויות שנבחר)."
+            },
+            // Problem 11: Solutions for Theta
+            {
+                statement: "מהם הערכים העצמיים (ע\"ע) והפונקציות העצמיות (פ\"ע) המתקבלים עבור המד\"ר $\\Theta''(\\theta) + \\lambda\\Theta(\\theta) = 0$ עם תנאי שפה מחזוריים $\\Theta(0)=\\Theta(2\\pi), \\Theta'(0)=\\Theta'(2\\pi)$?",
+                solution: "עבור המד\"ר $\\Theta''(\\theta) + \\lambda\\Theta(\\theta) = 0$ עם תנאי שפה מחזוריים:\n1. אם $\\lambda < 0$, למשל $\\lambda = -k^2$ ($k>0$), הפתרון הוא $\\Theta(\\theta) = c_1 e^{k\\theta} + c_2 e^{-k\\theta}$. מתנאי השפה מקבלים $c_1=c_2=0$, כלומר רק הפתרון הטריוויאלי.\n2. אם $\\lambda = 0$, הפתרון הוא $\\Theta(\\theta) = c_1 \\theta + c_2$. מתנאי השפה $\\Theta(0)=\\Theta(2\\pi)$ מקבלים $c_2 = 2\\pi c_1 + c_2 \\Rightarrow c_1=0$. מתנאי $\\Theta'(0)=\\Theta'(2\\pi)$ מקבלים $c_1=c_1$ (לא נותן מידע נוסף). לכן, $\\Theta_0(\\theta) = c_2 = A_0/2$ (קבוע, נהוג לסמן $A_0/2$). זהו ע\"ע $\\lambda_0 = 0$.\n3. אם $\\lambda > 0$, למשל $\\lambda = k^2$ ($k>0$), הפתרון הוא $\\Theta(\\theta) = c_1 \\cos(k\\theta) + c_2 \\sin(k\\theta)$.\nמתנאי השפה $\\Theta(0)=\\Theta(2\\pi) \\Rightarrow c_1 = c_1 \\cos(2\\pi k) + c_2 \\sin(2\\pi k)$.\nמתנאי השפה $\\Theta'(0)=\\Theta'(2\\pi) \\Rightarrow kc_2 = -kc_1 \\sin(2\\pi k) + kc_2 \\cos(2\\pi k)$.\nכדי שיהיה פתרון לא טריוויאלי, $k$ חייב להיות מספר שלם, $k=n$, $n=1,2,3,\\dots$.\nלכן, הע\"ע הם $\\lambda_n = n^2$ עבור $n=0,1,2,\\dots$.\nהפ\"ע המתאימות הן: \nעבור $n=0$: $\\Theta_0(\\theta) = A_0$ (קבוע).\nעבור $n \\ge 1$: $\\Theta_n(\\theta) = A_n \\cos(n\\theta) + B_n \\sin(n\\theta)$."
+            },
+            // Problem 12: ODE for R(r)
+            {
+                statement: "מהי משוואת אוילר המתקבלת עבור $R(r)$ בפתרון משוואת לפלס בעיגול, ומהם פתרונותיה הכלליים כתלות בערך העצמי $\\lambda_n = n^2$?",
+                solution: "המשוואה הדיפרנציאלית הרגילה המתקבלת עבור $R(r)$ היא משוואת אוילר:\n$$r^2R''(r) + rR'(r) - \\lambda R(r) = 0$$\nכאשר $\\lambda = \\lambda_n = n^2$ ($n=0,1,2,\\dots$) הם הערכים העצמיים שהתקבלו מהמשוואה הזוויתית.\nהפתרונות הכלליים הם:\n1. עבור $\\lambda_0 = 0$ (כלומר $n=0$): המשוואה היא $r^2R_0'' + rR_0' = 0$. פתרונה הוא $R_0(r) = C_0 + D_0 \\ln r$.\n2. עבור $\\lambda_n = n^2 > 0$ (כלומר $n \\ge 1$): המשוואה היא $r^2R_n'' + rR_n' - n^2R_n = 0$. פתרונה הוא $R_n(r) = C_n r^n + D_n r^{-n}$."
+            },
+            // Problem 13: Boundedness at Origin
+            {
+                statement: "בפתרון משוואת לפלס בעיגול הכולל את הראשית ($r=0$), מדוע יש לדרוש שהפתרון יהיה חסום בראשית, ואילו איברים בפתרון הכללי של $R(r)$ נפסלים כתוצאה מכך?",
+                solution: "בבעיות פיזיקליות רבות (כגון טמפרטורה, פוטנציאל), מצפים שהפתרון יהיה סופי ומוגדר היטב בכל נקודה בתחום, כולל הראשית (אם היא חלק מהתחום). אם הפתרון אינו חסום בראשית, הוא לרוב אינו פיזיקלי.\nהפתרונות הכלליים עבור $R(r)$ היו:\n$R_0(r) = C_0 + D_0 \\ln r$\n$R_n(r) = C_n r^n + D_n r^{-n}$ (עבור $n \\ge 1$)\nהאיבר $\\ln r$ שואף ל- $ -\\infty $ כאשר $r \\to 0^+$.\nהאיבר $r^{-n}$ (עבור $n \\ge 1$) שואף ל- $ +\\infty $ כאשר $r \\to 0^+$.\nכדי שהפתרון $w(r,\\theta) = R(r)\\Theta(\\theta)$ יהיה חסום בראשית ($r=0$), עלינו לדרוש שהמקדמים של האיברים הלא-חסומים יתאפסו. לכן, נדרוש:\n$D_0 = 0$\n$D_n = 0$ לכל $n \\ge 1$.\nכתוצאה מכך, הפתרונות הרלוונטיים ל-$R(r)$ בעיגול הכולל את הראשית הם $R_0(r) = C_0$ ו-$R_n(r) = C_n r^n$."
+            },
+            // Problem 14: General Solution in a Disk
+            {
+                statement: "רשום את הצורה הכללית של פתרון חסום למשוואת לפלס בעיגול ברדיוס $a$ הכולל את הראשית.",
+                solution: "הפתרון הכללי החסום למשוואת לפלס בעיגול ברדיוס $a$ (הכולל את $r=0$) מתקבל משילוב הפתרונות החסומים $R_n(r)$ ו-$\Theta_n(\\theta)$:\n$$w(r,\\theta) = \\frac{A_0}{2} + \\sum_{n=1}^{\\infty} r^n (A_n \\cos(n\\theta) + B_n \\sin(n\\theta))$$\nכאשר $A_0, A_n, B_n$ הם קבועים הנקבעים מתנאי השפה על היקף העיגול $r=a$. הצורה $\\frac{A_0}{2}$ היא קונבנציה סטנדרטית בטורי פורייה."
+            },
+            // Problem 15: Applying Boundary Conditions (Conceptual)
+            {
+                statement: "כיצד נקבעים המקדמים $A_n, B_n$ בפתרון הכללי למשוואת לפלס בעיגול $w(r,\\theta) = \\frac{A_0}{2} + \\sum_{n=1}^{\\infty} r^n (A_n \\cos(n\\theta) + B_n \\sin(n\\theta))$, אם נתון תנאי שפה $w(a,\\theta) = g(\\theta)$?",
+                solution: "אם נתון תנאי השפה $w(a,\\theta) = g(\\theta)$ על היקף העיגול (כלומר, כאשר $r=a$), נציב $r=a$ בפתרון הכללי:\n$$g(\\theta) = w(a,\\theta) = \\frac{A_0}{2} + \\sum_{n=1}^{\\infty} a^n (A_n \\cos(n\\theta) + B_n \\sin(n\\theta))$$\nזוהי בדיוק הצורה של טור פורייה כללי לפונקציה $g(\\theta)$.\nלכן, המקדמים $A_0, A_n, B_n$ (ליתר דיוק, $a^n A_n$ ו-$a^n B_n$) נקבעים באמצעות נוסחאות אוילר-פורייה הסטנדרטיות לפיתוח $g(\\theta)$ לטור פורייה:\n$$A_0 = \\frac{1}{\\pi} \\int_0^{2\\pi} g(\\theta) d\\theta$$\n$$A_n = \\frac{1}{\\pi a^n} \\int_0^{2\\pi} g(\\theta) \\cos(n\\theta) d\\theta \\quad (n \\ge 1)$$\n$$B_n = \\frac{1}{\\pi a^n} \\int_0^{2\\pi} g(\\theta) \\sin(n\\theta) d\\theta \\quad (n \\ge 1)$$\n(הערה: אם הטווח הוא $(-\\pi, \\pi)$, גבולות האינטגרציה משתנים בהתאם)."
+            },
+            // Problem 16: Poisson's Integral Formula
+            {
+                statement: "מהי נוסחת פואסון, ומה היא מאפשרת לחשב?",
+                solution: "נוסחת פואסון היא נוסחה אינטגרלית מפורשת המספקת את הפתרון לבעיית דיריכלה עבור משוואת לפלס בעיגול.\nאם נתונה משוואת לפלס $\\Delta w = 0$ בעיגול ברדיוס $a$, עם תנאי שפה $w(a,\\phi) = h(\\phi)$ על היקף העיגול, אז הפתרון $w(r,\\theta)$ לכל $(r,\\theta)$ כך ש-$r<a$ נתון על ידי:\n$$w(r,\\theta) = \\frac{1}{2\\pi} \\int_0^{2\\pi} \\frac{a^2-r^2}{a^2 - 2ar \\cos(\\theta-\\phi) + r^2} h(\\phi) d\\phi$$\nהנוסחה מאפשרת לחשב את ערך הפונקציה ההרמונית $w$ בכל נקודה בתוך העיגול, בהינתן ערכיה על שפת העיגול. הביטוי $\\frac{a^2-r^2}{a^2 - 2ar \\cos(\\theta-\\phi) + r^2}$ נקרא גרעין פואסון."
+            },
+            // Problem 17: Poisson Kernel
+            {
+                statement: "זהה את גרעין פואסון בנוסחת פואסון. מהם משתניו העיקריים?",
+                solution: "גרעין פואסון, המסומן לעיתים $K(r,\\theta; a,\\phi)$ או $P_r(a, \\theta-\\phi)$, הוא הביטוי:\n$$K(r,\\theta; a,\\phi) = \\frac{a^2-r^2}{a^2 - 2ar \\cos(\\theta-\\phi) + r^2}$$\nמשתניו העיקריים הם:\n<ul><li>$(r,\\theta)$: הקואורדינטות של הנקודה בתוך העיגול שבה אנו מחשבים את הפתרון.</li><li>$a$: רדיוס העיגול.</li><li>$\\phi$: משתנה האינטגרציה, המייצג את הזווית על שפת העיגול.</li></ul>הגרעין מתאר את 'ההשפעה' של ערך הפונקציה בנקודה $(a,\\phi)$ על השפה על ערך הפונקציה בנקודה $(r,\\theta)$ בפנים העיגול."
+            },
+            // Problem 18: Smoothness of Harmonic Functions
+            {
+                statement: "מה ניתן לומר על חלקות (smoothness) של פונקציות הרמוניות בתחום הגדרתן?",
+                solution: "אחת התכונות המרכזיות של פונקציות הרמוניות היא שהן חלקות אינסוף (כלומר, $C^\\infty$) בתחום שבו הן הרמוניות. משמעות הדבר היא שכל הנגזרות החלקיות שלהן, מכל סדר, קיימות ורציפות. זוהי תוצאה חזקה הנובעת מאליפטיות של משוואת לפלס, והיא נכונה גם אם הפונקציה $F(x,y)$ במשוואת פואסון $\\Delta u = F$ היא חלקה."
+            },
+            // Problem 19: Use of Mean Value Principle
+            {
+                statement: "פונקציה $u(x,y)$ הרמונית בעיגול היחידה $x^2+y^2 < 1$. נתון כי $u(x,y) = \\cos(2\\theta)$ על שפת העיגול (כלומר, כאשר $r=1$). מהו הערך של $u(0,0)$?",
+                solution: "לפי עיקרון הממוצע, ערך הפונקציה ההרמונית במרכז העיגול ($r=0$) שווה לממוצע ערכיה על היקפו.\nבמקרה זה, $(x_0,y_0)=(0,0)$ ורדיוס העיגול $R=1$. תנאי השפה הוא $u(1,\\theta) = \\cos(2\\theta)$.\n$$u(0,0) = \\frac{1}{2\\pi} \\int_0^{2\\pi} u(1\\cos\\theta, 1\\sin\\theta) d\\theta = \\frac{1}{2\\pi} \\int_0^{2\\pi} \\cos(2\\theta) d\\theta$$\nנחשב את האינטגרל:\n$$\\int_0^{2\\pi} \\cos(2\\theta) d\\theta = \\left[ \\frac{\\sin(2\\theta)}{2} \\right]_0^{2\\pi} = \\frac{\\sin(4\\pi)}{2} - \\frac{\\sin(0)}{2} = 0 - 0 = 0$$\nלכן, $u(0,0) = \\frac{1}{2\\pi} \\cdot 0 = 0$."
+            },
+            // Problem 20: Max Principle for Heat Equation
+            {
+                statement: "הסבר בקצרה את עיקרון המקסימום (והמינימום) עבור משוואת החום $u_t - k u_{xx} = 0$ בתחום $a < x < b, 0 < t \\le T$. היכן מתקבלים ערכי הקיצון?",
+                solution: "עיקרון המקסימום (והמינימום) למשוואת החום קובע כי עבור פתרון $u(x,t)$ למשוואת החום $u_t - k u_{xx} = 0$ בתחום המוגדר על ידי $a < x < b$ ו-$0 < t \\le T$ (עם תנאי התחלה ותנאי שפה מתאימים כך שהפתרון רציף עד השפה), ערכי המקסימום והמינימום של $u(x,t)$ מתקבלים על 'השפה הפרבולית' של התחום.\nהשפה הפרבולית מורכבת מ:\n1. קטע הזמן ההתחלתי: $t=0$ לכל $a \\le x \\le b$.\n2. השפות המרחביות לאורך הזמן: $x=a$ לכל $0 \\le t \\le T$, ו-$x=b$ לכל $0 \\le t \\le T$.\nכלומר, הטמפרטורה המקסימלית/מינימלית לאורך התהליך כולו נקבעת או על ידי הטמפרטורה ההתחלתית או על ידי הטמפרטורות הנכפות בשפות המרחביות."
+            },
+            // Problem 21: Linearity of Laplace Operator
+            {
+                statement: "אם $u_1(x,y)$ ו-$u_2(x,y)$ הן פונקציות הרמוניות בתחום $D$, הוכח שגם הצירוף הלינארי $u(x,y) = c_1 u_1(x,y) + c_2 u_2(x,y)$ (כאשר $c_1, c_2$ קבועים) הוא פונקציה הרמונית ב-$D$.",
+                solution: "נתון ש-$u_1$ ו-$u_2$ הרמוניות ב-$D$. זה אומר:\n$\\Delta u_1 = u_{1,xx} + u_{1,yy} = 0$\n$\\Delta u_2 = u_{2,xx} + u_{2,yy} = 0$\nנגדיר $u = c_1 u_1 + c_2 u_2$.\nנחשב את הלפלסיאן של $u$:\n$\\Delta u = \\Delta (c_1 u_1 + c_2 u_2)$\nמלינאריות אופרטור הגזירה (ולכן גם הלפלסיאן):\n$\\Delta u = c_1 \\Delta u_1 + c_2 \\Delta u_2$\nנציב את העובדה ש-$u_1, u_2$ הרמוניות:\n$\\Delta u = c_1 (0) + c_2 (0) = 0$\nמאחר ש-$\\Delta u = 0$, גם $u(x,y) = c_1 u_1(x,y) + c_2 u_2(x,y)$ היא פונקציה הרמונית ב-$D$. מ.ש.ל."
+            },
+            // Problem 22: Constant boundary condition
+            {
+                statement: "פונקציה $u(x,y)$ הרמונית בתחום חסום $D$. נתון כי $u(x,y) = C$ (קבוע) לכל $(x,y) \\in \\partial D$. מה ניתן לומר על $u(x,y)$ בתוך התחום $D$?",
+                solution: "לפי משפט המקסימום החלש, הערך המקסימלי של $u$ ב-$D \\cup \\partial D$ מתקבל על $\\partial D$. מאחר ש-$u=C$ על $\\partial D$, הערך המקסימלי של $u$ הוא $C$.\nבאופן דומה, לפי משפט המינימום החלש (שהוא שקול למשפט המקסימום עבור $-u$), הערך המינימלי של $u$ ב-$D \\cup \\partial D$ מתקבל על $\\partial D$. מאחר ש-$u=C$ על $\\partial D$, הערך המינימלי של $u$ הוא $C$.\nאם המקסימום של $u$ שווה למינימום של $u$ (ושניהם שווים ל-$C$), אזי הפונקציה $u$ חייבת להיות קבועה ושווה ל-$C$ בכל התחום $D \\cup \\partial D$.\nלכן, $u(x,y) = C$ לכל $(x,y) \\in D$."
+            },
+            // Problem 23: Role of v=1 in Green's
+            {
+                statement: "בשימוש בזהות גרין הראשונה כדי להפיק את התנאי ההכרחי לבעיית נוימן, מדוע הבחירה $v=1$ היא מועילה?",
+                solution: "זהות גרין הראשונה היא: $$\\iint_D (\\nabla u \\cdot \\nabla v + v\\Delta u) dxdy = \\oint_{\\partial D} v \\frac{\\partial u}{\\partial n} ds$$\nהבחירה $v=1$ מועילה מכמה סיבות:\n1. **פישוט האיבר $\\nabla u \\cdot \\nabla v$**: אם $v=1$, אז $v$ היא פונקציה קבועה, ולכן הגרדיאנט שלה הוא וקטור האפס: $\\nabla v = \\nabla 1 = (0,0)$. כתוצאה מכך, המכפלה הסקלרית $\\nabla u \\cdot \\nabla v = \\nabla u \\cdot \\vec{0} = 0$. זה מפשט מאוד את האינטגרנד בצד שמאל.\n2. **השארת $\\Delta u$ ו- $\\frac{\\partial u}{\\partial n}$**: בבחירת $v=1$, האיבר $v\\Delta u$ הופך ל-$\\Delta u$, והאיבר $v \\frac{\\partial u}{\\partial n}$ הופך ל-$\\frac{\\partial u}{\\partial n}$. אלו בדיוק הביטויים המופיעים בהגדרת בעיית נוימן ($\Delta u = F$ ו- $\\frac{\\partial u}{\\partial n} = g$).\nכך, הזהות הופכת ישירות לקשר בין $F$ ל-$g$: $$\\iint_D \\Delta u dxdy = \\oint_{\\partial D} \\frac{\\partial u}{\\partial n} ds \\implies \\iint_D F dxdy = \\oint_{\\partial D} g ds$$"
+            },
+            // Problem 24: Laplace operator in 1D
+            {
+                statement: "מהי הצורה של משוואת לפלס במקרה החד-ממדי, כלומר $u(x)$? מהם הפתרונות הכלליים למשוואה זו?",
+                solution: "במקרה החד-ממדי, הפונקציה $u$ תלויה רק במשתנה אחד, $x$. הלפלסיאן הופך להיות פשוט הנגזרת השנייה לפי $x$:\n$$\\Delta u = u_{xx} = \\frac{d^2 u}{dx^2}$$\nלכן, משוואת לפלס החד-ממדית היא:\n$$\\frac{d^2 u}{dx^2} = 0$$\nכדי למצוא את הפתרונות הכלליים, מבצעים אינטגרציה פעמיים:\n$\\frac{du}{dx} = C_1$ (כאשר $C_1$ קבוע אינטגרציה ראשון)\n$u(x) = C_1 x + C_2$ (כאשר $C_2$ קבוע אינטגרציה שני)\nהפתרונות הכלליים הם פונקציות לינאריות. פונקציות לינאריות אכן מקיימות את עיקרון הממוצע במובן החד-ממדי (ערך הפונקציה בנקודה הוא ממוצע ערכיה בשתי נקודות סימטריות סביבה) ואת עיקרון המקסימום (ערכי הקיצון בקטע מתקבלים בקצות הקטע)."
+            },
+            // Problem 25: Uniqueness for Poisson
+            {
+                statement: "האם הוכחת היחידות לבעיית דיריכלה עבור משוואת לפלס ($\Delta u = 0$) תקפה גם עבור משוואת פואסון ($\Delta u = F$)? נמק.",
+                solution: "כן, הוכחת היחידות לבעיית דיריכלה תקפה גם עבור משוואת פואסון ($\Delta u = F$) עם אותו תנאי שפה $u=g$ על $\\partial D$.\nההוכחה מתבססת על ההנחה שקיימים שני פתרונות $u_1, u_2$ והגדרת $w = u_1 - u_2$.\nאם $u_1, u_2$ הם פתרונות לבעיית פואסון עם אותו $F$ ואותו $g$:\n$\\Delta u_1 = F$ ב-$D$, $u_1 = g$ על $\\partial D$.\n$\\Delta u_2 = F$ ב-$D$, $u_2 = g$ על $\\partial D$.\nאז עבור $w = u_1 - u_2$:\n$\\Delta w = \\Delta (u_1 - u_2) = \\Delta u_1 - \\Delta u_2 = F - F = 0$ ב-$D$.\nועל השפה $\\partial D$: $w = u_1 - u_2 = g - g = 0$.\nכלומר, $w$ מקיים את משוואת לפלס ההומוגנית ($\Delta w = 0$) עם תנאי שפה דיריכלה הומוגניים ($w=0$).\nמכאן, המשך ההוכחה זהה להוכחת היחידות עבור משוואת לפלס: משתמשים בזהות גרין הראשונה (או במשפט המקסימום) כדי להראות ש-$w=0$ בכל $D$, ולכן $u_1=u_2$.\nההבדל הוא רק בשלב הראשון של הגדרת הבעיה עבור $w$; לאחר מכן הניתוח הוא על משוואת לפלס הומוגנית."
+            }
+        ];
+
+        // --- JavaScript Logic ---
+        let currentProblemIndex = 0;
+
+        // DOM Elements
+        const problemStatementDiv = document.getElementById('problem-statement');
+        const solutionAreaDiv = document.getElementById('solution-area');
+        const showSolutionBtn = document.getElementById('show-solution-btn');
+        const problemCounterSpan = document.getElementById('problem-counter');
+        const prevProblemBtn = document.getElementById('prev-problem-btn');
+        const nextProblemBtn = document.getElementById('next-problem-btn');
+        const viewAllBtn = document.getElementById('view-all-btn');
+        const allProblemsSection = document.getElementById('all-problems-section');
+
+        function renderProblem() {
+            const problem = problems[currentProblemIndex];
+            // Use textContent for statements/solutions to let MathJax handle the $...$
+            // Replace \n with <br> for multiline statements/solutions in HTML
+            problemStatementDiv.innerHTML = problem.statement.replace(/\n/g, '<br/>');
+            solutionAreaDiv.innerHTML = problem.solution.replace(/\n/g, '<br/>');
+            
+            // Ensure solution is hidden initially when a new problem is rendered
+            solutionAreaDiv.style.display = 'none';
+            showSolutionBtn.textContent = 'הצג פתרון';
+            
+            problemCounterSpan.textContent = `בעיה ${currentProblemIndex + 1} / ${problems.length}`;
+            
+            // Re-typeset MathJax for the current problem and solution area
+            if (window.MathJax && window.MathJax.typeset) {
+                MathJax.typesetPromise([problemStatementDiv, solutionAreaDiv]).catch(function (err) {
+                    console.error('MathJax typeset error: ' + err.message);
+                });
+            }
+        }
+
+        function toggleSingleSolution() {
+            const isHidden = solutionAreaDiv.style.display === 'none' || solutionAreaDiv.style.display === '';
+            solutionAreaDiv.style.display = isHidden ? 'block' : 'none';
+            showSolutionBtn.textContent = isHidden ? 'הסתר פתרון' : 'הצג פתרון';
+        }
+
+        function showNextProblem() {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                renderProblem();
+            }
+        }
+
+        function showPreviousProblem() {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                renderProblem();
+            }
+        }
+        
+        function toggleSolutionInAll(index) {
+            const solutionDiv = document.getElementById(`all-solution-${index}`);
+            const button = document.querySelector(`button[onclick="toggleSolutionInAll(${index})"]`);
+            const isHidden = solutionDiv.style.display === 'none' || solutionDiv.style.display === '';
+            solutionDiv.style.display = isHidden ? 'block' : 'none';
+            if (button) {
+                button.textContent = isHidden ? 'הסתר פתרון' : 'הצג פתרון';
+            }
+        }
+
+        function displayAllProblems() {
+            allProblemsSection.innerHTML = '<h2>כל הבעיות</h2>'; // Clear previous content and add title
+            problems.forEach((problem, index) => {
+                const problemItemDiv = document.createElement('div');
+                problemItemDiv.className = 'all-problems-item';
+                problemItemDiv.id = `all-problem-${index}`;
+
+                const statementDiv = document.createElement('div');
+                statementDiv.innerHTML = `<strong>בעיה ${index + 1}:</strong><br/>${problem.statement.replace(/\n/g, '<br/>')}`;
+                
+                const solutionBtn = document.createElement('button');
+                solutionBtn.textContent = 'הצג פתרון';
+                solutionBtn.className = 'show-solution-all-btn';
+                solutionBtn.onclick = () => toggleSolutionInAll(index);
+
+                const solDiv = document.createElement('div');
+                solDiv.id = `all-solution-${index}`;
+                solDiv.className = 'solution-container'; // Uses existing styling for hidden solutions
+                solDiv.innerHTML = problem.solution.replace(/\n/g, '<br/>');
+
+                problemItemDiv.appendChild(statementDiv);
+                problemItemDiv.appendChild(solutionBtn);
+                problemItemDiv.appendChild(solDiv);
+                allProblemsSection.appendChild(problemItemDiv);
+            });
+            allProblemsSection.style.display = 'block';
+            if (window.MathJax && window.MathJax.typeset) {
+                 MathJax.typesetPromise([allProblemsSection]).catch(function (err) {
+                    console.error('MathJax typeset error (all problems): ' + err.message);
+                });
+            }
+            viewAllBtn.textContent = 'הסתר את כל הבעיות';
+        }
+
+        function hideAllProblems() {
+            allProblemsSection.style.display = 'none';
+            allProblemsSection.innerHTML = '<h2>כל הבעיות</h2>'; // Clear content
+            viewAllBtn.textContent = 'הצג את כל הבעיות';
+        }
+        
+        viewAllBtn.addEventListener('click', () => {
+            if (allProblemsSection.style.display === 'none' || allProblemsSection.style.display === '') {
+                displayAllProblems();
+            } else {
+                hideAllProblems();
+            }
+        });
+
+        // Event Listeners for navigation and single solution
+        showSolutionBtn.addEventListener('click', toggleSingleSolution);
+        nextProblemBtn.addEventListener('click', showNextProblem);
+        prevProblemBtn.addEventListener('click', showPreviousProblem);
+
+        // Initial render
+        renderProblem();
+        
+        // Ensure MathJax typesets the theory section on load
+        document.addEventListener('DOMContentLoaded', (event) => {
+            if (window.MathJax && window.MathJax.typeset) {
+                const theorySection = document.querySelector('.theory-section');
+                if (theorySection) {
+                    MathJax.typesetPromise([theorySection]).catch(function (err) {
+                        console.error('MathJax typeset error (theory section): ' + err.message);
+                    });
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 2: משוואות קווזי לינאריות מסדר ראשון בשני משתנים - תרגול</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #444; /* Slightly lighter than body for contrast */
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        h1, h2, h3 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+        h1 { text-align: center; }
+        .theory-section, .problem-container, .all-problems-container {
+            background-color: #555; /* Slightly lighter than container */
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .problem-statement, .solution-area {
+            margin-bottom: 15px;
+        }
+        .solution-area {
+            background-color: #484848;
+            border: 1px solid #666;
+            padding: 10px;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+        }
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2a7cb0;
+        }
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        #problem-counter {
+            font-weight: bold;
+        }
+        /* Ensure math LTR rendering */
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important; /* Align math expressions to the left */
+        }
+        mjx-container[display="true"] {
+            display: block !important; /* Ensure display math takes full width and centers if desired */
+            margin: 1em 0 !important;
+        }
+        .problem-block {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #666;
+        }
+        .problem-block:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 2: משוואות דיפרנציאליות חלקיות קווזי-לינאריות מסדר ראשון בשני משתנים</h1>
+
+        <div class="theory-section">
+            <h2>סיכום תיאורטי</h2>
+            <p>פרק זה עוסק במשוואות דיפרנציאליות חלקיות (מד"ח) קווזי-לינאריות מסדר ראשון בשני משתנים. הצורה הכללית של משוואות אלו היא:</p>
+            <p>\( a(x, y, u) u_x + b(x, y, u) u_y = c(x, y, u) \)</p>
+            <p>כאשר \(u_x = \frac{\partial u}{\partial x}\) ו-\(u_y = \frac{\partial u}{\partial y}\). המונח "קווזי-לינארי" מציין שהמשוואה לינארית בנגזרות החלקיות מסדר הגבוה ביותר (במקרה זה, \(u_x\) ו-\(u_y\)), אך המקדמים \(a, b, c\) יכולים להיות תלויים ב-\(x, y\) ובפונקציה הנעלמת \(u\) עצמה.</p>
+            <p>בדרך כלל, פותרים משוואות אלו תחת תנאי התחלה, המכונה גם בעיית קושי (Cauchy problem). תנאי ההתחלה מגדיר את ערכי הפונקציה \(u\) לאורך עקום נתון במישור \(xy\). באופן כללי יותר, משטח הפתרון \(z = u(x,y)\) נדרש לעבור דרך עקום מרחבי נתון \( \Gamma(s) = (f(s), g(s), h(s)) \).</p>
+
+            <h3>2.1 שיטת האופיינים (Method of Characteristics)</h3>
+            <p>שיטת האופיינים היא טכניקה מרכזית לפתרון מד"ח קווזי-לינאריות מסדר ראשון.</p>
+            <p><strong>אינטואיציה גיאומטרית:</strong> ניתן לפרש את המד"ח \( a u_x + b u_y = c \) באופן גיאומטרי. הווקטור \( (u_x, u_y, -1) \) הוא וקטור נורמלי למשטח הפתרון \( z = u(x,y) \). המד"ח מציינת שהווקטור \( (a, b, c) \) אורתוגונלי לווקטור הנורמלי הזה, כלומר הווקטור \( (a, b, c) \) שוכן במישור המשיק למשטח הפתרון בכל נקודה.</p>
+            <p><strong>עקומים אופייניים:</strong> השיטה מחפשת עקומים \( (x(t), y(t), u(t)) \) במרחב \( (x,y,u) \) שהווקטורים המשיקים להם הם בדיוק \( (a(x,y,u), b(x,y,u), c(x,y,u)) \). עקומים אלו נקראים עקומים אופייניים (או בקיצור, אופיינים). הם פתרונות של מערכת המשוואות הדיפרנציאליות הרגילות (מד"ר) הבאה:</p>
+            <p>
+                \( \frac{dx}{dt} = a(x, y, u) \) <br>
+                \( \frac{dy}{dt} = b(x, y, u) \) <br>
+                \( \frac{du}{dt} = c(x, y, u) \)
+            </p>
+            <p><strong>בניית הפתרון:</strong> משטח הפתרון \( u(x,y) \) נוצר על ידי "שזירת" העקומים האופייניים היוצאים מעקום תנאי ההתחלה.</p>
+            <p><strong>תהליך הפתרון:</strong></p>
+            <ol>
+                <li>רושמים את מערכת המד"ר האופייניות.</li>
+                <li>מבצעים פרמטריזציה של עקום ההתחלה: \( x_0(s), y_0(s), u_0(s) \).</li>
+                <li>פותרים את מערכת המד"ר עם תנאי ההתחלה \( x(0,s) = x_0(s), y(0,s) = y_0(s), u(0,s) = u_0(s) \). הפתרון יהיה מהצורה \( x(t,s), y(t,s), u(t,s) \).</li>
+                <li>מבטאים את \( t \) ו-\( s \) באמצעות \( x \) ו-\( y \) על ידי הפיכת הקשרים \( x=x(t,s) \) ו-\( y=y(t,s) \) (אם ניתן), ומציבים ב-\( u(t,s) \) כדי למצוא את \( u(x,y) \).</li>
+            </ol>
+
+            <h3>2.2 משפט הקיום והיחידות</h3>
+            <p>לא תמיד שיטת האופיינים מניבה פתרון יחיד.</p>
+            <p><strong>תנאי הטרנסוורסליות (תנאי החיתוך):</strong> התנאי המרכזי לקיום ויחידות מקומיים של הפתרון קשור לעקום ההתחלה \( \Gamma(s) = (f(s), g(s), h(s)) \) ולכיוונים האופייניים. פתרון \( u(x,y) \) קיים (והוא יחיד) בסביבת עקום ההתחלה אם העקומים האופייניים "חוצים" את עקום ההתחלה באופן טרנסוורסלי (לא משיקים לו במובן מסוים). תנאי זה מתבטא באמצעות דטרמיננטה יעקוביאנית \( J \):</p>
+            <p>
+            \( J = \det \begin{vmatrix} a(f(s),g(s),h(s)) & b(f(s),g(s),h(s)) \\ f'(s) & g'(s) \end{vmatrix} = a \cdot g'(s) - b \cdot f'(s) \)
+            </p>
+            <p>אם \( J \neq 0 \) לאורך עקום ההתחלה, אז קיים פתרון יחיד באופן מקומי. אם \( J = 0 \), ההיטל של העקומים האופייניים על מישור \( xy \) משיק להיטל של עקום ההתחלה, מה שמוביל לבעיות.</p>
+
+            <h3>2.3 מציאת פתרון כללי</h3>
+            <p>אם תנאי ההתחלה כולל פונקציה שרירותית (למשל, \( u(x,0) = F(x) \) עבור \( F \) גזירה כלשהי), שיטת האופיינים יכולה לעיתים להניב פתרון כללי הכולל פונקציה שרירותית זו.</p>
+
+            <h3>2.4 חוסר יחידות ו-2.5 מציאת אינסוף פתרונות</h3>
+            <p>כאשר \( J = 0 \):</p>
+            <ul>
+                <li>אם עקום ההתחלה \( \Gamma(s) \) הוא בעצמו עקום אופייני (כלומר, הווקטור המשיק לו \( (f', g', h') \) מקביל לווקטור \( (a,b,c) \) לאורך העקום), אז קיימים אינסוף פתרונות. המד"ח אינה מספקת מידע חדש לאורך עקום זה מעבר למה שכבר נתון בתנאי ההתחלה.</li>
+                <li>אם \( J = 0 \) (ההיטל האופייני במישור \( xy \) משיק להיטל עקום ההתחלה) אך עקום ההתחלה \( \Gamma(s) \) *אינו* עקום אופייני, אז לא קיים פתרון. תנאי ההתחלה אינו תואם את המד"ח לאורך אותו עקום.</li>
+            </ul>
+            <p><strong>מנקודת מבט של אלגברה לינארית:</strong> המד"ח ותנאי ההתחלה הגזור (לפי פרמטר העקום) מהווים מערכת משוואות לינארית עבור \( u_x \) ו-\( u_y \). הדטרמיננטה של מטריצת המקדמים של מערכת זו היא \(J\).</p>
+
+            <h3>2.6 סיכום</h3>
+            <p>קיימות שלוש אפשרויות לבעיית קושי עבור מד"ח קווזי-לינארית מסדר ראשון:</p>
+            <ol>
+                <li><strong>פתרון מקומי יחיד:</strong> אם תנאי הטרנסוורסליות \( J \neq 0 \) מתקיים.</li>
+                <li><strong>אינסוף פתרונות מקומיים:</strong> אם \( J = 0 \) ועקום ההתחלה הוא עקום אופייני.</li>
+                <li><strong>אין פתרון:</strong> אם \( J = 0 \) ועקום ההתחלה אינו עקום אופייני.</li>
+            </ol>
+        </div>
+
+        <h2>תרגול אינטראקטיבי</h2>
+        <div class="problem-container">
+            <div class="navigation-controls">
+                <button id="prev-problem">הבעיה הקודמת</button>
+                <span id="problem-counter">בעיה 1 / 25</span>
+                <button id="next-problem">הבעיה הבאה</button>
+            </div>
+            <div id="problem-statement-area" class="problem-statement">
+                <!-- Problem statement will be loaded here -->
+            </div>
+            <button id="show-solution-btn" class="show-solution-btn-single">הצג פתרון</button>
+            <div id="solution-area-single" class="solution-area">
+                <!-- Solution will be loaded here -->
+            </div>
+        </div>
+        
+        <button id="view-all-problems-btn">הצג את כל הבעיות</button>
+        <div id="all-problems-area" class="all-problems-container" style="display:none;">
+            <!-- All problems will be loaded here -->
+        </div>
+
+    </div>
+
+    <script>
+        // JavaScript code will go here
+        const problems = [
+            // Problems for Chapter 2: Quasi-linear First-Order PDEs
+            {
+                statement: "נתונה המד\"ח: $u_x + u_y = 1$. מצא את העקומות האופייניות.",
+                solution: "המשוואות האופייניות הן: <br>" +
+                          "$\\frac{dx}{dt} = 1$ <br>" +
+                          "$\\frac{dy}{dt} = 1$ <br>" +
+                          "$\\frac{du}{dt} = 1$ <br>" +
+                          "פתרון המשוואות נותן: <br>" +
+                          "$x(t) = t + c_1$ <br>" +
+                          "$y(t) = t + c_2$ <br>" +
+                          "$u(t) = t + c_3$ <br>" +
+                          "העקומות האופייניות הן קווים ישרים. ניתן לבטא אותם למשל על ידי $y-x = C_1$ ו-$u-x = C_2$."
+            },
+            {
+                statement: "פתור את בעיית קושי: $u_x + 2u_y = 0$, עם תנאי התחלה $u(x,0) = \\sin(x)$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> <br>" +
+                          "$\\frac{dx}{dt} = 1$ <br>" +
+                          "$\\frac{dy}{dt} = 2$ <br>" +
+                          "$\\frac{du}{dt} = 0$ <br>" +
+                          "2. <strong>פרמטריזציה של עקום ההתחלה:</strong> <br>" +
+                          "עקום ההתחלה הוא $y=0$. נבחר פרמטריזציה $x_0(s) = s, y_0(s) = 0$. <br>" +
+                          "לכן, $u_0(s) = u(s,0) = \\sin(s)$. <br>" +
+                          "3. <strong>פתרון המד\"ר האופייניות עם תנאי התחלה:</strong> <br>" +
+                          "$x(t,s)$: $\\frac{dx}{dt} = 1 \Rightarrow x(t,s) = t + C_1(s)$. עם $x(0,s) = s$, נקבל $C_1(s) = s$. לכן $x(t,s) = t+s$. <br>" +
+                          "$y(t,s)$: $\\frac{dy}{dt} = 2 \Rightarrow y(t,s) = 2t + C_2(s)$. עם $y(0,s) = 0$, נקבל $C_2(s) = 0$. לכן $y(t,s) = 2t$. <br>" +
+                          "$u(t,s)$: $\\frac{du}{dt} = 0 \Rightarrow u(t,s) = C_3(s)$. עם $u(0,s) = \\sin(s)$, נקבל $C_3(s) = \\sin(s)$. לכן $u(t,s) = \\sin(s)$. <br>" +
+                          "4. <strong>הבעת הפתרון באמצעות x ו-y:</strong> <br>" +
+                          "יש לנו $y = 2t \Rightarrow t = y/2$. <br>" +
+                          "וגם $x = t+s \Rightarrow s = x-t = x - y/2$. <br>" +
+                          "לכן, $u(x,y) = \\sin(s) = \\sin(x - y/2)$."
+            },
+            {
+                statement: "נתונה המד\"ח $u_x + u u_y = 0$ עם תנאי התחלה $u(0,y) = y$. בדוק את תנאי הטרנסוורסליות בנקודה $s=1$ על עקום ההתחלה.",
+                solution: "עקום ההתחלה הוא $x=0$. פרמטריזציה: $f(s)=0, g(s)=s$. <br>" +
+                          "מתנאי ההתחלה $u(0,s) = s$, כלומר $h(s)=s$. <br>" +
+                          "המד\"ח היא $a(x,y,u)u_x + b(x,y,u)u_y = c(x,y,u)$ כאשר: <br>" +
+                          "$a(x,y,u) = 1$ <br>" +
+                          "$b(x,y,u) = u$ <br>" +
+                          "$c(x,y,u) = 0$ <br>" +
+                          "היעקוביאן $J$ נתון על ידי: $J = a(f,g,h)g'(s) - b(f,g,h)f'(s)$. <br>" +
+                          "נגזרות הפרמטריזציה: $f'(s) = 0$, $g'(s) = 1$. <br>" +
+                          "על עקום ההתחלה: $a(0,s,s) = 1$, $b(0,s,s) = s$. <br>" +
+                          "לכן, $J(s) = (1)(1) - (s)(0) = 1$. <br>" +
+                          "בנקודה $s=1$, $J(1) = 1$. <br>" +
+                          "מכיוון ש-$J(1) = 1 \\neq 0$, תנאי הטרנסוורסליות מתקיים בנקודה זו, וקיים פתרון יחיד מקומית."
+            },
+            {
+                statement: "הסבר מתי עבור המד\"ח $a u_x + b u_y = c$ (כאשר $a,b,c$ קבועים) ועקום התחלה $\\Gamma(s) = (f(s), g(s), h(s))$, ייתכנו אינסוף פתרונות.",
+                solution: "אינסוף פתרונות ייתכנו כאשר תנאי הטרנסוורסליות אינו מתקיים, כלומר $J=0$, ובנוסף עקום ההתחלה $\\Gamma(s)$ הוא בעצמו עקום אופייני. <br>" +
+                          "היעקוביאן $J = ag'(s) - bf'(s)$. אם $J=0$, אז $ag'(s) = bf'(s)$. זה אומר שההיטל של הכיוון האופייני $(a,b)$ על מישור $xy$ מקביל לווקטור המשיק להיטל עקום ההתחלה $(f'(s), g'(s))$. <br>" +
+                          "כדי שעקום ההתחלה יהיה אופייני, נדרש גם שהנגזרת של $u$ לאורך העקום תתאים למשוואה השלישית של האופיינים, כלומר $h'(s)$ צריך להיות פרופורציונלי ל-$c$ באותו יחס. באופן כללי, נדרש שהווקטור המשיק לעקום ההתחלה $(f'(s), g'(s), h'(s))$ יהיה מקביל לווקטור הכיוון האופייני $(a,b,c)$. <br>" +
+                          "במצב זה, עקום ההתחלה 'זורם' עם השדה האופייני, והמד\"ח לא מספקת אילוץ נוסף על הפתרון מעבר לנתוני ההתחלה."
+            },
+            {
+                statement: "פתור את המד\"ח $y u_x - x u_y = 0$ עם תנאי התחלה $u(x,0) = x^2$ עבור $x>0$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> <br>" +
+                          "$\\frac{dx}{dt} = y$ <br>" +
+                          "$\\frac{dy}{dt} = -x$ <br>" +
+                          "$\\frac{du}{dt} = 0$ <br>" +
+                          "2. <strong>פרמטריזציה של עקום ההתחלה:</strong> $y=0, x>0$. <br>" +
+                          "$x_0(s) = s, y_0(s) = 0$ (עבור $s>0$). <br>" +
+                          "$u_0(s) = u(s,0) = s^2$. <br>" +
+                          "3. <strong>פתרון המד\"ר האופייניות:</strong> <br>" +
+                          "מהמשוואה השלישית, $u(t,s) = C_3(s)$. עם $u(0,s) = s^2$, נקבל $u(t,s) = s^2$. <br>" +
+                          "עבור שתי המשוואות הראשונות: $\\frac{d^2x}{dt^2} = \\frac{dy}{dt} = -x \Rightarrow x'' + x = 0$. <br>" +
+                          "הפתרון הוא $x(t,s) = A(s)\\cos(t) + B(s)\\sin(t)$. <br>" +
+                          "ואז $y(t,s) = x'(t,s) = -A(s)\\sin(t) + B(s)\\cos(t)$. <br>" +
+                          "מתנאי ההתחלה: <br>" +
+                          "$x(0,s) = s \Rightarrow A(s) = s$. <br>" +
+                          "$y(0,s) = 0 \Rightarrow B(s) = 0$. <br>" +
+                          "לכן, $x(t,s) = s\\cos(t)$ ו-$y(t,s) = -s\\sin(t)$. <br>" +
+                          "4. <strong>הבעת הפתרון באמצעות x ו-y:</strong> <br>" +
+                          "$x^2 + y^2 = (s\\cos(t))^2 + (-s\\sin(t))^2 = s^2(\\cos^2(t) + \\sin^2(t)) = s^2$. <br>" +
+                          "מכיוון ש-$s>0$, $s = \\sqrt{x^2+y^2}$. <br>" +
+                          "הפתרון הוא $u(x,y) = s^2 = x^2+y^2$."
+            },
+            // Add 20 more problems here following the pattern
+            {
+                statement: "נתונה המד\"ח $u_x + u_y = u$. מצא פתרון כללי.",
+                solution: "המשוואות האופייניות הן: <br>" +
+                          "$\\frac{dx}{dt} = 1 \Rightarrow x = t + c_1$ <br>" +
+                          "$\\frac{dy}{dt} = 1 \Rightarrow y = t + c_2$ <br>" +
+                          "$\\frac{du}{dt} = u \Rightarrow \\ln|u| = t + c_3 \Rightarrow u = C e^t$ <br>" +
+                          "מהשתי הראשונות: $x-y = c_1 - c_2 = K_1$ (קבוע לאורך אופיין). <br>" +
+                          "נבטא את $t$ למשל באמצעות $x$: $t = x - c_1$. <br>" +
+                          "אז $u = C e^{x-c_1} = (C e^{-c_1}) e^x$. הביטוי בסוגריים הוא קבוע לאורך אופיין, ולכן הוא פונקציה של $x-y$. <br>" +
+                          "לכן, הפתרון הכללי הוא $u(x,y) = F(x-y)e^x$, כאשר $F$ היא פונקציה שרירותית."
+            },
+            {
+                statement: "עבור המד\"ח $u_x - u_y = 0$ ותנאי התחלה $u(x,x) = x^2$. האם קיים פתרון יחיד? נמק.",
+                solution: "עקום ההתחלה הוא $y=x$. פרמטריזציה: $f(s)=s, g(s)=s$. $h(s)=s^2$. <br>" +
+                          "כאן $a=1, b=-1$. <br>" +
+                          "היעקוביאן $J = a g'(s) - b f'(s) = (1)(1) - (-1)(1) = 1+1 = 2$. <br>" +
+                          "מכיוון ש-$J=2 \\neq 0$, קיים פתרון יחיד מקומית."
+            },
+            {
+                 statement: "עבור המד\"ח $u_x + u_y = 1$ ותנאי התחלה $u(x,x-1) = x$. האם קיים פתרון יחיד? נמק.",
+                 solution: "עקום ההתחלה הוא $y=x-1$. פרמטריזציה: $f(s)=s, g(s)=s-1$. $h(s)=s$. <br>" +
+                           "כאן $a=1, b=1$. <br>" +
+                           "היעקוביאן $J = a g'(s) - b f'(s)$. <br>" +
+                           "$f'(s)=1, g'(s)=1$. <br>" +
+                           "$J = (1)(1) - (1)(1) = 1 - 1 = 0$. <br>" +
+                           "מכיוון ש-$J=0$, הפתרון אינו יחיד או לא קיים. נבדוק אם עקום ההתחלה הוא אופייני. <br>" +
+                           "הכיוון האופייני במישור $xy$ הוא $(1,1)$. הווקטור המשיק לעקום ההתחלה במישור $xy$ הוא $(f'(s),g'(s)) = (1,1)$. <br>" +
+                           "הכיוונים מקבילים. <br>" +
+                           "עבור הכיוון $u$: $\\frac{du}{dt}=c=1$. לאורך עקום ההתחלה, $h'(s) = \\frac{d}{ds}(s) = 1$. <br>" +
+                           "מכיוון שהיחסים נשמרים $(f'/a = g'/b = h'/c \Rightarrow 1/1 = 1/1 = 1/1)$, עקום ההתחלה הוא אופייני. <br>" +
+                           "לכן, קיימים אינסוף פתרונות."
+            },
+            {
+                statement: "מהי המשמעות הגיאומטרית של תנאי הטרנסוורסליות $J \\neq 0$?",
+                solution: "המשמעות הגיאומטרית של $J \\neq 0$ היא שההיטל של עקום ההתחלה על מישור $xy$ אינו משיק בשום נקודה להיטל של העקומים האופייניים על מישור $xy$. <br>" +
+                          "במילים אחרות, העקומים האופייניים 'חוצים' את עקום ההתחלה ולא 'זורמים' לאורכו (במישור $xy$). <br>" +
+                          "זה מבטיח שכל נקודה בסביבת עקום ההתחלה נמצאת על עקום אופייני יחיד היוצא מעקום ההתחלה, מה שמאפשר בנייה יחידה של משטח הפתרון."
+            },
+            {
+                statement: "פתור את $u_x + x u_y = 0$ עם $u(0,y) = y^2$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> <br>" +
+                          "$\\frac{dx}{dt} = 1$ <br>" +
+                          "$\\frac{dy}{dt} = x$ <br>" +
+                          "$\\frac{du}{dt} = 0$ <br>" +
+                          "2. <strong>פרמטריזציה:</strong> $x_0(s) = 0, y_0(s) = s, u_0(s) = s^2$. <br>" +
+                          "3. <strong>פתרון המד\"ר:</strong> <br>" +
+                          "$x(t,s) = t + C_1(s)$. $x(0,s)=0 \Rightarrow C_1(s)=0 \Rightarrow x(t,s)=t$. <br>" +
+                          "$\\frac{dy}{dt} = x = t \Rightarrow y(t,s) = \\frac{t^2}{2} + C_2(s)$. $y(0,s)=s \Rightarrow C_2(s)=s \Rightarrow y(t,s) = \\frac{t^2}{2} + s$. <br>" +
+                          "$u(t,s) = C_3(s)$. $u(0,s)=s^2 \Rightarrow C_3(s)=s^2 \Rightarrow u(t,s) = s^2$. <br>" +
+                          "4. <strong>הבעת הפתרון:</strong> <br>" +
+                          "$t=x$. <br>" +
+                          "$s = y - \\frac{t^2}{2} = y - \\frac{x^2}{2}$. <br>" +
+                          "$u(x,y) = s^2 = (y - \\frac{x^2}{2})^2$."
+            },
+            {
+                statement: "האם המשוואה $u_x^2 + u_y = u$ היא קווזי-לינארית מסדר ראשון?",
+                solution: "לא. המשוואה אינה לינארית בנגזרת $u_x$ (היא מופיעה בריבוע). משוואה קווזי-לינארית מסדר ראשון דורשת לינאריות בכל הנגזרות מהסדר הגבוה ביותר. כאן $u_x^2$ הופך אותה ללא-לינארית (ליתר דיוק, סמי-לינארית אם $u_x^2$ היה מקדם של $u_y$, או קוואזי-לינארית אם היה $u_x$ כפול מקדם). במצבה הנוכחי היא פשוט לא-לינארית מסדר ראשון."
+            },
+            {
+                statement: "עבור $x u_x + y u_y = 2u$ ותנאי $u(x,1) = x^3$. מצא את $J(s)$.",
+                solution: "עקום התחלה $y=1$. פרמטריזציה $f(s)=s, g(s)=1$. $h(s)=s^3$. <br>" +
+                          "$a(x,y,u) = x, b(x,y,u) = y$. <br>" +
+                          "$f'(s)=1, g'(s)=0$. <br>" +
+                          "על עקום ההתחלה: $a(s,1,s^3) = s$, $b(s,1,s^3) = 1$. <br>" +
+                          "$J(s) = a g'(s) - b f'(s) = (s)(0) - (1)(1) = -1$. <br>" +
+                          "מכיוון ש-$J(s) = -1 \\neq 0$, קיים פתרון יחיד מקומית."
+            },
+            {
+                statement: "נתונה $u_x + u_y = 0$ עם $u(x, x) = f(x)$. מהו הפתרון?",
+                solution: "1. <strong>משוואות אופייניות:</strong> $dx/dt=1, dy/dt=1, du/dt=0$. <br>" +
+                          "2. <strong>פרמטריזציה:</strong> $x_0(s)=s, y_0(s)=s, u_0(s)=f(s)$. <br>" +
+                          "3. <strong>פתרון מד\"ר:</strong> <br>" +
+                          "$x(t,s) = t+s$. <br>" +
+                          "$y(t,s) = t+s$. <br>" +
+                          "$u(t,s) = f(s)$. <br>" +
+                          "4. <strong>הבעת הפתרון:</strong> <br>" +
+                          "מכיוון ש-$x=t+s$ ו-$y=t+s$, נובע $x=y$. זה אומר שהאופיינים נעים לאורך קווי $y=x$. <br>" +
+                          "נבטא את $s$ באמצעות $x$ (או $y$): $s = x-t$. <br>" +
+                          "אבל לא ניתן לבטא את $t$ באופן יחיד מ-$x,y$ כאשר $x=y$. <br>" +
+                          "נשים לב ש-$y-x = (t+s)-(t+s)=0$. כלומר $y=x$ הוא קבוע לאורך האופיינים. <br>" +
+                          "הפתרון הוא $u(x,y) = f(s)$. אם $y=x$, אז $s$ יכול להיות כל ערך. הפתרון יהיה $u(x,y) = f(k)$ כאשר $k$ הוא ערך כלשהו של $x$ (או $y$) על הקו $y=x$. <br>" +
+                          "למעשה, הפתרון הוא $u(x,y) = F(y-x)$. מתנאי ההתחלה $u(x,x) = f(x) \Rightarrow F(x-x) = F(0) = f(x)$. זה אפשרי רק אם $f(x)$ הוא קבוע, נניח $C$. אז $F(0)=C$. הפתרון הוא $u(x,y) = G(y-x)$ כאשר $G(0)=C$. <br>" +
+                          "נבדוק $J$: $a=1,b=1, f'(s)=1, g'(s)=1$. $J = (1)(1)-(1)(1) = 0$. עקום ההתחלה $y=x$ הוא אופייני. <br>" +
+                          "אם $f(x)$ אינו קבוע, אין פתרון יחיד. אם $f(x)=C$ (קבוע), אז כל פונקציה $u(x,y)=G(y-x)$ כך ש-$G(0)=C$ היא פתרון, ויש אינסוף כאלה."
+            },
+            {
+                statement: "מהן שלושת האפשרויות לגבי קיום ויחידות פתרון לבעיית קושי $a u_x + b u_y = c$ עם עקום התחלה $\\Gamma(s)$?",
+                solution: "1. <strong>פתרון מקומי יחיד:</strong> אם תנאי הטרנסוורסליות $J \\neq 0$ מתקיים לאורך $\\Gamma(s)$. <br>" +
+                          "2. <strong>אינסוף פתרונות מקומיים:</strong> אם $J = 0$ לאורך $\\Gamma(s)$ ועקום ההתחלה $\\Gamma(s)$ הוא עקום אופייני. <br>" +
+                          "3. <strong>אין פתרון:</strong> אם $J = 0$ לאורך $\\Gamma(s)$ ועקום ההתחלה $\\Gamma(s)$ אינו עקום אופייני."
+            },
+            {
+                statement: "פתור $2u_x - u_y = x$ עם $u(x,0)=x^2$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> $dx/dt=2, dy/dt=-1, du/dt=x$. <br>" +
+                          "2. <strong>פרמטריזציה:</strong> $x_0(s)=s, y_0(s)=0, u_0(s)=s^2$. <br>" +
+                          "3. <strong>פתרון מד\"ר:</strong> <br>" +
+                          "$x(t,s) = 2t+s$. <br>" +
+                          "$y(t,s) = -t$. <br>" +
+                          "$\\frac{du}{dt} = x = 2t+s \Rightarrow u(t,s) = t^2 + st + C_3(s)$. <br>" +
+                          "$u(0,s)=s^2 \Rightarrow C_3(s)=s^2$. <br>" +
+                          "לכן, $u(t,s) = t^2 + st + s^2$. <br>" +
+                          "4. <strong>הבעת הפתרון:</strong> <br>" +
+                          "$t = -y$. <br>" +
+                          "$s = x-2t = x-2(-y) = x+2y$. <br>" +
+                          "$u(x,y) = (-y)^2 + (x+2y)(-y) + (x+2y)^2 = y^2 -xy -2y^2 + x^2+4xy+4y^2 = x^2 + 3xy + 3y^2$."
+            },
+            {
+                statement: "הסבר מדוע $a,b,c$ בפונקציה $a(x,y,u)u_x + b(x,y,u)u_y = c(x,y,u)$ יכולים להיות תלויים ב-$u$ ועדיין המשוואה נקראת קווזי-לינארית.",
+                solution: "המונח 'קווזי-לינארי' מתייחס לכך שהמשוואה היא לינארית בנגזרות מהסדר הגבוה ביותר. במקרה של מד\"ח מסדר ראשון, הנגזרות מהסדר הגבוה ביותר הן $u_x$ ו-$u_y$. <br>" +
+                          "המשוואה $a(x,y,u)u_x + b(x,y,u)u_y = c(x,y,u)$ היא אכן לינארית ב-$u_x$ וב-$u_y$ (הם מופיעים בחזקה ראשונה ולא כארגומנט של פונקציה אחרת, ומקדמיהם אינם תלויים בנגזרות עצמן). <br>" +
+                          "העובדה שהמקדמים $a, b, c$ יכולים להיות תלויים ב-$u$ (הפונקציה הנעלמת עצמה, לא בנגזרותיה) היא מה שמבדיל משוואה קווזי-לינארית ממשוואה לינארית מלאה (שבה $a,b$ תלויים רק ב-$x,y$ ו-$c$ יכול להיות $c_1(x,y)u + c_0(x,y)$). <br>" +
+                          "אם $a,b$ היו תלויים גם ב-$u_x$ או $u_y$, המשוואה הייתה הופכת ללא-לינארית."
+            },
+            {
+                statement: "מצא את הפתרון ל-$u_x + u_y = 2u$ עם $u(x,0) = e^x$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> $dx/dt=1, dy/dt=1, du/dt=2u$.<br>" +
+                          "2. <strong>פרמטריזציה:</strong> $x_0(s)=s, y_0(s)=0, u_0(s)=e^s$. <br>" +
+                          "3. <strong>פתרון מד\"ר:</strong><br>" +
+                          "$x(t,s)=t+s$.<br>" +
+                          "$y(t,s)=t$.<br>" +
+                          "$\\frac{du}{u}=2dt \Rightarrow \\ln|u|=2t+C(s) \Rightarrow u(t,s)=K(s)e^{2t}$. <br>" +
+                          "$u(0,s)=e^s \Rightarrow K(s)e^0 = e^s \Rightarrow K(s)=e^s$. <br>" +
+                          "אז $u(t,s)=e^s e^{2t} = e^{s+2t}$. <br>" +
+                          "4. <strong>הבעת הפתרון:</strong><br>" +
+                          "$t=y$. <br>" +
+                          "$s=x-t=x-y$. <br>" +
+                          "$u(x,y) = e^{(x-y)+2y} = e^{x+y}$."
+            },
+            {
+                statement: "כיצד משתנה היעקוביאן $J$ אם במקום $a u_x + b u_y = c$ יש לנו $(k a) u_x + (k b) u_y = k c$ כאשר $k(x,y,u)$ היא פונקציה חלקה שאינה מתאפסת?",
+                solution: "היעקוביאן המקורי הוא $J = a g' - b f'$. <br>" +
+                          "במשוואה החדשה, המקדמים הם $a^* = ka$ ו-$b^* = kb$. <br>" +
+                          "היעקוביאן החדש יהיה $J^* = a^* g' - b^* f' = (ka) g' - (kb) f' = k (a g' - b f') = k J$. <br>" +
+                          "מכיוון ש-$k$ אינה מתאפסת, $J^*=0$ אם ורק אם $J=0$. לכן, תנאי הקיום והיחידות (במונחי התאפסות היעקוביאן) אינו משתנה. הכפלת המשוואה בפונקציה חלקה שאינה מתאפסת אינה משנה את טבע הבעיה מבחינת קיום ויחידות הפתרון המקומי."
+            },
+            {
+                statement: "נתונה בעיית קושי $u_x = 0$ עם $u(0,y) = g(y)$. מהו הפתרון?",
+                solution: "זוהי מד\"ח פשוטה. $a=1, b=0, c=0$. <br>" +
+                          "משוואות אופייניות: $dx/dt=1, dy/dt=0, du/dt=0$. <br>" +
+                          "פרמטריזציה של עקום ההתחלה $x=0$: $x_0(s)=0, y_0(s)=s, u_0(s)=g(s)$. <br>" +
+                          "פתרון המד\"ר: <br>" +
+                          "$x(t,s)=t$. <br>" +
+                          "$y(t,s)=s$. <br>" +
+                          "$u(t,s)=g(s)$. <br>" +
+                          "הבעת הפתרון: $s=y$. <br>" +
+                          "לכן $u(x,y)=g(y)$. <br>" +
+                          "ניתן לראות זאת גם ישירות: אם $u_x=0$, אז $u$ אינה תלויה ב-$x$, ולכן $u(x,y)=G(y)$ עבור פונקציה כלשהי $G$. מתנאי ההתחלה $u(0,y)=G(y)=g(y)$, ולכן $u(x,y)=g(y)$."
+            },
+            {
+                statement: "עבור בעיית קושי עם $J=0$ ועקום התחלה אופייני, הסבר מדוע יש אינסוף פתרונות במקום פתרון יחיד.",
+                solution: "כאשר עקום ההתחלה הוא אופייני, הוא 'זורם' עם השדה הווקטורי $(a,b,c)$ המוגדר על ידי המד\"ח. המשמעות היא שערכי $u$ לאורך עקום זה, כפי שנקבעו על ידי תנאי ההתחלה, עקביים עם האופן שבו המד\"ח 'רוצה' שערכי $u$ ישתנו לאורך אותו כיוון. <br>" +
+                          "מכיוון שעקום ההתחלה כבר מקיים את 'הזרימה' של המד\"ח, אין מספיק מידע כדי לקבוע באופן יחיד את התנהגות משטח הפתרון מחוץ לעקום ההתחלה. ניתן 'להטות' את משטח הפתרון בדרכים שונות הרחק מעקום ההתחלה, כל עוד הוא עדיין מכיל את עקום ההתחלה האופייני ומקיים את המד\"ח. <br>" +
+                          "היעקוביאן $J=0$ אומר שהמערכת הלינארית (האלגברית) לקביעת $u_x, u_y$ לאורך העקום היא מנוונת. אם העקום אופייני, המערכת גם עקבית, מה שמוביל לאינסוף פתרונות לנגזרות, ומכאן לאינסוף אפשרויות להמשך המשטח."
+            },
+            {
+                 statement: "פתור את המד\"ח $u_x - 2y u_y = u$ עם $u(0,y) = y^2$.",
+                 solution: "1. <strong>משוואות אופייניות:</strong> <br>" +
+                           "$\\frac{dx}{dt} = 1$ <br>" +
+                           "$\\frac{dy}{dt} = -2y$ <br>" +
+                           "$\\frac{du}{dt} = u$ <br>" +
+                           "2. <strong>פרמטריזציה:</strong> $x_0(s)=0, y_0(s)=s, u_0(s)=s^2$. <br>" +
+                           "3. <strong>פתרון המד\"ר:</strong> <br>" +
+                           "$x(t,s) = t$. <br>" +
+                           "$\\frac{dy}{y} = -2dt \Rightarrow \\ln|y| = -2t + C_1(s) \Rightarrow y(t,s) = K_1(s)e^{-2t}$. <br>" +
+                           "$y(0,s)=s \Rightarrow K_1(s)=s \Rightarrow y(t,s) = s e^{-2t}$. <br>" +
+                           "$\\frac{du}{u} = dt \Rightarrow \\ln|u| = t + C_2(s) \Rightarrow u(t,s) = K_2(s)e^{t}$. <br>" +
+                           "$u(0,s)=s^2 \Rightarrow K_2(s)=s^2 \Rightarrow u(t,s) = s^2 e^{t}$. <br>" +
+                           "4. <strong>הבעת הפתרון:</strong> <br>" +
+                           "$t=x$. <br>" +
+                           "$s = y e^{2t} = y e^{2x}$. <br>" +
+                           "$u(x,y) = (y e^{2x})^2 e^x = y^2 e^{4x} e^x = y^2 e^{5x}$."
+            },
+            {
+                 statement: "נתונה $u_x + u_y = 0$. תנאי התחלה $u(s, -s) = 1$. האם הפתרון יחיד?",
+                 solution: "עקום התחלה: $x=s, y=-s$. פרמטריזציה $f(s)=s, g(s)=-s, h(s)=1$.<br>" +
+                           "$a=1, b=1$. $f'(s)=1, g'(s)=-1$.<br>" +
+                           "$J = a g'(s) - b f'(s) = (1)(-1) - (1)(1) = -1-1 = -2$.<br>" +
+                           "מכיוון ש-$J = -2 \\neq 0$, הפתרון המקומי יחיד."
+            },
+            {
+                statement: "מה קורה אם בתנאי הטרנסוורסליות $J=0$ אבל עקום ההתחלה אינו אופייני?",
+                solution: "אם $J=0$, ההיטל של העקומים האופייניים על מישור $xy$ משיק להיטל של עקום ההתחלה. <br>" +
+                          "אם עקום ההתחלה אינו אופייני, פירוש הדבר שהתנהגות $u$ לאורך העקום (כפי שנקבעה על ידי $h(s)$ ונגזרתה $h'(s)$) אינה עקבית עם האופן שבו המד\"ח דורשת ש-$u$ ישתנה בכיוון המשיק לעקום. <br>" +
+                          "במילים אחרות, תנאי ההתחלה סותר את המד\"ח לאורך העקום. המערכת האלגברית ל-$u_x, u_y$ היא לא עקבית. <br>" +
+                          "במקרה זה, לא קיים פתרון לבעיית קושי."
+            },
+            {
+                statement: "פתור $u_x + u_y = x+y$ עם $u(x,0)=0$.",
+                solution: "1. <strong>משוואות אופייניות:</strong> $dx/dt=1, dy/dt=1, du/dt = x+y$. <br>" +
+                          "2. <strong>פרמטריזציה:</strong> $x_0(s)=s, y_0(s)=0, u_0(s)=0$. <br>" +
+                          "3. <strong>פתרון מד\"ר:</strong> <br>" +
+                          "$x(t,s) = t+s$. <br>" +
+                          "$y(t,s) = t$. <br>" +
+                          "$\\frac{du}{dt} = x+y = (t+s) + t = 2t+s$. <br>" +
+                          "$u(t,s) = t^2 + st + C(s)$. <br>" +
+                          "$u(0,s)=0 \Rightarrow C(s)=0$. אז $u(t,s) = t^2+st$. <br>" +
+                          "4. <strong>הבעת הפתרון:</strong> <br>" +
+                          "$t=y$. <br>" +
+                          "$s=x-t = x-y$. <br>" +
+                          "$u(x,y) = y^2 + (x-y)y = y^2 + xy - y^2 = xy$."
+            },
+            {
+                statement: "מצא את הפתרון הכללי של $u_y = u_x$.",
+                solution: "המשוואה היא $u_x - u_y = 0$. <br>" +
+                          "משוואות אופייניות: $dx/dt = 1, dy/dt = -1, du/dt = 0$. <br>" +
+                          "מהמשוואה השלישית $u=C_1$ (קבוע לאורך אופיין). <br>" +
+                          "מהשתיים הראשונות $\\frac{dy}{dx} = \\frac{dy/dt}{dx/dt} = \\frac{-1}{1} = -1$. <br>" +
+                          "אינטגרציה נותנת $y = -x + C_2$, או $y+x = C_2$. <br>" +
+                          "האופיינים הם קווים ישרים מהצורה $y+x = \\text{constant}$. <br>" +
+                          "מכיוון ש-$u$ קבוע לאורך האופיינים, $u$ חייב להיות פונקציה של $y+x$. <br>" +
+                          "לכן הפתרון הכללי הוא $u(x,y) = F(x+y)$, כאשר $F$ היא פונקציה שרירותית גזירה."
+            }
+        ];
+
+        let currentProblemIndex = 0;
+        const problemStatementArea = document.getElementById('problem-statement-area');
+        const solutionAreaSingle = document.getElementById('solution-area-single');
+        const showSolutionBtnSingle = document.getElementById('show-solution-btn');
+        const problemCounter = document.getElementById('problem-counter');
+        const prevProblemBtn = document.getElementById('prev-problem');
+        const nextProblemBtn = document.getElementById('next-problem');
+        const viewAllProblemsBtn = document.getElementById('view-all-problems-btn');
+        const allProblemsArea = document.getElementById('all-problems-area');
+
+        function displayProblem(index) {
+            // Ensure index is within bounds
+            if (index < 0 || index >= problems.length) {
+                console.error("Problem index out of bounds:", index);
+                return;
+            }
+            const problem = problems[index];
+            problemStatementArea.innerHTML = problem.statement;
+            solutionAreaSingle.innerHTML = problem.solution;
+            solutionAreaSingle.style.display = 'none'; // Hide solution initially
+            showSolutionBtnSingle.textContent = 'הצג פתרון';
+            problemCounter.textContent = `בעיה ${index + 1} / ${problems.length}`;
+            // Re-typeset MathJax for the new content
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([problemStatementArea, solutionAreaSingle]);
+            }
+        }
+
+        showSolutionBtnSingle.addEventListener('click', () => {
+            const isHidden = solutionAreaSingle.style.display === 'none';
+            solutionAreaSingle.style.display = isHidden ? 'block' : 'none';
+            showSolutionBtnSingle.textContent = isHidden ? 'הסתר פתרון' : 'הצג פתרון';
+            if (isHidden && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                 MathJax.typesetPromise([solutionAreaSingle]); // Retypeset only if showing
+            }
+        });
+
+        prevProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        nextProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                displayProblem(currentProblemIndex);
+            }
+        });
+        
+        viewAllProblemsBtn.addEventListener('click', () => {
+            const isAllHidden = allProblemsArea.style.display === 'none';
+            if (isAllHidden) {
+                allProblemsArea.innerHTML = ''; // Clear previous content
+                problems.forEach((problem, index) => {
+                    const problemBlock = document.createElement('div');
+                    problemBlock.className = 'problem-block';
+
+                    const statementDiv = document.createElement('div');
+                    statementDiv.className = 'problem-statement';
+                    statementDiv.innerHTML = `<strong>בעיה ${index + 1}:</strong> ${problem.statement}`;
+                    
+                    const solutionButton = document.createElement('button');
+                    solutionButton.textContent = 'הצג פתרון';
+                    solutionButton.className = 'show-solution-btn-all';
+                    
+                    const solutionDiv = document.createElement('div');
+                    solutionDiv.className = 'solution-area';
+                    solutionDiv.innerHTML = problem.solution;
+                    solutionDiv.style.display = 'none';
+
+                    solutionButton.addEventListener('click', () => {
+                        const isSolHidden = solutionDiv.style.display === 'none';
+                        solutionDiv.style.display = isSolHidden ? 'block' : 'none';
+                        solutionButton.textContent = isSolHidden ? 'הסתר פתרון' : 'הצג פתרון';
+                        if (isSolHidden && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                            MathJax.typesetPromise([solutionDiv]); // Retypeset if showing
+                        }
+                    });
+
+                    problemBlock.appendChild(statementDiv);
+                    problemBlock.appendChild(solutionButton);
+                    problemBlock.appendChild(solutionDiv);
+                    allProblemsArea.appendChild(problemBlock);
+                });
+                allProblemsArea.style.display = 'block';
+                viewAllProblemsBtn.textContent = 'הסתר את כל הבעיות';
+                if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([allProblemsArea]); // Retypeset all new content
+                }
+            } else {
+                allProblemsArea.style.display = 'none';
+                viewAllProblemsBtn.textContent = 'הצג את כל הבעיות';
+            }
+        });
+
+        // Initial display
+        displayProblem(currentProblemIndex);
+    </script>
+</body>
+</html>

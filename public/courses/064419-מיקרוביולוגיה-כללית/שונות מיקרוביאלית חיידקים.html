@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מגוון עולם החיידקים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Proteobacteria", definition: "מערכה (פילום) גדולה של חיידקים גראם-שליליים, בעלי מגוון מטבולי עצום הכולל פוטוטרופים, כימוליתוטרופים וכימואורגנוטרופים." },
+            { term: "Bacteriochlorophyll", definition: "קבוצת פיגמנטים פוטוסינתטיים עיקריים המצויים בחיידקים פוטוטרופיים אנאוקסיגניים, הבולעים אור באורכי גל ארוכים (אינפרא-אדום)." },
+            { term: "Carotenoids", definition: "פיגמנטים משניים המסייעים בפוטוסינתזה על ידי קליטת אור והעברת אנרגיה לבקטריוכלורופיל, וכן מספקים הגנה מפני נזקי חמצון." },
+            { term: "Nitrification", definition: "תהליך חמצון ביולוגי דו-שלבי של אמוניה ($NH_3$) לניטרט ($NO_3^-$), המבוצע על ידי קבוצות שונות של חיידקים כימוליתואוטוטרופיים." },
+            { term: "Ammonia monooxygenase", definition: "אנזים מפתח בשלב הראשון של ניטריפיקציה, המחמצן אמוניה ($NH_3$) להידרוקסילאמין ($NH_2OH$) תוך שימוש בחמצן." },
+            { term: "Purple Sulfur Bacteria", definition: "חיידקים פוטוטרופיים אנאוקסיגניים המשתמשים בתרכובות גופרית מחוזרות כתורם אלקטרונים. רובם שייכים לגמא-פרוטאובקטריה." },
+            { term: "Purple Nonsulfur Bacteria", definition: "חיידקים פוטוהטרוטרופיים המשתמשים בתרכובות אורגניות כתורם אלקטרונים, ומצויים בעיקר בקבוצות אלפא ובטא-פרוטאובקטריה." },
+            { term: "Rickettsia", definition: "סוג של טפילים תוך-תאיים אובליגטוריים, המועברים על ידי פרוקי-רגליים וגורמים למחלות כמו טיפוס וקדחת הכתמים. שייכים לאלפא-פרוטאובקטריה." },
+            { term: "Lactic Acid Bacteria", definition: "קבוצה של חיידקים גראם-חיוביים, אנאירוביים אוויר-סובלניים, המייצרים חומצה לקטית כתור תוצר תסיסה עיקרי וחסרי ציטוכרומים." },
+            { term: "Homofermentative", definition: "מסלול תסיסה בחיידקי חומצת חלב המייצר שני מולקולות לקטט ממולקולת גלוקוז אחת, תוך רווח נקי של 2 מולקולות ATP." },
+            { term: "Heterofermentative", definition: "מסלול תסיסה בחיידקי חומצת חלב המייצר לקטט, אתנול ופחמן דו-חמצני מגלוקוז, תוך רווח נקי של 1 מולקולת ATP." },
+            { term: "Cyanobacteria", definition: "מערכה של חיידקים המבצעים פוטוסינתזה אוקסיגנית (משחררת חמצן), בעלי כלורופיל a ופיקובילינים." },
+            { term: "Heterocyst", definition: "תא מיוחד בציאנובקטריה חוטית האחראי על קיבוע חנקן אטמוספרי בסביבה אנארובית שהוא יוצר כדי להגן על אנזים הניטרוגנאז." },
+            { term: "Planctomycetes", definition: "מערכת חיידקים ייחודית חסרת פפטידוגליקן בדופן התא, ובעלת קומפרטמנטליזציה פנימית מורכבת." },
+            { term: "Chlorosome", definition: "מבנה אנטנה ייחודי ויעיל ביותר לקליטת אור בעוצמה נמוכה, המצוי בחיידקי גופרית ירוקים (Green Sulfur Bacteria)." },
+            { term: "Hyperthermophiles", definition: "אורגניזמים הגדלים בטמפרטורות גבוהות מאוד, מעל 80 מעלות צלזיוס. רבים מהם, כמו Aquifex, ממוקמים בבסיס העץ הפילוגנטי החיידקי." },
+            { term: "Wolbachia", definition: "סוג של חיידק אנדוסימביונטי הנפוץ בפרוקי-רגליים ויכול לשנות את הביולוגיה הרבייתית של המארח (למשל, הרג זכרים, פמיניזציה)." },
+            { term: "Koch's Postulates", definition: "ארבעה קריטריונים שנועדו לקבוע באופן שיטתי קשר סיבתי בין מיקרואורגניזם גורם מחלה למחלה ספציפית." }
+        ];
+
+        const mcqData = [
+            {
+                question: "איזה מהמאפיינים הבאים מבדיל באופן מהותי בין חיידקי גופרית סגולים (Purple Sulfur Bacteria) לחיידקים סגולים ללא-גופרית (Purple Nonsulfur Bacteria)?",
+                options: [
+                    "הימצאות בקטריוכלורופיל a לעומת כלורופיל a",
+                    "ביצוע פוטוסינתזה אוקסיגנית לעומת אנאוקסיגנית",
+                    "שימוש עיקרי בתרכובות גופרית מחוזרות לעומת תרכובות אורגניות כתורם אלקטרונים",
+                    "השתייכות לקבוצת הגראם-חיוביים לעומת הגראם-שליליים"
+                ],
+                correctIndex: 2,
+                explanation: "ההבדל המטבולי המרכזי הוא מקור תורם האלקטרונים: חיידקי גופרית סגולים הם לרוב פוטוליתואוטוטרופים המשתמשים ב-$H_2S$, בעוד שחיידקים סגולים ללא-גופרית הם לרוב פוטוהטרוטרופים המשתמשים במולקולות אורגניות."
+            },
+            {
+                question: "מהי התוצאה הסופית של זיהום זכר ונקבה לא נגועים בחיידק Wolbachia, על פי מודל אי-ההתאמה הציטופלזמטית?",
+                options: [
+                    "צאצאים נגועים",
+                    "צאצאים לא נגועים",
+                    "אין צאצאים",
+                    "רק צאצאים זכרים"
+                ],
+                correctIndex: 2,
+                explanation: "במקרה של אי-התאמה ציטופלזמטית, כאשר זכר נגוע מזדווג עם נקבה לא נגועה, לא נוצרים צאצאים. זהו אחד המנגנונים שבהם החיידק מבטיח את התפשטותו דרך קו הנקבה."
+            },
+            {
+                question: "איזה מהשינויים המבניים הבאים הוא ההבדל המרכזי בין כלורופיל a לבקטריוכלורופיל a, המשפיע על ספקטרום הבליעה שלהם?",
+                options: [
+                    "החלפת יון המגנזיום המרכזי בברזל",
+                    "חיזור של אחת מטבעות הפירול ושינוי מתמרים צדדיים",
+                    "הוספת זנב פחמימני מסוג פרנזיל במקום פיטול",
+                    "היעדר טבעת הציקלופנטנון החמישית"
+                ],
+                correctIndex: 1,
+                explanation: "בבקטריוכלורופיל a, טבעת הפירול II מחוזרת (יש לה קשר יחיד במקום כפול), וישנה החלפה של קבוצת ויניל בקבוצת אצטיל. שינויים אלה גורמים להסטת שיא הבליעה לאורכי גל ארוכים יותר."
+            },
+            {
+                question: "חיידק המבצע תסיסה הומולקטית צורך 2 מולקולות גלוקוז. כמה ATP נטו הוא יפיק, וכמה מולקולות לקטט ייווצרו?",
+                options: [
+                    "2 ATP, 2 לקטט",
+                    "2 ATP, 4 לקטט",
+                    "4 ATP, 2 לקטט",
+                    "4 ATP, 4 לקטט"
+                ],
+                correctIndex: 3,
+                explanation: "בתסיסה הומולקטית, כל מולקולת גלוקוז מניבה רווח נקי של 2 ATP ו-2 מולקולות לקטט. לכן, עבור 2 מולקולות גלוקוז, התוצאה תהיה $2 * 2 = 4$ ATP ו-$2 * 2 = 4$ לקטט."
+            },
+            {
+                question: "איזו קבוצת חיידקים מאופיינת בהיעדר פפטידוגליקן בדופן התא, קומפרטמנטליזציה פנימית מורכבת, ולעיתים מבנים דמויי גבעול להיצמדות?",
+                options: [
+                    "Spirochetes",
+                    "Cyanobacteria",
+                    "Planctomycetes",
+                    "Actinomycetes"
+                ],
+                correctIndex: 2,
+                explanation: "Planctomycetes הם מערכה ייחודית של חיידקים מימיים הידועים בהיעדר פפטידוגליקן, דופן מבוסס חלבון, ומבנים פנימיים מורכבים כמו הפירלולוזום."
+            },
+            {
+                question: "מדוע הטרציסטים בציאנובקטריה חיוניים ליכולת קיבוע החנקן של האורגניזם?",
+                options: [
+                    "הם מכילים כמות גדולה יותר של כלורופיל a לטובת אנרגיה",
+                    "הם מייצרים סביבה אנארובית המגינה על אנזים הניטרוגנאז הרגיש לחמצן",
+                    "הם מאחסנים את החנקן המקובע בצורת גרגרי ציאנופיצין",
+                    "הם היחידים שמסוגלים לקלוט גז חנקן מהאטמוספירה"
+                ],
+                correctIndex: 1,
+                explanation: "אנזים הניטרוגנאז, המבצע את קיבוע החנקן ($N_2 \rightarrow NH_3$), עובר דנטורציה בלתי הפיכה בנוכחות חמצן. ההטרציסט מפתח דופן עבה ומפסיק את הפוטוסינתזה האוקסיגנית כדי ליצור תנאים אנארוביים פנימיים."
+            },
+            {
+                question: "איזו מהקבוצות הבאות שייכת לתת-הקבוצה גמא-פרוטאובקטריה (Gammaproteobacteria)?",
+                options: [
+                    "Rickettsia, Rhizobium",
+                    "Nitrosomonas, Neisseria",
+                    "Escherichia, Vibrio, Salmonella",
+                    "Myxococcus, Bdellovibrio"
+                ],
+                correctIndex: 2,
+                explanation: "Escherichia, Vibrio, Salmonella ו-Photobacterium הם כולם סוגים ידועים וחשובים בתת-הקבוצה גמא. Rickettsia ו-Rhizobium הם אלפא, Nitrosomonas ו-Neisseria הם בטא, ו-Myxococcus ו-Bdellovibrio הם דלתא."
+            },
+            {
+                question: "מהו המאפיין המטבולי המרכזי של חיידקי Nitrobacter בתהליך הניטריפיקציה?",
+                options: [
+                    "חמצון אמוניה ($NH_3$) להידרוקסילאמין ($NH_2OH$)",
+                    "חמצון ניטריט ($NO_2^-$) לניטרט ($NO_3^-$)",
+                    "חיזור ניטרט ($NO_3^-$) לגז חנקן ($N_2$)",
+                    "קיבוע חנקן אטמוספרי ($N_2$) לאמוניה ($NH_3$)"
+                ],
+                correctIndex: 1,
+                explanation: "תהליך הניטריפיקציה הוא דו-שלבי. Nitrobacter (וחיידקים דומים) מבצעים את השלב השני, חמצון של ניטריט לניטרט, תוך שימוש באנזים Nitrite oxidase."
+            },
+            {
+                question: "איזו קומבינציה של פיגמנטים פוטוסינתטיים אופיינית לציאנובקטריה ומאפשרת להן לבצע פוטוסינתזה אוקסיגנית?",
+                options: [
+                    "בקטריוכלורופיל a וקרוטנואידים אריליים",
+                    "כלורופיל a ופיקובילינים (פיקוציאנין, פיקואריתרין)",
+                    "בקטריוכלורופיל g ונוירוספורן",
+                    "כלורופיל a ובקטריוכלורופיל c"
+                ],
+                correctIndex: 1,
+                explanation: "ציאנובקטריה הן ייחודיות בקרב החיידקים הפוטוסינתטיים בכך שהן משתמשות בכלורופיל a (בדומה לצמחים ואצות) ובפיגמנטים משלימים הנקראים פיקובילינים, המאורגנים במבנים הנקראים פיקוביליזומים."
+            },
+            {
+                question: "איזה מהבאים מתאר בצורה הטובה ביותר את המיקום הפילוגנטי של המיטוכונדריה בתא האאוקריוטי, בהתבסס על העץ הפילוגנטי?",
+                options: [
+                    "כענף קדום של ארכאה, קרוב ל-Crenarchaeota",
+                    "כתוצאה מהתפתחות של ציאנובקטריה",
+                    "כענף שמקורו בקבוצת האלפא-פרוטאובקטריה",
+                    "כקבוצת אחות לחיידקים גראם-חיוביים"
+                ],
+                correctIndex: 2,
+                explanation: "התיאוריה האנדוסימביונטית, הנתמכת בראיות גנטיות רבות, מראה שהמיטוכונדריה התפתחה מחיידק מקבוצת האלפא-פרוטאובקטריה (קרוב לסוג Rickettsia) שנבלע על ידי תא אאוקריוטי קדום."
+            },
+            {
+                question: "באיזה שלב של הפוסטולטים של קוך נדרשת הוכחה כי האורגניזם המבודד יכול לגרום לאותה מחלה באורגניזם בריא?",
+                options: [
+                    "הפוסטולט הראשון: נוכחות בחולה, היעדר בבריא",
+                    "הפוסטולט השני: בידוד בתרבית טהורה",
+                    "הפוסטולט השלישי: הזרקה והדבקה",
+                    "הפוסטולט הרביעי: בידוד מחדש"
+                ],
+                correctIndex: 2,
+                explanation: "הפוסטולט השלישי דורש להדגים שהמיקרואורגניזם שבודד וגודל בתרבית טהורה, אכן גורם לאותם תסמיני מחלה כאשר הוא מוזרק לאורגניזם מארח בריא ורגיש."
+            },
+            {
+                question: "מהו ההבדל העיקרי בין קרוטנואידים אליפטיים (למשל Spirilloxanthin) לקרוטנואידים אריליים (למשל Chlorobactene)?",
+                options: [
+                    "אורכם של השרשראות הפחמימניות",
+                    "נוכחות של טבעות ארומטיות בקצות המולקולה",
+                    "הימצאות קבוצות מתוקסי ($OCH_3$)",
+                    "מספר הקשרים הכפולים המצומדים"
+                ],
+                correctIndex: 1,
+                explanation: "קרוטנואידים אריליים מכילים טבעות בנזן (טבעות ארומטיות) באחד או בשני קצוות השרשרת הפוליאנית שלהם. מאפיין זה ייחודי לקבוצות מסוימות כמו חיידקי גופרית ירוקים."
+            },
+            {
+                question: "איזו אנטיביוטיקה, המיוצרת על ידי Streptomyces, היא בעלת טווח פעולה רחב ויעילה גם נגד Rickettsia ו-Chlamydia?",
+                options: [
+                    "פניצילין",
+                    "אריתרומיצין",
+                    "טטרציקלין",
+                    "ניסטטין"
+                ],
+                correctIndex: 2,
+                explanation: "טטרציקלין, המיוצר על ידי S. aureofaciens, ידוע בספקטרום הפעולה הרחב שלו הכולל חיידקים גראם-חיוביים ושליליים, וחשוב מכך, הוא יעיל נגד טפילים תוך-תאיים כמו ריקציה וכלמידיה."
+            },
+            {
+                question: "חיידק היפרתרמופילי כימוליתואוטוטרופי, הנחשב לאחד מהענפים הקדומים ביותר בעץ החיידקי ומסוגל לגדול ב-95 מעלות צלזיוס, שייך ככל הנראה לסוג:",
+                options: [
+                    "Thermus",
+                    "Aquifex",
+                    "Bacillus",
+                    "Pyrolobus"
+                ],
+                correctIndex: 1,
+                explanation: "Aquifex הוא סוג של חיידק היפרתרמופילי המייצג את אחד הענפים העמוקים והקדומים ביותר בממלכת החיידקים. Pyrolobus הוא ארכאון, לא חיידק."
+            },
+            {
+                question: "מה ההבדל המרכזי במנגנון הרבייה בין Streptomyces לבין Lactobacillus?",
+                options: [
+                    "Streptomyces מתחלק בחלוקה בינארית פשוטה, בעוד Lactobacillus יוצר נבגים",
+                    "Streptomyces יוצר קורים (מיצליום) ומתרבה על ידי נבגים חיצוניים (קונידיות), בעוד Lactobacillus מתחלק בחלוקה בינארית",
+                    "שניהם מתרבים על ידי הנצה",
+                    "Lactobacillus יוצר אנדוספורות עמידות, בעוד Streptomyces לא"
+                ],
+                correctIndex: 1,
+                explanation: "Streptomyces, השייך לקבוצת ה-High GC, מציג מחזור חיים מורכב הכולל צמיחה כקורים מסועפים והתרבות א-מינית על ידי יצירת שרשראות של נבגים הנקראים קונידיות. Lactobacillus, מקבוצת ה-Low GC, מתרבה על ידי חלוקת תא פשוטה."
+            },
+            {
+                question: "איזה סוג של בקטריוכלורופיל אופייני לחיידקי גופרית ירוקים (Green Sulfur Bacteria) ומאורגן בכלורוזומים?",
+                options: [
+                    "בקטריוכלורופיל a או b",
+                    "בקטריוכלורופיל c, d, או e",
+                    "בקטריוכלורופיל g",
+                    "רק בקטריוכלורופיל a"
+                ],
+                correctIndex: 1,
+                explanation: "חיידקי גופרית ירוקים משתמשים בבקטריוכלורופיל c, d, או e כפיגמנט האנטנה העיקרי בתוך הכלורוזומים, בנוסף לכמות קטנה של בקטריוכלורופיל a במרכז הריאקציה."
+            },
+            {
+                question: "בהתבסס על תהליך הניטריפיקציה, מהי תוצאת הפעילות המשולבת של Nitrosomonas ו-Nitrobacter על מולקולת אמוניה אחת?",
+                options: [
+                    "יצירת מולקולת ניטריט אחת ($NO_2^-$) ו-ATP",
+                    "יצירת מולקולת ניטרט אחת ($NO_3^-$) ו-ATP",
+                    "חיזור אמוניה לגז חנקן ($N_2$)",
+                    "חמצון אמוניה ישירות לניטרט ($NO_3^-$) על ידי אורגניזם יחיד"
+                ],
+                correctIndex: 1,
+                explanation: "במודל הדו-שלבי הקלאסי, Nitrosomonas מחמצן אמוניה לניטריט, ולאחר מכן Nitrobacter מחמצן את הניטריט לניטרט. התוצאה הסופית של פעולתם המשולבת היא הפיכת אמוניה לניטרט."
+            },
+            {
+                question: "איזה מהסוגים הבאים שייך לקבוצת הדלתא-פרוטאובקטריה (Deltaproteobacteria) וידוע כטורף של חיידקים גראם-שליליים אחרים?",
+                options: [
+                    "Helicobacter",
+                    "Bdellovibrio",
+                    "Caulobacter",
+                    "Neisseria"
+                ],
+                correctIndex: 1,
+                explanation: "Bdellovibrio הוא סוג ייחודי של דלתא-פרוטאובקטריה הטורף חיידקים אחרים על ידי חדירה לפריפלזמה שלהם וצריכת תכולת התא."
+            },
+            {
+                question: "מהו הרווח האנרגטי נטו (במולקולות ATP) בתסיסה הטרופרמנטטיבית של מולקולת גלוקוז אחת?",
+                options: [
+                    "0 ATP",
+                    "1 ATP",
+                    "2 ATP",
+                    "4 ATP"
+                ],
+                correctIndex: 1,
+                explanation: "במסלול ההטרופרמנטטיבי, מולקולת גלוקוז אחת מתפרקת ללקטט, אתנול ו-$CO_2$, תוך יצירת רווח נקי של מולקולת ATP אחת בלבד. זאת בניגוד למסלול ההומופרמנטטיבי המניב 2 ATP."
+            },
+            {
+                question: "חיידק מתג גראם-שלילי, החי בסימביוזה עם שורשי קטניות ומסוגל לקבע חנקן אטמוספרי, שייך ככל הנראה לסוג:",
+                options: [
+                    "Nitrobacter",
+                    "Azotobacter",
+                    "Rhizobium",
+                    "Clostridium"
+                ],
+                correctIndex: 2,
+                explanation: "Rhizobium הוא סוג קלאסי של אלפא-פרוטאובקטריה היוצר סימביוזת קיבוע חנקן עם צמחי קטניות בתוך פקעיות שורש. Azotobacter מקבע חנקן אך חי באופן חופשי, ו-Nitrobacter הוא ניטריפיקטור."
+            },
+            {
+                question: "מהי התכונה המבנית הייחודית של הכלורוזום, המאפשרת לחיידקי גופרית ירוקים לבצע פוטוסינתזה יעילה באור חלש מאוד?",
+                options: [
+                    "הוא מכיל רק כלורופיל a, הפיגמנט היעיל ביותר",
+                    "הוא מוקף בממברנה כפולה המבודדת אותו מהציטופלזמה",
+                    "הוא אברון גדול המכיל ריבוזומים ו-DNA משלו",
+                    "צפיפות גבוהה מאוד של מולקולות בקטריוכלורופיל c/d/e המאורגנות ללא חלבונים"
+                ],
+                correctIndex: 3,
+                explanation: "הכלורוזום הוא מבנה אנטנה עצום ויעיל ביותר, שבו אלפי מולקולות בקטריוכלורופיל מאורגנות בצפיפות גבוהה במבנה דמוי-גביש, כמעט ללא צורך בחלבוני פיגום. מבנה זה מאפשר קליטת אור יעילה ביותר גם בתנאי תאורה מינימליים."
+            },
+            {
+                question: "בהשוואה בין בקטריוכלורופיל a ו-b, איזה מהם בולע אור באורכי גל ארוכים יותר באופן משמעותי באורגניזם החי (in vivo), ומדוע?",
+                options: [
+                    "בקטריוכלורופיל a, בגלל קבוצת האצטיל שלו",
+                    "בקטריוכלורופיל b, בגלל קשר כפול נוסף במבנה הטבעת שלו",
+                    "שניהם בולעים באותם אורכי גל בדיוק",
+                    "בקטריוכלורופיל a, בגלל זנב הפיטול הארוך יותר"
+                ],
+                correctIndex: 1,
+                explanation: "לבקטריוכלורופיל b יש קשר כפול נוסף (אקסוציקלי) בהשוואה לבקטריוכלורופיל a, מה שמרחיב את מערכת הקשרים המצומדים וגורם להסטה משמעותית של הבליעה לאורכי גל ארוכים עוד יותר, עד מעל 1000 ננומטר."
+            },
+            {
+                question: "איזה מהחיידקים הבאים הוא טפיל תוך-תאי אובליגטורי, אך מתמקם בווקואולות של התא המארח ולא בציטופלזמה החופשית?",
+                options: [
+                    "Rickettsia prowazekii",
+                    "Coxiella burnetii",
+                    "Wolbachia pipientis",
+                    "Ehrlichia chaffeensis"
+                ],
+                correctIndex: 1,
+                explanation: "בעוד שרוב הריקציות (כמו Rickettsia ו-Wolbachia) חיות חופשי בציטופלזמה, Coxiella burnetii, הגורם לקדחת Q, הוא ייחודי בכך שהוא מתרבה בתוך הפאגו-ליזוזום החומצי של התא המארח."
+            },
+            {
+                question: "מהי הסיבה העיקרית לכך שחיידקי חומצת חלב נחשבים לאנאירוביים אוויר-סובלניים (aerotolerant anaerobes)?",
+                options: [
+                    "הם יכולים לעבור לנשימה אירובית כאשר יש חמצן",
+                    "יש להם אנזימים המנטרלים תוצרי חמצן רעילים, אך אינם יכולים לנצל חמצן להפקת אנרגיה",
+                    "הם גדלים מהר יותר בהיעדר חמצן",
+                    "הם מתים מיד בחשיפה לחמצן"
+                ],
+                correctIndex: 1,
+                explanation: "הם אירו-טולרנטיים מכיוון שהם יכולים לשרוד ולגדול בנוכחות חמצן (בזכות אנזימים כמו סופראוקסיד דיסמוטאז), אך המטבוליזם שלהם להפקת אנרגיה נשאר תסיסתי בלבד, והם אינם מפיקים תועלת אנרגטית מהחמצן."
+            },
+            {
+                question: "איזו קבוצה של חיידקים גראם-חיוביים מאופיינת בתכולת GC גבוהה ב-DNA, יצירת קורים מסועפים וייצור מגוון רחב של אנטיביוטיקות?",
+                options: [
+                    "Lactobacillus",
+                    "Clostridium",
+                    "Streptococcus",
+                    "Actinobacteria (למשל Streptomyces)"
+                ],
+                correctIndex: 3,
+                explanation: "Actinobacteria, ובעיקר הסוג Streptomyces, הם הדוגמה הקלאסית לחיידקים גראם-חיוביים בעלי תכולת GC גבוהה, מורפולוגיה של קורים (דמוית פטריה), ויכולת יוצאת דופן לסנתז מטבוליטים שניוניים, כולל רוב האנטיביוטיקות המוכרות."
+            },
+            {
+                question: "איזה מהבאים אינו סובסטרט המשמש מתילוטרופים לגדילה, אלא רק עובר חמצון משותף (cometabolism)?",
+                options: [
+                    "מתאנול ($CH_3OH$)",
+                    "מתילאמין ($CH_3NH_2$)",
+                    "אתילן ($H_2C=CH_2$)",
+                    "פורמט ($HCOO^-$)"
+                ],
+                correctIndex: 2,
+                explanation: "מתילוטרופים מתמחים בשימוש בתרכובות בעלות פחמן אחד (ללא קשרי פחמן-פחמן) לגדילה. אתילן, פרופאן ופחמימנים גבוהים יותר אינם משמשים לגדילה אך יכולים לעבור חמצון על ידי אותם אנזימים (כמו מתאן מונואוקסיגנאז) בתהליך של קו-מטבוליזם."
+            },
+            {
+                question: "מהי תת-הקבוצה הפילוגנטית בתוך הפרוטאובקטריה שאליה משתייכים רוב החיידקים הסגולים שאינם גופריתיים (purple nonsulfur bacteria)?",
+                options: [
+                    "גמא ודלתא",
+                    "אלפא ובטא",
+                    "אפסילון בלבד",
+                    "גמא בלבד"
+                ],
+                correctIndex: 1,
+                explanation: "בעוד שחיידקי הגופרית הסגולים נמצאים בגמא, רוב המגוון של החיידקים הסגולים שאינם גופריתיים, שהם פוטוהטרוטרופים, נמצא בתת-הקבוצות אלפא (למשל Rhodospirillum, Rhodobacter) ובטא (למשל Rhodocyclus)."
+            },
+            {
+                question: "מהי הפונקציה של האנזים לוציפראז (Luciferase) בחיידקים ביולומינסנטיים כמו Vibrio fischeri?",
+                options: [
+                    "זרזת התגובה של $FMNH_2$ עם חמצן ואלדהיד ארוך שרשרת ליצירת אור",
+                    "יצירת מולקולות האיתות (autoinducer) לתקשורת חישת צפיפות (quorum sensing)",
+                    "הפקת האנרגיה (ATP) הדרושה לתהליך האור",
+                    "חיזור FMN ל-$FMNH_2$ באמצעות NADH"
+                ],
+                correctIndex: 0,
+                explanation: "לוציפראז הוא האנזים המרכזי המזרז את התגובה הכימית הפולטת אור. הוא משתמש ב-$FMNH_2$, חמצן מולקולרי ($O_2$) ואלדהיד ליצירת התוצרים $FMN$, $H_2O$, חומצה קרבוקסילית, וכמובן, פוטון של אור."
+            },
+            {
+                question: "איזו מהטענות הבאות מתארת נכונה את ההבדל בין ממברנות של ארכאה היפרתרמופילית לממברנות של חיידקים כמו Thermotoga?",
+                options: [
+                    "ארכאה משתמשות בקשרי אתר, בעוד חיידקים משתמשים בקשרי אסתר בין הגליצרול לחומצות השומן",
+                    "לחיידקים יש ממברנה דו-שכבתית, ולארכאה יש תמיד ממברנה חד-שכבתית (monolayer)",
+                    "ארכאה משתמשות בחומצות שומן ישרות שרשרת, וחיידקים משתמשים באיזופרנואידים מסועפים",
+                    "אין הבדל כימי משמעותי במבנה הממברנה שלהם"
+                ],
+                correctIndex: 0,
+                explanation: "אחד ההבדלים הכימיים הבסיסיים ביותר בין חיידקים לארכאה הוא מבנה הליפידים בממברנה. חיידקים (וכן אאוקריוטים) משתמשים בקשרי אסתר, בעוד שארכאה משתמשות בקשרי אתר, שהם עמידים יותר להידרוליזה בטמפרטורות גבוהות."
+            },
+            {
+                question: "חיידק החי באדמה, גראם-שלילי, ומבצע את השלב הראשון של ניטריפיקציה (חמצון אמוניה לניטריט) שייך ככל הנראה לסוג:",
+                options: [
+                    "Nitrobacter",
+                    "Nitrospira",
+                    "Nitrosomonas",
+                    "Rhizobium"
+                ],
+                correctIndex: 2,
+                explanation: "הסוגים ששמם מתחיל ב-Nitroso (כמו Nitrosomonas, Nitrosospira, Nitrosococcus) אחראים לשלב הראשון של הניטריפיקציה, חמצון אמוניה לניטריט. סוגים ששמם מתחיל ב-Nitro (כמו Nitrobacter, Nitrospira) אחראים לשלב השני."
+            },
+            {
+                question: "מהו המאפיין המשותף לחיידקי גופרית ירוקים (Green Sulfur) וחיידקים ירוקים ללא גופרית (Green Nonsulfur)?",
+                options: [
+                    "הם שייכים לאותה קבוצה פילוגנטית קרובה",
+                    "שניהם משתמשים במימן גופריתי ($H_2S$) כתורם אלקטרונים",
+                    "שניהם מכילים מבנים לקליטת אור הנקראים כלורוזומים",
+                    "שניהם גראם-חיוביים"
+                ],
+                correctIndex: 2,
+                explanation: "למרות שהם רחוקים פילוגנטית ומטבולית, שתי הקבוצות הללו חולקות את מבנה האנטנה הייחודי והיעיל, הכלורוזום, המאפשר להם לשרוד בתנאי אור נמוכים מאוד."
+            },
+            {
+                question: "מה ההסבר לכך שהאנטיביוטיקה אריתרומיצין (Macrolide) יעילה נגד Legionella, אך פחות יעילה נגד רוב החיידקים הגראם-שליליים האחרים?",
+                options: [
+                    "ל-Legionella אין ממברנה חיצונית",
+                    "אריתרומיצין פועל על דופן הפפטידוגליקן העבה של Legionella",
+                    "מנגנון הפעולה של אריתרומיצין ייחודי לריבוזומים של Legionella",
+                    "אריתרומיצין חודר ביעילות לתאי המארח האאוקריוטיים שבהם Legionella מתרבה"
+                ],
+                correctIndex: 3,
+                explanation: "אריתרומיצין יעיל בעיקר נגד גראם-חיוביים. Legionella הוא גראם-שלילי אך הוא פתוגן תוך-תאי. יעילות האריתרומיצין נובעת מיכולתו לחדור לתאי המארח (למשל, מקרופאגים) ולהצטבר בהם, ובכך להגיע לחיידק המתחבא בפנים. רוב הגראם-שליליים החופשיים עמידים לו."
+            },
+            {
+                question: "איזה מהבאים מהווה דוגמה לקרוטנואיד מסוג Keto-carotenoid המיוצר על ידי חיידקים סגולים בנוכחות אוויר?",
+                options: [
+                    "Lycopene",
+                    "beta-Carotene",
+                    "Spirilloxanthin",
+                    "OH-Spheroidenone"
+                ],
+                correctIndex: 3,
+                explanation: "קרוטנואידים קטוניים מכילים קבוצת קרבוניל (C=O). OH-Spheroidenone הוא דוגמה לקרוטנואיד כזה, המיוצר על ידי חיידקים סגולים מסוימים כאשר הם נחשפים לחמצן, כחלק ממנגנון הגנה."
+            },
+            {
+                question: "חיידק גראם-חיובי, בעל תכולת GC נמוכה, המבצע תסיסה הטרופרמנטטיבית ומורפולוגיית תאיו היא נקדים (cocci) בשרשראות, שייך ככל הנראה לסוג:",
+                options: [
+                    "Streptococcus",
+                    "Lactobacillus",
+                    "Leuconostoc",
+                    "Pediococcus"
+                ],
+                correctIndex: 2,
+                explanation: "Leuconostoc מתאים לכל התיאורים: הוא גראם-חיובי עם GC נמוך, מבצע תסיסה הטרופרמנטטיבית, וצורתו היא נקדים בשרשראות. Streptococcus הוא הומופרמנטטיבי, Lactobacillus הוא מתג, ו-Pediococcus יוצר טטרדות."
+            },
+            {
+                question: "מהו התפקיד הפילוגנטי של החיידק Nitrospira כפי שהתגלה במחקרים עדכניים?",
+                options: [
+                    "הוא יוצר קבוצה פילוגנטית נפרדת ועצמאית שאינה שייכת לפרוטאובקטריה",
+                    "הוא קרוב משפחה קדום של הציאנובקטריה",
+                    "הוא שייך לקבוצת הבטא-פרוטאובקטריה, יחד עם Nitrosomonas",
+                    "הוא למעשה ארכאון ולא חיידק"
+                ],
+                correctIndex: 0,
+                explanation: "בעוד שרוב החיידקים הניטריפיקטורים שייכים לאלפא או גמא-פרוטאובקטריה, Nitrospira מהווה מערכה (פילום) בפני עצמה, המראה על מוצא אבולוציוני נפרד ועצמאי ליכולת הניטריפיקציה."
+            },
+            {
+                question: "איזו תכונה מבדילה את החיידק Thermotoga, היפרתרמופיל, מחיידקים אחרים ומעידה על העברת גנים אופקית משמעותית?",
+                options: [
+                    "נוכחות ממברנה חיצונית דמוית 'טוגה'",
+                    "היכולת לבצע פוטוסינתזה בטמפרטורות גבוהות",
+                    "אחוז גבוה של גנים בעלי דמיון לגנים של ארכאונים",
+                    "היעדר מוחלט של פפטידוגליקן בדופן התא"
+                ],
+                correctIndex: 2,
+                explanation: "ניתוח הגנום של Thermotoga גילה שכ-25% מהגנים שלו דומים יותר לגנים של ארכאונים מאשר לגנים של חיידקים אחרים. זוהי עדות חזקה להעברת גנים אופקית נרחבת בין שתי הממלכות בסביבות היפרתרמופיליות."
+            },
+            {
+                question: "איזה מהבאים הוא המאפיין המבדיל העיקרי בין קבוצת ה-Spirochetes לבין רוב החיידקים הגראם-שליליים האחרים?",
+                options: [
+                    "הם חסרי דופן תא",
+                    "הם בעלי צורת ספירלה נוקשה",
+                    "השוטונים שלהם (אנדופלגלות) ממוקמים בתוך הפריפלזמה",
+                    "הם גראם-חיוביים"
+                ],
+                correctIndex: 2,
+                explanation: "ל-Spirochetes יש מבנה ייחודי שבו השוטונים (flagella) אינם יוצאים החוצה מהתא, אלא נמצאים במרחב הפריפלזמטי, בין הממברנה הציטופלזמטית לממברנה החיצונית. סיבוב של אנדופלגלות אלו גורם לכל התא לנוע בתנועת פיתול."
+            },
+            {
+                question: "מהו ההסבר הסביר ביותר לכך שחיידקים מסוג Ectothiorhodospira משקיעים גופרית מחוץ לתא, בעוד ש-Chromatium משקיע אותה בפנים?",
+                options: [
+                    "ל-Ectothiorhodospira אין מקום בתוך התא",
+                    "הם משתמשים בסוגי גופרית שונים",
+                    "הם חסרים את המנגנון להכנסת הגופרית לתוך התא",
+                    "זוהי הסתגלות אבולוציונית לסביבות שונות, המשקפת שושלות פילוגנטיות נפרדות בתוך הגמא-פרוטאובקטריה"
+                ],
+                correctIndex: 3,
+                explanation: "מיקום שיקוע הגופרית הוא מאפיין טקסונומי חשוב המבדיל בין משפחות שונות של חיידקי גופרית סגולים. Ectothiorhodospiraceae ו-Chromatiaceae מייצגות שתי שושלות נפרדות שהסתגלו לנצל גופרית בצורות שונות."
+            },
+            {
+                question: "בהתבסס על העץ הפילוגנטי של החיידקים, איזו קבוצה נחשבת לענף הקדום ביותר שהתפצל משאר החיידקים?",
+                options: [
+                    "Proteobacteria",
+                    "Cyanobacteria",
+                    "Aquifex ו-Thermotoga (היפרתרמופילים)",
+                    "Gram-positive bacteria"
+                ],
+                correctIndex: 2,
+                explanation: "הענפים העמוקים והקצרים ביותר בעץ הפילוגנטי, הקרובים ביותר לשורש המשותף, נכבשים על ידי קבוצות של חיידקים היפרתרמופיליים כמו Aquifex ו-Thermotoga. הדבר מרמז שהאב הקדמון המשותף לכל החיידקים היה כנראה היפרתרמופיל."
+            },
+            {
+                question: "איזה מהמנגנונים הבאים אינו משמש את החיידק Wolbachia כדי להשפיע על רביית המארח שלו?",
+                options: [
+                    "הרג זכרים (Male killing)",
+                    "פמיניזציה של זכרים גנטיים",
+                    "יצירת ציסטות עמידות בסביבה החיצונית",
+                    "גרימת רביית בתולים (Parthenogenesis)"
+                ],
+                correctIndex: 2,
+                explanation: "Wolbachia הוא טפיל תוך-תאי אובליגטורי המועבר אנכית מהאם לצאצאים דרך הביציות. הוא אינו יוצר ציסטות או צורות עמידות מחוץ לתאי המארח. כל שאר האפשרויות הן אסטרטגיות רבייה ידועות שהוא משרה."
+            }
+        ];
+
+        const tfData = [
+            { question: "כל החיידקים מקבוצת הפרוטאובקטריה הם פתוגניים לאדם או לבעלי חיים.", answer: false, explanation: "קבוצת הפרוטאובקטריה כוללת מינים רבים החיים באופן חופשי, סימביונטים מועילים (כמו מקבעי חנקן) וחיידקים בעלי חשיבות סביבתית, ולא רק פתוגנים." },
+            { question: "חיידקי Rickettsia מסוגלים לגדול על מצע גידול עשיר במעבדה מחוץ לתאי המארח.", answer: false, explanation: "Rickettsia הם טפילים תוך-תאיים אובליגטוריים וחייבים להיות בתוך תא מארח חי כדי להתרבות." },
+            { question: "בקטריוכלורופיל a בולע אור ביעילות באותם אורכי גל כמו כלורופיל a של ציאנובקטריה.", answer: false, explanation: "הספקטרום של בקטריוכלורופיל a מוסט לאורכי גל ארוכים יותר (קרוב לאינפרא-אדום, 800-900 ננומטר) בהשוואה לכלורופיל a (כ-680 ננומטר)." },
+            { question: "חיידקי חומצת חלב מבצעים זרחון חמצוני לייצור ATP.", answer: false, explanation: "חיידקי חומצת חלב חסרים מערכת הובלת אלקטרונים וציטוכרומים, ולכן הם מייצרים ATP אך ורק באמצעות זרחון ברמת הסובסטרט בתהליך התסיסה." },
+            { question: "חיידקי גופרית סגולים (Purple Sulfur Bacteria) משתמשים במים כתורם אלקטרונים בפוטוסינתזה, ולכן משחררים חמצן.", answer: false, explanation: "הם מבצעים פוטוסינתזה אנאוקסיגנית (ללא שחרור חמצן) ומשתמשים בתרכובות גופרית מחוזרות (כמו $H_2S$) כתורם אלקטרונים." },
+            { question: "תהליך הניטריפיקציה המלא, מחמצון אמוניה ועד ליצירת ניטרט, מתבצע תמיד על ידי שני סוגי חיידקים שונים הפועלים בשיתוף.", answer: false, explanation: "בעוד שבאופן קלאסי זה נכון (למשל, Nitrosomonas ו-Nitrobacter), התגלה שחיידקים מסוימים מסוג Nitrospira מסוגלים לבצע את כל התהליך בעצמם (Comammox)." },
+            { question: "הסוג Wolbachia תמיד גורם לעיקור של זכרים בחרקים הנגועים.", answer: false, explanation: "Wolbachia יכול לגרום למגוון תופעות, כולל הרג זכרים, פמיניזציה, רביית בתולים (פרתנוגנזה) או אי-התאמה ציטופלזמטית, לא רק לעיקור." },
+            { question: "כל החיידקים מקבוצת הגראם-חיוביים הם בעלי תכולת GC נמוכה ב-DNA שלהם.", answer: false, explanation: "חיידקים גראם-חיוביים מתחלקים לשתי קבוצות עיקריות: בעלי GC נמוך (כמו Lactobacillus) ובעלי GC גבוה (כמו Streptomyces)." },
+            { question: "הכלורוזום, המצוי בחיידקי גופרית ירוקים, הוא מבנה פנימי המוקף בממברנה ליפידית כפולה בדומה לכלורופלסט.", answer: false, explanation: "הכלורוזום הוא מבנה ייחודי המוקף בשכבה אחת של ליפידים וחלבונים (מונו-שכבה), והוא אינו אברון בעל ממברנה כפולה." },
+            { question: "היפרתרמופילים כמו Aquifex ממוקמים בענפים המאוחרים והמודרניים ביותר של העץ הפילוגנטי של החיידקים.", answer: false, explanation: "היפרתרמופילים אלו נחשבים לקבוצות קדומות מאוד וממוקמים קרוב לשורש העץ הפילוגנטי החיידקי, מה שמרמז על כך שהחיים הקדומים התפתחו בסביבות חמות." },
+            { question: "חיידקי Planctomycetes בונים את דופן התא שלהם מפפטידוגליקן, בדומה לרוב החיידקים האחרים.", answer: false, explanation: "מאפיין ייחודי של Planctomycetes הוא היעדר פפטידוגליקן בדופן התא שלהם; הדופן מבוסס על חלבון בעל מבנה דמוי-S-layer." },
+            { question: "כל החיידקים הפוטוטרופיים הסגולים משתייכים לקבוצת האלפא-פרוטאובקטריה.", answer: false, explanation: "חיידקי גופרית סגולים (Purple Sulfur Bacteria) שייכים לגמא-פרוטאובקטריה, בעוד שחיידקים סגולים ללא-גופרית (Purple Nonsulfur Bacteria) מצויים בעיקר באלפא ובטא-פרוטאובקטריה." },
+            { question: "מתאנוטרופים הם חיידקים המסוגלים להשתמש במתאן כמקור פחמן ואנרגיה, והם אנאירוביים אובליגטוריים.", answer: false, explanation: "מתאנוטרופים חיידקיים הם אירוביים אובליגטוריים, מכיוון שהשלב הראשון בחמצון מתאן, המזורז על ידי מתאן מונואוקסיגנאז, דורש חמצן מולקולרי." },
+            { question: "בתהליך התסיסה ההטרופרמנטטיבית, הרווח הנקי של ATP ממולקולת גלוקוז אחת הוא 2 מולקולות ATP.", answer: false, explanation: "במסלול ההטרופרמנטטיבי, הרווח הנקי הוא 1 ATP בלבד למולקולת גלוקוז, לעומת 2 ATP במסלול ההומופרמנטטיבי." },
+            { question: "הסוג Streptomyces מאופיין ביצירת מושבות ריריות פשוטות וחסרות מבנה מורפולוגי מורכב.", answer: false, explanation: "Streptomyces יוצר קורים מסועפים (מיצליום) ומתרבה על ידי יצירת נבגים (קונידיות) בקצה הקורים, תהליך מורפולוגי מורכב." },
+            { question: "אנטיביוטיקה מסוג טטרציקלין, המיוצרת על ידי Streptomyces, יעילה בעיקר נגד חיידקים גראם-חיוביים.", answer: false, explanation: "טטרציקלין הוא אנטיביוטיקה רחבת-טווח (broad spectrum) היעילה נגד חיידקים גראם-חיוביים וגראם-שליליים, וכן ריקציות וכלמידיות." },
+            { question: "הטרציסטים בציאנובקטריה הם תאים וגטטיביים המבצעים פוטוסינתזה אוקסיגנית בקצב גבוה.", answer: false, explanation: "הטרציסטים הם תאים מיוחדים שאינם מבצעים פוטוסינתזה אוקסיגנית. הם יוצרים סביבה אנארובית פנימית כדי להגן על אנזים הניטרוגנאז הרגיש לחמצן, ומבצעים קיבוע חנקן." },
+            { question: "החיידק Vibrio cholerae הוא פתוגן יבשתי בלבד ואינו שורד בסביבות מימיות.", answer: false, explanation: "Vibrio cholerae הוא חיידק מימי הנמצא במקורות מים מליחים ומתוקים, וצבירי ביצים של חרקים יכולים לשמש כמאגרים עבורו בסביבה." },
+            { question: "על פי הפוסטולטים של קוך, יש לבודד את הגורם החשוד למחלה גם מאורגניזמים בריאים כדי להוכיח את הקשר.", answer: false, explanation: "הפוסטולט הראשון של קוך קובע כי יש למצוא את הגורם החשוד בכל האורגניזמים החולים, אך הוא חייב להיעדר מכל האורגניזמים הבריאים." },
+            { question: "חיידקי גופרית ירוקים וחיידקים ירוקים ללא-גופרית (כמו Chloroflexus) שייכים לאותה קבוצה פילוגנטית קרובה.", answer: false, explanation: "למרות שמם הדומה והימצאות כלורוזומים בשניהם, הם שייכים לענפים פילוגנטיים נפרדים ומרוחקים. חיידקי גופרית ירוקים מהווים מערכה בפני עצמה." },
+            { question: "כלורופיל a ובקטריוכלורופיל a זהים במבנה הכימי שלהם.", answer: false, explanation: "ישנם הבדלים מבניים. לדוגמה, בבקטריוכלורופיל a יש קבוצת אצטיל במקום קבוצת ויניל בעמדה C3, והטבעת הפירולית השנייה מחוזרת." },
+            { question: "החיידק Coxiella burnetii, הגורם לקדחת Q, מתמקם בציטופלזמה של התא המארח, בדומה ל-Rickettsia.", answer: false, explanation: "Coxiella מתמקם ומתרבה בתוך וקואולות (חלוליות) פאגו-ליזוזומליות חומציות בתוך תא המארח, ולא בציטופלזמה החופשית." },
+            { question: "חיידקים מסוג Nitrobacter מחמצנים אמוניה לניטריט.", answer: false, explanation: "Nitrobacter מבצע את השלב השני של הניטריפיקציה: חמצון ניטריט ($NO_2^-$) לניטרט ($NO_3^-$). חיידקים כמו Nitrosomonas מחמצנים אמוניה לניטריט." },
+            { question: "תהליך הביולומינצסנציה בחיידקים כמו Vibrio fischeri דורש סביבה אנארובית לחלוטין.", answer: false, explanation: "התגובה הכימית המייצרת אור, המזורזת על ידי האנזים לוציפראז, דורשת חמצן מולקולרי ($O_2$), ולכן מתרחשת בתנאים אירוביים." },
+            { question: "החיידק Bdellovibrio הוא טפיל הניזון מתכולת תאים של חיידקים אחרים, והוא משתייך לקבוצת הגמא-פרוטאובקטריה.", answer: false, explanation: "Bdellovibrio הוא אכן טפיל של חיידקים אחרים, אך הוא משתייך לקבוצת הדלתא-פרוטאובקטריה (Deltaproteobacteria)." },
+            { question: "קרוטנואידים אליפטיים ואריליים מופיעים באותן קבוצות חיידקים פוטוטרופיים ללא הבחנה.", answer: false, explanation: "ישנה התמחות. לדוגמה, קרוטנואידים אריליים כמו Chlorobactene נמצאים בחיידקי גופרית ירוקים, בעוד שקרוטנואידים אליפטיים כמו Spirilloxanthin אופייניים לחיידקים סגולים." },
+            { question: "כל החיידקים מהסוג Rhodospirillum הם בעלי צורת מתג ומתחלקים על ידי הנצה.", answer: false, explanation: "Rhodospirillum מאופיין בצורת ספירלה ונע באמצעות שוטונים קוטביים. הסוג Rhodopseudomonas, לעומת זאת, הוא בעל צורת מתג ומתחלק על ידי הנצה." },
+            { question: "תכולת ה-GC ב-DNA של חיידקי Proteobacteria היא אחידה בכל תת-הקבוצות.", answer: false, explanation: "ישנה שונות רבה בתכולת ה-GC בין סוגים שונים של פרוטאובקטריה, למשל, Rickettsia עם 29-33% לעומת Nitrobacter עם 59-62%." },
+            { question: "החיידק Aquifex הוא היפרתרמופיל המבצע פוטוסינתזה באמצעות בקטריוכלורופיל.", answer: false, explanation: "Aquifex הוא כימוליתואוטוטרוף המשתמש בתגובות כימיות (כמו חמצון מימן) להפקת אנרגיה, ולא פוטוטרוף. הוא אינו מכיל בקטריוכלורופיל." },
+            { question: "הפוטוסינתזה בחיידקי הליובקטריה (Heliobacteria) היא אוקסיגנית, בדומה לציאנובקטריה.", answer: false, explanation: "הליובקטריה הם היחידים מהחיידקים הגראם-חיוביים המבצעים פוטוסינתזה, אך היא אנאוקסיגנית ומשתמשת בבקטריוכלורופיל g ייחודי." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.innerHTML = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.innerHTML = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.innerHTML = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.innerHTML = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.innerHTML = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

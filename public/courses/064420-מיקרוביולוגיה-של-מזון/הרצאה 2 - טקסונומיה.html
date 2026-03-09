@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>טקסונומיה ומיקרוביולוגיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "טקסונומיה", definition: "תחום מדע המאפשר לזהות שייכות וקירבה של אורגניזמים ובכך ללמוד עליהם על סמך מינים קרובים" },
+            { term: "הגדרת מין במיקרוביולוגיה", definition: "הבחנה המתבססת בעיקר על דמיון בתכונות ובגנום ולא על יכולת רבייה מינית" },
+            { term: "שיום בינומי", definition: "שיטה למתן שמות מדעיים המורכבת משם הסוג ושם המין של האורגניזם" },
+            { term: "פריונים", definition: "גורמי מחלה המורכבים מחלבון בלבד ואינם נחשבים לאורגניזמים שלמים" },
+            { term: "העברה פקאלית אוראלית", definition: "מנגנון הדבקה נפוץ של וירוסים במזון העובר דרך מים מזון וידיים מזוהמות אל מערכת העיכול" },
+            { term: "קוקים (Cocci)", definition: "חיידקים בעלי צורה כדורית המהווים קריטריון מורפולוגי לסיווג" },
+            { term: "בצילוס (Bacilli)", definition: "חיידקים בעלי צורה מתגית המשמשים כבסיס לסיווג מורפולוגי" },
+            { term: "ויבריו (Vibrio)", definition: "חיידקים בעלי צורה כפופה או פסיקית" },
+            { term: "פרוטוזואה", definition: "טפילים אאוקריוטים חד תאיים העלולים לזהם מזון ולגרום למחלות" },
+            { term: "אנטאמבה היסטוליטיקה", definition: "פרוטוזואה הגורמת לדיזנטריה העלולה לחדור לזרם הדם ולפגוע בכבד ובמוח" },
+            { term: "טריכינלה", definition: "סוג של תולעת טפילה הנפוצה בעיקר בבשר חזיר וניתנת לזיהוי ברקמת השריר" },
+            { term: "בדיקת PCR", definition: "שיטה מולקולרית המשמשת לזיהוי וירוסים במזון באמצעות איתור חומר גנטי" },
+            { term: "בדיקה סרולוגית", definition: "אבחון המבוסס על איתור נוגדנים ספציפיים במים במזון או בצואת החולה" },
+            { term: "אצות חד תאיות", definition: "קבוצה של מיקרואורגניזמים אאוקריוטיים היכולים להימצא במזון" },
+            { term: "מדריך ברגי (Bergey)", definition: "המדריך המקיף לסיווג וטקסונומיה של חיידקים המבוסס על תכונות וגנום" }
+        ];
+
+        const mcqData = [
+            { question: "איזה מהמשפטים הבאים מתאר בצורה המדויקת ביותר את ההבדל בהגדרת מין בין בעלי חיים לחיידקים?", options: ["בבעלי חיים ההגדרה מבוססת על דמיון גנומי בעוד שבחיידקים על יכולת רבייה מינית", "בבעלי חיים ההגדרה מתבססת על יכולת העמדת צאצאים פוריים בעוד שבחיידקים היא מבוססת על דמיון בתכונות ובגנום", "אין הבדל ושתי הקבוצות מוגדרות על סמך סטריליות של היברידים", "חיידקים מוגדרים על פי מורפולוגיה בלבד ובעלי חיים על פי גנטיקה"], correctIndex: 1, explanation: "בניגוד לבעלי חיים שבהם מין מוגדר על ידי יכולת רבייה מינית והעמדת צאצאים פוריים במיקרוביולוגיה ההבחנה מתבססת על קבוצות בעלות קווים של תכונות דומות וגנום דומה" },
+            { question: "על פי כללי הטקסונומיה כיצד נכתב שמו המדעי המלא של אורגניזם?", options: ["שם המין תחילה ואחריו שם המשפחה", "שם המחלקה תחילה ואחריה שם הסוג", "שם הסוג תחילה ואחריו שם המין", "שם הממלכה תחילה ואחריה שם המין"], correctIndex: 2, explanation: "מין האורגניזם מצוין תמיד על ידי צירוף של שם הסוג ולאחריו שם המין" },
+            { question: "איזה מהגורמים הבאים אינו משמש כקריטריון לסיווג חיידקים?", options: ["דרישות חמצן", "צביעת גראם", "יכולת יצירת היברידים סטריליים", "מאפיינים אימונולוגיים"], correctIndex: 2, explanation: "יכולת יצירת היברידים סטריליים היא מאפיין של בעלי חיים מורכבים ולא של חיידקים המתרבים ברבייה אל מינית" },
+            { question: "מהו המאפיין הייחודי של פריונים בהשוואה לשאר גורמי המחלה המועברים במזון?", options: ["הם מכילים חומר גנטי מסוג רנא בלבד", "הם מורכבים מחלבון בלבד ואינם נחשבים לאורגניזם", "הם עמידים לחלוטין בפני כל טיפול תרמי", "הם תוקפים רק תאים פרוקריוטיים"], correctIndex: 1, explanation: "פריונים הם חלבונים פגומים הגורמים למחלה ואינם מכילים חומר גנטי לכן אינם מוגדרים כאורגניזם" },
+            { question: "מדוע קשה במיוחד למנוע התפשטות של וירוסים במזון בזמן אפידמיה?", options: ["מכיוון שהם מתרבים במהירות בתוך המזון עצמו לפני האכילה", "בשל רגישותם הגבוהה וקושי בניטורם בסביבה ובמזון", "משום שהם אינם מגיבים לשום סוג של חיטוי כימי", "כי הם מועברים אך ורק דרך האוויר ולא דרך מגע"], correctIndex: 1, explanation: "וירוסים קשים לניטור ברגישות גבוהה מה שמקשה על זיהוי מוקדם ומניעת התפשטותם בזמן התפרצות" },
+            { question: "מהי הדרך היעילה ביותר לנטרל וירוסים המועברים במזון?", options: ["הקפאה עמוקה לתקופה ממושכת", "טיפול בחום ובישול יסודי", "הוספת אנטיביוטיקה למזון", "שטיפה במים קרים בלבד"], correctIndex: 1, explanation: "הרגישות של וירוסים במזון לחום הופכת את תהליך הבישול לדרך היעילה ביותר למניעת הדבקה" },
+            { question: "איזו מהקבוצות הבאות אינה נחשבת למיקרואורגניזם אאוקריוטי המצוי במזון?", options: ["תולעים", "פרוטוזואה", "וירוסים", "אצות חד תאיות"], correctIndex: 2, explanation: "וירוסים אינם נחשבים לאאוקריוטים או פרוקריוטים הם ישויות ביולוגיות נפרדות שאינן בנויות מתאים" },
+            { question: "מטופל מגיע למרפאה עם כאבי בטן עזים לאחר שאכל בשר חזיר נא בבדיקת רקמת שריר נמצאו טפילים מאיזה סוג סביר להניח שהמטופל סובל?", options: ["וירוס מסוג רוטה", "תולעת מסוג טריכינלה", "חיידק מסוג בצילוס", "פרוטוזואה מסוג אנטאמבה"], correctIndex: 1, explanation: "תולעי טריכינלה נפוצות בבשר חזירים וניתן לזהות את הפגיעה שלהן ולראותן בתוך רקמת שריר" },
+            { question: "מדוע מטפלים בזיהומי פרוטוזואה באמצעות אנטיביוטיקות ייחודיות ולא באנטיביוטיקה רגילה לחיידקים?", options: ["מכיוון שפרוטוזואה הם וירוסים חסרי דופן תא", "משום שפרוטוזואה הם אורגניזמים אאוקריוטיים בעלי מבנה תאי שונה מחיידקים", "כי פרוטוזואה מורכבים מחלבון בלבד", "מפני שפרוטוזואה עמידים לחלוטין לכל חומר כימי"], correctIndex: 1, explanation: "פרוטוזואה הם טפילים אאוקריוטים ולכן נדרשות תרופות ייחודיות הפוגעות במנגנונים אאוקריוטיים ספציפיים מבלי לפגוע בתאי המאכסן" },
+            { question: "מהי הסכנה המרכזית בנשאות לא מטופלת של אנטאמבה היסטוליטיקה?", options: ["התפתחות של דלקת קרום המוח ויראלית", "חדירה לזרם הדם ופגיעה באיברים פנימיים כמו הכבד והמוח", "הפיכת הטפיל לפריון עמיד לחום", "פגיעה בלתי הפיכה במערכת הנשימה העליונה"], correctIndex: 1, explanation: "אם הטפיל אינו מטופל הוא עלול לעבור מהמעי לזרם הדם להגיע לכבד ולעיתים אף למוח ולגרום למוות" },
+            { question: "כיצד משפיעה אוכלוסיית חיידקי המעי על נשאות של טפילי פרוטוזואה?", options: ["היא מחסלת אותם באופן מיידי ומונעת הדבקה לחלוטין", "נמצא כי הרכב חיידקי המעי משפיע על רמת הנשאות והשגשוג של הטפיל", "חיידקי המעי הופכים לטפילים בעצמם בנוכחות הפרוטוזואה", "אין שום קשר בין חיידקי המעי לבין הדבקה בפרוטוזואה"], correctIndex: 1, explanation: "מחקרים מראים כי הרכב המיקרוביום חיידקי המעי משפיע על האופן שבו המאכסן נושא את הטפיל ועל חומרת הסימפטומים" },
+            { question: "מהו אחוז האינפקציות המועברות במזון שנגרמות על ידי וירוסים?", options: ["פחות מ עשרה אחוזים", "כ שלושים אחוזים", "סביב חמישים אחוזים", "מעל שבעים אחוזים"], correctIndex: 3, explanation: "וירוסים אחראים למספר עצום של אינפקציות המועברות במזון המוערך בלמעלה מ ($70\\%$)" },
+            { question: "איזה מבין הוירוסים הבאים נחשב לפחות נפוץ בהעברה דרך מזון?", options: ["נורו-וירוס", "רוטה-וירוס", "אדנו-וירוס", "הפטיטיס אי"], correctIndex: 3, explanation: "נורו-וירוס רוטה-וירוס ואדנו-וירוס הם העיקריים בעוד שהפטיטיס אי ואסטרו-וירוס נחשבים לפחות נפוצים בקונטקסט זה" },
+            { question: "איזה סוג של מיקרואורגניזם בולע תאי דם אדומים כחלק ממנגנון הפעולה שלו?", options: ["חיידקי ויבריו", "וירוסי הפטיטיס", "פרוטוזואה מסוג אנטאמבה היסטוליטיקה", "תולעי טריכינלה"], correctIndex: 2, explanation: "אנטאמבה היסטוליטיקה היא פרוטוזואה הגורמת לדיזנטריה וידועה ביכולתה לבלוע תאי דם אדומים כחלק מפגיעתה ברקמות" },
+            { question: "מהי המשמעות המעשית של רגישות תולעים טפילות לקרינת על סגול ולחום?", options: ["שתולעים יכולות לשרוד רק באזורים טרופיים", "שבישול ראוי של מזון ובמיוחד מאכלי ים מונע הדבקה", "שתולעים מתרבות מהר יותר בחשיפה לשמש", "שאי אפשר להידבק בתולעים מאכילת דג נא"], correctIndex: 1, explanation: "בשל רגישותן לחום בישול יעיל משמיד את התולעים ולכן ההדבקה נפוצה בעיקר באכילת מאכלי ים לא מבושלים" },
+            { question: "איזו שיטה אינה משמשת כדרך מקובלת לזיהוי נוכחות של תולעים באדם?", options: ["בדיקה סרולוגית לאיתור נוגדנים ספציפיים", "מבחן ישיר דרך מיקרוסקופ", "צביעת גראם של דגימת צואה", "בדיקת צואת חולה"], correctIndex: 2, explanation: "צביעת גראם היא שיטה ספציפית לסיווג חיידקים על פי מבנה דופן התא שלהם ואינה רלוונטית לזיהוי תולעים אאוקריוטיות" },
+            { question: "מהו הסימפטום הראשוני הנפוץ ביותר של נשאות אקטיבית של אנטאמבה היסטוליטיקה?", options: ["שיתוק שרירים", "שלשול", "אובדן ראייה", "התקרחות"], correctIndex: 1, explanation: "הסימפטומים הראשוניים של פגיעת אנטאמבה היסטוליטיקה במעי הם שלשולים ודיזנטריה" },
+            { question: "כיצד מועברות רוב המחלות הויראליות הקשורות למזון?", options: ["ממגע ישיר עם חיות בר בלבד", "דרך עקיצות יתושים הנמצאים בקרבת מזון", "במסלול פקאלי אוראלי דרך מזון מים וידיים מזוהמות", "דרך קרינת שמש הפוגעת במזון מקולקל"], correctIndex: 2, explanation: "המסלול המרכזי להעברת וירוסים במזון הוא המסלול הפקאלי אוראלי לעיתים גם בשילוב הדבקה טיפתית" },
+            { question: "לפי הידוע כיום מהי רמת הסיכון להדבקה בנגיף הקורונה דרך מזון?", options: ["גבוהה מאוד ולכן יש לחטא כל פריט מזון", "הנגיף מתרבה בתוך בשר נא ולכן מסוכן", "אין כיום תיעוד או עדות להדבקה בנגיף דרך המזון", "הנגיף מועבר דרך מזון רק אם הוא חומם לטמפרטורה נמוכה"], correctIndex: 2, explanation: "ארגוני הבריאות קבעו כי אין עדות או תיעוד לכך שנגיף הקורונה מועבר דרך אכילת מזון או אריזות מזון" },
+            { question: "איזה מונח טקסונומי מתאר את הרמה הרחבה והכוללנית ביותר מבין האפשרויות הבאות?", options: ["סוג", "משפחה", "מערכה", "סדרה"], correctIndex: 2, explanation: "מבנה ההיררכיה הטקסונומית הוא ממלכה מערכה מחלקה סדרה משפחה סוג ומין לכן מערכה היא הרחבה ביותר מבין האפשרויות" },
+            { question: "איזו צורה מורפולוגית מאפיינת חיידקים המוגדרים כספירילה?", options: ["כדורית", "מתגית", "סלילונית", "פסיקית"], correctIndex: 2, explanation: "חיידקים מסוג ספירילה הם בעלי צורה סלילונית ספירלית" },
+            { question: "מה מאפיין את רוב מקרי הנשאות של טפיל האנטאמבה היסטוליטיקה?", options: ["תמותה מיידית תוך מספר ימים", "הופעת פריחה עורית קשה", "נשאות אסימפטומטית ללא תסמינים מורגשים", "התפתחות של דלקת ריאות כרונית"], correctIndex: 2, explanation: "בדרך כלל הנשאות של הטפיל היא ללא סימפטומים ורק בכ ($10\\%$) מהמקרים מתפתחת פגיעה קשה במוקוזה של המעי" },
+            { question: "איזה סוג של מיקרואורגניזם הוא טפיל חד תאי הגורם לדיזנטריה?", options: ["וירוס", "תולעת נימית", "פרוטוזואה", "פריון"], correctIndex: 2, explanation: "פרוטוזואה הם טפילים אאוקריוטים חד תאיים כדוגמת האנטאמבה הגורמת לדיזנטריה" },
+            { question: "איזו קבוצת אורגניזמים כוללת פטריות ואצות חד תאיות?", options: ["וירוסים", "מיקרואורגניזמים פרוקריוטיים", "מיקרואורגניזמים אאוקריוטיים", "פריונים"], correctIndex: 2, explanation: "פטריות אצות חד תאיות תולעים ופרוטוזואה שייכים כולם לקבוצת המיקרואורגניזמים האאוקריוטיים" },
+            { question: "מהי הסיבה העיקרית לכך שוירוסים במזון גורמים לאינפקציות רבות כל כך?", options: ["הם מסוגלים להתרבות בתוך המזון עצמו גם בטמפרטורת החדר", "הם עמידים לחלוטין בפני הרתחה ממושכת", "הם עוברים בקלות במסלול פקאלי אוראלי וקשה לנטר אותם", "הם גורמים למזון להיראות מקולקל ולכן אנשים נמשכים אליו"], correctIndex: 2, explanation: "וירוסים אינם מתרבים במזון אך הם מועברים בקלות רבה דרך מגע ומים מזוהמים וקשה מאוד לזהותם בשל הצורך ברגישות ניטור גבוהה" },
+            { question: "איזה מנגנון ביולוגי מאפשר את זיהויים של וירוסים במזון במעבדה?", options: ["צביעת גראם", "בדיקת עמידות לאנטיביוטיקה", "שימוש בנוגדנים ובשיטות הגברה גנטית כמו פי סי אר", "גידול על מצע אגר רגיל למשך עשרים וארבע שעות"], correctIndex: 2, explanation: "מכיוון שוירוסים אינם גדלים על מצעי מזון רגילים זיהויים דורש שיטות מולקולריות ואימונולוגיות מתקדמות" },
+            { question: "אילו איברים נוספים מלבד המעי עלולים להיפגע מזיהום חמור של תולעים?", options: ["רק השיער והציפורניים", "מערכת השלד בלבד", "רקמות שונות בגוף ובמקרים קיצוניים פגיעה המובילה למוות", "תולעים פוגעות אך ורק במערכת העיכול ואינן נודדות"], correctIndex: 2, explanation: "תולעים יכולות לנדוד ולפגוע ברקמות שונות בגוף להשפיע על המערכת האימונית ואף להגיע לאיברים קריטיים כמו המוח" },
+            { question: "מהו הקריטריון המבדיל בין מינים שונים של בעלי חיים בטבע?", options: ["היכולת ליצור הכלאות פוריות בתוך המין וסטריליות בין מינים שונים", "ההבדל בצבע הפרווה בלבד", "סוג המזון שהם צורכים", "המיקום הגיאוגרפי שבו הם חיים"], correctIndex: 0, explanation: "הבחנה קלאסית בין מינים בבעלי חיים מבוססת על היכולת להעמיד צאצאים פוריים יחד כאשר הכלאה בין מינים שונים יוצרת היבריד עקר כמו פרד" },
+            { question: "מהו אחוז התמותה השנתי המשוער מנשאות של אנטאמבה היסטוליטיקה?", options: ["כחמש מאות איש", "כחמישים אלף איש", "כמיליון איש", "אין תמותה כלל מהטפיל"], correctIndex: 1, explanation: "מתוך חמישים מיליון נשאים ברחבי העולם ישנה תמותה של כ ($50,000$) איש בשנה כתוצאה מסיבוכי המחלה" },
+            { question: "איזו רמה טקסונומית ממוקמת מיד מתחת לרמת המשפחה?", options: ["מחלקה", "מין", "סוג", "סדרה"], correctIndex: 2, explanation: "הסדר ההיררכי הוא סדרה משפחה סוג ולבסוף מין לכן הסוג נמצא מיד מתחת למשפחה" },
+            { question: "אילו מהווירוסים הבאים נחשבים לאלימים יותר אך נפוצים פחות בהעברה דרך מזון?", options: ["נורו-וירוס ורוטה-וירוס", "אדנו-וירוס ואסטרו-וירוס", "הפטיטיס אבולה ופוליו", "וירוסי שפעת עונתית"], correctIndex: 2, explanation: "וירוסים כמו הפטיטיס פוליו ואבולה הם אלימים ומסוכנים מאוד אך שכיחות ההעברה שלהם דרך מזון נמוכה יותר מוירוסים כמו נורו-וירוס" },
+            { question: "מהי המשמעות של היעדר דופן תא במיקרואורגניזם בהקשר טקסונומי?", options: ["הוא יסווג אוטומטית כוירוס", "הוא עשוי להשתייך לקבוצת המיקופלזמה בחיידקים", "הוא נחשב לפריון", "הוא בהכרח אורגניזם אירובי"], correctIndex: 1, explanation: "בעץ הפילוגנטי של חיידקים קיימת קבוצה חסרת דופן תא הנקראת מיקופלזמה המאובחנת כחלק מהסיווג הטקסונומי" },
+            { question: "מדוע טיפול תרמי אינו יעיל כנגד הרעלת מזון הנגרמת מפריונים?", options: ["כי פריונים מתרבים מהר יותר בחום", "משום שפריונים הם חלבונים פגומים ועמידים ביותר שאינם נהרסים בטמפרטורות בישול רגילות", "כי פריונים עטופים בשכבת שומן עבה המבודדת אותם", "טיפול תרמי דווקא יעיל לחלוטין נגד פריונים"], correctIndex: 1, explanation: "פריונים הם חלבונים יציבים מאוד הגורמים לשינוי מבני בחלבונים אחרים ואינם נהרסים בבישול סטנדרטי בניגוד לוירוסים וחיידקים" },
+            { question: "מה תפקידו של משרד החקלאות בהקשר של מיקרוביולוגיה של מזון בישראל?", options: ["ייצור חיסונים נגד וירוסים במזון", "פיקוח על תולעים וטפילים במזון דרך המעבדות הווטרינריות", "טיפול רפואי בנשאי אנטאמבה", "פיתוח זנים חדשים של צמחים עמידים"], correctIndex: 1, explanation: "הפיקוח על הימצאות תולעים וטפילים בבשר ובמזון מן החי נעשה בארץ על ידי המעבדות הווטרינריות של משרד החקלאות" },
+            { question: "מהי הדרך העיקרית בה נמנעת הדבקה נרחבת של תולעים במאכלי ים?", options: ["הקפאה עמוקה או בישול יסודי ההורסים את הטפילים", "שטיפת הדג במי מלח בלבד", "הוצאת העצמות מהדג", "אכילת הדג מיד לאחר הדיג"], correctIndex: 0, explanation: "תולעים רגישות לחום ולכן בישול מונע הדבקה בנוסף בתעשיית הסושי נהוג להקפיא דגים להקפאה עמוקה כדי להשמיד טפילים לפני אכילתם כנאים" },
+            { question: "מהי התכונה המשותפת לכל המיקרואורגניזמים האאוקריוטיים במזון?", options: ["כולם חסרי גרעין מוגדר", "כולם מכילים חומר גנטי המאורגן בתוך גרעין אמיתי", "כולם מתרבים רק בתוך תאים חיים אחרים", "כולם מורכבים מחלבון בלבד"], correctIndex: 1, explanation: "ההגדרה הבסיסית של אאוקריוטים הכוללת פטריות אצות תולעים ופרוטוזואה היא קיומו של גרעין תא מוגדר המכיל את החומר הגנטי" },
+            { question: "מדוע זיהוי סרולוגי יעיל באבחון של מחלות טפיליות?", options: ["כי הוא מזהה את הצורה החיצונית של הטפיל בצואה", "משום שהוא מאתר נוגדנים ספציפיים שהגוף ייצר בתגובה לנוכחות הטפיל", "כי הוא בודק את רמת החומציות בקיבה", "מפני שהוא מזהה פריונים בזרם הדם"], correctIndex: 1, explanation: "בדיקה סרולוגית מתבססת על תגובת המערכת החיסונית ומאתרת נוגדנים ספציפיים למחולל המחלה בדם או בהפרשות" },
+            { question: "איזה מבין הבאים אינו מהווה גורם מחלה ביולוגי שלם?", options: ["חיידק סלמונלה", "תולעת טריכינלה", "פריון", "אצת ים חד תאית"], correctIndex: 2, explanation: "פריון הוא מולקולת חלבון פגומה ואינו נחשב לאורגניזם חי או לתא שלם בניגוד לשאר האפשרויות" },
+            { question: "כיצד מתבצעת לרוב הדבקה בוירוסים התוקפים את מערכת העיכול?", options: ["דרך חתכים פתוחים בעור", "באמצעות מגע עם דם נגוע בלבד", "בעיקר דרך מזון מים וידיים מזוהמות במסלול פקאלי אוראלי", "דרך נשימת אוויר קר"], correctIndex: 2, explanation: "וירוסים הפוגעים במערכת העיכול כמו נורו-וירוס עוברים לרוב במסלול פקאלי אוראלי עקב היגיינה לקויה או מזון מזוהם" },
+            { question: "מהי ההשלכה של עמידות חיידקים לצביעת גראם על הטקסונומיה שלהם?", options: ["היא קובעת אם החיידק הוא אירובי או אנאירובי", "היא מחלקת את החיידקים לשתי קבוצות עיקריות על בסיס מבנה דופן התא", "היא מעידה על יכולת החיידק לבצע פוטוסינתזה", "אין לה שום משמעות טקסונומית"], correctIndex: 1, explanation: "צביעת גראם היא אחד הכלים הבסיסיים בטקסונומיה של חיידקים המחלקת אותם לגראם חיוביים ושליליים על בסיס עובי והרכב דופן התא" }
+        ];
+
+        const tfData = [
+            { question: "טקסונומיה במיקרוביולוגיה מאפשרת להסיק מסקנות על אורגניזם לא מוכר על סמך מידע הקיים על אורגניזמים הקרובים אליו אבולוציונית", answer: true, explanation: "זוהי אחת המטרות המרכזיות של הטקסונומיה לאפשר זיהוי ושיוך כדי להשתמש בידע קיים על משפחות וסוגים דומים" },
+            { question: "הגדרת מין בחיידקים מבוססת באופן מוחלט על היכולת שלהם להתרבות זה עם זה ולהעמיד צאצאים פוריים", answer: false, explanation: "בחיידקים הגדרת מין מבוססת על דמיון בתכונות ובגנום ולא על רבייה מינית שכן חיידקים מתרבים ברבייה אל מינית" },
+            { question: "פריונים הם מיקרואורגניזמים זעירים המכילים חומר גנטי מסוג רנא בלבד", answer: false, explanation: "פריונים אינם מיקרואורגניזמים ואינם מכילים חומר גנטי כלל הם מורכבים מחלבון פגום בלבד" },
+            { question: "וירוסים אחראים ליותר משבעים אחוזים מהאינפקציות המועברות במזון", answer: true, explanation: "על פי הנתונים וירוסים מהווים את הגורם המרכזי למחלות זיהומיות המועברות דרך מזון" },
+            { question: "המסלול הפקאלי אוראלי הוא דרך הדבקה נדירה מאוד בקרב מחלות ויראליות המועברות במזון", answer: false, explanation: "ההפך הוא הנכון זהו מסלול ההדבקה העיקרי של וירוסים במזון דרך מים ידיים ומזון מזוהמים" },
+            { question: "בישול מזון בטמפרטורות גבוהות אינו משפיע כלל על שרידותם של וירוסים במזון", answer: false, explanation: "וירוסים במזון רגישים לחום ולכן בישול יעיל נחשב לדרך טובה לנטרל אותם ולמנוע הדבקה" },
+            { question: "נגיף הקורונה הוכח מדעית כאחד הגורמים המרכזיים להרעלות מזון בשנים האחרונות", answer: false, explanation: "אין שום תיעוד או עדות מדעית להדבקה בנגיף הקורונה דרך מזון או אריזות מזון" },
+            { question: "תולעים טפילות המועברות במזון רגישות לקרינת על סגול ולטיפול בחום", answer: true, explanation: "רגישות זו הופכת את הבישול וטיפולי הקרינה ליעילים במניעת הדבקה בתולעים דרך מזון" },
+            { question: "זיהוי נוכחות של תולעים באדם יכול להתבצע באמצעות בדיקת נוגדנים ספציפיים בדם", answer: true, explanation: "בדיקות סרולוגיות לאיתור נוגדנים הן כלי מרכזי באבחון מחלות טפיליות הנגרמות על ידי תולעים" },
+            { question: "פרוטוזואה הם אורגניזמים פרוקריוטיים רב תאיים", answer: false, explanation: "פרוטוזואה הם מיקרואורגניזמים אאוקריוטיים והם חד תאיים ולא רב תאיים" },
+            { question: "אנטאמבה היסטוליטיקה היא סוג של חיידק הגורם לדיזנטריה", answer: false, explanation: "אנטאמבה היסטוליטיקה אינה חיידק אלא טפיל אאוקריוטי חד תאי השייך לקבוצת הפרוטוזואה" },
+            { question: "הטיפול בזיהומי פרוטוזואה מתבצע לרוב בעזרת אנטיביוטיקות ייחודיות המותאמות למבנה האאוקריוטי שלהם", answer: true, explanation: "מכיוון שהם אאוקריוטים נדרשות תרופות ספציפיות שלא יפגעו בתאי המאכסן האאוקריוטי גם כן" },
+            { question: "כל אדם שנדבק באנטאמבה היסטוליטיקה יפתח מיד תסמינים קשים של דיזנטריה ופגיעה בכבד", answer: false, explanation: "בדרך כלל הנשאות היא ללא סימפטומים ורק בכ ($10\\%$) מהמקרים מתפתחת מחלה קשה הפוגעת באיברים פנימיים" },
+            { question: "על פי שיטת השיום הבינומית השם הראשון המצוין הוא תמיד שם המין והשני הוא שם הסוג", answer: false, explanation: "בשיטת השיום הבינומית השם הראשון הוא תמיד שם הסוג והשם השני הוא שם המין" },
+            { question: "הפרד הוא דוגמה להיבריד סטרילי הממחיש את הגדרת המין בקרב בעלי חיים מורכבים", answer: true, explanation: "חוסר היכולת של הפרד להעמיד צאצאים מוכיח שהסוס והחמור שייכים למינים נפרדים" },
+            { question: "דרישות חמצן אינן מהוות קריטריון לסיווג חיידקים מכיוון שכל החיידקים זקוקים לחמצן כדי לשרוד", answer: false, explanation: "דרישות חמצן הן קריטריון טקסונומי חשוב המחלק את החיידקים לאירוביים הזקוקים לחמצן ואנאירוביים היכולים לחיות בלעדיו" },
+            { question: "אצות חד תאיות נחשבות למיקרואורגניזמים אאוקריוטיים העשויים להימצא במזון", answer: true, explanation: "אצות חד תאיות שייכות לקבוצת האאוקריוטים ומוגדרות כחלק מהמיקרוביולוגיה של המזון" },
+            { question: "מדריך ברגי הוא ספר עזר מרכזי המשמש לסיווג וטקסונומיה של וירוסים בלבד", answer: false, explanation: "מדריך ברגי מוקדש לטקסונומיה וסיווג שיטתי של חיידקים ולא של וירוסים" },
+            { question: "צורת מתג היא אחת מהצורות המורפולוגיות הבסיסיות המשמשות לסיווג חיידקים", answer: true, explanation: "חיידקים מתגיים המכונים בצילוס מהווים קבוצה מורפולוגית מרכזית בסיווג החיידקי" },
+            { question: "וירוסים מסוג הפטיטיס ואבולה נפוצים מאוד בהעברה יומיומית דרך מזון מהיר", answer: false, explanation: "למרות שהם וירוסים אלימים ומסוכנים הם נחשבים לפחות נפוצים בהעברה דרך מזון בהשוואה לנורו-וירוס ורוטה-וירוס" },
+            { question: "אחד המאפיינים הייחודיים של אנטאמבה היסטוליטיקה הוא היכולת שלה לבלוע תאי דם אדומים", answer: true, explanation: "זהו מאפיין פתולוגי חשוב של הטפיל המסייע לו לגרום לנזק רקמתי ולדיזנטריה" },
+            { question: "הרכב אוכלוסיית חיידקי המעי אינו משפיע כלל על שגשוגם של טפילי פרוטוזואה במערכת העיכול", answer: false, explanation: "מחקרים עדכניים מראים כי ישנו קשר ישיר בין המיקרוביום של המעי לבין רמת הנשאות והפגיעה של הטפיל" },
+            { question: "תולעים טפילות מסוג טריכינלה ניתן למצוא לרוב בבשר עוף שלא בושל כראוי", answer: false, explanation: "טריכינלה היא תולעת הנפוצה באופן ספציפי בבשר חזירים ולא בעופות" },
+            { question: "שיטות אימונולוגיות יכולות לשמש ככלי עזר בסיווג וטקסונומיה של חיידקים", answer: true, explanation: "אימונולוגיה היא אחד הכלים המשמשים לאפיון וחלוקה טקסונומית של חיידקים על בסיס תגובת נוגדנים למעטפת התא שלהם" },
+            { question: "הימצאות תולעים במזון מוגבלת אך ורק למדינות עולם שלישי ואינה קיימת במדינות מפותחות", answer: false, explanation: "תולעים יכולות להימצא במזון בכל העולם במיוחד במאכלי ים נאים כמו סושי הדורשים פיקוח וטרינרי קפדני" },
+            { question: "לכל הוירוסים המועברים במזון קיים כיום חיסון יעיל וזמין המונע הדבקה לחלוטין", answer: false, explanation: "רק לחלק מהוירוסים כמו הפטיטיס איי יש חיסון יעיל אך לוירוסים נפוצים רבים כמו נורו-וירוס אין עדיין חיסון זמין" },
+            { question: "זיהוי וירוסים במזון נחשב למשימה פשוטה ומהירה שאינה דורשת ציוד מעבדה מורכב", answer: false, explanation: "זיהוי וירוסים הוא תהליך קשה הדורש רגישות ניטור גבוהה ושימוש בשיטות מולקולריות מתקדמות" },
+            { question: "תולעים במעי האדם עלולות להשפיע על המערכת האימונית של המאכסן", answer: true, explanation: "נוכחות של טפילים גדולים כמו תולעים גורמת לתגובה אימונית מורכבת ולעיתים אף לוויסות של מערכת החיסון" },
+            { question: "היררכיה טקסונומית מתחילה ברמת המין שהיא הרחבה ביותר ומסתיימת ברמת הממלכה שהיא הספציפית ביותר", answer: false, explanation: "הסדר הוא הפוך הממלכה היא הרמה הרחבה והכוללנית ביותר בעוד שהמין הוא הרמה הספציפית והצרה ביותר" },
+            { question: "חיידקים גראם חיוביים וגראם שליליים נבדלים זה מזה במבנה דופן התא שלהם", answer: true, explanation: "צביעת גראם מבחינה בין חיידקים בעלי דופן פפטידוגליקן עבה לחיוביים לבין אלו בעלי דופן דקה לשליליים" }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([flashcardContent]);
+            }
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                
+                if (window.MathJax) {
+                    MathJax.typesetPromise([flashcardContent]);
+                }
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([mcqQuestion, mcqOptions, mcqExplanation]);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([explanationEl]);
+            }
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([mcqAllQuestionsContainer]);
+            }
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([tfQuestion, tfExplanation]);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             
+             if (window.MathJax) {
+                MathJax.typesetPromise([explanationEl]);
+             }
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             
+             if (window.MathJax) {
+                MathJax.typesetPromise([tfAllQuestionsContainer]);
+             }
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

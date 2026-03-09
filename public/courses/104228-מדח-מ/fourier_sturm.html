@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Sturm-Liouville & Fourier Series</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sturm-Liouville Theory & Fourier Series (Full/Cosine)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+
+            <h3>Sturm-Liouville Problems</h3>
+            <p>A **regular Sturm-Liouville (S-L) problem** on an interval $[a, b]$ involves finding eigenvalues $\lambda$ and non-trivial eigenfunctions $y(x)$ that satisfy:</p>
+            <ol>
+                <li>The differential equation: $\frac{d}{dx}\left[p(x)\frac{dy}{dx}\right] + q(x)y + \lambda r(x)y = 0$</li>
+                <li>Separated boundary conditions:
+                   $\alpha_1 y(a) + \alpha_2 y'(a) = 0$ <br>
+                   $\beta_1 y(b) + \beta_2 y'(b) = 0$
+                </li>
+            </ol>
+            <p>Where $p(x)>0, r(x)>0$ are continuously differentiable, $q(x)$ is continuous, and $\alpha_1, \alpha_2$ (and $\beta_1, \beta_2$) are not both zero.</p>
+            <p><strong>Key Properties:</strong></p>
+            <ul>
+                <li>There exists an infinite sequence of real eigenvalues $\lambda_1 < \lambda_2 < \dots$ with $\lambda_n \to \infty$.</li>
+                <li>Corresponding to each eigenvalue $\lambda_n$ is an eigenfunction $y_n(x)$ (unique up to a constant multiple).</li>
+                <li>The eigenfunctions $\{y_n(x)\}_{n=1}^\infty$ form an **orthogonal set** with respect to the **weight function $r(x)$** on $[a, b]$:
+                   $$ \int_a^b y_n(x) y_m(x) r(x) \, dx = 0 \quad \text{if } n \neq m $$</li>
+                <li>This set of eigenfunctions forms a complete basis, meaning "nice" functions $f(x)$ defined on $[a, b]$ can be represented by a **generalized Fourier series**:
+                   $$ f(x) = \sum_{n=1}^\infty c_n y_n(x) $$
+                   where the coefficients are found using orthogonality:
+                   $$ c_n = \frac{\int_a^b f(x) y_n(x) r(x) \, dx}{\int_a^b [y_n(x)]^2 r(x) \, dx} $$
+                   The denominator is the squared norm $\|y_n\|^2 = \int_a^b y_n^2 r dx$.</li>
+            </ul>
+             <p><strong>Relevance to PDEs:</strong> Separation of variables $u=X(x)T(t)$ often leads to a Sturm-Liouville problem for the spatial part $X(x)$. The type of boundary conditions on $u$ dictates the boundary conditions for $X(x)$.</p>
+
+            <h3>Standard Fourier Series</h3>
+            <p>These arise from the S-L problem $y'' + \lambda y = 0$ (where $p(x)=1, q(x)=0, r(x)=1$) with different boundary conditions.</p>
+
+            <h4>1. Full Fourier Series on $[-L, L]$</h4>
+            <p>Associated with periodic boundary conditions $y(-L)=y(L), y'(-L)=y'(L)$.</p>
+            <p>Any "nice" function $f(x)$ defined on $[-L, L]$ can be represented as:</p>
+            $$ f(x) = \frac{a_0}{2} + \sum_{n=1}^\infty \left[ a_n \cos\left(\frac{n\pi x}{L}\right) + b_n \sin\left(\frac{n\pi x}{L}\right) \right] $$
+            <p>Coefficients:</p>
+            $$ a_0 = \frac{1}{L} \int_{-L}^L f(x) \, dx $$
+            $$ a_n = \frac{1}{L} \int_{-L}^L f(x) \cos\left(\frac{n\pi x}{L}\right) \, dx \quad (n=1, 2, \dots) $$
+            $$ b_n = \frac{1}{L} \int_{-L}^L f(x) \sin\left(\frac{n\pi x}{L}\right) \, dx \quad (n=1, 2, \dots) $$
+            <p>Note: If $f(x)$ is even, all $b_n=0$. If $f(x)$ is odd, all $a_n=0$ (including $a_0$).</p>
+
+             <h4>2. Fourier Cosine Series on $[0, L]$</h4>
+             <p>Associated with Neumann boundary conditions $y'(0)=0, y'(L)=0$. The S-L problem $X''+\lambda X=0, X'(0)=X'(L)=0$ has eigenvalues $\lambda_n=(n\pi/L)^2$ for $n=0,1,2,\dots$ and eigenfunctions $X_n(x)=\cos(n\pi x/L)$.</p>
+            <p>Any "nice" function $f(x)$ defined on $[0, L]$ can be represented as:</p>
+            $$ f(x) = \frac{a_0}{2} + \sum_{n=1}^\infty a_n \cos\left(\frac{n\pi x}{L}\right) $$
+            <p>Coefficients:</p>
+            $$ a_0 = \frac{2}{L} \int_{0}^L f(x) \, dx $$
+            $$ a_n = \frac{2}{L} \int_{0}^L f(x) \cos\left(\frac{n\pi x}{L}\right) \, dx \quad (n=1, 2, \dots) $$
+            <p>This series corresponds to the **even extension** of $f(x)$ to $[-L, L]$.</p>
+
+            <h4>3. Fourier Sine Series on $[0, L]$ (Recap from Day 4)</h4>
+             <p>Associated with Dirichlet boundary conditions $y(0)=0, y(L)=0$. The S-L problem $X''+\lambda X=0, X(0)=X(L)=0$ has eigenvalues $\lambda_n=(n\pi/L)^2$ for $n=1,2,3,\dots$ and eigenfunctions $X_n(x)=\sin(n\pi x/L)$.</p>
+            <p>Any "nice" function $f(x)$ defined on $[0, L]$ can be represented as:</p>
+            $$ f(x) = \sum_{n=1}^\infty b_n \sin\left(\frac{n\pi x}{L}\right) $$
+             <p>Coefficients:</p>
+            $$ b_n = \frac{2}{L} \int_{0}^L f(x) \sin\left(\frac{n\pi x}{L}\right) \, dx \quad (n=1, 2, \dots) $$
+            <p>This series corresponds to the **odd extension** of $f(x)$ to $[-L, L]$.</p>
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Identify $p(x), q(x), r(x)$ for the S-L problem $y'' + \lambda y = 0$.</p>
+                <button onclick="toggleSolution('sol-fs-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Rewrite as $(1 \cdot y')' + 0 \cdot y + \lambda \cdot 1 \cdot y = 0$.</p>
+                    <p>Comparing with $(p y')' + qy + \lambda r y = 0$, we have:</p>
+                    <p>$p(x)=1$, $q(x)=0$, $r(x)=1$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Identify $p(x), q(x), r(x)$ for the S-L problem $(x y')' + \frac{1}{x} y + \lambda x y = 0$.</p>
+                <button onclick="toggleSolution('sol-fs-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Comparing with $(p y')' + qy + \lambda r y = 0$, we have:</p>
+                    <p>$p(x)=x$, $q(x)=1/x$, $r(x)=x$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Verify the orthogonality of $y_1=\cos(\pi x/L)$ and $y_2=\cos(2\pi x/L)$ on $[0, L]$ with weight $r(x)=1$.</p>
+                <button onclick="toggleSolution('sol-fs-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>We need to calculate $\int_0^L y_1(x) y_2(x) r(x) dx = \int_0^L \cos(\frac{\pi x}{L}) \cos(\frac{2\pi x}{L}) \cdot 1 \, dx$.</p>
+                    <p>Use product-to-sum: $\cos A \cos B = \frac{1}{2}[\cos(A-B) + \cos(A+B)]$.</p>
+                    <p>$\int_0^L \frac{1}{2}[\cos(\frac{\pi x}{L} - \frac{2\pi x}{L}) + \cos(\frac{\pi x}{L} + \frac{2\pi x}{L})] dx = \frac{1}{2} \int_0^L [\cos(-\frac{\pi x}{L}) + \cos(\frac{3\pi x}{L})] dx$.</p>
+                    <p>$= \frac{1}{2} \int_0^L [\cos(\frac{\pi x}{L}) + \cos(\frac{3\pi x}{L})] dx$.</p>
+                    <p>$= \frac{1}{2} \left[ \frac{L}{\pi}\sin(\frac{\pi x}{L}) + \frac{L}{3\pi}\sin(\frac{3\pi x}{L}) \right]_0^L$.</p>
+                    <p>$= \frac{1}{2} [ (\frac{L}{\pi}\sin(\pi) + \frac{L}{3\pi}\sin(3\pi)) - (\frac{L}{\pi}\sin(0) + \frac{L}{3\pi}\sin(0)) ]$.</p>
+                    <p>$= \frac{1}{2} [ (0+0) - (0+0) ] = 0$.</p>
+                    <p>The functions are orthogonal.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Find the full Fourier Series for $f(x) = x$ on $[-\pi, \pi]$.</p>
+                <button onclick="toggleSolution('sol-fs-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. Since $f(x)=x$ is an odd function, we expect $a_n=0$ for all $n \ge 0$.</p>
+                    <p>$a_0 = \frac{1}{\pi} \int_{-\pi}^{\pi} x dx = \frac{1}{\pi} [\frac{x^2}{2}]_{-\pi}^{\pi} = \frac{1}{\pi}[\frac{\pi^2}{2}-\frac{(-\pi)^2}{2}]=0$.</p>
+                    <p>$a_n = \frac{1}{\pi} \int_{-\pi}^{\pi} x \cos(nx) dx$. Since $x\cos(nx)$ is odd, the integral over a symmetric interval is 0. $a_n=0$.</p>
+                    <p>$b_n = \frac{1}{\pi} \int_{-\pi}^{\pi} x \sin(nx) dx$. Since $x\sin(nx)$ is even, we can write:</p>
+                    <p>$b_n = \frac{2}{\pi} \int_{0}^{\pi} x \sin(nx) dx$.</p>
+                    <p>Using integration by parts ($u=x, dv=\sin(nx)dx$):</p>
+                    <p>$b_n = \frac{2}{\pi} \left[ -x\frac{\cos(nx)}{n} \Big|_0^\pi - \int_0^\pi -\frac{\cos(nx)}{n} dx \right]$.</p>
+                    <p>$b_n = \frac{2}{\pi} \left[ -\pi\frac{\cos(n\pi)}{n} - 0 + \frac{1}{n} \int_0^\pi \cos(nx) dx \right]$.</p>
+                    <p>$b_n = \frac{2}{\pi} \left[ -\pi\frac{(-1)^n}{n} + \frac{1}{n} [\frac{\sin(nx)}{n}]_0^\pi \right]$.</p>
+                    <p>$b_n = \frac{2}{\pi} \left[ \frac{\pi(-1)^{n+1}}{n} + \frac{1}{n^2}(0-0) \right] = \frac{2(-1)^{n+1}}{n}$.</p>
+                    <p>The series is $f(x) = \sum_{n=1}^\infty \frac{2(-1)^{n+1}}{n} \sin(nx)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Find the Fourier Cosine Series for $f(x) = x$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-fs-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>$L=\pi$. $f(x) = \frac{a_0}{2} + \sum a_n \cos(nx)$.</p>
+                     <p>$a_0 = \frac{2}{\pi} \int_0^\pi x dx = \frac{2}{\pi} [\frac{x^2}{2}]_0^\pi = \frac{2}{\pi} \frac{\pi^2}{2} = \pi$.</p>
+                     <p>$a_n = \frac{2}{\pi} \int_0^\pi x \cos(nx) dx$. Use integration by parts ($u=x, dv=\cos(nx)dx$).</p>
+                     <p>$a_n = \frac{2}{\pi} \left[ x\frac{\sin(nx)}{n} \Big|_0^\pi - \int_0^\pi \frac{\sin(nx)}{n} dx \right]$.</p>
+                     <p>$a_n = \frac{2}{\pi} \left[ (\pi\frac{\sin(n\pi)}{n} - 0) - \frac{1}{n} [-\frac{\cos(nx)}{n}]_0^\pi \right]$.</p>
+                     <p>$a_n = \frac{2}{\pi} \left[ 0 + \frac{1}{n^2} (\cos(n\pi)-\cos(0)) \right] = \frac{2}{\pi n^2} ((-1)^n - 1)$.</p>
+                     <p>$a_n = 0$ for even $n$. For odd $n=2m-1$, $a_{2m-1} = \frac{2}{\pi(2m-1)^2}(-1-1) = -\frac{4}{\pi(2m-1)^2}$.</p>
+                     <p>The series is $f(x) = \frac{\pi}{2} + \sum_{m=1}^\infty \frac{-4}{\pi(2m-1)^2} \cos((2m-1)x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Find the Full Fourier Series for $f(x) = |x|$ on $[-\pi, \pi]$.</p>
+                <button onclick="toggleSolution('sol-fs-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q6">
+                     <p><strong>Solution:</strong></p>
+                     <p>$L=\pi$. $f(x)=|x|$ is an even function, so we expect $b_n=0$.</p>
+                     <p>$a_0 = \frac{1}{\pi} \int_{-\pi}^\pi |x| dx = \frac{2}{\pi} \int_0^\pi x dx = \frac{2}{\pi} [\frac{x^2}{2}]_0^\pi = \frac{2}{\pi}\frac{\pi^2}{2} = \pi$.</p>
+                     <p>$a_n = \frac{1}{\pi} \int_{-\pi}^\pi |x| \cos(nx) dx = \frac{2}{\pi} \int_0^\pi x \cos(nx) dx$.</p>
+                     <p>From Q5, this integral evaluates to $\frac{2}{\pi n^2}((-1)^n-1)$.</p>
+                     <p>So $a_n = \frac{2}{\pi} \cdot \frac{2}{\pi n^2}((-1)^n-1) = \frac{4}{\pi n^2}((-1)^n-1)$. Wait, Q5 had $\frac{2}{\pi}\int...$</p>
+                      <p>Let's re-evaluate $a_n$ from Q5. $a_n = \frac{2}{\pi} \int_0^\pi x \cos(nx) dx = \frac{2}{\pi} [\frac{1}{n^2}((-1)^n-1)]$. This is correct.</p>
+                     <p>$a_n = \frac{2}{\pi n^2}((-1)^n-1)$.</p>
+                      <p>$a_n=0$ for even $n$. For odd $n=2m-1$, $a_{2m-1} = \frac{2}{\pi(2m-1)^2}(-1-1) = -\frac{4}{\pi(2m-1)^2}$.</p>
+                     <p>$b_n = \frac{1}{\pi} \int_{-\pi}^\pi |x| \sin(nx) dx$. Since $|x|\sin(nx)$ is odd, $b_n=0$.</p>
+                      <p>The series is $f(x) = \frac{a_0}{2} + \sum a_n \cos(nx) = \frac{\pi}{2} + \sum_{m=1}^\infty \frac{-4}{\pi(2m-1)^2} \cos((2m-1)x)$.</p>
+                     <p>(Note: This is identical to the Fourier Cosine series of $f(x)=x$ on $[0, \pi]$, as expected, since $|x|$ is the even extension of $x$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Find the Fourier Cosine Series for $f(x)=1$ on $[0, L]$.</p>
+                <button onclick="toggleSolution('sol-fs-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x) = \frac{a_0}{2} + \sum a_n \cos(n\pi x/L)$.</p>
+                    <p>$a_0 = \frac{2}{L} \int_0^L 1 dx = \frac{2}{L} [x]_0^L = \frac{2}{L}(L) = 2$.</p>
+                    <p>$a_n = \frac{2}{L} \int_0^L 1 \cdot \cos(\frac{n\pi x}{L}) dx = \frac{2}{L} [\frac{L}{n\pi} \sin(\frac{n\pi x}{L})]_0^L$.</p>
+                    <p>$a_n = \frac{2}{n\pi} [\sin(n\pi) - \sin(0)] = \frac{2}{n\pi}[0-0] = 0$ for $n \ge 1$.</p>
+                    <p>The series is $f(x) = \frac{a_0}{2} + 0 = \frac{2}{2} = 1$.</p>
+                    <p>The Fourier Cosine Series for a constant is just the constant itself.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Find the Full Fourier Series for $f(x)=\sin x$ on $[-\pi, \pi]$.</p>
+                <button onclick="toggleSolution('sol-fs-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $f(x)=\sin x$ is an odd function, so $a_n=0$ for all $n \ge 0$.</p>
+                    <p>$b_n = \frac{1}{\pi} \int_{-\pi}^\pi \sin x \sin(nx) dx = \frac{2}{\pi} \int_0^\pi \sin x \sin(nx) dx$.</p>
+                    <p>By orthogonality of sines on $[0, \pi]$, this integral is 0 if $n \neq 1$, and $\pi/2$ if $n=1$.</p>
+                    <p>So, $b_1 = \frac{2}{\pi} (\frac{\pi}{2}) = 1$. $b_n = 0$ for $n \neq 1$.</p>
+                    <p>The series is $f(x) = 0 + \sum [0 + b_n \sin(nx)] = b_1 \sin(1x) = \sin x$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Which type of Fourier Series (Sine, Cosine, Full) would you use to represent the initial condition $u(x,0)=f(x)$ for a PDE solved on $[0, L]$ with boundary conditions $u_x(0,t)=0, u_x(L,t)=0$?</p>
+                <button onclick="toggleSolution('sol-fs-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q9">
+                     <p><strong>Solution:</strong></p>
+                     <p>The Neumann boundary conditions $u_x(0,t)=0, u_x(L,t)=0$ lead to the spatial eigenvalue problem $X''+\lambda X=0$ with $X'(0)=0, X'(L)=0$.</p>
+                     <p>The eigenfunctions for this problem are $X_n(x)=\cos(n\pi x/L)$ (including $n=0$).</p>
+                     <p>Therefore, the solution $u(x,t)$ will be a superposition of these cosine functions. To match the initial condition $u(x,0)=f(x)$, we need to represent $f(x)$ as a series of these cosine eigenfunctions, which is the **Fourier Cosine Series**. </p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Find the Fourier Cosine Series coefficient $a_0$ for $f(x)=x^2$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-fs-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $a_0 = \frac{2}{\pi} \int_0^\pi f(x) dx = \frac{2}{\pi} \int_0^\pi x^2 dx$.</p>
+                    <p>$a_0 = \frac{2}{\pi} [\frac{x^3}{3}]_0^\pi = \frac{2}{\pi} [\frac{\pi^3}{3} - 0] = \frac{2\pi^2}{3}$.</p>
+                    <p>($\frac{a_0}{2} = \frac{\pi^2}{3}$).</p>
+                 </div>
+            </article>
+
+            <!-- Questions 11-30 -->
+            <article class="question-block">
+                 <p class="question-number">Question 11:</p>
+                 <p class="question-text">Find the Fourier Sine Series coefficient $b_2$ for $f(x)=x$ on $[0, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q11')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q11">
+                     <p><strong>Solution:</strong></p>
+                     <p>$L=\pi$. $b_n = \frac{2(-1)^{n+1}}{n}$.</p>
+                     <p>For $n=2$, $b_2 = \frac{2(-1)^{2+1}}{2} = \frac{2(-1)}{2} = -1$.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 12:</p>
+                 <p class="question-text">Find the Full Fourier Series for $f(x)=1+\cos x$ on $[-\pi, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q12')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q12">
+                     <p><strong>Solution:</strong></p>
+                     <p>$f(x)$ is even, so $b_n=0$. $L=\pi$.</p>
+                     <p>$a_0 = \frac{1}{\pi}\int_{-\pi}^\pi (1+\cos x) dx = \frac{2}{\pi}\int_0^\pi (1+\cos x) dx = \frac{2}{\pi}[x+\sin x]_0^\pi = \frac{2}{\pi}[\pi+0-0]=2$.</p>
+                     <p>$a_n = \frac{1}{\pi}\int_{-\pi}^\pi (1+\cos x)\cos(nx) dx = \frac{2}{\pi}\int_0^\pi (\cos(nx)+\cos x \cos(nx)) dx$.</p>
+                     <p>$\int_0^\pi \cos(nx) dx = [\frac{\sin(nx)}{n}]_0^\pi = 0$ for $n\ge 1$.</p>
+                     <p>$\int_0^\pi \cos x \cos(nx) dx$. By orthogonality, this is 0 if $n\neq 1$. If $n=1$, the integral is $\int_0^\pi \cos^2 x dx = \int_0^\pi \frac{1+\cos(2x)}{2} dx = \frac{1}{2}[x+\frac{\sin(2x)}{2}]_0^\pi = \frac{1}{2}[\pi-0]=\pi/2$.</p>
+                     <p>So, $a_1 = \frac{2}{\pi}(0 + \pi/2) = 1$. $a_n = \frac{2}{\pi}(0+0)=0$ for $n \ge 2$.</p>
+                     <p>Series is $f(x) = \frac{a_0}{2} + a_1\cos(1x) = \frac{2}{2} + 1\cos x = 1+\cos x$. (The function is its own Fourier series).</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">To what value does the Fourier Sine series of $f(x)=x$ on $[0, \pi]$ converge at $x=\pi$?</p>
+                <button onclick="toggleSolution('sol-fs-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>The Fourier Sine series corresponds to the odd periodic extension of $f(x)$. The odd extension $f_{odd}(x)=x$ on $(-\pi, \pi)$ has jumps at $x=\pm \pi$. The odd extension is periodic with period $2\pi$.</p>
+                    <p>$f_{odd}(\pi^-) = \pi$. $f_{odd}(\pi^+) = f_{odd}(-\pi^+) = -\pi$.</p>
+                    <p>At a jump discontinuity, the Fourier series converges to the average of the left and right limits.</p>
+                    <p>Convergence at $x=\pi$: $\frac{f_{odd}(\pi^-) + f_{odd}(\pi^+)}{2} = \frac{\pi + (-\pi)}{2} = 0$.</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">To what value does the Fourier Cosine series of $f(x)=x$ on $[0, \pi]$ converge at $x=\pi$?</p>
+                <button onclick="toggleSolution('sol-fs-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q14">
+                     <p><strong>Solution:</strong></p>
+                     <p>The Fourier Cosine series corresponds to the even periodic extension $f_{even}(x)=|x|$ on $[-\pi, \pi]$. This extension is continuous everywhere.</p>
+                     <p>The Fourier series of a continuous function converges to the function value itself.</p>
+                     <p>At $x=\pi$, the value of the even extension is $f_{even}(\pi)=|\pi|=\pi$.</p>
+                     <p>The series converges to $\pi$.</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                 <p class="question-number">Question 15:</p>
+                 <p class="question-text">Find the Fourier Sine Series coefficient $b_1$ for $f(x)=1$ on $[0, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q15')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q15">
+                    <p><strong>Solution:</strong></p>
+                     <p>$L=\pi$. $b_n = -\frac{2}{n\pi}[(-1)^n - 1]$.</p>
+                     <p>For $n=1$, $b_1 = -\frac{2}{1\pi}[(-1)^1 - 1] = -\frac{2}{\pi}[-1 - 1] = -\frac{2}{\pi}[-2] = \frac{4}{\pi}$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Identify $p, q, r$ for Legendre's equation $(1-x^2)y'' - 2xy' + \lambda y = 0$ in S-L form.</p>
+                <button onclick="toggleSolution('sol-fs-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q16">
+                    <p><strong>Solution:</strong></p>
+                    <p>We need to write it as $(p y')' + qy + \lambda r y = 0$.</p>
+                    <p>Divide by $(1-x^2)$: $y'' - \frac{2x}{1-x^2}y' + \frac{\lambda}{1-x^2} y = 0$.</p>
+                    <p>The integrating factor for the first two terms is $e^{\int -\frac{2x}{1-x^2} dx}$. Let $v=1-x^2, dv=-2x dx$. Integral is $e^{\int \frac{dv}{v}} = e^{\ln|1-x^2|} = |1-x^2|$. For $x \in (-1, 1)$, this is $1-x^2$.</p>
+                    <p>Multiply the original equation by $\frac{1}{1-x^2}$ (no, multiply the *standard* form by $p$).</p>
+                    <p>Try to recognize $(p y')'$. Note that $((1-x^2)y')' = (1-x^2)y'' + (-2x)y'$. This matches the first two terms.</p>
+                    <p>So the equation is $((1-x^2)y')' + \lambda \cdot 1 \cdot y = 0$.</p>
+                    <p>$p(x) = 1-x^2$, $q(x) = 0$, $r(x) = 1$. (Also note $\lambda$ here is $n(n+1)$ usually).</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                 <p class="question-number">Question 17:</p>
+                 <p class="question-text">Find the Fourier Cosine Series coefficient $a_1$ for $f(x)=\sin x$ on $[0, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q17')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $a_n = \frac{2}{\pi} \int_0^\pi f(x)\cos(nx) dx$.</p>
+                    <p>$a_1 = \frac{2}{\pi} \int_0^\pi \sin x \cos(1x) dx = \frac{2}{\pi} \int_0^\pi \frac{1}{2}\sin(2x) dx$.</p>
+                    <p>$a_1 = \frac{1}{\pi} [-\frac{\cos(2x)}{2}]_0^\pi = -\frac{1}{2\pi}[\cos(2\pi)-\cos(0)] = -\frac{1}{2\pi}[1-1]=0$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Find the Full Fourier Series coefficient $b_2$ for $f(x)=x^2$ on $[-\pi, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>$f(x)=x^2$ is an even function. Therefore, all sine coefficients $b_n$ must be 0.</p>
+                    <p>$b_2 = 0$.</p>
+                </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">What boundary conditions correspond to the Fourier Sine Series on $[0, L]$?</p>
+                <button onclick="toggleSolution('sol-fs-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>The Fourier Sine Series uses basis functions $y_n(x)=\sin(n\pi x/L)$.</p>
+                    <p>These functions satisfy $y_n(0)=0$ and $y_n(L)=0$.</p>
+                    <p>These correspond to **Dirichlet** boundary conditions.</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                 <p class="question-number">Question 20:</p>
+                 <p class="question-text">Find the Fourier Cosine Series coefficient $a_2$ for $f(x)=x$ on $[0, \pi]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q20')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q20">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. From Q5, $a_n = \frac{2}{\pi n^2}((-1)^n-1)$.</p>
+                    <p>For $n=2$, $a_2 = \frac{2}{\pi (2^2)}((-1)^2-1) = \frac{2}{4\pi}(1-1) = 0$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">What is the value of $\int_0^1 \sin(2\pi x)\sin(3\pi x) dx$?</p>
+                <button onclick="toggleSolution('sol-fs-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q21">
+                    <p><strong>Solution:</strong></p>
+                    <p>This involves eigenfunctions $\sin(n\pi x/L)$ with $L=1$ for $n=2$ and $n=3$.</p>
+                    <p>Since the eigenfunctions are orthogonal on $[0,L]$ with weight $r=1$, the integral $\int_0^L \sin(n\pi x/L)\sin(m\pi x/L)dx = 0$ if $n\neq m$.</p>
+                    <p>Here $n=2, m=3$, so the integral is 0.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Find the Full Fourier Series for $f(x)=3$ on $[-2, 2]$.</p>
+                 <button onclick="toggleSolution('sol-fs-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=2$. $f(x)=3$ is even, so $b_n=0$.</p>
+                    <p>$a_0 = \frac{1}{L}\int_{-L}^L f(x) dx = \frac{1}{2}\int_{-2}^2 3 dx = \frac{3}{2}[x]_{-2}^2 = \frac{3}{2}(2-(-2)) = \frac{3}{2}(4)=6$.</p>
+                    <p>$a_n = \frac{1}{L}\int_{-L}^L f(x)\cos(\frac{n\pi x}{L}) dx = \frac{1}{2}\int_{-2}^2 3\cos(\frac{n\pi x}{2}) dx = \frac{3}{2} [\frac{2}{n\pi}\sin(\frac{n\pi x}{2})]_{-2}^2$.</p>
+                    <p>$a_n = \frac{3}{n\pi}[\sin(n\pi)-\sin(-n\pi)] = \frac{3}{n\pi}[0-0]=0$ for $n \ge 1$.</p>
+                    <p>Series is $f(x) = \frac{a_0}{2} = \frac{6}{2} = 3$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Find the Fourier Cosine Series for $f(x)=\sin x$ on $[0, \pi]$. Find $a_2$.</p>
+                <button onclick="toggleSolution('sol-fs-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q23">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $a_n = \frac{2}{\pi} \int_0^\pi \sin x \cos(nx) dx$.</p>
+                    <p>Use product-to-sum: $\sin A \cos B = \frac{1}{2}[\sin(A+B) + \sin(A-B)]$.</p>
+                    <p>$a_n = \frac{2}{\pi} \int_0^\pi \frac{1}{2}[\sin(x+nx) + \sin(x-nx)] dx = \frac{1}{\pi} \int_0^\pi [\sin((n+1)x) - \sin((n-1)x)] dx$.</p>
+                    <p>If $n=1$, $a_1 = \frac{1}{\pi} \int_0^\pi [\sin(2x) - \sin(0)] dx = \frac{1}{\pi} [-\frac{\cos(2x)}{2}]_0^\pi = -\frac{1}{2\pi}[1-1]=0$. (Matches Q17).</p>
+                    <p>If $n \neq 1$:</p>
+                    <p>$a_n = \frac{1}{\pi} [-\frac{\cos((n+1)x)}{n+1} + \frac{\cos((n-1)x)}{n-1}]_0^\pi$.</p>
+                    <p>$a_n = \frac{1}{\pi} [ (-\frac{\cos((n+1)\pi)}{n+1} + \frac{\cos((n-1)\pi)}{n-1}) - (-\frac{1}{n+1} + \frac{1}{n-1}) ]$.</p>
+                    <p>$a_n = \frac{1}{\pi} [ -\frac{(-1)^{n+1}}{n+1} + \frac{(-1)^{n-1}}{n-1} + \frac{1}{n+1} - \frac{1}{n-1} ]$.</p>
+                    <p>Note $(-1)^{n+1}=(-1)^{n-1}$. Let $P=(-1)^{n-1}$.</p>
+                     <p>$a_n = \frac{1}{\pi} [ \frac{P}{n-1} - \frac{P}{n+1} + \frac{1}{n+1} - \frac{1}{n-1} ] = \frac{1}{\pi} [ (P-1)(\frac{1}{n-1}-\frac{1}{n+1}) ]$.</p>
+                     <p>$a_n = \frac{P-1}{\pi} \frac{(n+1)-(n-1)}{(n-1)(n+1)} = \frac{P-1}{\pi} \frac{2}{n^2-1}$.</p>
+                     <p>If $n$ is odd ($n \ge 3$), $n-1$ is even, $P=(-1)^{even}=1$. $a_n = \frac{1-1}{\pi}\dots = 0$.</p>
+                     <p>If $n$ is even ($n \ge 2$), $n-1$ is odd, $P=(-1)^{odd}=-1$. $a_n = \frac{-1-1}{\pi}\frac{2}{n^2-1} = \frac{-4}{\pi(n^2-1)}$.</p>
+                     <p>We need $a_2$. $n=2$ is even. $a_2 = \frac{-4}{\pi(2^2-1)} = \frac{-4}{3\pi}$.</p>
+                </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Find the norm squared $\|y_n\|^2 = \int_0^L y_n^2 r dx$ for the eigenfunctions $y_n=\sin(n\pi x/L)$ of $y''+\lambda y=0, y(0)=y(L)=0$.</p>
+                <button onclick="toggleSolution('sol-fs-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $r(x)=1$. We need $\|y_n\|^2 = \int_0^L \sin^2(\frac{n\pi x}{L}) dx$.</p>
+                    <p>Using $\sin^2\theta = (1-\cos(2\theta))/2$:</p>
+                    <p>$\|y_n\|^2 = \int_0^L \frac{1-\cos(2n\pi x/L)}{2} dx = \frac{1}{2}[x - \frac{L}{2n\pi}\sin(\frac{2n\pi x}{L})]_0^L$.</p>
+                    <p>$\|y_n\|^2 = \frac{1}{2}[(L-0)-(0-0)] = \frac{L}{2}$.</p>
+                </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Find the norm squared $\|y_n\|^2$ for the eigenfunctions $y_n=\cos(n\pi x/L)$ ($n \ge 1$) of $y''+\lambda y=0, y'(0)=y'(L)=0$.</p>
+                 <button onclick="toggleSolution('sol-fs-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q25">
+                     <p><strong>Solution:</strong></p>
+                     <p>$r(x)=1$. $\|y_n\|^2 = \int_0^L \cos^2(\frac{n\pi x}{L}) dx$.</p>
+                     <p>Using $\cos^2\theta = (1+\cos(2\theta))/2$:</p>
+                     <p>$\|y_n\|^2 = \int_0^L \frac{1+\cos(2n\pi x/L)}{2} dx = \frac{1}{2}[x + \frac{L}{2n\pi}\sin(\frac{2n\pi x}{L})]_0^L$.</p>
+                     <p>$\|y_n\|^2 = \frac{1}{2}[(L+0)-(0+0)] = \frac{L}{2}$ (for $n \ge 1$).</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">What is the norm squared $\|y_0\|^2$ for the eigenfunction $y_0=1$ ($\lambda_0=0$) in Q25?</p>
+                 <button onclick="toggleSolution('sol-fs-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-fs-q26">
+                     <p><strong>Solution:</strong></p>
+                     <p>$\|y_0\|^2 = \int_0^L y_0^2 r dx = \int_0^L (1)^2 \cdot 1 dx = \int_0^L 1 dx = [x]_0^L = L$.</p>
+                     <p>(This is why the $a_0$ term has a $1/L$ or $2/L$ factor while $a_n, b_n$ have $2/L$ from $1/(L/2)$).</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                 <p class="question-number">Question 27:</p>
+                 <p class="question-text">If $f(x)$ on $[0,L]$ is represented by a Sine series, what is the value of the series at $x=0$ and $x=L$?</p>
+                 <button onclick="toggleSolution('sol-fs-q27')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q27">
+                    <p><strong>Solution:</strong></p>
+                     <p>The Sine series is $f(x) = \sum b_n \sin(n\pi x/L)$.</p>
+                     <p>At $x=0$, $\sin(0)=0$, so the series converges to 0.</p>
+                     <p>At $x=L$, $\sin(n\pi L/L)=\sin(n\pi)=0$, so the series converges to 0.</p>
+                     <p>This matches the Dirichlet boundary conditions $u(0,t)=0, u(L,t)=0$ for which the Sine series is used.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 28:</p>
+                 <p class="question-text">Find the Full Fourier Series for $f(x)=e^x$ on $[-1, 1]$. Write the formula for $a_n$.</p>
+                 <button onclick="toggleSolution('sol-fs-q28')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q28">
+                     <p><strong>Solution:</strong></p>
+                     <p>$L=1$. $f(x)$ is neither even nor odd.</p>
+                     <p>$a_n = \frac{1}{L} \int_{-L}^L f(x)\cos(\frac{n\pi x}{L}) dx = \frac{1}{1} \int_{-1}^1 e^x \cos(n\pi x) dx$.</p>
+                     <p>This requires integration by parts twice.</p>
+                     <p>Let $I = \int e^x \cos(n\pi x) dx$.</p>
+                     <p>$u=e^x, dv=\cos(n\pi x)dx \implies du=e^x dx, v=\frac{1}{n\pi}\sin(n\pi x)$.</p>
+                     <p>$I = \frac{e^x}{n\pi}\sin(n\pi x) - \int \frac{e^x}{n\pi}\sin(n\pi x) dx$.</p>
+                     <p>Second integral: $u=e^x, dv=\sin(n\pi x)dx \implies du=e^x dx, v=-\frac{1}{n\pi}\cos(n\pi x)$.</p>
+                     <p>$\int e^x \sin(n\pi x) dx = -\frac{e^x}{n\pi}\cos(n\pi x) - \int (-\frac{e^x}{n\pi}\cos(n\pi x)) dx = -\frac{e^x}{n\pi}\cos(n\pi x) + \frac{1}{n\pi} I$.</p>
+                     <p>$I = \frac{e^x}{n\pi}\sin(n\pi x) - \frac{1}{n\pi} [-\frac{e^x}{n\pi}\cos(n\pi x) + \frac{1}{n\pi} I]$.</p>
+                     <p>$I = \frac{e^x}{n\pi}\sin(n\pi x) + \frac{e^x}{(n\pi)^2}\cos(n\pi x) - \frac{1}{(n\pi)^2} I$.</p>
+                     <p>$I(1 + \frac{1}{(n\pi)^2}) = \frac{e^x}{(n\pi)^2} [n\pi \sin(n\pi x) + \cos(n\pi x)]$.</p>
+                     <p>$I \frac{(n\pi)^2+1}{(n\pi)^2} = \frac{e^x}{(n\pi)^2} [\dots]$.</p>
+                     <p>$I = \int e^x \cos(n\pi x) dx = \frac{e^x}{(n\pi)^2+1} [n\pi \sin(n\pi x) + \cos(n\pi x)]$.</p>
+                     <p>$a_n = [I]_{-1}^1 = \frac{e^1}{(n\pi)^2+1}[n\pi \sin(n\pi)+\cos(n\pi)] - \frac{e^{-1}}{(n\pi)^2+1}[n\pi \sin(-n\pi)+\cos(-n\pi)]$.</p>
+                     <p>$a_n = \frac{1}{(n\pi)^2+1} [e(0+(-1)^n) - e^{-1}(0+(-1)^n)] = \frac{(-1)^n (e-e^{-1})}{(n\pi)^2+1} = \frac{2(-1)^n \sinh(1)}{(n\pi)^2+1}$.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 29:</p>
+                 <p class="question-text">Find $a_0$ for the function in Q28.</p>
+                 <button onclick="toggleSolution('sol-fs-q29')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q29">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=1$. $a_0 = \frac{1}{1}\int_{-1}^1 e^x dx = [e^x]_{-1}^1 = e^1 - e^{-1} = 2\sinh(1)$.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 30:</p>
+                 <p class="question-text">What is the weight function $r(x)$ for Bessel's equation $x^2 y'' + xy' + (\lambda^2 x^2 - \nu^2)y = 0$ written in S-L form?</p>
+                 <button onclick="toggleSolution('sol-fs-q30')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-fs-q30">
+                     <p><strong>Solution:</strong></p>
+                     <p>Divide by $x^2$: $y'' + \frac{1}{x}y' + (\lambda^2 - \frac{\nu^2}{x^2})y = 0$.</p>
+                     <p>Integrating factor for first two terms: $e^{\int (1/x) dx} = e^{\ln x} = x$. This is $p(x)$.</p>
+                     <p>Multiply original equation by $p(x)/A = x/x^2 = 1/x$:</p>
+                     <p>$xy'' + y' + (\lambda^2 x - \frac{\nu^2}{x})y = 0$.</p>
+                     <p>Recognize the first two terms as $(xy')'$.</p>
+                     <p>$(xy')' - \frac{\nu^2}{x} y + \lambda^2 x y = 0$.</p>
+                     <p>This matches the form $(py')' + qy + \lambda' r y = 0$ if we let $\lambda'$ represent the eigenvalue parameter $\lambda^2$.</p>
+                     <p>So, $p(x)=x$, $q(x)=-\nu^2/x$, and the weight function is $r(x)=x$.</p>
+                 </div>
+             </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

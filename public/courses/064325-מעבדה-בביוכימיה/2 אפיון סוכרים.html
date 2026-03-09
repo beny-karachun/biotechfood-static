@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעבדה אינטראקטיבית: אפיון וזיהוי סוכרים</title>
+    <style>
+        body {
+            font-family: "Assistant", "Alef", "Open Sans Hebrew", sans-serif;
+            line-height: 1.8;
+            background-color: #333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: #444;
+            padding: 25px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        
+        .course-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3D90D7;
+            margin-bottom: 25px;
+        }
+
+        .course-header h1 {
+            font-size: 2.2em;
+            color: #3D90D7;
+            margin-bottom: 5px;
+        }
+
+        .course-header p {
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        h2 {
+            color: #3D90D7;
+            border-bottom: 1px solid #555;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #87CEEB; 
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            color: #9ACD32; /* YellowGreen for test names */
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+
+        ul {
+            list-style-type: disc; 
+            padding-right: 20px; 
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .safety-notice, .lab-note {
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-right: 5px solid; /* For RTL */
+        }
+
+        .safety-notice {
+            background-color: #6e3530; /* Darker red for subtlety */
+            border-color: #F44336; /* Bright red for the bar */
+            color: #fce4e4;
+        }
+        .safety-notice strong {
+            color: #F44336;
+        }
+
+
+        .lab-note {
+            background-color: #305d6e; /* Darker cyan/blue */
+            border-color: #00BCD4; /* Bright cyan for the bar */
+            color: #e0f7fa;
+        }
+        .lab-note strong {
+            color: #00BCD4;
+        }
+
+        .safety-warning-header { /* For the main MSDS warning */
+            background-color: #F44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .question-area {
+            background-color: #555;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #E0E0E0;
+        }
+
+        .options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #666;
+            color: #E0E0E0;
+            border: 1px solid #777;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .options button:hover:not([disabled]) {
+            background-color: #777;
+            border-color: #888;
+        }
+        
+        .options button.selected {
+            background-color: #3D90D7;
+            color: white;
+            border-color: #3D90D7;
+        }
+
+        .options button.correct {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #307533;
+        }
+
+        .options button.incorrect {
+            background-color: #F44336;
+            color: white;
+            border-color: #b02c23;
+        }
+        
+        .options button[disabled] {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1.1em;
+        }
+
+        .feedback.correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .feedback.incorrect {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #404040;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 1em;
+        }
+        
+        .navigation-controls, .utility-controls {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navigation-controls button, .utility-controls button {
+            padding: 10px 20px;
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .navigation-controls button:hover, .utility-controls button:hover {
+            background-color: #2a7cb8;
+        }
+        
+        .navigation-controls button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        #question-counter {
+            font-size: 1em;
+            color: #ccc;
+        }
+        
+        .all-questions-container {
+            margin-top: 20px;
+            background-color: #4a4a4a;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .all-questions-container .question-item {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+        .all-questions-container .question-item p {
+            margin: 5px 0;
+        }
+        .all-questions-container .correct-answer-display {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        mjx-container {
+            display: inline-block !important; 
+            margin: 0 0.2em; 
+            vertical-align: middle; 
+        }
+
+        .ltr-text {
+            direction: ltr;
+            display: inline-block; 
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            .course-header h1 {
+                font-size: 1.8em;
+            }
+            .question-text {
+                font-size: 1.1em;
+            }
+            .options button {
+                font-size: 1em;
+                padding: 10px;
+            }
+            .navigation-controls, .utility-controls {
+                flex-direction: column;
+            }
+            .navigation-controls button, .utility-controls button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #question-counter {
+                margin-bottom: 10px;
+            }
+        }
+
+    </style>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          },
+          startup: {
+            ready: () => {
+              MathJax.startup.defaultReady();
+            }
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="course-header">
+            
+            <h1>תגובות לאפיון וזיהוי סוכרים</h1>
+            <p>עודכן $13.02.2025$‏ </p>
+        </header>
+
+        <section id="lab-overview">
+            <h2>סקירת המעבדה</h2>
+            <div class="safety-warning-header">
+                לפני המעבדה: יש לקרוא בקפידה את דפי ה‏ <span class="ltr-text">MSDS</span>‏ של כל החומרים אשר ישמשו אותך במעבדה!
+            </div>
+
+            <h3>מטרות הניסוי</h3>
+            <ul>
+                <li>לימוד עקרונות הקביעה האיכותית של סוכרים.</li>
+                <li>זיהוי נעלם אחד.</li>
+            </ul>
+
+            <h3>חומרים ותמיסות</h3>
+            <ol>
+                <li><strong>תמיסות סוכרים:</strong> תמיסות בריכוז $0.1 M$‏ של גלוקוז, פרוקטוז, גלקטוז, לקטוז, סוכרוז, ארבינוז, ורפינוז. תמיסה מאחד הסוכרים הללו תשמש כנעלם.</li>
+                <li><strong>חומצה פיקרית רוויה:</strong> ממיסים $1.3 g$‏ של חומצה פיקרית ב‏-$100 mL$‏ מים מזוקקים.</li>
+                <li><strong>תמיסת קרבונט הנתרן:</strong> ריכוז $1 M$. ממיסים $106 g$‏ של המלח האל-מימי (נתרן פחמתי, $Na_2CO_3$) בליטר אחד של מים מזוקקים.</li>
+                <li><strong>ריאגנט לבדיקת בנדיקט:</strong> ממיסים $197 g$‏ של נתרן ציטרט אל-מימי, $100 g$‏ של נתרן פחמתי (אל-מימי), ו‏-$17.5 g$‏ של $CuSO_4 \cdot 5H_2O$ (נחושת גופרתית מחומשת) בנפח של כ‏-$800 mL$‏ מים. משלימים את הנפח לליטר אחד עם מים מזוקקים.</li>
+                <li><strong>ריאגנט לבדיקת סליואנוף:</strong> ממיסים $0.05 g$‏ של רסורצינול בליטר אחד של חומצה הידרוכלורית מהולה (המוכנה על ידי מיהול חלק אחד של חומצה הידרוכלורית מרוכזת עם שני חלקים של מים).</li>
+                <li><strong>ראגנט ביאל:</strong> ממיסים $3 g$‏ של אורצינול בליטר אחד של חומצה הידרוכלורית מהולה (המוכנה על ידי הוספת $500 mL$‏ של חומצה הידרוכלורית מרוכזת בזהירות ל‏-$500 mL$‏ מים מזוקקים). לתמיסה זו מוסיפים $0.045 mL$‏ של תמיסת $FeCl_3$ (ברזל כלוריד) בריכוז $60\%$.</li>
+                <li><strong>ריאגנט פניל הידרזין:</strong> מוסיפים $2 g$‏ של פנילהידרזין הידרוכלוריד ל‏-$30 mL$‏ מים ומערבבים למספר דקות. לאחר מכן, מוסיפים $3 g$‏ של נתרן אצטט ומערבבים היטב.</li>
+            </ol>
+
+            <h3>מהלך העבודה</h3>
+
+            <h4>1. בדיקת חומצה פיקרית (<span class="ltr-text">Picric acid test</span>‏) ($8$‏ מבחנות)</h4>
+            <div class="lab-note"><strong>הערה:</strong> בתום הניסוי, יש לפנות את המבחנות, והטיפים למיכל פסולת של חומצה פיקרית.</div>
+            <p>העבר לתוך מבחנת זכוכית $2 mL$‏ של כל אחת מתמיסות הסוכר (כולל הנעלם). הוסף $1 mL$‏ של תמיסת חומצה פיקרית רוויה ו‏-$0.5 mL$‏ של תמיסת $1 M$‏ נתרן פחמתי. ערבב באמצעות וורטקס. העבר את כל המבחנות באותו זמן לתוך אמבט מים רותחים ($100^{\circ}C$) עד להיווצרות צבע (מקסימום $15$‏ דקות). רשום את סדר הופעת הצבע במבחנות.</p>
+
+            <h4>2. בדיקת בנדיקט (<span class="ltr-text">Benedict test</span>‏) ($8$‏ מבחנות)</h4>
+            <div class="lab-note"><strong>הערה:</strong> בתום הניסוי, יש לפנות את המבחנות, והטיפים למיכל פסולת בדיקת בנדיקט.</div>
+            <p>העבר $1 mL$‏ של כל אחת מתמיסות הסוכר לתוך מבחנת זכוכית. הוסף $5 mL$‏ של ראגנט בנדיקט וערבב בוורטקס. העבר את כל המבחנות באותו זמן לתוך אמבט מים רותחים והשהה למשך $5$‏ דקות. רשום עבור כל סוכר את סדר הופעת הצבע. קרר על השולחן והשווה בין הצבעים.</p>
+            <ul>
+                <li>א. מה צבע המשקע?</li>
+                <li>ב. מה תפקיד נתרן ציטרט?</li>
+            </ul>
+
+            <h4>3. בדיקת סליואנוף (<span class="ltr-text">Seliwanoff test</span>‏) ($8$‏ מבחנות)</h4>
+            <div class="safety-notice"><strong>שימו לב!!</strong> תמיסת סליואנוף מכילה חומצה הידרוכלורית בריכוז גבוה. יש לעבוד איתה במנדף בלבד! יש ללבוש שתי זוגות כפפות.</div>
+            <div class="lab-note"><strong>הערה:</strong> בתום הניסוי, יש לפנות את המבחנות, והטיפים למיכל פסולת חומצית שנמצא בתוך המנדף.</div>
+            <p>העבר $0.1 mL$‏ מכל אחת מתמיסות הסוכר למבחנת זכוכית חד פעמית (ניתן לבצע על השולחן).</p>
+            <p><strong>במנדף:</strong> הוסף לכל מבחנה $3 mL$‏ של תמיסת סליואנוף, וערבב בוורטקס. הנח את כל המבחנות באותו זמן באמבט מים רותחים והרתח עד $40$‏ דקות. עקוב וציין את סדר הופעת הצבע עבור כל אחד מהסוכרים. לאחר $40$‏ דקות רשום את הצבע שהתקבל בכל מבחנה.</p>
+            <ul>
+                <li>א. אילו סוכרים הגיבו חיובית בזמן הקצר ביותר?</li>
+                <li>ב. האם אפשר להבדיל בין פרוקטוז לסוכרוז בבדיקה זו ומדוע?</li>
+            </ul>
+
+            <h4>4. בדיקת ביאל (<span class="ltr-text">Bial's test</span>‏) ($8$‏ מבחנות)</h4>
+            <div class="safety-notice"><strong>שימו לב!!</strong> ראגנט ביאל מכיל חומצה הידרוכלורית בריכוז גבוה. יש לעבוד איתו במנדף בלבד! יש ללבוש שתי זוגות כפפות.</div>
+            <div class="lab-note"><strong>הערה:</strong> יש לפנות את המבחנות, והטיפים למיכל פסולת חומצית שנמצא בתוך המנדף.</div>
+            <p>העבר $0.13 mL$‏ מכל אחת מתמיסות הסוכר אל מבחנת זכוכית חד פעמית.</p>
+            <p><strong>בתוך המנדף:</strong> הוסף למבחנות $1 mL$‏ ריאגנט ביאל וערבב בוורטקס.</p>
+            <p>הנח את המבחנות באמבט מים רותחים (שנמצא בתוך המנדף) ועקוב אחרי הופעת הצבע במשך $5$‏ דקות. הופעת צבע כחול-ירוק מראה על נוכחות פנטוזות.</p>
+
+            <h4>5. בדיקת פניל הידרזין (<span class="ltr-text">Phenylhydrazine test</span>‏) ($6$‏ מבחנות)</h4>
+            <div class="safety-notice"><strong>שימו לב!!</strong> פניל הידרזין הינו חומר רעיל ולכן יש לעבוד איתו במנדף בלבד! יש ללבוש $2$‏ זוגות כפפות.</div>
+            <div class="lab-note"><strong>הערה:</strong> יש לפנות את המבחנות, הטיפים והסליידים (שהוכנו להסתכלות במיקרוסקופ) למיכל פסולת מוצקה של פניל הידרזין שנמצא בתוך המנדף.</div>
+            <p>העבר ל‏-$6$‏ מבחנות $0.5 mL$‏ של תמיסות ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז ותמיסת נעלם אחת.</p>
+            <p><strong>במנדף:</strong> הוסף בעזרת פיפטור $1.25 mL$‏ של תמיסת פנילהידרזין לכל אחת מהמבחנות, וערבב בוורטקס. <strong>במנדף:</strong> שים את המבחנות באמבט מים רותחים למשך חצי שעה. עקוב אחר סדר ההתגבשות כל $5-10$‏ דקות. הנח למבחנות להתקרר.</p>
+            <p><strong>במנדף</strong> (ללא וורטקס): העבר לאט $5 \mu L$‏ תמיסה המכילה גבישים לזכוכית נושאת והנח זכוכית מכסה לשם בדיקה במיקרוסקופ.</p>
+            <ul>
+                <li>א. צייר את צורות הגבישים, ותאר את השוני ביניהם.</li>
+                <li>ב. אילו סוכרים יתנו אוסזונים זהים? תן דוגמאות.</li>
+            </ul>
+        </section>
+
+        <section id="interactive-quiz" class="question-area" aria-live="polite">
+            <h2>שאלות לתרגול</h2>
+            <div id="question-container">
+                <p id="question-text" class="question-text"></p>
+                <div id="options-container" class="options"></div>
+                <div id="feedback-container" class="feedback"></div>
+                <div id="explanation-container" class="explanation" style="display: none;"></div>
+            </div>
+            <div class="navigation-controls" role="navigation">
+                <button id="prev-btn">הקודם</button>
+                <span id="question-counter"></span>
+                <button id="next-btn">הבא</button>
+            </div>
+             <div class="utility-controls">
+                <button id="view-all-btn">הצג את כל השאלות והתשובות</button>
+            </div>
+            <div id="all-questions-summary" class="all-questions-container" style="display: none;">
+                <h3>סיכום כל השאלות והתשובות</h3>
+                <div id="all-questions-content"></div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>© קורס מעבדה אינטראקטיבי, הטכניון $2024$.</p>
+    </footer>
+
+    <script>
+        const questions = [
+            // General & Objectives
+            {
+                question: "מהי אחת ממטרות הניסוי העיקריות?",
+                type: "mcq",
+                options: ["קביעה כמותית של ריכוז חלבונים", "לימוד עקרונות הקביעה האיכותית של סוכרים", "סינתזה של סוכר חדש", "מדידת הפעילות האנזימטית של עמילאז"],
+                answer: 1,
+                explanation: "אחת ממטרות הניסוי היא לימוד עקרונות הקביעה האיכותית של סוכרים."
+            },
+            {
+                question: "בנוסף ללימוד עקרונות, מהי מטרה נוספת של הניסוי?",
+                type: "mcq",
+                options: ["זיהוי נעלם אחד", "קביעת המשקל המולקולרי של רפינוז", "בדיקת השפעת $pH$‏ על יציבות סוכרים", "הפרדת סוכרים באמצעות כרומטוגרפיה"],
+                answer: 0,
+                explanation: "מטרה נוספת של הניסוי היא זיהוי נעלם אחד (דגימת סוכר לא ידועה)."
+            },
+            {
+                question: "מהו הריכוז של תמיסות הסוכרים (גלוקוז, פרוקטוז, וכו') המסופקות לניסוי?",
+                type: "mcq",
+                options: ["$1 M$", "$0.5 M$", "$0.1 M$", "$0.01 M$"],
+                answer: 2,
+                explanation: "תמיסות הסוכרים השונות מסופקות בריכוז של $0.1 M$."
+            },
+            {
+                question: "איזה מהסוכרים הבאים אינו נכלל ברשימת הסוכרים הנבדקים באופן כללי בניסוי זה?",
+                type: "mcq",
+                options: ["גלוקוז", "פרוקטוז", "מנוז", "ארבינוז"],
+                answer: 2,
+                explanation: "מנוז אינו מופיע ברשימת הסוכרים המסופקים: גלוקוז, פרוקטוז, גלקטוז, לקטוז, סוכרוז, ארבינוז, ורפינוז."
+            },
+            // Reagents Preparation
+            {
+                question: "כיצד מכינים תמיסת חומצה פיקרית רוויה לפי הפרוטוקול?",
+                type: "mcq",
+                options: ["המס $1.3 g$‏ חומצה פיקרית ב‏-$100 mL$‏ אתנול", "המס $1.3 g$‏ חומצה פיקרית ב‏-$100 mL$‏ מים מזוקקים", "המס $13 g$‏ חומצה פיקרית ב‏-$1 L$‏ מים מזוקקים", "המס $0.13 g$‏ חומצה פיקרית ב‏-$10 mL$‏ מים מזוקקים"],
+                answer: 1,
+                explanation: "להכנת תמיסת חומצה פיקרית רוויה, ממיסים $1.3 g$‏ של חומצה פיקרית ב‏-$100 mL$‏ מים מזוקקים."
+            },
+            {
+                question: "מהו ריכוז תמיסת קרבונט הנתרן ($Na_2CO_3$) המשמשת בניסוי?",
+                type: "mcq",
+                options: ["$0.1 M$", "$0.5 M$", "$1 M$", "$2 M$"],
+                answer: 2,
+                explanation: "משתמשים בתמיסת קרבונט נתרן בריכוז $1 M$."
+            },
+            {
+                question: "אילו רכיבים עיקריים מכיל ריאגנט בנדיקט?",
+                type: "mcq",
+                options: ["נתרן הידרוקסידי, נחושת גופרתית, גליצרול", "נתרן ציטרט, נתרן פחמתי, נחושת גופרתית", "חומצה הידרוכלורית, רסורצינול, נחושת גופרתית", "נתרן אצטט, פנילהידרזין, ברזל כלוריד"],
+                answer: 1,
+                explanation: "ריאגנט בנדיקט מכיל נתרן ציטרט, נתרן פחמתי ונחושת גופרתית ($CuSO_4$)."
+            },
+             {
+                question: "איזה חומר כימי הוא המרכיב הפעיל העיקרי (מלבד $HCl$) בריאגנט סליואנוף?",
+                type: "mcq",
+                options: ["אורצינול", "פנילהידרזין", "רסורצינול", "חומצה פיקרית"],
+                answer: 2,
+                explanation: "רסורצינול הוא המרכיב הפעיל העיקרי בריאגנט סליואנוף, בנוסף לחומצה הידרוכלורית."
+            },
+            {
+                question: "איזה רכיב מוסף לראגנט ביאל בנוסף לאורצינול וחומצה הידרוכלורית כדי לסייע בתגובת הצבע?",
+                type: "mcq",
+                options: ["$CuSO_4$", "$FeCl_3$", "$AgNO_3$", "$KMnO_4$"],
+                answer: 1,
+                explanation: "לראגנט ביאל מוסיפים כמות קטנה של תמיסת $FeCl_3$ (ברזל כלוריד)."
+            },
+             {
+                question: "מה מוסיפים לתמיסת פנילהידרזין הידרוכלוריד במים, על מנת להשלים את הכנת ריאגנט פניל הידרזין?",
+                type: "mcq",
+                options: ["נתרן הידרוקסידי", "חומצה אצטית", "נתרן אצטט", "נתרן כלוריד"],
+                answer: 2,
+                explanation: "לאחר המסתו של פנילהידרזין הידרוכלוריד במים, מוסיפים נתרן אצטט ומערבבים."
+            },
+            // Test 1: Picric Acid Test
+            {
+                question: "בבדיקת חומצה פיקרית, מהו נפח תמיסת הסוכר הנלקח למבחנה?",
+                type: "mcq",
+                options: ["$0.5 mL$", "$1 mL$", "$2 mL$", "$5 mL$"],
+                answer: 2,
+                explanation: "בבדיקת חומצה פיקרית, מעבירים $2 mL$‏ של תמיסת סוכר למבחנה."
+            },
+            {
+                question: "מהם שני הריאגנטים המוספים לתמיסת הסוכר בבדיקת חומצה פיקרית, ובאיזה סדר?",
+                type: "mcq",
+                options: ["קרבונט נתרן ואז חומצה פיקרית", "חומצה פיקרית ואז קרבונט נתרן", "חומצה פיקרית בלבד", "קרבונט נתרן בלבד"],
+                answer: 1,
+                explanation: "מוסיפים $1 mL$‏ תמיסת חומצה פיקרית רוויה, ולאחר מכן $0.5 mL$‏ תמיסת $1 M$‏ קרבונט נתרן."
+            },
+            {
+                question: "מהו משך החימום המקסימלי באמבט מים רותחים לבדיקת חומצה פיקרית?",
+                type: "mcq",
+                options: ["$5$‏ דקות", "$10$‏ דקות", "$15$‏ דקות", "$30$‏ דקות"],
+                answer: 2,
+                explanation: "מחממים באמבט מים רותחים עד להיווצרות צבע, אך לא יותר מ‏-$15$‏ דקות."
+            },
+            {
+                question: "כיצד יש לפנות את הפסולת מבדיקת חומצה פיקרית?",
+                type: "tf",
+                options: ["ניתן לשפוך לכיור עם הרבה מים.", "יש לפנות למיכל פסולת ייעודי לחומצה פיקרית."],
+                answer: true, // Second option is correct
+                explanation: "ההנחיה היא לפנות את המבחנות והטיפים למיכל פסולת של חומצה פיקרית."
+            },
+            // Test 2: Benedict's Test
+            {
+                question: "מהו נפח ראגנט בנדיקט שמוסיפים ל‏-$1 mL$‏ תמיסת סוכר בבדיקת בנדיקט?",
+                type: "mcq",
+                options: ["$1 mL$", "$2 mL$", "$3 mL$", "$5 mL$"],
+                answer: 3,
+                explanation: "מוסיפים $5 mL$‏ של ראגנט בנדיקט ל‏-$1 mL$‏ תמיסת סוכר."
+            },
+            {
+                question: "כמה זמן מחממים את המבחנות באמבט מים רותחים בבדיקת בנדיקט?",
+                type: "mcq",
+                options: ["$1$‏ דקה", "$5$‏ דקות", "$10$‏ דקות", "$15$‏ דקות"],
+                answer: 1,
+                explanation: "מחממים את המבחנות באמבט מים רותחים למשך $5$‏ דקות."
+            },
+            {
+                question: "בבדיקת בנדיקט, לאחר החימום והקירור, איזו תצפית חשובה יש לרשום?",
+                type: "mcq",
+                options: ["שינוי ב‏-$pH$", "צבע המשקע", "טמפרטורת התמיסה", "נפח הגז שנפלט"],
+                answer: 1,
+                explanation: "לאחר הקירור, יש לרשום את צבע המשקע ולהשוות בין הצבעים שהתקבלו עבור הסוכרים השונים."
+            },
+            {
+                question: "מהו תפקידו של נתרן ציטרט בריאגנט בנדיקט?",
+                type: "mcq",
+                options: ["לשמש כחומר מחזר", "לשמור על יוני הנחושת ($Cu^{2+}$) בתמיסה בסביבה בסיסית ולמנוע שקיעתם כנחושת הידרוקסיד", "להעלות את ה‏-$pH$‏ של התמיסה", "לשמש כאינדיקטור צבע"],
+                answer: 1,
+                explanation: "נתרן ציטרט פועל כחומר מקמפלקס (chelating agent), השומר על יוני הנחושת ($Cu^{2+}$) מסיסים בסביבה הבסיסית של הריאגנט ומונע את שקיעתם כנחושת הידרוקסיד ($Cu(OH)_2$), ובכך מאפשר להם להגיב עם הסוכר המחזר."
+            },
+            // Test 3: Seliwanoff's Test
+            {
+                question: "מהו נפח תמיסת הסוכר המשמש בבדיקת סליואנוף?",
+                type: "mcq",
+                options: ["$0.1 mL$", "$0.5 mL$", "$1 mL$", "$3 mL$"],
+                answer: 0,
+                explanation: "בבדיקת סליואנוף משתמשים ב‏-$0.1 mL$‏ מתמיסת הסוכר."
+            },
+            {
+                question: "אילו אמצעי בטיחות מיוחדים נדרשים בעבודה עם תמיסת סליואנוף?",
+                type: "mcq",
+                options: ["עבודה בחושך בלבד", "עבודה במנדף ולבישת שתי זוגות כפפות", "חימום עדין בלבד, ללא הרתחה", "שימוש בכלי פלסטיק בלבד"],
+                answer: 1,
+                explanation: "תמיסת סליואנוף מכילה חומצה הידרוכלורית בריכוז גבוה, ולכן יש לעבוד איתה במנדף בלבד וללבוש שתי זוגות כפפות."
+            },
+            {
+                question: "בדיקת סליואנוף משמשת בעיקר להבחנה בין אילו קבוצות של סוכרים?",
+                type: "mcq",
+                options: ["סוכרים מחזרים ולא מחזרים", "אלדוזות וקטוזות", "פנטוזות והקסוזות", "חד-סוכרים ודו-סוכרים"],
+                answer: 1,
+                explanation: "בדיקת סליואנוף משמשת להבחנה בין אלדוזות לקטוזות. קטוזות (כמו פרוקטוז) מגיבות מהר יותר ונותנות צבע אדום עז."
+            },
+            {
+                question: "מדוע ייתכן שסוכרוז ייתן תגובה חיובית בבדיקת סליואנוף, למרות שהוא דו-סוכר?",
+                type: "mcq",
+                options: ["סוכרוז הוא קטוזה טבעית", "סוכרוז עובר הידרוליזה בתנאים החומציים של המבחן לפרוקטוז (קטוזה) וגלוקוז (אלדוזה)", "סוכרוז מכיל קבוצת אלדהיד חופשית", "סוכרוז מגיב ישירות עם רסורצינול ללא שינוי"],
+                answer: 1,
+                explanation: "סוכרוז הוא דו-סוכר המורכב מגלוקוז ופרוקטוז. בתנאים החומציים והחמים של בדיקת סליואנוף, סוכרוז עובר הידרוליזה ומשחרר פרוקטוז, שהוא קטוהקסוזה, הנותן תגובה חיובית (צבע אדום)."
+            },
+             // Test 4: Bial's Test
+            {
+                question: "מהו נפח תמיסת הסוכר הנדרש לבדיקת ביאל?",
+                type: "mcq",
+                options: ["$0.1 mL$", "$0.13 mL$", "$0.5 mL$", "$1 mL$"],
+                answer: 1,
+                explanation: "לבדיקת ביאל, מעבירים $0.13 mL$‏ מכל תמיסת סוכר למבחנה."
+            },
+             {
+                question: "הופעת איזה צבע בבדיקת ביאל מעידה על נוכחות פנטוזות?",
+                type: "mcq",
+                options: ["אדום-דובדבן", "צהוב-כתום", "כחול-ירוק", "סגול עמוק"],
+                answer: 2,
+                explanation: "הופעת צבע כחול-ירוק בבדיקת ביאל אופיינית לנוכחות פנטוזות (סוכרים בעלי חמישה פחמנים)."
+            },
+             {
+                question: "היכן יש לבצע את שלב החימום בבדיקת ביאל, ולכמה זמן?",
+                type: "mcq",
+                options: ["על פלטת חימום, $10$‏ דקות", "באמבט מים רותחים על השולחן, $2$‏ דקות", "באמבט מים רותחים בתוך המנדף, $5$‏ דקות", "בתנור ב‏-$60^{\circ}C$,‏ $15$‏ דקות"],
+                answer: 2,
+                explanation: "את המבחנות בבדיקת ביאל יש לחמם באמבט מים רותחים הנמצא בתוך המנדף, ולעקוב אחר הופעת הצבע במשך $5$‏ דקות."
+            },
+            // Test 5: Phenylhydrazine Test
+            {
+                question: "אילו סוכרים מהרשימה המקורית אינם נבדקים בבדיקת פניל הידרזין?",
+                type: "mcq",
+                options: ["גלוקוז ופרוקטוז", "לקטוז וארבינוז", "סוכרוז ורפינוז", "כל הסוכרים נבדקים"],
+                answer: 2,
+                explanation: "בבדיקת פניל הידרזין נבדקים $6$‏ סוכרים: ארבינוז, גלוקוז, גלקטוז, פרוקטוז, לקטוז והנעלם. סוכרוז ורפינוז אינם נכללים בבדיקה זו."
+            },
+            {
+                question: "מהו נפח תמיסת פנילהידרזין שמוסיפים ל‏-$0.5 mL$‏ תמיסת סוכר בבדיקה זו?",
+                type: "mcq",
+                options: ["$0.5 mL$", "$1 mL$", "$1.25 mL$", "$2 mL$"],
+                answer: 2,
+                explanation: "מוסיפים $1.25 mL$‏ של תמיסת פנילהידרזין לכל מבחנה."
+            },
+            {
+                question: "לאחר הוספת ריאגנט פנילהידרזין, מהו משך החימום באמבט מים רותחים?",
+                type: "mcq",
+                options: ["$10$‏ דקות", "$15$‏ דקות", "חצי שעה ($30$‏ דקות)", "שעה ($60$‏ דקות)"],
+                answer: 2,
+                explanation: "מחממים את המבחנות באמבט מים רותחים למשך חצי שעה ($30$‏ דקות)."
+            },
+             {
+                question: "מהי הפעולה שיש לבצע לאחר קירור המבחנות בבדיקת פניל הידרזין, לפני הבדיקה במיקרוסקופ?",
+                type: "mcq",
+                options: ["לערבב שוב בוורטקס", "להוסיף עוד מים", "להעביר בזהירות $5 \\mu L$‏ תמיסה עם גבישים לזכוכית נושאת", "לסנן את התמיסה"],
+                answer: 2,
+                explanation: "לאחר הקירור, יש להעביר לאט (ללא וורטקס) כ‏-$5 \\mu L$‏ מהתמיסה המכילה גבישים לזכוכית נושאת, לכסות בזכוכית מכסה, ולבדוק במיקרוסקופ."
+            },
+            {
+                question: "אילו סוכרים, לדוגמה, יתנו גבישי אוסזון זהים בבדיקת פניל הידרזין?",
+                type: "mcq",
+                options: ["גלוקוז וסוכרוז", "גלוקוז, פרוקטוז ומנוז", "לקטוז וגלקטוז", "ארבינוז ורפינוז"],
+                answer: 1,
+                explanation: "גלוקוז, פרוקטוז ומנוז (שאינו נבדק ישירות כאן אך הוא דוגמה קלאסית) נותנים גבישי אוסזון זהים מכיוון שההבדלים ביניהם הם בפחמנים $C1$ ו‏-$C2$, המשתתפים ביצירת האוסזון."
+            },
+            {
+                question: "האם נכון לומר שכל הצעדים הכוללים עבודה עם ריאגנט פנילהידרזין (הכנה, הוספה, חימום, העברה לסלייד) צריכים להתבצע במנדף?",
+                type: "tf",
+                options: ["נכון", "לא נכון, רק החימום במנדף"],
+                answer: false, // "נכון" is the first option, statement is true
+                explanation: "כן, פנילהידרזין הוא חומר רעיל, והפרוטוקול מדגיש שכל שלבי העבודה איתו (הוספה למבחנות, חימום, והעברת דגימה לסלייד) צריכים להתבצע במנדף, תוך לבישת $2$‏ זוגות כפפות."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null);
+        let questionsAttempted = new Array(questions.length).fill(false);
+
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackContainerEl = document.getElementById('feedback-container');
+        const explanationContainerEl = document.getElementById('explanation-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounterEl = document.getElementById('question-counter');
+        const viewAllBtn = document.getElementById('view-all-btn');
+        const allQuestionsSummaryEl = document.getElementById('all-questions-summary');
+        const allQuestionsContentEl = document.getElementById('all-questions-content');
+
+        function displayQuestion(index) {
+            const question = questions[index];
+            questionTextEl.innerHTML = question.question; 
+            optionsContainerEl.innerHTML = '';
+            feedbackContainerEl.innerHTML = '';
+            feedbackContainerEl.className = 'feedback'; 
+            explanationContainerEl.style.display = 'none';
+            explanationContainerEl.innerHTML = '';
+
+            question.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.innerHTML = option; 
+                button.addEventListener('click', () => handleOptionClick(index, i));
+                
+                if (questionsAttempted[index]) {
+                    button.disabled = true;
+                    if (question.type === "mcq") {
+                        if (i === question.answer) button.classList.add('correct');
+                        if (userAnswers[index] === i && i !== question.answer) button.classList.add('incorrect');
+                        if (userAnswers[index] === i) button.classList.add('selected');
+                    } else { // tf
+                        // question.answer = false means first option is correct statement.
+                        // question.answer = true means second option is correct statement.
+                        if ((i === 0 && !question.answer) || (i === 1 && question.answer)) {
+                            button.classList.add('correct');
+                        }
+                        if (userAnswers[index] === i ) { // Mark selected
+                           button.classList.add('selected');
+                           // If selected is not correct
+                           if (!((i === 0 && !question.answer) || (i === 1 && question.answer))) {
+                               button.classList.add('incorrect');
+                           }
+                        }
+                    }
+                }
+                optionsContainerEl.appendChild(button);
+            });
+
+            if (questionsAttempted[index]) {
+                showFeedback(index, userAnswers[index]);
+            }
+            
+            updateNavigationButtons();
+            updateQuestionCounter();
+            
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([questionTextEl, optionsContainerEl, explanationContainerEl]).catch(err => console.error('MathJax typesetting error:', err));
+            }
+        }
+
+        function handleOptionClick(questionIndex, optionIndex) {
+            if (questionsAttempted[questionIndex]) return;
+
+            userAnswers[questionIndex] = optionIndex;
+            questionsAttempted[questionIndex] = true;
+            
+            // No need to disable/mark here, displayQuestion will handle it
+            displayQuestion(questionIndex); 
+        }
+
+        function showFeedback(qIndex, selectedOptIndex) {
+            const question = questions[qIndex];
+            let isCorrect;
+
+            if (question.type === "mcq") {
+                isCorrect = (selectedOptIndex === question.answer);
+            } else { // tf
+                isCorrect = (selectedOptIndex === 0 && !question.answer) || (selectedOptIndex === 1 && question.answer);
+            }
+
+            feedbackContainerEl.style.display = 'block';
+            if (isCorrect) {
+                feedbackContainerEl.textContent = 'נכון!';
+                feedbackContainerEl.className = 'feedback correct';
+            } else {
+                feedbackContainerEl.textContent = 'לא נכון.';
+                feedbackContainerEl.className = 'feedback incorrect';
+            }
+            
+            explanationContainerEl.innerHTML = question.explanation; 
+            explanationContainerEl.style.display = 'block';
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([explanationContainerEl, feedbackContainerEl]).catch(err => console.error('MathJax typesetting error in feedback:', err));
+            }
+        }
+
+        function updateNavigationButtons() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+        }
+
+        function updateQuestionCounter() {
+            questionCounterEl.textContent = `שאלה ${currentQuestionIndex + 1} מתוך ${questions.length}`;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+        
+        viewAllBtn.addEventListener('click', () => {
+            if (allQuestionsSummaryEl.style.display === 'none') {
+                renderAllQuestionsSummary();
+                allQuestionsSummaryEl.style.display = 'block';
+                viewAllBtn.textContent = 'הסתר את כל השאלות והתשובות';
+            } else {
+                allQuestionsSummaryEl.style.display = 'none';
+                viewAllBtn.textContent = 'הצג את כל השאלות והתשובות';
+            }
+        });
+
+        function renderAllQuestionsSummary() {
+            allQuestionsContentEl.innerHTML = '';
+            questions.forEach((q, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('question-item');
+                
+                const qText = document.createElement('p');
+                qText.innerHTML = `<strong>שאלה ${index + 1}:</strong> ${q.question}`;
+                itemDiv.appendChild(qText);
+
+                const ul = document.createElement('ul');
+                q.options.forEach((opt, i) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = opt;
+                    if (q.type === "mcq") {
+                        if (i === q.answer) {
+                            li.classList.add('correct-answer-display');
+                            li.innerHTML += " (תשובה נכונה)";
+                        }
+                    } else { // tf
+                        if ((i === 0 && !q.answer) || (i === 1 && q.answer)) {
+                             li.classList.add('correct-answer-display');
+                             li.innerHTML += " (תשובה נכונה)";
+                        }
+                    }
+                    ul.appendChild(li);
+                });
+                itemDiv.appendChild(ul);
+
+                const explanationP = document.createElement('p');
+                explanationP.innerHTML = `<em>הסבר:</em> ${q.explanation}`;
+                itemDiv.appendChild(explanationP);
+                
+                allQuestionsContentEl.appendChild(itemDiv);
+            });
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                 MathJax.typesetPromise([allQuestionsContentEl]).catch(err => console.error('MathJax typesetting error in summary:', err));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => {
+                    displayQuestion(currentQuestionIndex);
+                }).catch(err => console.error('MathJax startup error:', err));
+            } else {
+                displayQuestion(currentQuestionIndex);
+            }
+        });
+
+    </script>
+</body>
+</html>

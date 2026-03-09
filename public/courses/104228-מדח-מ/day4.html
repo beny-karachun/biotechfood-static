@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 4</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 4: Separation of Variables (Heat Eq. - Dirichlet BCs) & Fourier Sine Series</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>Separation of Variables for the Heat Equation (Homogeneous PDE, Homogeneous Dirichlet BCs):</strong></p>
+            <p>Solves the Initial Boundary Value Problem (IBVP) on a finite domain $0 < x < L, t > 0$:</p>
+            $$ u_t = k u_{xx} $$
+            with boundary conditions (BCs):
+            $$ u(0,t) = 0, \quad u(L,t) = 0 $$
+            and initial condition (IC):
+            $$ u(x,0) = f(x) $$
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li><strong>Assume Separable Solution:</strong> Assume $u(x,t) = X(x)T(t)$. Substitute into the PDE:
+                    $$ X(x)T'(t) = k X''(x)T(t) $$</li>
+                <li><strong>Separate Variables:</strong> Divide by $kX(x)T(t)$ (assuming non-zero):
+                    $$ \frac{T'(t)}{k T(t)} = \frac{X''(x)}{X(x)} $$
+                    Since the left side depends only on $t$ and the right side only on $x$, both sides must equal a constant, say $-\lambda$.
+                    $$ \frac{T'}{kT} = -\lambda \implies T' + k\lambda T = 0 $$
+                    $$ \frac{X''}{X} = -\lambda \implies X'' + \lambda X = 0 $$</li>
+                <li><strong>Apply Boundary Conditions to Spatial Problem (X):</strong>
+                    The BCs $u(0,t)=0 \implies X(0)T(t)=0 \implies X(0)=0$ (for non-trivial $T$).
+                    Similarly, $u(L,t)=0 \implies X(L)T(t)=0 \implies X(L)=0$.
+                    We need to solve the eigenvalue problem:
+                    $$ X'' + \lambda X = 0, \quad X(0)=0, \quad X(L)=0 $$
+                    The non-trivial solutions (eigenfunctions) are $X_n(x) = \sin\left(\frac{n\pi x}{L}\right)$ corresponding to the eigenvalues $\lambda_n = \left(\frac{n\pi}{L}\right)^2$ for $n=1, 2, 3, \dots$.</li>
+                <li><strong>Solve the Temporal Problem (T):</strong> For each $\lambda_n$, solve $T_n' + k\lambda_n T_n = 0$. This is a first-order linear ODE with solution $T_n(t) = B_n e^{-k\lambda_n t} = B_n e^{-k(n\pi/L)^2 t}$.</li>
+                <li><strong>Superposition Principle:</strong> The general solution is a superposition of all product solutions $u_n(x,t) = X_n(x)T_n(t)$:
+                    $$ u(x,t) = \sum_{n=1}^{\infty} B_n e^{-k(n\pi/L)^2 t} \sin\left(\frac{n\pi x}{L}\right) $$</li>
+                <li><strong>Apply Initial Condition (IC) using Fourier Sine Series:</strong> Set $t=0$:
+                    $$ u(x,0) = f(x) = \sum_{n=1}^{\infty} B_n \sin\left(\frac{n\pi x}{L}\right) $$
+                    This is the Fourier Sine Series expansion of $f(x)$ on $[0, L]$. The coefficients $B_n$ are found using the orthogonality of sines:
+                    $$ B_n = \frac{2}{L} \int_0^L f(x) \sin\left(\frac{n\pi x}{L}\right) \, dx $$</li>
+            </ol>
+            <p><strong>Key Idea:</strong> The method breaks the PDE into simpler ODEs. The boundary conditions determine the allowed spatial shapes (eigenfunctions), and the initial condition determines how much of each shape is needed (coefficients $B_n$).</p>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Eigenvalue Problems -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the eigenvalues $\lambda_n$ and eigenfunctions $X_n(x)$ for the boundary value problem $X'' + \lambda X = 0$ with $X(0)=0, X(\pi)=0$.</p>
+                <button onclick="toggleSolution('sol-d4-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is the standard Dirichlet problem with $L=\pi$.</p>
+                    <p>Case 1: $\lambda = 0$. $X''=0 \implies X(x)=Ax+B$. $X(0)=B=0$. $X(\pi)=A\pi=0 \implies A=0$. Only trivial solution $X(x)=0$.</p>
+                    <p>Case 2: $\lambda = -\mu^2 < 0$. $X'' - \mu^2 X = 0$. $X(x)=Ae^{\mu x}+Be^{-\mu x}$. $X(0)=A+B=0 \implies B=-A$. $X(\pi)=Ae^{\mu\pi}+Be^{-\mu\pi} = A(e^{\mu\pi}-e^{-\mu\pi})=0$. Since $e^{\mu\pi}-e^{-\mu\pi} \neq 0$ for $\mu\neq 0$, we need $A=0$, hence $B=0$. Only trivial solution.</p>
+                    <p>Case 3: $\lambda = \mu^2 > 0$. $X'' + \mu^2 X = 0$. $X(x)=A\cos(\mu x)+B\sin(\mu x)$. $X(0)=A\cos(0)+B\sin(0)=A=0$. $X(x)=B\sin(\mu x)$. $X(\pi)=B\sin(\mu \pi)=0$. For non-trivial $B$, we need $\sin(\mu \pi)=0$. This means $\mu \pi = n\pi$ for $n=1, 2, 3, \dots$. So $\mu = n$.</p>
+                    <p>The eigenvalues are $\lambda_n = \mu^2 = n^2$ for $n=1, 2, 3, \dots$.</p>
+                    <p>The corresponding eigenfunctions are $X_n(x) = \sin(nx)$. (We can set $B=1$).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the eigenvalues $\lambda_n$ and eigenfunctions $X_n(x)$ for $X'' + \lambda X = 0$ with $X(0)=0, X(2)=0$.</p>
+                <button onclick="toggleSolution('sol-d4-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is the standard Dirichlet problem with $L=2$.</p>
+                    <p>Following the same logic as Q1 (Cases $\lambda=0, \lambda<0$ give only trivial solutions):</p>
+                    <p>Case $\lambda = \mu^2 > 0$. $X(x)=A\cos(\mu x)+B\sin(\mu x)$. $X(0)=A=0$. $X(x)=B\sin(\mu x)$. $X(2)=B\sin(2\mu)=0$. We need $2\mu = n\pi$ for $n=1, 2, 3, \dots$. So $\mu = \frac{n\pi}{2}$.</p>
+                    <p>The eigenvalues are $\lambda_n = \mu^2 = \left(\frac{n\pi}{2}\right)^2$ for $n=1, 2, 3, \dots$.</p>
+                    <p>The corresponding eigenfunctions are $X_n(x) = \sin\left(\frac{n\pi x}{2}\right)$.</p>
+                </div>
+            </article>
+
+            <!-- Solving T(t) -->
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Solve the ODE $T' + 5T = 0$.</p>
+                <button onclick="toggleSolution('sol-d4-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is a first-order linear ODE. $\frac{dT}{T} = -5 dt$.</p>
+                    <p>Integrating: $\ln|T| = -5t + C'$.</p>
+                    <p>$T(t) = e^{-5t+C'} = e^{C'}e^{-5t} = C e^{-5t}$.</p>
+                    <p>So, $T(t) = C e^{-5t}$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Solve the ODE $T' + k \lambda T = 0$, where $k$ and $\lambda$ are positive constants.</p>
+                <button onclick="toggleSolution('sol-d4-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is the standard temporal ODE for the heat equation.</p>
+                    <p>$\frac{dT}{T} = -k\lambda dt$.</p>
+                    <p>Integrating: $\ln|T| = -k\lambda t + C'$.</p>
+                    <p>$T(t) = e^{-k\lambda t + C'} = e^{C'}e^{-k\lambda t} = C e^{-k\lambda t}$.</p>
+                    <p>So, $T(t) = C e^{-k\lambda t}$.</p>
+                </div>
+            </article>
+
+             <!-- Fourier Sine Series -->
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Find the Fourier Sine Series for $f(x)=1$ on the interval $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-d4-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>We want $f(x) = \sum_{n=1}^{\infty} B_n \sin(nx)$ for $L=\pi$.</p>
+                    <p>$B_n = \frac{2}{\pi} \int_0^\pi f(x) \sin(nx) \, dx = \frac{2}{\pi} \int_0^\pi 1 \cdot \sin(nx) \, dx$.</p>
+                    <p>$B_n = \frac{2}{\pi} \left[ -\frac{\cos(nx)}{n} \right]_0^\pi = -\frac{2}{n\pi} [\cos(n\pi) - \cos(0)]$.</p>
+                    <p>$B_n = -\frac{2}{n\pi} [(-1)^n - 1]$.</p>
+                    <p>If $n$ is even ($n=2m$), $B_{2m} = -\frac{2}{2m\pi} [(-1)^{2m} - 1] = -\frac{1}{m\pi} [1 - 1] = 0$.</p>
+                    <p>If $n$ is odd ($n=2m-1$), $B_{2m-1} = -\frac{2}{(2m-1)\pi} [(-1)^{2m-1} - 1] = -\frac{2}{(2m-1)\pi} [-1 - 1] = \frac{4}{(2m-1)\pi}$.</p>
+                    <p>The series is $f(x) = \sum_{m=1}^{\infty} \frac{4}{(2m-1)\pi} \sin((2m-1)x) = \frac{4}{\pi} \left( \sin x + \frac{\sin 3x}{3} + \frac{\sin 5x}{5} + \dots \right)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Find the Fourier Sine Series for $f(x)=x$ on the interval $[0, L]$.</p>
+                <button onclick="toggleSolution('sol-d4-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>We want $f(x) = \sum_{n=1}^{\infty} B_n \sin\left(\frac{n\pi x}{L}\right)$.</p>
+                    <p>$B_n = \frac{2}{L} \int_0^L x \sin\left(\frac{n\pi x}{L}\right) \, dx$.</p>
+                    <p>Use integration by parts: $u=x, dv=\sin(\frac{n\pi x}{L})dx \implies du=dx, v=-\frac{L}{n\pi}\cos(\frac{n\pi x}{L})$.</p>
+                    <p>$B_n = \frac{2}{L} \left[ \left. -x \frac{L}{n\pi}\cos\left(\frac{n\pi x}{L}\right) \right|_0^L - \int_0^L -\frac{L}{n\pi}\cos\left(\frac{n\pi x}{L}\right) \, dx \right]$.</p>
+                    <p>$B_n = \frac{2}{L} \left[ -L \frac{L}{n\pi}\cos(n\pi) - 0 + \frac{L}{n\pi} \int_0^L \cos\left(\frac{n\pi x}{L}\right) \, dx \right]$.</p>
+                    <p>$B_n = \frac{2}{L} \left[ -\frac{L^2}{n\pi}(-1)^n + \frac{L}{n\pi} \left[ \frac{L}{n\pi}\sin\left(\frac{n\pi x}{L}\right) \right]_0^L \right]$.</p>
+                    <p>$B_n = \frac{2}{L} \left[ \frac{L^2(-1)^{n+1}}{n\pi} + \frac{L}{n\pi} [0 - 0] \right] = \frac{2L(-1)^{n+1}}{n\pi}$.</p>
+                    <p>The series is $f(x) = \sum_{n=1}^{\infty} \frac{2L(-1)^{n+1}}{n\pi} \sin\left(\frac{n\pi x}{L}\right)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Find the Fourier Sine Series for $f(x)=\sin(\frac{\pi x}{L})$ on $[0, L]$.</p>
+                <button onclick="toggleSolution('sol-d4-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>We want $f(x) = \sum_{n=1}^{\infty} B_n \sin\left(\frac{n\pi x}{L}\right)$.</p>
+                    <p>Since $f(x)$ is already exactly one of the basis functions (the one with $n=1$), the series will only have that term.</p>
+                    <p>By inspection, $B_1 = 1$ and $B_n = 0$ for $n \neq 1$.</p>
+                    <p>Alternatively, calculate $B_n = \frac{2}{L} \int_0^L \sin(\frac{\pi x}{L}) \sin(\frac{n\pi x}{L}) \, dx$.</p>
+                    <p>Due to orthogonality, this integral is 0 if $n \neq 1$, and $\frac{L}{2}$ if $n = 1$.</p>
+                    <p>So $B_1 = \frac{2}{L} \cdot \frac{L}{2} = 1$, and $B_n = 0$ for $n \neq 1$.</p>
+                    <p>The series is $f(x) = 1 \cdot \sin\left(\frac{\pi x}{L}\right)$.</p>
+                </div>
+            </article>
+
+            <!-- Full Problem Solving -->
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Solve the heat equation $u_t = 3 u_{xx}$ for $0 < x < \pi, t > 0$, with $u(0,t)=0, u(\pi,t)=0$, and $u(x,0)=5\sin(2x)$.</p>
+                <button onclick="toggleSolution('sol-d4-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here $k=3, L=\pi$. The eigenvalues are $\lambda_n = (n\pi/L)^2 = n^2$. The eigenfunctions are $X_n(x)=\sin(nx)$.</p>
+                    <p>The general solution is $u(x,t) = \sum_{n=1}^{\infty} B_n e^{-k\lambda_n t} \sin(nx) = \sum_{n=1}^{\infty} B_n e^{-3n^2 t} \sin(nx)$.</p>
+                    <p>Apply IC: $u(x,0) = \sum_{n=1}^{\infty} B_n \sin(nx) = 5\sin(2x)$.</p>
+                    <p>By matching coefficients (or orthogonality), we see that $B_2 = 5$ and $B_n = 0$ for $n \neq 2$.</p>
+                    <p>The solution is $u(x,t) = 5 e^{-3(2^2) t} \sin(2x) = 5 e^{-12t} \sin(2x)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Solve $u_t = u_{xx}$ for $0 < x < 1, t > 0$, with $u(0,t)=0, u(1,t)=0$, and $u(x,0)=x(1-x)$.</p>
+                <button onclick="toggleSolution('sol-d4-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>$k=1, L=1$. Eigenvalues $\lambda_n = (n\pi/1)^2 = (n\pi)^2$. Eigenfunctions $X_n(x)=\sin(n\pi x)$.</p>
+                    <p>General solution: $u(x,t) = \sum_{n=1}^{\infty} B_n e^{-(n\pi)^2 t} \sin(n\pi x)$.</p>
+                    <p>Apply IC: $u(x,0) = \sum_{n=1}^{\infty} B_n \sin(n\pi x) = x(1-x)$.</p>
+                    <p>$B_n = \frac{2}{1} \int_0^1 (x-x^2) \sin(n\pi x) \, dx = 2 \int_0^1 x\sin(n\pi x)dx - 2 \int_0^1 x^2\sin(n\pi x)dx$.</p>
+                    <p>Using integration by parts twice for each integral:</p>
+                    <p>$\int x\sin(n\pi x)dx = -\frac{x}{n\pi}\cos(n\pi x) + \frac{1}{(n\pi)^2}\sin(n\pi x)$.</p>
+                    <p>$\int x^2\sin(n\pi x)dx = -\frac{x^2}{n\pi}\cos(n\pi x) + \frac{2x}{(n\pi)^2}\sin(n\pi x) + \frac{2}{(n\pi)^3}\cos(n\pi x)$.</p>
+                    <p>$B_n = 2 \left[ -\frac{x}{n\pi}\cos(n\pi x) + \frac{1}{(n\pi)^2}\sin(n\pi x) \right]_0^1 - 2 \left[ -\frac{x^2}{n\pi}\cos(n\pi x) + \frac{2x}{(n\pi)^2}\sin(n\pi x) + \frac{2}{(n\pi)^3}\cos(n\pi x) \right]_0^1$.</p>
+                     <p>$B_n = 2 \left( -\frac{1}{n\pi}\cos(n\pi) + 0 - 0 \right) - 2 \left( -\frac{1}{n\pi}\cos(n\pi) + 0 + \frac{2}{(n\pi)^3}\cos(n\pi) - (0+0+\frac{2}{(n\pi)^3}\cos(0)) \right)$.</p>
+                     <p>$B_n = -\frac{2(-1)^n}{n\pi} - 2 \left( -\frac{(-1)^n}{n\pi} + \frac{2(-1)^n}{(n\pi)^3} - \frac{2}{(n\pi)^3} \right)$.</p>
+                     <p>$B_n = -\frac{2(-1)^n}{n\pi} + \frac{2(-1)^n}{n\pi} - \frac{4(-1)^n}{(n\pi)^3} + \frac{4}{(n\pi)^3} = \frac{4}{(n\pi)^3} [1 - (-1)^n]$.</p>
+                     <p>If $n$ is even, $B_n = 0$. If $n$ is odd ($n=2m-1$), $B_{2m-1} = \frac{4}{((2m-1)\pi)^3}[1 - (-1)] = \frac{8}{((2m-1)\pi)^3}$.</p>
+                    <p>$u(x,t) = \sum_{m=1}^{\infty} \frac{8}{((2m-1)\pi)^3} e^{-((2m-1)\pi)^2 t} \sin((2m-1)\pi x)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve $u_t = 2 u_{xx}$ for $0 < x < \pi, t > 0$, with $u(0,t)=0, u(\pi,t)=0$, and $u(x,0)=1$.</p>
+                <button onclick="toggleSolution('sol-d4-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$k=2, L=\pi$. $\lambda_n = n^2$, $X_n(x)=\sin(nx)$.</p>
+                    <p>General solution: $u(x,t) = \sum_{n=1}^{\infty} B_n e^{-2n^2 t} \sin(nx)$.</p>
+                    <p>Apply IC: $u(x,0) = \sum_{n=1}^{\infty} B_n \sin(nx) = 1$.</p>
+                    <p>From Q5, the Fourier Sine Series for $f(x)=1$ on $[0, \pi]$ has $B_n = \frac{4}{n\pi}$ for odd $n$, and $B_n=0$ for even $n$.</p>
+                    <p>$u(x,t) = \sum_{m=1}^{\infty} \frac{4}{(2m-1)\pi} e^{-2(2m-1)^2 t} \sin((2m-1)x)$.</p>
+                 </div>
+            </article>
+
+            <!-- Continue with 20 more questions -->
+
+             <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Find the Fourier Sine Series for $f(x)=3\sin(5\pi x)$ on $[0, 1]$.</p>
+                 <button onclick="toggleSolution('sol-d4-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=1$. We want $f(x) = \sum B_n \sin(n\pi x)$.</p>
+                    <p>The function $f(x)$ is already a multiple of the $n=5$ basis function.</p>
+                    <p>By inspection, $B_5 = 3$, and $B_n = 0$ for $n \neq 5$.</p>
+                    <p>The series is $f(x) = 3\sin(5\pi x)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Solve $u_t = u_{xx}$ for $0 < x < \pi, t > 0$, $u(0,t)=u(\pi,t)=0$, $u(x,0) = \sin(x) - 0.5\sin(3x)$.</p>
+                 <button onclick="toggleSolution('sol-d4-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q12">
+                    <p><strong>Solution:</strong></p>
+                     <p>$k=1, L=\pi$. $\lambda_n=n^2$, $X_n=\sin(nx)$.</p>
+                     <p>$u(x,t) = \sum B_n e^{-n^2 t} \sin(nx)$.</p>
+                     <p>$u(x,0) = \sum B_n \sin(nx) = 1\cdot\sin(1x) - 0.5\sin(3x)$.</p>
+                     <p>By matching coefficients: $B_1=1$, $B_3=-0.5$, and $B_n=0$ for all other $n$.</p>
+                     <p>$u(x,t) = B_1 e^{-1^2 t}\sin(1x) + B_3 e^{-3^2 t}\sin(3x)$.</p>
+                     <p>$u(x,t) = e^{-t}\sin(x) - 0.5 e^{-9t}\sin(3x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Find the eigenvalues for $X''+\lambda X = 0$, $X(0)=0, X(10)=0$.</p>
+                 <button onclick="toggleSolution('sol-d4-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>Standard Dirichlet problem with $L=10$.</p>
+                    <p>Eigenvalues are $\lambda_n = \left(\frac{n\pi}{L}\right)^2 = \left(\frac{n\pi}{10}\right)^2$ for $n=1, 2, 3, \dots$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">What ODE does $T(t)$ satisfy in the separation of variables for $u_t = 5 u_{xx}$?</p>
+                 <button onclick="toggleSolution('sol-d4-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>Assuming $u=X(x)T(t)$, we get $XT' = 5X''T$.</p>
+                    <p>Separating gives $\frac{T'}{5T} = \frac{X''}{X} = -\lambda$.</p>
+                    <p>The ODE for T is $\frac{T'}{5T} = -\lambda$, which is $T' + 5\lambda T = 0$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Find the Fourier Sine Series coefficient $B_1$ for $f(x)=x$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-d4-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. From Q6, $B_n = \frac{2L(-1)^{n+1}}{n\pi}$.</p>
+                    <p>For $n=1$, $B_1 = \frac{2\pi(-1)^{1+1}}{1\pi} = \frac{2\pi(1)}{\pi} = 2$.</p>
+                    <p>$B_1 = 2$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Solve $u_t = u_{xx}$, $u(0,t)=u(1,t)=0$, $u(x,0)=2\sin(3\pi x)$.</p>
+                <button onclick="toggleSolution('sol-d4-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q16">
+                    <p><strong>Solution:</strong></p>
+                    <p>$k=1, L=1$. $\lambda_n = (n\pi)^2$, $X_n = \sin(n\pi x)$.</p>
+                    <p>$u(x,t) = \sum B_n e^{-(n\pi)^2 t} \sin(n\pi x)$.</p>
+                    <p>$u(x,0) = \sum B_n \sin(n\pi x) = 2\sin(3\pi x)$.</p>
+                    <p>Matching coefficients: $B_3=2$, $B_n=0$ for $n \neq 3$.</p>
+                    <p>$u(x,t) = 2 e^{-(3\pi)^2 t} \sin(3\pi x) = 2 e^{-9\pi^2 t} \sin(3\pi x)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Find the Fourier Sine Series coefficient $B_2$ for $f(x)=1$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-d4-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q17">
+                    <p><strong>Solution:</strong></p>
+                     <p>From Q5, $B_n = -\frac{2}{n\pi}[(-1)^n - 1]$.</p>
+                     <p>For $n=2$, $B_2 = -\frac{2}{2\pi}[(-1)^2 - 1] = -\frac{1}{\pi}[1 - 1] = 0$.</p>
+                     <p>$B_2 = 0$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Find the first eigenvalue ($\lambda_1$) for $X''+\lambda X=0$, $X(0)=0, X(5)=0$.</p>
+                <button onclick="toggleSolution('sol-d4-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=5$. Eigenvalues $\lambda_n = (n\pi/L)^2$.</p>
+                    <p>For $n=1$, $\lambda_1 = (\frac{1\pi}{5})^2 = \frac{\pi^2}{25}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">If $u(x,t) = \sum_{n=1}^{\infty} B_n e^{-k\lambda_n t} X_n(x)$, what is $u(x,0)$?</p>
+                <button onclick="toggleSolution('sol-d4-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>Set $t=0$ in the expression:</p>
+                    <p>$u(x,0) = \sum_{n=1}^{\infty} B_n e^{-k\lambda_n (0)} X_n(x) = \sum_{n=1}^{\infty} B_n e^0 X_n(x) = \sum_{n=1}^{\infty} B_n X_n(x)$.</p>
+                    <p>This is the eigenfunction expansion (e.g., Fourier series) of the initial condition $f(x)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Find the solution $T(t)$ for $T'+9T=0$ if $T(0)=4$.</p>
+                <button onclick="toggleSolution('sol-d4-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q20">
+                    <p><strong>Solution:</strong></p>
+                    <p>The general solution is $T(t) = C e^{-9t}$.</p>
+                    <p>Apply initial condition: $T(0) = C e^0 = C = 4$.</p>
+                    <p>So, $T(t) = 4e^{-9t}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Calculate the integral $\int_0^\pi \sin(x)\sin(3x) dx$.</p>
+                 <button onclick="toggleSolution('sol-d4-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q21">
+                    <p><strong>Solution:</strong></p>
+                    <p>The functions $\sin(nx)$ for $n=1, 2, \dots$ are orthogonal on $[0, \pi]$.</p>
+                    <p>Since $1 \neq 3$, the integral is 0.</p>
+                    <p>Alternatively, use product-to-sum: $\sin A \sin B = \frac{1}{2}[\cos(A-B) - \cos(A+B)]$.</p>
+                    <p>$\int_0^\pi \sin(x)\sin(3x) dx = \int_0^\pi \frac{1}{2}[\cos(-2x) - \cos(4x)] dx = \frac{1}{2} \int_0^\pi (\cos(2x) - \cos(4x)) dx$.</p>
+                    <p>$= \frac{1}{2} [\frac{\sin(2x)}{2} - \frac{\sin(4x)}{4}]_0^\pi = \frac{1}{2} [ (0-0) - (0-0) ] = 0$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Calculate the integral $\int_0^L \sin^2(\frac{n\pi x}{L}) dx$.</p>
+                <button onclick="toggleSolution('sol-d4-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>Use the identity $\sin^2 \theta = \frac{1-\cos(2\theta)}{2}$.</p>
+                    <p>$\int_0^L \sin^2\left(\frac{n\pi x}{L}\right) dx = \int_0^L \frac{1 - \cos\left(\frac{2n\pi x}{L}\right)}{2} dx$.</p>
+                    <p>$= \frac{1}{2} \left[ x - \frac{L}{2n\pi} \sin\left(\frac{2n\pi x}{L}\right) \right]_0^L$.</p>
+                    <p>$= \frac{1}{2} \left[ (L - \frac{L}{2n\pi} \sin(2n\pi)) - (0 - \frac{L}{2n\pi} \sin(0)) \right]$.</p>
+                    <p>$= \frac{1}{2} [ (L - 0) - (0 - 0) ] = \frac{L}{2}$.</p>
+                    <p>(This integral result is used in deriving the Fourier coefficient formula).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Solve $u_t = 10 u_{xx}$, $u(0,t)=u(\pi,t)=0$, $u(x,0)=0$.</p>
+                <button onclick="toggleSolution('sol-d4-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q23">
+                    <p><strong>Solution:</strong></p>
+                    <p>$k=10, L=\pi$. $\lambda_n=n^2$, $X_n=\sin(nx)$.</p>
+                    <p>$u(x,t) = \sum B_n e^{-10n^2 t} \sin(nx)$.</p>
+                    <p>$u(x,0) = \sum B_n \sin(nx) = 0$.</p>
+                    <p>This requires all $B_n = 0$.</p>
+                    <p>The only solution is the trivial solution $u(x,t) = 0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Find the Fourier Sine Series coefficient $B_3$ for $f(x)=x$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-d4-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q24">
+                     <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. From Q6, $B_n = \frac{2L(-1)^{n+1}}{n\pi}$.</p>
+                    <p>For $n=3$, $B_3 = \frac{2\pi(-1)^{3+1}}{3\pi} = \frac{2\pi(1)}{3\pi} = \frac{2}{3}$.</p>
+                    <p>$B_3 = 2/3$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Find the first eigenfunction $X_1(x)$ for $X''+\lambda X=0$, $X(0)=0, X(1)=0$.</p>
+                <button onclick="toggleSolution('sol-d4-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q25">
+                    <p><strong>Solution:</strong></p>
+                     <p>$L=1$. Eigenfunctions are $X_n(x) = \sin(\frac{n\pi x}{L}) = \sin(n\pi x)$.</p>
+                     <p>For $n=1$, the first eigenfunction is $X_1(x) = \sin(\pi x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Write the general form of the solution $u(x,t)$ for $u_t = k u_{xx}$, $u(0,t)=u(L,t)=0$, $u(x,0)=f(x)$, without calculating the coefficients $B_n$.</p>
+                <button onclick="toggleSolution('sol-d4-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q26">
+                    <p><strong>Solution:</strong></p>
+                    <p>Following the steps of separation of variables:</p>
+                    <p>1. Eigenvalue problem: $X''+\lambda X = 0, X(0)=X(L)=0$ gives $\lambda_n = (n\pi/L)^2$, $X_n(x)=\sin(n\pi x/L)$ for $n=1,2,3,...$.</p>
+                    <p>2. Temporal problem: $T' + k\lambda_n T = 0$ gives $T_n(t) = B_n e^{-k(n\pi/L)^2 t}$.</p>
+                    <p>3. Superposition: The general form is</p>
+                    $$ u(x,t) = \sum_{n=1}^{\infty} B_n e^{-k(n\pi/L)^2 t} \sin\left(\frac{n\pi x}{L}\right) $$
+                    <p>where $B_n = \frac{2}{L} \int_0^L f(x) \sin\left(\frac{n\pi x}{L}\right) \, dx$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">Solve $u_t = 4 u_{xx}$, $u(0,t)=u(2,t)=0$, $u(x,0)=3\sin(\pi x)$.</p>
+                <button onclick="toggleSolution('sol-d4-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q27">
+                     <p><strong>Solution:</strong></p>
+                     <p>$k=4, L=2$. Eigenvalues $\lambda_n = (n\pi/2)^2$. Eigenfunctions $X_n = \sin(n\pi x/2)$.</p>
+                     <p>$u(x,t) = \sum B_n e^{-4(n\pi/2)^2 t} \sin(n\pi x/2) = \sum B_n e^{-n^2\pi^2 t} \sin(n\pi x/2)$.</p>
+                     <p>$u(x,0) = \sum B_n \sin(n\pi x/2) = 3\sin(\pi x) = 3\sin(2\pi x/2)$.</p>
+                     <p>Matching coefficients: $n=2$. $B_2 = 3$. All other $B_n=0$.</p>
+                     <p>$u(x,t) = 3 e^{-(2)^2\pi^2 t} \sin(2\pi x/2) = 3 e^{-4\pi^2 t} \sin(\pi x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">What happens to the solution $u(x,t)$ of the standard heat equation problem (Dirichlet BCs) as $t \to \infty$?</p>
+                <button onclick="toggleSolution('sol-d4-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q28">
+                    <p><strong>Solution:</strong></p>
+                     <p>The solution is $u(x,t) = \sum_{n=1}^{\infty} B_n e^{-k(n\pi/L)^2 t} \sin\left(\frac{n\pi x}{L}\right)$.</p>
+                     <p>Since $k>0$ and $(n\pi/L)^2 > 0$ for all $n \ge 1$, the exponential term $e^{-k(n\pi/L)^2 t}$ decays to 0 as $t \to \infty$.</p>
+                     <p>Each term in the series goes to 0.</p>
+                     <p>Therefore, $\lim_{t \to \infty} u(x,t) = 0$. The temperature distribution dissipates towards the temperature fixed at the boundaries (which is 0 in this case).</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">Find the Fourier Sine Series coefficient $B_1$ for $f(x)=\sin(x)\cos(x)$ on $[0, \pi]$.</p>
+                <button onclick="toggleSolution('sol-d4-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q29">
+                    <p><strong>Solution:</strong></p>
+                    <p>$L=\pi$. $f(x) = \sin x \cos x = \frac{1}{2}\sin(2x)$.</p>
+                    <p>We want $f(x) = \sum B_n \sin(nx)$.</p>
+                    <p>The function $f(x)$ is a multiple of the $n=2$ basis function.</p>
+                    <p>Therefore, $B_1=0$. (Also $B_2=1/2$, and $B_n=0$ for $n \neq 2$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">If the initial condition is $u(x,0) = f(x)$, why do we use a Fourier Sine Series for the Dirichlet problem $u(0,t)=u(L,t)=0$?</p>
+                <button onclick="toggleSolution('sol-d4-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d4-q30">
+                    <p><strong>Solution:</strong></p>
+                    <p>The separation of variables method leads to solving the spatial eigenvalue problem $X''+\lambda X = 0$ with the boundary conditions imposed by the PDE, which are $X(0)=0$ and $X(L)=0$.</p>
+                    <p>The non-trivial solutions (eigenfunctions) to this specific boundary value problem are $X_n(x) = \sin(n\pi x/L)$.</p>
+                    <p>Since the general solution $u(x,t)$ is formed by a superposition (infinite sum) of the product solutions $X_n(x)T_n(t)$, the solution is naturally expressed as a series of sine functions: $u(x,t) = \sum B_n T_n(t) \sin(n\pi x/L)$.</p>
+                    <p>To satisfy the initial condition $u(x,0)=f(x)$, we must be able to represent $f(x)$ as a series of these same sine functions, which is precisely what a Fourier Sine Series does.</p>
+                </div>
+            </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

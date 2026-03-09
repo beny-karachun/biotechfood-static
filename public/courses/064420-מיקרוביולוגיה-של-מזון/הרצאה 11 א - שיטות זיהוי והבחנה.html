@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שיטות לזיהוי ולהבחנה בין מיקרואורגניזמים במזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "שלב 1 באבחון מזון", definition: "בחינת הימצאות מיקרואורגניזמים על ידי ספירה כללית." },
+            { term: "שלב 2 באבחון מזון", definition: "הערכה למספר מיקרואורגניזמים אינדיקטורים המעידים על איכות ותנאי תברואה." },
+            { term: "שלב 3 באבחון מזון", definition: "זיהוי ספציפי של חיידקים פתוגנים והערכה מספרית שלהם." },
+            { term: "התאמה אפידמיולוגית", definition: "היכולת להבחין בין התפרצויות מתועדות של תחלואה לבין מקרים ספורדיים באוכלוסייה." },
+            { term: "שיטות תרבית קלאסיות", definition: "כוללות העשרות, סינון ממברנלי, בידוד על מצעים סלקטיביים, ביוכימיה וסרולוגיה. חסרונן באיטיות וספציפיות נמוכה." },
+            { term: "מבחן ביוכימי VITEK", definition: "מערכת לסיווג מושבה לאחר בידוד המבוססת על 48 ראקציות ביוכימיות. מבצעת זיהוי אך לא כימות." },
+            { term: "אנטיגן O", definition: "מרכיב במעטפת החיידק המשמש מטרה לזיהוי במבחנים אימונולוגיים." },
+            { term: "אנטיגן H", definition: "מרכיב בפלגלה של החיידק המשמש מטרה לזיהוי במבחנים אימונולוגיים." },
+            { term: "מבחן ELISA", definition: "מבחן אימונולוגי הנמצא בשימוש נרחב לזיהוי טוקסינים, אך מסוגל לזהות גם חיידקים שלמים כמו ספורות אנטרקס." },
+            { term: "ערכת Reveal", definition: "בדיקה מהירה המבוססת על נוגדן ואנטיגן לזיהוי חיידקים. דורשת הופעת קו בקרה לאישור תקינותה." },
+            { term: "מערכת mini VIDAS", definition: "שיטה אימונולוגית אוטומטית לזיהוי מהיר של פתוגנים ללא יכולת כימות." },
+            { term: "זיהוי באמצעות פאגים", definition: "שימוש בנגיפים התוקפים חיידקים לצורך הבחנה ספציפית בין מינים וגזעים שונים." },
+            { term: "ג'ל דו מימדי", definition: "שיטה לאנליזת חלבונים המפרידה אותם בשני ממדים, לרוב לפי נקודה איזואלקטרית ולפי גודל." },
+            { term: "MALDI TOF", definition: "שיטה מתקדמת לאנליזת חלבונים המבוססת על ספקטרומטריית מסות לזיהוי מהיר של חיידקים ממושבות." },
+            { term: "אתגרי בטיחות מזון מודרניים", definition: "כוללים חיי מדף ארוכים, סחר בינלאומי, מזון מוכן לאכילה, וסכנות טרור ביולוגי." }
+        ];
+
+        const mcqData = [
+            { question: "בתהליך בדיקת מזון במפעל, מהי הפעולה הראשונה שיש לבצע על פי שלבי האבחון המקובלים?", options: ["זיהוי ספציפי של חיידק פתוגני מסוג סלמונלה", "ביצוע ספירה כללית להערכת העומס המיקרוביאלי", "שימוש בפאגים להבחנה בין גזעים", "כימות מדויק של מיקרואורגניזמים אינדיקטורים"], correctIndex: 1, explanation: "שלב 1 באבחון מיקרוביולוגיה של מזון הוא תמיד בחינת הימצאות מיקרואורגניזמים על ידי ספירה כללית." },
+            { question: "מדוע הערכת מספר מיקרואורגניזמים אינדיקטורים מוגדרת כשלב נפרד הקודם לזיהוי פתוגנים ספציפיים?", options: ["משום שאינדיקטורים תמיד גורמים למחלות קשות יותר מפתוגנים", "כדי לספק אינדיקציה כללית לאיכות התברואתית לפני שמשקיעים משאבים בזיהוי פתוגן ספציפי", "מפני שאינדיקטורים ניתנים לזיהוי רק באמצעות ספקטרומטריית מסות", "כי אינדיקטורים מונעים את הגדילה של פתוגנים בתרבית"], correctIndex: 1, explanation: "שלב 2 עוסק באינדיקטורים המעידים על איכות ותנאי ייצור, ורק בשלב 3 מחפשים ומזהים פתוגנים ספציפיים שהם לרוב נדירים יותר וקשים יותר לבידוד." },
+            { question: "איזה מהגורמים הבאים אינו נחשב לאתגר חדש בתחום הדיאגנוסטיקה של מיקרוביולוגיה במזון?", options: ["העלייה בשיעור צרכנים בעלי סיכון גבוה", "הצורך במעקב אחר סחר בינלאומי של מזון", "השימוש הגובר במזון מוכן לאכילה", "הצורך בביצוע ספירה כללית של חיידקים בסביבה טבעית"], correctIndex: 3, explanation: "ספירה כללית היא פעולה בסיסית וקלאסית, בעוד שסחר בינלאומי, מזון מוכן לאכילה וצרכנים בסיכון הם אתגרים מודרניים שנוספו לתחום." },
+            { question: "מהי הבעיה המרכזית בזיהוי חיידקים פתוגנים לעומת המגוון החיידקי העצום הקיים בטבע?", options: ["לפתוגנים יש שונות פנוטיפית מוגבלת מאוד שניתן לבדוק בקלות", "פתוגנים אינם מייצרים חלבונים שניתן לזהות בשיטות מודרניות", "המגוון העצום גורם לכך שכל פתוגן מגיב אחרת לאותו מבחן ביוכימי", "לפתוגנים יש שונות גנטית עצומה אך שונות פנוטיפית אינסופית"], correctIndex: 0, explanation: "האתגר הדיאגנוסטי נובע מכך שלמרות המגוון החיידקי העצום, בקרב החיידקים הפתוגנים ישנה שונות פנוטיפית מוגבלת שקל לבדוק אותה במעבדה." },
+            { question: "חוקר מנסה להבחין בין חיידק אי קולי פרוביוטי לחיידק אי קולי פתוגני. מדוע התאמה אפידמיולוגית חשובה במקרה זה?", options: ["היא מאפשרת לקבוע את רצף הדי אן איי המדויק של שני החיידקים", "היא עוזרת להבחין האם החיידק הפתוגני שייך להתפרצות מחלה מתועדת או שהוא מקרה ספורדי", "היא מונעת את הצורך בשימוש במבחנים ביוכימיים", "היא משפרת את הרגישות של ספירה כללית בצלחת פטרי"], correctIndex: 1, explanation: "התאמה אפידמיולוגית מספקת את היכולת לזהות התפרצויות באוכלוסייה ולהבדיל אותן ממקרים ספורדיים, במיוחד כאשר מדובר בזנים שונים של אותו מין." },
+            { question: "מעבדה החליטה לעבור משיטות תרבית קלאסיות לשיטות אבחון מודרניות. איזה חיסרון של השיטות הקלאסיות הוביל ככל הנראה להחלטה זו?", options: ["השיטות הקלאסיות מספקות ספציפיות גבוהה מדי שמובילה לתוצאות חיוביות שגויות", "השיטות הקלאסיות דורשות כוח אדם מיומן, זמן רב ובעלות ספציפיות נמוכה", "השיטות הקלאסיות אינן מאפשרות ביצוע מבחנים ביוכימיים", "השיטות הקלאסיות מבוססות אך ורק על זיהוי גנומי יקר"], correctIndex: 1, explanation: "החסרונות העיקריים של שיטות תרבית קלאסיות הם שהן דורשות זמן רב, עבודה אינטנסיבית, כוח אדם מנוסה, והן בעלות ספציפיות נמוכה." },
+            { question: "על פי הדרישות האופטימליות לדיאגנוסטיקה מיקרוביאלית, מערכת אידיאלית צריכה להיות:", options: ["איטית, רגישה, מבוססת תרבית ויקרה", "ספציפית, רגישה, מהירה, אוטומטית וניתנת להשוואה בין מעבדות", "בעלת רגישות נמוכה כדי למנוע רעשי רקע, וזולה להפעלה", "מבוססת אך ורק על תכונות מורפולוגיות כדי לחסוך בעלויות"], correctIndex: 1, explanation: "הדרישות האופטימליות כוללות ספציפיות, רגישות, מהירות, אוטומציה, עלות נמוכה, הדירות, ויכולת השוואה בין מעבדות." },
+            { question: "איזה מהשלבים הבאים אינו חלק משרשרת הפעולות האופיינית לשיטות תרבית קלאסיות?", options: ["בידוד על מצעים סלקטיביים", "סינון ממברנלי", "אנליזת חלבונים באמצעות ספקטרומטריית מסות", "מבחנים ביוכימיים וסרולוגיה"], correctIndex: 2, explanation: "אנליזת חלבונים בספקטרומטריית מסות היא שיטה מודרנית ומתקדמת, ואינה חלק משרשרת התרבית הקלאסית הכוללת העשרה, סינון, בידוד, ביוכימיה וסרולוגיה." },
+            { question: "בזיהוי חיידקים, מהו ההבדל העקרוני בין שימוש בצביעה דיפרנציאלית לבין מבחן ביוכימי?", options: ["צביעה דיפרנציאלית בוחנת את המטען הגנטי, ואילו מבחן ביוכימי בוחן את תנועת החיידק", "צביעה דיפרנציאלית מסייעת בזיהוי מבנה דופן התא, ואילו מבחן ביוכימי בוחן פעילות אנזימטית ומטבולית", "שניהם מבוססים על הדבקה באמצעות פאגים, אך בשלבים שונים", "מבחן ביוכימי מחייב שימוש בנוגדנים, בעוד צביעה אינה דורשת זאת"], correctIndex: 1, explanation: "צביעה דיפרנציאלית היא כלי מורפולוגי ומבני, בעוד מבחן ביוכימי מאשר זיהוי על ידי בחינת תגובות מטבוליות ואנזימטיות של החיידק." },
+            { question: "מערכת VITEK נכנסה לשימוש במעבדה. מהי המגבלה המרכזית של מערכת זו שאותה על מנהל המעבדה לקחת בחשבון?", options: ["המערכת אינה מסוגלת לבצע סיווג של מושבות מבודדות", "המערכת מבוססת על מבחנים גנומיים ולכן דורשת זמן רב", "המערכת מספקת זיהוי וסיווג אך אינה מסוגלת לבצע כימות של החיידקים", "המערכת בודקת רק ראקציה ביוכימית אחת בכל פעם"], correctIndex: 2, explanation: "מערכת VITEK מבצעת סיווג של מושבה לאחר בידוד המבוסס על 48 ראקציות ביוכימיות, אך היא מיועדת לזיהוי וסיווג בלבד, ולא לכימות." },
+            { question: "בבדיקת API במעבדה, החוקר מבחין בשינויי צבע במספר רב של בארות. על מה מבוססת שיטה זו?", options: ["על זיהוי רצפי די אן איי ספציפיים בכל בארית", "על סדרת מבחנים ביוכימיים זעירים המאשרים את זיהוי החיידק על סמך פרופיל מטבולי", "על קישור נוגדנים פלואורסצנטיים לאנטיגנים שונים", "על הדבקת החיידק בפאגים שונים בכל בארית"], correctIndex: 1, explanation: "מערכת API היא אוסף של מבחנים ביוכימיים ממוזערים שנועדו לאשר את זיהוי החיידק על ידי יצירת פרופיל תגובות ייחודי." },
+            { question: "במהלך פיתוח מבחן אימונולוגי חדש לזיהוי חיידק מעיים, החוקרים מתמקדים באנטיגן H. לאיזה חלק בחיידק הם מכוונים את הנוגדנים?", options: ["למעטפת החיידק החיצונית", "לריבוזומים בתוך הציטופלזמה", "לפלגלה של החיידק האחראית על תנועה", "לחומצת הגרעין של החיידק"], correctIndex: 2, explanation: "במבחנים אימונולוגיים, זיהוי באמצעות נוגדנים מבוצע לרוב כלפי אנטיגן O המייצג את מעטפת החיידק, ואנטיגן H המייצג את הפלגלה." },
+            { question: "מבחן אליזה נמצא בשימוש נרחב בתעשיית המזון. מהו היישום המעשי העיקרי שלו בבדיקות אלו?", options: ["כימות מדויק של מספר החיידקים החיים בדגימה", "זיהוי בעיקר של טוקסינים המופרשים למזון, אך גם של ספורות או חיידקים שלמים", "הפרדת חלבונים על פי משקל מולקולרי", "קביעת פרופיל העמידות לאנטיביוטיקה של פתוגן"], correctIndex: 1, explanation: "מבחן אליזה נמצא בשימוש מעשי בעיקר לזיהוי טוקסינים, אך ניתן גם לזהות באמצעותו חיידקים שלמים או ספורות של אנטרקס." },
+            { question: "טכנאי מעבדה מבצע בדיקה באמצעות ערכת Reveal לזיהוי אי קולי. לאחר 15 דקות מופיע קו רק באזור T, ואילו אזור C נשאר ריק. מהי המסקנה הנכונה?", options: ["הבדיקה חיובית ויש נוכחות של החיידק בדגימה", "הבדיקה שלילית ואין נוכחות של החיידק בדגימה", "הבדיקה פסולה ויש לחזור עליה, ללא קשר להופעת הקו באזור T", "הדגימה מכילה ריכוז נמוך מאוד של החיידק שאינו ניתן לכימות"], correctIndex: 2, explanation: "על פי הוראות הערכה, אם אין קו באזור C, וללא תלות אם יש או אין קו באזור T, הבדיקה מוגדרת כפסולה." },
+            { question: "מהי המשמעות של הופעת קו באזור C בלבד בערכת הבדיקה Reveal?", options: ["הבדיקה שלילית, החיידק אינו נוכח בדגימה", "הבדיקה חיובית, החיידק נוכח בדגימה", "הבדיקה פסולה עקב פגם בערכה", "הבדיקה מעידה על נוכחות טוקסינים אך לא חיידקים שלמים"], correctIndex: 0, explanation: "קו באזור C אבל לא באזור T בתוך 15 דקות מציין כי הבדיקה תקינה אך התוצאה היא שלילית." },
+            { question: "מערכת mini VIDAS משמשת במעבדות מזון רבות. עבור אילו מהמטרות הבאות המערכת אינה מתאימה?", options: ["זיהוי מהיר של סלמונלה", "זיהוי מהיר של ליסטריה", "קביעת כמות מדויקת של קמפילובקטר בגרם מזון", "זיהוי אנטרוטוקסינים של סטפילוקוקוס"], correctIndex: 2, explanation: "מערכת mini VIDAS מיועדת לזיהוי מהיר אך היא מוגדרת כמערכת ללא כימות. היא מתאימה לזיהוי סלמונלה, ליסטריה, קמפילובקטר וטוקסינים." },
+            { question: "אפידמיולוג חוקר התפרצות של הרעלת מזון ומעוניין להבחין בין שני גזעים קרובים מאוד של אותו מין חיידק שאינם ניתנים להבחנה בשיטות ביוכימיות רגילות. איזו שיטה מהבאות עשויה לספק את ההבחנה הנדרשת?", options: ["צביעה דיפרנציאלית", "יכולת תנועה במדיום הגידול", "יכולת הדבקה על ידי פאגים שונים", "ספירה כללית בצלחת פטרי"], correctIndex: 2, explanation: "הפאג יכול לשמש ככלי ספציפי ורגיש מאוד להבחנה בין מינים ואף בין גזעים שונים של אותו חיידק, כאשר שיטות פנוטיפיות אחרות נכשלות." },
+            { question: "במסגרת אנליזת חלבונים לזיהוי חיידקים, מהו היתרון של שימוש בג'ל דו מימדי לעומת ג'ל רגיל?", options: ["הוא מאפשר זיהוי חלבונים ללא צורך בהכנת דגימה מוקדמת", "הוא מפריד את החלבונים בשני ממדים שונים, כגון מטען חשמלי וגודל, ובכך מספק רזולוציה גבוהה יותר לפרופיל החלבוני", "הוא מבוסס על נוגדנים ולכן ספציפי יותר מכל שיטה אחרת", "הוא מאפשר למדוד את תנועת החיידק בזמן אמת"], correctIndex: 1, explanation: "ג'ל דו מימדי מפריד חלבונים תחילה על פי המטען שלהם ולאחר מכן על פי הגודל שלהם, מה שמאפשר השוואה מדויקת של דפוסי חלבונים מורכבים בין מינים שונים." },
+            { question: "טכנולוגיית MALDI TOF נכנסה לשימוש במעבדות קליניות ומעבדות מזון. על איזה עיקרון בסיסי היא פועלת באבחון מיקרוביולוגי?", options: ["ריצוף מלא של גנום החיידק תוך מספר דקות", "מדידת הזמן שלוקח לנוגדנים להיקשר לאנטיגן פלואורסצנטי", "יצירת ספקטרום מסות של חלבוני החיידק והשוואתו למאגר נתונים קיים", "כימות מדויק של מספר החיידקים החיים על ידי מדידת פליטת אור"], correctIndex: 2, explanation: "שיטת MALDI TOF מבוססת על ספקטרומטריית מסות ליצירת פרופיל חלבוני ייחודי של החיידק, אשר מושווה מול מאגר נתונים לצורך זיהוי מהיר." },
+            { question: "איזה מבין הקריטריונים הבאים לזיהוי מיקרואורגניזמים נחשב למבחן גנומי ולא פנוטיפי?", options: ["מבחן אימונולוגי סרולוגי", "אנליזת חלבונים", "רצף די אן איי", "צביעה דיפרנציאלית"], correctIndex: 2, explanation: "קריטריון מספר 8 מוגדר כמבחנים גנומיים, הכוללים ריצוף די אן איי, בעוד שאר השיטות בוחנות ביטוי פנוטיפי, חלבונים או מבנה." },
+            { question: "במהלך הכנת דגימה למכשיר MALDI TOF, מהו השלב המיידי לאחר לקיחת מושבות מוקדמות מצלחת התרבית?", options: ["הוספת נוגדנים ספציפיים", "הדבקה בפאגים", "השעיה מחדש בתמיסה ואינקובציה", "הזרקה ישירה למכשיר ללא עיבוד"], correctIndex: 2, explanation: "על פי סכמת ההכנה למכשיר ה-MALDI TOF, לאחר לקיחת המושבות מבצעים השעיה מחדש בתמיסה ואינקובציה לפני שלבי הסרכוז והכנת המטרה." },
+            { question: "מהי המשמעות של ספציפיות כדרישה אופטימלית לדיאגנוסטיקה מיקרוביאלית?", options: ["היכולת לזהות כמויות מזעריות של חיידקים בדגימה", "היכולת להבחין במדויק בין פתוגן המטרה לבין מיקרואורגניזמים אחרים ללא זיהוי שגוי", "היכולת לבצע את הבדיקה בעלות מינימלית", "היכולת לקבל את אותה תוצאה במספר מעבדות שונות"], correctIndex: 1, explanation: "ספציפיות מתייחסת ליכולת של המבחן לזהות רק את גורם המטרה מבלי להיות מושפע מגורמים אחרים, ובכך למנוע תוצאות חיוביות שגויות." },
+            { question: "אם בדיקת מעבדה מתוארת כבעלת הדירות גבוהה, למה הכוונה מתוך הדרישות האופטימליות?", options: ["הבדיקה מסוגלת לזהות מגוון רחב של פתוגנים במקביל", "הבדיקה מפיקה תוצאות עקביות כאשר חוזרים עליה באותם תנאים", "הבדיקה מתבצעת באופן אוטומטי לחלוטין ללא מגע יד אדם", "הבדיקה מספקת תוצאה תוך דקות ספורות"], correctIndex: 1, explanation: "הדירות היא הדרישה האופטימלית המתייחסת לכך שניתן לשחזר את התוצאות באופן עקבי בניסויים חוזרים." },
+            { question: "מה ההבדל העיקרי בין שלב 1 לשלב 3 בבדיקת נוכחות חיידקים במזון?", options: ["שלב 1 מחפש רק טוקסינים, ואילו שלב 3 מחפש חיידקים שלמים", "שלב 1 מתמקד בספירה כללית של כלל החיידקים, ואילו שלב 3 מתמקד בזיהוי וכימות של פתוגנים ספציפיים", "שלב 1 מבוצע רק במזון מוכן לאכילה, ואילו שלב 3 מבוצע במזון גולמי", "אין הבדל, שניהם מבוצעים באמצעות מערכת VITEK"], correctIndex: 1, explanation: "שלב 1 הוא בחינת הימצאות כללית, בעוד שלב 3 הוא השלב המתקדם של זיהוי ספציפי של חיידקים פתוגנים והערכה מספרית שלהם." },
+            { question: "הופעת פתוגנים חדשים או פתוגנים שחוזרים ומופיעים מוגדרת כ:", options: ["יתרון בטיחותי המאפשר פיתוח חיסונים מהיר", "אתגר בטיחותי חדש בתחום הדיאגנוסטיקה של מיקרוביולוגיה במזון", "תוצאה ישירה של ספירה כללית שגויה", "סיבה להפסקת השימוש במבחנים ביוכימיים"], correctIndex: 1, explanation: "הופעת פתוגנים חדשים או מתחדשים מוזכרת כאחד האתגרים הבטיחותיים החדשים בדיאגנוסטיקה של מזון." },
+            { question: "איזו מהשיטות הבאות תתאים ביותר לזיהוי מהיר של אנטרוטוקסינים של סטפילוקוקוס במפעל מזון?", options: ["ספירה כללית בצלחת פטרי סטנדרטית", "בדיקת יכולת תנועה במדיום גידול", "שימוש בקיט של מערכת mini VIDAS", "ביצוע מבחן אינדול"], correctIndex: 2, explanation: "מערכת mini VIDAS מציעה קיטים לזיהוי מהיר ללא כימות, והיא מתאימה במפורש לזיהוי אנטרוטוקסינים של סטפילוקוקוס." },
+            { question: "מדוע שימוש במיקרואורגניזמים בטרור נחשב לאתגר לדיאגנוסטיקה של מזון?", options: ["מפני שחיידקי טרור תמיד מתרבים לאט יותר מחיידקים רגילים", "משום שנדרשות מערכות זיהוי מהירות, מדויקות ורגישות במיוחד כדי להתמודד עם איומים לא צפויים וקריטיים", "כי שיטות קלאסיות אינן מסוגלות לגדל חיידקים שנוצרו במעבדה", "מפני שטרור ביולוגי פוגע רק במזון בעל חיי מדף קצרים"], correctIndex: 1, explanation: "האיום החדש של שימוש במיקרואורגניזמים בטרור מחייב את מערכות הדיאגנוסטיקה להיות מהירות ואמינות כדי להגן על הציבור מפני סכנות חמורות ובלתי צפויות." },
+            { question: "ערכת Dry spot של חברת Oxoid מבוססת על איזה סוג של מבחן?", options: ["מבחן גנומי המזהה רצפי חומצות גרעין", "מבחן ביוכימי המזהה תסיסת סוכרים", "מבחן אימונולוגי מהיר המבוסס על אגלוטינציה של נוגדנים", "מבחן מורפולוגי המבוסס על צביעת גראם"], correctIndex: 2, explanation: "ערכת Dry spot מתוארת כקיט זיהוי מהיר מבוסס נוגדנים, הפועל על עיקרון של מבחן אגלוטינציה." },
+            { question: "בזמן הרצת מבחן אליזה, מהו התפקיד של הנוגדנים המקובעים למשטח הבדיקה?", options: ["לפרק את החיידק כדי לשחרר את הדי אן איי שלו", "ללכוד באופן ספציפי את אנטיגן המטרה או הטוקסין מתוך דגימת המזון המורכבת", "לשנות את צבע המדיום כדי להעיד על תסיסת סוכרים", "לשמש כחומר תזונה לחיידקים הפתוגניים"], correctIndex: 1, explanation: "במבחן אליזה, נוגדנים ספציפיים משמשים ללכידה וזיהוי של אנטיגנים או טוקסינים מתוך הדגימה." },
+            { question: "מהי המשמעות של המונח אגלוטינציה בהקשר של דיאגנוסטיקה מיקרוביאלית?", options: ["פירוק של דופן התא החיידקי באמצעות חימום", "הצמדה וקישור של חלקיקים או תאים על ידי נוגדנים ליצירת צברים נראים לעין", "הפרדת חלבונים על גבי ג'ל לפי גודלם", "יכולתו של החיידק לנוע בתוך נוזל"], correctIndex: 1, explanation: "מבחן אגלוטינציה, כמו בערכת ה-Dry spot, מבוסס על יצירת צברים נראים לעין כאשר נוגדנים נקשרים לאנטיגנים על פני תאי החיידק." },
+            { question: "כיצד תורמת האוטומציה במערכות כמו VITEK ו-mini VIDAS למעבדת המזון?", options: ["היא מבטלת לחלוטין את הצורך בשלב ההעשרה הראשוני", "היא מפחיתה את התלות בכוח אדם מיומן מאוד ומקצרת את זמן העבודה הידנית", "היא מאפשרת זיהוי ודאי של פתוגנים ללא צורך בבידוד מושבות", "היא הופכת את השיטות הקלאסיות לזולות יותר משיטות אימונולוגיות"], correctIndex: 1, explanation: "אוטומציה עונה על החיסרון של השיטות הקלאסיות שדורשות עבודה אינטנסיבית וכוח אדם מנוסה, ומאפשרת ייעול התהליך." },
+            { question: "חוקר מעוניין לזהות נוכחות של חיידק קמפילובקטר בדגימת עוף באופן מהיר וללא צורך בספירה מדויקת של החיידקים. באיזו מערכת סביר שיבחר?", options: ["ספירה כללית בסינון ממברנלי", "מערכת mini VIDAS", "מבחן אינדול קלאסי בודד", "צביעה דיפרנציאלית פשוטה"], correctIndex: 1, explanation: "מערכת mini VIDAS מציעה קיטים ספציפיים לזיהוי מהיר של קמפילובקטר ללא כימות." },
+            { question: "מה מאפיין את מבחן האינדול ומבחן האוקסידאז?", options: ["אלו הם מבחנים גנומיים המזהים מוטציות", "אלו הם מבחנים אימונולוגיים המזהים נוגדנים", "אלו הם מבחנים ביוכימיים המשמשים לאישור זיהוי חיידקים", "אלו הן שיטות להפרדת חלבונים באמצעות ג'ל"], correctIndex: 2, explanation: "אינדול, אוקסידאז, ציטראט ותסיסת סוכרים הם דוגמאות למבחנים ביוכימיים המשמשים לאישור זיהוי החיידק." },
+            { question: "באיזה שלב של הכנת הדגימה למערכת MALDI TOF מתבצע הסרכוז?", options: ["לפני לקיחת המושבות מצלחת התרבית", "מיד לאחר איסוף הסופרנאטנט", "לאחר השעיית החיידקים בתמיסה ואינקובציה", "במהלך ניתוח הספקטרום על ידי המחשב"], correctIndex: 2, explanation: "על פי התרשים, הסרכוז מתבצע לאחר שלב ההשעיה מחדש בתמיסה והאינקובציה, ולפני איסוף הסופרנאטנט להכנת המטרה." },
+            { question: "מדוע הבחנה בין גזעים שונים של חיידקים מאותו מין היא קריטית במקרים של הרעלת מזון?", options: ["כי כל הגזעים של אותו מין תמיד גורמים לאותה מחלה בדיוק", "כדי לקבוע איזה סוג של אריזת מזון גרם לזיהום", "משום שגזעים מסוימים יכולים להיות קומנסליים או פרוביוטיים, בעוד אחרים הם פתוגניים ואחראים להתפרצות", "מפני שזה מוזיל את עלויות הבדיקה במעבדה"], correctIndex: 2, explanation: "השונות המוגבלת מחייבת הבחנה דקה, שכן בתוך אותו מין של חיידק יכולים להיות גזעים בלתי מזיקים לצד גזעים פתוגניים אלימים." },
+            { question: "מה משותף למערכות API ו-VITEK?", options: ["שתיהן מבוססות על ריצוף גנטי של החיידק", "שתיהן משתמשות בפאגים לזיהוי ספציפי", "שתיהן מבוססות על סדרת ראקציות ביוכימיות לצורך סיווג החיידק לאחר בידוד", "שתיהן מספקות כימות מדויק של העומס החיידקי בדגימה"], correctIndex: 2, explanation: "שתי המערכות, API ו-VITEK, הן פלטפורמות המאגדות מספר רב של מבחנים ביוכימיים כדי לאפשר סיווג מדויק של החיידק." },
+            { question: "בבדיקת תסיסת סוכרים, מהו המדד המרכזי המצביע על תגובה חיובית?", options: ["יצירת צברים של נוגדנים", "הופעת פסים על גבי ממברנה", "שינוי צבע במבחנה המעיד על שינוי ברמת החומציות בעקבות המטבוליזם", "פירוק מוחלט של החיידק על ידי פאג"], correctIndex: 2, explanation: "במבחן ביוכימי של תסיסת סוכרים, תגובה חיובית ניכרת לרוב בשינוי צבע של האינדיקטור במבחנה כתוצאה מיצירת חומצה." },
+            { question: "איזו מבין השיטות הבאות מספקת את רמת הרזולוציה הגבוהה ביותר בהבחנה בין חלבונים שונים של החיידק?", options: ["מבחן אוקסידאז", "ג'ל דו מימדי", "צביעה דיפרנציאלית", "מבחן אגלוטינציה בסיסי"], correctIndex: 1, explanation: "ג'ל דו מימדי מספק רזולוציה גבוהה מאוד באנליזת חלבונים על ידי הפרדה בשני צירים שונים, מה שמאפשר להבחין בין חלבונים שאינם נראים בשיטות פשוטות יותר." },
+            { question: "היכולת לעקוב אחר מקור המזון לאורך שרשרת האספקה הבינלאומית קשורה לאיזה אתגר בטיחותי?", options: ["התאמה אפידמיולוגית מוגבלת", "סחר בינלאומי ועקיבות", "ירידה במספר הצרכנים בסיכון", "היעדר צורך בשיטות תרבית קלאסיות"], correctIndex: 1, explanation: "סחר בינלאומי יוצר אתגר של עקיבות, המחייב יכולת לזהות את מקור המיקרואורגניזמים לאורך שרשרת אספקה מורכבת וארוכה." },
+            { question: "אם נרצה לבצע בדיקה המשלבת זיהוי מהיר ופשטות תפעולית לזיהוי נוכחות של אי קולי פתוגני במפעל, איזו ערכה תהיה המתאימה ביותר מבין הבאות?", options: ["הרצת ג'ל דו מימדי מלא", "שימוש במערכת VITEK הדורשת בידוד מוקדם", "שימוש בערכת Reveal המבוססת על זרימה צידית ונוגדנים", "ביצוע ריצוף די אן איי מלא"], correctIndex: 2, explanation: "ערכת Reveal היא בדיקה מהירה, פשוטה לתפעול, ומבוססת על נוגדנים לזיהוי מהיר של אי קולי, ללא צורך בציוד מעבדה מורכב." }
+        ];
+
+        const tfData = [
+            { question: "השלב הראשון בבדיקת מזון הוא תמיד זיהוי ספציפי של החיידק הפתוגני.", answer: false, explanation: "השלב הראשון הוא בחינת הימצאות מיקרואורגניזמים על ידי ספירה כללית. זיהוי ספציפי הוא השלב השלישי." },
+            { question: "מזון מוכן לאכילה מהווה אתגר חדש בתחום הדיאגנוסטיקה המיקרוביולוגית.", answer: true, explanation: "מזון מוכן לאכילה מוזכר כאחד האתגרים הבטיחותיים החדשים, שכן הוא אינו עובר בישול נוסף לפני הצריכה." },
+            { question: "לכל החיידקים הפתוגנים יש שונות פנוטיפית עצומה המקלה מאוד על זיהוים.", answer: false, explanation: "ההפך הוא הנכון. למרות המגוון החיידקי העצום, בקרב החיידקים הפתוגנים ישנה שונות פנוטיפית מוגבלת שניתן לבדוק בקלות." },
+            { question: "התאמה אפידמיולוגית מאפשרת לזהות התפרצויות של תחלואה באוכלוסייה.", answer: true, explanation: "התאמה אפידמיולוגית מספקת את היכולת להבחין בין התפרצויות מתועדות לבין מקרים ספורדיים." },
+            { question: "אחת הדרישות האופטימליות למערכת אבחון היא עלות גבוהה כדי להבטיח איכות.", answer: false, explanation: "עלות נמוכה היא אחת הדרישות האופטימליות למערכת דיאגנוסטית מיקרוביאלית." },
+            { question: "שיטות תרבית קלאסיות מתאפיינות בזמן פעולה קצר מאוד וספציפיות גבוהה.", answer: false, explanation: "שיטות קלאסיות לוקחות זמן רב, דורשות עבודה אינטנסיבית, והן בעלות ספציפיות נמוכה." },
+            { question: "מבחנים ביוכימיים משמשים לאישור זיהוי של החיידק.", answer: true, explanation: "מבחנים ביוכימיים כמו אינדול, אוקסידאז ותסיסת סוכרים משמשים לאישור הזיהוי של החיידק." },
+            { question: "מערכת VITEK מסוגלת לסווג חיידקים וגם לקבוע את הכמות המדויקת שלהם בדגימה.", answer: false, explanation: "המערכת מיועדת לזיהוי וסיווג, אך מצוין במפורש כי היא אינה מיועדת לכימות." },
+            { question: "מערכת VITEK מבוססת על 48 ראקציות ביוכימיות שונות.", answer: true, explanation: "המערכת אכן בנויה על 48 ראקציות ביוכימיות המאפשרות סיווג של המושבה." },
+            { question: "במבחנים אימונולוגיים, אנטיגן O מתייחס לפלגלה של החיידק.", answer: false, explanation: "אנטיגן O מתייחס למעטפת החיידק, ואילו אנטיגן H מתייחס לפלגלה." },
+            { question: "מבחן אליזה נמצא בשימוש מעשי בעיקר לזיהוי טוקסינים.", answer: true, explanation: "המבחן יעיל מאוד לזיהוי טוקסינים, אם כי ניתן להשתמש בו גם לזיהוי חיידקים וספורות." },
+            { question: "ערכת Dry spot של חברת Oxoid מבוססת על זיהוי רצפי די אן איי.", answer: false, explanation: "ערכת Dry spot היא קיט זיהוי מהיר המבוסס על נוגדנים ומבחן אגלוטינציה, ולא על רצפי די אן איי." },
+            { question: "בערכת Reveal, אם מופיע קו רק באזור T, הבדיקה נחשבת לחיובית ותקינה.", answer: false, explanation: "אם אין קו באזור C, וללא תלות אם יש קו באזור T, הבדיקה פסולה לחלוטין." },
+            { question: "קו C בערכת Reveal מעיד על תקינות הבדיקה.", answer: true, explanation: "הופעת קו באזור C הכרחית כדי לאשר שהבדיקה בוצעה כראוי ושהערכה תקינה." },
+            { question: "מערכת mini VIDAS מאפשרת זיהוי מהיר הכולל כימות מדויק של פתוגנים.", answer: false, explanation: "מערכת mini VIDAS מוגדרת כמערכת לזיהוי מהיר ללא כימות." },
+            { question: "מערכת mini VIDAS מסוגלת לזהות אנטרוטוקסינים של סטפילוקוקוס.", answer: true, explanation: "המערכת כוללת קיטים ייעודיים לזיהוי אנטרוטוקסינים של סטפילוקוקוס, כמו גם סלמונלה וליסטריה." },
+            { question: "יכולת תנועה במדיום הגידול היא אחד מהקריטריונים לזיהוי מיקרואורגניזמים.", answer: true, explanation: "זהו הקריטריון השני ברשימת השיטות לזיהוי מיקרואורגניזמים." },
+            { question: "פאגים אינם יכולים להבחין בין גזעים שונים של אותו מין חיידק.", answer: false, explanation: "הפאג יכול לשמש להבחנה ספציפית גם בין מינים וגם בין גזעים שונים." },
+            { question: "אנליזת חלבונים יכולה להתבצע באמצעות הרצת ג'ל SDS.", answer: true, explanation: "ג'ל SDS הוא אחת השיטות המוצגות לאנליזת חלבונים במסגרת הקריטריון השביעי." },
+            { question: "ג'ל דו מימדי מפריד חלבונים אך ורק על פי המשקל המולקולרי שלהם.", answer: false, explanation: "ג'ל דו מימדי מפריד חלבונים בשני ממדים, לרוב מטען וגודל, ולא רק לפי משקל מולקולרי." },
+            { question: "שיטת MALDI TOF מבוססת על ספקטרומטריית מסות.", answer: true, explanation: "MALDI TOF היא טכנולוגיית ספקטרומטריית מסות המשמשת לאנליזת חלבונים וזיהוי מהיר." },
+            { question: "השלב השני באבחון מזון מתמקד בספירה של חיידקים פתוגנים ספציפיים בלבד.", answer: false, explanation: "השלב השני עוסק בהערכה למספר מיקרואורגניזמים אינדיקטורים, ולא בזיהוי פתוגנים ספציפיים שמתבצע בשלב השלישי." },
+            { question: "מבחן אינדול הוא דוגמה למבחן אימונולוגי סרולוגי.", answer: false, explanation: "מבחן אינדול הוא מבחן ביוכימי, ולא מבחן אימונולוגי המבוסס על נוגדנים." },
+            { question: "סחר בינלאומי מחייב יכולת עקיבות אחר מקור המזון והמיקרואורגניזמים שבו.", answer: true, explanation: "סחר בינלאומי מוצג כאתגר המצריך עקיבות כדי לנהל סיכונים בטיחותיים." },
+            { question: "שיטות תרבית קלאסיות דורשות כוח אדם מנוסה.", answer: true, explanation: "אחד החסרונות הבולטים של שיטות אלו הוא הצורך בכוח אדם מיומן ומנוסה." },
+            { question: "מערכת API היא כלי לזיהוי המבוסס על סדרת מבחנים ביוכימיים.", answer: true, explanation: "מערכת API מורכבת ממספר רב של מבחנים ביוכימיים ממוזערים המאפשרים יצירת פרופיל לזיהוי החיידק." },
+            { question: "מבחנים גנומיים בוחנים את תכונות המורפולוגיה של החיידק תחת מיקרוסקופ.", answer: false, explanation: "מבחנים גנומיים מבוססים על קביעת רצף הדי אן איי של החיידק, ולא על המראה הפיזי שלו." },
+            { question: "במערכת ה-MALDI TOF, יש לבצע אינקובציה של הדגימה בתמיסה לפני הסרכוז.", answer: true, explanation: "על פי סכמת ההכנה, לאחר לקיחת המושבות יש שלב של השעיה מחדש ואינקובציה, ורק לאחריו מתבצע סרכוז." },
+            { question: "מערכות אבחון אידיאליות צריכות לספק תוצאות שאינן ניתנות להשוואה בין מעבדות שונות.", answer: false, explanation: "אחת הדרישות האופטימליות היא שהתוצאות יהיו ברות השוואה בין מעבדות שונות." },
+            { question: "מבחן אגלוטינציה גורם להיווצרות צברים נראים לעין בעקבות תגובת נוגדן ואנטיגן.", answer: true, explanation: "זוהי מהות מבחן האגלוטינציה, כפי שמיושם בערכות זיהוי מהירות כמו Dry spot." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

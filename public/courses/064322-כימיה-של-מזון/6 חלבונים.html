@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: חלבונים ופפטידים במזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "מונוסודיום גלוטמט (MSG)", definition: "מלח נתרן של חומצה גלוטמית, משמש כמשפר טעם במזון ומעניק טעם אומאמי. יכול לגרום לתסמינים זמניים אצל אנשים רגישים." },
+            { term: "אספרטם", definition: "ממתיק מלאכותי דל קלוריות, מתוק פי 200 מסוכרוז. מורכב מחומצה אספרטית, פנילאלנין וקבוצת מתיל אסטר. אינו מתאים לחולי פנילקטונוריה (PKU)." },
+            { term: "גלוטטיון (GSH)", definition: "טריפפטיד (גמא-גלוטמט-ציסטאין-גליצין) המשמש כנוגד חמצון חשוב בגוף, שומר על מצב מחוזר של חלבונים ומשתתף בנטרול רעלים." },
+            { term: "דנטורציה של חלבון", definition: "שינוי במבנה המרחבי (שניוני, שלישוני ורביעוני) של חלבון, ללא שינוי במבנה הראשוני. גורמת לרוב לאובדן הפעילות הביולוגית ולירידה במסיסות." },
+            { term: "קשיון מוות (Rigor Mortis)", definition: "מצב של קשיחות שרירים המתרחש לאחר המוות עקב היעדר ATP, אשר נדרש לשחרור הקשרים בין סיבי האקטין והמיוזין." },
+            { term: "מיוגלובין", definition: "חלבון קושר חמצן בתאי שריר, האחראי לצבע הבשר. צבעו משתנה (סגול, אדום, חום) בהתאם למצב החמצון של יון הברזל (Fe+2/Fe+3) ונוכחות חמצן." },
+            { term: "אקטין ומיוזין", definition: "שני חלבוני השריר העיקריים היוצרים את הסרקומר. החלקתם זה על גבי זה, המונעת על ידי ATP ויוני סידן, גורמת להתכווצות השריר." },
+            { term: "יישון בשר (Aging)", definition: "תהליך ריכוך בשר לאחר שלב הריגור מורטיס, המתרחש באמצעות אנזימים פרוטאוליטיים טבעיים המפרקים את מבנה סיבי השריר." },
+            { term: "Salting out", definition: "תהליך הורדת מסיסות של חלבונים בריכוזי מלח גבוהים. יוני המלח מתחרים עם החלבון על מולקולות המים, מה שגורם לחלבונים לעבור אגרגציה ולשקוע." },
+            { term: "סרקומר", definition: "היחידה הבסיסית המתכווצת של שריר, המורכבת מסידור של פילמנטים דקים (אקטין) ועבים (מיוזין) בין שני קווי Z." },
+            { term: "Curing (שימור/כבישה)", definition: "תהליך שימור בשר באמצעות הוספת מלח, סוכר וניטריט או ניטראט. התהליך משפיע על שימור, טעם וצבע הבשר." },
+            { term: "נקודה איזואלקטרית (pI)", definition: "ערך ה-pH שבו לחלבון יש מטען חשמלי נטו אפס. ב-pI, מסיסות החלבון היא מינימלית והוא נוטה לעבור אגרגציה." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי הסיבה המולקולרית המרכזית לתופעת קשיון המוות (Rigor Mortis) בבשר?",
+                options: ["הצטברות חומצה לקטית הגורמת לדנטורציית החלבונים", "היעדר ATP המונע את ניתוק קשרי הרוחב בין אקטין למיוזין", "פעילות אנזימים פרוטאוליטיים המפרקים את הסרקומרים", "התייבשות מהירה של רקמת השריר לאחר המוות"],
+                correctIndex: 1,
+                explanation: "קשיון המוות נגרם כאשר מאגרי ה-ATP בשריר אוזלים. ATP נדרש כדי להיקשר לראשי המיוזין ולשחרר אותם מהאקטין, מה שמאפשר הרפיה. בהיעדר ATP, הקשרים נותרים נעולים."
+            },
+            {
+                question: "איזה מהבאים אינו תוצר פירוק ישיר של אספרטם במערכת העיכול?",
+                options: ["חומצה אספרטית", "פנילאלנין", "מתנול", "סוכרוז"],
+                correctIndex: 3,
+                explanation: "אספרטם הוא דיפפטיד המורכב מחומצה אספרטית ופנילאלנין, עם קבוצת מתיל אסטר. בפירוקו מתקבלים שלושת המרכיבים הללו. סוכרוז הוא סוכר שולחן ואינו קשור לאספרטם."
+            },
+            {
+                question: "מהו ההסבר הכימי לכך שבשר הנחשף לפחמן חד-חמצני (CO) שומר על צבע ורוד-אדום עז לתקופה ארוכה?",
+                options: ["CO גורם לחמצון מהיר של המיוגלובין למטמיוגלובין", "CO נקשר למיוגלובין בעוצמה רבה יותר מחמצן ויוצר קומפלקס יציב (קרבוקסימיוגלובין)", "CO מונע פעילות של אנזימים הגורמים להשחמת הבשר", "CO מגיב עם מים ליצירת חומצה המשמרת את הצבע האדום"],
+                correctIndex: 1,
+                explanation: "פחמן חד-חמצני נקשר לאתר הקישור לברזל במיוגלובין פי 50 חזק יותר מחמצן. הוא יוצר קומפלקס קרבוקסימיוגלובין יציב מאוד שצבעו ורוד-אדום, המונע את הפיכת המיוגלובין למטמיוגלובין החום."
+            },
+            {
+                question: "בתהליך יישון בשר (aging), מהי הפעילות הביוכימית העיקרית התורמת לריכוך הבשר?",
+                options: ["דנטורציה של קולגן בטמפרטורת היישון", "פירוק מבוקר של חלבוני הסרקומר, בעיקר באזור דיסק ה-Z, על ידי פרוטאזות", "ירידה ב-pH של השריר הממיסה את החלבונים", "הידרוליזה של קשרי אקטין-מיוזין שנוצרו בריגור מורטיס"],
+                correctIndex: 1,
+                explanation: "יישון הוא תהליך אנזימטי. פרוטאזות טבעיות בשריר (כמו קלפאינים) מפרקות באופן מבוקר חלבונים מבניים בסרקומר, במיוחד אלה שבדיסק ה-Z, מה שפוגע בשלמות המבנית ומביא לרכות."
+            },
+            {
+                question: "איזו מהפעולות הבאות תגרום לירידה הדרסטית ביותר במסיסות של חלבון בטא-לקטוגלובולין (pI ~5.3) בתמיסה מימית?",
+                options: ["הוספת התמיסה ל-pH 7.0", "הוספת ריכוז מלח נמוך (Salting in)", "קירור התמיסה ל-4 מעלות צלזיוס", "כוונון ה-pH של התמיסה ל-5.3"],
+                correctIndex: 3,
+                explanation: "מסיסות חלבון היא הנמוכה ביותר בנקודה האיזואלקטרית (pI), שבה המטען החשמלי נטו של המולקולה הוא אפס. ב-pH זה, המשיכה הבין-מולקולרית היא מקסימלית והדחייה היא מינימלית, מה שמוביל לאגרגציה ושקיעה."
+            },
+            {
+                question: "מהו תפקידו העיקרי של הטריפפטיד גלוטטיון (GSH) בהקשר של חלבונים בתא?",
+                options: ["לשמש סובסטרט לבניית חלבונים חדשים", "לשמור על קבוצות תיול (SH) של ציסטאין בחלבונים במצבן המחוזר", "לזרז יצירת קשרים דיסולפידיים (S-S) לייצוב החלבון", "להיקשר ישירות לרעלנים ולמנוע מהם להגיע לחלבונים"],
+                correctIndex: 1,
+                explanation: "אחד מתפקידיו המרכזיים של GSH הוא לשמש כרדוקטנט (מחזר). הוא מונע חמצון של קבוצות תיול (SH) חופשיות של ציסטאין בחלבונים, ובכך שומר על המבנה והתפקוד התקין שלהם."
+            },
+            {
+                question: "בשר נא במרכז הנתח, שלא בא במגע עם אוויר, הוא בעל צבע סגול-אדמדם. מהי הצורה הדומיננטית של מיוגלובין במצב זה?",
+                options: ["אוקסימיוגלובין (Fe+2)", "מטמיוגלובין (Fe+3)", "דאוקסימיוגלובין (Fe+2)", "קרבוקסימיוגלובין (Fe+2)"],
+                correctIndex: 2,
+                explanation: "בהיעדר חמצן, המיוגלובין נמצא בצורתו המחוזרת (Fe+2) אך ללא חמצן קשור. צורה זו נקראת דאוקסימיוגלובין וצבעה סגול-אדמדם."
+            },
+            {
+                question: "מה מהבאים אינו מאפיין של דנטורציית חלבונים?",
+                options: ["אובדן פעילות ביולוגית", "שבירת קשרים פפטידיים", "ירידה במסיסות", "חשיפת קבוצות הידרופוביות"],
+                correctIndex: 1,
+                explanation: "דנטורציה היא שינוי במבנה המרחבי (שניוני, שלישוני, רביעוני) של החלבון. המבנה הראשוני, כלומר רצף חומצות האמינו המחוברות בקשרים פפטידיים, נשאר ללא שינוי."
+            },
+            {
+                question: "מדוע יש לסמן על מוצרי מזון המכילים אספרטם אזהרה לחולי פנילקטונוריה (PKU)?",
+                options: ["כי אספרטם גורם לעלייה חדה ברמות הסוכר בדם", "כי פירוק אספרטם משחרר מתנול, הרעיל במיוחד לחולי PKU", "כי לחולי PKU חסר האנזים המפרק את חומצת האמינו פנילאלנין", "כי אספרטם מכיל כמויות גבוהות של נתרן"],
+                correctIndex: 2,
+                explanation: "PKU היא מחלה גנטית שבה יש חסר באנזים פנילאלנין הידרוקסילאז, ההופך פנילאלנין לטירוזין. צריכת פנילאלנין, אחד מתוצרי הפירוק של אספרטם, עלולה להוביל להצטברותו ולהשפעות נוירולוגיות חמורות."
+            },
+            {
+                question: "בהתכווצות שריר, מהו תפקידם של יוני הסידן (Ca++)?",
+                options: ["לספק את האנרגיה לתנועת ראשי המיוזין", "להיקשר לטרופונין, ובכך לחשוף את אתרי הקישור למיוזין על גבי האקטין", "לפרק ATP ל-ADP ופוספט", "לגרום לדנטורציה של המיוזין כדי לאפשר קשירה לאקטין"],
+                correctIndex: 1,
+                explanation: "במצב מנוחה, קומפלקס טרופונין-טרופומיוזין חוסם את אתרי הקישור על האקטין. כאשר אות עצבי גורם לשחרור יוני סידן, הם נקשרים לטרופונין, מה שגורם לשינוי מבני החושף את אתרי הקישור ומאפשר לראשי המיוזין להיקשר ולהתחיל את ההתכווצות."
+            },
+            {
+                question: "איזה מהבאים מתאר באופן המדויק ביותר את תפקיד הניטריט (nitrite) בתהליך ה-curing של בשר?",
+                options: ["הוא משמש כממתיק ומאזן את מליחות המלח", "הוא מגיב עם מיוגלובין ליצירת ניטרוזומיוגלובין, האחראי לצבע הוורוד-אדום היציב של מוצרי בשר משומרים", "הוא גורם לדנטורציה מהירה של חלבוני הבשר ומונע קלקול", "הוא מעלה את ה-pH של הבשר ובכך משפר את טעמו"],
+                correctIndex: 1,
+                explanation: "ניטריט הוא מרכיב מפתח בתהליך הכבישה. הוא מחוזר ל-Nitric Oxide (NO) אשר נקשר למיוגלובין. הקומפלקס שנוצר (ניטרוזומיוגלובין) הוא בעל צבע ורוד-אדום, והוא יציב לחום, מה שמעניק למוצרים כמו נקניקיות ופסטרמה את צבעם האופייני."
+            },
+            {
+                question: "על פי תאוריית הפילמנטים המחליקים, מה קורה לאורכם של הפילמנטים (אקטין ומיוזין) ולאורך הסרקומר במהלך התכווצות שריר?",
+                options: ["הפילמנטים מתקצרים והסרקומר מתקצר", "הפילמנטים שומרים על אורכם והסרקומר מתקצר", "הפילמנטים מתארכים והסרקומר מתקצר", "הפילמנטים והסרקומר שומרים על אורכם"],
+                correctIndex: 1,
+                explanation: "התאוריה גורסת שהפילמנטים עצמם אינם משנים את אורכם. ההתכווצות נובעת מכך שפילמנטי האקטין מחליקים על פני פילמנטי המיוזין לכיוון מרכז הסרקומר, מה שמקצר את הסרקומר כולו."
+            },
+            {
+                question: "צריכה פומית (דרך הפה) של גלוטטיון (GSH) אינה יעילה להעלאת רמתו בתאים. מה הסיבה העיקרית לכך?",
+                options: ["GSH אינו נספג במעי הדק", "GSH מתפרק אנזימטית לחומצות האמינו המרכיבות אותו במערכת העיכול", "GSH רעיל כאשר הוא נלקח בריכוזים גבוהים", "GSH אינו מסיס במים ולכן אינו יכול להיספג"],
+                correctIndex: 1,
+                explanation: "גלוטטיון הוא פפטיד, וכמו חלבונים ופפטידים אחרים, הוא עובר פירוק על ידי אנזימי עיכול (פרוטאזות ופפטידאזות) במערכת העיכול לחומצות האמינו גלוטמט, ציסטאין וגליצין, לפני שהן נספגות."
+            },
+            {
+                question: "איזה מהבאים אינו נחשב למקור 'נסתר' ל-MSG (או חומצה גלוטמית חופשית) במוצרי מזון?",
+                options: ["תמצית שמרים (Yeast Extract)", "חלבון סויה שעבר הידרוליזה (Hydrolyzed Soy Protein)", "חומצת לימון (Citric Acid)", "קזאין (Casein) שעבר פירוק אנזימטי"],
+                correctIndex: 2,
+                explanation: "תמציות שמרים וחלבונים שעברו הידרוליזה מכילים חומצות אמינו חופשיות, כולל חומצה גלוטמית. חומצת לימון היא חומצה אורגנית המשמשת לוויסות חומציות וטעם ואינה מקור לגלוטמט."
+            },
+            {
+                question: "מהו ההבדל המהותי בין דנטורציה של מיוגלובין בבשר בקר (70°C) לזו שבטונה (40°C)?",
+                options: ["מיוגלובין בטונה אינו מכיל ברזל", "המיוגלובין בבקר יציב יותר לחום מאשר המיוגלובין בטונה", "הדנטורציה בטונה הפיכה ובבקר אינה הפיכה", "בבקר הדנטורציה גורמת לצבע אדום ובטונה לצבע אפור"],
+                correctIndex: 1,
+                explanation: "לחלבונים מיצורים שונים יש יציבות תרמית שונה, המותאמת לסביבתם. דגי מים קרים, כמו טונה, מכילים חלבונים הפעילים ויציבים בטמפרטורות נמוכות יותר, ולכן המיוגלובין שלהם עובר דנטורציה בטמפרטורה נמוכה יותר מאשר אצל יונקים."
+            },
+            {
+                question: "מדוע הוספת אנזימים כמו פפאין (מפפאיה) לבשר לפני הבישול תורמת לרכותו?",
+                options: ["פפאין מזרז את תגובת מייאר ומשפר את הטעם", "פפאין הוא פרוטאז המפרק חלבוני שריר וקולגן", "פפאין מעלה את יכולת קשירת המים של הבשר", "פפאין קושר את יוני הסידן ומונע התכווצות יתר בחימום"],
+                correctIndex: 1,
+                explanation: "פפאין הוא אנזים פרוטאוליטי (מפרק חלבונים) אקסוגני. כאשר מוסיפים אותו לבשר, הוא מסייע בפירוק חלבוני השריר המבניים (כמו אקטין ומיוזין) וגם את חלבון רקמת החיבור, קולגן, ובכך מרכך את הבשר."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר באופן שגוי את תכונותיו של MSG במזון?",
+                options: ["הוא תורם טעם אומאמי כאשר הוא בריכוז מעל סף הזיהוי שלו", "הוא יכול לשפר טעמים אחרים גם בריכוזים נמוכים מסף הזיהוי שלו", "ריכוזו במזונות מעובדים הוא בדרך כלל מעל 5%", "הוא מסיס מאוד במים"],
+                correctIndex: 2,
+                explanation: "ריכוז ה-MSG במזונות נמצא בדרך כלל בטווח של 0.1% עד 0.8%. ריכוז של מעל 5% יהיה גבוה מאוד ואינו אופייני לשימוש תעשייתי או ביתי."
+            },
+            {
+                question: "מהי הסיבה לכך שבשר בקר הופך לחום (metmyoglobin) כאשר הוא נשמר במקרר באריזה חדירה לחמצן?",
+                options: ["חמצון של יון הברזל מ-Fe+2 ל-Fe+3", "דנטורציה של המיוגלובין עקב הקור", "חיזור של יון הברזל מ-Fe+3 ל-Fe+2", "פעילות של חיידקים המייצרים פיגמנטים חומים"],
+                correctIndex: 0,
+                explanation: "בנוכחות חמצן, יון הברזל הדו-ערכי (Fe+2) באוקסימיוגלובין (האדום) עובר חמצון ליון ברזל תלת-ערכי (Fe+3). הצורה המחומצנת, מטמיוגלובין, היא בעלת צבע חום-אפרפר."
+            },
+            {
+                question: "כל חומצות האמינו הבאות הן חיוניות למבוגרים, פרט ל:",
+                options: ["ליזין", "מתיונין", "טריפטופן", "ארגינין"],
+                correctIndex: 3,
+                explanation: "ארגינין נחשבת לחומצת אמינו חיונית בתנאים מסוימים (חיונית על תנאי) ובמיוחד לילדים, אך מבוגרים בריאים יכולים לסנתז אותה. ליזין, מתיונין וטריפטופן הן חומצות אמינו חיוניות תמיד למבוגרים."
+            },
+            {
+                question: "איזה מהבאים אינו תפקיד של חלבונים בגוף האדם?",
+                options: ["אחסון ארוך טווח של אנרגיה", "הובלת חומרים בדם", "זירוז תגובות ביוכימיות", "תמיכה מבנית ברקמות"],
+                correctIndex: 0,
+                explanation: "חלבונים ממלאים תפקידים רבים, אך הגוף אינו משתמש בהם כמקור אחסון אנרגיה עיקרי לטווח ארוך; תפקיד זה שמור לשומנים (טריגליצרידים) ולגליקוגן (מאגר פחמימות)."
+            },
+            {
+                question: "באיזה תנאי pH יציג חלבון בעל pI=8.0 מטען כולל חיובי?",
+                options: ["ב-pH 8.0", "ב-pH 9.0", "ב-pH 7.0", "בכל תנאי ה-pH"],
+                correctIndex: 2,
+                explanation: "כאשר ה-pH של התמיסה נמוך מה-pI של החלבון, יש עודף פרוטונים (H+) בתמיסה. קבוצות אמינו וקרבוקסיל על החלבון יקבלו פרוטונים, מה שיוביל למטען כולל חיובי. לכן ב-pH 7.0, החלבון יהיה חיובי."
+            },
+            {
+                question: "מהו הקשר הפפטידי הייחודי בגלוטטיון (GSH)?",
+                options: ["קשר בין קבוצת האלפא-אמינו של ציסטאין לאלפא-קרבוקסיל של גליצין", "קשר בין קבוצת הגמא-קרבוקסיל של גלוטמט לאלפא-אמינו של ציסטאין", "קשר דיסולפידי בין שתי מולקולות גלוטמט", "קשר אסטרי בין גליצין לציסטאין"],
+                correctIndex: 1,
+                explanation: "הקשר הראשון בטריפפטיד גלוטטיון הוא קשר איזופפטידי לא שגרתי. הוא נוצר בין קבוצת הקרבוקסיל שבשייר הצדדי (גמא) של חומצה גלוטמית לבין קבוצת האמינו של ציסטאין."
+            },
+            {
+                question: "איזו תופעה מתאר המונח 'Salting in'?",
+                options: ["הורדת מסיסות חלבון בריכוז מלח גבוה", "העלאת מסיסות חלבון בריכוז מלח נמוך", "שימוש במלח לשימור בשר", "יצירת ג'ל חלבון באמצעות מלח"],
+                correctIndex: 1,
+                explanation: "בריכוזי מלח נמוכים, יוני המלח מצפים את המטענים על פני החלבון, ובכך מקטינים את המשיכה האלקטרוסטטית בין מולקולות החלבון. אפקט מיסוך זה מגביר את האינטראקציה עם המים ומעלה את מסיסות החלבון."
+            },
+            {
+                question: "מהי הסיבה העיקרית לכך שבשר מבושל הופך לאפור-חום?",
+                options: ["חמצון של שומנים בטמפרטורה גבוהה", "דנטורציה של המיוגלובין והפיכתו להמיכרום דנטורטי", "תגובות מייאר בין חלבונים לסוכרים", "פירוק מוחלט של מולקולת ההם"],
+                correctIndex: 1,
+                explanation: "במהלך החימום, חלבון הגלובין שבמיוגלובין עובר דנטורציה. יון הברזל נחשף ועובר חמצון, והמבנה כולו הופך לקומפלקס הנקרא המיכרום דנטורטי, שצבעו אפור-חום."
+            },
+            {
+                question: "איזה מהבאים מתאר את השינוי המבני העיקרי המתרחש בהתכווצות סרקומר?",
+                options: ["פס A מתקצר באופן משמעותי", "פס I והאזור H מתקצרים או נעלמים", "דיסקיות Z מתרחקות זו מזו", "אורך פילמנטי המיוזין קטן בחצי"],
+                correctIndex: 1,
+                explanation: "בזמן התכווצות, פילמנטי האקטין נמשכים פנימה. כתוצאה מכך, פס I (המכיל רק אקטין) והאזור H (המכיל רק מיוזין במרכז) מתקצרים. פס A (המכיל את כל אורך המיוזין) אינו משנה את אורכו."
+            },
+            {
+                question: "מה משותף לחומרים כמו 'תמצית שמרים אוטוליטית' ו'חלבון צמחי שעבר הידרוליזה'?",
+                options: ["שניהם משמשים בעיקר להמתקת מוצרים", "שניהם עשירים בחומצה גלוטמית חופשית ומשמשים כמשפרי טעם", "שניהם תוצרי לוואי של תעשיית השומנים", "שניהם אסורים לשימוש במזון על פי ה-FDA"],
+                correctIndex: 1,
+                explanation: "אוטוליזה (פירוק עצמי) והידרוליזה הם תהליכים המפרקים חלבונים לחומצות האמינו המרכיבות אותם. מכיוון שחלבונים רבים עשירים בחומצה גלוטמית, התוצרים החופשיים הללו תורמים טעם אומאמי ומשמשים כמקור טבעי לשיפור טעם, בדומה ל-MSG."
+            },
+            {
+                question: "כל המאפיינים הבאים קשורים לאספרטם, פרט לאחד. מהו?",
+                options: ["ערך קלורי של כ-4 קק\"ל לגרם", "מתיקות גבוהה פי 200 מסוכרוז", "יציבות גבוהה בחימום וב-pH בסיסי", "מכיל את חומצת האמינו החיונית פנילאלנין"],
+                correctIndex: 2,
+                explanation: "אספרטם אינו יציב בחום ונוטה להתפרק, במיוחד בסביבה ניטרלית או בסיסית. זו הסיבה שהוא משמש בעיקר במשקאות קלים ומוצרים קרים, ופחות מתאים לאפייה."
+            },
+            {
+                question: "איזה מהבאים אינו תוצאה אופיינית של דנטורציה תרמית של חלבון ביצה (אלבומין)?",
+                options: ["הפיכת החלבון משקוף ללבן אטום", "עלייה חדה בפעילותו האנזימטית", "ירידה דרמטית במסיסות במים", "יצירת מבנה ג'ל מוצק"],
+                correctIndex: 1,
+                explanation: "דנטורציה גורמת לאובדן המבנה המרחבי הנחוץ לפעילות ביולוגית. לכן, פעילותו האנזימטית (אם קיימת) של החלבון תאבד לחלוטין, ולא תעלה."
+            },
+            {
+                question: "מדוע הוספת מלח לבצק יכולה לחזק את רשת הגלוטן?",
+                options: ["המלח מפרק את הגלוטן ליחידות קטנות יותר", "המלח מנטרל את המטענים הדוחים בין שרשראות החלבון ומאפשר להן להתקרב", "המלח פועל כזרז ליצירת קשרים פפטידיים חדשים", "המלח סופח מים ומונע מהגלוטן להיות דביק מדי"],
+                correctIndex: 1,
+                explanation: "לשרשראות הגלוטן יש מטענים חשמליים דומים הגורמים לדחייה ביניהן. יוני המלח (Na+ ו-Cl-) ממסכים את המטענים הללו, מפחיתים את הדחייה ומאפשרים לשרשראות להתקרב וליצור רשת חזקה ומאורגנת יותר."
+            },
+            {
+                question: "בתהליך פירוק החלבונים במערכת העיכול, איזה אנזים אינו מופרש על ידי הלבלב אל המעי הדק?",
+                options: ["טריפסין", "כימוטריפסין", "פפסין", "קרבוקסיפפטידאז"],
+                correctIndex: 2,
+                explanation: "פפסין הוא האנזים שמתחיל את פירוק החלבונים בקיבה, בסביבה החומצית שלה. טריפסין, כימוטריפסין וקרבוקסיפפטידאז מופרשים על ידי הלבלב ופועלים בסביבה הבסיסית יותר של המעי הדק."
+            },
+            {
+                question: "איזו קבוצת חלבונים בחיטה אינה מסיסה במים אך מסיסה בתמיסת אתנול 70%?",
+                options: ["אלבומינים", "גלובולינים", "גליאדינים", "גלוטנינים"],
+                correctIndex: 2,
+                explanation: "על פי החלוקה הקלאסית, הגליאדינים, שהם חלק ממרכיב הגלוטן, מאופיינים בכך שהם אינם מסיסים במים או בתמיסות מלח, אך כן מסיסים בתמיסות של אתנול."
+            },
+            {
+                question: "מהו ההסבר לתחושת הלחץ או הצריבה שחלק מהאנשים הרגישים ל-MSG חווים?",
+                options: ["MSG הוא חומר הגורם לתגובה אלרגית קשה בכלל האוכלוסיה", "הגלוטמט פועל כמוליך עצבי מעורר ויכול להשפיע על קולטנים במערכת העצבים", "הנתרן ב-MSG גורם לעלייה חדה בלחץ הדם", "MSG מתפרק לחומר רעיל הגורם לנזק רקמתי"],
+                correctIndex: 1,
+                explanation: "גלוטמט הוא המוליך העצבי המעורר העיקרי במוח. הסברה היא שאצל אנשים מסוימים, צריכת כמות גדולה של גלוטמט חופשי עלולה לעורר יתר על המידה קולטני עצב היקפיים ולגרום לתסמינים זמניים כמו כאב ראש, הסמקה ותחושת צריבה."
+            },
+            {
+                question: "מה ההבדל העיקרי בין קשר הברזל לחמצן באוקסימיוגלובין לקשר הברזל לפחמן חד-חמצני בקרבוקסימיוגלובין?",
+                options: ["הקשר עם חמצן חזק יותר", "הקשר עם פחמן חד-חמצני חזק משמעותית", "שני הקשרים זהים בעוצמתם", "רק הקשר עם חמצן הפיך"],
+                correctIndex: 1,
+                explanation: "פחמן חד-חמצני (CO) נקשר ליון הברזל במיוגלובין בחוזקה הגדולה בערך פי 50 מזו של חמצן (O2). זיקה גבוהה זו היא הסיבה לרעילותו של CO ולהשפעתו המשמרת על צבע הבשר."
+            },
+            {
+                question: "איזה מהמשפטים הבאים אינו נכון לגבי גלוטן?",
+                options: ["הוא נוצר מערבוב של גליאדין וגלוטנין עם מים", "הוא אחראי לאלסטיות של בצק חיטה", "הוא נמצא בכל סוגי הדגנים, כולל אורז ותירס", "קשרים דיסולפידיים חיוניים ליצירת רשת הגלוטן"],
+                correctIndex: 2,
+                explanation: "גלוטן במובנו הקלאסי, הגורם למחלת צליאק, הוא ייחודי לחיטה, שעורה ושיפון. אורז ותירס מכילים חלבונים אחרים, אך לא את הגלוטן שיוצר את הרשת האלסטית האופיינית."
+            },
+            {
+                question: "מהי מטרת תהליך ה-curing בבשר מעבר לשימור?",
+                options: ["העלאת תכולת השומן במוצר", "פירוק מוחלט של כל החלבונים", "פיתוח טעם וצבע אופייניים", "הורדת הערך הקלורי של המוצר"],
+                correctIndex: 2,
+                explanation: "בנוסף להשפעתו המשמרת (בעיקר עיכוב חיידקים), תהליך ה-curing, באמצעות מלח, סוכר וניטריטים, תורם משמעותית לפיתוח פרופיל טעמים ייחודי וליצירת הצבע הוורוד-אדום היציב המאפיין מוצרי בשר מעובדים."
+            }
+        ];
+
+        const tfData = [
+            { question: "דנטורציה של חלבון היא תמיד תהליך בלתי הפיך.", answer: false, explanation: "דנטורציה יכולה להיות הפיכה, במיוחד אם הגורם המדנטר מוסר בעדינות והחלבון קטן ופשוט מספיק כדי להתקפל חזרה למבנה המקורי שלו." },
+            { question: "מסיסות חלבון עולה באופן לינארי עם עליית ריכוז המלח בתמיסה.", answer: false, explanation: "בריכוזי מלח נמוכים המסיסות עולה (salting in), אך בריכוזים גבוהים המסיסות יורדת בחדות (salting out) עקב תחרות על מולקולות המים." },
+            { question: "בתהליך התכווצות השריר, הן ATP והן יוני סידן חיוניים.", answer: true, explanation: "יוני סידן חיוניים לחשיפת אתרי הקישור על האקטין, ו-ATP מספק את האנרגיה לתנועת ראשי המיוזין וכן נדרש לשחרורם מהאקטין לצורך הרפיה." },
+            { question: "צבעו החום של בשר מבושל (מטמיוגלובין) נובע מחיזור של יון הברזל מ-Fe+2 ל-Fe+3.", answer: false, explanation: "המעבר מ-Fe+2 ל-Fe+3 הוא תהליך חמצון, לא חיזור. הצבע האדום (אוקסימיוגלובין) מכיל Fe+2, והצבע החום (מטמיוגלובין) מכיל Fe+3." },
+            { question: "אספרטם מספק אפס קלוריות לגוף.", answer: false, explanation: "אספרטם מספק כ-4 קק\"ל לגרם, בדומה לחלבון. עם זאת, מכיוון שהוא מתוק פי 200 מסוכר, משתמשים בכמויות זעירות מאוד, ולכן תרומתו הקלורית למוצר הסופי זניחה." },
+            { question: "סינדרום המסעדה הסינית הוא תגובה אלרגית חמורה ל-MSG המוכחת מדעית.", answer: false, explanation: "אין הוכחות מדעיות חד משמעיות לקשר ישיר וסיבתי. מדובר ברגישות אינדיבידואלית שמופיעה אצל חלק קטן מהאוכלוסייה, והתסמינים הם בדרך כלל קלים וזמניים." },
+            { question: "במהלך יישון בשר, רכותו משתפרת בעיקר עקב פירוק רקמת החיבור (קולגן).", answer: false, explanation: "השיפור העיקרי ברכות נובע מפירוק אנזימטי של חלבוני הסרקומר. פירוק משמעותי של קולגן דורש חום ולחות (בישול ארוך) ולא מתרחש ביישון בקרור." },
+            { question: "הקשר הפפטידי הראשון במולקולת גלוטטיון (GSH) נוצר דרך שייר הצד של חומצה גלוטמית.", answer: true, explanation: "זהו קשר איזופפטידי ייחודי בין קבוצת הגמא-קרבוקסיל (בשייר) של גלוטמט לקבוצת האמינו של ציסטאין, ולא דרך האלפא-קרבוקסיל שבשלד הפפטידי." },
+            { question: "נוכחות ניטריט (nitrite) בתהליך שימור בשר חיונית לקבלת הצבע הוורוד היציב לאחר בישול.", answer: true, explanation: "הניטריט יוצר עם המיוגלובין קומפלקס (ניטרוזומיוגלובין) שהופך לאחר חימום לניטרוזולמוכרום, פיגמנט ורוד ויציב לחום." },
+            { question: "הוספת ברומלין (אנזים מאננס) לנתח בשר תפעל ביעילות הגבוהה ביותר בטמפרטורת החדר.", answer: false, explanation: "כמו רוב האנזימים, גם ברומלין פעיל יותר בטמפרטורות גבוהות יותר (אך לפני שהוא עובר דנטורציה). פעילותו מואצת משמעותית בזמן תחילת הבישול." },
+            { question: "מיוגלובין ואוקסימיוגלובין מכילים שניהם יון ברזל במצב חמצון +2.", answer: true, explanation: "בשתי הצורות הברזל הוא Fe+2. ההבדל הוא שבמיוגלובין (דאוקסימיוגלובין) הוא אינו קשור לחמצן, ובאוקסימיוגלובין הוא קשור למולקולת חמצן." },
+            { question: "חלבונים מסיסים הכי טוב בנקודה האיזואלקטרית שלהם (pI).", answer: false, explanation: "בדיוק להפך. ב-pI, המטען נטו של החלבון הוא אפס, המשיכה בין המולקולות היא מקסימלית והמסיסות היא מינימלית." },
+            { question: "שחרור ראשי המיוזין מסיבי האקטין הוא תהליך פסיבי שאינו דורש אנרגיה.", answer: false, explanation: "שחרור הקשר בין אקטין למיוזין דורש באופן פעיל קישור של מולקולת ATP חדשה לראש המיוזין. זהו השלב שכושל בריגור מורטיס." },
+            { question: "צריכה פומית של קולגן משפרת ישירות את כמות הקולגן בעור ובמפרקים.", answer: false, explanation: "בדומה לכל חלבון, קולגן הנצרך במזון מתפרק במערכת העיכול לחומצות אמינו בודדות ופפטידים קצרים, אשר נספגים ומשמשים את הגוף לבניית חלבונים שונים, לאו דווקא קולגן." },
+            { question: "ניתן למצוא חומצה גלוטמית חופשית באופן טבעי במזונות כמו עגבניות וגבינת פרמזן.", answer: true, explanation: "מזונות רבים, במיוחד כאלה שעברו הבשלה או תסיסה, מכילים רמות גבוהות של גלוטמט חופשי טבעי, התורם לטעם האומאמי שלהם." },
+            { "question": "בשר שעבר curing עם ניטראט (nitrate) הופך ורוד ישירות מהתגובה עם הניטראט.", "answer": false, "explanation": "הניטראט (NO3-) עצמו אינו פעיל. הוא חייב תחילה לעבור חיזור לניטריט (NO2-) על ידי חיידקים, והניטריט הוא זה שמגיב עם המיוגלובין." },
+            { "question": "גלוטן הוא חלבון יחיד המצוי בגרעין החיטה.", "answer": false, "explanation": "גלוטן אינו חלבון יחיד, אלא קומפלקס של מאות חלבונים שונים, הנחלקים לשתי משפחות עיקריות: גליאדינים וגלוטנינים." },
+            { "question": "במהלך התכווצות השריר, אורכו של פס A בסרקומר נשאר קבוע.", "answer": true, "explanation": "פס A מייצג את אורך פילמנט המיוזין העבה, ואורך הפילמנטים אינו משתנה במהלך ההתכווצות. מה שמשתנה הוא מידת החפיפה בין פילמנטי האקטין והמיוזין." },
+            { "question": "הפיכת אספרטם למתוקה יותר מסוכרוז נובעת מכך שהוא נקשר חזק יותר לקולטני הטעם המתוק.", "answer": true, "explanation": "האינטראקציה המרחבית של מולקולת האספרטם עם קולטני הטעם המתוק בלשון חזקה ויציבה יותר מזו של סוכרוז, מה שגורם לאות עצבי חזק יותר המפורש במוח כמתיקות גבוהה." },
+            { "question": "דנטורציה תרמית של חלבון תמיד תגרום לעלייה בצמיגות התמיסה.", "answer": false, "explanation": "זה תלוי בריכוז החלבון. בריכוזים נמוכים, החלבונים הפרושים יכולים לנוע בחופשיות והצמיגות לא תעלה משמעותית. בריכוזים גבוהים, החלבונים הפרושים יוצרים רשת וגורמים ליצירת ג'ל ולעלייה דרמטית בצמיגות." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

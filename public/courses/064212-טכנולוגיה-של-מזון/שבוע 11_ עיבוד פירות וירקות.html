@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 11: עיבוד פירות וירקות</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 11: עיבוד פירות וירקות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 11 ---
+
+        const flashcardData = [
+            { term: "סיווג ירקות ופירות (תעשייתי)", definition: "ההגדרות אינן בוטניות אלא מבוססות על שימושים, צרכים, תפיסת צרכן והגדרות שיווקיות (ירק - מלוח, פרי - מתוק)." },
+            { term: "הרכב פירות וירקות", definition: "בעיקר מים (70-95%). המרכיב השני הוא סוכרים. לרוב דלים בשומן וחלבון (למעט קטניות ופירות מסוימים כמו אבוקדו)." },
+            { term: "רכיבים תזונתיים מרכזיים בפירות וירקות", definition: "פחמימות זמינות (סוכרים, עמילן), סיבים תזונתיים, חומצות אורגניות, ויטמינים (במיוחד A, C, K), מינרלים (במיוחד אשלגן), פיגמנטים ונוגדי חמצון." },
+            { term: "מבנה התא הצמחי", definition: "כולל דופן תא קשיחה (צלולוז), וקואולה מרכזית גדולה המלאה בנוזל, ציטופלסמה המכילה אברונים (גרעין, כלורופלסטים, עמילופלסטים)." },
+            { term: "דופן התא (Cell Wall)", definition: "שכבה קשיחה חיצונית לממברנת התא בצמחים, בנויה בעיקר מצלולוז, פקטין ועוד. מקנה חוזק מבני לתא ולרקמה." },
+            { term: "וקואולה (Vacuole)", definition: "אברון מרכזי גדול בתא הצמחי המכיל מים, סוכרים, מלחים, חומצות, פיגמנטים ופסולת. אחראי לשמירת לחץ הטורגור." },
+            { term: "ציטופלסמה", definition: "התוכן התוך-תאי, למעט הגרעין. כוללת את הציטוזול (הנוזל) והאברונים המרחפים בו." },
+            { term: "טורגור (Turgor Pressure)", definition: "הלחץ הפנימי של נוזל התא (בעיקר בווקואולה) כנגד דופן התא. לחץ זה מקנה לרקמות הצמח את המוצקות והפריכות שלהן ('קריספיות')." },
+            { term: "איבוד טורגור", definition: "נגרם מאיבוד מים מהתא, המוביל לירידה בלחץ הפנימי, להתכווצות התא ולהתרככות הרקמה (אובדן 'קריספיות')." },
+            { term: "דרישות מפירות וירקות לעיבוד תעשייתי", definition: "שונות מאלו לשוק הטרי. דגש על אחידות הבשלה (לקטיף מכני), אופטימיזציה של תכונות סנסוריות (תירס מתוק), תכונות ספציפיות לעיבוד (עגבניות עם ריכוז מוצקים גבוה)." },
+            { term: "שיקולי אסיף, קטיף וטיפול לפני עיבוד", definition: "לאחר הקטיף ממשיכים תהליכים ביולוגיים (נשימה, אנזימים, קלקול). נדרש קירור מהיר להאטתם, וניהול לוגיסטי יעיל להבאת התוצרת לעיבוד בזמן." },
+            { term: "Flotation de-stoner", definition: "מכשיר להפרדת אבנים וגופים כבדים מירקות שורש, המבוסס על יצירת זרם מים חזק כלפי מעלה המציף את הירקות וגורם לאבנים לשקוע." },
+            { term: "Screw de-stoner", definition: "מכשיר להפרדת אבנים מירקות שורש, המשתמש בחילזון (בורג) המעלה את הירקות עם המים למעלה, בעוד האבנים הכבדות מחליקות ונאספות בתחתית." },
+            { term: "Belt washer", definition: "מכונת שטיפה למגוון ירקות ופירות, הכוללת מסוע, מערכת ריסוס מים (מעל ומתחת) ולעיתים אזורים נפרדים למים ממוחזרים ומים טריים." },
+            { term: "Drum washer", definition: "מכונת שטיפה המבוססת על תוף מסתובב ומערכת ריסוס מים, מתאימה למגוון ירקות." },
+            { term: "Rotating brush polisher", definition: "מכונת ניקוי המשתמשת במברשות מסתובבות וריסוס מים, יעילה במיוחד להסרת בוץ ואדמה מירקות שורש." },
+            { term: "Centrifuge (ייבוש)", definition: "מכשיר להרחקת עודפי מים מפני השטח של עלים או ירקות חתוכים באמצעות כוח צנטריפוגלי." },
+            { term: "Air dry tunnel", definition: "מנהרת ייבוש המשתמשת בזרם אוויר (לרוב בטמפ' מבוקרת) להסרת לחות מפני השטח של ירקות עלים." },
+            { term: "Diverging chain grader", definition: "ממיינת גודל המבוססת על שרשרת שהמרווח בין חוליותיה גדל בהדרגה, ומאפשרת לפירות/ירקות ליפול דרך המרווח המתאים לגודלם." },
+            { term: "Roller grader", definition: "ממיינת גודל המבוססת על גלילים מסתובבים שהמרווח ביניהם ניתן לכיוון (קבוע או משתנה), ומאפשרת מיון לפי קוטר." },
+            { term: "Undersize grading drum", definition: "תוף מסתובב עם 'כוסות מיון' בגודל רצוי, המשמש להפרדת ירקות/חלקיקים קטנים מהרצוי מהזרם העיקרי." },
+            { term: "Optical and laser sorting", definition: "מיון אוטומטי המבוסס על מצלמות וחיישנים לזיהוי פגמים בצבע, צורה, מרקם או הרכב, והרחקת הפריטים הפגומים באמצעות זרם אוויר." },
+            { term: "Hot Break (עיבוד עגבניות)", definition: "חימום מהיר ומיידי של רסק העגבניות לטמפרטורה גבוהה כדי לבצע אינאקטיבציה של אנזימים (כמו פקטינאז) ולשמור על צמיגות גבוהה. מתאים לרסק, קטשופ." },
+            { term: "Cold Break (עיבוד עגבניות)", definition: "עיבוד עגבניות ללא חימום מיידי או בחימום מתון, המאפשר פעילות אנזימטית מסוימת המובילה לצמיגות נמוכה יותר. מתאים למיצי עגבניות." },
+            { term: "מיץ ורסק פרי (עיבוד)", definition: "תהליך הכולל לרוב הפרדת גופים זרים, שטיפה, מיון, ריסוק/סחיטה, סינון/הפרדה, טיפול תרמי (חליטה/פסטור), ולעיתים הוצאת אוויר וריכוז." }
+        ];
+
+        const mcqData = [
+            {
+                question: "על מה מבוסס בעיקר הסיווג של 'ירק' או 'פרי' בתעשיית המזון?",
+                options: ["על ההגדרה הבוטנית המחמירה", "על השימוש הקולינרי ותפיסת הצרכן (מלוח/מתוק)", "על תכולת הוויטמינים", "על ארץ המקור"],
+                correctIndex: 1,
+                explanation: "הטקסט מדגיש שההגדרה אינה בוטנית אלא פונקציונלית ושיווקית, המבוססת על אופן השימוש והטעם הנתפס."
+            },
+            {
+                question: "מהו המרכיב העיקרי במשקל רוב הפירות והירקות?",
+                options: ["חלבון", "שומן", "מים", "סיבים תזונתיים"],
+                correctIndex: 2,
+                explanation: "רוב הפירות והירקות מכילים אחוז גבוה מאוד של מים (70-95%)."
+            },
+            {
+                question: "איזו קבוצת ירקות עשירה יחסית בחלבון?",
+                options: ["ירקות עלים (חסה)", "דלועיים (מלפפון)", "קטניות (אפונה, שעועית)", "ירקות שורש (גזר)"],
+                correctIndex: 2,
+                explanation: "קטניות הן יוצאות דופן בקרב הירקות בכך שהן מכילות כמות משמעותית של חלבון."
+            },
+            {
+                question: "מה תפקידו העיקרי של לחץ הטורגור בתא הצמחי?",
+                options: ["לייצר אנרגיה", "להקנות מוצקות ופריכות לרקמה", "להגן מפני קרינה", "לסנתז חלבונים"],
+                correctIndex: 1,
+                explanation: "לחץ הטורגור, הלחץ הפנימי של הנוזל כנגד דופן התא, הוא האחראי למרקם המוצק וה'קריספי' של ירקות ופירות טריים."
+            },
+            {
+                question: "מה קורה לירק המאבד מלחץ הטורגור שלו?",
+                options: ["הוא הופך מתוק יותר", "הוא הופך מוצק יותר", "הוא מתרכך ומאבד מפריכותו", "הוא משנה את צבעו לירוק"],
+                correctIndex: 2,
+                explanation: "איבוד מים מוביל לירידה בלחץ הטורגור, וכתוצאה מכך הרקמה מתרככת ומאבדת את הפריכות האופיינית."
+            },
+            {
+                question: "מדוע חשוב לקרר פירות וירקות במהירות לאחר הקטיף?",
+                options: ["כדי להקפיא אותם מיידית", "כדי להאט תהליכי נשימה ופעילות אנזימטית", "כדי להגביר את מתיקותם", "כדי להקל על השטיפה"],
+                correctIndex: 1,
+                explanation: "קירור מאט את התהליכים המטבוליים והאנזימטיים הממשיכים לאחר הקטיף וגורמים להזדקנות ולקלקול, ובכך מאריך את חיי המדף."
+            },
+            {
+                question: "איזו שיטה משמשת להפרדת אבנים מירקות שורש באמצעות זרם מים המציף את הירקות?",
+                options: ["Screw de-stoner", "Belt washer", "Flotation de-stoner", "Optical sorter"],
+                correctIndex: 2,
+                explanation: "מפריד הרחפה (Flotation de-stoner) משתמש בזרם מים חזק כלפי מעלה כדי להפריד בין הירקות הקלים יחסית (שצפים) לאבנים הכבדות (ששוקעות)."
+            },
+            {
+                question: "איזו מכונת שטיפה מתאימה במיוחד להסרת בוץ ואדמה עיקשת מירקות שורש?",
+                options: ["Centrifuge", "Drum washer", "Rotating brush polisher", "Air dry tunnel"],
+                correctIndex: 2,
+                explanation: "מכונת ניקוי המברשות משלבת פעולה מכנית של קרצוף על ידי מברשות עם ריסוס מים, ויעילה בהסרת לכלוך קשה."
+            },
+            {
+                question: "כיצד פועלת ממיינת גודל מסוג Roller grader?",
+                options: ["היא מציפה את הירקות במים", "היא משתמשת בזרם אוויר למיין לפי משקל", "היא מעבירה את הירקות על גלילים שהמרווח ביניהם משתנה", "היא מצלמת את הירקות ומנתחת את גודלם"],
+                correctIndex: 2,
+                explanation: "Roller grader מורכבת מגלילים מסתובבים שהמרווח ביניהם הולך וגדל (או ניתן לכיוון), והירקות נופלים דרך המרווח המתאים לקוטרם."
+            },
+            {
+                question: "מהי המטרה העיקרית של מיון אופטי (Optical sorting)?",
+                options: ["לשטוף את הירקות", "לייבש את הירקות", "לזהות ולהרחיק פריטים פגומים או גופים זרים", "למיין לפי גודל בלבד"],
+                correctIndex: 2,
+                explanation: "מיון אופטי משתמש במצלמות וחיישנים לזהות פגמים בצבע, צורה, מרקם וכו', ולהסיר באופן אוטומטי את הפריטים שאינם עומדים בקריטריונים."
+            },
+             {
+                question: "מה ההבדל העיקרי בין Hot Break ל-Cold Break בעיבוד עגבניות?",
+                options: ["Hot Break משתמש בעגבניות חמות, Cold Break בקרות", "Hot Break מנטרל אנזימים במהירות לשמירת צמיגות, Cold Break מאפשר פעילות אנזימטית לצמיגות נמוכה יותר", "Hot Break מיועד למיץ, Cold Break לרסק", "אין הבדל משמעותי"],
+                correctIndex: 1,
+                explanation: "ההבדל המרכזי הוא בטיפול התרמי המיידי. Hot Break מחמם מיד לטמפרטורה גבוהה כדי לנטרל אנזימים מפרקי פקטין ולשמור על צמיגות גבוהה, בעוד Cold Break מאפשר לאנזימים לפעול וליצור מוצר דליל יותר."
+            },
+             {
+                question: "מהו המרכיב המבני העיקרי בדופן התא הצמחי?",
+                options: ["חלבון", "שומן", "צלולוז", "DNA"],
+                correctIndex: 2,
+                explanation: "צלולוז הוא רב-סוכר מבני המהווה את המרכיב העיקרי בדופן התא הצמחי ומקנה לה חוזק."
+            },
+            {
+                question: "איזה אברון בתא הצמחי אחראי בעיקר לשמירת לחץ הטורגור?",
+                options: ["גרעין", "כלורופלסט", "וקואולה", "מיטוכונדריה"],
+                correctIndex: 2,
+                explanation: "הווקואולה הגדולה המלאה בנוזל התא (תמיסה מימית) היא זו שדוחפת כנגד דופן התא ויוצרת את לחץ הטורגור."
+            },
+             {
+                question: "מה גורם לאיבוד 'קריספיות' בירקות?",
+                options: ["עלייה בריכוז הסוכר", "איבוד מים וירידה בלחץ הטורגור", "פעילות מוגברת של כלורופלסטים", "הצטברות עמילן"],
+                correctIndex: 1,
+                explanation: "הפריכות נובעת מלחץ הטורגור. כאשר התא מאבד מים, הלחץ יורד והרקמה מתרככת."
+            },
+            {
+                question: "מדוע נדרשת התאמה של זני עגבניות לעיבוד תעשייתי לרסק?",
+                options: ["כדי שיהיו ירוקות יותר", "כדי שיהיו בעלות ריכוז מוצקים גבוה יותר", "כדי שיהיו קטנות יותר", "כדי שיהיו עמידות יותר למזיקים"],
+                correctIndex: 1,
+                explanation: "לתעשיית הרסק עדיפות לעגבניות עם אחוז מוצקים גבוה (פחות מים), מה שמייעל את תהליך הריכוז וחוסך אנרגיה."
+            },
+            {
+                question: "איזה תהליך מתרחש בפירות וירקות גם לאחר הקטיף?",
+                options: ["פוטוסינתזה", "נשימה תאית", "חלוקת תאים", "צמיחה לגודל"],
+                correctIndex: 1,
+                explanation: "תהליך הנשימה התאית, הצורך אנרגיה ופולט CO2 ומים, ממשיך גם לאחר שהפרי או הירק נקטף, ותורם להזדקנותו."
+            },
+            {
+                question: "איזה סוג ממיינת מתאים למיון תפוחי אדמה לפי קוטר?",
+                options: ["Flotation de-stoner", "Optical sorter", "Roller grader", "Air dry tunnel"],
+                correctIndex: 2,
+                explanation: "Roller grader מאפשר מיון יעיל לפי קוטר על ידי התאמת המרווח בין הגלילים."
+            },
+             {
+                question: "מה מטרת השימוש ב-'סכין אוויר' במכונת שטיפה לעלים?",
+                options: ["לחתוך את העלים", "להסיר עודפי מים מהעלים ביעילות", "לקרר את העלים", "לנקות את המכונה"],
+                correctIndex: 1,
+                explanation: "'סכין אוויר' הוא זרם אוויר חזק ומרוכז המסייע בהסרת טיפות מים מפני השטח של העלים בסוף תהליך השטיפה."
+            },
+            {
+                question: "כיצד פועל Undersize grading drum?",
+                options: ["הוא מפריד לפי צבע", "הוא מפריד פריטים קטנים מהרצוי באמצעות 'כוסות מיון'", "הוא שוטף את המוצר", "הוא מייבש את המוצר"],
+                correctIndex: 1,
+                explanation: "התוף מכיל שקעים או 'כוסות' בגודל מוגדר. פריטים הקטנים מגודל זה נלכדים בכוסות ומופרדים מהזרם העיקרי."
+            },
+             {
+                question: "איזה תהליך מתאים להכנת מיץ עגבניות דליל יחסית?",
+                options: ["Hot Break", "Cold Break", "עיקור ב-UHT", "ייבוש בהתזה"],
+                correctIndex: 1,
+                explanation: "Cold Break מאפשר פעילות אנזימטית המפרקת חלק מהפקטין, וכתוצאה מכך מתקבל מיץ בעל צמיגות נמוכה יותר (דליל)."
+            },
+            {
+                question: "מהו המרכיב העיקרי המקנה קשיחות לדופן התא הצמחי?",
+                options: ["פקטין", "ליגנין", "חלבון", "צלולוז"],
+                correctIndex: 3,
+                explanation: "צלולוז הוא הפוליסכריד המבני העיקרי בדופן התא הצמחי, היוצר סיבים חזקים המקנים קשיחות."
+            },
+             {
+                question: "איזה ויטמין נפוץ בפירות וירקות ורגיש לחום ולחמצון?",
+                options: ["ויטמין D", "ויטמין K", "ויטמין C", "ויטמין B12"],
+                correctIndex: 2,
+                explanation: "ויטמין C (חומצה אסקורבית) הוא נוגד חמצון חשוב המצוי בפירות וירקות רבים, אך הוא רגיש יחסית ונהרס בחום ובחשיפה לחמצן."
+            },
+            {
+                question: "מהי מטרת תהליך ה-Dearation בעיבוד מיץ פרי?",
+                options: ["להוסיף אוויר למיץ", "להוציא אוויר מומס למניעת חמצון", "לסנן את המיץ", "לרכז את המיץ"],
+                correctIndex: 1,
+                explanation: "Dearation הוא תהליך של הוצאת אוויר (בעיקר חמצן) מומס מהמיץ, לרוב באמצעות ואקום, כדי למנוע תגובות חמצון הפוגעות בטעם, בצבע ובוויטמינים."
+            },
+             {
+                question: "איזה פרי מהבאים מכיל אחוז שומן גבוה יחסית?",
+                options: ["תפוח", "בננה", "אבוקדו", "תות שדה"],
+                correctIndex: 2,
+                explanation: "אבוקדו (וגם זיתים וקוקוס) הוא דוגמה לפרי המכיל אחוז שומן גבוה משמעותית מרוב הפירות האחרים."
+            },
+            {
+                question: "מיון לפי צבע מתבצע לרוב באמצעות איזה ציוד?",
+                options: ["Roller grader", "Flotation de-stoner", "Optical sorter", "Screw de-stoner"],
+                correctIndex: 2,
+                explanation: "ממיינות אופטיות משתמשות במצלמות צבע וחיישנים כדי לזהות פריטים שצבעם חורג מהרצוי ולהפרידם."
+            },
+            {
+                question: "מהו היתרון של שימוש במים ממוחזרים בשלבי השטיפה הראשונים?",
+                options: ["זה מנקה טוב יותר", "זה חוסך במים", "זה מוסיף טעם למוצר", "זה מחטא את המוצר"],
+                correctIndex: 1,
+                explanation: "שימוש במים ממוחזרים לשלבי השטיפה הראשוניים (הסרת לכלוך גס) מאפשר לחסוך בכמויות גדולות של מים טריים."
+            },
+             {
+                question: "מה יכול לגרום להפרדה בין תאים ברקמה צמחית?",
+                options: ["חיזוק דופן התא", "עיבוד או הזדקנות הגורמים לפירוק הפקטין ב'למלה האמצעית'", "עלייה בלחץ הטורגור", "קירור מהיר"],
+                correctIndex: 1,
+                explanation: "ה'למלה האמצעית' המכילה פקטין מדביקה תאים סמוכים. פירוק הפקטין (על ידי אנזימים או טיפול אחר) מחליש את הקשרים וגורם להפרדת תאים ולשינוי מרקם."
+            },
+            {
+                question: "איזה ציוד משמש להרחקת עודפי מים מעלים באמצעות כוח צנטריפוגלי?",
+                options: ["Belt washer", "Air dry tunnel", "Centrifuge", "Brush polisher"],
+                correctIndex: 2,
+                explanation: "צנטריפוגה מסובבת את העלים במהירות גבוהה, והכוח הצנטריפוגלי מסלק את עודפי המים מפני השטח."
+            },
+            {
+                question: "מהי אחת הסיבות לכך שירקות לעיבוד תעשייתי צריכים הבשלה אחידה?",
+                options: ["כדי שיהיו טעימים יותר", "כדי לאפשר קטיף מכני יעיל", "כדי שיהיה ניתן לאחסן אותם לזמן ארוך יותר", "כדי שיהיו גדולים יותר"],
+                correctIndex: 1,
+                explanation: "קטיף מכני לרוב מתבצע בפעם אחת. הבשלה אחידה מבטיחה שרוב היבול יהיה בשלב הבשלה אופטימלי בזמן הקטיף."
+            },
+            {
+                question: "איזה תהליך אינו חלק מעיבוד טיפוסי של מיץ פרי?",
+                options: ["סחיטה", "סינון", "פסטור", "הוספת חלבון"],
+                correctIndex: 3,
+                explanation: "תהליך ייצור מיץ כולל סחיטה, לרוב סינון וטיפול תרמי (פסטור) לשימור, אך לרוב אינו כולל הוספת חלבון."
+            }
+        ];
+
+
+        const tfData = [
+             { question: "ההבחנה בין פרי לירק בתעשייה זהה תמיד להגדרה הבוטנית.", answer: false, explanation: "הסיווג התעשייתי מבוסס על שימוש וטעם נתפס, לא בהכרח על ההגדרה הבוטנית." },
+             { question: "המרכיב העיקרי בפירות וירקות הוא סוכר.", answer: false, explanation: "המרכיב העיקרי הוא מים." },
+             { question: "קטניות הן ירקות דלים בחלבון.", answer: false, explanation: "קטניות עשירות יחסית בחלבון בהשוואה לירקות אחרים." },
+             { question: "לחץ טורגור גבוה גורם לירקות להיות רכים ונטולי פריכות.", answer: false, explanation: "לחץ טורגור גבוה הוא מה שמקנה לירקות את המוצקות והפריכות." },
+             { question: "קירור מהיר לאחר קטיף מאיץ את תהליכי ההזדקנות של הפרי.", answer: false, explanation: "קירור מהיר מאט את תהליכי ההזדקנות והקלקול." },
+             { question: "Flotation de-stoner מפריד אבנים באמצעות מגנטים.", answer: false, explanation: "הוא מפריד באמצעות זרם מים המציף את הירקות." },
+             { question: "מכונת ניקוי מברשות יעילה במיוחד להסרת לכלוך קל מעלים.", answer: false, explanation: "היא יעילה במיוחד להסרת לכלוך עיקש כמו בוץ ואדמה מירקות שורש." },
+             { question: "מיון אופטי משתמש בחוש הריח לזיהוי פגמים.", answer: false, explanation: "מיון אופטי משתמש במצלמות וחיישנים לזיהוי פגמים ויזואליים (צבע, צורה) או הרכב." },
+             { question: "תהליך Hot Break נועד לשמור על צמיגות נמוכה ברסק עגבניות.", answer: false, explanation: "Hot Break נועד לנטרל אנזימים ולשמור על צמיגות גבוהה." },
+             { question: "דופן התא הצמחי בנויה בעיקר משומנים.", answer: false, explanation: "דופן התא בנויה בעיקר מצלולוז ופוליסכרידים אחרים." },
+             { question: "איבוד טורגור גורם לרקמה הצמחית לאבד מים ולהתרכך.", answer: true, explanation: "ירידה בלחץ הפנימי כתוצאה מאיבוד מים גורמת להתרככות הרקמה." },
+             { question: "כל הפירות והירקות מתאימים באותה מידה לעיבוד תעשייתי.", answer: false, explanation: "נדרשת התאמה של זנים ותכונות ספציפיות לדרישות העיבוד והמוצר הסופי." },
+             { question: "נשימה תאית נפסקת מיד עם קטיף הפרי או הירק.", answer: false, explanation: "תהליכי נשימה ממשיכים גם לאחר הקטיף ותורמים להזדקנות." },
+             { question: "Roller grader ממיין לפי משקל הפרי.", answer: false, explanation: "Roller grader ממיין לפי קוטר (גודל)." },
+             { question: "מיון אופטי יכול לזהות פגמים בצבע ובצורה.", answer: true, explanation: "מצלמות וחיישנים במערכות מיון אופטי מתוכנתים לזהות חריגות בצבע ובצורה." },
+             { question: "Cold Break בעיבוד עגבניות מנטרל אנזימים באופן מיידי.", answer: false, explanation: "Cold Break מאפשר פעילות אנזימטית מסוימת מכיוון שאין חימום מיידי או שהוא מתון." },
+             { question: "צלולוז הוא המרכיב המסיס העיקרי בווקואולה.", answer: false, explanation: "צלולוז הוא מרכיב מבני בלתי מסיס בדופן התא. הווקואולה מכילה בעיקר מים ומומסים כמו סוכרים ומלחים." },
+             { question: "ויטמין C יציב מאוד בחום.", answer: false, explanation: "ויטמין C רגיש לחום ונהרס בקלות יחסית בעיבוד תרמי." },
+             { question: "תהליך ה-Dearation נועד להוסיף גזים למיץ.", answer: false, explanation: "Dearation נועד להוציא גזים (בעיקר חמצן) מהמיץ." },
+             { question: "סינון הוא שלב הכרחי בהכנת רסק פרי.", answer: false, explanation: "רסק פרי הוא לרוב מוצר שאינו מסונן או מסונן גס, בעוד שמיץ עובר סינון להפרדת מוצקים." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

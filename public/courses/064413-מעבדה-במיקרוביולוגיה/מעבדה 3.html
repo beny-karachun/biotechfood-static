@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללימוד: הערכה כמותית של חיידקים</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                tags: 'ams' // Added for potential equation numbering, though not strictly used here
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            options: {
+                menuOptions: {
+                    settings: {
+                        renderer: 'SVG' 
+                    }
+                }
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            background-color: #444; /* Slightly lighter than body for main container */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        h1, h2, h3 {
+            color: #3D90D7;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2em;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+
+        h3 {
+            font-size: 1.2em;
+            color: #64B5F6; /* Lighter blue for subheadings */
+        }
+
+        p, li {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            padding-right: 20px; /* For RTL lists */
+        }
+
+        /* Section Styling */
+        .section {
+            background-color: #555; /* Medium gray for sections */
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 6px;
+            border: 1px solid #666;
+        }
+        
+        .section-title {
+            margin-top: 0;
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2A7CB5;
+        }
+
+        button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
+        /* Navigation Controls */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 15px; /* Spacing for navigation */
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: #B0B0B0;
+        }
+
+        /* Study Cards */
+        .study-card-container {
+            perspective: 1000px;
+            min-height: 200px; /* Ensure space for card */
+            margin-bottom: 20px; /* Spacing below card */
+        }
+
+        .study-card {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            background-color: #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .study-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .study-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto; /* For long definitions */
+        }
+
+        .study-card-front {
+            background-color: #666;
+            color: #E0E0E0;
+        }
+
+        .study-card-back {
+            background-color: #777; /* Slightly different for back */
+            color: #E0E0E0;
+            transform: rotateY(180deg);
+        }
+        .study-card-term {
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+        .study-card-definition {
+            font-size: 1em;
+        }
+
+        /* MCQ and True/False Styling */
+        .question-view { /* This is the direct container for a single question's content */
+            background-color: #666;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px; /* Spacing below question view */
+        }
+
+        .question-text {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options-list li button {
+            display: block;
+            width: 100%;
+            text-align: right;
+            margin-bottom: 8px;
+            background-color: #5A5A5A;
+        }
+        .options-list li button:hover:not(:disabled) {
+            background-color: #3D90D7;
+        }
+        .options-list li button.correct {
+            background-color: #4CAF50 !important;
+            color: white !important;
+        }
+        .options-list li button.incorrect {
+            background-color: #F44336 !important;
+            color: white !important;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #505050;
+            border-radius: 4px;
+            border-right: 3px solid #3D90D7; /* Accent for RTL */
+        }
+        
+        .explanation-title {
+            font-weight: bold;
+            color: #A0CFFF;
+        }
+
+        /* View All Sections */
+        .all-questions-container {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #777;
+        }
+        .all-questions-container .question-item {
+            background-color: #585858;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+        .all-questions-container .question-item .options-list li button {
+             background-color: #686868; /* Different base for all view buttons */
+        }
+
+        /* MathJax specific styling */
+        .MathJax, .MJXc-display, mjx-container {
+            direction: ltr !important; 
+            text-align: left !important; 
+            overflow-x: auto; 
+            overflow-y: hidden;
+        }
+        span.MathJax_Preview { display: none; } /* Hide MathJax preview junk */
+        
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+        .text-english { /* For embedding English terms */
+            direction: ltr;
+            display: inline-block; 
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללימוד: הערכה כמותית של חיידקים (מעבדה מס 3)</h1>
+
+        <!-- Theory Section -->
+        <div class="section" id="theory-section">
+            <h2 class="section-title">תאוריה</h2>
+            <p>הערכה כמותית של חיידקים היא תהליך חיוני במיקרוביולוגיה. במעבדה זו, נתמקד בקביעת ריכוז חיידקי <span class="text-english">Escherichia coli</span> בתרבית באמצעות שלוש שיטות מקובלות. חלק מהחיידקים בתרבית עברו טרנספורמציה גנטית עם פלסמידים המכילים גנים מדווחים. פלסמיד אחד מקנה לחיידקים את היכולת לבטא את החלבון <span class="text-english">GFP (Green Fluorescent Protein)</span>, הגורם לפלורסנציה ירוקה, וכן עמידות לאנטיביוטיקה כלורמפניקול. פלסמיד אחר מקנה ביטוי של החלבון <span class="text-english">RFP (Red Fluorescent Protein)</span>, הגורם לפלורסנציה אדומה, וגם הוא מקנה עמידות לכלורמפניקול. חלבונים פלואורסצנטיים אלו, <span class="text-english">GFP</span> ו-<span class="text-english">RFP</span>, משמשים כסמנים המאפשרים זיהוי ומעקב אחר החיידקים. הריכוז הכולל המוערך של החיידקים בתרחיף ההתחלתי הוא כ-$10^8 \text{ CFU/ml}$.</p>
+            <p>שלוש השיטות להערכה כמותית בהן נשתמש הן:</p>
+            <ul>
+                <li><strong>ספירה חיה (Viable Count):</strong> שיטה זו מעריכה את מספר החיידקים החיים המסוגלים ליצור מושבה על מצע גידול. היא כוללת מיהולים עשרוניים של התרבית וזריעה על צלחות אגר. לאחר אינקובציה, סופרים את המושבות. הנוסחה לחישוב היא: $\text{CFU/ml} = \frac{\sum (\text{Number of colonies})}{\text{Plating volume} \times \sum (\text{Dilutions})}$. יש לבחור צלחות עם 30-300 מושבות לתוצאה אמינה.</li>
+                <li><strong>ספירה ישירה (Direct Count):</strong> שיטה זו כוללת ספירת תאים (חיים ומתים, תלוי באופן הצפייה) ישירות תחת מיקרוסקופ. במעבדה זו נשתמש במיקרוסקופ פלורסנטי לזיהוי חיידקי <span class="text-english">GFP+</span> ו-<span class="text-english">RFP+</span>. נפח ידוע של דגימה מועלה על זכוכית נושאת, והתאים נספרים באזורים מוגדרים. הנוסחה לחישוב, כפי שמופיעה בחומר המעבדה, היא: $\text{Cells/ml} = \frac{\sum (\text{Number of cells})}{\text{Number of squares counted}} \times 40,000 (\frac{1}{\text{mm}^3}) \times 10^3 (\frac{\text{mm}^3}{\text{cm}^3})$. הפקטור $40,000$ קשור לממדי רשת הספירה או נפח הדגימה הנצפה, ו-$10^3$ הוא פקטור המרה.</li>
+                <li><strong>מדידת עכירות ופלורסנציה (Turbidity and Fluorescence Measurement):</strong> עכירות התרבית (הנקראת גם <span class="text-english">Optical Density</span> או <span class="text-english">OD</span>), הנמדדת בדרך כלל באורך גל של <span class="text-english">600nm</span>, נמצאת בקורלציה למסת התאים הכוללת. פלורסנציה נמדדת באורכי גל ספציפיים לעירור ופליטה של <span class="text-english">GFP</span> (למשל, עירור <span class="text-english">460nm</span>, פליטה <span class="text-english">510nm</span>) ו-<span class="text-english">RFP</span> (למשל, עירור <span class="text-english">530nm</span>, פליטה <span class="text-english">610nm</span>). מדידות אלו מתבצעות באמצעות <span class="text-english">microplate reader</span> בפלטת 96 באריות.</li>
+            </ul>
+        </div>
+
+        <!-- Study Cards Section -->
+        <div class="section" id="study-cards-section">
+            <h2 class="section-title">כרטיסיות לימוד</h2>
+            <div class="study-card-container">
+                <div class="study-card" id="studyCard">
+                    <div class="study-card-face study-card-front">
+                        <span id="cardFront" class="study-card-term"></span>
+                    </div>
+                    <div class="study-card-face study-card-back">
+                        <span id="cardBack" class="study-card-definition"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prevCardBtn">הקודם</button>
+                <span id="cardCounter" class="counter"></span>
+                <button id="nextCardBtn">הבא</button>
+            </div>
+        </div>
+
+        <!-- MCQ Section -->
+        <div class="section" id="mcq-section">
+            <h2 class="section-title">שאלות רב-ברירה (MCQ)</h2>
+            <div id="mcqSingleView"> <!-- This div is visible by default -->
+                <div class="question-view">
+                    <p id="mcqQuestionText" class="question-text"></p>
+                    <ul id="mcqOptionsList" class="options-list">
+                        <!-- Options will be populated by JS -->
+                    </ul>
+                    <div id="mcqExplanation" class="explanation hidden">
+                        <p><span class="explanation-title">הסבר:</span> <span id="mcqExplanationText"></span></p>
+                    </div>
+                </div>
+                <div class="navigation-controls">
+                    <button id="prevMcqBtn">הקודם</button>
+                    <span id="mcqCounter" class="counter"></span>
+                    <button id="nextMcqBtn">הבא</button>
+                </div>
+            </div>
+            <button id="viewAllMcqBtn">הצג את כל השאלות</button>
+            <div id="mcqAllViewContainer" class="all-questions-container hidden">
+                <!-- All MCQs will be populated here by JS -->
+            </div>
+        </div>
+
+        <!-- True/False Section -->
+        <div class="section" id="tf-section">
+            <h2 class="section-title">שאלות נכון/לא נכון</h2>
+             <div id="tfSingleView"> <!-- This div is visible by default -->
+                <div class="question-view">
+                    <p id="tfQuestionText" class="question-text"></p>
+                    <ul id="tfOptionsList" class="options-list">
+                        <li><button data-answer="true">נכון</button></li>
+                        <li><button data-answer="false">לא נכון</button></li>
+                    </ul>
+                    <div id="tfExplanation" class="explanation hidden">
+                         <p><span class="explanation-title">הסבר:</span> <span id="tfExplanationText"></span></p>
+                    </div>
+                </div>
+                <div class="navigation-controls">
+                    <button id="prevTfBtn">הקודם</button>
+                    <span id="tfCounter" class="counter"></span>
+                    <button id="nextTfBtn">הבא</button>
+                </div>
+            </div>
+            <button id="viewAllTfBtn">הצג את כל השאלות</button>
+            <div id="tfAllViewContainer" class="all-questions-container hidden">
+                <!-- All T/F questions will be populated here by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    // --- Data ---
+
+    // Study Cards Data
+    const studyCards = [
+        // ... (Existing card data - checking math content)
+        { front: "הערכה כמותית של חיידקים", back: "תהליך לקביעת ריכוז החיידקים בדגימה, תוך שימוש בשיטות שונות כמו ספירה חיה, ספירה ישירה, ומדידת עכירות או פלורסנציה." },
+        { front: "<span class='text-english'>Escherichia coli</span> (E. coli)", back: "סוג של חיידק המשמש במחקר זה, אשר חלקו עבר טרנספורמציה עם פלסמידים." },
+        { front: "פלסמיד (Plasmid)", back: "מולקולת DNA מעגלית קטנה, נפרדת מהכרומוזום החיידקי, היכולה להשתכפל באופן עצמאי ולהקנות תכונות חדשות לחיידק, כמו עמידות לאנטיביוטיקה או ביטוי חלבונים פלואורסצנטיים." },
+        { front: "גן gfp", back: "גן המקודד לחלבון <span class='text-english'>GFP (Green Fluorescent Protein)</span>." },
+        { front: "חלבון <span class='text-english'>GFP</span>", back: "חלבון המאיר באור ירוק (פליטה בסביבות <span class='text-english'>510nm</span>) כאשר מואר באורך גל מתאים (עירור בסביבות <span class='text-english'>460nm</span>), משמש כסמן גנטי." },
+        { front: "גן rfp", back: "גן המקודד לחלבון <span class='text-english'>RFP (Red Fluorescent Protein)</span>." },
+        { front: "חלבון <span class='text-english'>RFP</span>", back: "חלבון המאיר באור אדום (פליטה בסביבות <span class='text-english'>610nm</span>) כאשר מואר באורך גל מתאים (עירור בסביבות <span class='text-english'>530nm</span>), משמש כסמן גנטי." },
+        { front: "כלורמפניקול (Chloramphenicol)", back: "אנטיביוטיקה המשמשת לברירת חיידקים המכילים פלסמידים המקנים עמידות לאנטיביוטיקה זו. במעבדה, מבטיחה שרק חיידקים עם הפלסמידים (<span class='text-english'>gfp/rfp</span>) יגדלו." },
+        { front: "גן מדווח (Reporter gene)", back: "רצף גנטי המוחדר ליד או בתוך גן נחקר, ותוצרו (לרוב חלבון בעל תכונה ניתנת למדידה, כמו פלורסנציה) מאפשר מעקב איכותי או כמותי אחר ביטוי הגן הנחקר. <span class='text-english'>GFP</span> ו-<span class='text-english'>RFP</span> הם דוגמאות." },
+        { front: "חיידקי <span class='text-english'>GFP+</span>", back: "חיידקים המבטאים את חלבון ה-<span class='text-english'>GFP</span> ופולטים אור ירוק פלואורסצנטי." },
+        { front: "חיידקי <span class='text-english'>RFP+</span>", back: "חיידקים המבטאים את חלבון ה-<span class='text-english'>RFP</span> ופולטים אור אדום פלואורסצנטי." },
+        { front: "<span class='text-english'>CFU/ml</span>", back: "יחידות יוצרות מושבה למילליטר (<span class='text-english'>Colony Forming Units per milliliter</span>). מדד למספר החיידקים החיים והמסוגלים להתחלק וליצור מושבה בדגימה." },
+        { front: "ספירה חיה (Viable Count)", back: "שיטה להערכת מספר החיידקים החיים בדגימה על ידי זריעתם על מצע גידול וספירת המושבות המתפתחות לאחר אינקובציה." },
+        { front: "מיהולים עשרוניים", back: "סדרה של מיהולים בה כל שלב מהווה דילול פי 10 של השלב הקודם. במעבדה: העברת 0.5 <span class='text-english'>ml</span> תרחיף ל-4.5 <span class='text-english'>ml</span> סליין." },
+        { front: "צלחות <span class='text-english'>LB agar</span>", back: "מצע גידול מוצק נפוץ לגידול חיידקים. במעבדה זו, הצלחות מכילות גם כלורמפניקול לברירת חיידקים שעברו טרנספורמציה." },
+        { front: "שיטת כדורי הזכוכית", back: "שיטת זריעה בה משתמשים בכדורי זכוכית מעוקרים לפיזור אחיד של תרחיף חיידקים על פני צלחת אגר." },
+        { front: "אינקובציה", back: "הדגרת צלחות החיידקים בתנאים מבוקרים (טמפרטורה, זמן) כדי לאפשר גדילת מושבות. במעבדה: 37 מעלות צלזיוס, 48 שעות." },
+        { front: "טווח ספירה אופטימלי (מושבות)", back: "בספירה חיה, צלחת עם 30-300 מושבות נחשבת אמינה סטטיסטית ומדויקת לחישוב ריכוז החיידקים." },
+        { front: "נוסחת חישוב <span class='text-english'>CFU/ml</span> (ספירה חיה)", back: "הנוסחה היא $\\text{CFU/ml} = \\frac{\\sum (\\text{Number of colonies})}{\\text{Plating volume} \\times \\sum (\\text{Dilutions})}$. היא מתייחסת למספר המושבות שנספרו, נפח הדגימה שנזרע, וסך כל גורם המיהול." },
+        { front: "ספירה ישירה (Direct Count)", back: "שיטה לספירת כלל התאים (לרוב חיים ומתים יחד, אלא אם משתמשים בצביעה ויטלית או פלורסנציה מבחינה) ישירות תחת מיקרוסקופ, ללא צורך בגידול." },
+        { front: "מיקרוסקופ פלורסנטי", back: "מיקרוסקופ המשתמש במקור אור ופילטרים כדי לעורר מולקולות פלואורסצנטיות בדגימה באורך גל מסוים, ולאסוף את האור הנפלט מהן באורך גל אחר. מאפשר זיהוי תאים או מבנים ספציפיים." },
+        { front: "זכוכית נושאת (<span class='text-english'>Slide</span>)", back: "משטח זכוכית מלבני קטן עליו מניחים את הדגימה הביולוגית לצורך התבוננות תחת מיקרוסקופ." },
+        { front: "זכוכית מכסה (<span class='text-english'>Coverslip</span>)", back: "לוחית זכוכית דקה וריבועית המונחת על הדגימה שעל הזכוכית הנושאת, ליישור הנוזל ולהגנה על עדשת האובייקטיב." },
+        { front: "נוסחת חישוב תאים/<span class='text-english'>ml</span> (ספירה ישירה)", back: "הנוסחה היא $\\text{Cells/ml} = \\frac{\\sum (\\text{Number of cells})}{(\\text{Number of squares counted})} \\times 40,000 (\\frac{1}{\\text{mm}^3}) \\times 10^3 (\\frac{\\text{mm}^3}{\\text{cm}^3})$. הפקטור $40,000$ מתייחס לנפח ושטח הספירה, ו-$10^3$ ממיר יחידות נפח." },
+        { front: "מדידת עכירות (<span class='text-english'>Turbidity</span>)", back: "שיטה עקיפה להערכת ריכוז חיידקים (או חלקיקים אחרים) בתרחיף. מבוססת על מדידת כמות האור הנבלעת או מפוזרת על ידי התרחיף. נמדדת בדרך כלל באורך גל של <span class='text-english'>600nm</span> באמצעות ספקטרופוטומטר או <span class='text-english'>microplate reader</span>." },
+        { front: "<span class='text-english'>Microplate reader</span>", back: "מכשיר אוטומטי המסוגל לקרוא במהירות אותות אופטיים (כגון בליעה/עכירות, פלורסנציה, לומינסנציה) מבארות רבות בפלטת מיקרוטיטר (למשל, פלטת 96 באריות)." },
+        { front: "פלטת 96 באריות שחורה", back: "פלטה עם 96 באריות המשמשת למדידות פלורסנציה. הדפנות השחורות מונעות זליגת אור בין בארות סמוכות וקריאות רקע, והתחתית השקופה מאפשרת מעבר אור למדידה." },
+        { front: "מיהולים כפולים", back: "סדרה של מיהולים בה כל שלב מהווה דילול פי 2 של השלב הקודם (לדוגמה, 1 <span class='text-english'>ml</span> תרחיף + 1 <span class='text-english'>ml</span> מדלל). במעבדה זו, עד מיהול של 1/32." },
+        { front: "בלנק (<span class='text-english'>Blank</span>)", back: "דגימת ייחוס (קונטרול) המכילה את כל הרכיבים של הדגימה הנבדקת פרט לחומר הנמדד עצמו (במעבדה: סליין בלבד). משמשת לאיפוס המכשיר או לחיסור קריאות רקע מהמדידות." },
+        { front: "אורך גל עירור (<span class='text-english'>Excitation wavelength</span>)", back: "אורך הגל של האור שבו משתמשים כדי לעורר מולקולה פלואורסצנטית, כך שתעבור למצב אנרגטי גבוה יותר. ל-<span class='text-english'>GFP</span>: כ-<span class='text-english'>460nm</span>, ל-<span class='text-english'>RFP</span>: כ-<span class='text-english'>530nm</span>." },
+        { front: "אורך גל פליטה (<span class='text-english'>Emission wavelength</span>)", back: "אורך הגל של האור הנפלט ממולקולה פלואורסצנטית כאשר היא חוזרת ממצב מעורר למצב היסוד. ארוך יותר מאורך גל העירור. ל-<span class='text-english'>GFP</span>: כ-<span class='text-english'>510nm</span>, ל-<span class='text-english'>RFP</span>: כ-<span class='text-english'>610nm</span>." }
+    ];
+
+    // MCQ Data
+    const mcqQuestions = [
+        // ... (Existing MCQ data - checking math content)
+        {
+            question: "מהי המטרה העיקרית של שימוש בכלורמפניקול בצלחות <span class='text-english'>LB agar</span> במעבדה זו?",
+            options: [
+                "להגביר את קצב גדילת כלל החיידקים בתרבית באופן משמעותי",
+                "לספק מקור פחמן וחנקן נוסף והכרחי לחיידקים לצורך ביטוי פלורסנציה",
+                "לבצע סלקציה לחיידקים שעברו טרנספורמציה עם הפלסמיד הרצוי המקנה עמידות לאנטיביוטיקה זו",
+                "לצבוע את מושבות החיידקים בגוון כחלחל עדין לצורך זיהוי קל יותר שלהן במעבדה"
+            ],
+            correctAnswer: 2,
+            explanation: "כלורמפניקול היא אנטיביוטיקה. הפלסמידים עם גני <span class='text-english'>GFP</span> ו-<span class='text-english'>RFP</span> מקנים גם עמידות לכלורמפניקול, ולכן רק חיידקים שקיבלו את הפלסמיד ישרדו ויגדלו על המצע המכיל אנטיביוטיקה זו."
+        },
+        {
+            question: "בשיטת הספירה החיה, מדוע חשוב לבחור צלחות המכילות בין 30 ל-300 מושבות לחישוב <span class='text-english'>CFU/ml</span>?",
+            options: [
+                "פחות מ-30 מושבות גורם לזיהום גבוה של הצלחת מחיידקים אחרים",
+                "יותר מ-300 מושבות מקל על ספירה ידנית ומפחית טעויות אנוש בספירה",
+                "טווח זה מספק את האיזון הטוב ביותר בין דיוק סטטיסטי לבין הימנעות מצפיפות יתר של מושבות אשר עלולה לגרום לקשיי ספירה ועיכוב גדילה הדדי",
+                "זהו הטווח היחיד בו החיידקים מבטאים פלורסנציה באופן אופטימלי ולכן ניתן להבחין ביניהם"
+            ],
+            correctAnswer: 2,
+            explanation: "פחות מ-30 מושבות נחשב ללא אמין סטטיסטית (טעות דגימה גדולה). יותר מ-300 מושבות גורם לצפיפות יתר, חפיפה בין מושבות, תחרות על מזון וקושי בספירה מדויקת."
+        },
+        {
+            question: "איזו מהפעולות הבאות היא קריטית בעת ביצוע מיהולים עשרוניים לספירה חיה?",
+            options: [
+                "שימוש באותה פיפטה לכל שלבי המיהול כדי לחסוך בכלים מתכלים",
+                "חימום קל של תמיסת הסליין לפני כל מיהול לטובת שיפור חיות החיידקים",
+                "החלפת טיפ (קצה פיפטה) לאחר כל העברה בין מבחנות מיהול למניעת זיהום צולב ונשיאת עודפי תרחיף",
+                "הוספת כמות קטנה של מצע גידול נוזלי לסליין בכל שלב מיהול כדי לשמור על חיוניות"
+            ],
+            correctAnswer: 2,
+            explanation: "החלפת טיפ חיונית למניעת העברת חיידקים מהמיהול הקודם (התרחיף המרוכז יותר) למיהול הבא, דבר שיגרום לשגיאה בחישוב הריכוז."
+        },
+        {
+            question: "מהו העיקרון המרכזי של שיטת כדורי הזכוכית לזריעת חיידקים?",
+            options: [
+                "כדורי הזכוכית סופחים אליהם חיידקים מתים ומאפשרים רק לחיים להיזרע",
+                "הכדורים יוצרים שקעים קטנים באגר המעודדים צמיחה של מושבות בודדות ונפרדות",
+                "תנועת כדורי הזכוכית על פני האגר מפזרת את הנוזל עם החיידקים באופן אחיד יחסית על כל שטח הפלטה",
+                "הכדורים משחררים חומרי מזון חיוניים הנמצאים בציפוי שלהם ומסייעים לגדילה מהירה של החיידקים"
+            ],
+            correctAnswer: 2,
+            explanation: "שיטת כדורי הזכוכית נועדה להשיג פיזור אחיד של האינוקולום (תרחיף החיידקים) על פני שטח מצע הגידול המוצק."
+        },
+        {
+            question: "בספירה ישירה באמצעות מיקרוסקופ, איזה סוג של תאים נספרים בדרך כלל אם לא משתמשים בצביעה מבחינה?",
+            options: [
+                "רק חיידקים חיים המסוגלים לנוע באופן אקטיבי",
+                "רק חיידקים פלואורסצנטיים המבטאים <span class='text-english'>GFP</span> או <span class='text-english'>RFP</span>",
+                "כלל החלקיקים דמויי תא הנראים בשדה הראייה, כולל חיידקים חיים ומתים",
+                "רק חיידקים גדולים במיוחד שניתן לזהותם בקלות בהגדלה נמוכה יחסית"
+            ],
+            correctAnswer: 2,
+            explanation: "ספירה ישירה סטנדרטית (ללא צביעות מיוחדות) סופרת את כל התאים הנצפים, ללא הבחנה בין חיים למתים. השימוש במיקרוסקופ פלורסנטי מאפשר הבחנה במקרה של ביטוי חלבונים כמו <span class='text-english'>GFP/RFP</span> בתאים פעילים מטבולית."
+        },
+        {
+            question: "מה היתרון הפוטנציאלי של שימוש במיקרוסקופ פלורסנטי לספירת חיידקי <span class='text-english'>E. coli</span> שעברו טרנספורמציה עם <span class='text-english'>GFP/RFP</span> בהשוואה למיקרוסקופ אור רגיל?",
+            options: [
+                "הוא מאפשר לראות את הדופן והממברנה של התא ברזולוציה גבוהה הרבה יותר",
+                "הוא מאפשר להבחין בין חיידקים חיים (המבטאים את החלבון הפלורסנטי) לבין פסולת או חיידקים מתים שאינם מבטאים",
+                "הוא אינו דורש שימוש בזכוכית נושאת או זכוכית מכסה כלל",
+                "הוא גורם לכל החיידקים, גם אלו שלא עברו טרנספורמציה, להאיר בצבעים שונים"
+            ],
+            correctAnswer: 1,
+            explanation: "חלבונים פלורסנטיים כמו <span class='text-english'>GFP</span> ו-<span class='text-english'>RFP</span> מתבטאים לרוב בתאים חיים ופעילים מטבולית. לכן, מיקרוסקופ פלורסנטי יכול לעזור להבחין בין תאים אלו לבין תאים מתים או חלקיקים אחרים."
+        },
+        {
+            question: "במדידת עכירות (<span class='text-english'>OD600</span>) של תרבית חיידקים, מה בעצם נמדד על ידי ה-<span class='text-english'>microplate reader</span>?",
+            options: [
+                "מספר החיידקים המדויק ל-<span class='text-english'>ml</span> בתוך כל בארית",
+                "כמות האור באורך גל <span class='text-english'>600nm</span> שעובר דרך הדגימה (כלומר, כמות האור שלא נבלעה או פוזרה על ידי החיידקים)",
+                "עוצמת הפלורסנציה הירוקה הנפלטת מהחיידקים בתרבית באופן טבעי",
+                "ריכוז החמצן הנצרך על ידי החיידקים בתוך כל בארית בפלטה"
+            ],
+            correctAnswer: 1,
+            explanation: "מדידת עכירות (<span class='text-english'>Optical Density</span>, <span class='text-english'>OD</span>) ב-<span class='text-english'>600nm</span> מעריכה את כמות האור שמתפזר או נבלע על ידי החלקיקים (החיידקים) בתרחיף. ככל שיש יותר חיידקים, יותר אור יתפזר/ייבלע, ופחות אור יעבור דרך הדגימה אל הגלאי."
+        },
+        {
+            question: "מדוע משתמשים בפלטת 96 באריות שחורה עם תחתית שקופה למדידות פלורסנציה?",
+            options: [
+                "הצבע השחור מגביר את עוצמת האור הנפלט מהדגימה פי עשרה",
+                "התחתית השקופה מונעת זליגת אור בין באריות סמוכות, והדפנות השחורות מאפשרות קריאה מלמעלה",
+                "הדפנות השחורות מפחיתות פיזור אור וזליגת אות בין באריות סמוכות (<span class='text-english'>crosstalk</span>), והתחתית השקופה מאפשרת מעבר אור עירור ופליטה אל הגלאי וממנו",
+                "פלטות שחורות זולות יותר לייצור המוני מפלטות שקופות לחלוטין ומתאימות לרוב השימושים"
+            ],
+            correctAnswer: 2,
+            explanation: "פלטות שחורות משמשות למדידות פלורסנציה כדי למזער רעשי רקע וזליגת אות בין באריות. התחתית השקופה חיונית למעבר אור לצורך עירור הדגימה וקליטת האור הנפלט."
+        },
+        {
+            question: "מהו תפקידו של הבלנק (דגימת סליין בלבד) במדידות עכירות ופלורסנציה?",
+            options: [
+                "לספק נקודת מקסימום לקריאה, אליה משווים את כל הדגימות האחרות",
+                "לבדוק את תקינות נורת המכשיר לפני ביצוע המדידות העיקריות",
+                "לשמש כדגימת ייחוס המאפשרת הפחתת קריאות רקע הנגרמות מהתמיסה עצמה או מהפלטה, ולא מהחיידקים",
+                "להוות מדד לרמת הזיהום הסביבתי בתוך מכשיר ה-<span class='text-english'>microplate reader</span>"
+            ],
+            correctAnswer: 2,
+            explanation: "הבלנק (לרוב, הממס או המדיום ללא החומר הנבדק) משמש לקביעת קריאת הרקע. קריאה זו מופחתת מקריאות הדגימות כדי לקבל את האות הספציפי מהחומר הנבדק (החיידקים)."
+        },
+        {
+            question: "בהנחה שחיידק <span class='text-english'>E. coli</span> בודד מתחלק כל 20 דקות בתנאים אופטימליים, כמה חיידקים צפויים להיווצר מחיידק בודד לאחר שעתיים של אינקובציה?",
+            options: [
+                "$2^3 = 8$ חיידקים",
+                "$2^6 = 64$ חיידקים",
+                "$2 \\times 6 = 12$ חיידקים",
+                "$20 \\times 6 = 120$ חיידקים"
+            ],
+            correctAnswer: 1,
+            explanation: "בשעתיים יש 120 דקות. אם זמן דור הוא 20 דקות, אז בשעתיים יהיו $120/20 = 6$ דורות. מספר החיידקים לאחר $n$ דורות הוא $N_0 \\times 2^n$, כאשר $N_0$ הוא מספר החיידקים ההתחלתי. מחיידק בודד ($N_0=1$), לאחר 6 דורות יהיו $1 \\times 2^6 = 64$ חיידקים."
+        },
+        {
+            question: "במעבדה זו, ריכוז החיידקים ההתחלתי בתרחיף המקורי הוערך בכ-$10^8 \\text{ CFU/ml}$. אם מבצעים סדרת מיהולים עשרוניים וזורעים 0.1 <span class='text-english'>ml</span> מהמיהול של $10^{-6}$, כמה מושבות בקירוב צפויות להתקבל על הצלחת?",
+            options: [
+                "כ-10 מושבות",
+                "כ-100 מושבות",
+                "כ-1,000 מושבות",
+                "כ-10,000 מושבות"
+            ],
+            correctAnswer: 0,
+            explanation: "הריכוז לאחר מיהול $10^{-6}$ יהיה $10^8 \\text{ CFU/ml} \\times 10^{-6} = 10^2 \\text{ CFU/ml} = 100 \\text{ CFU/ml}$. אם זורעים 0.1 <span class='text-english'>ml</span>, אז מספר המושבות הצפוי הוא $100 \\text{ CFU/ml} \\times 0.1 \\text{ ml} = 10$ מושבות."
+        },
+        {
+            question: "אילו אורכי גל אופייניים למדידת פלורסנציה של חלבון <span class='text-english'>GFP</span>?",
+            options: [
+                "עירור ב-<span class='text-english'>530nm</span> ופליטה ב-<span class='text-english'>610nm</span>",
+                "עירור ב-<span class='text-english'>600nm</span> ופליטה ב-<span class='text-english'>600nm</span>",
+                "עירור ב-<span class='text-english'>460nm</span> ופליטה ב-<span class='text-english'>510nm</span>",
+                "עירור ב-<span class='text-english'>260nm</span> ופליטה ב-<span class='text-english'>280nm</span>"
+            ],
+            correctAnswer: 2,
+            explanation: "לפי חומר המעבדה, עבור <span class='text-english'>GFP</span>: אורך הגל לעירור הוא <span class='text-english'>460nm</span> ואורך הגל בו נמדדת הפליטה הוא <span class='text-english'>510nm</span>."
+        },
+        {
+            question: "איזו מהשיטות הבאות נותנת הערכה ישירה של מספר החיידקים החיים המסוגלים להתחלק וליצור מושבה?",
+            options: [
+                "מדידת עכירות (<span class='text-english'>OD600</span>) של התרבית",
+                "ספירה ישירה תחת מיקרוסקופ אור רגיל ללא צביעה מיוחדת",
+                "ספירה חיה על צלחות אגר המאפשרת גדילת מושבות",
+                "מדידת פלורסנציה כוללת של כל החלבונים בתא החיידקי"
+            ],
+            correctAnswer: 2,
+            explanation: "ספירה חיה (<span class='text-english'>Viable Count</span>) היא השיטה הקלאסית להערכת מספר החיידקים החיים בדגימה, שכן היא מבוססת על יכולתם להתחלק וליצור מושבה נראית לעין."
+        },
+        {
+            question: "אם במיהול $10^{-5}$ של תרבית חיידקים נספרו 150 מושבות לאחר זריעת 0.1 <span class='text-english'>ml</span>, מהו ריכוז החיידקים (<span class='text-english'>CFU/ml</span>) בתרבית המקורית?",
+            options: [
+                "$1.5 \\times 10^6 \\text{ CFU/ml}$",
+                "$1.5 \\times 10^7 \\text{ CFU/ml}$",
+                "$1.5 \\times 10^8 \\text{ CFU/ml}$",
+                "$1.5 \\times 10^9 \\text{ CFU/ml}$"
+            ],
+            correctAnswer: 2,
+            explanation: "הנוסחה היא: $\\text{CFU/ml} = \\frac{\\text{Number of colonies}}{\\text{Plating volume} \\times \\text{Dilution}}$. כאן: $\\frac{150}{0.1 \\text{ ml} \\times 10^{-5}} = \\frac{150}{10^{-6} \\text{ ml}} = 150 \\times 10^6 \\text{ CFU/ml} = 1.5 \\times 10^8 \\text{ CFU/ml}$."
+        },
+        {
+            question: "מה ההבדל העיקרי בין מיהולים עשרוניים (כמו בספירה חיה) למיהולים כפולים (כמו בהכנת דגימות ל-<span class='text-english'>microplate reader</span> במעבדה זו)?",
+            options: [
+                "מיהולים עשרוניים משתמשים תמיד בנפח סופי גדול יותר ממיהולים כפולים באופן משמעותי",
+                "מיהולים עשרוניים הם תמיד מדויקים יותר ממיהולים כפולים מבחינה סטטיסטית",
+                "במיהול עשרוני גורם הדילול בין שלב לשלב הוא פי 10, בעוד שבמיהול כפול הוא פי 2",
+                "מיהולים כפולים מתאימים רק למדידת פלורסנציה ולא למדידת עכירות כלל"
+            ],
+            correctAnswer: 2,
+            explanation: "מיהולים עשרוניים (סדרתיים) מקטינים את הריכוז בפקטור של 10 בכל שלב (למשל 1:10, 1:100, 1:1000). מיהולים כפולים מקטינים את הריכוז בפקטור של 2 בכל שלב (למשל 1:2, 1:4, 1:8)."
+        },
+        {
+            question: "לצורך העברת 0.5 <span class='text-english'>ml</span> תרחיף ל-4.5 <span class='text-english'>ml</span> סליין (כפי שמבוצע במיהולים העשרוניים), מהו גורם המיהול שנוצר בשלב זה?",
+            options: [
+                "פי 2, כלומר 1:2",
+                "פי 5, כלומר 1:5",
+                "פי 9, כלומר 1:9",
+                "פי 10, כלומר 1:10"
+            ],
+            correctAnswer: 3,
+            explanation: "הנפח הכולל לאחר ההעברה הוא $0.5 \\text{ ml} + 4.5 \\text{ ml} = 5.0 \\text{ ml}$. הועברו 0.5 <span class='text-english'>ml</span> לתוך נפח סופי זה, לכן גורם המיהול הוא $\\frac{0.5 \\text{ ml}}{5.0 \\text{ ml}} = \\frac{1}{10}$."
+        },
+        {
+            question: "כאשר מכינים דגימות לפלטת 96 באריות, מעבירים 1 <span class='text-english'>ml</span> תרבית לתוך 1 <span class='text-english'>ml</span> סליין. מהו המיהול הראשון שנוצר?",
+            options: [
+                "1/2 (אחד לשתיים)",
+                "1/1 (ללא מיהול)",
+                "1/10 (אחד לעשר)",
+                "1/100 (אחד למאה)"
+            ],
+            correctAnswer: 0,
+            explanation: "מוסיפים 1 <span class='text-english'>ml</span> תרבית ל-1 <span class='text-english'>ml</span> סליין. הנפח הכולל הוא 2 <span class='text-english'>ml</span>, והנפח המקורי של התרבית הוא 1 <span class='text-english'>ml</span>. לכן המיהול הוא $1/2$."
+        },
+        {
+            question: "בספירה ישירה, נספרו בממוצע 5 תאים למשבצת קטנה. אם נאמר שכל משבצת כזו מייצגת נפח של $2.5 \\times 10^{-8} \\text{ ml}$ (או $2.5 \\times 10^{-5} \\text{ mm}^3$), מהו ריכוז התאים ב-<span class='text-english'>ml</span>?",
+            options: [
+                "$2 \\times 10^5 \\text{ cells/ml}$",
+                "$2 \\times 10^6 \\text{ cells/ml}$",
+                "$2 \\times 10^7 \\text{ cells/ml}$",
+                "$2 \\times 10^8 \\text{ cells/ml}$"
+            ],
+            correctAnswer: 3,
+            explanation: "אם יש 5 תאים ב-$2.5 \\times 10^{-8} \\text{ ml}$, אז ב-<span class='text-english'>ml</span> אחד יהיו $\\frac{5 \\text{ cells}}{2.5 \\times 10^{-8} \\text{ ml}} = \\frac{5}{2.5} \\times 10^8 \\text{ cells/ml} = 2 \\times 10^8 \\text{ cells/ml}$. הערה: הפקטור 40,000 בנוסחה שבחוברת משלב את גודל המשבצת, עומק תא הספירה, ומספר המשבצות."
+        },
+        {
+            question: "מדוע מדגירים את צלחות הפטרי הפוכות (כשהמכסה כלפי מטה) לאחר זריעת החיידקים?",
+            options: [
+                "כדי למנוע מאור ישיר לפגוע בחיידקים הרגישים",
+                "כדי להגביר את זרימת האוויר למושבות ולאפשר גדילה מהירה יותר שלהן",
+                "כדי למנוע מטיפות עיבוי שנוצרות על המכסה לטפטף על האגר ולגרום למריחה של המושבות",
+                "כדי להקל על סידור הצלחות באינקובטור אחת מעל השנייה ללא החלקה מסוכנת"
+            ],
+            correctAnswer: 2,
+            explanation: "הדגרת צלחות הפוכות מונעת מטיפות מים (קונדנסציה) הנוצרות על המכסה ליפול על פני האגר ולגרום להתפשטות ומריחה של המושבות, דבר שיקשה על ספירתן."
+        },
+        {
+            question: "גן מדווח (<span class='text-english'>reporter gene</span>) כמו <span class='text-english'>gfp</span> או <span class='text-english'>rfp</span> מאפשר:",
+            options: [
+                "להגביר את קצב התרגום של כלל החלבונים בתא החיידקי באופן משמעותי ביותר",
+                "לשנות את צורת החיידק כך שיהיה קל יותר לצפות בו תחת מיקרוסקופ רגיל",
+                "לעקוב אחר נוכחות או ביטוי של גן מסוים (או הפלסמיד הנושא אותו) באמצעות אות פשוט למדידה כמו פלורסנציה",
+                "להעניק לחיידק עמידות למגוון רחב של אנטיביוטיקות בו זמנית וביעילות גבוהה"
+            ],
+            correctAnswer: 2,
+            explanation: "גן מדווח הוא גן שתוצר הביטוי שלו (לרוב חלבון) ניתן לזיהוי ולמדידה בקלות (למשל, פלורסנציה, פעילות אנזימטית). הוא משמש כסמן לנוכחות הפלסמיד או לרמת ביטוי של גן אחר שאליו הוא צמוד."
+        },
+        {
+            question: "מהו תפקיד תמיסת הסליין (תמיסת מלח פיזיולוגית) בתהליך המיהולים של החיידקים?",
+            options: [
+                "לספק מקור אנרגיה חיוני לחיידקים בזמן תהליך המיהול הארוך",
+                "לשמש כחומר חיטוי עדין המונע גדילה של חיידקים מזהמים מהסביבה",
+                "לשמור על סביבה אוסמוטית יציבה עבור החיידקים ולמנוע את התפוצצותם או הצטמקותם",
+                "לשנות את צבע החיידקים כדי שיהיה קל יותר לספור אותם על הצלחת לאחר מכן"
+            ],
+            correctAnswer: 2,
+            explanation: "תמיסת סליין בריכוז פיזיולוגי (כ-0.85-0.9%) משמשת כמדלל איזוטוני, כלומר, שומרת על לחץ אוסמוטי דומה לזה שבתוך תאי החיידקים, ובכך מונעת נזק לתאים כתוצאה מכניסת או יציאת מים מוגברת."
+        },
+        {
+            question: "אם בתרבית מקורית יש $5 \\times 10^7 \\text{ RFP+ cells/ml}$ ו-$1.5 \\times 10^8 \\text{ GFP+ cells/ml}$, מהו היחס המוערך בין חיידקי <span class='text-english'>GFP+</span> לחיידקי <span class='text-english'>RFP+</span>?",
+            options: [
+                "יחס של 1 ל-3 לטובת <span class='text-english'>RFP+</span>",
+                "יחס של 1 ל-1 בערך",
+                "יחס של 3 ל-1 לטובת <span class='text-english'>GFP+</span>",
+                "יחס של 10 ל-1 לטובת <span class='text-english'>GFP+</span>"
+            ],
+            correctAnswer: 2,
+            explanation: "היחס הוא $\\frac{1.5 \\times 10^8 \\text{ cells/ml}}{5 \\times 10^7 \\text{ cells/ml}} = \\frac{15 \\times 10^7}{5 \\times 10^7} = \\frac{15}{5} = 3$. כלומר, יש פי 3 יותר חיידקי <span class='text-english'>GFP+</span> מחיידקי <span class='text-english'>RFP+</span>, או יחס של 3:1 לטובת <span class='text-english'>GFP+</span>."
+        },
+        {
+            question: "מדוע נדרש להחליף טיפ (קצה פיפטה) לאחר כל מיהול בעת הכנת סדרת מיהולים עשרוניים?",
+            options: [
+                "הטיפים נסתמים בקלות מחיידקים ולכן יש להחליפם תדיר",
+                "כדי למנוע העברת עודפי תרחיף מהמיהול הקודם (המרוכז יותר) למיהול הבא, דבר שישבש את דיוק המיהול הסופי",
+                "הפלסטיק של הטיפ מגיב עם הסליין לאחר שימוש אחד ומשנה את תכונותיו הכימיות",
+                "זהו נוהל סטנדרטי במעבדה אך אין לו השפעה מהותית על תוצאות המיהולים במקרה זה"
+            ],
+            correctAnswer: 1,
+            explanation: "שאריות נוזל מהמיהול הקודם (שהוא מרוכז יותר) על דפנות הטיפ יכולות לעבור למיהול הבא ולהעלות בו את ריכוז החיידקים באופן שגוי. החלפת טיפ מבטיחה שרק הנפח המדוד מועבר."
+        },
+        {
+            question: "איזו טענה נכונה לגבי הקשר בין עכירות (<span class='text-english'>OD</span>) למספר חיידקים חיים?",
+            options: [
+                "עכירות מודדת ישירות רק את מספר החיידקים המתים בתרבית",
+                "יש קורלציה ליניארית מושלמת בין עכירות למספר חיידקים חיים בכל ריכוז שהוא",
+                "עכירות (<span class='text-english'>OD</span>) נמצאת בקורלציה עם המסה הכוללת של התאים (חיים ומתים) ולאו דווקא עם מספר החיידקים החיים בלבד, והקשר לרוב אינו ליניארי בריכוזים גבוהים מאוד",
+                "ככל שהעכירות גבוהה יותר, כך מספר החיידקים החיים קטן יותר באופן משמעותי"
+            ],
+            correctAnswer: 2,
+            explanation: "עכירות היא מדד למסת התאים הכוללת. היא כוללת תאים חיים, מתים, ולפעמים גם חלקיקי תאים או תוצרי פירוק. הקשר בין <span class='text-english'>OD</span> למספר תאים (או <span class='text-english'>CFU</span>) הוא לרוב ליניארי בטווח ריכוזים מסוים, אך בריכוזים גבוהים מאוד הקשר עלול לסטות מליניאריות (למשל, עקב אפקט הצללה)."
+        },
+        {
+            question: "העברת 0.1 <span class='text-english'>ml</span> של תרחיף חיידקים לצלחת פטרי היא פעולה הנקראת:",
+            options: [
+                "סטרליזציה של התרחיף",
+                "אינוקולציה או זריעה של התרחיף",
+                "צנטריפוגציה של התרחיף החיידקי",
+                "סוניקציה של תאי החיידקים"
+            ],
+            correctAnswer: 1,
+            explanation: "אינוקולציה (או זריעה) היא תהליך של החדרת מיקרואורגניזמים (כמו חיידקים) למצע גידול מתאים במטרה לאפשר להם להתרבות."
+        },
+        {
+            question: "מה נכון לגבי אורכי הגל המשמשים לעירור ופליטה של חומר פלורסנטי?",
+            options: [
+                "אורך גל העירור תמיד ארוך יותר מאורך גל הפליטה",
+                "אורך גל הפליטה תמיד ארוך יותר מאורך גל העירור",
+                "אורכי הגל של העירור והפליטה חייבים להיות זהים לחלוטין",
+                "אין קשר קבוע בין אורך גל העירור לאורך גל הפליטה"
+            ],
+            correctAnswer: 1,
+            explanation: "בתהליך פלורסנציה, המולקולה בולעת אור (עירור) באורך גל מסוים, עוברת למצב אנרגטי גבוה, ולאחר מכן פולטת אור (פליטה) באורך גל ארוך יותר (כלומר, אנרגיה נמוכה יותר) כאשר היא חוזרת למצב היסוד. הפרש האנרגיה הולך לאיבוד, למשל כחום."
+        },
+        {
+            question: "בספירה ישירה, מדוע חשוב לדעת את נפח הנוזל מעל כל משבצת הנצפית במיקרוסקופ?",
+            options: [
+                "כדי לחשב את מהירות התנועה של החיידקים",
+                "כדי לקבוע את סוג החיידקים על פי גודלם היחסי",
+                "כדי להמיר את מספר התאים שנספרו בשטח מסוים לריכוז תאים ליחידת נפח (למשל, תאים/<span class='text-english'>ml</span>)",
+                "כדי לכייל את עוצמת התאורה של המיקרוסקופ הפלורסנטי"
+            ],
+            correctAnswer: 2,
+            explanation: "הספירה נעשית על פני שטח דו-ממדי (המשבצת). כדי להפוך זאת לריכוז תלת-ממדי (ליחידת נפח), יש לדעת את עומק הנוזל מעל אותו שטח, ובכך לחשב את הנפח שממנו נדגמו התאים שנספרו."
+        },
+        {
+            question: "איזה מהבאים אינו חומר הנדרש ישירות לביצוע שיטת הספירה החיה כפי שתוארה במעבדה?",
+            options: [
+                "מבחנות עם סליין סטרילי",
+                "צלחות <span class='text-english'>LB agar</span> עם כלורמפניקול",
+                "זכוכית נושאת וזכוכית מכסה",
+                "פיפטורים וטיפים סטריליים"
+            ],
+            correctAnswer: 2,
+            explanation: "זכוכית נושאת וזכוכית מכסה הן חומרים הנדרשים לשיטת הספירה הישירה במיקרוסקופ, ולא לספירה חיה על צלחות אגר."
+        },
+        {
+            question: "אם התקבלו 5 מושבות על צלחת שנזרעה ממיהול $10^{-4}$ (נפח זריעה 0.1 <span class='text-english'>ml</span>), האם תוצאה זו אמינה לחישוב <span class='text-english'>CFU/ml</span>?",
+            options: [
+                "כן, כל עוד יש לפחות מושבה אחת התוצאה אמינה לחלוטין",
+                "לא, התוצאה נמוכה מדי (פחות מ-30 מושבות) ונחשבת ללא אמינה סטטיסטית",
+                "כן, זהו מספר מושבות אידיאלי לספירה מדויקת במיוחד",
+                "לא, התוצאה גבוהה מדי (יותר מ-300 מושבות) וקשה לספירה מדויקת"
+            ],
+            correctAnswer: 1,
+            explanation: "הטווח האמין לספירת מושבות הוא 30-300. 5 מושבות זהו מספר נמוך מדי, והתוצאה המתקבלת תהיה בעלת טעות סטטיסטית גדולה ולא אמינה."
+        },
+        {
+            question: "בתהליך הכנת מיהולים כפולים, אם מתחילים מתרבית מקורית ומבצעים 3 שלבי מיהול (1 <span class='text-english'>ml</span> דגימה + 1 <span class='text-english'>ml</span> סליין בכל שלב), מהו המיהול הסופי במבחנה השלישית?",
+            options: [
+                "1/3 (אחד לשלוש)",
+                "1/6 (אחד לשש)",
+                "1/8 (אחד לשמונה)",
+                "1/32 (אחד לשלושים ושתיים)"
+            ],
+            correctAnswer: 2,
+            explanation: "מיהול ראשון: 1/2. מיהול שני: $(1/2) \\times (1/2) = 1/4$. מיהול שלישי: $(1/4) \\times (1/2) = 1/8$."
+        }
+    ];
+
+    // True/False Data
+    const trueFalseQuestions = [
+        // ... (Existing T/F data - checking math content)
+        { question: "בשיטת הספירה החיה, כל חיידק בודד בתרחיף המקורי ייצור בהכרח מושבה אחת על צלחת האגר.", answer: false, explanation: "לא כל חיידק חי יצליח בהכרח ליצור מושבה. חלקם עלולים לא לשרוד את תהליך הזריעה, או להיות במצב פיזיולוגי שאינו מאפשר חלוקה בתנאים הנתונים. <span class='text-english'>CFU</span> מייצג יחידה יוצרת מושבה, שיכולה להיות תא בודד או צבר קטן של תאים." },
+        { question: "מדידת עכירות ב-<span class='text-english'>600nm</span> היא שיטה ישירה לספירת מספר החיידקים החיים בלבד.", answer: false, explanation: "מדידת עכירות (<span class='text-english'>OD</span>) היא מדד עקיף למסת התאים הכוללת (חיים ומתים). היא אינה מבחינה בין תאים חיים למתים ואינה סופרת תאים באופן ישיר." },
+        { question: "חלבון <span class='text-english'>GFP</span> פולט אור ירוק באופן ספונטני ללא צורך בעירור חיצוני כלשהו.", answer: false, explanation: "<span class='text-english'>GFP</span> דורש עירור באור באורך גל מתאים (כחול או <span class='text-english'>UV</span>, סביב <span class='text-english'>460nm</span> במקרה זה) כדי לפלוט אור ירוק (סביב <span class='text-english'>510nm</span>)." },
+        { question: "השימוש בכלורמפניקול במצע הגידול נועד להרוג את חיידקי ה-<span class='text-english'>E. coli</span> המבטאים <span class='text-english'>RFP</span>.", answer: false, explanation: "כלורמפניקול נועד לבחור חיידקים שקיבלו פלסמיד המקנה עמידות לאנטיביוטיקה. במעבדה זו, גם הפלסמיד של <span class='text-english'>RFP</span> וגם של <span class='text-english'>GFP</span> מקנים עמידות, ולכן חיידקים המבטאים <span class='text-english'>RFP</span> (וגם <span class='text-english'>GFP</span>) ישגשגו." },
+        { question: "בספירה ישירה תחת מיקרוסקופ, ניתן להבחין בקלות בין חיידקי <span class='text-english'>GFP+</span> לבין <span class='text-english'>RFP+</span> גם ללא שימוש בפילטרים פלורסנטיים מתאימים.", answer: false, explanation: "כדי להבחין בין פלורסנציה ירוקה לאדומה, יש צורך במיקרוסקופ פלורסנטי עם מערכות פילטרים מתאימות (פילטר עירור ופילטר פליטה) לכל אחד מהחלבונים." },
+        { question: "הנוסחה $\\text{CFU/ml} = \\frac{\\sum (\\text{Number of colonies})}{(\\text{Plating volume}) \\times \\sum (\\text{Dilutions})}$ מתאימה לחישוב ריכוז חיידקים גם בשיטת הספירה הישירה.", answer: false, explanation: "נוסחה זו ספציפית לשיטת הספירה החיה (<span class='text-english'>Viable Count</span>). לספירה ישירה יש נוסחה אחרת המתבססת על מספר תאים ליחידת שטח/נפח נצפה." },
+        { question: "אינקובציה של צלחות ב-37 מעלות צלזיוס למשך 48 שעות היא תנאי סטנדרטי לגידול <span class='text-english'>E. coli</span>.", answer: true, explanation: "37 מעלות צלזיוס היא טמפרטורה אופטימלית לגדילת <span class='text-english'>E. coli</span>, ו-48 שעות הן זמן מספק להתפתחות מושבות נראות לעין." },
+        { question: "מיהולים כפולים מבוצעים על ידי העברת 1 <span class='text-english'>ml</span> תרחיף ל-9 <span class='text-english'>ml</span> סליין בכל שלב.", answer: false, explanation: "מיהולים כפולים (פי 2) מבוצעים על ידי העברת נפח מסוים (למשל 1 <span class='text-english'>ml</span>) לנפח שווה של מדלל (1 <span class='text-english'>ml</span> סליין), כך שהנפח הכולל מוכפל והריכוז יורד בחצי. העברת 1 <span class='text-english'>ml</span> ל-9 <span class='text-english'>ml</span> היא מיהול עשרוני (פי 10)." },
+        { question: "פלטת 96 באריות שקופה לחלוטין מתאימה יותר למדידות פלורסנציה מפלטה שחורה עם תחתית שקופה.", answer: false, explanation: "פלטה שחורה עם תחתית שקופה עדיפה למדידות פלורסנציה כיוון שהדפנות השחורות מפחיתות זליגת אור (<span class='text-english'>crosstalk</span>) בין באריות וקריאות רקע." },
+        { question: "יש להשתמש באותו טיפ פיפטה לכל המיהולים בסדרת מיהולים עשרוניים כדי לשמור על עקביות.", answer: false, explanation: "יש להחליף טיפ לאחר כל העברה כדי למנוע זיהום צולב (נשיאת חיידקים מהמיהול המרוכז יותר לקליל יותר) ולהבטיח דיוק בנפחים המועברים." },
+        { question: "אורך הגל של האור הנפלט מחומר פלורסנטי (<span class='text-english'>emission</span>) הוא תמיד קצר יותר מאורך הגל של האור המעורר (<span class='text-english'>excitation</span>).", answer: false, explanation: "אורך גל הפליטה הוא תמיד ארוך יותר (כלומר, בעל אנרגיה נמוכה יותר) מאורך גל העירור, עקב איבוד אנרגיה בתהליך הפלורסנציה (תופעת סטוקס)." },
+        { question: "בשיטת כדורי הזכוכית, הכדורים עצמם מכילים חומרי הזנה המשפרים את גדילת החיידקים.", answer: false, explanation: "תפקיד כדורי הזכוכית הוא אך ורק מכני – לפזר את תרחיף החיידקים באופן אחיד על פני האגר. הם אינם מספקים חומרי הזנה." },
+        { question: "הערכה כמותית של חיידקים חיונית רק בתעשיית המזון ולא במחקר בסיסי.", answer: false, explanation: "הערכה כמותית של חיידקים היא כלי בסיסי וחשוב במגוון רחב של תחומים, כולל מחקר בסיסי במיקרוביולוגיה, רפואה, אקולוגיה, ביוטכנולוגיה ועוד." },
+        { question: "ניתן להשתמש בתוצאות מדידת עכירות (<span class='text-english'>OD600</span>) כדי לקבוע במדויק את היחס בין חיידקי <span class='text-english'>GFP+</span> ל-<span class='text-english'>RFP+</span> בתרבית.", answer: false, explanation: "מדידת עכירות מספקת מידע על כלל מסת החיידקים בתרבית, אך אינה מבחינה בין סוגי הפלורסנציה השונים. לשם כך נדרשות מדידות פלורסנציה ספציפיות לכל סמן." },
+        { question: "המספר 40,000 בנוסחת הספירה הישירה המוצגת בחומר המעבדה הוא קבוע אוניברסלי לכל סוגי תאי הספירה והמיקרוסקופים.", answer: false, explanation: "פקטור זה (40,000) קשור ככל הנראה לממדים הספציפיים של רשת הספירה (למשל, המוקסילוב, נויבאואר) או לשדה הראייה של המיקרוסקופ בהגדלה מסוימת, ולנפח הדגימה המיוצג. הוא אינו קבוע אוניברסלי לכל המצבים." },
+        { question: "תרחיף חיידקים בריכוז של $10^2 \\text{ CFU/ml}$ נחשב לתרחיף מרוכז מאוד.", answer: false, explanation: "$10^2 \\text{ CFU/ml}$ (מאה חיידקים ל-<span class='text-english'>ml</span>) הוא ריכוז נמוך יחסית. תרביות חיידקים יכולות להגיע לריכוזים של $10^9 \\text{ CFU/ml}$ או יותר." },
+        { question: "כלורמפניקול היא אנטיביוטיקה הפועלת על ידי עיכוב סינתזת דופן התא בחיידקים.", answer: false, explanation: "כלורמפניקול פועלת על ידי קשירה ליחידה הריבוזומלית <span class='text-english'>50S</span> ועיכוב סינתזת חלבונים בחיידקים. אנטיביוטיקות ממשפחת הפניצילין, למשל, הן אלו שמעכבות סינתזת דופן התא." },
+        { question: "הנפח הסופי של הדגימה בבארית בפלטת 96 באריות במעבדה זו הוא 1 <span class='text-english'>ml</span>.", answer: false, explanation: "לפי מהלך העבודה למדידת עכירות ופלורסנציה, מעבירים 150 מיקרוליטר (0.15 <span class='text-english'>ml</span>) לכל בארית בפלטת 96 באריות." },
+        { question: "הסיבה העיקרית לדרישה להגיש דוח מסכם בזוגות היא כדי לחסוך בנייר.", answer: false, explanation: "הגשת דוחות בזוגות (או קבוצות) במעבדות נועדה לעודד שיתוף פעולה, דיון ולימוד הדדי בין סטודנטים, ולאו דווקא חיסכון בנייר, אף שזה עשוי להיות יתרון משני." },
+        { question: "העיקרון של 'גן מדווח' מאפשר לחוקרים לחקור גנים שקשה למדוד את פעילותם באופן ישיר.", answer: true, explanation: "גנים מדווחים, כמו <span class='text-english'>gfp</span> או <span class='text-english'>lacZ</span>, מקודדים לתוצרים שניתן לזהותם ולכמתם בקלות (פלורסנציה, צבע). על ידי הצמדת הגן המדווח לגן הנחקר, ניתן לעקוב אחר ביטוי הגן הנחקר באופן עקיף." }
+    ];
+
+
+    // --- Global Variables & DOM Elements ---
+    let currentCardIndex = 0;
+    let currentMcqIndex = 0;
+    let currentTfIndex = 0;
+
+    // Study Card elements
+    const studyCard = document.getElementById('studyCard');
+    const cardFront = document.getElementById('cardFront');
+    const cardBack = document.getElementById('cardBack');
+    const prevCardBtn = document.getElementById('prevCardBtn');
+    const nextCardBtn = document.getElementById('nextCardBtn');
+    const cardCounter = document.getElementById('cardCounter');
+
+    // MCQ elements
+    const mcqSingleView = document.getElementById('mcqSingleView'); // Stable ID for single question view
+    const mcqQuestionText = document.getElementById('mcqQuestionText'); // Stable ID
+    const mcqOptionsList = document.getElementById('mcqOptionsList'); // Stable ID
+    const mcqExplanation = document.getElementById('mcqExplanation'); // Stable ID
+    const mcqExplanationText = document.getElementById('mcqExplanationText'); // Stable ID
+    const prevMcqBtn = document.getElementById('prevMcqBtn');
+    const nextMcqBtn = document.getElementById('nextMcqBtn');
+    const mcqCounter = document.getElementById('mcqCounter');
+    const viewAllMcqBtn = document.getElementById('viewAllMcqBtn');
+    const mcqAllViewContainer = document.getElementById('mcqAllViewContainer');
+
+    // True/False elements
+    const tfSingleView = document.getElementById('tfSingleView'); // Stable ID for single question view
+    const tfQuestionText = document.getElementById('tfQuestionText'); // Stable ID
+    const tfOptionsList = document.getElementById('tfOptionsList'); // Stable ID for options container
+    const tfExplanation = document.getElementById('tfExplanation'); // Stable ID
+    const tfExplanationText = document.getElementById('tfExplanationText'); // Stable ID
+    const prevTfBtn = document.getElementById('prevTfBtn');
+    const nextTfBtn = document.getElementById('nextTfBtn');
+    const tfCounter = document.getElementById('tfCounter');
+    const viewAllTfBtn = document.getElementById('viewAllTfBtn');
+    const tfAllViewContainer = document.getElementById('tfAllViewContainer');
+    
+    // --- Functions ---
+
+    // Study Card Functions
+    function displayCard() {
+        const card = studyCards[currentCardIndex];
+        cardFront.innerHTML = card.front; 
+        cardBack.innerHTML = card.back;   
+        studyCard.classList.remove('is-flipped');
+        cardCounter.textContent = `כרטיסייה ${currentCardIndex + 1} / ${studyCards.length}`;
+        if (window.MathJax) { // Check if MathJax is loaded
+            MathJax.typesetPromise([cardFront, cardBack]).catch(err => console.error("MathJax typesetting error (card):", err));
+        }
+    }
+
+    // MCQ Functions for single view
+    function displayMcq() {
+        const q = mcqQuestions[currentMcqIndex];
+        mcqQuestionText.innerHTML = q.question; 
+        mcqOptionsList.innerHTML = ''; // Clear previous options
+        q.options.forEach((option, index) => {
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.innerHTML = option; 
+            button.dataset.index = index;
+            button.addEventListener('click', handleMcqAnswer);
+            li.appendChild(button);
+            mcqOptionsList.appendChild(li);
+        });
+        mcqExplanation.classList.add('hidden');
+        mcqCounter.textContent = `שאלה ${currentMcqIndex + 1} / ${mcqQuestions.length}`;
+        if (window.MathJax) {
+            MathJax.typesetPromise([mcqQuestionText, mcqOptionsList]).catch(err => console.error("MathJax typesetting error (MCQ display):", err));
+        }
+    }
+
+    function handleMcqAnswer(event) {
+        // This function handles answers specifically for the single MCQ view
+        const selectedButton = event.target.closest('button');
+        if (!selectedButton) return; // Should not happen if event listener is on button
+        const selectedIndex = parseInt(selectedButton.dataset.index);
+        const q = mcqQuestions[currentMcqIndex];
+
+        // Disable all options in the single view
+        Array.from(mcqOptionsList.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = true;
+            if (parseInt(btn.dataset.index) === q.correctAnswer) {
+                btn.classList.add('correct');
+            } else if (parseInt(btn.dataset.index) === selectedIndex) {
+                btn.classList.add('incorrect');
+            }
+        });
+
+        mcqExplanationText.innerHTML = q.explanation; 
+        mcqExplanation.classList.remove('hidden');
+        if (window.MathJax) {
+            MathJax.typesetPromise([mcqExplanationText]).catch(err => console.error("MathJax typesetting error (MCQ explanation):", err));
+        }
+    }
+
+    // True/False Functions for single view
+    function displayTf() {
+        const q = trueFalseQuestions[currentTfIndex];
+        tfQuestionText.innerHTML = q.question; 
+        
+        // Enable and reset buttons in the single view
+        Array.from(tfOptionsList.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('correct', 'incorrect');
+        });
+
+        tfExplanation.classList.add('hidden');
+        tfCounter.textContent = `שאלה ${currentTfIndex + 1} / ${trueFalseQuestions.length}`;
+        if (window.MathJax) {
+            MathJax.typesetPromise([tfQuestionText]).catch(err => console.error("MathJax typesetting error (TF display):", err));
+        }
+    }
+
+    function handleTfAnswer(event) {
+        // This function handles answers specifically for the single T/F view
+        const selectedButton = event.target.closest('button');
+        if (!selectedButton) return;
+        const selectedAnswer = selectedButton.dataset.answer === 'true';
+        const q = trueFalseQuestions[currentTfIndex];
+
+        // Disable all options in single view
+        Array.from(tfOptionsList.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = true;
+            const btnAnswer = btn.dataset.answer === 'true';
+            if (btnAnswer === q.correctAnswer) {
+                btn.classList.add('correct');
+            }
+            // Mark selected incorrect answer
+            if (btn === selectedButton && selectedAnswer !== q.correctAnswer) {
+                btn.classList.add('incorrect');
+            }
+        });
+        
+        tfExplanationText.innerHTML = q.explanation; 
+        tfExplanation.classList.remove('hidden');
+        if (window.MathJax) {
+            MathJax.typesetPromise([tfExplanationText]).catch(err => console.error("MathJax typesetting error (TF explanation):", err));
+        }
+    }
+
+    // View All Functions - These generate and manage content for the "All Questions" sections
+    function populateAllMcqView() {
+        mcqAllViewContainer.innerHTML = ''; 
+        mcqQuestions.forEach((q, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('question-item');
+            // Unique IDs for elements within each item if needed, or rely on hierarchy
+            itemDiv.innerHTML = `
+                <h3>שאלה ${index + 1}</h3>
+                <p class="question-text">${q.question}</p>
+                <ul class="options-list">
+                    ${q.options.map((opt, optIndex) => `<li><button data-qindex="${index}" data-optindex="${optIndex}">${opt}</button></li>`).join('')}
+                </ul>
+                <div class="explanation hidden"> <!-- Explanation div is specific to this question item -->
+                    <p><span class="explanation-title">הסבר:</span> <span>${q.explanation}</span></p>
+                </div>
+            `;
+            mcqAllViewContainer.appendChild(itemDiv);
+            itemDiv.querySelectorAll('.options-list button').forEach(button => {
+                button.addEventListener('click', (e) => handleAllMcqAnswer(e, index, parseInt(button.dataset.optindex)));
+            });
+        });
+        mcqAllViewContainer.classList.remove('hidden');
+        mcqSingleView.classList.add('hidden'); // Hide single view
+        if (window.MathJax) {
+            MathJax.typesetPromise([mcqAllViewContainer]).catch(err => console.error("MathJax typesetting error (All MCQ view):", err));
+        }
+    }
+    
+    function handleAllMcqAnswer(event, questionIndex, selectedOptionIndex) {
+        // This function handles answers specifically for MCQs in the "All Questions" view
+        const q = mcqQuestions[questionIndex];
+        const questionItemDiv = event.target.closest('.question-item');
+        const optionButtons = questionItemDiv.querySelectorAll('.options-list button');
+        const explanationDiv = questionItemDiv.querySelector('.explanation');
+        const explanationTextSpan = explanationDiv.querySelector('span:last-child'); // Target the correct span
+
+        optionButtons.forEach((btn, optIdx) => {
+            btn.disabled = true;
+            if (optIdx === q.correctAnswer) {
+                btn.classList.add('correct');
+            } else if (optIdx === selectedOptionIndex) {
+                btn.classList.add('incorrect');
+            }
+        });
+        explanationTextSpan.innerHTML = q.explanation; // Update the correct explanation span
+        explanationDiv.classList.remove('hidden');
+        if (window.MathJax) {
+            MathJax.typesetPromise([explanationDiv]).catch(err => console.error("MathJax typesetting error (All MCQ explanation):", err));
+        }
+    }
+
+
+    function populateAllTfView() {
+        tfAllViewContainer.innerHTML = ''; 
+        trueFalseQuestions.forEach((q, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('question-item');
+            itemDiv.innerHTML = `
+                <h3>שאלה ${index + 1}</h3>
+                <p class="question-text">${q.question}</p>
+                <ul class="options-list">
+                    <li><button data-qindex="${index}" data-answer="true">נכון</button></li>
+                    <li><button data-qindex="${index}" data-answer="false">לא נכון</button></li>
+                </ul>
+                <div class="explanation hidden"> <!-- Explanation div specific to this question item -->
+                    <p><span class="explanation-title">הסבר:</span> <span>${q.explanation}</span></p>
+                </div>
+            `;
+            tfAllViewContainer.appendChild(itemDiv);
+            itemDiv.querySelectorAll('.options-list button').forEach(button => {
+                 button.addEventListener('click', (e) => handleAllTfAnswer(e, index, button.dataset.answer === 'true'));
+            });
+        });
+        tfAllViewContainer.classList.remove('hidden');
+        tfSingleView.classList.add('hidden'); 
+        if (window.MathJax) {
+            MathJax.typesetPromise([tfAllViewContainer]).catch(err => console.error("MathJax typesetting error (All TF view):", err));
+        }
+    }
+
+    function handleAllTfAnswer(event, questionIndex, selectedAnswer) {
+        // This function handles answers specifically for T/F questions in the "All Questions" view
+        const q = trueFalseQuestions[questionIndex];
+        const questionItemDiv = event.target.closest('.question-item');
+        const optionButtons = questionItemDiv.querySelectorAll('.options-list button');
+        const explanationDiv = questionItemDiv.querySelector('.explanation');
+        const explanationTextSpan = explanationDiv.querySelector('span:last-child'); // Target the correct span
+
+        optionButtons.forEach(btn => {
+            btn.disabled = true;
+            const btnAnswer = btn.dataset.answer === 'true';
+            if (btnAnswer === q.correctAnswer) {
+                btn.classList.add('correct');
+            }
+             // Mark selected incorrect answer
+            if (btn === event.target.closest('button') && selectedAnswer !== q.correctAnswer) {
+                 btn.classList.add('incorrect');
+            }
+        });
+        explanationTextSpan.innerHTML = q.explanation; // Update the correct explanation span
+        explanationDiv.classList.remove('hidden');
+        if (window.MathJax) {
+            MathJax.typesetPromise([explanationDiv]).catch(err => console.error("MathJax typesetting error (All TF explanation):", err));
+        }
+    }
+
+
+    // --- Event Listeners ---
+
+    // Study Cards
+    studyCard.addEventListener('click', () => {
+        studyCard.classList.toggle('is-flipped');
+    });
+    prevCardBtn.addEventListener('click', () => {
+        currentCardIndex = (currentCardIndex - 1 + studyCards.length) % studyCards.length;
+        displayCard();
+    });
+    nextCardBtn.addEventListener('click', () => {
+        currentCardIndex = (currentCardIndex + 1) % studyCards.length;
+        displayCard();
+    });
+
+    // MCQs (Single View Navigation)
+    prevMcqBtn.addEventListener('click', () => {
+        currentMcqIndex = (currentMcqIndex - 1 + mcqQuestions.length) % mcqQuestions.length;
+        displayMcq(); // Updates the single view elements
+    });
+    nextMcqBtn.addEventListener('click', () => {
+        currentMcqIndex = (currentMcqIndex + 1) % mcqQuestions.length;
+        displayMcq(); // Updates the single view elements
+    });
+    // MCQ options are handled by event listener in displayMcq()
+
+    viewAllMcqBtn.addEventListener('click', () => {
+        if (mcqAllViewContainer.classList.contains('hidden')) {
+            populateAllMcqView(); // Generates content for all view
+            viewAllMcqBtn.textContent = "הצג שאלה בודדת";
+        } else {
+            mcqAllViewContainer.classList.add('hidden');
+            mcqSingleView.classList.remove('hidden');
+            displayMcq(); // Refresh single view using its stable IDs
+            viewAllMcqBtn.textContent = "הצג את כל השאלות";
+        }
+    });
+    
+    // True/False (Single View Navigation and Options)
+    // Add event listeners to T/F option buttons in the single view
+    tfOptionsList.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', handleTfAnswer); // Uses single view handler
+    });
+    prevTfBtn.addEventListener('click', () => {
+        currentTfIndex = (currentTfIndex - 1 + trueFalseQuestions.length) % trueFalseQuestions.length;
+        displayTf(); // Updates the single view elements
+    });
+    nextTfBtn.addEventListener('click', () => {
+        currentTfIndex = (currentTfIndex + 1) % trueFalseQuestions.length;
+        displayTf(); // Updates the single view elements
+    });
+
+    viewAllTfBtn.addEventListener('click', () => {
+         if (tfAllViewContainer.classList.contains('hidden')) {
+            populateAllTfView(); // Generates content for all view
+            viewAllTfBtn.textContent = "הצג שאלה בודדת";
+        } else {
+            tfAllViewContainer.classList.add('hidden');
+            tfSingleView.classList.remove('hidden');
+            displayTf(); // Refresh single view using its stable IDs
+            viewAllTfBtn.textContent = "הצג את כל השאלות";
+        }
+    });
+
+    // --- Initializations ---
+    function init() {
+        displayCard();
+        displayMcq(); // Populates the single MCQ view
+        displayTf();  // Populates the single T/F view
+        
+        // General MathJax typesetting for any static content not covered by specific calls
+        // Or if specific calls are missed. Wait a bit for initial content to be in DOM.
+        setTimeout(() => {
+            if (window.MathJax) {
+                MathJax.typesetPromise().catch(err => console.error("Global MathJax typesetting error on init:", err));
+            }
+        }, 100); 
+    }
+
+    // Call init when DOM is ready
+    document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>

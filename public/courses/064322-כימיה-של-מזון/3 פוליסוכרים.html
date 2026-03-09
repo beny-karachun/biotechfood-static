@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: פוליסכרידים בכימיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "ג'לטיניזציה", definition: "תהליך בו גרגירי עמילן סופחים מים ומתנפחים בחום, תוך איבוד המבנה הגבישי ושחרור עמילוז. התהליך גורם לעלייה בצמיגות המערכת." },
+            { term: "רטרוגרדציה", definition: "תהליך המתרחש בעמילן שעבר ג'לטיניזציה בזמן קירור. שרשראות עמילן מסתדרות מחדש, לוכדות מים ויוצרות ג'ל. התהליך אחראי להתיישנות לחם." },
+            { term: "סינרזיס", definition: "תופעה של הפרשת מים מרשת הג'ל, הנגרמת כתוצאה מהתכווצות והידוק הקשרים בין שרשראות הפולימר במהלך רטרוגרדציה." },
+            { term: "גליקוגן", definition: "פוליסכריד אגירה בעלי חיים, המכונה גם עמילן מן החי. מורכב מגלוקוז בקשרי אלפא-1,4 עם הסתעפויות רבות בקשרי אלפא-1,6 כל 8-12 יחידות." },
+            { term: "עמילופקטין", definition: "הרכיב המסועף של העמילן. מורכב משרשראות גלוקוז בקשרי אלפא-1,4 עם הסתעפויות בקשרי אלפא-1,6 כל 20-30 יחידות גלוקוז." },
+            { term: "עמילוז", definition: "הרכיב הלינארי, כמעט ללא הסתעפויות, של העמילן. מורכב משרשראות ארוכות של גלוקוז המחוברות בקשרי אלפא-1,4." },
+            { term: "תאית (צלולוז)", definition: "פוליסכריד מבני בצמחים. פולימר לינארי של גלוקוז המחובר בקשרי בטא-1,4, המקנים לו מבנה ישר וגבישי שאינו ניתן לעיכול על ידי יונקים." },
+            { term: "כיטין", definition: "פוליסכריד מבני המצוי בדופן תא של פטריות ובשלד חיצוני של פרוקי רגליים. מורכב מיחידות חוזרות של אן-אצטיל גלוקוזאמין." },
+            { term: "כיטוזן", definition: "פולימר המופק מכיטין על ידי תהליך דה-אצטילציה (הסרת קבוצות אצטיל) בתמיסת בסיס חזקה וחמה." },
+            { term: "אינולין", definition: "פוליסכריד אגירה מסוג פרוקטזן (פולימר של פרוקטוז). לינארי, בעל משקל מולקולרי נמוך מעמילן, ומשמש כסיב תזונתי מסיס ותחליף שומן." },
+            { term: "הומופוליסכרידים", definition: "רב-סוכרים הבנויים מיחידת מונומר אחת החוזרת על עצמה, כגון עמילן, גליקוגן ותאית המורכבים כולם מגלוקוז." }
+        ];
+
+        const mcqData = [
+            { question: "מהו ההבדל המבני המרכזי בין גליקוגן לעמילופקטין, המסביר את תכונותיהם השונות?", options: ["גליקוגן בנוי מיחידות פרוקטוז ועמילופקטין מגלוקוז", "גליקוגן מכיל קשרי בטא-1,4 בעוד עמילופקטין מכיל קשרי אלפא-1,4", "גליקוגן מסועף בתדירות גבוהה יותר (כל 8-12 יחידות) מאשר עמילופקטין (כל 20-30 יחידות)", "גליקוגן הוא פולימר לינארי בעוד עמילופקטין הוא מסועף"], correctIndex: 2, explanation: "ההבדל העיקרי הוא בתדירות ההסתעפויות מסוג אלפא-1,6. תדירות ההסתעפות הגבוהה יותר בגליקוגן מאפשרת פירוק מהיר יותר של יחידות גלוקוז בקצוות." },
+            { question: "איזה מהתהליכים הבאים אינו חלק מתהליך הג'לטיניזציה של עמילן?", options: ["שבירת קשרי מימן בין שרשראות העמילן בגרגיר", "חדירת מולקולות מים לתוך הגרגיר", "יצירת אזורי צומת (junction zones) בין שרשראות עמילוז ועמילופקטין", "דליפה של מולקולות עמילוז מהגרגיר אל המים"], correctIndex: 2, explanation: "יצירת אזורי צומת היא השלב המרכזי בתהליך הרטרוגרדציה המתרחש בקירור, ולא בתהליך הג'לטיניזציה המתרחש בחימום." },
+            { question: "במאפייה מעוניינים לעכב את תהליך ההתיישנות (staling) של לחם. איזו מהפעולות הבאות תהיה היעילה ביותר למטרה זו?", options: ["אחסון הלחם במקרר בטמפרטורה של 4 מעלות צלזיוס", "שימוש בקמח דל עמילופקטין ועשיר בעמילוז", "הוספת חומרים מתחלבים (emulsifiers) לתערובת הבצק", "הגברת כמות המים במתכון כדי להגביר את הג'לטיניזציה"], correctIndex: 2, explanation: "חומרים מתחלבים ושומנים מפריעים לתהליך ההתארגנות מחדש של שרשראות העמילן ומעכבים את הרטרוגרדציה. אחסון בקירור דווקא מאיץ את התהליך." },
+            { question: "מדוע יונקים, כולל בני אדם, אינם יכולים לעכל תאית (צלולוז)?", options: ["בגלל המשקל המולקולרי הגבוה שלה", "מכיוון שהיא אינה מסיסה במים קרים", "בשל היעדר אנזים המפרק קשרי בטא-1,4 גליקוזידיים", "מכיוון שהיא בנויה מיחידות פרוקטוז ולא גלוקוז"], correctIndex: 2, explanation: "הסיבה היא היעדר אנזים צלולאז, המסוגל לפרק את קשרי בטא-1,4. לאנזימי העיכול האנושיים יש ספציפיות לקשרי אלפא." },
+            { question: "איזו תכונה אינה מאפיינת אינולין?", options: ["הוא פולימר לינארי של פרוקטוז", "הוא משמש תחליף שומן במוצרי מזון דלי קלוריות", "הוא יוצר צבע כחול-שחור עז במגע עם תמיסת יוד", "הוא משמש כסיב תזונתי מסיס"], correctIndex: 2, explanation: "אינולין נותן צבע צהוב במבחן יוד. הצבע הכחול-שחור אופייני לעמילן, ובמיוחד לרכיב העמילוז שבו." },
+            { question: "מה ההיגד הנכון ביותר המתאר את תפקיד הגליקוגן בכבד לעומת תפקידו בשריר?", options: ["בשניהם הוא משמש לוויסות רמת הסוכר בדם", "בכבד הוא משמש לאנרגיה מקומית, ובשריר לוויסות כללי", "בכבד הוא משמש כבופר לגלוקוז בדם, ובשריר לאנרגיה מקומית לצורכי השריר", "ריכוזו בשריר גבוה יותר מאשר בכבד"], correctIndex: 2, explanation: "הכבד משחרר גלוקוז לדם כדי לשמור על רמה יציבה לכלל הגוף, בעוד השריר משתמש במאגרי הגליקוגן שלו לאנרגיה זמינה עבור פעילותו בלבד." },
+            { question: "כיצד מופק כיטוזן מכיטין?", options: ["על ידי הידרוליזה חומצית המפרקת את השרשראות", "על ידי תהליך דה-אצטילציה בבסיס חזק וחם", "על ידי חמצון עם חומרים מחמצנים חזקים", "על ידי הסתעפות אנזימטית של שרשראות הכיטין"], correctIndex: 1, explanation: "כיטוזן הוא נגזרת של כיטין המתקבלת על ידי הסרת קבוצות האצטיל (דה-אצטילציה) בתנאים בסיסיים, מה שמשנה את תכונותיו הכימיות והפיזיקליות." },
+            { question: "איזה מהבאים מתאר נכונה את תהליך הסינרזיס?", options: ["התנפחות גרגירי עמילן במים חמים", "שחרור מים מרשת ג'ל מתכווצת במהלך קירור", "יצירת קשרי אלפא-1,6 בעמילופקטין", "עיכול אנזימטי של תאית במערכת העיכול"], correctIndex: 1, explanation: "סינרזיס, המכונה גם 'בכי', הוא תהליך הפרשת המים החוצה מהג'ל כתוצאה מהידוק הרשת הפולימרית במהלך רטרוגרדציה." },
+            { question: "איזה מהפוליסכרידים הבאים אינו הומופוליסכריד?", options: ["עמילן", "תאית", "חומצה היאלורונית", "גליקוגן"], correctIndex: 2, explanation: "חומצה היאלורונית היא הטרופוליסכריד, מכיוון שהיא בנויה מיחידות חוזרות של שני סוכרים שונים (חומצה גלוקורונית ואן-אצטיל-גלוקוזאמין). כל השאר בנויים מיחידות גלוקוז בלבד." },
+            { question: "במהלך בישול פסטה, המים הופכים עכורים ולבנים. מהי הסיבה הכימית הסבירה ביותר לתופעה זו?", options: ["חלבונים מהחיטה מתמוססים במים", "מולקולות עמילוז דולפות מגרגירי העמילן שעברו ג'לטיניזציה אל מי הבישול", "שומנים מהפסטה יוצרים אמולסיה במים החמים", "רטרוגרדציה מהירה של העמילן גורמת לשחרור מים"], correctIndex: 1, explanation: "החימום גורם לג'לטיניזציה של העמילן בפסטה. העמילוז הלינארי והמסיס יותר דולף החוצה מהמבנה ויוצר תמיסה קולואידית הגורמת לעכירות." },
+            { question: "מהי התכונה המבנית המשותפת לעמילוז ולתאית?", options: ["שניהם מסועפים מאוד", "שניהם מורכבים מיחידות גלוקוז המחוברות בקשרים לינאריים", "שניהם ניתנים לעיכול על ידי בני אדם", "שניהם יוצרים תגובת צבע כחולה עם יוד"], correctIndex: 1, explanation: "גם עמילוז וגם תאית הם פולימרים לינאריים של גלוקוז. ההבדל הקריטי ביניהם הוא סוג הקשר: אלפא-1,4 בעמילוז ובטא-1,4 בתאית." },
+            { question: "מהו GTR (Gelatinization Temperature Range)?", options: ["מדד לקצב הרטרוגרדציה", "ריכוז העמילן הדרוש ליצירת ג'ל", "טווח הטמפרטורות בו מתרחש איבוד הגבישיות של גרגיר העמילן", "הטמפרטורה המדויקת בה כל העמילוז דולף מהגרגיר"], correctIndex: 2, explanation: "GTR הוא טווח הטמפרטורות, ולא נקודה בודדת, שבו מתרחשת ג'לטיניזציה. טווח זה משתנה בין סוגי עמילן שונים." },
+            { question: "איזו מהתכונות הבאות אינה מאפיינת באופן כללי פוליסכרידים?", options: ["משקל מולקולרי גבוה", "טעם מתוק", "חוסר תכונות חיזור", "מבנה אמורפי או גבישי"], correctIndex: 1, explanation: "בניגוד למונוסכרידים ודיסכרידים, פוליסכרידים בדרך כלל אינם מתוקים בשל גודלם המולקולרי הגדול." },
+            { question: "מהו ההבדל העיקרי בין עמילוז לעמילופקטין מבחינת עיכול?", options: ["עמילוז מתעכל מהר יותר בשל מבנהו הפתוח", "עמילופקטין קשה יותר לעיכול בגלל ההסתעפויות", "שניהם אינם ניתנים לעיכול", "עמילופקטין קל יותר לעיכול בשל ריבוי הקצוות הלא-מחזרים הנגישים לאנזימים"], correctIndex: 3, explanation: "המבנה המסועף של עמילופקטין מספק קצוות רבים יותר להתקפה על ידי אנזימי העמילאז, ולכן פירוקו מהיר וקל יותר בהשוואה לעמילוז הלינארי והצפוף." },
+            { question: "איזה מהשימושים הבאים אינו משויך לנגזרות של תאית (צלולוז)?", options: ["ציפוי אנטרי לכדורים (Cellulose acetate phthalate)", "חומר נפץ (Nitrocellulose)", "ממתיק דל קלוריות (Methylcellulose)", "חומר משלשל (Sodium carboxymethyl cellulose)"], correctIndex: 2, explanation: "מתילצלולוז משמש כחומר מייצב ומשלשל (יוצר נפח), אך אינו משמש כממתיק. אינולין, לעומת זאת, יכול לשמש כממתיק דל קלוריות." },
+            { question: "איזה מהמשפטים הבאים מתאר באופן שגוי את ההבדלים בין עמילן לתאית?", options: ["עמילן משמש כחומר אגירה בצמחים, ותאית כחומר מבני", "בעמילן קשרי אלפא-1,4 ובתאית קשרי בטא-1,4", "עמילן מסיס במים חמים, ותאית אינה מסיסה במים", "שניהם יוצרים מבנה סלילי המאפשר קשירת יוד"], correctIndex: 3, explanation: "רק עמילוז, רכיב בעמילן, יוצר מבנה סלילי המאפשר קשירת יוד יעילה. המבנה הישר והשטוח של תאית אינו מאפשר זאת." },
+            { question: "מדוע יש כמות גדולה יותר של גליקוגן במסת השריר הכוללת בגוף מאשר בכבד, למרות שריכוזו בכבד גבוה יותר?", options: ["כי הגליקוגן בשריר דחוס יותר", "כי מסת השריר הכוללת בגוף גדולה משמעותית ממסת הכבד", "כי הכבד מפרק גליקוגן בקצב מהיר יותר", "כי השריר מייצר גליקוגן גם משומנים"], correctIndex: 1, explanation: "למרות שהריכוז (אחוז מהמשקל) גבוה יותר בכבד (10% לעומת 2%), המסה הכוללת של שרירי השלד בגוף גדולה בהרבה ממסת הכבד, ולכן סך כמות הגליקוגן המאוחסנת בהם גדולה יותר." },
+            { question: "מה קורה לצמיגות של תמיסת עמילן במהלך ג'לטיניזציה?", options: ["הצמיגות יורדת כי השרשראות נשברות", "הצמיגות עולה כי הגרגרים המתנפחים והעמילוז שדולף מגבירים את החיכוך", "הצמיגות אינה משתנה עד לשלב הקירור", "הצמיגות עולה ויורדת לסירוגין"], correctIndex: 1, explanation: "כאשר גרגירי העמילן סופחים מים ומתנפחים, וכאשר שרשראות עמילוז משתחררות למים, ההתנגדות לזרימה (צמיגות) של התמיסה עולה באופן משמעותי." },
+            { question: "איזה פולימר משמש כמקור העיקרי לסיבים תזונתיים בלתי מסיסים בתזונת האדם?", options: ["עמילופקטין", "אינולין", "גליקוגן", "תאית (צלולוז)"], correctIndex: 3, explanation: "תאית היא המרכיב העיקרי בדפנות תאי הצמח, ובשל אי-יכולתנו לעכל אותה, היא מהווה את רוב הסיבים הבלתי מסיסים בתזונה, התורמים לנפח הצואה." },
+            { question: "איזה מהחומרים הבאים הוא פולימר של אן-אצטיל גלוקוזאמין?", options: ["תאית", "אינולין", "כיטין", "כונדרואיטין סולפט"], correctIndex: 2, explanation: "כיטין הוא הומופוליסכריד מבני המורכב מיחידות חוזרות של הנגזרת אן-אצטיל גלוקוזאמין." },
+            { question: "כל ההיגדים הבאים על רטרוגרדציה נכונים, פרט לאחד. מהו ההיגד השגוי?", options: ["התהליך אחראי להתקשות לחם ישן", "התהליך מואץ על ידי הקפאה", "התהליך כרוך בהתארגנות מחדש של שרשראות עמילוז ועמילופקטין", "התהליך מגביר את מסיסות העמילן במים"], correctIndex: 3, explanation: "רטרוגרדציה היא תהליך של חזרה למצב מסודר יותר ופחות מסיס. היא גורמת ליצירת ג'ל ולהפרשת מים (סינרזיס), ובכך מקטינה את המסיסות הכוללת של המערכת." },
+            { question: "במבחן יוד, דגימה המכילה גליקוגן צפויה לתת צבע:", options: ["כחול-שחור עז", "אדום-סגול", "צהוב-חום", "ללא שינוי צבע"], correctIndex: 1, explanation: "עמילן (בעיקר עמילוז) נותן צבע כחול-שחור. גליקוגן, בשל מבנהו המסועף מאוד, נותן צבע אדום-סגול או חום-אדמדם." },
+            { question: "מהי קבוצת הפוליסכרידים אליה שייכים עמילן, גליקוגן ותאית?", options: ["פרוקטזנים", "גלוקוזאנים", "גלקטזנים", "הטרוגליקנים"], correctIndex: 1, explanation: "גלוקוזאנים הם הומופוליסכרידים הבנויים מיחידות גלוקוז. עמילן, גליקוגן ותאית כולם שייכים לקבוצה זו." },
+            { question: "מהי התוצאה של פירוק הידרוליטי מלא של גליקוגן?", options: ["גלוקוז בלבד", "תערובת של גלוקוז ופרוקטוז", "תערובת של עמילוז ועמילופקטין", "אן-אצטיל גלוקוזאמין"], correctIndex: 0, explanation: "גליקוגן הוא פולימר של גלוקוז, ולכן פירוק מלא שלו ייתן אך ורק את יחידות המונומר המרכיבות אותו, כלומר גלוקוז." },
+            { question: "מה ההבדל בין הטרופוליסכרידים להומופוליסכרידים?", options: ["הטרופוליסכרידים מסועפים והומופוליסכרידים לינאריים", "הטרופוליסכרידים בנויים מיותר מסוג אחד של מונוסכריד", "הטרופוליסכרידים מסיסים במים והומופוליסכרידים לא", "הטרופוליסכרידים נמצאים רק בבעלי חיים"], correctIndex: 1, explanation: "ההגדרה הבסיסית היא שהומופוליסכרידים בנויים מסוג אחד של יחידת סוכר חוזרת, בעוד הטרופוליסכרידים בנויים משני סוגים או יותר של יחידות סוכר." },
+            { question: "איזו תכונה אינה משותפת לכיטין ולתאית?", options: ["שניהם פולימרים מבניים", "שניהם בעלי קשרי בטא-1,4 גליקוזידיים", "שניהם אינם ניתנים לעיכול על ידי בני אדם", "שניהם מורכבים מיחידות גלוקוז בלבד"], correctIndex: 3, explanation: "בעוד שתאית מורכבת מגלוקוז, כיטין מורכב מהנגזרת של גלוקוז, אן-אצטיל גלוקוזאמין, המכילה קבוצת אצטיל-אמין." },
+            { question: "בתהליך הג'לטיניזציה, מהו הגורם המאפשר למים לחדור לגרגיר העמילן?", options: ["התפרקות קשרים קוולנטיים בשרשראות הגלוקוז", "עלייה בלחץ האוסמוטי מחוץ לגרגיר", "היחלשות ושבירה של קשרי מימן בין-מולקולריים עקב עליית האנרגיה הקינטית", "פעילות אנזימטית המפרקת את קרום הגרגיר"], correctIndex: 2, explanation: "החימום מספק אנרגיה קינטית למולקולות, הגורמת לתנודות חזקות יותר ולקריעת קשרי המימן החלשים יחסית שמחזיקים את השרשראות יחד במבנה הגבישי." },
+            { question: "איזה מהבאים אינו שימוש ידוע של אינולין בתעשיית המזון?", options: ["ממתיק בעל אינדקס גליקמי נמוך", "סיב תזונתי מסיס", "תחליף שומן וקרם", "חומר מתחלב חזק ליצירת מיונז"], correctIndex: 3, explanation: "אינולין משמש ליצירת מרקם קרמי כתחליף שומן, כממתיק וכסיב, אך אינו ידוע כחומר מתחלב קלאסי כמו לציטין או חלבוני ביצה המשמשים במיונז." },
+            { question: "מהי הסיבה לכך שעמילוז קשה יותר לעיכול מעמילופקטין?", options: ["עמילוז מכיל קשרי בטא", "עמילוז אינו מסיס כלל במים", "המבנה הלינארי והצפוף של עמילוז מקשה על הגישה של אנזימים", "עמילופקטין מכיל יותר גלוקוז"], correctIndex: 2, explanation: "השרשראות הלינאריות של העמילוז נוטות להסתדר בצפיפות וליצור אזורים גבישיים המקשים על חדירת אנזימי העמילאז ופירוק השרשרת." },
+            { question: "הוספת איזה מהחומרים הבאים לתמיסת עמילן שעברה ג'לטיניזציה תאט את קצב הרטרוגרדציה?", options: ["מלח שולחן", "חומצת לימון", "שומן", "יוני סידן"], correctIndex: 2, explanation: "שומנים ומתחלבים יכולים להפריע פיזית להתקרבות והתארגנות מחדש של שרשראות העמילן, ובכך להאט את תהליך הרטרוגרדציה והסינרזיס." },
+            { question: "כונדרואיטין סולפט הוא דוגמה לפוליסכריד חשוב. מה תפקידו העיקרי בגוף?", options: ["אגירת אנרגיה בשריר", "ויסות רמת הסוכר בדם", "מרכיב מבני בסחוס, בגידים וברקמות חיבור", "ציפוי מגן על פירות וירקות"], correctIndex: 2, explanation: "כונדרואיטין סולפט הוא הטרופוליסכריד מבני הנמצא בריכוז גבוה בסחוסים ורקמות חיבור, שם הוא תורם לגמישות ולעמידות בפני לחצים." },
+            { question: "איזה מהמשפטים הבאים מתאר באופן שגוי את מאפייני הפוליסכרידים?", options: ["בנויים ממספר רב של יחידות מונוסכריד הקשורות בקשרים גליקוזידיים", "בדרך כלל הם חסרי טעם ואינם מחזרים", "כולם פולימרים לינאריים ללא הסתעפויות", "בעלי משקל מולקולרי גבוה"], correctIndex: 2, explanation: "פוליסכרידים רבים, כגון עמילופקטין וגליקוגן, הם פולימרים מסועפים. הלינאריות אינה תכונה אוניברסלית של כל הפוליסכרידים." },
+            { question: "מהו ההסבר להיווצרות ג'ל במהלך קירור של תמיסת עמילן שעברה ג'לטיניזציה?", options: ["המים מתאדים והתמיסה מסמיכה", "שרשראות העמילוז והעמילופקטין מתארגנות מחדש ולוכדות ביניהן מולקולות מים", "הגרגירים השלמים מתחברים זה לזה ויוצרים רשת", "החלבונים שבעמילן עוברים דנטורציה ויוצרים רשת"], correctIndex: 1, explanation: "במהלך הקירור (רטרוגרדציה), שרשראות הפולימר מאבדות אנרגיה, מתקרבות זו לזו ויוצרות אזורי צומת (קשרי מימן). רשת תלת-ממדית זו לוכדת את מולקולות המים ומונעת מהן לזרום בחופשיות, וכך נוצר ג'ל." },
+            { question: "מה ההבדל בין כיטין לכיטוזן?", options: ["כיטין מסועף וכיטוזן לינארי", "כיטין מכיל קבוצות אצטיל-אמין שמוסרות בתהליך יצירת הכיטוזן", "כיטין הוא פולימר של גלוקוז וכיטוזן של פרוקטוז", "כיטין מסיס במים וכיטוזן לא"], correctIndex: 1, explanation: "כיטוזן נוצר מכיטין על ידי תהליך דה-אצטילציה, כלומר, הסרה של קבוצת האצטיל מקבוצת האמין שעל יחידת הסוכר. שינוי כימי זה מקנה לו תכונות חדשות." },
+            { question: "איזה מהבאים אינו נכון לגבי עמילן שעבר מודיפיקציה כימית (MFS)?", options: ["ניתן לשנות את יציבותו לחום, חומצה והקפאה", "ניתן לשנות את המרקם שלו", "השינוי הכימי הופך אותו תמיד לקל יותר לעיכול", "ניתן להאריך או לקצר את זמן הג'לטיניזציה שלו"], correctIndex: 2, explanation: "מודיפיקציה כימית של עמילן נעשית כדי לשפר תכונות פונקציונליות כמו יציבות ומרקם. היא לא בהכרח משפיעה על עיכול, ולעיתים יכולה ליצור עמילן עמיד שקשה יותר לעיכול." }
+        ];
+
+        const tfData = [
+            { question: "הקפאה מאיצה את תהליך הרטרוגרדציה (התיישנות) בעמילן.", answer: true, explanation: "הקפאה אכן מאיצה את התארגנות מחדש של שרשראות העמילן, ולכן לחם שהוקפא והופשר נוטה להתיישן מהר יותר." },
+            { question: "גליקוגן מסועף במידה רבה יותר מאשר עמילופקטין.", answer: true, explanation: "בגליקוגן יש הסתעפות כל 8-12 יחידות גלוקוז, בעוד שבעמילופקטין ההסתעפות היא כל 20-30 יחידות, ולכן הגליקוגן מסועף יותר." },
+            { question: "תאית אינה ניתנת לעיכול על ידי בני אדם עקב קיומם של קשרי אלפא-1,4 בין יחידות הגלוקוז.", answer: false, explanation: "הסיבה לחוסר היכולת לעכל תאית היא קיומם של קשרי בטא-1,4, שלאדם אין אנזים כדי לפרקם." },
+            { question: "במהלך ג'לטיניזציה, מולקולות עמילופקטין הן הראשונות שדולפות החוצה מגרגיר העמילן.", answer: false, explanation: "מולקולות העמילוז, שהן לינאריות וקטנות יותר, הן הראשונות שדולפות מגרגיר העמילן המתנפח." },
+            { question: "הוספת שומן או חומרים מתחלבים לבצק יכולה לעכב את תהליך התיישנות הלחם.", answer: true, explanation: "חומרים אלו מפריעים להתארגנות מחדש של שרשראות העמילן, ובכך מעכבים את תהליך הרטרוגרדציה." },
+            { question: "כיטוזן הוא פולימר טבעי המצוי בשפע בשלד חיצוני של סרטנים.", answer: false, explanation: "כיטין הוא הפולימר הטבעי. כיטוזן הוא נגזרת המופקת מכיטין בתהליך כימי של דה-אצטילציה." },
+            { question: "ריכוז הגליקוגן, כאחוז מהמשקל, גבוה יותר בשריר מאשר בכבד.", answer: false, explanation: "ריכוז הגליקוגן בכבד (כ-10%) גבוה יותר מריכוזו בשריר (כ-2%)." },
+            { question: "אינולין, בהיותו פולימר של פרוקטוז, נותן תגובת צבע כחול-שחור עזה עם יוד.", answer: false, explanation: "אינולין נותן צבע צהוב-חום עם יוד. הצבע הכחול-שחור אופייני לעמילן." },
+            { question: "מבחן יוד משמש לזיהוי עמילן, והצבע האופייני מתקבל בזכות יצירת קומפלקס בין היוד למבנה הסלילי של העמילוז.", answer: true, explanation: "מולקולות היוד נכלאות בתוך מבנה הסליל של העמילוז, מה שגורם להיווצרות קומפלקס מעבר מטען הנותן את הצבע הכחול העז." },
+            { question: "גם עמילן וגם תאית הם הומופוליסכרידים של גלוקוז.", answer: true, explanation: "שניהם פולימרים הבנויים מיחידת מונומר אחת חוזרת, שהיא גלוקוז." },
+            { question: "תהליך הסינרזיס מתאר את ספיחת המים לתוך גרגיר העמילן במהלך חימום.", answer: false, explanation: "זהו תיאור של ג'לטיניזציה. סינרזיס הוא תהליך הפרשת המים מרשת הג'ל במהלך רטרוגרדציה (קירור)." },
+            { question: "חומצה היאלורונית היא הומופוליסכריד המצוי ברקמות חיבור.", answer: false, explanation: "היא הטרופוליסכריד, כיוון שהיא בנויה משני סוגי סוכרים שונים החוזרים על עצמם לסירוגין." },
+            { question: "למרות שסך מסת הגליקוגן בגוף גדולה יותר בשרירים, הכבד הוא האיבר המווסת את רמת הגלוקוז בדם באמצעות מאגריו.", answer: true, explanation: "הכבד יכול לשחרר גלוקוז לזרם הדם לטובת כלל הגוף, בעוד השריר שומר את הגליקוגן לשימושו העצמי." },
+            { question: "עמילוז קשה יותר לעיכול מאשר עמילופקטין בשל מבנהו הלינארי והצפוף.", answer: true, explanation: "המבנה המסועף של העמילופקטין מספק יותר קצוות זמינים לפעולת אנזימים, ולכן הוא מתעכל בקלות רבה יותר." },
+            { question: "ניתן להפיק כיטוזן מכיטין על ידי תהליך אצטילציה בבסיס חזק.", answer: false, explanation: "התהליך הוא דה-אצטילציה, כלומר הסרת קבוצות אצטיל, ולא הוספתן (אצטילציה)." },
+            { question: "טווח טמפרטורת הג'לטיניזציה (GTR) הוא ערך קבוע לכל סוגי העמילנים.", answer: false, explanation: "GTR הוא תכונה ספציפית המשתנה בין עמילנים ממקורות שונים (תפוח אדמה, תירס, חיטה וכו')." },
+            { question: "תפקידו העיקרי של הגליקוגן בשריר הוא לשמש כמאגר אנרגיה זמין לצורכי השריר עצמו בלבד.", answer: true, explanation: "בניגוד לכבד, לשריר אין את האנזים הדרוש לשחרור גלוקוז חופשי לדם, ולכן הוא משתמש במאגרים לצרכיו בלבד." },
+            { question: "כל הפוליסכרידים אינם מתוקים ואינם בעלי תכונות חיזור.", answer: true, explanation: "אלו הן תכונות כלליות של פוליסכרידים. קצה הפולימר המחזר היחיד זניח ביחס למסה הכוללת, ולכן הם נחשבים לא-מחזרים." },
+            { question: "שינויים כימיים בעמילן יכולים להתבצע רק כדי לקצר את זמן הג'לטיניזציה.", answer: false, explanation: "מודיפיקציות כימיות יכולות להאריך או לקצר את זמן הג'לטיניזציה, לשנות יציבות, מרקם ועוד, בהתאם לצורך." },
+            { question: "פירוק מלא של אינולין נותן בעיקר יחידות גלוקוז.", answer: false, explanation: "אינולין הוא פרוקטזן, פולימר של פרוקטוז. פירוקו המלא ייתן בעיקר פרוקטוז (עם יחידת גלוקוז אחת בקצה)." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

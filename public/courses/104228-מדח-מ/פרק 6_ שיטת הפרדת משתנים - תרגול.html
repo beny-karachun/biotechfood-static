@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 6: שיטת הפרדת משתנים - תרגול</title>
+    <script>
+        // MathJax 3 Configuration
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true // Allows for \$ to represent a literal dollar sign
+            },
+            svg: {
+                fontCache: 'global' // Or 'local' or 'none'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333;
+            color: #E0E0E0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            background-color: #444; /* Slightly lighter than body for container */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        h1, h2, h3 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Theory Section */
+        .theory-section {
+            background-color: #555; /* Slightly lighter for section distinction */
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        .theory-section h3 {
+            margin-top: 0;
+            color: #50a5f0; /* Lighter blue for subheadings */
+            border-bottom: 1px solid #50a5f0;
+        }
+        .theory-section p, .theory-section ul {
+            margin-bottom: 10px;
+        }
+        .theory-section ul {
+            padding-right: 20px; /* Adjust for RTL */
+        }
+        .theory-section li {
+            margin-bottom: 5px;
+        }
+
+        /* Practice Section */
+        .practice-section, .all-problems-section {
+            background-color: #555;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .problem-counter {
+            text-align: center;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #A0D0F7;
+        }
+
+        .problem-statement {
+            background-color: #666;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #777;
+        }
+
+        .solution-area {
+            background-color: #6a6a6a; /* Slightly different for solution */
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px dashed #888;
+            display: none; /* Initially hidden */
+        }
+        .solution-area h4 {
+            margin-top:0;
+            color: #60b0ff;
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 5px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2E77B5;
+        }
+
+        .navigation-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+            margin-top: 20px;
+        }
+        .navigation-buttons button {
+            min-width: 100px;
+        }
+
+        /* All Problems Section Specifics */
+        .all-problems-section .problem-item {
+            background-color: #5c5c5c;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #707070;
+        }
+        .all-problems-section .problem-item h3 {
+            margin-top:0;
+            font-size: 1.2em;
+        }
+        .all-problems-section .problem-statement {
+            background-color: #6e6e6e;
+        }
+        .all-problems-section .solution-area {
+            background-color: #757575;
+        }
+
+
+        /* MathJax specific styling if needed - ensure LTR for math */
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important; /* For display math */
+        }
+        /* Ensure inline math also respects LTR if it inherits RTL */
+        mjx-container[display="true"] {
+             display: block;
+             margin: 1em 0;
+        }
+        .problem-statement p, .solution-area p, .theory-section p {
+            text-align: right; /* Default text alignment for Hebrew */
+        }
+        .problem-statement mjx-container, .solution-area mjx-container, .theory-section mjx-container {
+            text-align: left !important; /* Ensure math equations are LTR */
+        }
+
+        /* Code comments in problems/solutions */
+        .code-comment {
+            color: #90ee90; /* Light green for comments */
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 6: שיטת הפרדת משתנים - תרגול</h1>
+
+        <!-- Theory Section -->
+        <div class="theory-section">
+            <h2>חומר תיאורטי: פרק 6 - שיטת הפרדת משתנים</h2>
+            <p>פרק זה עוסק בשיטת הפרדת המשתנים, טכניקה מרכזית לפתרון משוואות דיפרנציאליות חלקיות (מד"ח) לינאריות עם תנאי שפה, במיוחד בתחומים חסומים. הרעיון המרכזי הוא להניח שהפתרון יכול להתבטא כמכפלה של פונקציות, כאשר כל פונקציה תלויה במשתנה בלתי תלוי אחד בלבד. הנחה זו הופכת את המד"ח למערכת של משוואות דיפרנציאליות רגילות (מד"ר), שהן לרוב קלות יותר לפתרון.</p>
+
+            <h3>6.1 בעיית החום ההומוגנית</h3>
+            <p>בסעיף זה פותרים את משוואת החום ההומוגנית החד-ממדית $u_t - k u_{xx} = 0$ בתחום סופי (למשל, $0 < x < L$) עם תנאי שפה הומוגניים (בדרך כלל דיריכלה, $u(0,t)=0, u(L,t)=0$) ותנאי התחלה $u(x,0) = f(x)$.</p>
+            <p>שלבי השיטה:</p>
+            <ol>
+                <li>הנחת פתרון מהצורה $u(x,t) = X(x)T(t)$.</li>
+                <li>הצבה במד"ח והפרדת משתנים: $\frac{T'(t)}{k T(t)} = \frac{X''(x)}{X(x)} = -\lambda$ (כאשר $\lambda$ הוא קבוע ההפרדה).</li>
+                <li>קבלת שתי מד"ר:
+                    <ul>
+                        <li>מד"ר מרחבית: $X''(x) + \lambda X(x) = 0$, עם תנאי שפה $X(0)=0, X(L)=0$. זוהי בעיית שטורם-ליוביל.</li>
+                        <li>מד"ר זמנית: $T'(t) + k\lambda T(t) = 0$.</li>
+                    </ul>
+                </li>
+                <li>פתרון בעיית שטורם-ליוביל עבור $X(x)$ לקבלת ערכים עצמיים $\lambda_n$ ופונקציות עצמיות $X_n(x)$ (למשל, $\lambda_n = (\frac{n\pi}{L})^2$, $X_n(x) = \sin(\frac{n\pi x}{L})$ עבור תנאי דיריכלה).</li>
+                <li>לכל $\lambda_n$, פתרון המד"ר הזמנית עבור $T_n(t)$ (למשל, $T_n(t) = A_n e^{-k\lambda_n t}$).</li>
+                <li>הפתרון הכללי הוא סופרפוזיציה (טור אינסופי) של פתרונות המכפלה: $u(x,t) = \sum A_n X_n(x) T_n(t)$.</li>
+                <li>קביעת המקדמים $A_n$ על-ידי שימוש בתנאי ההתחלה $u(x,0) = f(x)$, לרוב על-ידי פיתוח $f(x)$ לטור פורייה של הפונקציות העצמיות $X_n(x)$.</li>
+            </ol>
+
+            <h3>6.2 בדיקת אמיתות הפתרון</h3>
+            <p>סעיף זה דן בתנאים שבהם פתרון הטור הפורמלי שהתקבל הוא פתרון קלאסי (כלומר, גזיר מספיק פעמים). הדבר כרוך באימות שהטור עבור $u(x,t)$ ונגזרותיו הרלוונטיות ($u_t, u_{xx}$) מתכנסים במידה שווה. נדרשים תנאי חלקות מסוימים על נתוני ההתחלה $f(x)$.</p>
+
+            <h3>6.3 בעיית חום לא הומוגנית</h3>
+            <p>כאן פותרים את משוואת החום הלא-הומוגנית $u_t - k u_{xx} = F(x,t)$ (כאשר $F(x,t)$ הוא איבר מקור) עם תנאי שפה הומוגניים ותנאי התחלה. השיטה הנפוצה היא פיתוח לפי פונקציות עצמיות:</p>
+            <ol>
+                <li>מוצאים את הפונקציות העצמיות $X_n(x)$ מהבעיה המרחבית ההומוגנית המתאימה.</li>
+                <li>מניחים שהפתרון $u(x,t)$ ניתן לפיתוח כטור עם מקדמים תלויי זמן: $u(x,t) = \sum T_n(t)X_n(x)$.</li>
+                <li>מפתחים את איבר המקור $F(x,t)$ באמצעות אותן פונקציות עצמיות: $F(x,t) = \sum F_n(t)X_n(x)$.</li>
+                <li>הצבת הטורים במד"ח הלא-הומוגנית מובילה, באמצעות אורתוגונליות הפונקציות העצמיות, למערכת של מד"ר לא-הומוגניות מסדר ראשון עבור כל $T_n(t)$: $T_n'(t) + k\lambda_n T_n(t) = F_n(t)$.</li>
+                <li>פותרים מד"ר אלו עבור $T_n(t)$ ומיישמים תנאי התחלה $T_n(0)$ הנגזרים מפיתוח פורייה של תנאי ההתחלה $u(x,0) = f(x)$.</li>
+            </ol>
+
+            <h3>6.4 בעיית הגלים ההומוגנית</h3>
+            <p>בסעיף זה פותרים את משוואת הגלים ההומוגנית $u_{tt} - c^2 u_{xx} = 0$ בתחום סופי עם תנאי שפה הומוגניים ושני תנאי התחלה: $u(x,0) = f(x)$ (העתק התחלתי) ו-$u_t(x,0) = g(x)$ (מהירות התחלתית).</p>
+            <p>השיטה דומה לזו של משוואת החום, אך המד"ר הזמנית עבור $T(t)$ היא מסדר שני: $T''(t) + c^2\lambda T(t) = 0$. הפתרון $T_n(t)$ יכלול קוסינוסים וסינוסים. שני תנאי ההתחלה משמשים לקביעת שני סוגי המקדמים בטור הפתרון.</p>
+
+            <h3>6.5 משוואת הגלים האי-הומוגנית - תופעת התהודה</h3>
+            <p>כאשר פותרים את משוואת הגלים הלא-הומוגנית $u_{tt} - c^2 u_{xx} = F(x,t)$ בשיטת פיתוח לפי פונקציות עצמיות, מתקבלות מד"ר לא-הומוגניות מסדר שני עבור $T_n(t)$: $T_n''(t) + c^2\lambda_n T_n(t) = F_n(t)$.</p>
+            <p>אם לאיבר הכפייה $F_n(t)$ (לרוב סינוסואידלי) יש תדירות $\omega$ הזהה לאחת התדירויות הטבעיות של המערכת ($\sqrt{\lambda_n}c$), הפתרון עבור אותו $T_n(t)$ יכיל איברים כמו $t\sin(\omega t)$ או $t\cos(\omega t)$. דבר זה גורם לאמפליטודה של אותו אופן תנודה לגדול ללא הגבלה עם הזמן, תופעה הידועה כתהודה (Resonance). אם $\omega$ אינו תואם אף תדירות טבעית, הפתרונות $T_n(t)$ נשארים חסומים.</p>
+
+            <h3>6.6 תנאי שפה אי-הומוגניים</h3>
+            <p>כאשר תנאי השפה אינם כולם אפס (למשל, $u(0,t) = \alpha(t), u(L,t) = \beta(t)$), יש להפוך את הבעיה לכזו עם תנאי שפה הומוגניים. עושים זאת על ידי הגדרת פונקציית עזר $w(x,t)$ שמקיימת את תנאי השפה האי-הומוגניים הנתונים (למשל, $w(x,t) = \alpha(t) + \frac{x}{L}(\beta(t)-\alpha(t))$). לאחר מכן, מגדירים פונקציה נעלמת חדשה $v(x,t) = u(x,t) - w(x,t)$. הבעיה עבור $v(x,t)$ תהיה עם תנאי שפה הומוגניים, אך ייתכן שהמד"ח עבור $v$ תהפוך ללא-הומוגנית. פותרים עבור $v(x,t)$ והפתרון הסופי הוא $u(x,t) = v(x,t) + w(x,t)$.</p>
+
+            <h3>6.7 סיכום סכמטי של הפרדת משתנים</h3>
+            <p>סעיף זה מסכם את שלבי השיטה באופן אלגוריתמי:</p>
+            <ol>
+                <li>טיפול בתנאי שפה אי-הומוגניים במידת הצורך.</li>
+                <li>הנחת $u = X(x)T(t)$ עבור המד"ח ההומוגנית ותנאי השפה ההומוגניים.</li>
+                <li>מציאת ערכים עצמיים $\lambda_n$ ופונקציות עצמיות $X_n(x)$.</li>
+                <li>כתיבת הפתרון כטור $u(x,t) = \sum T_n(t)X_n(x)$.</li>
+                <li>הצבת הטור במד"ח (העשויה להיות לא-הומוגנית) לקבלת מד"ר עבור $T_n(t)$.</li>
+                <li>שימוש בתנאי התחלה למציאת הפתרונות הפרטיים עבור $T_n(t)$.</li>
+                <li>בדיקת אמיתות הפתרון.</li>
+            </ol>
+
+            <h3>6.8 אינטגרל האנרגיה ויחידות הפתרון</h3>
+            <p>זוהי שיטה להוכחת יחידות הפתרון של מד"ח לינאריות. הרעיון הוא להניח שקיימים שני פתרונות, $u_1$ ו-$u_2$. ההפרש שלהם, $w = u_1 - u_2$, יקיים את המד"ח ההומוגנית עם תנאי שפה הומוגניים ותנאי התחלה אפס. מגדירים פונקציונל "אנרגיה" אי-שלילי $E(t)$ הקשור ל-$w$. מראים ש-$\frac{dE}{dt} \le 0$ (עבור משוואת החום) או $\frac{dE}{dt} = 0$ (עבור משוואת הגלים הלא מרוסנת). מכיוון ש-$E(0)=0$ (כי $w(x,0)=0$), ו-$E(t) \ge 0$, יחד עם התנהגות הנגזרת, נובע ש-$E(t) = 0$ לכל $t > 0$. מכך נובע ש-$w(x,t) = 0$ בכל מקום, ולכן $u_1 = u_2$, מה שמוכיח יחידות.</p>
+            <p>עבור משוואת החום: $E(t) = \frac{1}{2} \int w^2(x,t) dx$.</p>
+            <p>עבור משוואת הגלים: $E(t) = \frac{1}{2} \int [w_t^2(x,t) + c^2w_x^2(x,t)] dx$.</p>
+        </div>
+
+        <!-- Practice Section -->
+        <div class="practice-section">
+            <h2>תרגול אינטראקטיבי</h2>
+            <div class="problem-counter" id="problem-counter">בעיה 1 / 25</div>
+            <div id="current-problem-statement" class="problem-statement">
+                <!-- Problem statement will be loaded here -->
+            </div>
+            <button id="show-solution-btn">הצג פתרון</button>
+            <div id="current-problem-solution" class="solution-area">
+                <!-- Solution will be loaded here -->
+            </div>
+            <div class="navigation-buttons">
+                <button id="prev-problem-btn">הבעיה הקודמת</button>
+                <button id="next-problem-btn">הבעיה הבאה</button>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="view-all-problems-btn">הצג את כל הבעיות</button>
+            </div>
+        </div>
+
+        <!-- All Problems Section (hidden by default) -->
+        <div id="all-problems-container" class="all-problems-section" style="display: none;">
+            <h2>כל הבעיות</h2>
+            <!-- All problems will be appended here by JavaScript -->
+        </div>
+
+    </div>
+
+    <script>
+        // JavaScript for interactivity
+
+        // Array of problems (statement and solution in LaTeX)
+        // CRITICAL: Use double backslashes for LaTeX commands in JavaScript strings
+        const problems = [
+            { // Problem 1 (Sec 6.1)
+                statement: "נתונה בעיית החום ההומוגנית $u_t = k u_{xx}$ על התחום $0 < x < L, t > 0$ עם תנאי שפה $u(0,t) = 0, u(L,t) = 0$. השתמשו בשיטת הפרדת משתנים $u(x,t) = X(x)T(t)$ כדי למצוא את המשוואות הדיפרנציאליות הרגילות (ODEs) עבור $X(x)$ ו-$T(t)$, ואת הצורה הכללית של הפתרונות להן (לפני קביעת קבועים).",
+                solution: "<h4>פתרון:</h4><p>1. הנחת פתרון: $u(x,t) = X(x)T(t)$.</p><p>2. הצבה במד\"ח: $X(x)T'(t) = k X''(x)T(t)$.</p><p>3. הפרדת משתנים (נחלק ב-$kX(x)T(t)$, בהנחה שאינם אפס):</p><p>$\\frac{T'(t)}{k T(t)} = \\frac{X''(x)}{X(x)}$</p><p>מכיוון שאגף שמאל תלוי רק ב-$t$ ואגף ימין תלוי רק ב-$x$, שני האגפים חייבים להיות שווים לקבוע, נסמנו $-\\lambda$:</p><p>$\\frac{T'(t)}{k T(t)} = -\\lambda \\quad \\Rightarrow \\quad T'(t) + k\\lambda T(t) = 0$</p><p>$\\frac{X''(x)}{X(x)} = -\\lambda \\quad \\Rightarrow \\quad X''(x) + \\lambda X(x) = 0$</p><p>4. תנאי השפה עבור $X(x)$:</p><p>$u(0,t) = X(0)T(t) = 0$. מכיוון שאיננו מחפשים פתרון טריוויאלי ($T(t) \\neq 0$), חייב להתקיים $X(0)=0$.</p><p>$u(L,t) = X(L)T(t) = 0$. מאותה סיבה, $X(L)=0$.</p><p>5. המשוואות הדיפרנציאליות הרגילות הן:</p><p>   א. עבור $X(x)$: $X''(x) + \\lambda X(x) = 0$, עם תנאי שפה $X(0)=0, X(L)=0$.</p><p>   ב. עבור $T(t)$: $T'(t) + k\\lambda T(t) = 0$.</p><p>6. צורת הפתרונות הכלליים (לפני בחינת $\\lambda$ עבור $X(x)$):</p><p>   א. עבור $X(x)$: תלוי בסימן של $\\lambda$. הפתרונות הלא-טריוויאליים מתקבלים עבור $\\lambda > 0$. נסמן $\\lambda = \\alpha^2$ ($\alpha > 0$). אז $X(x) = C_1 \\cos(\\alpha x) + C_2 \\sin(\\alpha x)$.</p><p>      מתנאי השפה: $X(0)=0 \\Rightarrow C_1 = 0$.</p><p>      $X(L)=0 \\Rightarrow C_2 \\sin(\\alpha L) = 0$. כדי ש-$C_2 \\neq 0$ (פתרון לא טריוויאלי), צריך $\\sin(\\alpha L) = 0$, כלומר $\\alpha L = n\\pi$ עבור $n \\in \\mathbb{N}$ (שלם חיובי).</p><p>      לכן, $\\alpha_n = \\frac{n\\pi}{L}$, והערכים העצמיים הם $\\lambda_n = (\\frac{n\\pi}{L})^2$.</p><p>      הפונקציות העצמיות הן $X_n(x) = C_n \\sin(\\frac{n\\pi x}{L})$.</p><p>   ב. עבור $T(t)$: $T'(t) + k\\lambda_n T(t) = 0$. זהו מד\"ר לינארית מסדר ראשון. פתרונה הוא $T_n(t) = A_n e^{-k\\lambda_n t}$.</p>"
+            },
+            { // Problem 2 (Sec 6.1)
+                statement: "בהמשך לבעיה הקודמת, אם תנאי ההתחלה הוא $u(x,0) = f(x) = 3\\sin(\\frac{\\pi x}{L}) - 5\\sin(\\frac{3\\pi x}{L})$, מהו הפתרון $u(x,t)$?",
+                solution: "<h4>פתרון:</h4><p>1. הפתרון הכללי מבעיה 1 הוא מהצורה $u(x,t) = \\sum_{n=1}^{\\infty} B_n X_n(x) T_n(t)$, כאשר $B_n$ הוא קבוע חדש (שילוב של $A_n$ ו-$C_n$).</p><p>$u(x,t) = \\sum_{n=1}^{\\infty} B_n \\sin(\\frac{n\\pi x}{L}) e^{-k(\\frac{n\\pi}{L})^2 t}$</p><p>2. נשתמש בתנאי ההתחלה $u(x,0) = f(x)$:</p><p>$u(x,0) = \\sum_{n=1}^{\\infty} B_n \\sin(\\frac{n\\pi x}{L}) e^0 = \\sum_{n=1}^{\\infty} B_n \\sin(\\frac{n\\pi x}{L})$</p><p>3. נתון $f(x) = 3\\sin(\\frac{\\pi x}{L}) - 5\\sin(\\frac{3\\pi x}{L})$.</p><p>4. על ידי השוואת מקדמים (מכיוון ש-$f(x)$ כבר נתון כטור פורייה סופי של סינוסים בבסיס המתאים):</p><p>   עבור $n=1$: $B_1 = 3$.</p><p>   עבור $n=3$: $B_3 = -5$.</p><p>   עבור כל $n$ אחר ($n \\neq 1, 3$): $B_n = 0$.</p><p>5. לכן, הפתרון הפרטי הוא:</p><p>$u(x,t) = B_1 \\sin(\\frac{\\pi x}{L}) e^{-k(\\frac{\\pi}{L})^2 t} + B_3 \\sin(\\frac{3\\pi x}{L}) e^{-k(\\frac{3\\pi}{L})^2 t}$</p><p>$u(x,t) = 3\\sin(\\frac{\\pi x}{L}) e^{-k\\frac{\\pi^2}{L^2} t} - 5\\sin(\\frac{3\\pi x}{L}) e^{-k\\frac{9\\pi^2}{L^2} t}$</p>"
+            },
+            // ... More problems to be added here, covering all sections
+            { // Problem 3 (Sec 6.1 - modified BCs)
+                statement: "פתרו את משוואת החום $u_t = k u_{xx}$ בתחום $0 < x < L, t > 0$ עם תנאי שפה $u_x(0,t) = 0$ ו-$u_x(L,t) = 0$ (קצוות מבודדים), ותנאי התחלה $u(x,0) = f(x)$. מהן הפונקציות העצמיות $X_n(x)$ והערכים העצמיים $\\lambda_n$ במקרה זה?",
+                solution: "<h4>פתרון:</h4><p>1. הפרדת משתנים $u(x,t) = X(x)T(t)$ מובילה לאותן מד\"ר כמו קודם:</p><p>   $X''(x) + \\lambda X(x) = 0$</p><p>   $T'(t) + k\\lambda T(t) = 0$</p><p>2. תנאי השפה עבור $X(x)$ הם כעת $X'(0)=0$ ו-$X'(L)=0$.</p><p>3. פתרון $X(x)$:</p><p>   א. אם $\\lambda = 0$: $X''(x) = 0 \\Rightarrow X(x) = Ax+B$.</p><p>      $X'(x) = A$. $X'(0)=0 \\Rightarrow A=0$. $X'(L)=0 \\Rightarrow A=0$.</p><p>      לכן $X(x) = B$ (קבוע) הוא פתרון. זה מתאים לערך עצמי $\\lambda_0 = 0$ ופונקציה עצמית $X_0(x) = 1$ (נבחר $B=1$).</p><p>   ב. אם $\\lambda < 0$, נסמן $\\lambda = -\\alpha^2$ ($\alpha > 0$): $X''(x) - \\alpha^2 X(x) = 0$.</p><p>      $X(x) = C_1 e^{\\alpha x} + C_2 e^{-\\alpha x}$. $X'(x) = \\alpha C_1 e^{\\alpha x} - \\alpha C_2 e^{-\\alpha x}$.</p><p>      $X'(0)=0 \\Rightarrow \\alpha C_1 - \\alpha C_2 = 0 \\Rightarrow C_1 = C_2$.</p><p>      $X'(L)=0 \\Rightarrow \\alpha C_1 e^{\\alpha L} - \\alpha C_1 e^{-\\alpha L} = 0 \\Rightarrow C_1 (e^{\\alpha L} - e^{-\\alpha L}) = 0$.</p><p>      מכיוון ש-$e^{\\alpha L} \\neq e^{-\\alpha L}$ עבור $\\alpha L \\neq 0$, חייב להתקיים $C_1=0$, ולכן $C_2=0$. זהו פתרון טריוויאלי.</p><p>   ג. אם $\\lambda > 0$, נסמן $\\lambda = \\alpha^2$ ($\alpha > 0$): $X''(x) + \\alpha^2 X(x) = 0$.</p><p>      $X(x) = C_1 \\cos(\\alpha x) + C_2 \\sin(\\alpha x)$. $X'(x) = -\\alpha C_1 \\sin(\\alpha x) + \\alpha C_2 \\cos(\\alpha x)$.</p><p>      $X'(0)=0 \\Rightarrow \\alpha C_2 = 0 \\Rightarrow C_2 = 0$.</p><p>      $X'(L)=0 \\Rightarrow -\\alpha C_1 \\sin(\\alpha L) = 0$. כדי ש-$C_1 \\neq 0$, צריך $\\sin(\\alpha L) = 0$.</p><p>      לכן $\\alpha L = n\\pi$ עבור $n \\in \\mathbb{N}$. $\\alpha_n = \\frac{n\\pi}{L}$.</p><p>      הערכים העצמיים הם $\\lambda_n = (\\frac{n\\pi}{L})^2$ עבור $n=1, 2, 3, ...$</p><p>      הפונקציות העצמיות הן $X_n(x) = C_n \\cos(\\frac{n\\pi x}{L})$.</p><p>4. סיכום הערכים והפונקציות העצמיות:</p><p>   $\\lambda_0 = 0, X_0(x) = 1$ (או קבוע כלשהו).</p><p>   $\\lambda_n = (\\frac{n\\pi}{L})^2, X_n(x) = \\cos(\\frac{n\\pi x}{L})$ עבור $n=1, 2, 3, ...$</p><p>5. הפתרון עבור $T_n(t)$:</p><p>   עבור $\\lambda_0 = 0$: $T_0'(t) = 0 \\Rightarrow T_0(t) = A_0$ (קבוע).</p><p>   עבור $\\lambda_n = (\\frac{n\\pi}{L})^2$: $T_n'(t) + k(\\frac{n\\pi}{L})^2 T_n(t) = 0 \\Rightarrow T_n(t) = A_n e^{-k(\\frac{n\\pi}{L})^2 t}$.</p><p>6. הפתרון הכללי הוא $u(x,t) = A_0 + \\sum_{n=1}^{\\infty} A_n \\cos(\\frac{n\\pi x}{L}) e^{-k(\\frac{n\\pi}{L})^2 t}$.</p><p>   המקדמים $A_n$ ייקבעו מתנאי ההתחלה $u(x,0)=f(x)$ באמצעות פיתוח $f(x)$ לטור פורייה של קוסינוסים.</p>"
+            },
+            { // Problem 4 (Sec 6.2)
+                statement: "מהם התנאים על פונקציית ההתחלה $f(x)$ ועל פתרון הטור $u(x,t) = \\sum A_n X_n(x) T_n(t)$ הנדרשים כדי שהטור ונגזרותיו הרלוונטיות ($u_t, u_{xx}$) יתכנסו במידה שווה, ובכך יהוו פתרון קלאסי למשוואת החום?",
+                solution: "<h4>פתרון:</h4><p>כדי שפתרון הטור $u(x,t) = \\sum A_n X_n(x) T_n(t)$ יהיה פתרון קלאסי, הטור עצמו ונגזרותיו המופיעות במד\"ח ($u_t, u_{xx}$) צריכים להתכנס במידה שווה בתחום הרלוונטי (לרוב עבור $t > 0$).</p><p>1.  <strong>התכנסות $u(x,t)$</strong>: לרוב מובטחת אם $f(x)$ רציפה למקוטעין וחסומה, והמקדמים $A_n$ דועכים מספיק מהר (מה שקורה אם $f(x)$ מספיק חלקה). הפקטור המעריכי $e^{-k\\lambda_n t}$ ב-$T_n(t)$ עוזר מאוד להתכנסות עבור $t>0$, מכיוון ש-$\lambda_n \\to \\infty$.</p><p>2.  <strong>התכנסות $u_x(x,t)$ ו-$u_{xx}(x,t)$</strong>: דורשת התכנסות במידה שווה של טורי הנגזרות $\\sum A_n X_n'(x) T_n(t)$ ו-$\\sum A_n X_n''(x) T_n(t)$. מכיוון ש-$X_n''(x) = -\\lambda_n X_n(x)$, התכנסות $u_{xx}$ קשורה להתכנסות $\\sum A_n \\lambda_n X_n(x) T_n(t)$. הדבר דורש ש-$f(x)$ תהיה גזירה פעמיים, ותנאי שפה מסוימים יתקיימו על ידי $f(x)$ ונגזרותיה (תאימות עם תנאי השפה של $X_n(x)$). לדוגמה, אם תנאי השפה הם $u(0,t)=u(L,t)=0$, אז רצוי ש-$f(0)=f(L)=0$. אם $f(x)$ מקיימת תנאים אלו והיא רציפה עם נגזרת ראשונה רציפה למקוטעין ונגזרת שנייה רציפה למקוטעין, אז מקדמי פורייה $A_n$ ידעכו מספיק מהר (כמו $1/n^3$ או מהר יותר עבור $f$ חלקה יותר) כדי להבטיח התכנסות במידה שווה של $u_{xx}$.</p><p>3.  <strong>התכנסות $u_t(x,t)$</strong>: $u_t = \\sum A_n X_n(x) T_n'(t) = \\sum A_n X_n(x) (-k\\lambda_n T_n(t)) = -k \\sum A_n \\lambda_n X_n(x) T_n(t)$. זו אותה דרישה כמו להתכנסות $u_{xx}$ (עד כדי פקטור $-k$).</p><p>באופן כללי, ככל ש-$f(x)$ חלקה יותר ומקיימת את תנאי השפה בצורה טובה יותר, כך מקדמי פורייה $A_n$ דועכים מהר יותר, והתכנסות הטורים ונגזרותיהם מובטחת יותר. לדוגמה, אם $f(x)$ היא $C^2$ ומקיימת $f(0)=f(L)=0$ ו-$f''(0)=f''(L)=0$ (במקרה של תנאי דיריכלה), התכנסות הטורים תהיה טובה. משפט ויירשטראס (M-test) הוא כלי שימושי להוכחת התכנסות במידה שווה של טורי פונקציות.</p>"
+            },
+            { // Problem 5 (Sec 6.3)
+                statement: "נתונה בעיית החום הלא-הומוגנית $u_t - k u_{xx} = F(x,t)$ עם תנאי שפה הומוגניים $u(0,t)=0, u(L,t)=0$. אם מניחים פתרון מהצורה $u(x,t) = \\sum_{n=1}^{\\infty} T_n(t)X_n(x)$ כאשר $X_n(x) = \\sin(\\frac{n\\pi x}{L})$ הן הפונקציות העצמיות של בעיית שטורם-ליוביל המרחבית המתאימה, ומרחיבים את $F(x,t) = \\sum_{n=1}^{\\infty} F_n(t)X_n(x)$, מהי המשוואה הדיפרנציאלית הרגילה (ODE) עבור $T_n(t)$?",
+                solution: "<h4>פתרון:</h4><p>1. הפונקציות העצמיות $X_n(x) = \\sin(\\frac{n\\pi x}{L})$ מקיימות $X_n''(x) = -(\\frac{n\\pi}{L})^2 X_n(x) = -\\lambda_n X_n(x)$, כאשר $\\lambda_n = (\\frac{n\\pi}{L})^2$.</p><p>2. נתון הפתרון $u(x,t) = \\sum_{n=1}^{\\infty} T_n(t)X_n(x)$. נגזור לפי $t$ ולפי $x$ (בהנחת התכנסות המאפשרת גזירה איבר-איבר):</p><p>$u_t(x,t) = \\sum_{n=1}^{\\infty} T_n'(t)X_n(x)$</p><p>$u_x(x,t) = \\sum_{n=1}^{\\infty} T_n(t)X_n'(x)$</p><p>$u_{xx}(x,t) = \\sum_{n=1}^{\\infty} T_n(t)X_n''(x) = \\sum_{n=1}^{\\infty} T_n(t)(-\\lambda_n X_n(x)) = -\\sum_{n=1}^{\\infty} \\lambda_n T_n(t)X_n(x)$</p><p>3. נציב במד\"ח $u_t - k u_{xx} = F(x,t)$:</p><p>$\\sum_{n=1}^{\\infty} T_n'(t)X_n(x) - k \\left(-\\sum_{n=1}^{\\infty} \\lambda_n T_n(t)X_n(x)\\right) = \\sum_{n=1}^{\\infty} F_n(t)X_n(x)$</p><p>$\\sum_{n=1}^{\\infty} \\left[T_n'(t) + k \\lambda_n T_n(t)\\right] X_n(x) = \\sum_{n=1}^{\\infty} F_n(t)X_n(x)$</p><p>4. מכיוון שפיתוח לטור פורייה הוא יחיד (או על ידי הכפלה ב-$X_m(x)$ ואינטגרציה תוך שימוש באורתוגונליות), ניתן להשוות את המקדמים של $X_n(x)$ משני אגפי המשוואה:</p><p>$T_n'(t) + k \\lambda_n T_n(t) = F_n(t)$</p><p>כאשר $\\lambda_n = (\\frac{n\\pi}{L})^2$. זוהי המשוואה הדיפרנציאלית הרגילה (מד\"ר) עבור $T_n(t)$.</p>"
+            },
+            // Add 20 more problems here...
+            { // Problem 6 (Sec 6.3 specific solve)
+                statement: "עבור הבעיה $u_t - u_{xx} = x$ בתחום $0 < x < \\pi, t > 0$, עם תנאי שפה $u(0,t)=0, u(\\pi,t)=0$ ותנאי התחלה $u(x,0)=0$. מצאו את המשוואות עבור $T_n(t)$. (רמז: $X_n(x) = \\sin(nx)$, $\\lambda_n=n^2$, $F_n(t) = \\frac{2}{\\pi} \\int_0^\\pi x \\sin(nx) dx = \\frac{2(-1)^{n+1}}{n}$)",
+                solution: "<h4>פתרון:</h4><p>1. במקרה זה $k=1, L=\\pi$. הפונקציות העצמיות הן $X_n(x) = \\sin(nx)$ והערכים העצמיים $\\lambda_n = n^2$.</p><p>2. איבר המקור הוא $F(x,t) = x$. הפיתוח שלו לפי $X_n(x)$ הוא $F(x,t) = \\sum_{n=1}^{\\infty} F_n(t)X_n(x)$, כאשר $F_n(t)$ כאן אינו תלוי ב-$t$ כי $F$ אינו תלוי ב-$t$.</p><p>$F_n = \\frac{2}{\\pi} \\int_0^\\pi x \\sin(nx) dx$. נשתמש באינטגרציה בחלקים: $\\int u dv = uv - \\int v du$.</p><p>   $u=x \\Rightarrow du=dx$. $dv=\\sin(nx)dx \\Rightarrow v = -\\frac{1}{n}\\cos(nx)$.</p><p>   $F_n = \\frac{2}{\\pi} \\left[ -\\frac{x}{n}\\cos(nx) \\Big|_0^\\pi - \\int_0^\\pi (-\\frac{1}{n}\\cos(nx)) dx \\right]$</p><p>   $F_n = \\frac{2}{\\pi} \\left[ -\\frac{\\pi}{n}\\cos(n\\pi) - 0 + \\frac{1}{n} \\int_0^\\pi \\cos(nx) dx \\right]$</p><p>   $F_n = \\frac{2}{\\pi} \\left[ -\\frac{\\pi}{n}(-1)^n + \\frac{1}{n^2} [\\sin(nx)]_0^\\pi \\right]$</p><p>   $F_n = \\frac{2}{\\pi} \\left[ -\\frac{\\pi}{n}(-1)^n + 0 \\right] = -\\frac{2}{n}(-1)^n = \\frac{2(-1)^{n+1}}{n}$.</p><p>3. המשוואה עבור $T_n(t)$ היא $T_n'(t) + k \\lambda_n T_n(t) = F_n(t)$. כאן $k=1, \\lambda_n=n^2$.</p><p>$T_n'(t) + n^2 T_n(t) = \\frac{2(-1)^{n+1}}{n}$.</p><p>4. תנאי ההתחלה $u(x,0)=0$ פירושו $T_n(0)=0$ לכל $n$.</p><p>   זוהי מד\"ר לינארית מסדר ראשון, לא הומוגנית. הפתרון ההומוגני הוא $C e^{-n^2 t}$.</p><p>   נחפש פתרון פרטי קבוע $T_p = A$. $0 + n^2 A = \\frac{2(-1)^{n+1}}{n} \\Rightarrow A = \\frac{2(-1)^{n+1}}{n^3}$.</p><p>   הפתרון הכללי הוא $T_n(t) = C_n e^{-n^2 t} + \\frac{2(-1)^{n+1}}{n^3}$.</p><p>   נשתמש בתנאי $T_n(0)=0$: $C_n + \\frac{2(-1)^{n+1}}{n^3} = 0 \\Rightarrow C_n = -\\frac{2(-1)^{n+1}}{n^3} = \\frac{2(-1)^{n}}{n^3}$.</p><p>   לכן, $T_n(t) = \\frac{2(-1)^{n}}{n^3} e^{-n^2 t} + \\frac{2(-1)^{n+1}}{n^3} = \\frac{2(-1)^{n+1}}{n^3} (1 - e^{-n^2 t})$.</p>"
+            },
+            { // Problem 7 (Sec 6.4)
+                statement: "עבור בעיית הגלים ההומוגנית $u_{tt} = c^2 u_{xx}$ על התחום $0 < x < L, t > 0$ עם תנאי שפה $u(0,t) = 0, u(L,t) = 0$, השתמשו בשיטת הפרדת משתנים $u(x,t) = X(x)T(t)$ כדי למצוא את המשוואות הדיפרנציאליות הרגילות (ODEs) עבור $X(x)$ ו-$T(t)$, ואת הצורה הכללית של $T_n(t)$ המתאימה ל-$X_n(x) = \\sin(\\frac{n\\pi x}{L})$.",
+                solution: "<h4>פתרון:</h4><p>1. הנחת פתרון: $u(x,t) = X(x)T(t)$.</p><p>2. הצבה במד\"ח: $X(x)T''(t) = c^2 X''(x)T(t)$.</p><p>3. הפרדת משתנים (נחלק ב-$c^2X(x)T(t)$):</p><p>$\\frac{T''(t)}{c^2 T(t)} = \\frac{X''(x)}{X(x)} = -\\lambda$ (קבוע הפרדה).</p><p>4. המשוואות הדיפרנציאליות הרגילות הן:</p><p>   א. עבור $X(x)$: $X''(x) + \\lambda X(x) = 0$, עם תנאי שפה $X(0)=0, X(L)=0$.</p><p>      הפתרונות הלא-טריוויאליים הם $X_n(x) = \\sin(\\frac{n\\pi x}{L})$ עבור ערכים עצמיים $\\lambda_n = (\\frac{n\\pi}{L})^2$, $n=1,2,3,...$</p><p>   ב. עבור $T(t)$: $\\frac{T''(t)}{c^2 T(t)} = -\\lambda_n \\quad \\Rightarrow \\quad T''(t) + c^2\\lambda_n T(t) = 0$.</p><p>5. נציב את $\\lambda_n = (\\frac{n\\pi}{L})^2$ במשוואה של $T(t)$:</p><p>$T_n''(t) + c^2 (\\frac{n\\pi}{L})^2 T_n(t) = 0$.</p><p>   נסמן $\\omega_n = \\frac{cn\\pi}{L}$ (התדירות הזוויתית הטבעית). המשוואה היא $T_n''(t) + \\omega_n^2 T_n(t) = 0$.</p><p>6. זוהי מד\"ר לינארית הומוגנית מסדר שני עם מקדמים קבועים. המשוואה האופיינית היא $r^2 + \\omega_n^2 = 0 \\Rightarrow r = \\pm i\\omega_n$.</p><p>7. הצורה הכללית של הפתרון $T_n(t)$ היא:</p><p>$T_n(t) = A_n \\cos(\\omega_n t) + B_n \\sin(\\omega_n t)$</p><p>$T_n(t) = A_n \\cos(\\frac{cn\\pi t}{L}) + B_n \\sin(\\frac{cn\\pi t}{L})$</p><p>   כאשר $A_n$ ו-$B_n$ הם קבועים שייקבעו משני תנאי ההתחלה של בעיית הגלים.</p>"
+            },
+            { // Problem 11 (Sec 6.5 Resonance)
+                statement: "נתונה בעיית הגלים הלא-הומוגנית $u_{tt} - c^2 u_{xx} = F(x,t)$ עם תנאי שפה הומוגניים. לאחר הפרדת משתנים ופיתוח לפי פונקציות עצמיות $X_n(x)$, מתקבלת המשוואה $T_n''(t) + \\omega_n^2 T_n(t) = F_n(t)$, כאשר $\\omega_n = c\\sqrt{\\lambda_n}$ היא התדירות הטבעית ה-$n$-ית. אם $F_n(t) = A \\cos(\\omega t)$, מתי תתרחש תופעת התהודה עבור האופן ה-$n$?",
+                solution: "<h4>פתרון:</h4><p>המשוואה עבור האופן ה-$n$ היא:</p><p>$T_n''(t) + \\omega_n^2 T_n(t) = A \\cos(\\omega t)$</p><p>תופעת התהודה מתרחשת כאשר תדירות הכוח המאלץ החיצוני, $\\omega$, שווה לאחת מהתדירויות הטבעיות של המערכת, $\\omega_n$.</p><p>במקרה זה, הכוח המאלץ הוא $A \\cos(\\omega t)$, ותדירותו היא $\\omega$.</p><p>התדירות הטבעית של האופן ה-$n$ היא $\\omega_n$.</p><p>לכן, תהודה תתרחש עבור האופן ה-$n$ אם ורק אם $\\omega = \\omega_n$.</p><p>כאשר תנאי זה מתקיים, הפתרון הפרטי למשוואה הלא-הומוגנית יכלול איבר הגדל לינארית עם הזמן (כמו $t\\sin(\\omega_n t)$ או $t\\cos(\\omega_n t)$), מה שגורם לאמפליטודה של $T_n(t)$ לגדול ללא הגבלה.</p>"
+            },
+            { // Problem 14 (Sec 6.6)
+                statement: "נתונה בעיית החום $u_t = k u_{xx}$ בתחום $0 < x < L, t > 0$, עם תנאי שפה $u(0,t) = \\alpha(t)$ ו-$u(L,t) = 0$, ותנאי התחלה $u(x,0) = f(x)$. הציעו פונקציית עזר $w(x,t)$ שתאפשר להפוך את הבעיה לכזו עם תנאי שפה הומוגניים.",
+                solution: "<h4>פתרון:</h4><p>המטרה היא למצוא פונקציה $w(x,t)$ שמקיימת את תנאי השפה האי-הומוגניים הנתונים:</p><p>$w(0,t) = \\alpha(t)$</p><p>$w(L,t) = 0$</p><p>אחת הדרכים הפשוטות למצוא פונקציה כזו היא להניח שהיא לינארית ב-$x$:</p><p>$w(x,t) = A(t)x + B(t)$</p><p>נציב את תנאי השפה:</p><p>$w(0,t) = A(t) \\cdot 0 + B(t) = B(t) = \\alpha(t)$</p><p>$w(L,t) = A(t)L + B(t) = A(t)L + \\alpha(t) = 0$</p><p>מהמשוואה השנייה, $A(t)L = -\\alpha(t) \\Rightarrow A(t) = -\\frac{\\alpha(t)}{L}$.</p><p>לכן, פונקציית עזר אפשרית היא:</p><p>$w(x,t) = -\\frac{\\alpha(t)}{L}x + \\alpha(t) = \\alpha(t) (1 - \\frac{x}{L})$</p><p>פונקציה זו מקיימת:</p><p>$w(0,t) = \\alpha(t) (1 - 0) = \\alpha(t)$</p><p>$w(L,t) = \\alpha(t) (1 - \\frac{L}{L}) = \\alpha(t) (1 - 1) = 0$</p><p>כנדרש. לאחר מכן, נגדיר $v(x,t) = u(x,t) - w(x,t)$ ונמצא את הבעיה החדשה עבור $v(x,t)$, שתהיה עם תנאי שפה הומוגניים $v(0,t)=0$ ו-$v(L,t)=0$.</p>"
+            },
+            { // Problem 18 (Sec 6.8)
+                statement: "הגדירו את אינטגרל האנרגיה $E(t)$ עבור הפתרון $w(x,t)$ של בעיית החום ההומוגנית $w_t = k w_{xx}$ עם תנאי שפה הומוגניים $w(0,t)=0, w(L,t)=0$.",
+                solution: "<h4>פתרון:</h4><p>אינטגרל האנרגיה $E(t)$ עבור הפתרון $w(x,t)$ של משוואת החום ההומוגנית $w_t = k w_{xx}$ בתחום $0 < x < L$ מוגדר בדרך כלל כך:</p><p>$E(t) = \\frac{1}{2} \\int_0^L w^2(x,t) dx$</p><p>אינטגרל זה מייצג (עד כדי קבועים פיזיקליים) מדד לכמות ה\"אנרגיה\" או ה\"הפרעה\" הכוללת במערכת בזמן $t$. עבור משוואת החום, $w^2(x,t)$ קשור לטמפרטורה (או ריכוז), והאינטגרל סוכם את תרומת ריבוע הטמפרטורה על פני המוט.</p><p>בשיטת אינטגרל האנרגיה להוכחת יחידות, מראים ש-$E(0)=0$ (אם תנאי ההתחלה עבור $w$ הוא אפס) וכן ש-$\frac{dE}{dt} \\le 0$. משני תנאים אלו, יחד עם $E(t) \\ge 0$, נובע ש-$E(t)=0$ לכל $t \\ge 0$, מה שגורר $w(x,t)=0$.</p>"
+            },
+             { // Problem 19 (Sec 6.8)
+                statement: "עבור $w(x,t)$ המקיימת $w_t = k w_{xx}$ עם תנאי שפה $w(0,t)=0, w(L,t)=0$, ואינטגרל האנרגיה $E(t) = \\frac{1}{2} \\int_0^L w^2(x,t) dx$, הראו כי $\\frac{dE}{dt} \\le 0$.",
+                solution: "<h4>פתרון:</h4><p>1. נגזור את $E(t)$ לפי $t$ (בהנחה שניתן להכניס את הנגזרת תחת האינטגרל):</p><p>$\\frac{dE}{dt} = \\frac{d}{dt} \\left( \\frac{1}{2} \\int_0^L w^2(x,t) dx \\right) = \\frac{1}{2} \\int_0^L \\frac{\\partial}{\\partial t} (w^2) dx = \\frac{1}{2} \\int_0^L 2w \\frac{\\partial w}{\\partial t} dx = \\int_0^L w w_t dx$</p><p>2. נשתמש במשוואת החום $w_t = k w_{xx}$:</p><p>$\\frac{dE}{dt} = \\int_0^L w (k w_{xx}) dx = k \\int_0^L w w_{xx} dx$</p><p>3. נשתמש באינטגרציה בחלקים עבור האינטגרל $\\int_0^L w w_{xx} dx$.</p><p>   נסמן $u_{int} = w$ ו-$dv_{int} = w_{xx} dx$. אז $du_{int} = w_x dx$ ו-$v_{int} = w_x$.</p><p>   $\\int_0^L w w_{xx} dx = [w w_x]_0^L - \\int_0^L (w_x)(w_x) dx = [w w_x]_0^L - \\int_0^L (w_x)^2 dx$</p><p>4. נשתמש בתנאי השפה $w(0,t)=0$ ו-$w(L,t)=0$:</p><p>   $[w w_x]_0^L = w(L,t)w_x(L,t) - w(0,t)w_x(0,t) = (0)w_x(L,t) - (0)w_x(0,t) = 0$.</p><p>5. לכן, $\\int_0^L w w_{xx} dx = - \\int_0^L (w_x)^2 dx$.</p><p>6. נציב בחזרה בביטוי עבור $\\frac{dE}{dt}$:</p><p>$\\frac{dE}{dt} = k \\left( - \\int_0^L (w_x)^2 dx \\right) = -k \\int_0^L (w_x)^2 dx$</p><p>7. מכיוון ש-$k > 0$ (קבוע הדיפוזיה) ו-$(w_x)^2 \\ge 0$, האינטגרל $\\int_0^L (w_x)^2 dx \\ge 0$.</p><p>   לכן, $\\frac{dE}{dt} = -k \\times (\\text{אי-שלילי}) \\le 0$.</p><p>   מ.ש.ל.</p>"
+            },
+            { // Problem 21 (Sec 6.8)
+                statement: "הגדירו את אינטגרל האנרגיה $E(t)$ עבור הפתרון $w(x,t)$ של בעיית הגלים ההומוגנית $w_{tt} = c^2 w_{xx}$ עם תנאי שפה הומוגניים $w(0,t)=0, w(L,t)=0$.",
+                solution: "<h4>פתרון:</h4><p>אינטגרל האנרגיה $E(t)$ עבור הפתרון $w(x,t)$ של משוואת הגלים ההומוגנית $w_{tt} = c^2 w_{xx}$ בתחום $0 < x < L$ מוגדר בדרך כלל כך:</p><p>$E(t) = \\frac{1}{2} \\int_0^L \\left( w_t^2(x,t) + c^2 w_x^2(x,t) \\right) dx$</p><p>אינטגרל זה מייצג את האנרגיה הכוללת של המיתר (או התווך) בזמן $t$. האיבר $w_t^2$ קשור לאנרגיה הקינטית (תלויה במהירות) והאיבר $c^2 w_x^2$ קשור לאנרגיה הפוטנציאלית (תלויה במתיחות או בשיפוע).</p><p>בשיטת אינטגרל האנרגיה להוכחת יחידות, מראים ש-$E(0)=0$ (אם תנאי ההתחלה עבור $w$ ו-$w_t$ הם אפס) וכן ש-$\frac{dE}{dt} = 0$ (עבור בעיה לא מרוסנת עם תנאי שפה הומוגניים). משני תנאים אלו נובע ש-$E(t)=0$ לכל $t \\ge 0$, מה שגורר $w_t=0$ ו-$w_x=0$, ולכן $w(x,t)$ הוא קבוע. מתנאי ההתחלה $w(x,0)=0$, נובע שהקבוע הוא אפס, כלומר $w(x,t)=0$.</p>"
+            },
+            // Placeholder for more problems
+            { statement: "בעיה 13: פתרו את המשוואה $T_n''(t) + \\omega_n^2 T_n(t) = A \\cos(\\omega t)$ כאשר $\\omega \\neq \\omega_n$, עם תנאי התחלה $T_n(0)=0, T_n'(0)=0$.", solution: "<h4>פתרון:</h4><p>המשוואה ההומוגנית היא $T_h''(t) + \\omega_n^2 T_h(t) = 0$, ופתרונה $T_h(t) = C_1 \\cos(\\omega_n t) + C_2 \\sin(\\omega_n t)$.</p><p>נחפש פתרון פרטי $T_p(t)$ למשוואה הלא-הומוגנית מהצורה $T_p(t) = K \\cos(\\omega t)$.</p><p>$T_p'(t) = -K\\omega \\sin(\\omega t)$</p><p>$T_p''(t) = -K\\omega^2 \\cos(\\omega t)$</p><p>הצבה במשוואה: $-K\\omega^2 \\cos(\\omega t) + \\omega_n^2 K \\cos(\\omega t) = A \\cos(\\omega t)$.</p><p>$K(\\omega_n^2 - \\omega^2) \\cos(\\omega t) = A \\cos(\\omega t)$.</p><p>מכיוון ש-$\\omega \\neq \\omega_n$, אז $\\omega_n^2 - \\omega^2 \\neq 0$. לכן $K = \\frac{A}{\\omega_n^2 - \\omega^2}$.</p><p>הפתרון הפרטי הוא $T_p(t) = \\frac{A}{\\omega_n^2 - \\omega^2} \\cos(\\omega t)$.</p><p>הפתרון הכללי הוא $T_n(t) = C_1 \\cos(\\omega_n t) + C_2 \\sin(\\omega_n t) + \\frac{A}{\\omega_n^2 - \\omega^2} \\cos(\\omega t)$.</p><p>נשתמש בתנאי ההתחלה:</p><p>$T_n(0)=0 \\Rightarrow C_1 + \\frac{A}{\\omega_n^2 - \\omega^2} = 0 \\Rightarrow C_1 = -\\frac{A}{\\omega_n^2 - \\omega^2}$.</p><p>$T_n'(t) = -C_1\\omega_n \\sin(\\omega_n t) + C_2\\omega_n \\cos(\\omega_n t) - \\frac{A\\omega}{\\omega_n^2 - \\omega^2} \\sin(\\omega t)$.</p><p>$T_n'(0)=0 \\Rightarrow C_2\\omega_n = 0$. מכיוון ש-$\\omega_n \\neq 0$ (עבור $n \\ge 1$), אז $C_2 = 0$.</p><p>לכן, $T_n(t) = -\\frac{A}{\\omega_n^2 - \\omega^2} \\cos(\\omega_n t) + \\frac{A}{\\omega_n^2 - \\omega^2} \\cos(\\omega t) = \\frac{A}{\\omega_n^2 - \\omega^2} (\\cos(\\omega t) - \\cos(\\omega_n t))$.</p><p>הפתרון נשאר חסום, בניגוד למקרה התהודה.</p>"},
+            { statement: "בעיה 15 (Sec 6.6): בהמשך לבעיה 14, אם $u(x,t) = v(x,t) + w(x,t)$ כאשר $w(x,t) = \\alpha(t)(1-\\frac{x}{L})$, מהי המשוואה הדיפרנציאלית החלקית ותנאי ההתחלה עבור $v(x,t)$?", solution: "<h4>פתרון:</h4><p>1. נתון $u_t = k u_{xx}$.</p><p>   $u(0,t) = \\alpha(t)$, $u(L,t) = 0$.</p><p>   $u(x,0) = f(x)$.</p><p>   $w(x,t) = \\alpha(t)(1-\\frac{x}{L})$.</p><p>2. נגזרות של $w(x,t)$:</p><p>   $w_t(x,t) = \\alpha'(t)(1-\\frac{x}{L})$</p><p>   $w_x(x,t) = \\alpha(t)(-\\frac{1}{L}) = -\\frac{\\alpha(t)}{L}$</p><p>   $w_{xx}(x,t) = 0$</p><p>3. נציב $u(x,t) = v(x,t) + w(x,t)$ במד\"ח:</p><p>   $(v_t + w_t) = k (v_{xx} + w_{xx})$</p><p>   $v_t + \\alpha'(t)(1-\\frac{x}{L}) = k (v_{xx} + 0)$</p><p>   $v_t - k v_{xx} = -\\alpha'(t)(1-\\frac{x}{L})$</p><p>   זוהי משוואת חום לא-הומוגנית עבור $v(x,t)$.</p><p>4. תנאי השפה עבור $v(x,t)$:</p><p>   $v(0,t) = u(0,t) - w(0,t) = \\alpha(t) - \\alpha(t)(1-0) = \\alpha(t) - \\alpha(t) = 0$.</p><p>   $v(L,t) = u(L,t) - w(L,t) = 0 - \\alpha(t)(1-\\frac{L}{L}) = 0 - 0 = 0$.</p><p>   תנאי השפה עבור $v(x,t)$ הם הומוגניים.</p><p>5. תנאי ההתחלה עבור $v(x,t)$:</p><p>   $v(x,0) = u(x,0) - w(x,0) = f(x) - \\alpha(0)(1-\\frac{x}{L})$.</p><p>   נסמן $g(x) = f(x) - \\alpha(0)(1-\\frac{x}{L})$. אז $v(x,0) = g(x)$.</p><p>6. הבעיה עבור $v(x,t)$ היא:</p><p>   $v_t - k v_{xx} = -\\alpha'(t)(1-\\frac{x}{L})$</p><p>   $v(0,t) = 0, v(L,t) = 0$</p><p>   $v(x,0) = f(x) - \\alpha(0)(1-\\frac{x}{L})$</p>"},
+            { statement: "בעיה 17 (Sec 6.7): תארו בראשי פרקים את שלבי הפתרון של בעיית חום לא-הומוגנית $u_t - k u_{xx} = F(x,t)$ עם תנאי שפה לא-הומוגניים $u(0,t)=\\alpha(t), u(L,t)=\\beta(t)$ ותנאי התחלה $u(x,0)=f(x)$, באמצעות שיטת הפרדת משתנים.", solution: "<h4>פתרון:</h4><p>שלבי הפתרון הם:</p><p>1.  <strong>טיפול בתנאי שפה לא-הומוגניים:</strong></p><p>    א. מצאו פונקציית עזר $w(x,t)$ שמקיימת את תנאי השפה $w(0,t)=\\alpha(t)$ ו-$w(L,t)=\\beta(t)$. למשל, $w(x,t) = \\alpha(t) + \\frac{x}{L}(\\beta(t)-\\alpha(t))$.</p><p>    ב. הגדירו $v(x,t) = u(x,t) - w(x,t)$.</p><p>    ג. הציבו במד\"ח המקורית ובתנאי ההתחלה כדי לקבל בעיה חדשה עבור $v(x,t)$. בעיה זו תהיה עם תנאי שפה הומוגניים ($v(0,t)=0, v(L,t)=0$), אך המד\"ח עבור $v$ תהיה (בדרך כלל) לא-הומוגנית, ותנאי ההתחלה ישתנה.</p><p>        המד\"ח תהיה $v_t - k v_{xx} = F(x,t) - (w_t - k w_{xx})$. נסמן $G(x,t) = F(x,t) - w_t + k w_{xx}$.</p><p>        תנאי ההתחלה יהיה $v(x,0) = f(x) - w(x,0)$. נסמן $h(x) = f(x) - w(x,0)$.</p><p>2.  <strong>מציאת פונקציות עצמיות (עבור הבעיה ההומוגנית המרחבית):</strong></p><p>    א. פתרו את בעיית שטורם-ליוביל $X''(x) + \\lambda X(x) = 0$ עם תנאי השפה ההומוגניים $X(0)=0, X(L)=0$.</p><p>    ב. מצאו את הערכים העצמיים $\\lambda_n$ והפונקציות העצמיות $X_n(x)$ (למשל, $X_n(x) = \\sin(\\frac{n\\pi x}{L})$).</p><p>3.  <strong>פיתוח הפתרון והאיבר הלא-הומוגני לטורים:</strong></p><p>    א. הניחו פתרון עבור $v(x,t)$ מהצורה $v(x,t) = \\sum_{n=1}^{\\infty} T_n(t)X_n(x)$.</p><p>    ב. פתחו את האיבר הלא-הומוגני החדש $G(x,t)$ לטור באמצעות הפונקציות העצמיות: $G(x,t) = \\sum_{n=1}^{\\infty} G_n(t)X_n(x)$, כאשר $G_n(t) = \\frac{\\int_0^L G(x,t)X_n(x)dx}{\\int_0^L X_n^2(x)dx}$.</p><p>4.  <strong>קבלת ופתרון מד\"ר עבור $T_n(t)$:</strong></p><p>    א. הציבו את הטורים במד\"ח של $v(x,t)$ ($v_t - k v_{xx} = G(x,t)$) כדי לקבל מערכת של מד\"ר עבור $T_n(t)$: $T_n'(t) + k\\lambda_n T_n(t) = G_n(t)$.</p><p>    ב. פתרו כל מד\"ר כזו.</p><p>5.  <strong>שימוש בתנאי ההתחלה עבור $v(x,t)$:</strong></p><p>    א. פתחו את תנאי ההתחלה $v(x,0) = h(x)$ לטור: $h(x) = \\sum_{n=1}^{\\infty} h_n X_n(x)$, כאשר $h_n = \\frac{\\int_0^L h(x)X_n(x)dx}{\\int_0^L X_n^2(x)dx}$.</p><p>    ב. השתמשו ב-$T_n(0) = h_n$ כדי למצוא את הקבועים האינטגרציה בפתרונות של $T_n(t)$.</p><p>6.  <strong>הרכבת הפתרון הסופי:</strong></p><p>    א. הציבו את $T_n(t)$ בחזרה בטור עבור $v(x,t)$.</p><p>    ב. הפתרון הסופי הוא $u(x,t) = v(x,t) + w(x,t)$.</p><p>7.  <strong>(אופציונלי) בדיקת אמיתות הפתרון:</strong> ודאו שהטורים מתכנסים כנדרש.</p>"},
+            { statement: "בעיה 20 (Sec 6.8): הסבירו כיצד שיטת אינטגרל האנרגיה מוכיחה יחידות פתרון לבעיית החום $u_t = k u_{xx}$ עם תנאי שפה הומוגניים $u(0,t)=0, u(L,t)=0$ ותנאי התחלה $u(x,0)=f(x)$.", solution: "<h4>פתרון:</h4><p>להוכחת יחידות הפתרון, נניח בשלילה שקיימים שני פתרונות שונים, $u_1(x,t)$ ו-$u_2(x,t)$, המקיימים את המד\"ח, תנאי השפה ותנאי ההתחלה.</p><p>1.  <strong>הגדרת פונקציית ההפרש:</strong></p><p>    נגדיר $w(x,t) = u_1(x,t) - u_2(x,t)$.</p><p>2.  <strong>הבעיה עבור $w(x,t)$:</strong></p><p>    מכיוון שהמד\"ח לינארית, $w(x,t)$ יקיים את המד\"ח ההומוגנית:</p><p>    $w_t = (u_1-u_2)_t = u_{1,t} - u_{2,t} = k u_{1,xx} - k u_{2,xx} = k (u_1-u_2)_{xx} = k w_{xx}$.</p><p>    כלומר, $w_t = k w_{xx}$.</p><p>    תנאי השפה עבור $w(x,t)$ יהיו הומוגניים:</p><p>    $w(0,t) = u_1(0,t) - u_2(0,t) = 0 - 0 = 0$.</p><p>    $w(L,t) = u_1(L,t) - u_2(L,t) = 0 - 0 = 0$.</p><p>    תנאי ההתחלה עבור $w(x,t)$ יהיה אפס:</p><p>    $w(x,0) = u_1(x,0) - u_2(x,0) = f(x) - f(x) = 0$.</p><p>3.  <strong>הגדרת אינטגרל האנרגיה עבור $w(x,t)$:</strong></p><p>    $E(t) = \\frac{1}{2} \\int_0^L w^2(x,t) dx$.</p><p>4.  <strong>ניתוח $E(t)$:</strong></p><p>    א.  $E(t) \\ge 0$ לכל $t \\ge 0$, מכיוון שהאינטגרנד $w^2(x,t)$ הוא אי-שלילי.</p><p>    ב.  $E(0) = \\frac{1}{2} \\int_0^L w^2(x,0) dx = \\frac{1}{2} \\int_0^L (0)^2 dx = 0$, מתנאי ההתחלה $w(x,0)=0$.</p><p>    ג.  כפי שהוכח בבעיה 19, עבור $w(x,t)$ המקיים את משוואת החום עם תנאי שפה הומוגניים דיריכלה, מתקיים $\\frac{dE}{dt} = -k \\int_0^L (w_x)^2 dx \\le 0$.</p><p>5.  <strong>מסקנה:</strong></p><p>    יש לנו פונקציה $E(t)$ המקיימת:</p><p>    (i) $E(0) = 0$.</p><p>    (ii) $E(t) \\ge 0$ לכל $t \\ge 0$.</p><p>    (iii) $\\frac{dE}{dt} \\le 0$ לכל $t \\ge 0$ (כלומר, $E(t)$ היא פונקציה לא עולה).</p><p>    מ-(i) ו-(iii) נובע ש-$E(t) \\le E(0) = 0$ לכל $t \\ge 0$.</p><p>    יחד עם (ii), זה אומר שחייב להתקיים $E(t) = 0$ לכל $t \\ge 0$.</p><p>    אם $E(t) = \\frac{1}{2} \\int_0^L w^2(x,t) dx = 0$, ומכיוון ש-$w^2(x,t) \\ge 0$ ו-$w(x,t)$ רציפה (בהנחת פתרון קלאסי), חייב להתקיים $w^2(x,t) = 0$ לכל $x \\in [0,L]$ ולכל $t \\ge 0$.</p><p>    זה גורר $w(x,t) = 0$ לכל $x,t$.</p><p>    כלומר, $u_1(x,t) - u_2(x,t) = 0 \\Rightarrow u_1(x,t) = u_2(x,t)$.</p><p>    לכן, הפתרון הוא יחיד.</p>"},
+            // Fill up to 25 problems
+            { statement: "בעיה 22 (Sec 6.8): עבור $w(x,t)$ המקיימת $w_{tt} = c^2 w_{xx}$ עם תנאי שפה $w(0,t)=0, w(L,t)=0$, ואינטגרל האנרגיה $E(t) = \\frac{1}{2} \\int_0^L (w_t^2 + c^2 w_x^2) dx$, הראו כי $\\frac{dE}{dt} = 0$.", solution: "<h4>פתרון:</h4><p>1. נגזור את $E(t)$ לפי $t$:</p><p>$\\frac{dE}{dt} = \\frac{1}{2} \\int_0^L \\frac{\\partial}{\\partial t} (w_t^2 + c^2 w_x^2) dx = \\frac{1}{2} \\int_0^L (2w_t w_{tt} + c^2 2w_x w_{xt}) dx = \\int_0^L (w_t w_{tt} + c^2 w_x w_{xt}) dx$.</p><p>2. נשתמש במשוואת הגלים $w_{tt} = c^2 w_{xx}$:</p><p>$\\frac{dE}{dt} = \\int_0^L (w_t (c^2 w_{xx}) + c^2 w_x w_{xt}) dx = c^2 \\int_0^L (w_t w_{xx} + w_x w_{xt}) dx$.</p><p>3. נשים לב שהאינטגרנד הוא $\\frac{\\partial}{\\partial x} (w_t w_x) = w_{xt}w_x + w_t w_{xx}$.</p><p>   לכן, $\\frac{dE}{dt} = c^2 \\int_0^L \\frac{\\partial}{\\partial x} (w_t w_x) dx$.</p><p>4. לפי המשפט היסודי של החשבון הדיפרנציאלי והאינטגרלי:</p><p>$\\frac{dE}{dt} = c^2 [w_t w_x]_0^L = c^2 (w_t(L,t)w_x(L,t) - w_t(0,t)w_x(0,t))$.</p><p>5. נשתמש בתנאי השפה $w(0,t)=0$ ו-$w(L,t)=0$. אם תנאי שפה אלו נכונים לכל $t$, אז גם הנגזרות לפי $t$ של $w$ בקצוות הן אפס: $w_t(0,t)=0$ ו-$w_t(L,t)=0$.</p><p>   (לחלופין, אם תנאי השפה הם נוימן $w_x(0,t)=0, w_x(L,t)=0$, גם אז הביטוי מתאפס).</p><p>   במקרה של תנאי דיריכלה $w(0,t)=0, w(L,t)=0$, אז $w_t(0,t)=0$ ו-$w_t(L,t)=0$.</p><p>   לכן, $\\frac{dE}{dt} = c^2 (0 \\cdot w_x(L,t) - 0 \\cdot w_x(0,t)) = 0$.</p><p>   מ.ש.ל. (האנרגיה נשמרת).</p>"},
+            { statement: "בעיה 24: פתרו את בעיית החום $u_t = u_{xx}$ בתחום $0 < x < \\pi, t > 0$, עם תנאי שפה $u(0,t)=0, u(\\pi,t)=0$ ותנאי התחלה $u(x,0) = x(\\pi-x)$.", solution: "<h4>פתרון:</h4><p>1. הפתרון הכללי לבעיה זו הוא $u(x,t) = \\sum_{n=1}^{\\infty} A_n \\sin(nx) e^{-n^2 t}$.</p><p>2. מקדמי $A_n$ נקבעים מתנאי ההתחלה $u(x,0) = x(\\pi-x)$:</p><p>$A_n = \\frac{2}{\\pi} \\int_0^\\pi x(\\pi-x) \\sin(nx) dx = \\frac{2}{\\pi} \\int_0^\\pi (\\pi x - x^2) \\sin(nx) dx$.</p><p>3. נחשב את האינטגרל באמצעות אינטגרציה בחלקים פעמיים.</p><p>   $\\int (\\pi x - x^2) \\sin(nx) dx = -\\frac{1}{n}(\\pi x - x^2)\\cos(nx) - \\int -\\frac{1}{n}(\\pi - 2x)\\cos(nx) dx$</p><p>   $= -\\frac{1}{n}(\\pi x - x^2)\\cos(nx) + \\frac{1}{n} \\int (\\pi - 2x)\\cos(nx) dx$</p><p>   האינטגרל השני: $\\int (\\pi - 2x)\\cos(nx) dx = \\frac{1}{n}(\\pi - 2x)\\sin(nx) - \\int \\frac{1}{n}(-2)\\sin(nx) dx$</p><p>   $= \\frac{1}{n}(\\pi - 2x)\\sin(nx) + \\frac{2}{n} \\int \\sin(nx) dx = \\frac{1}{n}(\\pi - 2x)\\sin(nx) - \\frac{2}{n^2}\\cos(nx)$.</p><p>   לכן, $\\int (\\pi x - x^2) \\sin(nx) dx = -\\frac{1}{n}(\\pi x - x^2)\\cos(nx) + \\frac{1}{n^2}(\\pi - 2x)\\sin(nx) - \\frac{2}{n^3}\\cos(nx)$.</p><p>4. נציב את גבולות האינטגרציה $0$ ו-$\\pi$:</p><p>   ב-$x=\\pi$: $-0 + 0 - \\frac{2}{n^3}\\cos(n\\pi) = -\\frac{2(-1)^n}{n^3}$.</p><p>   ב-$x=0$: $-0 + 0 - \\frac{2}{n^3}\\cos(0) = -\\frac{2}{n^3}$.</p><p>   ההפרש: $(-\\frac{2(-1)^n}{n^3}) - (-\\frac{2}{n^3}) = \\frac{2}{n^3}(1 - (-1)^n)$.</p><p>5. $A_n = \\frac{2}{\\pi} \\cdot \\frac{2}{n^3}(1 - (-1)^n) = \\frac{4}{\\pi n^3}(1 - (-1)^n)$.</p><p>   אם $n$ זוגי, $n=2m$, אז $1 - (-1)^n = 1-1=0$, לכן $A_{2m}=0$.</p><p>   אם $n$ אי-זוגי, $n=2m-1$, אז $1 - (-1)^n = 1-(-1)=2$.</p><p>   לכן, $A_{2m-1} = \\frac{4}{\\pi (2m-1)^3} \\cdot 2 = \\frac{8}{\\pi (2m-1)^3}$.</p><p>6. הפתרון הוא $u(x,t) = \\sum_{m=1}^{\\infty} \\frac{8}{\\pi (2m-1)^3} \\sin((2m-1)x) e^{-(2m-1)^2 t}$.</p>"},
+            { statement: "בעיה 25: לאיזו מהבעיות הבאות שיטת הפרדת המשתנים היא המתאימה ביותר לפתרון ישיר (ללא טרנספורמציות מורכבות): (א) $u_{xy} + u_x = 0$ בתחום מלבני, (ב) $u_{tt} - u_{xx} + u = 0$ בתחום $0<x<L$ עם תנאי שפה דיריכלה, (ג) $u_t = u_{xx} + u^2$ בתחום $0<x<L$?", solution: "<h4>פתרון:</h4><p>שיטת הפרדת המשתנים עובדת בצורה הטובה ביותר עבור משוואות דיפרנציאליות חלקיות <strong>לינאריות והומוגניות</strong> עם <strong>תנאי שפה הומוגניים</strong> בתחומים פרידים (כמו מלבן, עיגול, קטע).</p><p>(א) $u_{xy} + u_x = 0$. זוהי מד\"ח לינארית והומוגנית. אם התחום הוא מלבני ותנאי השפה מתאימים (למשל, הומוגניים), ייתכן שניתן להשתמש בהפרדת משתנים. אם מניחים $u(x,y)=X(x)Y(y)$, מקבלים $X'(x)Y'(y) + X'(x)Y(y) = 0 \\Rightarrow X'(x)(Y'(y)+Y(y))=0$. אם $X'(x) \\neq 0$, אז $Y'(y)+Y(y)=0$. זוהי אפשרות.</p><p>(ב) $u_{tt} - u_{xx} + u = 0$. זוהי משוואת טלגרף (או קליין-גורדון במקרים מסוימים), שהיא <strong>לינארית והומוגנית</strong>. אם התחום הוא $0<x<L$ ותנאי השפה דיריכלה הם הומוגניים ($u(0,t)=0, u(L,t)=0$), שיטת הפרדת המשתנים מתאימה מאוד. הנחת $u(x,t)=X(x)T(t)$ תוביל ל:</p><p>$X(x)T''(t) - X''(x)T(t) + X(x)T(t) = 0$</p><p>$\\frac{T''(t)+T(t)}{T(t)} = \\frac{X''(x)}{X(x)} = -\\lambda$</p><p>זה מוביל לשתי מד\"ר לינאריות, $X''(x)+\\lambda X(x)=0$ (בעיית שטורם-ליוביל) ו-$T''(t)+(1+\\lambda)T(t)=0$.</p><p>(ג) $u_t = u_{xx} + u^2$. זוהי מד\"ח <strong>לא-לינארית</strong> בגלל האיבר $u^2$. שיטת הפרדת המשתנים הסטנדרטית אינה ישימה ישירות למשוואות לא-לינאריות, מכיוון שעקרון הסופרפוזיציה (הנחוץ לבניית הפתרון הכללי מטור של פתרונות מכפלה) אינו תקף.</p><p><strong>לכן, האפשרות המתאימה ביותר לפתרון ישיר באמצעות שיטת הפרדת משתנים היא (ב).</strong></p><p>אפשרות (א) גם היא אפשרית, אך היא פחות סטנדרטית מבעיית הגלים או החום. הפתרון יהיה $X'(x)=0 \\Rightarrow X(x)=C$ או $Y'(y)+Y(y)=0 \\Rightarrow Y(y)=Ae^{-y}$. פתרונות יכולים להיות $u(x,y)=C$ או $u(x,y)=X(x)Ae^{-y}$.</p>"}
+
+        ];
+         // Ensure we have 25 problems, padding with placeholders if needed
+        const placeholderProblem = { statement: "בעיה לדוגמה - תוכן יתווסף בהמשך.", solution: "<h4>פתרון:</h4><p>פרטי הפתרון יתווספו כאן.</p>" };
+        while (problems.length < 25) {
+            problems.push({ 
+                statement: `בעיה ${problems.length + 1}: ${placeholderProblem.statement}`,
+                solution: placeholderProblem.solution 
+            });
+        }
+
+
+        let currentProblemIndex = 0;
+
+        const problemCounterEl = document.getElementById('problem-counter');
+        const problemStatementEl = document.getElementById('current-problem-statement');
+        const solutionAreaEl = document.getElementById('current-problem-solution');
+        const showSolutionBtn = document.getElementById('show-solution-btn');
+        const prevProblemBtn = document.getElementById('prev-problem-btn');
+        const nextProblemBtn = document.getElementById('next-problem-btn');
+        const viewAllProblemsBtn = document.getElementById('view-all-problems-btn');
+        const allProblemsContainer = document.getElementById('all-problems-container');
+
+        function displayProblem(index) {
+            problemStatementEl.innerHTML = `<p>${problems[index].statement}</p>`;
+            solutionAreaEl.style.display = 'none'; // Hide solution when new problem loads
+            solutionAreaEl.innerHTML = ''; // Clear previous solution
+            problemCounterEl.textContent = `בעיה ${index + 1} / ${problems.length}`;
+            // Typeset the new problem statement
+            if (window.MathJax && window.MathJax.typeset) {
+                MathJax.typeset([problemStatementEl]);
+            }
+        }
+
+        function toggleSolution() {
+            if (solutionAreaEl.style.display === 'none' || solutionAreaEl.innerHTML === '') {
+                solutionAreaEl.innerHTML = problems[currentProblemIndex].solution;
+                solutionAreaEl.style.display = 'block';
+                // Typeset the solution
+                if (window.MathJax && window.MathJax.typeset) {
+                    MathJax.typeset([solutionAreaEl]);
+                }
+            } else {
+                solutionAreaEl.style.display = 'none';
+            }
+        }
+        
+        function showAllProblems() {
+            allProblemsContainer.innerHTML = '<h2>כל הבעיות</h2>'; // Clear previous and add title
+            problems.forEach((problem, index) => {
+                const problemItem = document.createElement('div');
+                problemItem.classList.add('problem-item');
+
+                const title = document.createElement('h3');
+                title.textContent = `בעיה ${index + 1}`;
+                problemItem.appendChild(title);
+
+                const statementDiv = document.createElement('div');
+                statementDiv.classList.add('problem-statement');
+                statementDiv.innerHTML = `<p>${problem.statement}</p>`;
+                problemItem.appendChild(statementDiv);
+
+                const btn = document.createElement('button');
+                btn.textContent = 'הצג פתרון';
+                btn.id = `show-solution-all-${index}`; // Unique ID for button
+                problemItem.appendChild(btn);
+
+                const solutionDiv = document.createElement('div');
+                solutionDiv.classList.add('solution-area');
+                solutionDiv.id = `solution-all-${index}`; // Unique ID for solution area
+                solutionDiv.style.display = 'none';
+                problemItem.appendChild(solutionDiv);
+                
+                btn.addEventListener('click', () => {
+                    if (solutionDiv.style.display === 'none' || solutionDiv.innerHTML === '') {
+                        solutionDiv.innerHTML = problem.solution;
+                        solutionDiv.style.display = 'block';
+                        if (window.MathJax && window.MathJax.typeset) {
+                           MathJax.typeset([solutionDiv]);
+                        }
+                    } else {
+                        solutionDiv.style.display = 'none';
+                    }
+                });
+
+                allProblemsContainer.appendChild(problemItem);
+            });
+            allProblemsContainer.style.display = 'block';
+            if (window.MathJax && window.MathJax.typeset) {
+                MathJax.typeset([allProblemsContainer]);
+            }
+        }
+
+
+        showSolutionBtn.addEventListener('click', toggleSolution);
+
+        prevProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        nextProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                displayProblem(currentProblemIndex);
+            }
+        });
+        
+        viewAllProblemsBtn.addEventListener('click', showAllProblems);
+
+        // Initial display
+        displayProblem(currentProblemIndex);
+
+    </script>
+</body>
+</html>

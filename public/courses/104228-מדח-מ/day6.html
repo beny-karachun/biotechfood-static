@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 6</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 6: Separation of Variables (Laplace Eq. - Rectangle)</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>Separation of Variables for Laplace's Equation ($u_{xx} + u_{yy} = 0$) in a Rectangle:</strong></p>
+            <p>Solves the Boundary Value Problem (BVP) on a rectangular domain $x \in (0, a), y \in (0, b)$.</p> <!-- Notation Change -->
+            <p><strong>Strategy (Superposition):</strong> The general problem has boundary conditions on all four sides. The standard approach is to decompose the problem into four simpler problems, where only one side has a non-homogeneous boundary condition and the other three are homogeneous (zero). The solution to the original problem is the sum of the solutions to these four simpler problems.</p>
+            <p><strong>Example: Solving for Non-Homogeneous Top Boundary</strong></p>
+            $$ u_{xx} + u_{yy} = 0 $$
+            BCs: $u(0,y) = 0$, $u(a,y) = 0$, $u(x,0) = 0$, $u(x,b) = f(x)$.
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li><strong>Assume Separable Solution:</strong> $u(x,y) = X(x)Y(y)$. Substitute into PDE: $X''Y + XY'' = 0$.</li>
+                <li><strong>Separate Variables:</strong> $\frac{X''}{X} = -\frac{Y''}{Y} = -\lambda$ (separation constant).
+                    $$ X'' + \lambda X = 0 $$
+                    $$ Y'' - \lambda Y = 0 $$</li>
+                <li><strong>Apply Homogeneous Boundary Conditions to Spatial Problem (X):</strong>
+                    $u(0,y) = X(0)Y(y) = 0 \implies X(0) = 0$.
+                    $u(a,y) = X(a)Y(y) = 0 \implies X(a) = 0$.
+                    The eigenvalue problem for $X$ is $X'' + \lambda X = 0, X(0)=0, X(a)=0$.
+                    The solutions are $\lambda_n = (\frac{n\pi}{a})^2$, $X_n(x) = \sin(\frac{n\pi x}{a})$ for $n=1, 2, 3, \dots$.</li>
+                <li><strong>Solve the ODE for Y:</strong> For each $\lambda_n = (\frac{n\pi}{a})^2 > 0$, the ODE is $Y_n'' - \lambda_n Y_n = 0$. The general solution is:
+                    $$ Y_n(y) = C_n \cosh(\sqrt{\lambda_n} y) + D_n \sinh(\sqrt{\lambda_n} y) $$
+                    $$ Y_n(y) = C_n \cosh\left(\frac{n\pi y}{a}\right) + D_n \sinh\left(\frac{n\pi y}{a}\right) $$</li>
+                <li><strong>Apply Remaining Homogeneous Boundary Condition to Y:</strong>
+                    $u(x,0) = X(x)Y(0) = 0 \implies Y(0)=0$.
+                    $Y_n(0) = C_n \cosh(0) + D_n \sinh(0) = C_n(1) + D_n(0) = C_n = 0$.
+                    So, $Y_n(y) = D_n \sinh(\frac{n\pi y}{a})$.</li>
+                <li><strong>Superposition Principle:</strong> The solution is a superposition of product solutions $u_n(x,y) = X_n(x)Y_n(y)$:
+                    $$ u(x,y) = \sum_{n=1}^{\infty} D_n \sinh\left(\frac{n\pi y}{a}\right) \sin\left(\frac{n\pi x}{a}\right) $$
+                    (We absorb the constant $D_n$ into a single coefficient, let's call it $E_n$).
+                    $$ u(x,y) = \sum_{n=1}^{\infty} E_n \sinh\left(\frac{n\pi y}{a}\right) \sin\left(\frac{n\pi x}{a}\right) $$</li>
+                <li><strong>Apply Non-Homogeneous Boundary Condition using Fourier Sine Series:</strong> Set $y=b$:
+                    $$ u(x,b) = f(x) = \sum_{n=1}^{\infty} E_n \sinh\left(\frac{n\pi b}{a}\right) \sin\left(\frac{n\pi x}{a}\right) $$
+                    This is a Fourier Sine Series for $f(x)$. The coefficients are $E_n \sinh\left(\frac{n\pi b}{a}\right)$.
+                    $$ E_n \sinh\left(\frac{n\pi b}{a}\right) = \frac{2}{a} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx $$
+                    $$ E_n = \frac{1}{\sinh(n\pi b/a)} \left[ \frac{2}{a} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx \right] $$</li>
+            </ol>
+             <p><strong>Note:</strong> If the homogeneous BCs are on the $x$-variable sides, the signs in the ODEs flip, $X$ involves hyperbolic functions, and $Y$ involves sines/cosines.</p>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+             <!-- Solving ODE for Y -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the general solution to $Y'' - 4Y = 0$.</p>
+                <button onclick="toggleSolution('sol-d6-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equation: $r^2 - 4 = 0 \implies r = \pm 2$.</p>
+                    <p>The general solution is $Y(y) = C_1 e^{2y} + C_2 e^{-2y}$.</p>
+                    <p>Alternatively, it can be written using hyperbolic functions: $Y(y) = A \cosh(2y) + B \sinh(2y)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the general solution to $Y'' - \lambda Y = 0$ where $\lambda = (n\pi/a)^2 > 0$.</p>
+                <button onclick="toggleSolution('sol-d6-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $\mu = \sqrt{\lambda} = n\pi/a$. The ODE is $Y'' - \mu^2 Y = 0$.</p>
+                    <p>Characteristic equation: $r^2 - \mu^2 = 0 \implies r = \pm \mu$.</p>
+                    <p>General solution: $Y(y) = C_1 e^{\mu y} + C_2 e^{-\mu y} = C_1 e^{(n\pi/a)y} + C_2 e^{-(n\pi/a)y}$.</p>
+                    <p>Alternative form: $Y(y) = A \cosh(\mu y) + B \sinh(\mu y) = A \cosh(\frac{n\pi y}{a}) + B \sinh(\frac{n\pi y}{a})$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Solve $Y'' - 9Y = 0$ with $Y(0)=0$.</p>
+                 <button onclick="toggleSolution('sol-d6-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>General solution: $Y(y) = A \cosh(3y) + B \sinh(3y)$.</p>
+                    <p>$Y(0) = A \cosh(0) + B \sinh(0) = A(1) + B(0) = A = 0$.</p>
+                    <p>The solution is $Y(y) = B \sinh(3y)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Solve $X'' - (2\pi)^2 X = 0$ with $X(1)=0$. (Assume general solution $X(x) = A \cosh(2\pi x) + B \sinh(2\pi x)$).</p>
+                 <button onclick="toggleSolution('sol-d6-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q4">
+                    <p><strong>Solution:</strong></p>
+                     <p>$X(1) = A \cosh(2\pi) + B \sinh(2\pi) = 0$.</p>
+                     <p>This gives a relationship between A and B: $A = -B \frac{\sinh(2\pi)}{\cosh(2\pi)} = -B \tanh(2\pi)$.</p>
+                     <p>$X(x) = -B \tanh(2\pi) \cosh(2\pi x) + B \sinh(2\pi x)$.</p>
+                     <p>$X(x) = B \left( \sinh(2\pi x) - \tanh(2\pi) \cosh(2\pi x) \right)$.</p>
+                     <p>$X(x) = B \left( \sinh(2\pi x) - \frac{\sinh(2\pi)}{\cosh(2\pi)} \cosh(2\pi x) \right)$.</p>
+                     <p>$X(x) = \frac{B}{\cosh(2\pi)} \left( \sinh(2\pi x)\cosh(2\pi) - \cosh(2\pi x)\sinh(2\pi) \right)$.</p>
+                     <p>Using $\sinh(A-B) = \sinh A \cosh B - \cosh A \sinh B$:</p>
+                     <p>$X(x) = C \sinh(2\pi(x-1))$ where $C = B/\cosh(2\pi)$.</p>
+                 </div>
+            </article>
+
+             <!-- Finding coefficients -->
+             <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Consider $u(x,y) = \sum_{n=1}^\infty E_n \sinh(\frac{n\pi y}{a}) \sin(\frac{n\pi x}{a})$. If $u(x,b) = f(x)$, write the expression for $E_n$.</p>
+                 <button onclick="toggleSolution('sol-d6-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>Setting $y=b$: $f(x) = \sum_{n=1}^\infty \left[ E_n \sinh\left(\frac{n\pi b}{a}\right) \right] \sin\left(\frac{n\pi x}{a}\right)$.</p>
+                    <p>The term in brackets is the $n$-th Fourier Sine coefficient of $f(x)$ on $[0, a]$.</p>
+                    <p>$E_n \sinh\left(\frac{n\pi b}{a}\right) = \frac{2}{a} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx$.</p>
+                    <p>$E_n = \frac{2}{a \sinh(n\pi b/a)} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Consider $u(x,y) = \sum_{n=1}^\infty E_n \sin(\frac{n\pi x}{a}) \sinh(\frac{n\pi (b-y)}{a})$. If $u(x,0) = f(x)$, find $E_n$.</p>
+                <button onclick="toggleSolution('sol-d6-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>This form often arises when the non-homogeneous BC is at $y=0$ and $u(x,b)=0$.</p>
+                    <p>Set $y=0$: $f(x) = \sum_{n=1}^\infty E_n \sin\left(\frac{n\pi x}{a}\right) \sinh\left(\frac{n\pi b}{a}\right)$.</p>
+                    <p>The term $E_n \sinh(n\pi b/a)$ is the $n$-th Fourier Sine coefficient of $f(x)$ on $[0,a]$.</p>
+                     <p>$E_n \sinh\left(\frac{n\pi b}{a}\right) = \frac{2}{a} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx$.</p>
+                    <p>$E_n = \frac{2}{a \sinh(n\pi b/a)} \int_0^a f(x) \sin\left(\frac{n\pi x}{a}\right) \, dx$.</p>
+                    <p>(Note: The structure ensures $u(x,b)=0$ because $\sinh(n\pi(b-b)/a) = \sinh(0) = 0$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Consider $u(x,y) = \sum_{n=1}^\infty E_n \sin(\frac{n\pi y}{b}) \sinh(\frac{n\pi x}{b})$. If $u(a,y) = g(y)$, find $E_n$.</p>
+                 <button onclick="toggleSolution('sol-d6-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q7">
+                     <p><strong>Solution:</strong></p>
+                    <p>This setup implies homogeneous BCs are $u(x,0)=0, u(x,b)=0, u(0,y)=0$. The $Y$ problem gives sines, and the $X$ problem gives sinh, satisfying $X(0)=0$.</p>
+                    <p>Set $x=a$: $g(y) = \sum_{n=1}^\infty E_n \sin\left(\frac{n\pi y}{b}\right) \sinh\left(\frac{n\pi a}{b}\right)$.</p>
+                    <p>The term $E_n \sinh(n\pi a/b)$ is the $n$-th Fourier Sine coefficient of $g(y)$ on $[0,b]$.</p>
+                    <p>$E_n \sinh\left(\frac{n\pi a}{b}\right) = \frac{2}{b} \int_0^b g(y) \sin\left(\frac{n\pi y}{b}\right) \, dy$.</p>
+                    <p>$E_n = \frac{2}{b \sinh(n\pi a/b)} \int_0^b g(y) \sin\left(\frac{n\pi y}{b}\right) \, dy$.</p>
+                 </div>
+            </article>
+
+             <!-- Full Problems -->
+            <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,\pi), y \in (0,1)$, with $u(0,y)=0, u(\pi,y)=0, u(x,0)=0, u(x,1)=5\sin(x)$.</p> <!-- Corrected -->
+                 <button onclick="toggleSolution('sol-d6-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>This is the standard setup from the theory with $a=\pi, b=1, f(x)=5\sin(x)$.</p>
+                    <p>The separated X problem gives $X_n(x)=\sin(nx)$, $\lambda_n=n^2$.</p>
+                    <p>The Y problem $Y''-n^2 Y = 0$ with $Y(0)=0$ gives $Y_n(y)=D_n \sinh(ny)$.</p>
+                    <p>General solution: $u(x,y) = \sum_{n=1}^\infty E_n \sinh(ny) \sin(nx)$.</p>
+                    <p>Apply $u(x,1)=5\sin(x)$: $5\sin(x) = \sum_{n=1}^\infty E_n \sinh(n\cdot 1) \sin(nx)$.</p>
+                    <p>Matching coefficients for $n=1$: $E_1 \sinh(1) = 5$. $E_n=0$ for $n \neq 1$.</p>
+                    <p>$E_1 = 5 / \sinh(1)$.</p>
+                    <p>The solution is $u(x,y) = E_1 \sinh(1y)\sin(1x) = \frac{5}{\sinh(1)} \sinh(y)\sin(x)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,a), y \in (0,b)$, with $u(x,0)=0, u(x,b)=0, u(0,y)=0, u(a,y)=g(y)$.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>Here, the homogeneous BCs are on $y$. Assume $u=X(x)Y(y)$.</p>
+                    <p>Separating: $\frac{Y''}{Y} = -\frac{X''}{X} = -\lambda$.</p>
+                    <p>$Y'' + \lambda Y = 0$, $Y(0)=0, Y(b)=0$. This gives $\lambda_n=(n\pi/b)^2$, $Y_n(y)=\sin(n\pi y/b)$.</p>
+                    <p>$X'' - \lambda_n X = 0 \implies X_n'' - (n\pi/b)^2 X_n = 0$.</p>
+                    <p>General solution $X_n(x) = C_n \cosh(\frac{n\pi x}{b}) + D_n \sinh(\frac{n\pi x}{b})$.</p>
+                    <p>Apply BC $u(0,y)=0 \implies X(0)=0$. $X_n(0) = C_n = 0$. So $X_n(x) = D_n \sinh(\frac{n\pi x}{b})$.</p>
+                    <p>General solution $u(x,y) = \sum_{n=1}^\infty E_n \sinh(\frac{n\pi x}{b}) \sin(\frac{n\pi y}{b})$.</p>
+                    <p>Apply $u(a,y)=g(y)$: $g(y) = \sum_{n=1}^\infty [E_n \sinh(\frac{n\pi a}{b})] \sin(\frac{n\pi y}{b})$.</p>
+                    <p>$E_n \sinh(\frac{n\pi a}{b}) = \frac{2}{b} \int_0^b g(y) \sin(\frac{n\pi y}{b}) dy$.</p>
+                    <p>$E_n = \frac{2}{b \sinh(n\pi a/b)} \int_0^b g(y) \sin(\frac{n\pi y}{b}) dy$.</p>
+                    <p>The final solution is $u(x,y) = \sum_{n=1}^\infty \left[ \frac{2}{b \sinh(n\pi a/b)} \int_0^b g(s) \sin(\frac{n\pi s}{b}) ds \right] \sinh\left(\frac{n\pi x}{b}\right) \sin\left(\frac{n\pi y}{b}\right)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,1), y \in (0,2)$, with $u(0,y)=0, u(1,y)=0, u(x,0)=f(x), u(x,2)=0$.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q10">
+                     <p><strong>Solution:</strong></p>
+                     <p>Here $a=1, b=2$. Homogeneous BCs on $x=0, x=1, y=2$. Non-homogeneous on $y=0$.</p>
+                     <p>Separate: $X''+\lambda X = 0, X(0)=X(1)=0 \implies \lambda_n=(n\pi)^2, X_n=\sin(n\pi x)$.</p>
+                     <p>$Y'' - \lambda_n Y = 0 \implies Y_n'' - (n\pi)^2 Y_n = 0$. $Y_n(y) = C_n \cosh(n\pi y) + D_n \sinh(n\pi y)$.</p>
+                     <p>Apply $u(x,2)=0 \implies Y(2)=0$. $Y_n(2) = C_n \cosh(2n\pi) + D_n \sinh(2n\pi) = 0$.</p>
+                     <p>This gives $D_n = -C_n \frac{\cosh(2n\pi)}{\sinh(2n\pi)} = -C_n \coth(2n\pi)$.</p>
+                     <p>$Y_n(y) = C_n \cosh(n\pi y) - C_n \coth(2n\pi) \sinh(n\pi y)$.</p>
+                     <p>$Y_n(y) = C_n \left[ \cosh(n\pi y) - \frac{\cosh(2n\pi)}{\sinh(2n\pi)} \sinh(n\pi y) \right]$.</p>
+                     <p>$Y_n(y) = \frac{C_n}{\sinh(2n\pi)} \left[ \sinh(2n\pi)\cosh(n\pi y) - \cosh(2n\pi)\sinh(n\pi y) \right]$.</p>
+                     <p>Using $\sinh(A-B) = \sinh A \cosh B - \cosh A \sinh B$: $A=2n\pi, B=n\pi y$.</p>
+                     <p>$Y_n(y) = \frac{C_n}{\sinh(2n\pi)} \sinh(2n\pi - n\pi y) = E_n \sinh(n\pi(2-y))$. (Absorbing constant).</p>
+                     <p>General solution: $u(x,y) = \sum_{n=1}^\infty E_n \sinh(n\pi(2-y)) \sin(n\pi x)$.</p>
+                     <p>Apply $u(x,0)=f(x)$: $f(x) = \sum_{n=1}^\infty E_n \sinh(2n\pi) \sin(n\pi x)$.</p>
+                     <p>$E_n \sinh(2n\pi) = \frac{2}{1} \int_0^1 f(x) \sin(n\pi x) dx$.</p>
+                     <p>$E_n = \frac{2}{\sinh(2n\pi)} \int_0^1 f(x) \sin(n\pi x) dx$.</p>
+                      <p>Final solution is $u(x,y) = \sum_{n=1}^\infty \left[ \frac{2}{\sinh(2n\pi)} \int_0^1 f(s) \sin(n\pi s) ds \right] \sinh(n\pi(2-y)) \sin(n\pi x)$.</p>
+                </div>
+            </article>
+
+            <!-- More questions 11-30 -->
+
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Find the solution $X(x)$ to $X'' - 4X = 0$ with $X(0)=0$.</p>
+                 <button onclick="toggleSolution('sol-d6-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>General solution $X(x) = A\cosh(2x) + B\sinh(2x)$.</p>
+                    <p>$X(0) = A(1) + B(0) = A = 0$.</p>
+                    <p>So, $X(x) = B\sinh(2x)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">If the boundary conditions for Laplace's equation in a rectangle are $u(0,y)=0, u(a,y)=0, u(x,0)=f(x), u(x,b)=g(x)$, how do you approach the solution using superposition?</p>
+                 <button onclick="toggleSolution('sol-d6-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $u(x,y) = v(x,y) + w(x,y)$, where $v$ and $w$ both satisfy Laplace's equation.</p>
+                    <p>Problem for $v$: $v_{xx}+v_{yy}=0$ with BCs $v(0,y)=0, v(a,y)=0, v(x,0)=f(x), v(x,b)=0$.</p>
+                    <p>Problem for $w$: $w_{xx}+w_{yy}=0$ with BCs $w(0,y)=0, w(a,y)=0, w(x,0)=0, w(x,b)=g(x)$.</p>
+                    <p>Solve each simpler problem using separation of variables (as shown in Q10 for $v$ and Q8/Theory for $w$). The final solution is $u(x,y) = v(x,y) + w(x,y)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,1), y \in (0,1)$, with $u(0,y)=0, u(1,y)=\sin(\pi y), u(x,0)=0, u(x,1)=0$.</p> <!-- Corrected -->
+                 <button onclick="toggleSolution('sol-d6-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q13">
+                    <p><strong>Solution:</strong></p>
+                     <p>$a=1, b=1$. Homogeneous BCs on $y=0, y=1, x=0$. Non-homogeneous on $x=1$. $g(y)=\sin(\pi y)$.</p>
+                     <p>Use the setup from Q9.</p>
+                     <p>$Y'' + \lambda Y = 0, Y(0)=Y(1)=0 \implies \lambda_n=(n\pi)^2, Y_n=\sin(n\pi y)$.</p>
+                     <p>$X'' - (n\pi)^2 X = 0, X(0)=0 \implies X_n(x)=D_n \sinh(n\pi x)$.</p>
+                     <p>$u(x,y) = \sum E_n \sinh(n\pi x) \sin(n\pi y)$.</p>
+                     <p>$u(1,y) = \sum E_n \sinh(n\pi) \sin(n\pi y) = \sin(\pi y)$.</p>
+                     <p>Matching coefficients: $n=1$. $E_1 \sinh(\pi) = 1$. $E_n=0$ for $n\neq 1$.</p>
+                     <p>$E_1 = 1/\sinh(\pi)$.</p>
+                     <p>$u(x,y) = E_1 \sinh(\pi x)\sin(\pi y) = \frac{\sinh(\pi x)\sin(\pi y)}{\sinh(\pi)}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">What is the general solution to $X'' = 0$?</p>
+                <button onclick="toggleSolution('sol-d6-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>Integrate once: $X'(x) = A$.</p>
+                    <p>Integrate again: $X(x) = Ax + B$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Find the solution $Y(y)$ to $Y'' - \mu^2 Y = 0$ satisfying $Y(0)=A$ and $Y(b)=B$.</p>
+                <button onclick="toggleSolution('sol-d6-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>General solution: $Y(y) = C_1 \cosh(\mu y) + C_2 \sinh(\mu y)$.</p>
+                    <p>$Y(0) = C_1 \cosh(0) + C_2 \sinh(0) = C_1 = A$.</p>
+                    <p>$Y(b) = A \cosh(\mu b) + C_2 \sinh(\mu b) = B$.</p>
+                    <p>$C_2 \sinh(\mu b) = B - A \cosh(\mu b)$.</p>
+                    <p>$C_2 = \frac{B - A \cosh(\mu b)}{\sinh(\mu b)}$ (assuming $\sinh(\mu b) \neq 0$).</p>
+                    <p>$Y(y) = A \cosh(\mu y) + \frac{B - A \cosh(\mu b)}{\sinh(\mu b)} \sinh(\mu y)$.</p>
+                    <p>This can be rewritten using $\sinh(A-B)$ as:</p>
+                    <p>$Y(y) = \frac{A \sinh(\mu(b-y)) + B \sinh(\mu y)}{\sinh(\mu b)}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Solve $u_{xx}+u_{yy}=0$ for $x \in (0,a), y \in (0,b)$ with $u=0$ on all boundaries.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q16">
+                     <p><strong>Solution:</strong></p>
+                     <p>Consider the setup from the theory (Q8). The general solution satisfying $u(0,y)=0, u(a,y)=0, u(x,0)=0$ is $u(x,y) = \sum E_n \sinh(n\pi y/a)\sin(n\pi x/a)$.</p>
+                     <p>We also need $u(x,b)=0$. So, $\sum E_n \sinh(n\pi b/a)\sin(n\pi x/a) = 0$.</p>
+                     <p>This is a Fourier Sine series for the zero function. All coefficients must be zero.</p>
+                     <p>$E_n \sinh(n\pi b/a) = 0$. Since $\sinh(z)=0$ only if $z=0$, and $n, \pi, b, a$ are positive, $\sinh(n\pi b/a) \neq 0$.</p>
+                     <p>Therefore, $E_n=0$ for all $n$.</p>
+                     <p>The only solution is the trivial solution $u(x,y) = 0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,1), y \in (0,\pi)$, with $u(0,y)=0, u(1,y)=0, u(x,0)=\sin(\pi x), u(x,\pi)=0$.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>$a=1, b=\pi$. Homogeneous BCs on $x=0, x=1, y=\pi$. Non-homogeneous on $y=0$. $f(x)=\sin(\pi x)$.</p>
+                    <p>Use the setup from Q10.</p>
+                    <p>$X_n=\sin(n\pi x)$. $Y_n(y) = E_n \sinh(n\pi(\pi-y))$.</p>
+                    <p>$u(x,y) = \sum E_n \sinh(n\pi(\pi-y))\sin(n\pi x)$.</p>
+                    <p>$u(x,0) = \sum E_n \sinh(n\pi^2)\sin(n\pi x) = \sin(\pi x)$.</p>
+                    <p>Matching coefficients: $n=1$. $E_1 \sinh(\pi^2) = 1$. $E_n=0$ for $n\neq 1$.</p>
+                    <p>$E_1 = 1/\sinh(\pi^2)$.</p>
+                    <p>$u(x,y) = E_1 \sinh(\pi(\pi-y))\sin(\pi x) = \frac{\sinh(\pi(\pi-y))\sin(\pi x)}{\sinh(\pi^2)}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">What is the eigenvalue $\lambda$ if the solution to $X''+\lambda X=0$ is $X(x)=A$? What boundary conditions does this imply?</p>
+                <button onclick="toggleSolution('sol-d6-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>If $X(x)=A$ (a non-zero constant), then $X'(x)=0$ and $X''(x)=0$.</p>
+                    <p>Substituting into the ODE: $0 + \lambda A = 0$.</p>
+                    <p>Since $A \neq 0$, we must have $\lambda = 0$.</p>
+                    <p>The boundary conditions satisfied by $X(x)=A$ are Neumann conditions: $X'(0)=0$ and $X'(L)=0$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Find the solution $Y(y)$ to $Y'' + 0 \cdot Y = 0$ (i.e., $Y''=0$) satisfying $Y(0)=0$.</p>
+                <button onclick="toggleSolution('sol-d6-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>The general solution to $Y''=0$ is $Y(y)=Ay+B$.</p>
+                    <p>Applying $Y(0)=0$: $A(0)+B=0 \implies B=0$.</p>
+                    <p>The solution is $Y(y)=Ay$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Solve $u_{xx}+u_{yy}=0$ for $x \in (0,1), y \in (0,1)$, $u(x,0)=0, u(x,1)=1, u(0,y)=0, u(1,y)=0$.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q20">
+                    <p><strong>Solution:</strong></p>
+                     <p>$a=1, b=1$. Homogeneous on $x=0, x=1, y=0$. Non-homogeneous on $y=1$. $f(x)=1$.</p>
+                     <p>Use theory setup.</p>
+                     <p>$X_n=\sin(n\pi x)$, $\lambda_n=(n\pi)^2$. $Y_n(y)=E_n \sinh(n\pi y)$.</p>
+                     <p>$u(x,y) = \sum E_n \sinh(n\pi y)\sin(n\pi x)$.</p>
+                     <p>$u(x,1) = \sum E_n \sinh(n\pi)\sin(n\pi x) = 1$.</p>
+                     <p>The coefficients $E_n \sinh(n\pi)$ are the Fourier Sine coefficients of $f(x)=1$ on $[0,1]$.</p>
+                     <p>$E_n \sinh(n\pi) = \frac{2}{1} \int_0^1 1 \cdot \sin(n\pi x) dx = 2 [-\frac{\cos(n\pi x)}{n\pi}]_0^1 = -\frac{2}{n\pi}[(-1)^n-1] = \frac{2(1-(-1)^n)}{n\pi}$.</p>
+                     <p>$E_n = \frac{2(1-(-1)^n)}{n\pi \sinh(n\pi)}$. $E_n=0$ for even $n$. For odd $n=2m-1$, $E_{2m-1} = \frac{4}{(2m-1)\pi \sinh((2m-1)\pi)}$.</p>
+                     <p>$u(x,y) = \sum_{m=1}^\infty \frac{4}{(2m-1)\pi \sinh((2m-1)\pi)} \sinh((2m-1)\pi y) \sin((2m-1)\pi x)$.</p>
+                 </div>
+            </article>
+
+            <!-- Questions 21-30 -->
+            <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Find the general solution to $Y'' + k^2 Y = 0$ where $k>0$.</p>
+                 <button onclick="toggleSolution('sol-d6-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q21">
+                    <p><strong>Solution:</strong></p>
+                     <p>Characteristic equation $r^2+k^2=0 \implies r=\pm ik$.</p>
+                     <p>General solution $Y(y) = C_1 \cos(ky) + C_2 \sin(ky)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Solve $X'' + \lambda X = 0$ with $X'(0)=0, X'(a)=0$. (Neumann BCs).</p>
+                <button onclick="toggleSolution('sol-d6-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>Case 1: $\lambda=0$. $X''=0 \implies X(x)=Ax+B$. $X'(x)=A$. $X'(0)=A=0$. $X'(a)=A=0$. So $A=0$. $X(x)=B$ (constant) is a solution. Eigenvalue $\lambda_0=0$, eigenfunction $X_0(x)=1$ (or any constant).</p>
+                    <p>Case 2: $\lambda=-\mu^2<0$. $X(x)=Ae^{\mu x}+Be^{-\mu x}$. $X'(x)=A\mu e^{\mu x}-B\mu e^{-\mu x}$. $X'(0)=A\mu - B\mu = 0 \implies A=B$. $X'(a)=A\mu e^{\mu a}-A\mu e^{-\mu a}=A\mu(e^{\mu a}-e^{-\mu a})=0$. Since $\mu\neq 0$, $e^{\mu a}-e^{-\mu a} \neq 0$, so $A=0$. Trivial solution.</p>
+                    <p>Case 3: $\lambda=\mu^2>0$. $X(x)=A\cos(\mu x)+B\sin(\mu x)$. $X'(x)=-A\mu\sin(\mu x)+B\mu\cos(\mu x)$. $X'(0)=B\mu=0$. Since $\mu \neq 0$, $B=0$. $X(x)=A\cos(\mu x)$. $X'(a)=-A\mu\sin(\mu a)=0$. For non-trivial $A$, need $\sin(\mu a)=0$. $\mu a = n\pi$ for $n=1, 2, 3, \dots$. $\mu = n\pi/a$.</p>
+                    <p>Eigenvalues $\lambda_n = (n\pi/a)^2$ for $n=1, 2, 3, \dots$. Eigenfunctions $X_n(x)=\cos(n\pi x/a)$.</p>
+                    <p>Combined: $\lambda_n = (n\pi/a)^2$ for $n=0, 1, 2, \dots$, with $X_n(x) = \cos(n\pi x/a)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">How does the solution form change in Q8 if the boundary condition was $u(x,1)=5\sin(3x)$ instead?</p>
+                 <button onclick="toggleSolution('sol-d6-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q23">
+                    <p><strong>Solution:</strong></p>
+                    <p>The general solution form remains $u(x,y) = \sum E_n \sinh(ny)\sin(nx)$.</p>
+                    <p>The boundary condition $u(x,1)=\sum E_n \sinh(n)\sin(nx) = 5\sin(3x)$.</p>
+                    <p>Matching coefficients: $E_3 \sinh(3) = 5$. $E_n=0$ for $n\neq 3$.</p>
+                    <p>$E_3 = 5/\sinh(3)$.</p>
+                    <p>The solution becomes $u(x,y) = \frac{5}{\sinh(3)}\sinh(3y)\sin(3x)$. Only the index $n=3$ contributes.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">If $u_1$ solves Laplace's equation with BCs $f_1, 0, 0, 0$ (on top, left, bottom, right) and $u_2$ solves it with BCs $0, f_2, 0, 0$, what is the solution for BCs $f_1, f_2, 0, 0$?</p>
+                 <button onclick="toggleSolution('sol-d6-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>By the superposition principle for linear PDEs, if $u_1$ and $u_2$ are solutions, then their sum $u = u_1+u_2$ is also a solution.</p>
+                    <p>Let's check the boundary conditions for $u = u_1+u_2$:</p>
+                    <ul>
+                        <li>Top ($y=b$): $u = u_1+u_2 = f_1+0 = f_1$.</li>
+                        <li>Left ($x=0$): $u = u_1+u_2 = 0+f_2 = f_2$.</li>
+                        <li>Bottom ($y=0$): $u = u_1+u_2 = 0+0 = 0$.</li>
+                        <li>Right ($x=a$): $u = u_1+u_2 = 0+0 = 0$.</li>
+                    </ul>
+                     <p>The boundary conditions match the desired problem.</p>
+                    <p>Therefore, the solution is $u(x,y) = u_1(x,y) + u_2(x,y)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,\pi), y \in (0,\pi)$, with $u(x,0)=0, u(x,\pi)=\sin(2x), u(0,y)=0, u(\pi,y)=0$.</p> <!-- Corrected -->
+                 <button onclick="toggleSolution('sol-d6-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q25">
+                    <p><strong>Solution:</strong></p>
+                    <p>$a=\pi, b=\pi$. Homogeneous on $x=0, x=\pi, y=0$. Non-homogeneous on $y=\pi$. $f(x)=\sin(2x)$.</p>
+                    <p>Use theory setup.</p>
+                     <p>$X_n=\sin(nx)$, $\lambda_n=n^2$. $Y_n(y)=E_n \sinh(ny)$.</p>
+                     <p>$u(x,y) = \sum E_n \sinh(ny)\sin(nx)$.</p>
+                     <p>$u(x,\pi) = \sum E_n \sinh(n\pi)\sin(nx) = \sin(2x)$.</p>
+                     <p>Matching: $n=2$. $E_2 \sinh(2\pi) = 1$. $E_n=0$ for $n\neq 2$.</p>
+                     <p>$E_2 = 1/\sinh(2\pi)$.</p>
+                     <p>$u(x,y) = E_2 \sinh(2y)\sin(2x) = \frac{\sinh(2y)\sin(2x)}{\sinh(2\pi)}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">What kind of functions (trigonometric or hyperbolic) typically arise for the variable corresponding to the sides with homogeneous boundary conditions in Laplace's equation?</p>
+                <button onclick="toggleSolution('sol-d6-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q26">
+                    <p><strong>Solution:</strong></p>
+                     <p>The variable corresponding to the homogeneous boundary conditions (e.g., $X(x)$ if $u(0,y)=u(a,y)=0$) leads to an eigenvalue problem like $X''+\lambda X=0$ with boundary conditions.</p>
+                     <p>The non-trivial solutions to such eigenvalue problems with standard homogeneous boundary conditions (Dirichlet, Neumann, Robin, Periodic) are typically trigonometric functions (sines and/or cosines).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">What kind of functions (trigonometric or hyperbolic) typically arise for the variable corresponding to the sides with non-homogeneous boundary conditions in Laplace's equation?</p>
+                <button onclick="toggleSolution('sol-d6-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q27">
+                    <p><strong>Solution:</strong></p>
+                    <p>The ODE for the other variable (e.g., $Y(y)$ if $X(x)$ had homogeneous BCs) typically takes the form $Y'' - \lambda_n Y = 0$, where $\lambda_n$ are the positive eigenvalues found from the $X$ problem.</p>
+                    <p>The solutions to $Y'' - \mu^2 Y = 0$ (where $\mu^2 = \lambda_n > 0$) are exponential functions $e^{\mu y}, e^{-\mu y}$ or, more commonly used, hyperbolic functions $\sinh(\mu y), \cosh(\mu y)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">Solve $u_{xx} + u_{yy} = 0$ for $x \in (0,1), y \in (0,1)$, with $u(0,y)=\sin(2\pi y), u(1,y)=0, u(x,0)=0, u(x,1)=0$.</p> <!-- Corrected -->
+                <button onclick="toggleSolution('sol-d6-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q28">
+                    <p><strong>Solution:</strong></p>
+                    <p>$a=1, b=1$. Homogeneous on $x=1, y=0, y=1$. Non-homogeneous on $x=0$. $g(y)=\sin(2\pi y)$.</p>
+                     <p>Separate: $Y''+\lambda Y=0, Y(0)=Y(1)=0 \implies \lambda_n=(n\pi)^2, Y_n=\sin(n\pi y)$.</p>
+                     <p>$X'' - (n\pi)^2 X = 0$. $X_n(x) = C_n \cosh(n\pi x) + D_n \sinh(n\pi x)$.</p>
+                     <p>Apply $u(1,y)=0 \implies X(1)=0$. $X_n(1) = C_n \cosh(n\pi) + D_n \sinh(n\pi) = 0$.</p>
+                     <p>As in Q4, this leads to solutions of the form $X_n(x)=E_n \sinh(n\pi(1-x))$.</p>
+                     <p>$u(x,y) = \sum E_n \sinh(n\pi(1-x))\sin(n\pi y)$.</p>
+                     <p>$u(0,y) = \sum E_n \sinh(n\pi)\sin(n\pi y) = \sin(2\pi y)$.</p>
+                     <p>Matching: $n=2$. $E_2 \sinh(2\pi) = 1$. $E_n=0$ for $n\neq 2$.</p>
+                     <p>$E_2=1/\sinh(2\pi)$.</p>
+                     <p>$u(x,y) = \frac{\sinh(2\pi(1-x))\sin(2\pi y)}{\sinh(2\pi)}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">Find the coefficient $E_1$ in Q8 if $f(x)=x$. ($a=\pi, b=1$).</p>
+                 <button onclick="toggleSolution('sol-d6-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>From Q8 setup, $u(x,y) = \sum E_n \sinh(ny)\sin(nx)$.</p>
+                     <p>$u(x,1) = \sum E_n \sinh(n)\sin(nx) = x$.</p>
+                     <p>$E_n \sinh(n)$ are the Fourier Sine coefficients of $f(x)=x$ on $[0, \pi]$.</p>
+                     <p>$E_n \sinh(n) = \frac{2}{\pi} \int_0^\pi x \sin(nx) dx = \frac{2(-1)^{n+1}}{n}$. (From Q17/Q20).</p>
+                     <p>For $n=1$: $E_1 \sinh(1) = \frac{2(-1)^{1+1}}{1} = 2$.</p>
+                     <p>$E_1 = 2/\sinh(1)$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">Why can we use superposition for Laplace's equation with boundary conditions split across different sides?</p>
+                 <button onclick="toggleSolution('sol-d6-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d6-q30">
+                    <p><strong>Solution:</strong></p>
+                    <p>Laplace's equation ($u_{xx}+u_{yy}=0$) is a <strong>linear</strong> and <strong>homogeneous</strong> PDE. The boundary conditions are also typically linear.</p>
+                    <p>Linearity means that if $u_1$ and $u_2$ are solutions to the PDE, then any linear combination $c_1 u_1 + c_2 u_2$ is also a solution to the PDE itself.</p>
+                    <p>When splitting the problem, say $u=v+w$, both $v$ and $w$ satisfy Laplace's equation, so their sum $u$ also satisfies it.</p>
+                    <p>The boundary conditions are additive. If $v$ satisfies the BC on side 1 and $w$ satisfies the BC on side 2 (with both satisfying 0 on the other sides), then $u=v+w$ will satisfy the combined BCs on sides 1 and 2. For example, on side 1: $u=v+w = f_1+0 = f_1$. On side 2: $u=v+w=0+f_2=f_2$. On other sides: $u=v+w=0+0=0$.</p>
+                    <p>This allows us to break down a complex BVP into simpler BVPs that we can solve individually using techniques like separation of variables, and then add the results.</p>
+                 </div>
+            </article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

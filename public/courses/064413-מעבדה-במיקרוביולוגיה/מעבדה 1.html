@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעבדה 1: טכניקות בסיסיות במיקרוביולוגיה - בחינת בקיאות</title>
+    <script>
+        // MathJax Configuration
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimiters for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']], // Delimiters for display math
+            processEscapes: true // Allows using \$ for literal dollar signs
+          },
+          svg: {
+            fontCache: 'global' // Use global font cache for better performance
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'], // Tags to ignore
+            ignoreHtmlClass: 'tex2jax_ignore', // Class to ignore
+            processHtmlClass: 'tex2jax_process' // Class to process explicitly
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            line-height: 1.6;
+            padding: 20px;
+            direction: rtl; /* Right-to-left layout */
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 20px auto;
+            background-color: #666; /* Medium Gray containers */
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents */
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        h1 {
+           margin-bottom: 25px;
+        }
+
+        h3 {
+            text-align: right;
+            margin-top: 20px;
+            border-bottom: 1px solid #3D90D7;
+            padding-bottom: 5px;
+        }
+
+        /* Summary Section */
+        .summary-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #555; /* Slightly darker gray */
+            border-radius: 5px;
+        }
+
+        .summary-section h2 {
+            margin-bottom: 15px;
+            color: #3D90D7;
+        }
+
+        .summary-section ul {
+            list-style-position: inside;
+            padding-right: 20px; /* Indentation for RTL */
+        }
+
+        .summary-section li {
+            margin-bottom: 10px;
+        }
+
+        /* Question Area */
+        .question-area, .question-container-all {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: #555;
+            border-radius: 5px;
+            border: 1px solid #777;
+        }
+
+        .question-container-all {
+            margin-bottom: 15px; /* Less margin in 'all view' */
+        }
+
+
+        .question-text {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Options Styling */
+        .options button, .options div /* For TF */ {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background-color: #3D90D7; /* Blue buttons */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: right;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .options button:hover:not(:disabled) {
+            background-color: #2a6fa1; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .options div.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* True/False specific alignment */
+         .options div {
+            background-color: transparent; /* Remove button background for TF containers */
+            padding: 0; /* Remove padding for TF containers */
+         }
+        .tf-button {
+             display: inline-block; /* Allow side-by-side */
+             width: auto; /* Adjust width */
+             padding: 10px 20px;
+             margin-left: 10px; /* Space between T/F buttons */
+             background-color: #3D90D7;
+             color: #fff;
+             border: none;
+             border-radius: 5px;
+             cursor: pointer;
+         }
+         .tf-button:hover:not(:disabled) {
+             background-color: #2a6fa1;
+         }
+         .tf-button:disabled {
+             cursor: not-allowed;
+             opacity: 0.7;
+         }
+
+        /* Feedback Styling */
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: #4CAF50; /* Green correct */
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: #F44336; /* Red incorrect */
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #444; /* Darker background for explanation */
+            border-radius: 5px;
+            border: 1px solid #555;
+        }
+
+        .explanation strong {
+            color: #3D90D7;
+        }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            margin-bottom: 20px;
+        }
+
+        .navigation button, #view-all-btn, #view-single-btn {
+            padding: 10px 20px;
+            background-color: #3D90D7;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .navigation button:hover, #view-all-btn:hover, #view-single-btn:hover {
+            background-color: #2a6fa1;
+        }
+
+        .navigation button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #question-counter {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        /* View All Section */
+        #all-questions-view {
+           margin-top: 30px;
+           padding-top: 20px;
+           border-top: 2px solid #3D90D7;
+        }
+
+        #all-questions-view h2 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .experiment-group {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #5a5a5a; /* Slightly different shade for grouping */
+            border-radius: 8px;
+        }
+
+        .experiment-group h3 {
+           color: #E0E0E0;
+           border-bottom: 1px solid #777;
+           margin-bottom: 15px;
+           padding-bottom: 8px;
+        }
+
+        /* MathJax alignment fix */
+        mjx-container[jax="SVG"] {
+            direction: ltr; /* Force MathJax content LTR */
+            display: inline-block; /* Prevent taking full width */
+        }
+        .question-text mjx-container[jax="SVG"],
+        .options button mjx-container[jax="SVG"],
+        .explanation mjx-container[jax="SVG"] {
+            margin: 0 0.2em; /* Add slight spacing around math */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מעבדה מיקרוביולוגיה 064413 - מעבדה מס' 1: טכניקות בסיסיות</h1>
+
+        <!-- Lab Summary Section -->
+        <div class="summary-section">
+            <h2>תקציר המעבדה ובטיחות</h2>
+            <p>מעבדה זו מתמקדת בהקניית טכניקות יסוד במיקרוביולוגיה, החיוניות לעבודה סטרילית ובטוחה עם מיקרואורגניזמים.</p>
+            <ul>
+                <li><strong>מטרה כללית:</strong> לימוד הכנת מצעי מזון, עיקור (סטריליזציה) בכלים ואמצעים שונים (בדגש על אוטוקלאב), וטכניקות זריעה ובידוד בסיסיות לקבלת תרביות נקיות.</li>
+                <li><strong>דרישה מוקדמת:</strong> כל זוג סטודנטים נדרש להביא דגימת מים (כגון מי ברז) בנפח של כ-$10$ מ"ל.</li>
+                <li><strong>בטיחות עיקרית:</strong>
+                    <ul>
+                        <li>עבודה בסביבת להבה (טכניקה אספטית) בעת ביצוע זריעות והעברות למניעת זיהום.</li>
+                        <li>עיקור נכון של כלים ומצעים באוטוקלאב לפי ההוראות למניעת זיהום והבטחת סטריליות.</li>
+                        <li>שימוש זהיר בלולאת וא מחט בקטריולוגית, כולל חימום ללהט וקירור לפני מגע עם תרבית.</li>
+                        <li>עיקור מקל דריגלסקי באמצעות טבילה באתנול והעברה בלהבה - יש לבצע בזהירות למנוע התלקחות.</li>
+                        <li>טיפול נכון בדגימות ביולוגיות.</li>
+                    </ul>
+                </li>
+                <li><strong>ציוד וחומרים עיקריים:</strong> צלחות פטרי, מבחנות, ארלנמיירים, פיפטורים, לולאת ומחט בקטריולוגית, מקל דריגלסקי, אוטוקלאב, אינקובטור, מבער בונזן, מצעי מזון (LB, YE, אגר דם), חיידקי *Escherichia coli* ATCC 25922, דגימות מים ואוויר, סליין פיזיולוגי ($\text{NaCl } 0.9\%$), אגר ($\text{Agar}$).</li>
+                <li><strong>חלקי המעבדה:</strong>
+                    <ul>
+                        <li><strong>חלק א': הכנת מצעי מזון ועיקורם (תרגיל א')</strong> - הכנת מצע LB או YE (מרק ואגר), כולל חישוב ריכוזים (לדוגמא, טריפטון $1\%$ ב-LB, פפטון $0.5\%$ ב-YE, אגר $2\%$ לפלטות), התאמת pH, ועיקור באוטוקלאב. הכנת מבחנות שיפוע (slants).</li>
+                        <li><strong>חלק ב': הכרת האוטוקלאב (תרגיל ב')</strong> - הבנת פעולת המכשיר לעיקור.</li>
+                        <li><strong>חלק ג': טכניקות במיקרוביולוגיה (תרגיל ג')</strong> - לימוד טכניקות אספטיות, שימוש בלולאה/מחט, וביצוע זריעות בידוד (Plate-to-Plate, Slant-to-Plate) ושימור (Plate-to-Slant).</li>
+                        <li><strong>חלק ד': חיידקים בסביבתם הטבעית (תרגילים ד'1-ד'4)</strong> - דגימת מיקרואורגניזמים מהאוויר, מים (מי ברז, מי קולחין) ומגוף האדם/סביבה. שימוש בטכניקות חשיפה לאוויר, זריעה במקל דריגלסקי לאחר מיהול ($10^0, 10^{-1}, 10^{-2}$), וזריעה בעזרת מטוש על אגר דם. כולל חישוב ריכוז חיידקים ($\text{CFU/ml}$) ואפיון מורפולוגי של מושבות (מתבצע במעבדה 2).</li>
+                    </ul>
+                </li>
+                <li><strong>מעקב (מעבדה 2):</strong> בדיקת תוצאות הצמיחה מהזריעות והדגימות שבוצעו במעבדה 1, ספירת מושבות, חישובים, ותיעוד מורפולוגי.</li>
+            </ul>
+        </div>
+
+        <!-- Interactive Question Area -->
+        <div id="question-section">
+             <div id="question-counter">שאלה 0 / 0 (כללי)</div>
+             <div class="question-area">
+                 <div class="question-text">טוען שאלה...</div>
+                 <div class="options"></div>
+                 <div class="feedback" style="display: none;"></div>
+                 <div class="explanation" style="display: none;"></div>
+             </div>
+             <div class="navigation">
+                 <button id="prev-btn" onclick="previousQuestion()" disabled>הקודם</button>
+                 <button id="next-btn" onclick="nextQuestion()" disabled>הבא</button>
+             </div>
+             <button id="view-all-btn" onclick="toggleViewAll()">הצג את כל השאלות</button>
+             <button id="view-single-btn" onclick="toggleViewAll()" style="display:none;">חזור לשאלה הנוכחית</button>
+        </div>
+
+
+        <!-- View All Questions Area -->
+        <div id="all-questions-view" style="display: none;">
+             <h2>כל השאלות</h2>
+             <!-- Content will be populated by JavaScript -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- Question Data ---
+        // Derived sequentially from the PDF document
+        const allQuestions = [
+            // Introduction & Requirements (Page 1 Top)
+            {
+                experiment_id: "Intro",
+                experiment_name: "מבוא ודרישות",
+                question_text: "מהו מספר הקורס של המעבדה במיקרוביולוגיה?",
+                type: "mcq",
+                options: ["064133", "064413", "061443", "046413"],
+                correct_answer: "064413",
+                explanation: "כותרת המסמך מציינת את מספר הקורס: מעבדה מיקרוביולוגיה- 064413.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "Intro",
+                experiment_name: "מבוא ודרישות",
+                question_text: "איזו מעבדה מתוארת במסמך זה?",
+                type: "mcq",
+                options: ["מעבדה מס' 1: צביעות מיקרוסקופיות", "מעבדה מס' 2: מטבוליזם חיידקי", "מעבדה מס' 1: טכניקות בסיסיות במיקרוביולוגיה", "מעבדה מס' 3: גנטיקה של חיידקים"],
+                correct_answer: "מעבדה מס' 1: טכניקות בסיסיות במיקרוביולוגיה",
+                explanation: "כותרת המסמך מציינת: מעבדה מס' 1: טכניקות בסיסיות במיקרוביולוגיה.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "Intro",
+                experiment_name: "מבוא ודרישות",
+                question_text: "מה נדרש מכל זוג סטודנטים להביא למעבדה?",
+                type: "mcq",
+                options: ["דגימת אדמה בנפח 5 גרם", "דגימת מים (מי ברז, וכד') בנפח של כ-$10$ מ\"ל", "תרבית חיידקים מוכנה", "מבחנות סטריליות ריקות"],
+                correct_answer: "דגימת מים (מי ברז, וכד') בנפח של כ-$10$ מ\"ל",
+                explanation: "ההנחיה בתחילת המסמך מציינת: 'כל זוג נדרש להביא דגימה של מים (מי ברז, וכד') בנפח של כ $10$ מל'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            // Part A: Media Prep (Page 1)
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהי מטרת הניסוי בתרגיל א'?",
+                type: "mcq",
+                options: ["ללמוד לזהות חיידקים בעזרת מיקרוסקופ", "ללמוד להכין מצעים בסיסיים ולבצע עיקור, כולל הבנת פעולת האוטוקלב", "לבודד DNA מחיידקים", "לבדוק עמידות חיידקים לאנטיביוטיקה"],
+                correct_answer: "ללמוד להכין מצעים בסיסיים ולבצע עיקור, כולל הבנת פעולת האוטוקלב",
+                explanation: "פסקת 'מטרת הניסוי' בתרגיל א' מציינת: 'בחלק זה נלמד איך להכין מצעים בסיסיים... ואיך מבצעים עיקור... נלמד על אוטוקלב, ונבין כיצד מתבצעת הסטריליזציה...'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "לפי הטבלה, איזה סטודנט מכין מצע Luria-Bertani (LB)?",
+                type: "mcq",
+                options: ["סטודנט א'", "סטודנט ב'", "שני הסטודנטים", "אף אחד מהם"],
+                correct_answer: "סטודנט א'",
+                explanation: "הטבלה בראש עמוד 1 מחלקת את המשימות: סטודנט א' מכין מצע LB, וסטודנט ב' מכין מצע YE.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו ריכוז הטריפטון (Tryptone) במצע LB?",
+                type: "mcq",
+                options: ["$0.5\\%$", "$1\\%$", "$2\\%$", "$0.2\\%$"],
+                correct_answer: "$1\\%$",
+                explanation: "הטבלה מציינת $1\\%$ Tryptone עבור מצע LB.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו ריכוז ה-NaCl במצע LB?",
+                type: "mcq",
+                options: ["$0.5\\%$", "$1\\%$", "$0.2\\%$", "$2\\%$"],
+                correct_answer: "$0.5\\%$",
+                explanation: "הטבלה מציינת $0.5\\%$ NaCl עבור מצע LB.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו טווח ה-pH הרצוי למצע LB?",
+                type: "mcq",
+                options: ["$6.6 \\pm 0.2$", "$7.0 \\pm 0.2$", "$7.4 \\pm 0.2$", "$5.0 \\pm 0.5$"],
+                correct_answer: "$7.0 \\pm 0.2$",
+                explanation: "הטבלה מציינת $pH~7.0 \\pm 0.2$ עבור מצע LB.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "איזה סטודנט מכין מצע תמצית שמרים (YE)?",
+                type: "mcq",
+                options: ["סטודנט א'", "סטודנט ב'", "שני הסטודנטים", "אף אחד מהם"],
+                correct_answer: "סטודנט ב'",
+                explanation: "הטבלה בראש עמוד 1 מחלקת את המשימות: סטודנט א' מכין מצע LB, וסטודנט ב' מכין מצע YE.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו ריכוז הפפטון (Peptone) במצע YE?",
+                type: "mcq",
+                options: ["$0.5\\%$", "$1\\%$", "$2\\%$", "$0.2\\%$"],
+                correct_answer: "$0.5\\%$",
+                explanation: "הטבלה מציינת $0.5\\%$ Peptone עבור מצע YE.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו ריכוז הדקסטרוז (D-glucose) במצע YE?",
+                type: "mcq",
+                options: ["$0.5\\%$", "$1\\%$", "$2\\%$", "$0.2\\%$"],
+                correct_answer: "$2\\%$",
+                explanation: "הטבלה מציינת $2\\%$ Dextrose (D-glucose) עבור מצע YE.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו טווח ה-pH הרצוי למצע YE?",
+                type: "mcq",
+                options: ["$6.6 \\pm 0.2$", "$7.0 \\pm 0.2$", "$7.4 \\pm 0.2$", "$5.0 \\pm 0.5$"],
+                correct_answer: "$6.6 \\pm 0.2$",
+                explanation: "הטבלה מציינת $pH~6.6 \\pm 0.2$ עבור מצע YE.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "להכנת פלטות אגר, איזה ריכוז של אגר יש להוסיף למרק?",
+                type: "mcq",
+                options: ["$1\\%$", "$1.5\\%$", "$2\\%$", "$0.5\\%$"],
+                correct_answer: "$2\\%$",
+                explanation: "ההנחיה מתחת לטבלה מציינת: 'להכנת פלטות אגר הוסף $2\\%$ אגר'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "כמה גרם אגר נדרשים להכנת 100 מ\"ל תמיסת אגר בריכוז $2\\%$ (w/v)?",
+                type: "mcq",
+                options: ["1 גרם", "2 גרם", "0.5 גרם", "10 גרם"],
+                correct_answer: "2 גרם",
+                explanation: "הנוסחה $W/V~1\\% = 1$ גרם חומר ב-$100$ מ\"ל נפח סופי. לכן, עבור $2\\%$ ב-$100$ מ\"ל, נדרשים $2$ גרם.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "בשלב 1 של הכנת המצע ('אופן ההכנה'), האם שוקלים וממיסים את האגר יחד עם שאר מרכיבי המרק?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 1 אומר לשקול ולהמיס את החומרים (פרט לאגר) במים מזוקקים. האגר מוסף רק בשלב 3 לחלק מהמצע.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "מהו הנפח הכולל של המצע שמכינים בשלב 1?",
+                type: "mcq",
+                options: ["50 מ\"ל", "100 מ\"ל", "200 מ\"ל", "תלוי בסוג המצע"],
+                correct_answer: "100 מ\"ל",
+                explanation: "שלב 1 מציין: 'הכן 100 מ\"ל של מצע'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "בשלב 2, כיצד מחולק המצע הנוזלי שהוכן?",
+                type: "mcq",
+                options: ["ארלנמייר אחד של 100 מ\"ל", "שני ארלנמיירים, 50 מ\"ל כל אחד", "עשר מבחנות של 10 מ\"ל", "ארבע בקבוקים של 25 מ\"ל"],
+                correct_answer: "שני ארלנמיירים, 50 מ\"ל כל אחד",
+                explanation: "שלב 2 מציין: 'חלק את המצע הנוזלי... לשני ארלנמיירים, 50 מ\"ל עבור מרק מזין ו 50 מ\"ל עבור אגר מוצק'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "בשלב 3, האם מוסיפים אגר לשני הארלנמיירים המכילים 50 מ\"ל כל אחד?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 3 מציין: 'הוסף את האגר לאחד מן הארלנמיירים (זכרו שאתם מוסיפים אותו ל 50 מ\"ל בלבד)'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "בשלב 3, האם האגר מתמוסס בנוזל באופן מיידי לפני החימום?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 3 מציין: 'בשלב הזה, כשהמצע אינו מחומם, האגר אינו מתמוסס בנוזל'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "בשלב 4, 5 מ\"ל מהמרק המזין מועברים למבחנה סטרילית. מהי מטרת מבחנה זו?",
+                type: "mcq",
+                options: ["גידול תרבית גדולה", "ביקורת סטריליות (ללא עיקור)", "מדידת pH סופי", "תרגול שימוש בפיפטור"],
+                correct_answer: "ביקורת סטריליות (ללא עיקור)",
+                explanation: "שלב 4 מציין: 'מהמרק המזין העבר 5 מ\"ל למבחנה סטרילית (ביקורת - ללא עיקור)'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "כיצד מכסים את הארלנמיירים לפני הכנסתם לאוטוקלאב (שלב 5)?",
+                type: "mcq",
+                options: ["פקקי כותנה", "פקקי גומי", "נייר אלומיניום", "משאירים פתוחים"],
+                correct_answer: "נייר אלומיניום",
+                explanation: "שלב 5 מציין: 'כסה את הארלנמיירים המכילים את המצע בנייר אלומיניום וסמן אותם'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "האם יש לסמן את הארלנמיירים רק לאחר העיקור באוטוקלאב?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 5 מציין לכסות ולסמן את הארלנמיירים *לפני* העיקור (שלב 6).",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "באיזה מכשיר מתבצע העיקור בשלב 6?",
+                type: "mcq",
+                options: ["תנור יבש", "אוטוקלאב", "מיקרוגל", "אינקובטור"],
+                correct_answer: "אוטוקלאב",
+                explanation: "שלב 6 מציין: 'עקר באוטוקלאב'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "לאחר העיקור, כיצד מכינים מבחנת סלנט (שיפוע אגר) לפי שלב 7?",
+                type: "mcq",
+                options: ["יוצקים 5 מ\"ל ונותנים להתמצק במצב אנכי", "יוצקים 5 מ\"ל ומזריעים מייד", "יוצקים כ-5 מ\"ל ומניחים בזווית של 5-10 מעלות עד להתמצקות", "יוצקים כ-5 מ\"ל ומכניסים לאמבט קרח"],
+                correct_answer: "יוצקים כ-5 מ\"ל ומניחים בזווית של 5-10 מעלות עד להתמצקות",
+                explanation: "שלב 7 מתאר: 'מהארלנמייר המכיל מרק + אגר, שפוך למבחנה סטרילית כ-5 מ\"ל והנח בזווית של 5-10 מעלות על מעמדים ייעודיים עד שהמצע יתמצק'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "לפי שלב 7, האם יש לצקת את האגר לצלחות פטרי *לפני* יציקת מבחנת הסלנט?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 7 מתאר קודם את הכנת מבחנת הסלנט ('שפוך למבחנה... והנח בזווית') ו*בנוסף* ('בנוסף, צוק את המצע לשתי צלחות פטרי ריקות'). הסדר המקובל הוא לצקת סלנטים ופלטות בעוד האגר חם.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "לפי שלב 7, היכן יש לבצע את עבודת יציקת האגר לצלחות?",
+                type: "mcq",
+                options: ["במנדף כימי", "בתוך המקרר", "סמוך לאש (מבער)", "בכל מקום על שולחן העבודה"],
+                correct_answer: "סמוך לאש (מבער)",
+                explanation: "שלב 7 מציין בסופו: 'בצע את העבודה סמוך לאש'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "A",
+                experiment_name: "חלק א': הכנת מצעים ועיקורם",
+                question_text: "לאחר התמצקות האגר בצלחות ובמבחנות, היכן מאחסנים את המצעים שהוכנו (שלב 8)?",
+                type: "mcq",
+                options: ["באינקובטור ב-37°C", "במקרר ב-4°C", "בתא שמתחת לשולחן העבודה", "באוטוקלאב עד לשימוש"],
+                correct_answer: "בתא שמתחת לשולחן העבודה",
+                explanation: "שלב 8 מציין: 'הנח את כל המצעים שהכנת בתא שמתחת לשולחן העבודה'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            // Part B: Autoclave (Page 2)
+            {
+                experiment_id: "B",
+                experiment_name: "חלק ב': הכרת האוטוקלאב",
+                question_text: "באיזו מעבדה יש לבדוק אם הופיעה צמיחת מיקרואורגניזמים במצעים שהוכנו?",
+                type: "mcq",
+                options: ["מעבדה 1", "מעבדה 2", "מעבדה 3", "מעבדה 4"],
+                correct_answer: "מעבדה 2",
+                explanation: "הערה בתחילת עמוד 2 מציינת: 'במעבדה מספר 2 - לאחר שבוע בדוק באיזה מהמצעים הופיעה צמיחת מיקרואורגניזמים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "B",
+                experiment_name: "חלק ב': הכרת האוטוקלאב",
+                question_text: "מהו נושא חלק ב' של המעבדה?",
+                type: "mcq",
+                options: ["הכנת תמיסות בסיסיות", "הכרת המיקרוסקופ", "הכרת האוטוקלאב", "טכניקות צביעה"],
+                correct_answer: "הכרת האוטוקלאב",
+                explanation: "כותרת חלק ב' היא 'הכרת האוטוקלאב'. תרגיל ב' כולל 'הכנת כלים ומצעים ועיקורם', ולימוד פעולת האוטוקלאב.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            // Part C: Microbiology Techniques (Page 2)
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מהי מטרת חלק ג' של המעבדה?",
+                type: "mcq",
+                options: ["ללמוד על מחלות זיהומיות", "ללמוד שיטות וטכניקות בסיסיות לבדיקות מיקרוביולוגיות", "לבצע אנליזה כימית של מצעים", "לגדל וירוסים בתרביות תאים"],
+                correct_answer: "ללמוד שיטות וטכניקות בסיסיות לבדיקות מיקרוביולוגיות",
+                explanation: "פסקת 'מטרת הניסוי' בחלק ג' מציינת: 'בחלק זה של המעבדה נלמד את השיטות והטכניקות הבסיסיות שישמשו אתנו לבדיקות מיקרוביולוגיות'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "לפי רוברט קוך, מה חיוני לעשות על מנת לזהות גורם מחלה כלשהו?",
+                type: "mcq",
+                options: ["להדביק חיית ניסוי", "לבודד אותו ולגדלו בתרבית נקייה", "לצפות בו במיקרוסקופ אלקטרוני", "לרצף את הגנום שלו"],
+                correct_answer: "לבודד אותו ולגדלו בתרבית נקייה",
+                explanation: "הטקסט מציין: 'עוד בתחילת המחקר המיקרוביולוגי טען רוברט קוך, שעל מנת לזהות גורם מחלה כלשהו, חיוני לבודדו ולגדלו בתרבית נקייה מאורגניזמים אחרים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מהי 'מושבה' (Colony) בהקשר מיקרוביולוגי?",
+                type: "mcq",
+                options: ["אזור סטרילי בצלחת פטרי", "תערובת של סוגי חיידקים שונים", "מסת תאים הנראית לעין, שנוצרה מתא בודד שהתרבה", "נוזל המכיל חיידקים"],
+                correct_answer: "מסת תאים הנראית לעין, שנוצרה מתא בודד שהתרבה",
+                explanation: "הטקסט מגדיר תרבית נקייה כנגזרת 'מתא יחיד שהתרבה למסת תאים הנראית לעין, זו נקראת מושבה'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מה המטרה העיקרית של שימוש בטכניקות אספטיות?",
+                type: "mcq",
+                options: ["להבטיח שהתרבית המיועדת לעבודה לא תזדהם בחיידקים לא רצויים", "להאיץ את קצב גדילת החיידקים", "להרוג את כל החיידקים בתרבית", "לצבוע את החיידקים לצפייה במיקרוסקופ"],
+                correct_answer: "להבטיח שהתרבית המיועדת לעבודה לא תזדהם בחיידקים לא רצויים",
+                explanation: "הטקסט מסביר שטכניקות אלו באות 'להבטיח כי התרבית המיועדת לעבודה לא תזדהם במיקרואורגניזמים שונים ותכיל אך ורק את הזן בו אנו מעוניינים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "איזה כלים מוצגים באיור 2 ומשמשים להעברה אספטית של מיקרואורגניזמים?",
+                type: "mcq",
+                options: ["פיפטה ומרית", "מחט ולולאה בקטריולוגיות", "מלקחיים ואזמל", "מזרק ומסנן"],
+                correct_answer: "מחט ולולאה בקטריולוגיות",
+                explanation: "הכיתוב מתחת לאיור 2 הוא 'מחט ולולאה בקטריולוגיות'. הטקסט הסמוך מסביר שהם משמשים 'להעברה אספטית של מיקרואורגניזמים'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "היכן יש לבצע את התרגילים הבאים (החל מתרגיל ג') כדי לשמור על תנאים אספטיים?",
+                type: "mcq",
+                options: ["בתוך המקרר", "ליד חלון פתוח", "בסמיכות ללהבת אש", "על הרצפה"],
+                correct_answer: "בסמיכות ללהבת אש",
+                explanation: "הערה בסוף עמוד 2 מציינת: 'את התרגילים הבאים יש לבצע בסמיכות ללהבת אש, במטרה לשמור על תנאים אספטיים ומניעת זיהום התרביות'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part C: Exercise C - Streaking (Page 3)
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "לפני ביצוע תרגיל ג', מה על הסטודנטים לעשות?",
+                type: "mcq",
+                options: ["לקרוא מאמר מדעי", "לצפות בסרטונים במודל", "לנקות את שולחן העבודה", "להכין דוח מעבדה מקדים"],
+                correct_answer: "לצפות בסרטונים במודל",
+                explanation: "ההנחיה בתחילת תרגיל ג' היא: 'לפני המעבדה עליכם לצפות בסרטונים במודל - חובה !'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מאיזו תרבית חיידקים מזריעים בתרגיל ג'?",
+                type: "mcq",
+                options: ["*Staphylococcus aureus*", "*Bacillus subtilis*", "*Escherichia coli* (E. coli) ATCC 25922", "*Pseudomonas aeruginosa*"],
+                correct_answer: "*Escherichia coli* (E. coli) ATCC 25922",
+                explanation: "סעיף 'חומרים' בתרגיל ג' מציין: 'תרבית של חיידקי: *Escherichia coli* (E. coli) ATCC 25922'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "כמה זריעות שונות של החיידק מבצע כל סטודנט בתרגיל ג'?",
+                type: "mcq",
+                options: ["1", "2", "3", "4"],
+                correct_answer: "3",
+                explanation: "ההנחיה היא: 'כל סטודנט מבצע שלוש זריעות של החיידק:'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "איזו זריעה מבין השלוש המפורטות בתרגיל ג' מיועדת ל'שימור'?",
+                type: "mcq",
+                options: ["מפלטה לפלטה (בידוד)", "מסלנט (שיפוע אגר) לפלטה (בידוד)", "מפלטה לסלנט (שימור)", "ממרק לפלטה"],
+                correct_answer: "מפלטה לסלנט (שימור)",
+                explanation: "רשימת הזריעות בתרגיל ג' היא: 1. מפלטה לפלטה (בידוד), 2. מסלנט לפלטה (בידוד), 3. מפלטה לסלנט (שימור).",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מהם תנאי ההדגרה (אינקובציה) לזריעות שבוצעו בתרגיל ג'?",
+                type: "mcq",
+                options: ["$30^{\\circ}C$ למשך 24 שעות", "$37^{\\circ}C$ למשך 48 שעות", "טמפ' חדר למשך שבוע", "$4^{\\circ}C$ למשך 3 ימים"],
+                correct_answer: "$37^{\\circ}C$ למשך 48 שעות",
+                explanation: "ההנחיה בסוף תרגיל ג' היא: 'הדגר ב-$37$ מע\"צ למשך 48 שעות'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "האם תוצאות הזריעה מתרגיל ג' מנותחות מיד בתום ההדגרה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "ההנחיה בסוף תרגיל ג' אומרת: 'במעבדה מספר 2 – התבונן בתוצאות הזריעה, צייר אותן... והסק מסקנות...'. הניתוח מתבצע במעבדה הבאה.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "מהי המטרה העיקרית של 'זריעת בידוד'?",
+                type: "mcq",
+                options: ["לקבל תרבית מעורבת של חיידקים רבים", "לקבל מושבות בודדות, כל אחת מייצגת זן נקי", "לכסות את כל שטח הפלטה בצמיחה אחידה", "לבדוק את חיות החיידקים"],
+                correct_answer: "לקבל מושבות בודדות, כל אחת מייצגת זן נקי",
+                explanation: "ההסבר על 'זריעת בידוד' מציין שהיא 'טכניקה קלה לקבלת מטרה זו [תרבית נקיה]... לאחר אינקובציה... חלק מהתאים מתפתחים למושבות בודדות... ההנחה היא שמושבה מתפתחת מתא יחיד ולכן מייצגת זן יחיד'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "בזריעת בידוד מפלטה לפלטה, האם מחטאים את לולאת הזריעה רק פעם אחת בתחילת התהליך?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "תהליך זריעת הבידוד (כפי שמפורט בעמוד 4, שלבים ט' ו-יא') כולל חיטוי (שריפה) של הלולאה בין כל שלב של זריעה על שליש/רבע מהפלטה.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part C: Streaking Details (Page 4)
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "כיצד מעקרים את לולאת הזריעה לפני תחילת זריעת בידוד מפלטה לפלטה (שלב א')?",
+                type: "mcq",
+                options: ["טבילה באתנול", "ניגוב במטלית סטרילית", "חימום ללהט אדום בלהבה", "שטיפה במים סטריליים"],
+                correct_answer: "חימום ללהט אדום בלהבה",
+                explanation: "שלב א' ב'זריעת בידוד מפלטה לפלטה' מציין: 'שורפים את קצה הלולאה'. הכוונה היא לחימום עד להט בלהבה.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "לאחר חיטוי הלולאה בלהבה, כיצד מקררים אותה לפני לקיחת דגימה מהמושבות (שלב ד')?",
+                type: "mcq",
+                options: ["טבילה במרק סטרילי", "נגיעה באגר נקי בצלחת הבידוד המיועדת", "המתנה של דקה באוויר", "נגיעה בדופן הפנימית של מכסה הפלטה"],
+                correct_answer: "נגיעה באגר נקי בצלחת הבידוד המיועדת",
+                explanation: "שלב ד' מציין: 'מקררים את הלולאה ע\"י דקירה באגר נקי'. הכוונה היא לגעת באזור נקי באגר של הפלטה אליה זורעים.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "כאשר לוקחים דגימה מהפלטה המקורית (שלב ה'), מהי הכמות הרצויה?",
+                type: "mcq",
+                options: ["כל הצמיחה מהפלטה", "מושבה גדולה שלמה", "כמות קטנה ממושבות בודדות", "נוזל עיבוי מהמכסה"],
+                correct_answer: "כמות קטנה ממושבות בודדות",
+                explanation: "שלב ה' מתאר: 'מגרדים את הצמיחה של מושבות בודדות מעל פני האגר בעזרת קצה הלולאה'. המטרה היא לקחת כמות קטנה ממקור נקי.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "בזריעת בידוד, האם השלב הראשון (שלב ח', איור 3 - שלב 1) מכסה כמחצית משטח הפלטה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "איור 3 מראה שהשלב הראשון של הזריעה (שלב 1) מכסה אזור קטן יחסית, פחות משליש הפלטה, בדרך כלל.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "לפני הזריעה על השליש השני של הפלטה (שלב י', איור 3 - שלב 2), האם יש לחטא ולקירר את הלולאה שוב?",
+                type: "tf",
+                correct_answer: true,
+                explanation: "שלב ט' מציין שיש לשרוף את קצה הלולאה ולקיררה לפני המעבר לשלב י' (זריעת השליש השני).",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "כיצד מועבר האינוקולום (החיידקים) לאזור הזריעה השני (שלב י')?",
+                type: "mcq",
+                options: ["על ידי לקיחת דגימה חדשה מהפלטה המקורית", "על ידי טבילת הלולאה שוב בתרבית המקורית", "על ידי משיכת הלולאה מקצה אזור הזריעה הראשון אל תוך האזור השני", "על ידי יציקת מצע מאזור 1 לאזור 2"],
+                correct_answer: "על ידי משיכת הלולאה מקצה אזור הזריעה הראשון אל תוך האזור השני",
+                explanation: "שלב י' מתאר: 'מעבירים קו זריעה אחד באופן מאונך לקווי הזריעה שכבר נעשו בשליש הראשון, כדי לאסוף מעט חיידקים... ומורחים אותם... על שליש נוסף'. כלומר, גוררים חיידקים מהאזור הקודם.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "בזריעת השליש השלישי (שלב יב', איור 3 - שלב 3), האם יש למשוך את הלולאה גם דרך האזור הראשון וגם דרך האזור השני?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב יב' מתאר העברת קו זריעה מאונך לזיגזג *השני*, ומריחת החיידקים בשליש השלישי, תוך הימנעות ממגע בקווים הקודמים (ובפרט באזור הראשון). גוררים רק מהאזור הקודם (השני).",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "לאחר סיום זריעת הבידוד, מה יש לעשות עם הלולאה (שלב יד')?",
+                type: "mcq",
+                options: ["להשאיר אותה על השולחן", "לשטוף אותה במים", "לשרוף (לחטא) אותה בלהבה", "להכניס אותה למבחנת המרק"],
+                correct_answer: "לשרוף (לחטא) אותה בלהבה",
+                explanation: "שלב יד', השלב האחרון בזריעת בידוד מפלטה לפלטה, הוא: 'שורפים את קצה הלולאה'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "בעת זריעה ממבחנה (מרק או סלנט) לפלטה (שלבים א-יא בעמ' 4), כיצד מטפלים במבחנה בצורה אספטית?",
+                type: "mcq",
+                options: ["מחזיקים אותה אופקית", "מסירים את הפקק ומניחים אותו על השולחן", "מעבירים את פי המבחנה בלהבה לפני ואחרי הכנסת הלולאה, ומחזיקים את הפקק באצבע הקטנה", "מזריעים ישירות דרך הפקק"],
+                correct_answer: "מעבירים את פי המבחנה בלהבה לפני ואחרי הכנסת הלולאה, ומחזיקים את הפקק באצבע הקטנה",
+                explanation: "שלבים ג' ו-ד' מתארים את לקיחת הפקק בעזרת האצבע הקטנה והעברת פי המבחנה באש. שלב ו' מתאר העברה נוספת באש לפני סגירה.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "C",
+                experiment_name: "חלק ג': טכניקות במיקרוביולוגיה",
+                question_text: "כאשר מזריעים חיידקים מפלטה לתוך מבחנת סלנט (שיפוע אגר) (שלבים א-יא בתחתית עמ' 4), כיצד מתבצעת הזריעה על פני האגר?",
+                type: "mcq",
+                options: ["דקירה עמוקה לתוך האגר", "זריעה בצורת זיג-זג על פני שטח השיפוע", "טפטוף טיפה מהפלטה על הסלנט", "ערבוב החיידקים עם האגר המותך"],
+                correct_answer: "זריעה בצורת זיג-זג על פני שטח השיפוע",
+                explanation: "שלב ט' ב'זריעה מפלטה לתוך סלנט' מציין: 'זורעים לתוך המבחנה בעזרת הלולאה הבקטריולוגית בצורת זיג זג'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part D: Natural Environments (Page 5)
+             {
+                experiment_id: "D",
+                experiment_name: "חלק ד': חיידקים בסביבתם הטבעית",
+                question_text: "האם מטרת חלק ד' היא לזהות מינים ספציפיים של חיידקים פתוגניים בסביבה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "מטרת הניסוי בחלק ד' היא 'לדגום ולהכיר אוכלוסיות מיקרוביאליות בסביבתן הטבעית'. המיקוד הוא על הבנת הרכב האוכלוסיות והשפעת הסביבה, לאו דווקא זיהוי פתוגנים ספציפיים.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D",
+                experiment_name: "חלק ד': חיידקים בסביבתם הטבעית",
+                question_text: "האם הרכב האוכלוסיות המיקרוביאליות אינו תלוי בגורמים סביבתיים כמו חמצן או טמפרטורה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "הטקסט מציין שהרכב האוכלוסיות 'תלוי בפונקציה מורכבת של גורמים כגון ריכוז החומר האורגני, ריכוז וסוג המלחים, נוכחות חמצן, טמפרטורה וכדומה'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "D",
+                experiment_name: "חלק ד': חיידקים בסביבתם הטבעית",
+                question_text: "האם מצעי הגידול הסטנדרטיים במעבדה מאפשרים לגדל את *כל* המיקרואורגניזמים הקיימים בסביבה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "הטקסט מציין: 'בתנאי הגידול במעבדה אין באפשרותנו לגדל את רוב המיקרואורגניזמים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            // Part D'1: Airborne Microbes (Page 5)
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "איזו תכונה מסייעת לחיידקי האוויר לשרוד?",
+                type: "mcq",
+                options: ["יכולת שחייה מהירה", "יכולת לשרוד בתנאי יובש וקרינת שמש חזקה", "דרישה לריכוז מלח גבוה", "יצירת רעלנים חזקים"],
+                correct_answer: "יכולת לשרוד בתנאי יובש וקרינת שמש חזקה",
+                explanation: "הטקסט על חיידקי האוויר מציין שהם 'מצטיינים ביכולתם לשרוד בתנאי יובש וקרינת שמש חזקה'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "כיצד נישאים חיידקי האוויר בעיקר, ומה משפיע על תנועתם?",
+                type: "mcq",
+                options: ["על גבי טיפות מים, ותנועתם מושפעת מהרוח בלבד", "על גבי גרגרי אבק, ותנועתם מושפעת מכוח הכבידה", "באופן עצמאי, ותנועתם אקראית", "על כנפי חרקים, ותנועתם תלויה בתעופת החרק"],
+                correct_answer: "על גבי גרגרי אבק, ותנועתם מושפעת מכוח הכבידה",
+                explanation: "הטקסט מציין שהם 'נישאים בד\"כ על גרגירי אבק ומכאן שתנועתם באוויר מושפעת מכוח הכבידה'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "בניסוי ד'1, סטודנט א' חושף צלחות במצב מאוזן. באילו סוגי מצעים הוא משתמש לחשיפה זו?",
+                type: "mcq",
+                options: ["LB agar בלבד", "LB agar + $30\\%$ גלוקוז בלבד", "גם LB agar וגם LB agar + $30\\%$ גלוקוז", "אגר דם"],
+                correct_answer: "גם LB agar וגם LB agar + $30\\%$ גלוקוז",
+                explanation: "שלב 1 בהנחיות לסטודנט א' מציין: 'פתח צלחת אחת של LB agar וצלחת עם מצע גלוקוז והנח אותן במצב מאוזן...'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "האם סטודנט ב' בניסוי ד'1 חושף צלחות במצב מאוזן בתוך המעבדה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "ההנחיות לסטודנט ב' (שלבים 1-3 בעמוד 6) כולן מתייחסות לחשיפת צלחות LB agar במצב *מאונך* במקומות שונים.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "כמה זמן נמשכת חשיפת הצלחות לאוויר בניסוי ד'1?",
+                type: "mcq",
+                options: ["5 דקות", "30 דקות", "שעה", "24 שעות"],
+                correct_answer: "30 דקות",
+                explanation: "שלב 3 (סטודנט א') ושלב 4 (סטודנט ב') מציינים לסגור את הצלחות 'לאחר 30 דקות'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "מהי טמפרטורת ההדגרה (אינקובציה) של צלחות דגימת האוויר?",
+                type: "mcq",
+                options: ["$37^{\\circ}C$", "$30^{\\circ}C$", "טמפרטורת החדר", "$4^{\\circ}C$"],
+                correct_answer: "$30^{\\circ}C$",
+                explanation: "שלב 4 (סטודנט א') ושלב 5 (סטודנט ב') מציינים: 'הדגר ב - $30^{\\circ}C$'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D1",
+                experiment_name: "תרגיל ד'1 - מיקרואורגניזמים באוויר",
+                question_text: "מהו משך ההדגרה (אינקובציה) של צלחות דגימת האוויר?",
+                type: "mcq",
+                options: ["48 שעות", "3 ימים", "שבוע", "עד להופעת צמיחה"],
+                correct_answer: "שבוע",
+                explanation: "שלב 4 (סטודנט א') ושלב 5 (סטודנט ב') מציינים: 'הדגר... למשך שבוע'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part D'2: Water Microbes (Page 6)
+            {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "מהו המשתנה העיקרי אותו בודק סטודנט ב' בניסוי דגימת האוויר (ד'1)?",
+                type: "mcq",
+                options: ["סוג מצע האגר", "טמפרטורת החדר", "מיקום הדגימה (קרבה לאנשים / חדר מבודד)", "משך החשיפה"],
+                correct_answer: "מיקום הדגימה (קרבה לאנשים / חדר מבודד)",
+                explanation: "סטודנט ב' חושף צלחות במצב מאונך בקרבה לעמדת העבודה, במרחק 2 מטר מאנשים, ובחדר ללא אנשים. המשתנה הוא המיקום והשפעת נוכחות אנשים.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "במעקב במעבדה 2 עבור דגימת האוויר, האם מתעדים רק את מספר המושבות?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "ההנחיה למעקב במעבדה 2 (עמוד 6) היא: 'ספור את המושבות, ותאר את המושבות שהתקבלו (גודל, פיגמנטים, צורת מושבה וכד')'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "איזו תכונה של סביבה מימית מאפשרת דיפוזיה מהירה של מרכיבים כימיים?",
+                type: "mcq",
+                options: ["לחץ גבוה", "טמפרטורה נמוכה", "פאזת המים הרציפה", "נוכחות ביופילמים"],
+                correct_answer: "פאזת המים הרציפה",
+                explanation: "הטקסט הפותח את תרגיל ד'2 מציין שהייחוד של המדיום המימי נובע 'בעיקר מפאזת המים הרציפה המאפשרת דיפוזיה מהירה של המרכיבים הכימיים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "בניסוי ד'2, אילו שני סוגי מים עיקריים נבדקים בדרך כלל?",
+                type: "mcq",
+                options: ["מי ברז ומים מזוקקים", "מי ים ומי נהר", "מי ברז ומי קולחין", "מים מינרליים ומי אגם"],
+                correct_answer: "מי ברז ומי קולחין",
+                explanation: "הטקסט מציין: 'בניסיון זה נכיר 2 בתי גידול מימיים טיפוסיים: מי ברז ומי קולחין'. סטודנט א' עובד עם מי ברז וסטודנט ב' עם מי קולחין.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "האם מצע LB agar המשמש בתרגיל ד'2 הוא מצע מוגדר כימית?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "הטקסט מציין: 'מצע הגידול LB agar הוא מצע עשיר, לא מוגדר'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "באיזה כלי משתמשים לזריעה על פני כל שטח הפלטה בתרגיל ד'2?",
+                type: "mcq",
+                options: ["לולאת זריעה", "קצה פיפטה", "מקל דריגלסקי", "מטוש סטרילי"],
+                correct_answer: "מקל דריגלסקי",
+                explanation: "הטקסט מציג את שיטת הזריעה בעזרת מקל דריגלסקי, שבה 'מורחים את הנוזל על האגר בעזרת מקל פלסטיק או זכוכית'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "כיצד מעקרים את מקל הדריגלסקי בין שימושים?",
+                type: "mcq",
+                options: ["באוטוקלאב", "טבילה באתנול והעברה בלהבה", "שטיפה במים וסבון", "חשיפה לקרינת UV"],
+                correct_answer: "טבילה באתנול והעברה בלהבה",
+                explanation: "הטקסט מציין: 'את מקל הדריגלסקי מעקרים באתנול לפני ואחרי כל שימוש'. ההליך המקובל (ובטיחותי) הוא טבילה באתנול והעברה מהירה בלהבה לשריפת עודפי האלכוהול.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part D'2: Water Procedure (Page 7)
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "עבור דגימת מי הברז (סטודנט א'), כמה מיהולים עשרוניים סדרתיים מכינים בנוסף לדגימה המקורית?",
+                type: "mcq",
+                options: ["0", "1 ($10^{-1}$)", "2 ($10^{-1}, 10^{-2}$)", "3 ($10^{-1}, 10^{-2}, 10^{-3}$)"],
+                correct_answer: "2 ($10^{-1}, 10^{-2}$)",
+                explanation: "שלב 1 בהנחיות לסטודנט א' (עמוד 7) הוא: 'ערוך 2 מיהולים למי הברז...'. הכוונה היא להכנת המיהולים $10^{-1}$ ו-$10^{-2}$.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "איזה נפח של דגימה (או מיהול) נזרע על כל צלחת אגר בתרגיל ד'2?",
+                type: "mcq",
+                options: ["$0.01$ מ\"ל", "$0.1$ מ\"ל", "$0.5$ מ\"ל", "$1.0$ מ\"ל"],
+                correct_answer: "$0.1$ מ\"ל",
+                explanation: "שלב 2 (גם לסטודנט א' וגם לב') מציין: 'זרע על פלטה מתאימה $0.1$ מ\"ל'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "אילו מיהולים של *מי ברז* זורע סטודנט א' על הפלטות?",
+                type: "mcq",
+                options: ["$10^0$ בלבד", "$10^{-1}, 10^{-2}$ בלבד", "$10^0, 10^{-1}, 10^{-2}$", "$10^{-2}, 10^{-3}, 10^{-4}$"],
+                correct_answer: "$10^0, 10^{-1}, 10^{-2}$",
+                explanation: "שלב 2 א' לסטודנט א' מציין לזרוע את המיהולים: '$10^0, 10^{-1}, 10^{-2}$ של מי הברז'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "אילו מיהולים של *מי קולחין* זורע סטודנט ב' על הפלטות?",
+                type: "mcq",
+                options: ["$10^0$ בלבד", "$10^{-1}, 10^{-2}$ בלבד", "$10^0, 10^{-1}, 10^{-2}$", "$10^{-2}, 10^{-3}, 10^{-4}$"],
+                correct_answer: "$10^0, 10^{-1}, 10^{-2}$",
+                explanation: "שלב 2 א' לסטודנט ב' מציין לזרוע את המיהולים: '$10^0, 10^{-1}, 10^{-2}$ של מי הקולחין'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "מהי טמפרטורת ההדגרה (אינקובציה) של צלחות דגימת המים?",
+                type: "mcq",
+                options: ["$37^{\\circ}C$", "$30^{\\circ}C$", "טמפרטורת החדר", "$4^{\\circ}C$"],
+                correct_answer: "$30^{\\circ}C$",
+                explanation: "שלב 3 (גם לסטודנט א' וגם לב') מציין: 'הדגר את הפלטות (הפוכות) ב-$30$ מע\"צ'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                 experiment_id: "D2",
+                 experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                 question_text: "במעקב במעבדה 2 עבור דגימת המים, האם משווים רק את סוגי המושבות שהתקבלו?",
+                 type: "tf",
+                 correct_answer: false,
+                 explanation: "ההנחיה למעקב במעבדה 2 (עמוד 7) היא: 'ספור את המושבות שהתפתחו, וחשב את מספר המיקרואורגניזמים שהיה בדוגמת המים המקורית תוך התחשבות במיהולים שעשית'. יש לבצע ספירה וחישוב ריכוז.",
+                 answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D2",
+                experiment_name: "תרגיל ד'2 - מיקרואורגניזמים במים",
+                question_text: "אם ספרת 45 מושבות על צלחת שנזרעה עם $0.1$ מ\"ל ממיהול $10^{-2}$, מהו ריכוז החיידקים (CFU/ml) בדגימה המקורית?",
+                type: "mcq",
+                options: ["$4.5 \\times 10^3$ CFU/ml", "$4.5 \\times 10^4$ CFU/ml", "$4.5 \\times 10^5$ CFU/ml", "$4.5 \\times 10^2$ CFU/ml"],
+                correct_answer: "$4.5 \\times 10^4$ CFU/ml",
+                explanation: "החישוב הוא: $\\frac{\\text{מספר מושבות}}{V_{\\text{זריעה}} \\times \\text{מיהול}} = \\frac{45}{0.1 \\text{ ml} \\times 10^{-2}} = \\frac{45}{10^{-3} \\text{ ml}} = 45000 \\text{ CFU/ml} = 4.5 \\times 10^4 \\text{ CFU/ml}$. הנוסחה מופיעה בעמוד 12.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            // Part D'3: Body Flora (Page 7)
+             {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "האם המיקרופלורה הנורמלית של גוף האדם (מיקרוביוטה) מורכבת מחיידקים בלבד?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "הטקסט מציין שהמיקרוביוטה 'מורכבת מאד ומכילה חיידקים, פרזיטים חד תאיים, פטריות ווירוסים'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "האם גורמים כמו תזונה וגיל משפיעים באופן זניח על הרכב המיקרוביוטה של האדם?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "הטקסט מציין שהמיקרוביוטה 'תלויה בגורמים שונים כגון גנטיקה, גיל, מין, תזונה ועוד, והיא משפיעה באופן משמעותי על הבריאות שלנו'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "היכן בגוף האדם נמצא הריכוז הגבוה ביותר של חיידקים בדרך כלל?",
+                type: "mcq",
+                options: ["בזרם הדם ובמוח", "בריאות ובקיבה", "על פני העור ובמעי", "בשרירים ובעצמות"],
+                correct_answer: "על פני העור ובמעי",
+                explanation: "הטקסט מציין: 'רוב החיידקים בגופנו מרוכזים בעיקר במעי ועל פני השכבה החיצונית של העור'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "באיזה סוג מצע אגר משתמשים בתרגיל ד'3 לדגימת פלורה מגוף האדם והסביבה?",
+                type: "mcq",
+                options: ["LB agar", "MacConkey agar", "אגר דם (Blood agar)", "Nutrient agar"],
+                correct_answer: "אגר דם (Blood agar)",
+                explanation: "רשימת ה'חומרים' לתרגיל ד'3 מציינת: 'צלחת אגר דם לכל סטודנט'. הטקסט מסביר שזהו מצע מתאים לגידול חיידקים שסביבתם הטבעית היא גוף האדם.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "האם אגר דם הוא מצע סלקטיבי המעכב צמיחה של חיידקים גראם-חיוביים?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "אגר דם הוא מצע עשיר ולא סלקטיבי במיוחד, המאפשר גידול של מגוון רחב של חיידקים. הוא דיפרנציאלי בכך שהוא מאפשר הבחנה בין חיידקים המוליטיים (מפרקי דם) ללא-המוליטיים.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "כמה אזורים שונים מסומנים על צלחת אגר הדם בתרגיל ד'3?",
+                type: "mcq",
+                options: ["1", "2", "3", "4"],
+                correct_answer: "4",
+                explanation: "שלב 1 ב'ביצוע' הוא: 'סמן 4 גזרות שוות על תחתית הפלטות'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "באיזה כלי עיקרי משתמשים לדגימה בתרגיל ד'3?",
+                type: "mcq",
+                options: ["לולאת זריעה", "קצה פיפטה סטרילי", "קיסם סטרילי עטוף בצמר גפן (מטוש)", "אזמל"],
+                correct_answer: "קיסם סטרילי עטוף בצמר גפן (מטוש)",
+                explanation: "רשימת ה'חומרים' מציינת 'קיסמים סטריליים העטופים בצמר גפן (מטושים)'. שלב 2 ב'ביצוע' מתאר שימוש באצבע ובמטוש לדגימה.",
+                answered: false, user_choice: null, is_correct: null
+            },
+            // Part D'3: Body Flora Procedure (Page 8)
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "בתרגיל ד'3, האם משתמשים באותו מטוש סטרילי לדגימת כל ארבעת האזורים?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "שלב 3 מתאר דגימה של שני רבעים נוספים מחומר משולחן העבודה, בגדים או רצפה. ההערה בסוגריים בשלב 3 היא 'השתמש בקיסם חדש בכל דגימה (מדוע?)', מה שמדגיש את הצורך במטוש נפרד לכל דגימה למניעת זיהום צולב.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "מהם תנאי ההדגרה (אינקובציה) של צלחות אגר הדם מתרגיל ד'3?",
+                type: "mcq",
+                options: ["$30^{\\circ}C$ למשך שבוע", "$37^{\\circ}C$ למשך 48 שעות", "$4^{\\circ}C$ למשך 3 ימים", "טמפ' חדר למשך 72 שעות"],
+                correct_answer: "$37^{\\circ}C$ למשך 48 שעות",
+                explanation: "שלב 4 ב'ביצוע' הוא: 'הדגר את הפלטות ב-$37$ מע\"צ למשך 48 שעות'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "במעקב במעבדה 2 עבור תרגיל ד'3, מה הדבר העיקרי שמחפשים ומציינים?",
+                type: "mcq",
+                options: ["את מספר המושבות המדויק בכל רביע", "את סוג ההמוליזה (אם קיימת) סביב המושבות", "את ה-pH של האגר לאחר הצמיחה", "את המשקל היבש של החיידקים"],
+                correct_answer: "את סוג ההמוליזה (אם קיימת) סביב המושבות",
+                explanation: "ההנחיה למעבדה 2 היא: 'צייר את תצפיותיך וציין איזו הילה נוצרה סביב המושבות'. ההילה מתייחסת לאזורי המוליזה (פירוק כדוריות דם אדומות).",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D3",
+                experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                question_text: "מהי המוליזה (Hemolysis) בהקשר של צלחות אגר דם?",
+                type: "mcq",
+                options: ["פירוק של מולקולות האגר על ידי החיידקים", "פירוק של כדוריות הדם האדומות במצע על ידי החיידקים", "יצירת קריש דם סביב המושבה", "שינוי צבע המושבה בתגובה לדם"],
+                correct_answer: "פירוק של כדוריות הדם האדומות במצע על ידי החיידקים",
+                explanation: "המוליזה היא תופעה בה חיידקים מפרישים אנזימים המפרקים את כדוריות הדם האדומות הנמצאות במצע אגר הדם, דבר המתבטא באזורים שקופים (בטא-המוליזה) או ירקרקים (אלפא-המוליזה) סביב המושבות.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                 experiment_id: "D3",
+                 experiment_name: "תרגיל ד'3 - מיקרופלורה של גוף האדם והסביבה",
+                 question_text: "האם המאמר המצורף של Buxton R. דן בשיטות לחישוב CFU/ml?",
+                 type: "tf",
+                 correct_answer: false,
+                 explanation: "הכותרת המלאה של המאמר היא 'Blood Agar Plates and Hemolysis Protocols'. הוא עוסק באופן ספציפי באגר דם ובפרוטוקולים הקשורים להמוליזה, לא בחישובי CFU כלליים.",
+                 answered: false, user_choice: null, is_correct: null
+             },
+            // Part D'4: Colony Morphology (Page 9 - Lab 2 Task)
+             {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "מתי מבוצע תרגיל ד'4 (אפיון מורפולוגיה של מושבה)?",
+                type: "mcq",
+                options: ["במהלך מעבדה 1", "במעבדה 2", "בבית, בין המעבדות", "במעבדה 3"],
+                correct_answer: "במעבדה 2",
+                explanation: "כותרת התרגיל בעמוד 9 היא 'תרגיל ד'4 - מורפולוגיה של מושבה – יבוצע במעבדה 2'.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "כמה מושבות שונות יש לבחור ולתאר בתרגיל ד'4?",
+                type: "mcq",
+                options: ["1", "2", "5", "את כל המושבות הנראות לעין"],
+                correct_answer: "2",
+                explanation: "שלב 1 ב'מהלך העבודה' הוא: 'בחר 2 מושבות בודדות אשר שונות ביניהן במאפיינים המורפולוגים'.",
+                answered: false, user_choice: null, is_correct: null
+            },
+             {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "איזה מהבאים *אינו* מאפיין מורפולוגי סטנדרטי המשמש לתיאור מושבה?",
+                type: "mcq",
+                options: ["גודל (מ\"מ)", "צורה (Form)", "תגובת צביעת גראם", "התרוממות (Elevation)"],
+                correct_answer: "תגובת צביעת גראם",
+                explanation: "רשימת התכונות לתיאור מורפולוגי (שלב 2) כוללת גודל, צורה, התרוממות, שוליים, פני שטח ותכונות אופטיות. צביעת גראם היא טכניקה נפרדת המתבצעת על תאים בודדים, לא על המושבה כולה.",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "לאיזה מאפיין של המושבה מתייחס המונח 'שוליים' (Margin)?",
+                type: "mcq",
+                options: ["גובה המושבה מעל פני האגר", "מרקם פני השטח שלה", "צורת הקצה או הגבול החיצוני שלה", "צבע המושבה"],
+                correct_answer: "צורת הקצה או הגבול החיצוני שלה",
+                explanation: "שוליים (Margin) מתארים את צורת הגבול החיצוני של המושבה, למשל: חלקים, גליים, מסורגים וכו' (כפי שמופיע בסעיף 2d).",
+                answered: false, user_choice: null, is_correct: null
+             },
+             {
+                 experiment_id: "D4",
+                 experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                 question_text: "למה מתייחסות 'תכונות אופטיות' בתיאור מושבה?",
+                 type: "mcq",
+                 options: ["האם היא זוהרת בחושך", "הריח שהיא מפיצה", "מידת השקיפות שלה (אטומה, שקופה) ונוכחות צבען (פיגמנט)", "המרקם שלה למגע"],
+                 correct_answer: "מידת השקיפות שלה (אטומה, שקופה) ונוכחות צבען (פיגמנט)",
+                 explanation: "סעיף 2f מציין 'תכונות אופטיות (אטומה, שקופה, פיגמנט)'.",
+                 answered: false, user_choice: null, is_correct: null
+            },
+            {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "האם מושבה המתוארת כ'פילמנטית' היא בעלת צורה עגולה וחלקה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "צורה פילמנטית (סעיף 2b) מתארת מושבה בעלת מבנה דמוי חוטים או קורים, ולא צורה עגולה וחלקה.",
+                answered: false, user_choice: null, is_correct: null
+             },
+            {
+                experiment_id: "D4",
+                experiment_name: "תרגיל ד'4 - מורפולוגיה של מושבה",
+                question_text: "האם תוצאות אפיון המורפולוגיה נרשמות כפסקה חופשית בדוח המעבדה?",
+                type: "tf",
+                correct_answer: false,
+                explanation: "ההנחיה בסוף עמוד 9 היא: 'מלא את הטבלה שבדף התוצאות'. קיים מבנה טבלאי ייעודי לרישום המאפיינים (כפי שמופיע בעמוד 13).",
+                answered: false, user_choice: null, is_correct: null
+            }
+        ];
+
+        // --- State Variables ---
+        let currentQuestionIndex = 0;
+        let questionsByExperiment = {};
+
+        // --- DOM Elements ---
+        const questionCounterElement = document.getElementById('question-counter');
+        const questionAreaElement = document.querySelector('.question-area');
+        const questionTextElement = document.querySelector('.question-text');
+        const optionsElement = document.querySelector('.options');
+        const feedbackElement = document.querySelector('.feedback');
+        const explanationElement = document.querySelector('.explanation');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const viewAllBtn = document.getElementById('view-all-btn');
+        const viewSingleBtn = document.getElementById('view-single-btn');
+        const allQuestionsViewElement = document.getElementById('all-questions-view');
+        const questionSectionElement = document.getElementById('question-section');
+
+
+        // --- Functions ---
+
+        /**
+         * Groups questions by experiment ID and name.
+         */
+        function groupQuestionsByExperiment() {
+            questionsByExperiment = {}; // Reset
+            allQuestions.forEach((q, index) => {
+                if (!questionsByExperiment[q.experiment_id]) {
+                    questionsByExperiment[q.experiment_id] = {
+                        name: q.experiment_name,
+                        questions: []
+                    };
+                }
+                // Add global index and initial index within experiment
+                q.globalIndex = index;
+                 q.indexInExperiment = questionsByExperiment[q.experiment_id].questions.length;
+                questionsByExperiment[q.experiment_id].questions.push(q);
+            });
+        }
+
+        /**
+         * Updates the question counter display.
+         */
+         function updateCounter() {
+             const currentQ = allQuestions[currentQuestionIndex];
+             const experiment = questionsByExperiment[currentQ.experiment_id];
+             const totalInExperiment = experiment.questions.length;
+             const currentInExperiment = currentQ.indexInExperiment + 1; // 1-based index for display
+             const totalOverall = allQuestions.length;
+             const currentOverall = currentQuestionIndex + 1; // 1-based index
+
+             questionCounterElement.textContent = `שאלה ${currentOverall} / ${totalOverall} (כללי) | ${experiment.name}: שאלה ${currentInExperiment} / ${totalInExperiment}`;
+         }
+
+
+        /**
+         * Loads and displays a question by its global index.
+         * @param {number} index - The global index of the question in allQuestions.
+         */
+        async function loadQuestion(index) {
+            if (index < 0 || index >= allQuestions.length) {
+                console.error("Invalid question index:", index);
+                return;
+            }
+
+            currentQuestionIndex = index;
+            const question = allQuestions[index];
+
+            // Update question text
+            questionTextElement.innerHTML = ''; // Clear previous
+            questionTextElement.textContent = question.question_text; // Set text first
+
+            // Clear previous options and feedback
+            optionsElement.innerHTML = '';
+            feedbackElement.style.display = 'none';
+            explanationElement.style.display = 'none';
+            feedbackElement.textContent = '';
+            explanationElement.innerHTML = ''; // Clear explanation
+
+
+            // Populate options
+            if (question.type === 'mcq') {
+                question.options.forEach((option, i) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.onclick = () => handleAnswer(i);
+                    button.disabled = question.answered; // Disable if already answered
+                    optionsElement.appendChild(button);
+                });
+            } else if (question.type === 'tf') {
+                 const tfContainer = document.createElement('div'); // Container for buttons
+
+                 const trueButton = document.createElement('button');
+                 trueButton.textContent = 'נכון';
+                 trueButton.classList.add('tf-button');
+                 trueButton.onclick = () => handleTFAnswer(true);
+                 trueButton.disabled = question.answered;
+                 tfContainer.appendChild(trueButton);
+
+                 const falseButton = document.createElement('button');
+                 falseButton.textContent = 'לא נכון';
+                 falseButton.classList.add('tf-button');
+                 falseButton.onclick = () => handleTFAnswer(false);
+                 falseButton.disabled = question.answered;
+                 tfContainer.appendChild(falseButton);
+
+                 optionsElement.appendChild(tfContainer);
+            }
+
+            // Show explanation and feedback if already answered
+            if (question.answered) {
+                showFeedbackAndExplanation(question.is_correct, question.explanation);
+                // Visually mark the chosen answer and the correct answer
+                 highlightAnswers(question);
+            }
+
+
+            // Update navigation buttons
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === allQuestions.length - 1;
+
+            // Update counter
+             updateCounter();
+
+            // Typeset MathJax for the newly added content
+            try {
+                await MathJax.typesetPromise([questionAreaElement]);
+            } catch (err) {
+                console.error('MathJax Typesetting Error:', err);
+            }
+        }
+
+         /**
+         * Highlights the user's choice and the correct answer visually.
+         * Should be called *after* options are created.
+         * @param {object} question - The question object containing answer info.
+         */
+        function highlightAnswers(question) {
+             const buttons = optionsElement.querySelectorAll('button'); // Works for both MCQ and TF buttons
+
+             if (question.type === 'mcq') {
+                 buttons.forEach((button, i) => {
+                     if (button.textContent === question.correct_answer) {
+                         button.style.backgroundColor = '#4CAF50'; // Green for correct
+                         button.style.border = '2px solid white';
+                     }
+                     if (i === question.user_choice && !question.is_correct) {
+                         button.style.backgroundColor = '#F44336'; // Red for incorrect user choice
+                     }
+                     if (button.textContent !== question.correct_answer && i !== question.user_choice) {
+                         button.style.opacity = '0.6'; // Dim other options slightly
+                     }
+                 });
+             } else if (question.type === 'tf') {
+                 buttons.forEach(button => {
+                     const choice = (button.textContent === 'נכון');
+                     if (choice === question.correct_answer) {
+                          button.style.backgroundColor = '#4CAF50'; // Green correct
+                          button.style.border = '2px solid white';
+                     }
+                     if (choice === question.user_choice && !question.is_correct) {
+                         button.style.backgroundColor = '#F44336'; // Red incorrect
+                     }
+                     if (choice !== question.correct_answer && choice !== question.user_choice) {
+                          button.style.opacity = '0.6'; // Dim other option
+                     }
+                 });
+             }
+        }
+
+        /**
+         * Shows feedback and explanation.
+         * @param {boolean} isCorrect - Whether the user's answer was correct.
+         * @param {string} explanationText - The explanation text.
+         */
+         function showFeedbackAndExplanation(isCorrect, explanationText) {
+             feedbackElement.textContent = isCorrect ? 'נכון!' : 'לא נכון.';
+             feedbackElement.className = isCorrect ? 'feedback correct' : 'feedback incorrect'; // Apply class
+             feedbackElement.style.display = 'block';
+
+             explanationElement.innerHTML = `<strong>הסבר:</strong> ${explanationText}`; // Set explanation
+             explanationElement.style.display = 'block';
+
+             // Disable all options after showing feedback
+             const options = optionsElement.querySelectorAll('button');
+             options.forEach(option => option.disabled = true);
+        }
+
+        /**
+         * Handles the selection of an MCQ answer.
+         * @param {number} selectedIndex - The index of the selected option.
+         */
+        async function handleAnswer(selectedIndex) {
+            const question = allQuestions[currentQuestionIndex];
+            if (question.answered) return; // Prevent re-answering
+
+            const selectedOption = question.options[selectedIndex];
+            const isCorrect = selectedOption === question.correct_answer;
+
+            // Update question state
+            question.answered = true;
+            question.user_choice = selectedIndex;
+            question.is_correct = isCorrect;
+
+            // Show feedback and explanation
+            showFeedbackAndExplanation(isCorrect, question.explanation);
+
+            // Visually highlight answers
+             highlightAnswers(question);
+
+            // Typeset MathJax for the explanation if it contains math
+            try {
+                await MathJax.typesetPromise([explanationElement]);
+            } catch (err) {
+                console.error('MathJax Typesetting Error on Explanation:', err);
+            }
+
+        }
+
+        /**
+         * Handles the selection of a True/False answer.
+         * @param {boolean} choice - True if 'נכון' was clicked, False otherwise.
+         */
+        async function handleTFAnswer(choice) {
+            const question = allQuestions[currentQuestionIndex];
+            if (question.answered) return; // Prevent re-answering
+
+            const isCorrect = choice === question.correct_answer;
+
+            // Update question state
+            question.answered = true;
+            question.user_choice = choice;
+            question.is_correct = isCorrect;
+
+            // Show feedback and explanation
+            showFeedbackAndExplanation(isCorrect, question.explanation);
+
+            // Visually highlight answers
+            highlightAnswers(question);
+
+            // Typeset MathJax for the explanation if it contains math
+            try {
+                await MathJax.typesetPromise([explanationElement]);
+            } catch (err) {
+                console.error('MathJax Typesetting Error on Explanation:', err);
+            }
+        }
+
+
+        /**
+         * Navigates to the next question.
+         */
+        function nextQuestion() {
+            if (currentQuestionIndex < allQuestions.length - 1) {
+                loadQuestion(currentQuestionIndex + 1);
+            }
+        }
+
+        /**
+         * Navigates to the previous question.
+         */
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                loadQuestion(currentQuestionIndex - 1);
+            }
+        }
+
+        /**
+         * Toggles between single question view and all questions view.
+         */
+        function toggleViewAll() {
+            const isHidden = allQuestionsViewElement.style.display === 'none';
+            if (isHidden) {
+                populateViewAll(); // Populate/Refresh the view
+                questionSectionElement.style.display = 'none'; // Hide single view
+                allQuestionsViewElement.style.display = 'block'; // Show all view
+                viewAllBtn.style.display = 'none'; // Hide "View All" button
+                viewSingleBtn.style.display = 'inline-block'; // Show "View Single" button
+            } else {
+                questionSectionElement.style.display = 'block'; // Show single view
+                allQuestionsViewElement.style.display = 'none'; // Hide all view
+                viewAllBtn.style.display = 'inline-block'; // Show "View All" button
+                viewSingleBtn.style.display = 'none'; // Hide "View Single" button
+                // Optionally reload the current question in single view to ensure state consistency
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+
+         /**
+          * Populates the 'View All' section with all questions, grouped by experiment.
+          */
+         async function populateViewAll() {
+             allQuestionsViewElement.innerHTML = '<h2>כל השאלות</h2>'; // Clear and add title
+
+             for (const expId in questionsByExperiment) {
+                 const experiment = questionsByExperiment[expId];
+                 const experimentGroupDiv = document.createElement('div');
+                 experimentGroupDiv.classList.add('experiment-group');
+
+                 const title = document.createElement('h3');
+                 title.textContent = experiment.name;
+                 experimentGroupDiv.appendChild(title);
+
+                 experiment.questions.forEach(q => {
+                     const questionContainer = document.createElement('div');
+                     questionContainer.classList.add('question-container-all');
+                     questionContainer.id = `q-all-${q.globalIndex}`; // Unique ID
+
+                     const qText = document.createElement('div');
+                     qText.classList.add('question-text');
+                     qText.textContent = `${q.indexInExperiment + 1}. ${q.question_text}`; // Number within experiment
+                     questionContainer.appendChild(qText);
+
+                     const qOptions = document.createElement('div');
+                     qOptions.classList.add('options');
+
+                     // Add options (buttons)
+                     if (q.type === 'mcq') {
+                         q.options.forEach((opt, i) => {
+                             const btn = document.createElement('button');
+                             btn.textContent = opt;
+                             // Use a wrapper function to pass the global index and option index
+                             btn.onclick = (event) => handleAnswerFromAllView(q.globalIndex, i, event.target);
+                             btn.disabled = q.answered;
+                             qOptions.appendChild(btn);
+                         });
+                     } else if (q.type === 'tf') {
+                          const tfContainerAll = document.createElement('div');
+
+                          const trueBtnAll = document.createElement('button');
+                          trueBtnAll.textContent = 'נכון';
+                          trueBtnAll.classList.add('tf-button');
+                          trueBtnAll.onclick = (event) => handleTFAnswerFromAllView(q.globalIndex, true, event.target);
+                          trueBtnAll.disabled = q.answered;
+                          tfContainerAll.appendChild(trueBtnAll);
+
+                          const falseBtnAll = document.createElement('button');
+                          falseBtnAll.textContent = 'לא נכון';
+                          falseBtnAll.classList.add('tf-button');
+                          falseBtnAll.onclick = (event) => handleTFAnswerFromAllView(q.globalIndex, false, event.target);
+                          falseBtnAll.disabled = q.answered;
+                          tfContainerAll.appendChild(falseBtnAll);
+
+                          qOptions.appendChild(tfContainerAll);
+                     }
+                     questionContainer.appendChild(qOptions);
+
+                     // Add feedback and explanation containers (initially hidden)
+                     const qFeedback = document.createElement('div');
+                     qFeedback.classList.add('feedback');
+                     qFeedback.style.display = 'none';
+                     questionContainer.appendChild(qFeedback);
+
+                     const qExplanation = document.createElement('div');
+                     qExplanation.classList.add('explanation');
+                     qExplanation.style.display = 'none';
+                     questionContainer.appendChild(qExplanation);
+
+                     // If already answered, show feedback/explanation and highlight
+                     if (q.answered) {
+                         qFeedback.textContent = q.is_correct ? 'נכון!' : 'לא נכון.';
+                         qFeedback.className = q.is_correct ? 'feedback correct' : 'feedback incorrect';
+                         qFeedback.style.display = 'block';
+                         qExplanation.innerHTML = `<strong>הסבר:</strong> ${q.explanation}`;
+                         qExplanation.style.display = 'block';
+                         highlightAnswersInAllView(q, qOptions); // Highlight correct/incorrect
+                     }
+
+                     experimentGroupDiv.appendChild(questionContainer);
+                 });
+
+                 allQuestionsViewElement.appendChild(experimentGroupDiv);
+             }
+
+             // Typeset MathJax for the entire 'View All' section
+             try {
+                 await MathJax.typesetPromise([allQuestionsViewElement]);
+             } catch (err) {
+                 console.error('MathJax Typesetting Error in View All:', err);
+             }
+         }
+
+
+         /**
+          * Handles MCQ answer selection from the 'View All' section.
+          * @param {number} globalIndex - The global index of the question.
+          * @param {number} selectedOptionIndex - The index of the selected option.
+          * @param {HTMLElement} buttonElement - The button element that was clicked.
+          */
+         async function handleAnswerFromAllView(globalIndex, selectedOptionIndex, buttonElement) {
+             const question = allQuestions[globalIndex];
+             if (question.answered) return;
+
+             const selectedOptionText = question.options[selectedOptionIndex];
+             const isCorrect = selectedOptionText === question.correct_answer;
+
+             // Update master question state
+             question.answered = true;
+             question.user_choice = selectedOptionIndex;
+             question.is_correct = isCorrect;
+
+             // Update the specific question container in the 'View All' display
+             const questionContainer = document.getElementById(`q-all-${globalIndex}`);
+             const feedbackDiv = questionContainer.querySelector('.feedback');
+             const explanationDiv = questionContainer.querySelector('.explanation');
+             const optionsDiv = questionContainer.querySelector('.options');
+
+             feedbackDiv.textContent = isCorrect ? 'נכון!' : 'לא נכון.';
+             feedbackDiv.className = isCorrect ? 'feedback correct' : 'feedback incorrect';
+             feedbackDiv.style.display = 'block';
+
+             explanationDiv.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`;
+             explanationDiv.style.display = 'block';
+
+             // Disable all buttons for this question in 'View All'
+             optionsDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+             // Highlight answers
+             highlightAnswersInAllView(question, optionsDiv);
+
+
+             // Typeset MathJax if needed for the explanation
+             try {
+                  await MathJax.typesetPromise([explanationDiv]);
+             } catch (err) {
+                  console.error('MathJax Typesetting Error on Explanation (All View):', err);
+             }
+         }
+
+        /**
+         * Handles T/F answer selection from the 'View All' section.
+         * @param {number} globalIndex - The global index of the question.
+         * @param {boolean} choice - The boolean choice made (true for 'נכון').
+         * @param {HTMLElement} buttonElement - The button element that was clicked.
+         */
+         async function handleTFAnswerFromAllView(globalIndex, choice, buttonElement) {
+            const question = allQuestions[globalIndex];
+            if (question.answered) return;
+
+            const isCorrect = choice === question.correct_answer;
+
+            // Update master question state
+            question.answered = true;
+            question.user_choice = choice;
+            question.is_correct = isCorrect;
+
+             // Update the specific question container in the 'View All' display
+             const questionContainer = document.getElementById(`q-all-${globalIndex}`);
+             const feedbackDiv = questionContainer.querySelector('.feedback');
+             const explanationDiv = questionContainer.querySelector('.explanation');
+             const optionsDiv = questionContainer.querySelector('.options');
+
+             feedbackDiv.textContent = isCorrect ? 'נכון!' : 'לא נכון.';
+             feedbackDiv.className = isCorrect ? 'feedback correct' : 'feedback incorrect';
+             feedbackDiv.style.display = 'block';
+
+             explanationDiv.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`;
+             explanationDiv.style.display = 'block';
+
+             // Disable all buttons for this question in 'View All'
+             optionsDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+             // Highlight answers
+             highlightAnswersInAllView(question, optionsDiv);
+
+             // Typeset MathJax if needed for the explanation
+             try {
+                  await MathJax.typesetPromise([explanationDiv]);
+             } catch (err) {
+                  console.error('MathJax Typesetting Error on Explanation (All View TF):', err);
+             }
+        }
+
+        /**
+         * Highlights answers within a specific question container in the 'View All' list.
+         * @param {object} question - The question object.
+         * @param {HTMLElement} optionsDiv - The container div for the options/buttons.
+         */
+        function highlightAnswersInAllView(question, optionsDiv) {
+            const buttons = optionsDiv.querySelectorAll('button'); // Selects all buttons within the options container
+
+             if (question.type === 'mcq') {
+                 buttons.forEach((button, i) => {
+                     // Check based on text content as index might not be stored on element
+                     if (button.textContent === question.correct_answer) {
+                         button.style.backgroundColor = '#4CAF50'; // Green for correct
+                         button.style.border = '2px solid white';
+                     }
+                     // Check if this button corresponds to the user's choice (by index) and if it was incorrect
+                     if (i === question.user_choice && !question.is_correct) {
+                         button.style.backgroundColor = '#F44336'; // Red for incorrect user choice
+                     }
+                      if (button.textContent !== question.correct_answer && i !== question.user_choice) {
+                         button.style.opacity = '0.6'; // Dim others
+                     }
+                 });
+             } else if (question.type === 'tf') {
+                 buttons.forEach(button => {
+                     const choice = (button.textContent === 'נכון'); // Determine boolean value from button text
+                     if (choice === question.correct_answer) {
+                          button.style.backgroundColor = '#4CAF50'; // Green correct
+                          button.style.border = '2px solid white';
+                     }
+                     if (choice === question.user_choice && !question.is_correct) {
+                         button.style.backgroundColor = '#F44336'; // Red incorrect
+                     }
+                      if (choice !== question.correct_answer && choice !== question.user_choice) {
+                          button.style.opacity = '0.6'; // Dim other
+                     }
+                 });
+             }
+        }
+
+        /**
+         * Initializes the quiz by grouping questions and loading the first one.
+         */
+        function initialize() {
+            groupQuestionsByExperiment();
+            loadQuestion(0); // Load the first question initially
+        }
+
+        // --- Initialization ---
+        // Run initialize after the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', initialize);
+
+    </script>
+
+</body>
+</html>

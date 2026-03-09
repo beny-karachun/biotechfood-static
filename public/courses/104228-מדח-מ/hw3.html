@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי למידה: פתרון מד״ר חלקית מסדר ראשון (שאלה 4)</title>
+    
+    <!-- MathJax 3 Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimiters for inline math
+                displayMath: [['$$', '$$'], ['\\[', '\\]']] // Delimiters for display math
+            },
+            svg: {
+                fontCache: 'global' // Use global font cache for better performance
+            },
+            options: {
+                enableMenu: false // Disable right-click menu for simplicity
+            }
+        };
+    </script>
+    <!-- Load MathJax 3 -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif; /* Using a common font */
+            line-height: 1.7;
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            direction: rtl; /* Right-to-left for Hebrew */
+        }
+
+        .container {
+            max-width: 85%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #444; /* Medium Gray container */
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents */
+            margin-bottom: 15px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2em;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            font-size: 1.3em;
+            margin-top: 25px;
+            color: #cccccc; /* Lighter heading for questions */
+            border-bottom: none;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        code {
+            background-color: #555;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .math-block {
+            display: block;
+            margin: 15px auto; /* Center display math */
+            text-align: center; /* Ensure MathJax block is centered */
+            overflow-x: auto; /* Allow scrolling for wide equations */
+            padding: 10px 0;
+        }
+        
+        /* Ensure MathJax itself renders LTR */
+        mjx-container[jax="SVG"] {
+            direction: ltr !important;
+            display: inline-block; /* Prevents taking full width unnecessarily */
+            text-align: left; /* Align math content left */
+        }
+        
+        /* Specific section styling */
+        .methodology {
+            background-color: #555; /* Slightly different background */
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+            border: 1px solid #666;
+        }
+
+        .practice {
+            margin-top: 30px;
+        }
+
+        .question-container {
+            background-color: #555; /* Same as methodology */
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: 1px solid #666;
+        }
+
+        .question-content {
+            margin-bottom: 15px;
+        }
+
+        .solution-content {
+            background-color: #484848; /* Distinct background for solutions */
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 6px;
+            border: 1px solid #5a5a5a;
+        }
+
+        .toggle-solution {
+            background-color: #3D90D7; /* Blue button */
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-solution:hover {
+            background-color: #2a7ab0; /* Darker blue on hover */
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #666;
+            margin: 20px 0;
+        }
+
+        /* Styling for lists */
+        ul, ol {
+            margin-right: 25px; /* Indentation for RTL */
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+        
+        /* Comments for clarity in the code */
+        /* Style for code comments if needed */
+        .code-comment { 
+            color: #999; 
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי למידה: פתרון משוואה דיפרנציאלית חלקית מסדר ראשון</h1>
+        <p style="text-align: center;">כלי זה מתמקד בפתרון בעיות קושי (Cauchy Problems) עבור מד"ר חלקיות לינאריות מסדר ראשון, בדגש על המבנה של שאלה 4 מגיליון בית 3.</p>
+
+        <div class="methodology">
+            <h2>שיטת פתרון (Methodology)</h2>
+            <p>
+                אנו מתמקדים בפתרון משוואות דיפרנציאליות חלקיות (מד"ר חלקיות, או PDE) לינאריות מסדר ראשון מהצורה:
+                <span class="math-block">\[ a(x, y) u_x + b(x, y) u_y = c(x, y, u) \]</span>
+                עם תנאי התחלה (תנאי קושי) הנתון על עקום $\Gamma$:
+                <span class="math-block">\[ u(x_0(s), y_0(s)) = u_0(s) \]</span>
+                כאשר $\Gamma$ הוא העקום $(x_0(s), y_0(s))$. שיטת הפתרון הנפוצה היא שיטת המאפיינים (Method of Characteristics).
+            </p>
+
+            <h3>שלבי הפתרון:</h3>
+            <ol>
+                <li>
+                    <strong>זיהוי המקדמים:</strong> זהה את הפונקציות $a(x, y)$, $b(x, y)$, $c(x, y, u)$ במשוואה הנתונה.
+                </li>
+                <li>
+                    <strong>משוואות המאפיינים:</strong> רשום את מערכת המשוואות הדיפרנציאליות הרגילות (מד"ר) המגדירה את העקומים המאפיינים ואת התנהגות $u$ לאורכם:
+                    <span class="math-block">\[ \frac{dx}{dt} = a(x, y) \]</span>
+                    <span class="math-block">\[ \frac{dy}{dt} = b(x, y) \]</span>
+                    <span class="math-block">\[ \frac{du}{dt} = c(x, y, u) \]</span>
+                    כאשר $t$ הוא פרמטר לאורך העקום המאפיין.
+                </li>
+                <li>
+                    <strong>פתרון משוואות המאפיינים:</strong> פתור את מערכת המד"ר כדי למצוא את העקומות המאפיינות $(x(t), y(t))$ ואת הפתרון $u(t)$ לאורכן, כתלות בתנאי ההתחלה על עקום $\Gamma$ (שמתואר באמצעות פרמטר $s$). הפתרון הכללי לעיתים קרובות יכלול פונקציה שרירותית $F$.
+                    <br>דרך נפוצה למצוא את המאפיינים היא לפתור את $\frac{dy}{dx} = \frac{b(x, y)}{a(x, y)}$. פתרון משוואה זו נותן משפחה של עקומים $q(x, y) = \text{constant}$, שהם ההיטלים של העקומים המאפיינים על מישור $xy$.
+                </li>
+                 <li>
+                    <strong>הפתרון הכללי:</strong> בטא את הפתרון הכללי $u(x,y)$ באמצעות המשתנים המקוריים $x, y$. הוא לרוב יהיה מהצורה $G(x, y, F(q(x,y))) = 0$ או $u(x,y) = H(x, y) + F(q(x,y))$, כאשר $q(x,y)$ הוא האינטגרל הראשון של מערכת המאפיינים (כלומר, $q(x,y)=\text{const}$ לאורך מאפיין), ו-$F$ היא פונקציה שרירותית (גזירה ברציפות).
+                </li>
+                <li>
+                    <strong>בדיקת תנאי קיום ויחידות (סעיף א' במבנה השאלה):</strong>
+                    <ul>
+                        <li>נתון עקום התחלה $\Gamma: (x_0(s), y_0(s))$ ותנאי $u(x_0(s), y_0(s)) = h(s)$.</li>
+                        <li>בודקים את תנאי הטרנסברסליות (Transversality Condition): האם העקום $\Gamma$ חוצה את העקומים המאפיינים? התנאי הוא:
+                          <span class="math-block">\[ J = a(x_0(s), y_0(s)) \frac{dy_0}{ds} - b(x_0(s), y_0(s)) \frac{dx_0}{ds} \neq 0 \]</span>
+                        </li>
+                        <li>אם $J \neq 0$, קיים פתרון יחיד בסביבת העקום $\Gamma$ עבור כל פונקציה $h(s)$ גזירה ברציפות.</li>
+                        <li>אם $J = 0$ לכל $s$, העקום $\Gamma$ הוא בעצמו עקום מאפיין. במקרה זה:
+                            <ul>
+                                <li>אם תנאי ההתחלה $h(s)$ אינו מקיים את המד"ח המקורית לאורך $\Gamma$, אז אין פתרון.</li>
+                                <li>אם תנאי ההתחלה $h(s)$ כן מקיים את המד"ח לאורך $\Gamma$, אז קיימים אינסוף פתרונות. התנאי המדויק על $h(s)$ נובע מהצבת הפתרון הכללי על העקום $\Gamma$ ודרישה להתאמה עם $h(s)$. לרוב זה יגביל את $h(s)$ לצורה מסוימת (למשל, $h(s) = \text{expression}(s) + C$).
+                            </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>מציאת פתרונות ספציפיים (סעיף ב' במבנה השאלה):</strong>
+                    <ul>
+                        <li>אם $J=0$ ותנאי ההתחלה $h(s)$ תואם (כלומר מהצורה שמאפשרת אינסוף פתרונות), מציאת אינסוף הפתרונות כרוכה בהשארת הפונקציה השרירותית $F$ כמעט חופשית, אך עם אילוץ אחד הנובע מההתאמה המדויקת. למשל, אם התנאי הוא $h(s) = \text{expression}(s) + C$, והתאמה עם $h_0(s)$ ספציפי דורשת $C=C_0$, אז האילוץ על $F$ יהיה $F(\text{value specific to } \Gamma) = C_0$.</li>
+                    </ul>
+                </li>
+                 <li>
+                    <strong>שימוש בחילוף משתנים (כמו ברמז):</strong> לעיתים, חילוף משתנים מתאים (למשל, $q=q(x,y), r=r(x,y)$) יכול לפשט את המשוואה. אם בוחרים $q(x,y)$ כך ש $q=\text{const}$ על המאפיינים, ו-$r$ כמשתנה אחר (למשל $r=x$ או $r=y$), אפשר להפוך את המד"ח למד"ר פשוטה יותר במשתנים $q, r$.
+                </li>
+            </ol>
+        </div>
+
+        <div class="practice">
+            <h2>שאלות תרגול (Practice Questions)</h2>
+
+            <!-- Question 1 (Original Q4) -->
+            <div class="question-container">
+                <h3>שאלה 1 מתוך 5 (המקורית)</h3>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    <span class="math-block">\[ \begin{cases} e^y u_x + u_y = x \\ u(x, \ln x) = h(x) \end{cases} \]</span>
+                    <p>א. קבעו עבור אילו פונקציות $h(x)$ גזירות ברציפות יש פתרון אמיתי לבעיה.</p>
+                    <p>ב. מצאו אינסוף פתרונות לבעיה עבור $h(x) = x$.</p>
+                    <p><em>הערה מהשאלה המקורית: אפשר למצוא פתרון כללי באמצעות מציאת עקום התחלה מתאים או באמצעות חילוף המשתנים $q = x - e^y$, $r = x$.</em></p>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution-content" style="display: none;">
+                    <h4>פתרון שאלה 1:</h4>
+                    <p>המשוואה היא $e^y u_x + 1 \cdot u_y = x$. כאן $a=e^y$, $b=1$, $c=x$.</p>
+                    <p>עקום ההתחלה הוא $\Gamma: (x_0(s), y_0(s)) = (s, \ln s)$ עבור $s>0$.</p>
+                    <p>תנאי ההתחלה הוא $u(s, \ln s) = h(s)$.</p>
+
+                    <p><strong>סעיף א': תנאי קיום</strong></p>
+                    <p>נבדוק את תנאי הטרנסברסליות:</p>
+                    <p>הנגזרות של עקום ההתחלה הן $\frac{dx_0}{ds} = 1$ ו- $\frac{dy_0}{ds} = \frac{1}{s}$.</p>
+                    <p>התנאי הוא $J = a(x_0, y_0) \frac{dy_0}{ds} - b(x_0, y_0) \frac{dx_0}{ds}$.</p>
+                    <p>נציב את ערכי $a, b$ ואת ערכי העקום $(s, \ln s)$:
+                    <span class="math-block">\[ J = e^{y_0(s)} \left(\frac{1}{s}\right) - 1 \cdot (1) = e^{\ln s} \left(\frac{1}{s}\right) - 1 = s \left(\frac{1}{s}\right) - 1 = 1 - 1 = 0 \]</span>
+                    </p>
+                    <p>מאחר ש-$J=0$, עקום ההתחלה $\Gamma$ הוא עקום מאפיין. לכן, פתרון קיים רק אם תנאי ההתחלה $h(s)$ "תואם" למשוואה לאורך $\Gamma$.</p>
+                    <p>נמצא את הפתרון הכללי. נשתמש בחילוף המשתנים המוצע $q = x - e^y$, $r=y$ (נבחר $r=y$ כי $b=1$, זה עשוי לפשט).
+                    <br>נחשב נגזרות חלקיות של $u$ לפי $x, y$ באמצעות כלל השרשרת:
+                    <br>$u_x = u_q q_x + u_r r_x = u_q \cdot 1 + u_r \cdot 0 = u_q$
+                    <br>$u_y = u_q q_y + u_r r_y = u_q \cdot (-e^y) + u_r \cdot 1 = -e^y u_q + u_r$
+                    </p>
+                    <p>נציב במד"ח $e^y u_x + u_y = x$:
+                    <span class="math-block">\[ e^y (u_q) + (-e^y u_q + u_r) = x \]</span>
+                    <span class="math-block">\[ e^y u_q - e^y u_q + u_r = x \]</span>
+                    <span class="math-block">\[ u_r = x \]</span>
+                    </p>
+                    <p>עלינו לבטא את $x$ באמצעות $q, r$. מתוך $q = x - e^y$ ו- $r=y$, נקבל $x = q + e^y = q + e^r$.
+                    <br>לכן המשוואה היא:
+                    <span class="math-block">\[ u_r = q + e^r \]</span>
+                    </p>
+                    <p>נבצע אינטגרציה לפי $r$ (כאשר $q$ קבוע):
+                    <span class="math-block">\[ u(q, r) = \int (q + e^r) dr = q r + e^r + F(q) \]</span>
+                    כאשר $F$ היא פונקציה שרירותית (גזירה ברציפות) של $q$.
+                    </p>
+                    <p>נחזור למשתנים המקוריים $x, y$:
+                    <span class="math-block">\[ u(x, y) = (x - e^y) y + e^y + F(x - e^y) \]</span>
+                    זהו הפתרון הכללי.
+                    </p>
+                    <p>כעת נבדוק את התאימות על עקום ההתחלה $\Gamma: (s, \ln s)$.
+                    <br>נציב $x=s$ ו- $y=\ln s$ בפתרון הכללי:
+                    <span class="math-block">\[ u(s, \ln s) = (s - e^{\ln s}) \ln s + e^{\ln s} + F(s - e^{\ln s}) \]</span>
+                    <span class="math-block">\[ u(s, \ln s) = (s - s) \ln s + s + F(s - s) \]</span>
+                    <span class="math-block">\[ u(s, \ln s) = 0 \cdot \ln s + s + F(0) \]</span>
+                    <span class="math-block">\[ u(s, \ln s) = s + F(0) \]</span>
+                    </p>
+                    <p>נדרוש שזה יהיה שווה ל-$h(s)$:
+                    <span class="math-block">\[ h(s) = s + F(0) \]</span>
+                    </p>
+                    <p>מאחר ש-$F(0)$ הוא קבוע (ערך הפונקציה השרירותית $F$ בנקודה $q=0$), נסמן $C = F(0)$.
+                    <br>התנאי לקיום פתרון הוא שפונקציית תנאי ההתחלה $h(x)$ חייבת להיות מהצורה:
+                    <span class="math-block">\[ h(x) = x + C \]</span>
+                    עבור קבוע כלשהו $C$. מכיוון ש-$h(x)$ נדרשת להיות גזירה ברציפות, ו-$x+C$ היא פונקציה כזו (עם נגזרת 1), זהו התנאי הסופי.
+                    </p>
+                    
+                    <hr>
+
+                    <p><strong>סעיף ב': פתרונות עבור $h(x) = x$</strong></p>
+                    <p>במקרה זה, $h(x) = x$. נשווה לצורה הנדרשת $h(x) = x + C$.
+                    <br>אנו רואים ש-$h(x)=x$ מתאים לדרישה עם $C=0$.
+                    </p>
+                    <p>לפי התוצאה מסעיף א', תנאי זה מתקיים כאשר $F(0) = C = 0$.</p>
+                    <p>הפתרון הכללי הוא $u(x, y) = y(x - e^y) + e^y + F(x - e^y)$.
+                    <br>הפתרונות לבעיה הספציפית עם $h(x)=x$ הם כל הפונקציות מהצורה הזו, כאשר $F$ היא פונקציה כלשהי (גזירה ברציפות) המקיימת $F(0) = 0$.
+                    </p>
+                    <p>למשל:
+                    <ul>
+                        <li>אם נבחר $F(q) = q$, אז $F(0)=0$ ופתרון אחד הוא $u_1(x, y) = y(x - e^y) + e^y + (x - e^y) = (y+1)(x - e^y) + e^y$.</li>
+                        <li>אם נבחר $F(q) = q^2$, אז $F(0)=0$ ופתרון אחר הוא $u_2(x, y) = y(x - e^y) + e^y + (x - e^y)^2$.</li>
+                        <li>אם נבחר $F(q) = k q$ לכל קבוע $k$, אז $F(0)=0$ ופתרון הוא $u_k(x, y) = y(x - e^y) + e^y + k(x - e^y)$.</li>
+                         <li>אם נבחר $F(q) = \sin(q)$, אז $F(0)=0$ ופתרון הוא $u_s(x, y) = y(x - e^y) + e^y + \sin(x - e^y)$.</li>
+                    </ul>
+                    באופן כללי, קבוצת אינסוף הפתרונות היא:
+                    <span class="math-block">\[ u(x, y) = y(x - e^y) + e^y + F(x - e^y) \]</span>
+                    כאשר $F$ היא כל פונקציה $C^1$ המקיימת $F(0)=0$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-container">
+                <h3>שאלה 2 מתוך 5</h3>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                     <span class="math-block">\[ \begin{cases} u_x + x u_y = 0 \\ u(s, s^2/2 + 1) = h(s) \end{cases} \]</span>
+                     <p>א. קבעו עבור אילו פונקציות $h(s)$ גזירות ברציפות יש פתרון אמיתי לבעיה.</p>
+                    <p>ב. מצאו אינסוף פתרונות לבעיה עבור $h(s) = 5$.</p>
+                 </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution-content" style="display: none;">
+                    <h4>פתרון שאלה 2:</h4>
+                    <p>המשוואה היא $1 \cdot u_x + x u_y = 0$. כאן $a=1$, $b=x$, $c=0$.</p>
+                    <p>עקום ההתחלה הוא $\Gamma: (x_0(s), y_0(s)) = (s, s^2/2 + 1)$.</p>
+                    <p>תנאי ההתחלה הוא $u(s, s^2/2 + 1) = h(s)$.</p>
+
+                    <p><strong>סעיף א': תנאי קיום</strong></p>
+                    <p>נבדוק את תנאי הטרנסברסליות:</p>
+                    <p>$\frac{dx_0}{ds} = 1$, $\frac{dy_0}{ds} = s$.</p>
+                    <p>התנאי הוא $J = a(x_0, y_0) \frac{dy_0}{ds} - b(x_0, y_0) \frac{dx_0}{ds}$.</p>
+                    <p>נציב $a=1$, $b=x=x_0(s)=s$:
+                    <span class="math-block">\[ J = 1 \cdot (s) - s \cdot (1) = s - s = 0 \]</span>
+                    </p>
+                    <p>מאחר ש-$J=0$, עקום ההתחלה $\Gamma$ הוא עקום מאפיין.</p>
+                    <p>נמצא את הפתרון הכללי. המאפיינים מקיימים $\frac{dy}{dx} = \frac{b}{a} = \frac{x}{1} = x$.
+                    <br>אינטגרציה נותנת $y = \frac{x^2}{2} + C$, או $q(x,y) = y - \frac{x^2}{2} = \text{constant}$.
+                    <br>המשוואה $u_x + x u_y = 0$ אומרת שהנגזרת הכיוונית בכיוון המאפיין $(1, x)$ היא אפס, כלומר $u$ קבוע לאורך המאפיינים.
+                    <br>לכן, הפתרון הכללי הוא מהצורה:
+                    <span class="math-block">\[ u(x, y) = F(y - x^2/2) \]</span>
+                    כאשר $F$ היא פונקציה שרירותית גזירה.
+                    </p>
+                    <p>נבדוק את התאימות על עקום ההתחלה $\Gamma: (s, s^2/2 + 1)$.
+                    <br>נציב $x=s$ ו- $y=s^2/2 + 1$ בפתרון הכללי:
+                    <span class="math-block">\[ u(s, s^2/2 + 1) = F\left( (s^2/2 + 1) - s^2/2 \right) = F(1) \]</span>
+                    </p>
+                    <p>נדרוש שזה יהיה שווה ל-$h(s)$:
+                    <span class="math-block">\[ h(s) = F(1) \]</span>
+                    </p>
+                    <p>מאחר ש-$F(1)$ הוא קבוע, התנאי לקיום פתרון הוא שפונקציית תנאי ההתחלה $h(s)$ חייבת להיות פונקציה קבועה:
+                    <span class="math-block">\[ h(s) = C \]</span>
+                    עבור קבוע כלשהו $C$. מכיוון שפונקציה קבועה היא גזירה ברציפות (נגזרת 0), זהו התנאי.
+                    </p>
+
+                    <hr>
+
+                    <p><strong>סעיף ב': פתרונות עבור $h(s) = 5$</strong></p>
+                    <p>במקרה זה, $h(s) = 5$. זוהי פונקציה קבועה, ולכן היא מתאימה לתנאי $h(s)=C$ עם $C=5$.</p>
+                    <p>לפי התוצאה מסעיף א', תנאי זה מתקיים כאשר $F(1) = C = 5$.</p>
+                    <p>הפתרון הכללי הוא $u(x, y) = F(y - x^2/2)$.
+                    <br>הפתרונות לבעיה הספציפית עם $h(s)=5$ הם כל הפונקציות מהצורה הזו, כאשר $F$ היא פונקציה כלשהי (גזירה ברציפות) המקיימת $F(1) = 5$.
+                    </p>
+                    <p>למשל:
+                    <ul>
+                        <li>אם נבחר $F(q) = 5$. אז $F(1)=5$ ופתרון הוא $u_1(x, y) = 5$.</li>
+                        <li>אם נבחר $F(q) = q + 4$. אז $F(1)=1+4=5$ ופתרון הוא $u_2(x, y) = (y - x^2/2) + 4$.</li>
+                        <li>אם נבחר $F(q) = 5 \cos(q-1)$. אז $F(1)=5\cos(0)=5$ ופתרון הוא $u_3(x, y) = 5 \cos(y - x^2/2 - 1)$.</li>
+                    </ul>
+                    באופן כללי, קבוצת אינסוף הפתרונות היא:
+                    <span class="math-block">\[ u(x, y) = F(y - x^2/2) \]</span>
+                    כאשר $F$ היא כל פונקציה $C^1$ המקיימת $F(1)=5$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-container">
+                <h3>שאלה 3 מתוך 5</h3>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    <span class="math-block">\[ \begin{cases} x u_x + y u_y = u \\ u(s, 2s) = h(s) \end{cases} \]</span>
+                     <p>א. קבעו עבור אילו פונקציות $h(s)$ גזירות ברציפות ($s \neq 0$) יש פתרון אמיתי לבעיה.</p>
+                    <p>ב. מצאו אינסוף פתרונות לבעיה עבור $h(s) = 3s$.</p>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution-content" style="display: none;">
+                    <h4>פתרון שאלה 3:</h4>
+                    <p>המשוואה היא $x u_x + y u_y = u$. כאן $a=x$, $b=y$, $c=u$.</p>
+                    <p>עקום ההתחלה הוא $\Gamma: (x_0(s), y_0(s)) = (s, 2s)$ עבור $s \neq 0$.</p>
+                    <p>תנאי ההתחלה הוא $u(s, 2s) = h(s)$.</p>
+
+                    <p><strong>סעיף א': תנאי קיום</strong></p>
+                    <p>נבדוק את תנאי הטרנסברסליות:</p>
+                    <p>$\frac{dx_0}{ds} = 1$, $\frac{dy_0}{ds} = 2$.</p>
+                    <p>התנאי הוא $J = a(x_0, y_0) \frac{dy_0}{ds} - b(x_0, y_0) \frac{dx_0}{ds}$.</p>
+                    <p>נציב $a=x=x_0(s)=s$, $b=y=y_0(s)=2s$:
+                    <span class="math-block">\[ J = s \cdot (2) - (2s) \cdot (1) = 2s - 2s = 0 \]</span>
+                    </p>
+                    <p>מאחר ש-$J=0$, עקום ההתחלה $\Gamma$ הוא עקום מאפיין.</p>
+                    <p>נמצא את הפתרון הכללי. המאפיינים מקיימים $\frac{dy}{dx} = \frac{b}{a} = \frac{y}{x}$.
+                    <br>זו משוואה ניתנת להפרדה: $\frac{dy}{y} = \frac{dx}{x}$.
+                    <br>אינטגרציה נותנת $\ln|y| = \ln|x| + C'$, או $y/x = C$. אז $q(x,y) = y/x = \text{constant}$ על מאפיינים.
+                    </p>
+                    <p>נשתמש במשתנים $q = y/x$, $r=x$.
+                    <br>$u_x = u_q q_x + u_r r_x = u_q (-y/x^2) + u_r (1)$
+                    <br>$u_y = u_q q_y + u_r r_y = u_q (1/x) + u_r (0)$
+                    <br>נציב במד"ח $x u_x + y u_y = u$:
+                    <span class="math-block">\[ x (u_q (-y/x^2) + u_r) + y (u_q (1/x)) = u \]</span>
+                     <span class="math-block">\[ -y/x u_q + x u_r + y/x u_q = u \]</span>
+                     <span class="math-block">\[ x u_r = u \]</span>
+                     <p>במשתנים החדשים, $x=r$, אז $r u_r = u$.</p>
+                     <p>זו מד"ר ניתנת להפרדה עבור $u$ כפונקציה של $r$ (עם $q$ קבוע): $\frac{du}{u} = \frac{dr}{r}$.
+                     <br>אינטגרציה: $\ln|u| = \ln|r| + \ln|F(q)|$ (נכתוב את קבוע האינטגרציה כך).
+                     <br>$u = r F(q)$.
+                     </p>
+                    <p>נחזור למשתנים המקוריים $x, y$:
+                    <span class="math-block">\[ u(x, y) = x F(y/x) \]</span>
+                    כאשר $F$ היא פונקציה שרירותית גזירה.
+                    </p>
+                    <p>נבדוק את התאימות על עקום ההתחלה $\Gamma: (s, 2s)$.
+                    <br>נציב $x=s$ ו- $y=2s$ בפתרון הכללי:
+                    <span class="math-block">\[ u(s, 2s) = s F(2s/s) = s F(2) \]</span>
+                    </p>
+                    <p>נדרוש שזה יהיה שווה ל-$h(s)$:
+                    <span class="math-block">\[ h(s) = s F(2) \]</span>
+                    </p>
+                    <p>מאחר ש-$F(2)$ הוא קבוע, נסמן $C = F(2)$. התנאי לקיום פתרון הוא שפונקציית תנאי ההתחלה $h(s)$ חייבת להיות מהצורה:
+                    <span class="math-block">\[ h(s) = C s \]</span>
+                    עבור קבוע כלשהו $C$. פונקציה זו גזירה ברציפות, ולכן זהו התנאי.
+                    </p>
+
+                    <hr>
+
+                    <p><strong>סעיף ב': פתרונות עבור $h(s) = 3s$</strong></p>
+                    <p>במקרה זה, $h(s) = 3s$. פונקציה זו מתאימה לתנאי $h(s)=Cs$ עם $C=3$.</p>
+                    <p>לפי התוצאה מסעיף א', תנאי זה מתקיים כאשר $F(2) = C = 3$.</p>
+                    <p>הפתרון הכללי הוא $u(x, y) = x F(y/x)$.
+                    <br>הפתרונות לבעיה הספציפית עם $h(s)=3s$ הם כל הפונקציות מהצורה הזו, כאשר $F$ היא פונקציה כלשהי (גזירה ברציפות) המקיימת $F(2) = 3$.
+                    </p>
+                    <p>למשל:
+                    <ul>
+                        <li>אם נבחר $F(q) = 3$. אז $F(2)=3$ ופתרון הוא $u_1(x, y) = 3x$.</li>
+                        <li>אם נבחר $F(q) = q + 1$. אז $F(2)=2+1=3$ ופתרון הוא $u_2(x, y) = x (y/x + 1) = y + x$.</li>
+                        <li>אם נבחר $F(q) = 3/2 q$. אז $F(2)=3/2 \cdot 2 = 3$ ופתרון הוא $u_3(x, y) = x (3/2 \cdot y/x) = \frac{3}{2} y$.</li>
+                    </ul>
+                    באופן כללי, קבוצת אינסוף הפתרונות היא:
+                    <span class="math-block">\[ u(x, y) = x F(y/x) \]</span>
+                    כאשר $F$ היא כל פונקציה $C^1$ המקיימת $F(2)=3$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="question-container">
+                 <h3>שאלה 4 מתוך 5</h3>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    <span class="math-block">\[ \begin{cases} y u_x - x u_y = 0 \\ u(r \cos \theta, r \sin \theta) = h(\theta) \quad (\text{for a fixed } r>0) \end{cases} \]</span>
+                     <p>א. קבעו עבור אילו פונקציות $h(\theta)$ גזירות ברציפות (ומחזוריות $2\pi$) יש פתרון אמיתי לבעיה.</p>
+                    <p>ב. מצאו אינסוף פתרונות לבעיה עבור $h(\theta) = \cos^2 \theta + \sin^2 \theta$.</p>
+                 </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution-content" style="display: none;">
+                    <h4>פתרון שאלה 4:</h4>
+                    <p>המשוואה היא $y u_x - x u_y = 0$. כאן $a=y$, $b=-x$, $c=0$.</p>
+                    <p>עקום ההתחלה הוא מעגל קבוע $\Gamma: (x_0(\theta), y_0(\theta)) = (r \cos \theta, r \sin \theta)$ עם $r>0$ קבוע.</p>
+                    <p>תנאי ההתחלה הוא $u(r \cos \theta, r \sin \theta) = h(\theta)$.</p>
+
+                    <p><strong>סעיף א': תנאי קיום</strong></p>
+                    <p>נבדוק את תנאי הטרנסברסליות:</p>
+                    <p>$\frac{dx_0}{d\theta} = -r \sin \theta$, $\frac{dy_0}{d\theta} = r \cos \theta$.</p>
+                    <p>התנאי הוא $J = a(x_0, y_0) \frac{dy_0}{d\theta} - b(x_0, y_0) \frac{dx_0}{d\theta}$.</p>
+                    <p>נציב $a=y=y_0(\theta)=r \sin \theta$, $b=-x=-x_0(\theta)=-r \cos \theta$:
+                    <span class="math-block">\[ J = (r \sin \theta) (r \cos \theta) - (-r \cos \theta) (-r \sin \theta) \]</span>
+                    <span class="math-block">\[ J = r^2 \sin \theta \cos \theta - r^2 \cos \theta \sin \theta = 0 \]</span>
+                    </p>
+                    <p>מאחר ש-$J=0$, עקום ההתחלה $\Gamma$ (מעגל) הוא עקום מאפיין.</p>
+                    <p>נמצא את הפתרון הכללי. המאפיינים מקיימים $\frac{dy}{dx} = \frac{b}{a} = \frac{-x}{y}$.
+                    <br>זו משוואה ניתנת להפרדה: $y dy = -x dx$.
+                    <br>אינטגרציה נותנת $y^2/2 = -x^2/2 + C'$, או $x^2 + y^2 = C$. אז $q(x,y) = x^2+y^2 = \text{constant}$ על מאפיינים (המאפיינים הם מעגלים).
+                    <br>המשוואה $y u_x - x u_y = 0$ אומרת ש-$u$ קבוע לאורך המאפיינים.
+                    <br>לכן, הפתרון הכללי הוא מהצורה:
+                    <span class="math-block">\[ u(x, y) = F(x^2 + y^2) \]</span>
+                    כאשר $F$ היא פונקציה שרירותית גזירה.
+                    </p>
+                    <p>נבדוק את התאימות על עקום ההתחלה $\Gamma: (r \cos \theta, r \sin \theta)$.
+                    <br>נציב $x=r \cos \theta$ ו- $y=r \sin \theta$ בפתרון הכללי:
+                    <span class="math-block">\[ u(r \cos \theta, r \sin \theta) = F((r \cos \theta)^2 + (r \sin \theta)^2) = F(r^2 (\cos^2 \theta + \sin^2 \theta)) = F(r^2) \]</span>
+                    </p>
+                    <p>נדרוש שזה יהיה שווה ל-$h(\theta)$:
+                    <span class="math-block">\[ h(\theta) = F(r^2) \]</span>
+                    </p>
+                    <p>מאחר ש-$F(r^2)$ הוא קבוע (ערך הפונקציה $F$ בנקודה הקבועה $q=r^2$), התנאי לקיום פתרון הוא שפונקציית תנאי ההתחלה $h(\theta)$ חייבת להיות פונקציה קבועה:
+                    <span class="math-block">\[ h(\theta) = C \]</span>
+                    עבור קבוע כלשהו $C$. פונקציה קבועה היא גזירה ברציפות ומחזורית $2\pi$.
+                    </p>
+
+                    <hr>
+
+                    <p><strong>סעיף ב': פתרונות עבור $h(\theta) = \cos^2 \theta + \sin^2 \theta$</strong></p>
+                    <p>במקרה זה, $h(\theta) = \cos^2 \theta + \sin^2 \theta = 1$. זוהי פונקציה קבועה, ולכן היא מתאימה לתנאי $h(\theta)=C$ עם $C=1$.</p>
+                    <p>לפי התוצאה מסעיף א', תנאי זה מתקיים כאשר $F(r^2) = C = 1$.</p>
+                    <p>הפתרון הכללי הוא $u(x, y) = F(x^2 + y^2)$.
+                    <br>הפתרונות לבעיה הספציפית עם $h(\theta)=1$ הם כל הפונקציות מהצורה הזו, כאשר $F$ היא פונקציה כלשהי (גזירה ברציפות) המקיימת $F(r^2) = 1$.
+                    </p>
+                    <p>למשל:
+                    <ul>
+                        <li>אם נבחר $F(q) = 1$. אז $F(r^2)=1$ ופתרון הוא $u_1(x, y) = 1$.</li>
+                        <li>אם נבחר $F(q) = q/r^2$. אז $F(r^2)=r^2/r^2=1$ ופתרון הוא $u_2(x, y) = (x^2+y^2)/r^2$.</li>
+                        <li>אם נבחר $F(q) = 1 + (q-r^2)^2$. אז $F(r^2)=1+(r^2-r^2)^2 = 1$ ופתרון הוא $u_3(x, y) = 1 + (x^2+y^2-r^2)^2$.</li>
+                    </ul>
+                    באופן כללי, קבוצת אינסוף הפתרונות היא:
+                    <span class="math-block">\[ u(x, y) = F(x^2 + y^2) \]</span>
+                    כאשר $F$ היא כל פונקציה $C^1$ המקיימת $F(r^2)=1$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="question-container">
+                <h3>שאלה 5 מתוך 5</h3>
+                <div class="question-content">
+                     <p>נתונה הבעיה:</p>
+                     <span class="math-block">\[ \begin{cases} e^x u_x + u_y = y \\ u(s, 1 - e^{-s}) = h(s) \end{cases} \]</span>
+                     <p>א. קבעו עבור אילו פונקציות $h(s)$ גזירות ברציפות יש פתרון אמיתי לבעיה.</p>
+                    <p>ב. מצאו אינסוף פתרונות לבעיה עבור $h(s) = \frac{1}{2}(1 - e^{-s})^2$.</p>
+                 </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution-content" style="display: none;">
+                    <h4>פתרון שאלה 5:</h4>
+                    <p>המשוואה היא $e^x u_x + 1 \cdot u_y = y$. כאן $a=e^x$, $b=1$, $c=y$.</p>
+                    <p>עקום ההתחלה הוא $\Gamma: (x_0(s), y_0(s)) = (s, 1 - e^{-s})$.</p>
+                    <p>תנאי ההתחלה הוא $u(s, 1 - e^{-s}) = h(s)$.</p>
+
+                    <p><strong>סעיף א': תנאי קיום</strong></p>
+                    <p>נבדוק את תנאי הטרנסברסליות:</p>
+                    <p>$\frac{dx_0}{ds} = 1$, $\frac{dy_0}{ds} = -e^{-s}(-1) = e^{-s}$.</p>
+                    <p>התנאי הוא $J = a(x_0, y_0) \frac{dy_0}{ds} - b(x_0, y_0) \frac{dx_0}{ds}$.</p>
+                    <p>נציב $a=e^x=e^{x_0(s)}=e^s$, $b=1$:
+                    <span class="math-block">\[ J = e^s \cdot (e^{-s}) - 1 \cdot (1) = e^{s-s} - 1 = e^0 - 1 = 1 - 1 = 0 \]</span>
+                    </p>
+                    <p>מאחר ש-$J=0$, עקום ההתחלה $\Gamma$ הוא עקום מאפיין.</p>
+                    <p>נמצא את הפתרון הכללי. המאפיינים מקיימים $\frac{dy}{dx} = \frac{b}{a} = \frac{1}{e^x} = e^{-x}$.
+                    <br>אינטגרציה נותנת $y = -e^{-x} + C$, או $q(x,y) = y + e^{-x} = \text{constant}$.
+                    </p>
+                    <p>נשתמש במשתנים $q = y + e^{-x}$, $r=y$.
+                    <br>$u_x = u_q q_x + u_r r_x = u_q (-e^{-x}) + u_r (0)$
+                    <br>$u_y = u_q q_y + u_r r_y = u_q (1) + u_r (1)$
+                    <br>נציב במד"ח $e^x u_x + u_y = y$:
+                    <span class="math-block">\[ e^x (u_q (-e^{-x})) + (u_q + u_r) = y \]</span>
+                     <span class="math-block">\[ -e^{x-x} u_q + u_q + u_r = y \]</span>
+                     <span class="math-block">\[ -u_q + u_q + u_r = y \]</span>
+                     <span class="math-block">\[ u_r = y \]</span>
+                     <p>במשתנים החדשים, $y=r$, אז $u_r = r$.</p>
+                     <p>אינטגרציה לפי $r$ (עם $q$ קבוע):
+                     <span class="math-block">\[ u(q, r) = \int r dr = \frac{1}{2} r^2 + F(q) \]</span>
+                    </p>
+                    <p>נחזור למשתנים המקוריים $x, y$:
+                    <span class="math-block">\[ u(x, y) = \frac{1}{2} y^2 + F(y + e^{-x}) \]</span>
+                    כאשר $F$ היא פונקציה שרירותית גזירה.
+                    </p>
+                    <p>נבדוק את התאימות על עקום ההתחלה $\Gamma: (s, 1 - e^{-s})$.
+                    <br>נציב $x=s$ ו- $y=1 - e^{-s}$ בפתרון הכללי:
+                    <span class="math-block">\[ u(s, 1 - e^{-s}) = \frac{1}{2} (1 - e^{-s})^2 + F\left( (1 - e^{-s}) + e^{-s} \right) \]</span>
+                    <span class="math-block">\[ u(s, 1 - e^{-s}) = \frac{1}{2} (1 - e^{-s})^2 + F(1) \]</span>
+                    </p>
+                    <p>נדרוש שזה יהיה שווה ל-$h(s)$:
+                    <span class="math-block">\[ h(s) = \frac{1}{2} (1 - e^{-s})^2 + F(1) \]</span>
+                    </p>
+                    <p>מאחר ש-$F(1)$ הוא קבוע, נסמן $C = F(1)$. התנאי לקיום פתרון הוא שפונקציית תנאי ההתחלה $h(s)$ חייבת להיות מהצורה:
+                    <span class="math-block">\[ h(s) = \frac{1}{2} (1 - e^{-s})^2 + C \]</span>
+                    עבור קבוע כלשהו $C$. פונקציה זו גזירה ברציפות.
+                    </p>
+
+                    <hr>
+
+                    <p><strong>סעיף ב': פתרונות עבור $h(s) = \frac{1}{2}(1 - e^{-s})^2$</strong></p>
+                    <p>במקרה זה, $h(s) = \frac{1}{2}(1 - e^{-s})^2$. פונקציה זו מתאימה לתנאי $h(s)=\frac{1}{2}(1 - e^{-s})^2 + C$ עם $C=0$.</p>
+                    <p>לפי התוצאה מסעיף א', תנאי זה מתקיים כאשר $F(1) = C = 0$.</p>
+                    <p>הפתרון הכללי הוא $u(x, y) = \frac{1}{2} y^2 + F(y + e^{-x})$.
+                    <br>הפתרונות לבעיה הספציפית עם $h(s)=\frac{1}{2}(1 - e^{-s})^2$ הם כל הפונקציות מהצורה הזו, כאשר $F$ היא פונקציה כלשהי (גזירה ברציפות) המקיימת $F(1) = 0$.
+                    </p>
+                    <p>למשל:
+                    <ul>
+                        <li>אם נבחר $F(q) = q - 1$. אז $F(1)=1-1=0$ ופתרון הוא $u_1(x, y) = \frac{1}{2} y^2 + (y + e^{-x}) - 1$.</li>
+                        <li>אם נבחר $F(q) = (q-1)^2$. אז $F(1)=(1-1)^2=0$ ופתרון הוא $u_2(x, y) = \frac{1}{2} y^2 + (y + e^{-x} - 1)^2$.</li>
+                        <li>אם נבחר $F(q) = \sin(\pi q)$. אז $F(1)=\sin(\pi)=0$ ופתרון הוא $u_3(x, y) = \frac{1}{2} y^2 + \sin(\pi (y + e^{-x}))$.</li>
+                    </ul>
+                    באופן כללי, קבוצת אינסוף הפתרונות היא:
+                    <span class="math-block">\[ u(x, y) = \frac{1}{2} y^2 + F(y + e^{-x}) \]</span>
+                    כאשר $F$ היא כל פונקציה $C^1$ המקיימת $F(1)=0$.
+                    </p>
+                </div>
+            </div>
+
+        </div> <!-- End Practice Section -->
+    </div> <!-- End Container -->
+
+    <script>
+        // JavaScript for toggling solution visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButtons = document.querySelectorAll('.toggle-solution');
+
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const solutionContent = this.nextElementSibling; // The solution div is expected right after the button
+                    const isVisible = solutionContent.style.display === 'block';
+                    
+                    if (isVisible) {
+                        solutionContent.style.display = 'none';
+                        this.textContent = 'הצג פתרון'; // Change text to "Show Solution"
+                    } else {
+                        solutionContent.style.display = 'block';
+                        this.textContent = 'הסתר פתרון'; // Change text to "Hide Solution"
+                        // Optional: Re-render MathJax in the revealed solution if needed (usually not necessary with SVG)
+                        // MathJax.typesetPromise([solutionContent]); 
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

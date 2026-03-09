@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 2: אבות המזון - פחמימות</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 2: אבות המזון - פחמימות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 2 ---
+
+        const flashcardData = [
+            { term: "פחמימות", definition: "קבוצת תרכובות אורגניות הכוללת חד-סוכרים, דו-סוכרים ורב-סוכרים (כגון עמילנים וסיבים), המשמשות כמקור אנרגיה עיקרי." },
+            { term: "חד סוכרים", definition: "אבני היסוד של כל הפחמימות, מכילים לרוב 6 פחמנים (הקסוזות). דוגמאות: גלוקוז, פרוקטוז, גלקטוז." },
+            { term: "גלוקוז", definition: "חד סוכר (אלדהיד), מקור אנרגיה מרכזי ליצורים חיים, מרכיב בסוכרוז, לקטוז, מלטוז ועמילן." },
+            { term: "פרוקטוז", definition: "חד סוכר (קטון), המכונה גם 'סוכר פירות', מרכיב בסוכרוז." },
+            { term: "גלקטוז", definition: "חד סוכר (אלדהיד), מרכיב בלקטוז (סוכר החלב)." },
+            { term: "דו סוכרים", definition: "נוצרים מחיבור של שני חד סוכרים תוך שחרור מולקולת מים. דוגמאות: סוכרוז, לקטוז, מלטוז." },
+            { term: "סוכרוז", definition: "דו סוכר המורכב מגלוקוז ופרוקטוז. ידוע כ'סוכר שולחן' או 'סוכר גבישי'." },
+            { term: "לקטוז", definition: "דו סוכר המורכב מגלוקוז וגלקטוז. ידוע כ'סוכר החלב'." },
+            { term: "מלטוז", definition: "דו סוכר המורכב משתי יחידות גלוקוז. אבן היסוד של רוב העמילנים." },
+            { term: "מסיסות סוכרים", definition: "תכונה פיזיקלית חשובה, טובה במים, תלויה בטמפרטורה. ניתן להגיע לריכוזים גבוהים (עד 80 גרם ל-100 גרם תמיסה)." },
+            { term: "התגבשות סוכרים", definition: "תכונה פיזיקלית. סוכרים יוצרים מבנה גבישי ספונטני כאשר מאיידים את המים מתמיסתם." },
+            { term: "תכונות פונקציונליות של סוכרים", definition: "מסיסות, התגבשות, הקניית סמיכות/צמיגות, יצירת מרקם פריך/מוצק/זגוגיתי, מקור אנרגיה, אפקט מיקרוביאלי (שימור בריכוז גבוה), השתתפות בתסיסה, תגובת מייארד וקרמליזציה." },
+            { term: "תגובת מייארד (Maillard Reaction)", definition: "תהליך השחמה כימי בין סוכר מחזר לחומצת אמינו (חלבון), יוצר תוצרים המשפיעים על טעם, צבע ומאפייני מזון אחרים." },
+            { term: "סוכר מחזר", definition: "סוכר בעל קבוצה אלדהידית או קטונית חופשית (לרוב חד-סוכרים), המסוגל להשתתף בתגובת מייארד." },
+            { term: "קרמליזציה", definition: "תהליך השחמה של סוכרים בחום גבוה, ללא נוכחות חלבונים, הגורם לשינוי בטעם ובצבע." },
+            { term: "עמילנים", definition: "רב-סוכרים המורכבים מיחידות גלוקוז, משמשים כחומר תשמורת בצמחים. קיימים שני מבנים עיקריים: עמילוז ועמילופקטין." },
+            { term: "עמילוז", definition: "שרשרת ישרה (ספירלית) של גלוקוז בקשרי אלפא 1-4. נוטה לרה-ארגון (רטרוגרדציה) וליצירת ג'ל בקירור." },
+            { term: "עמילופקטין", definition: "שרשרת מסועפת של גלוקוז בקשרי אלפא 1-4 ונקודות הסתעפות בקשרי אלפא 1-6. פחות נוטה לרטרוגרדציה." },
+            { term: "גרגרי עמילן (starch granules)", definition: "הצורה שבה עמילן מופיע בצמחים (פקעות, גרעינים). אינם נמסים במים קרים." },
+            { term: "ג'לטיניזציה (Gelatinization)", definition: "תהליך תפיחת גרגרי עמילן במים חמים ויצירת מערכת סמיכה או ג'ל." },
+            { term: "רטרוגרדציה (Retrogradation)", definition: "תהליך התארגנות מחדש של שרשראות העמילן (בעיקר עמילוז) לאחר ג'לטיניזציה וקירור, המוביל לשינוי מבנה ומרקם (למשל, התקשות לחם)." },
+            { term: "תפקידי עמילנים במזון", definition: "הסמכה ויצירת מרקם, החזקת מים, הדבקה, יצירת פילמים וזיגוג, יצירת מבנה במזונות יבשים (מאפה, אקסטרוזיה)." },
+            { term: "סיבים תזונתיים", definition: "פולימרים פחמימתיים (לפחות 3 יחידות) שאינם נעכלים או נספגים במעי הדק, ותורמים לבריאות מערכת העיכול." },
+            { term: "סוגי סיבים תזונתיים", definition: "פולימרים טבעיים מצמחים, פולימרים שהופקו מחומרי גלם באמצעים פיזיקליים/אנזימטיים/כימיים, ופולימרים סינתטיים." },
+            { term: "אפקט אוסמוטי/שימור של סוכר", definition: "בריכוזים גבוהים, סוכר יוצר לחץ אוסמוטי גבוה המונע התפתחות מיקרואורגניזמים ולכן משמש כחומר משמר." }
+        ];
+
+        const mcqData = [
+             {
+                question: "איזה מהבאים הוא חד סוכר?",
+                options: ["סוכרוז", "לקטוז", "פרוקטוז", "עמילן"],
+                correctIndex: 2,
+                explanation: "פרוקטוז הוא חד סוכר (סוכר פירות). סוכרוז ולקטוז הם דו סוכרים, ועמילן הוא רב סוכר."
+            },
+            {
+                question: "מה משתחרר בעת יצירת קשר בין שני חד סוכרים ליצירת דו סוכר?",
+                options: ["מולקולת פחמן דו חמצני", "מולקולת מים", "אטום חמצן", "יון נתרן"],
+                correctIndex: 1,
+                explanation: "יצירת הקשר הגליקוזידי בין שני חד סוכרים כרוכה בתגובת דחיסה (קונדנסציה) שבה משתחררת מולקולת מים."
+            },
+             {
+                question: "סוכרוז (סוכר שולחן) מורכב מ:",
+                options: ["גלוקוז וגלוקוז", "גלוקוז וגלקטוז", "פרוקטוז ופרוקטוז", "גלוקוז ופרוקטוז"],
+                correctIndex: 3,
+                explanation: "סוכרוז הוא דו סוכר המורכב מיחידת גלוקוז המחוברת ליחידת פרוקטוז."
+            },
+             {
+                question: "איזה דו סוכר מכונה סוכר החלב?",
+                options: ["מלטוז", "לקטוז", "סוכרוז", "עמילוז"],
+                correctIndex: 1,
+                explanation: "לקטוז הוא הדו סוכר העיקרי המצוי בחלב."
+            },
+            {
+                question: "מהי תגובת מייארד?",
+                options: ["התמוססות סוכר במים", "פירוק עמילן על ידי אנזימים", "השחמה כימית בין סוכר מחזר לחלבון", "יצירת גבישי סוכר מתמיסה"],
+                correctIndex: 2,
+                explanation: "תגובת מייארד היא תגובת השחמה לא אנזימטית המתרחשת בין קבוצה אמינית (מחלבון) לקבוצה קרבונילית (מסוכר מחזר)."
+            },
+             {
+                question: "איזה סוג סוכר נדרש עבור תגובת מייארד?",
+                options: ["כל סוג סוכר", "סוכר מחזר (כמו גלוקוז)", "רב סוכר (כמו עמילן)", "דו סוכר שאינו מחזר (כמו סוכרוז)"],
+                correctIndex: 1,
+                explanation: "תגובת מייארד דורשת נוכחות סוכר מחזר, כלומר סוכר עם קבוצה אלדהידית או קטונית חופשית."
+            },
+            {
+                question: "מה ההבדל המבני העיקרי בין עמילוז לעמילופקטין?",
+                options: ["עמילוז מורכב מפרוקטוז, עמילופקטין מגלוקוז", "עמילוז מסועף, עמילופקטין ישר", "עמילוז ישר (ספירלי), עמילופקטין מסועף", "לעמילוז קשרים אחרים בין יחידות הגלוקוז"],
+                correctIndex: 2,
+                explanation: "עמילוז הוא שרשרת לינארית (יוצרת סליל), בעוד עמילופקטין הוא מבנה מסועף."
+            },
+             {
+                question: "מהי רטרוגרדציה של עמילן?",
+                options: ["תפיחת גרגרי עמילן במים חמים", "פירוק עמילן לסוכרים פשוטים", "התארגנות מחדש של שרשראות עמילן לאחר קירור הגורמת להתקשות", "יצירת צבע חום בעמילן בחום גבוה"],
+                correctIndex: 2,
+                explanation: "רטרוגרדציה היא התהליך בו שרשראות העמילן, בעיקר עמילוז, מסתדרות מחדש לאחר בישול וקירור, מה שמוביל לשינויים במרקם כמו התקשות לחם ישן."
+            },
+             {
+                question: "מדוע סוכר בריכוז גבוה יכול לשמש כחומר משמר?",
+                options: ["הוא רעיל לחיידקים", "הוא יוצר סביבה חומצית", "הוא יוצר לחץ אוסמוטי גבוה המעכב צמיחת חיידקים", "הוא מגיב עם החמצן באוויר"],
+                correctIndex: 2,
+                explanation: "ריכוז גבוה של סוכר מוריד את פעילות המים (aw) ויוצר סביבה היפרטונית שמעכבת את רוב המיקרואורגניזמים."
+            },
+             {
+                question: "באיזה תהליך משתתפים סיבים תזונתיים בגוף האדם?",
+                options: ["עיכול וספיגה מלאה במעי הדק", "אספקת אנרגיה מיידית לשרירים", "תרומה לבריאות מערכת העיכול", "בניית חלבונים"],
+                correctIndex: 2,
+                explanation: "סיבים תזונתיים אינם נעכלים במעי הדק, אך הם חשובים לתפקוד תקין של מערכת העיכול."
+            },
+             {
+                question: "מה קורה לגרגרי עמילן במים קרים?",
+                options: ["הם נמסים לחלוטין", "הם תופחים ויוצרים ג'ל", "הם אינם נמסים", "הם משחירים"],
+                correctIndex: 2,
+                explanation: "גרגרי עמילן אינם מסיסים במים קרים, נדרשים מים חמים לג'לטיניזציה."
+            },
+            {
+                question: "מהי דוגמה לשימוש בעמילנים בתעשיית המזון?",
+                options: ["המתקה", "הסמכה של רטבים ומרקים", "שימור פירות", "התססת יין"],
+                correctIndex: 1,
+                explanation: "עמילנים משמשים רבות כחומרי הסמכה וליצירת מרקם במגוון מוצרי מזון."
+            },
+             {
+                question: "איזה תהליך אחראי להשחמת לחם בתנור?",
+                options: ["קרמליזציה בלבד", "תגובת מייארד", "רטרוגרדציה", "פירוק שומנים"],
+                correctIndex: 1,
+                explanation: "השחמת הקרום של הלחם נובעת בעיקר מתגובת מייארד בין החלבונים (בקמח) לסוכרים המחזרים שנוצרים בתהליך האפייה."
+            },
+            {
+                question: "ממה מורכב מלטוז?",
+                options: ["גלוקוז ופרוקטוז", "גלוקוז וגלקטוז", "שתי יחידות גלוקוז", "שתי יחידות פרוקטוז"],
+                correctIndex: 2,
+                explanation: "מלטוז הוא דו סוכר המורכב משתי יחידות גלוקוז הקשורות בקשר אלפא 1-4."
+            },
+            {
+                question: "מדוע מפרקים לפעמים לקטוז במוצרי חלב?",
+                options: ["כדי להפוך את המוצר למר יותר", "כדי להעלות את אחוז השומן", "כדי להעלות את המתיקות ולהתאים לרגישים ללקטוז", "כדי להקטין את כמות החלבון"],
+                correctIndex: 2,
+                explanation: "פירוק לקטוז לגלוקוז וגלקטוז מעלה את המתיקות הנתפסת (כי החד-סוכרים מתוקים יותר מלקטוז) ומתאים לאנשים עם אי-סבילות ללקטוז."
+            },
+            {
+                question: "מהי תכונה פיזיקלית של תמיסת סוכר מימית?",
+                options: ["עכורה תמיד", "בעלת ריח חריף", "שקופה וצלולה", "מוליכה חשמל היטב"],
+                correctIndex: 2,
+                explanation: "תמיסות סוכר במים הן לרוב שקופות וצלולות."
+            },
+             {
+                question: "איזו תכונה של סוכר תורמת לתחושת 'גוף' או סמיכות במשקאות?",
+                options: ["מסיסות נמוכה", "צבע לבן", "יכולת התגבשות", "צמיגות בתמיסה"],
+                correctIndex: 3,
+                explanation: "סוכרים מומסים מגבירים את צמיגות התמיסה, מה שתורם לתחושת 'גוף' או סמיכות בפה."
+            },
+             {
+                question: "כיצד משפיעה הטמפרטורה על מסיסות רוב הסוכרים במים?",
+                options: ["אין השפעה", "המסיסות יורדת עם עליית הטמפרטורה", "המסיסות עולה עם עליית הטמפרטורה", "המסיסות קבועה עד 100 מעלות צלזיוס"],
+                correctIndex: 2,
+                explanation: "ככלל, מסיסות מוצקים (כמו סוכרים) בנוזלים (כמו מים) עולה עם עליית הטמפרטורה."
+            },
+             {
+                question: "מה ההבדל בין גלוקוז לפרוקטוז מבחינת הקבוצה הפונקציונלית העיקרית?",
+                options: ["לגלוקוז יש קבוצת קטון, לפרוקטוז אלדהיד", "לגלוקוז יש קבוצת אלדהיד, לפרוקטוז קטון", "שניהם קטונים", "שניהם אלדהידים"],
+                correctIndex: 1,
+                explanation: "גלוקוז הוא אלדוז (מכיל קבוצת אלדהיד), ופרוקטוז הוא קטוז (מכיל קבוצת קטון)."
+            },
+             {
+                question: "איזה מבנה של עמילן אחראי בעיקר לנטייה לרטרוגרדציה?",
+                options: ["עמילופקטין", "עמילוז", "גם וגם במידה שווה", "אף אחד מהם"],
+                correctIndex: 1,
+                explanation: "השרשראות הישרות של העמילוז נוטות להסתדר מחדש וליצור קשרים ביניהן בקלות רבה יותר מהמבנה המסועף של עמילופקטין, ולכן עמילוז הוא הגורם העיקרי לרטרוגרדציה."
+            },
+            {
+                question: "מהו אחד התפקידים של סיבים תזונתיים מסוג פולימרים סינתטיים?",
+                options: ["להוסיף מתיקות למזון", "לשמש כמקור אנרגיה", "להוסיף נפח ותכונות פונקציונליות למזון דל קלוריות", "לשפר את צבע המזון"],
+                correctIndex: 2,
+                explanation: "סיבים סינתטיים יכולים לשמש להוספת נפח ותכונות רצויות למזון, לעיתים תוך החלפת רכיבים עתירי קלוריות כמו שומן או סוכר."
+            },
+             {
+                question: "מדוע סוכריה קשה (כמו סוכריית לימון) נמסה לאט בפה?",
+                options: ["כי היא מכילה שומן רב", "כי היא במצב גבישי מסודר", "כי היא במצב אמורפי זגוגיתי עם צמיגות גבוהה מאוד", "כי היא מצופה בחומר מונע המסה"],
+                correctIndex: 2,
+                explanation: "במהלך הבישול בטמפרטורה גבוהה והקירור המהיר, הסוכר לא מספיק להתגבש ונוצר מבנה אמורפי (לא מסודר) דמוי זכוכית. למבנה זה צמיגות גבוהה מאוד ולכן הוא מתמוסס לאט."
+            },
+            {
+                question: "מה הגורם למראה הלבן שיכול להופיע על פני סוכריה קשה ישנה?",
+                options: ["עובש", "שומן שהופרש", "התגבשות מחדש של הסוכר על פני השטח", "לכלוך"],
+                correctIndex: 2,
+                explanation: "השכבה הלבנה היא סוכר שבתנאי לחות מסוימים הצליח להתארגן מחדש למבנה גבישי על פני הסוכריה."
+            },
+             {
+                question: "מדוע לחם (בגט) טרי הוא פריך וטעים, והופך קשה למחרת?",
+                options: ["בגלל התפתחות חיידקים", "בגלל איבוד מוחלט של מים", "בגלל רטרוגרדציה של העמילן", "בגלל התחמצנות השומנים"],
+                correctIndex: 2,
+                explanation: "ההתקשות של לחם ישן נובעת בעיקר מרטרוגרדציה – התארגנות מחדש של מולקולות העמילן (בעיקר עמילוז) למבנה יותר מסודר וקשיח, תוך איבוד יכולת קשירת מים."
+            },
+            {
+                question: "איזה מהבאים אינו תפקיד פונקציונלי של עמילן במזון?",
+                options: ["הסמכה", "הדבקה", "שימור באמצעות אפקט אוסמוטי חזק", "יצירת פילם"],
+                correctIndex: 2,
+                explanation: "בעוד שעמילן תורם למרקם ויכול להחזיק מים, אין לו אפקט שימור אוסמוטי חזק כמו לסוכרים פשוטים בריכוז גבוה."
+            },
+             {
+                question: "מהו התפקיד של סוכרים בתהליכי תסיסה על ידי שמרים?",
+                options: ["לשמש כמקור פחמן ואנרגיה לשמרים", "לעכב את גדילת השמרים", "לשנות את צבע התמיסה", "לספוח גזים"],
+                correctIndex: 0,
+                explanation: "שמרים (וחיידקים מסוימים) משתמשים בסוכרים כמצע מזון בתהליך התסיסה, ומפרקים אותם ליצירת אנרגיה ותוצרים כמו אלכוהול ופחמן דו חמצני."
+            },
+             {
+                question: "מה ההבדל בין סיבים תזונתיים לעמילן מבחינת עיכול?",
+                options: ["עמילן לא מתעכל כלל, סיבים כן", "שניהם מתעכלים במעי הדק", "סיבים לא מתעכלים במעי הדק, עמילן כן", "שניהם לא מתעכלים כלל"],
+                correctIndex: 2,
+                explanation: "עמילן (רובו) מתפרק לגלוקוז ונספג במעי הדק, בעוד סיבים תזונתיים עמידים בפני אנזימי העיכול במעי הדק."
+            },
+             {
+                question: "האם סוכרוז הוא סוכר מחזר?",
+                options: ["כן, תמיד", "לא, הקשר בין גלוקוז לפרוקטוז מונע זאת", "רק בתמיסה חמה", "רק בצורתו הגבישית"],
+                correctIndex: 1,
+                explanation: "בסוכרוז, הפחמנים האנומריים של גלוקוז ופרוקטוז (המעורבים ביצירת קבוצות מחזרות) קשורים זה לזה בקשר הגליקוזידי, ולכן לסוכרוז אין קבוצה מחזרת חופשית."
+            },
+            {
+                question: "מה עלול לקרות לעמילן במזון במהלך אחסון ממושך, במיוחד בתנאי לחות?",
+                options: ["הוא יהפוך מתוק יותר", "הוא יעבור רטרוגרדציה וישנה מרקם", "הוא יתאדה לחלוטין", "הוא יגיב עם חלבונים וייצור צבע ירוק"],
+                correctIndex: 1,
+                explanation: "רטרוגרדציה היא תהליך איטי שיכול להתרחש לאורך זמן באחסון, במיוחד במוצרים המכילים עמילן שעברו בישול ומכילים לחות מסוימת."
+            },
+             {
+                question: "האם הוספת סיבים תזונתיים למזון תמיד קלה ואינה משפיעה על תכונות אחרות?",
+                options: ["כן, הם ניטרליים לחלוטין", "לא, הוספת סיבים עלולה להשפיע על הטעם, המרקם ועוד", "כן, הם רק משפרים את הטעם", "לא, הם מותרים רק במזונות יבשים"],
+                correctIndex: 1,
+                explanation: "הטקסט מציין שקיים קושי להוסיף סיבים למזון מאחר והם משפיעים על תכונות סנסוריות ופיזיקליות."
+            }
+        ];
+
+        const tfData = [
+            { question: "כל החד-סוכרים מכילים בדיוק 6 אטומי פחמן.", answer: false, explanation: "רוב החד-סוכרים הנפוצים במזון מכילים 6 פחמנים (הקסוזות), אך קיימים גם חד-סוכרים עם מספר פחמנים אחר (כמו פנטוזות עם 5)." },
+            { question: "יצירת דו-סוכר מחד-סוכרים כרוכה בקליטת מולקולת מים.", answer: false, explanation: "יצירת דו-סוכר היא תגובת דחיסה (קונדנסציה) שבה משתחררת מולקולת מים." },
+            { question: "לקטוז הוא חד סוכר המצוי בפירות.", answer: false, explanation: "לקטוז הוא דו-סוכר (גלוקוז+גלקטוז) המצוי בחלב. פרוקטוז הוא החד-סוכר העיקרי בפירות." },
+            { question: "מלטוז מורכב מיחידת גלוקוז ויחידת פרוקטוז.", answer: false, explanation: "מלטוז מורכב משתי יחידות גלוקוז." },
+            { question: "סוכרים תורמים לסמיכות של תמיסות מימיות.", answer: true, explanation: "אחת התכונות הפונקציונליות של סוכרים היא הגברת הצמיגות של נוזלים." },
+            { question: "תגובת מייארד מתרחשת רק בטמפרטורות נמוכות מאוד.", answer: false, explanation: "תגובת מייארד היא תגובת השחמה המתרחשת בחום, לרוב בטמפרטורות בישול ואפייה." },
+            { question: "כל הדו-סוכרים הם סוכרים מחזרים.", answer: false, explanation: "סוכרוז, לדוגמה, אינו סוכר מחזר מכיוון שהפחמנים האנומריים קשורים זה לזה." },
+            { question: "קרמליזציה דורשת נוכחות של חלבונים.", answer: false, explanation: "קרמליזציה היא השחמת סוכר בחום גבוה, ללא צורך בחלבונים (בניגוד לתגובת מייארד)." },
+            { question: "עמילוז הוא המרכיב המסועף של העמילן.", answer: false, explanation: "עמילוז הוא המרכיב הלינארי (ספירלי), בעוד עמילופקטין הוא המרכיב המסועף." },
+            { question: "גרגרי עמילן נמסים בקלות במים קרים.", answer: false, explanation: "גרגרי עמילן אינם מסיסים במים קרים ודורשים חימום לצורך ג'לטיניזציה." },
+            { question: "רטרוגרדציה היא תהליך רצוי ברוב המקרים לשמירת מרקם המזון.", answer: false, explanation: "רטרוגרדציה לרוב אינה רצויה מכיוון שהיא גורמת להתקשות ושינויים לא רצויים במרקם (כמו בלחם ישן)." },
+            { question: "עמילנים משמשים בעיקר להמתקת מזונות.", answer: false, explanation: "בעוד שעמילן הוא פחמימה, תפקידו העיקרי במזון הוא הסמכה ויצירת מרקם, לא המתקה ישירה." },
+            { question: "סיבים תזונתיים מתעכלים ונספגים במלואם במערכת העיכול.", answer: false, explanation: "סיבים תזונתיים מוגדרים כפחמימות שאינן נעכלות או נספגות במעי הדק." },
+            { question: "הוספת סיבים תזונתיים למזון אינה משפיעה על תכונותיו הסנסוריות.", answer: false, explanation: "הטקסט מציין שיש קושי בהוספת סיבים כי הם משפיעים על טעם, מרקם ועוד." },
+            { question: "פירוק לקטוז לגלוקוז וגלקטוז מוריד את מתיקות מוצר החלב.", answer: false, explanation: "גלוקוז וגלקטוז מתוקים יותר מלקטוז, לכן פירוק לקטוז מעלה את המתיקות הנתפסת." },
+            { question: "תמיסת סוכר מרוכזת יכולה לעכב צמיחת חיידקים.", answer: true, explanation: "בגלל האפקט האוסמוטי (הורדת פעילות המים), תמיסות סוכר מרוכזות משמשות לשימור מזון." },
+            { question: "עמילופקטין נוטה לרטרוגרדציה יותר מעמילוז.", answer: false, explanation: "עמילוז (המבנה הלינארי) נוטה יותר לרטרוגרדציה מאשר עמילופקטין (המבנה המסועף)." },
+            { question: "התקשות בגט יום לאחר אפייתו נובעת בעיקר מאיבוד לחות מוחלט.", answer: false, explanation: "בעוד שיש איבוד לחות, הגורם העיקרי להתקשות הוא רטרוגרדציה של העמילן." },
+            { question: "סוכר במצב אמורפי-זגוגיתי (כמו בסוכריה קשה) נמס מהר מאוד.", answer: false, explanation: "המצב הזגוגיתי הוא בעל צמיגות גבוהה מאוד ולכן מתמוסס לאט." },
+            { question: "ניתן להעלות את ריכוז הסוכר בתמיסה מימית ללא הגבלה.", answer: false, explanation: "לכל סוכר יש גבול מסיסות במים בטמפרטורה נתונה. הטקסט מציין ריכוז מרבי של כ-80 גרם ל-100 גרם תמיסה." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

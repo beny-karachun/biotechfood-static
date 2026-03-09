@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תרגול: פתרון מד"ח קוואזי-לינארית מסדר ראשון</title>
+    <style>
+        /* --- Global Styles & Dark Mode --- */
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif; /* Basic fallback font */
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+            direction: rtl; /* Right-to-left for Hebrew */
+        }
+
+        .container {
+            max-width: 85%;
+            margin: 20px auto;
+            padding: 25px 35px;
+            background-color: #444; /* Slightly lighter container */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        h1, h2, h3, h4 {
+            color: #3D90D7; /* Blue accent for headings */
+            border-bottom: 1px solid #555;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+        }
+
+        h1 { text-align: center; font-size: 2em; }
+        h2 { font-size: 1.6em; }
+        h3 { font-size: 1.4em; margin-top: 25px; }
+        h4 { font-size: 1.2em; color: #6ebff1; border-bottom: none; margin-bottom: 10px; } /* Lighter blue for solution titles */
+
+        p, li {
+            margin-bottom: 12px;
+            text-align: right; /* Ensure text aligns right */
+        }
+
+        /* --- MathJax Specific Styling --- */
+        mjx-container {
+            display: inline-block; /* Prevent block behavior for inline math */
+            direction: ltr; /* Ensure math renders LTR */
+            text-align: left; /* Ensure alignment within the math container */
+        }
+        .mjx-display { /* Style for display math $$...$$ */
+            display: block;
+            margin: 1em 0;
+            direction: ltr;
+            text-align: center; /* Center display math */
+        }
+
+        /* --- Methodology & Practice Sections --- */
+        .methodology, .practice {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #555; /* Slightly darker for sections */
+            border: 1px solid #666;
+            border-radius: 6px;
+        }
+
+        .methodology ol li {
+            margin-bottom: 15px; /* More space between methodology steps */
+        }
+
+        /* --- Question & Solution Styling --- */
+        .question-block {
+            background-color: #444; /* Back to main container color */
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #585858;
+            border-radius: 5px;
+        }
+
+        .question-counter {
+            font-weight: bold;
+            color: #8bc34a; /* Greenish color for counter */
+            margin-bottom: 15px;
+        }
+
+        .question-content ol[type="א"] {
+            list-style-type: hebrew; /* Use Hebrew letters for list */
+            padding-right: 20px; /* Indent Hebrew list */
+        }
+
+        .toggle-solution {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-solution:hover {
+            background-color: #2a7ab0;
+        }
+
+        .solution {
+            background-color: #484848; /* Distinct background for solution */
+            border: 1px dashed #6a6a6a;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .solution hr {
+            border: none;
+            border-top: 1px solid #666;
+            margin: 20px 0;
+        }
+
+        /* --- Code/Term Styling (Optional) --- */
+        code { /* For inline technical terms if needed, ensure LTR */
+            font-family: Consolas, Monaco, monospace;
+            background-color: #3a3a3a;
+            padding: 2px 5px;
+            border-radius: 3px;
+            direction: ltr;
+            display: inline-block;
+        }
+
+    </style>
+
+    <!-- MathJax 3 Configuration and Loading -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']], // Delimiters for inline math
+                displayMath: [['$$', '$$'], ['\\[', '\\]']], // Delimiters for display math
+                processEscapes: true,
+                tags: 'ams' // Use AMS numbering if needed
+            },
+            svg: {
+                fontCache: 'global' // Use global font cache for SVG output
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'], // Tags to ignore
+                ignoreHtmlClass: 'tex2jax_ignore', // Class to ignore
+                processHtmlClass: 'tex2jax_process' // Class to process explicitly
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is ready');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+</head>
+<body>
+
+    <div class="container">
+        <h1>כלי תרגול: פתרון מד"ח - תרגיל 4</h1>
+
+        <!-- Methodology Section -->
+        <div class="methodology">
+            <h2>שיטת הפתרון: משוואות דיפרנציאליות חלקיות קוואזי-לינאריות מסדר ראשון</h2>
+            <p>
+                אנו מתמודדים עם משוואות מהצורה הכללית:
+                $$ a(x, y, u) u_x + b(x, y, u) u_y = c(x, y, u) $$
+                כאשר נתון תנאי התחלה על עקום כלשהו $\Gamma$. שיטת הפתרון המקובלת היא "שיטת הקווים האופייניים" (Method of Characteristics).
+            </p>
+            <ol>
+                <li>
+                    <strong>הגדרת העקום ההתחלתי:</strong> נתאר את העקום ההתחלתי $\Gamma$ בצורה פרמטרית. אם התנאי נתון כ- $u(x_0(s), y_0(s)) = u_0(s)$, אז העקום במרחב $(x, y, u)$ הוא $\vec{\Gamma}(s) = (x_0(s), y_0(s), u_0(s))$.
+                </li>
+                <li>
+                    <strong>כתיבת המשוואות האופייניות:</strong> נרשום מערכת של משוואות דיפרנציאליות רגילות (מד"ר) עבור הקווים האופייניים $(x(t), y(t), u(t))$:
+                    $$ \frac{dx}{dt} = a(x, y, u) $$
+                    $$ \frac{dy}{dt} = b(x, y, u) $$
+                    $$ \frac{du}{dt} = c(x, y, u) $$
+                </li>
+                <li>
+                    <strong>פתרון המד"ר עם תנאי התחלה:</strong> נפתור את מערכת המד"ר תוך שימוש בתנאי ההתחלה הנגזרים מהעקום הפרמטרי. עבור כל ערך של פרמטר $s$, הקו האופייני היוצא מנקודה $\vec{\Gamma}(s)$ על עקום ההתחלה מקיים $x(t=0) = x_0(s)$, $y(t=0) = y_0(s)$, $u(t=0) = u_0(s)$. הפתרון יהיה תלוי ב-$s$ וב-$t$: $x(t, s)$, $y(t, s)$, $u(t, s)$.
+                </li>
+                 <li>
+                    <strong>מציאת הפתרון $u(x, y)$:</strong> נבטא את $s$ ו-$t$ כפונקציות של $x$ ו-$y$ מתוך המשוואות $x = x(t, s)$ ו-$y = y(t, s)$. לאחר מכן, נציב את הביטויים הללו במשוואה $u = u(t, s)$ כדי לקבל את הפתרון $u(x, y)$.
+                </li>
+                 <li>
+                    <strong>בדיקת קיום ויחידות (תנאי הטרנסברסליות):</strong> הפתרון קיים ויחיד בסביבת עקום ההתחלה $\Gamma$ אם ורק אם הקווים האופייניים חוצים את עקום ההתחלה באופן שאינו משיק לו. תנאי זה מתורגם לדרישה שהדטרמיננטה הבאה שונה מאפס לאורך העקום:
+                    $$ J = \det \begin{pmatrix} a(x_0(s), y_0(s), u_0(s)) & b(x_0(s), y_0(s), u_0(s)) \\ \frac{dx_0}{ds} & \frac{dy_0}{ds} \end{pmatrix} \neq 0 $$
+                    כאשר $a, b$ מחושבים על העקום $(x_0(s), y_0(s), u_0(s))$.
+                 </li>
+                 <li>
+                     <strong>תחום הגדרה:</strong> יש לבדוק את תחום ההגדרה של הפתרון. לעיתים הפתרון אינו מוגדר בכל המישור, למשל כאשר פרמטרים $s$ או $t$ אינם ניתנים לביטוי באופן יחיד, או כאשר נוצרים מכנים המתאפסים.
+                 </li>
+            </ol>
+        </div>
+
+        <!-- Practice Questions Section -->
+        <div class="practice">
+            <h2>שאלות תרגול</h2>
+
+            <!-- Question 1 (Original Question 4) -->
+            <div class="question-block">
+                <p class="question-counter">שאלה 1 מתוך 5</p>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    $$
+                    \begin{cases}
+                        x u_x(x, y) + u_y(x, y) = u(x, y) & ; x > 0 \\
+                        u(x, 0) = x
+                    \end{cases}
+                    $$
+                    <ol type="א">
+                        <li>כמה פתרונות יש לבעיה בסביבת עקום ההתחלה?</li>
+                        <li>מצאו את הקו האופייני של המשוואה העובר בנקודה $(1, 0, 1)$. מהו היטלו במישור ה־XY?</li>
+                        <li>מצאו את כל הפתרונות לבעיה ואת תחום ההגדרה שלהם.</li>
+                    </ol>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution" style="display: none;">
+                    <h4>פתרון:</h4>
+                    <p>המשוואה היא $x u_x + 1 \cdot u_y = u$. זוהי מד"ח קוואזי-לינארית מסדר ראשון.
+                       נזהה $a = x$, $b = 1$, $c = u$.
+                       עקום ההתחלה הוא הקו $y=0$ עבור $x>0$, ועליו $u=x$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף א: קיום ויחידות</strong></p>
+                    <p>נרשום את עקום ההתחלה בצורה פרמטרית: $\Gamma(s) = (x_0(s), y_0(s), u_0(s)) = (s, 0, s)$ עבור $s > 0$.
+                       נגזור לפי $s$: $x_0'(s) = 1$, $y_0'(s) = 0$.
+                       נחשב את $a$ ו-$b$ על העקום: $a(s, 0, s) = s$, $b(s, 0, s) = 1$.
+                       נחשב את תנאי הטרנסברסליות (היעקוביאן $J$):
+                       $$ J = \det \begin{pmatrix} a(s, 0, s) & b(s, 0, s) \\ x_0'(s) & y_0'(s) \end{pmatrix} = \det \begin{pmatrix} s & 1 \\ 1 & 0 \end{pmatrix} = s \cdot 0 - 1 \cdot 1 = -1 $$
+                       מכיוון ש $J = -1 \neq 0$ לכל $s$ בתחום ההגדרה ($s>0$), קיים פתרון יחיד לבעיה בסביבת עקום ההתחלה.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ב: קו אופייני דרך (1, 0, 1)</strong></p>
+                    <p>הנקודה $(1, 0, 1)$ נמצאת על עקום ההתחלה ומתקבלת עבור $s=1$.
+                       המשוואות האופייניות הן:
+                       $$ \frac{dx}{dt} = a = x $$
+                       $$ \frac{dy}{dt} = b = 1 $$
+                       $$ \frac{du}{dt} = c = u $$
+                       נפתור מערכת זו עם תנאי ההתחלה ב-$t=0$ המתאימים ל-$s=1$: $x(0)=1$, $y(0)=0$, $u(0)=1$.
+                    </p>
+                    <ol>
+                        <li>$\frac{dx}{dt} = x \implies \int \frac{dx}{x} = \int dt \implies \ln|x| = t + C_1$. עם $x(0)=1$, $\ln(1) = 0 + C_1 \implies C_1 = 0$. לכן $x(t) = e^t$.</li>
+                        <li>$\frac{dy}{dt} = 1 \implies \int dy = \int dt \implies y = t + C_2$. עם $y(0)=0$, $0 = 0 + C_2 \implies C_2 = 0$. לכן $y(t) = t$.</li>
+                        <li>$\frac{du}{dt} = u \implies \int \frac{du}{u} = \int dt \implies \ln|u| = t + C_3$. עם $u(0)=1$, $\ln(1) = 0 + C_3 \implies C_3 = 0$. לכן $u(t) = e^t$.</li>
+                    </ol>
+                    <p>הקו האופייני העובר דרך $(1, 0, 1)$ הוא $\gamma(t) = (e^t, t, e^t)$ עבור $t \in \mathbb{R}$.
+                       היטל הקו האופייני על מישור XY הוא העקום הפרמטרי $(x(t), y(t)) = (e^t, t)$.
+                       זוהי העקומה $x = e^y$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ג: פתרון כללי ותחום הגדרה</strong></p>
+                    <p>נפתור את המשוואות האופייניות עם תנאי התחלה כלליים $x(0)=s$, $y(0)=0$, $u(0)=s$ (כאשר $s>0$).
+                       מהפתרונות שכבר מצאנו, עם קבועים אחרים:
+                       $$ x(t, s) = s e^t $$
+                       $$ y(t, s) = t $$
+                       $$ u(t, s) = s e^t $$
+                       כדי למצוא את $u(x, y)$, נבטא את $s, t$ באמצעות $x, y$.
+                       מ-$y = t$, נציב במשוואות האחרות:
+                       $$ x = s e^y $$
+                       $$ u = s e^y $$
+                       משתי משוואות אלו נובע ישירות כי $u = x$.
+                       נוודא שפתרון זה מקיים את תנאי ההתחלה: $u(x, 0) = x$, וזה נכון.
+                       נוודא שהוא מקיים את המשוואה: $u_x = 1$, $u_y = 0$. נציב במד"ח:
+                       $x \cdot (1) + (0) = x$, כלומר $x = x$. המשוואה מתקיימת.
+                       תחום ההגדרה של הפתרון נקבע על ידי תחום ההגדרה של תנאי ההתחלה והתנהגות הקווים האופייניים. תנאי ההתחלה נתון עבור $x>0$. הפתרון $u(x,y)=x$ מוגדר היטב לכל $x,y$. הקשר $x=se^y$ מראה שעבור $s>0$ וכל $y$ ממשי, $x$ תמיד חיובי. לכן, תחום ההגדרה של הפתרון הוא התחום שבו הקווים האופייניים היוצאים מהתחום $x>0, y=0$ מכסים את המישור. תחום זה הוא $x>0$.
+                       הפתרון הוא $u(x, y) = x$, ותחום הגדרתו הוא $\{(x, y) \in \mathbb{R}^2 \mid x > 0\}$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 2 (Generated) -->
+            <div class="question-block">
+                <p class="question-counter">שאלה 2 מתוך 5</p>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    $$
+                    \begin{cases}
+                        u_x(x, y) + y u_y(x, y) = u(x, y)^2 & ; y > 0 \\
+                        u(x, 1) = 1/x & ; x > 0
+                    \end{cases}
+                    $$
+                    <ol type="א">
+                        <li>כמה פתרונות יש לבעיה בסביבת עקום ההתחלה?</li>
+                        <li>מצאו את הקו האופייני של המשוואה העובר בנקודה $(1, 1, 1)$. מהו היטלו במישור ה־XY?</li>
+                        <li>מצאו את כל הפתרונות לבעיה ואת תחום ההגדרה שלהם.</li>
+                    </ol>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution" style="display: none;">
+                    <h4>פתרון:</h4>
+                     <p>המשוואה היא $1 \cdot u_x + y u_y = u^2$. נזהה $a = 1$, $b = y$, $c = u^2$.
+                       עקום ההתחלה הוא הקו $y=1$ עבור $x>0$, ועליו $u=1/x$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף א: קיום ויחידות</strong></p>
+                    <p>נרשום את עקום ההתחלה בצורה פרמטרית: $\Gamma(s) = (s, 1, 1/s)$ עבור $s > 0$.
+                       נגזור לפי $s$: $x_0'(s) = 1$, $y_0'(s) = 0$.
+                       נחשב את $a$ ו-$b$ על העקום: $a(s, 1, 1/s) = 1$, $b(s, 1, 1/s) = 1$.
+                       נחשב את תנאי הטרנסברסליות:
+                       $$ J = \det \begin{pmatrix} a & b \\ x_0' & y_0' \end{pmatrix} = \det \begin{pmatrix} 1 & 1 \\ 1 & 0 \end{pmatrix} = 1 \cdot 0 - 1 \cdot 1 = -1 $$
+                       מכיוון ש $J = -1 \neq 0$ לכל $s > 0$, קיים פתרון יחיד לבעיה בסביבת עקום ההתחלה.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ב: קו אופייני דרך (1, 1, 1)</strong></p>
+                    <p>הנקודה $(1, 1, 1)$ נמצאת על עקום ההתחלה ומתקבלת עבור $s=1$.
+                       המשוואות האופייניות הן:
+                       $$ \frac{dx}{dt} = a = 1 $$
+                       $$ \frac{dy}{dt} = b = y $$
+                       $$ \frac{du}{dt} = c = u^2 $$
+                       נפתור עם תנאי התחלה $x(0)=1$, $y(0)=1$, $u(0)=1$.
+                    </p>
+                    <ol>
+                        <li>$\frac{dx}{dt} = 1 \implies x(t) = t + C_1$. עם $x(0)=1$, $C_1=1$. $x(t) = t + 1$.</li>
+                        <li>$\frac{dy}{dt} = y \implies \ln|y| = t + C_2$. עם $y(0)=1$, $C_2=0$. $y(t) = e^t$.</li>
+                        <li>$\frac{du}{dt} = u^2 \implies \int u^{-2} du = \int dt \implies -u^{-1} = t + C_3$. עם $u(0)=1$, $-1 = 0 + C_3 \implies C_3 = -1$. $-1/u = t - 1 \implies u(t) = \frac{1}{1-t}$.</li>
+                    </ol>
+                    <p>הקו האופייני הוא $\gamma(t) = (t+1, e^t, \frac{1}{1-t})$. שימו לב שהקו מוגדר רק עבור $t \neq 1$.
+                       היטל הקו האופייני על מישור XY הוא $(t+1, e^t)$.
+                       מכיוון ש $t = x-1$, ההיטל הוא העקום $y = e^{x-1}$.
+                    </p>
+                    <hr>
+                     <p><strong>סעיף ג: פתרון כללי ותחום הגדרה</strong></p>
+                    <p>נפתור את המשוואות האופייניות עם תנאי התחלה כלליים $x(0)=s$, $y(0)=1$, $u(0)=1/s$ (כאשר $s>0$).
+                       $$ x(t, s) = t + s $$
+                       $$ y(t, s) = e^t $$
+                       $$ u(t, s) = \frac{1/s}{1 + (1/s)t} = \frac{1}{s + t} $$
+                       נבטא את $s, t$ באמצעות $x, y$.
+                       מ-$y = e^t \implies t = \ln y$. פתרון זה תקף כאשר $y > 0$.
+                       נציב ב-$x = t + s$: $x = \ln y + s \implies s = x - \ln y$.
+                       נציב את $s$ ו-$t$ בביטוי ל-$u$:
+                       $$ u(x, y) = \frac{1}{s + t} = \frac{1}{(x - \ln y) + \ln y} = \frac{1}{x} $$
+                       הפתרון הוא $u(x, y) = 1/x$.
+                       נוודא תנאי התחלה: $u(x, 1) = 1/x$. מתקיים.
+                       נוודא משוואה: $u_x = -1/x^2$, $u_y = 0$. נציב במד"ח:
+                       $1 \cdot (-1/x^2) + y \cdot 0 = (1/x)^2 \implies -1/x^2 = 1/x^2$. משוואה זו אינה מתקיימת! יש טעות בפתרון של מד"ר ה-u.
+                    </p>
+                     <p>נחזור למד"ר עבור $u$: $\frac{du}{dt} = u^2$.
+                        $\int u^{-2} du = \int dt \implies -u^{-1} = t + C_3(s)$.
+                        עם $u(0)=1/s$, $- (1/s)^{-1} = 0 + C_3(s) \implies -s = C_3(s)$.
+                        לכן $-1/u = t - s$.
+                        $u(t, s) = \frac{1}{s - t}$.
+                     </p>
+                     <p>
+                        כעת נציב $t = \ln y$ ו $s = x - \ln y$:
+                        $$ u(x, y) = \frac{1}{(x - \ln y) - \ln y} = \frac{1}{x - 2 \ln y} $$
+                        נוודא תנאי התחלה: $u(x, 1) = \frac{1}{x - 2 \ln 1} = \frac{1}{x - 0} = 1/x$. מתקיים.
+                        נוודא משוואה:
+                        $u_x = -\frac{1}{(x - 2 \ln y)^2} \cdot 1$
+                        $u_y = -\frac{1}{(x - 2 \ln y)^2} \cdot (-\frac{2}{y}) = \frac{2}{y(x - 2 \ln y)^2}$
+                        נציב במד"ח: $1 \cdot u_x + y \cdot u_y = u^2$
+                        $$ -\frac{1}{(x - 2 \ln y)^2} + y \cdot \frac{2}{y(x - 2 \ln y)^2} = \left( \frac{1}{x - 2 \ln y} \right)^2 $$
+                        $$ -\frac{1}{(x - 2 \ln y)^2} + \frac{2}{(x - 2 \ln y)^2} = \frac{1}{(x - 2 \ln y)^2} $$
+                        $$ \frac{1}{(x - 2 \ln y)^2} = \frac{1}{(x - 2 \ln y)^2} $$
+                        המשוואה מתקיימת.
+                        הפתרון הוא $u(x, y) = \frac{1}{x - 2 \ln y}$.
+                        תחום ההגדרה:
+                        1. מתנאי ההתחלה, $s > 0$, כלומר $x - \ln y > 0 \implies x > \ln y$.
+                        2. מביטוי ל-$t$, $y > 0$.
+                        3. המכנה בפתרון הסופי צריך להיות שונה מאפס: $x - 2 \ln y \neq 0 \implies x \neq 2 \ln y$.
+                        4. המכנה בפתרון האופייני $u(t,s)=1/(s-t)$ לא יכול להתאפס. $s \neq t \implies x-\ln y \neq \ln y \implies x \neq 2 \ln y$.
+                        התחום הוא $\{(x, y) \mid y > 0, x > \ln y, x \neq 2 \ln y\}$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 3 (Generated) -->
+            <div class="question-block">
+                <p class="question-counter">שאלה 3 מתוך 5</p>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    $$
+                    \begin{cases}
+                        x u_x(x, y) - y u_y(x, y) = 0 & ; x > 0 \\
+                        u(x, 1) = x^2
+                    \end{cases}
+                    $$
+                     <ol type="א">
+                        <li>כמה פתרונות יש לבעיה בסביבת עקום ההתחלה?</li>
+                        <li>מצאו את הקו האופייני של המשוואה העובר בנקודה $(2, 1, 4)$. מהו היטלו במישור ה־XY?</li>
+                        <li>מצאו את כל הפתרונות לבעיה ואת תחום ההגדרה שלהם.</li>
+                    </ol>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution" style="display: none;">
+                    <h4>פתרון:</h4>
+                     <p>המשוואה היא $x u_x - y u_y = 0$. נזהה $a = x$, $b = -y$, $c = 0$.
+                       עקום ההתחלה הוא הקו $y=1$ עבור $x>0$, ועליו $u=x^2$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף א: קיום ויחידות</strong></p>
+                    <p>נרשום את עקום ההתחלה בצורה פרמטרית: $\Gamma(s) = (s, 1, s^2)$ עבור $s > 0$.
+                       נגזור לפי $s$: $x_0'(s) = 1$, $y_0'(s) = 0$.
+                       נחשב את $a$ ו-$b$ על העקום: $a(s, 1, s^2) = s$, $b(s, 1, s^2) = -1$.
+                       נחשב את תנאי הטרנסברסליות:
+                       $$ J = \det \begin{pmatrix} a & b \\ x_0' & y_0' \end{pmatrix} = \det \begin{pmatrix} s & -1 \\ 1 & 0 \end{pmatrix} = s \cdot 0 - (-1) \cdot 1 = 1 $$
+                       מכיוון ש $J = 1 \neq 0$ לכל $s > 0$, קיים פתרון יחיד לבעיה בסביבת עקום ההתחלה.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ב: קו אופייני דרך (2, 1, 4)</strong></p>
+                    <p>הנקודה $(2, 1, 4)$ נמצאת על עקום ההתחלה ומתקבלת עבור $s=2$.
+                       המשוואות האופייניות הן:
+                       $$ \frac{dx}{dt} = a = x $$
+                       $$ \frac{dy}{dt} = b = -y $$
+                       $$ \frac{du}{dt} = c = 0 $$
+                       נפתור עם תנאי התחלה $x(0)=2$, $y(0)=1$, $u(0)=4$.
+                    </p>
+                    <ol>
+                        <li>$\frac{dx}{dt} = x \implies x(t) = C_1 e^t$. עם $x(0)=2$, $C_1=2$. $x(t) = 2e^t$.</li>
+                        <li>$\frac{dy}{dt} = -y \implies y(t) = C_2 e^{-t}$. עם $y(0)=1$, $C_2=1$. $y(t) = e^{-t}$.</li>
+                        <li>$\frac{du}{dt} = 0 \implies u(t) = C_3$. עם $u(0)=4$, $C_3=4$. $u(t) = 4$.</li>
+                    </ol>
+                    <p>הקו האופייני הוא $\gamma(t) = (2e^t, e^{-t}, 4)$.
+                       היטל הקו האופייני על מישור XY הוא $(2e^t, e^{-t})$.
+                       נשים לב ש $x \cdot y = 2e^t \cdot e^{-t} = 2$. ההיטל הוא העקומה $xy = 2$ (עבור $x>0, y>0$).
+                    </p>
+                    <hr>
+                     <p><strong>סעיף ג: פתרון כללי ותחום הגדרה</strong></p>
+                    <p>נפתור את המשוואות האופייניות עם תנאי התחלה כלליים $x(0)=s$, $y(0)=1$, $u(0)=s^2$ (כאשר $s>0$).
+                       $$ x(t, s) = s e^t $$
+                       $$ y(t, s) = 1 \cdot e^{-t} = e^{-t} $$
+                       $$ u(t, s) = s^2 $$
+                       נבטא את $s, t$ באמצעות $x, y$.
+                       מ-$y = e^{-t} \implies -t = \ln y \implies t = -\ln y = \ln(1/y)$. פתרון זה תקף כאשר $y > 0$.
+                       נציב ב-$x = s e^t$: $x = s e^{\ln(1/y)} = s (1/y) \implies s = xy$.
+                       נציב את $s$ בביטוי ל-$u$:
+                       $$ u(x, y) = s^2 = (xy)^2 = x^2 y^2 $$
+                       הפתרון הוא $u(x, y) = x^2 y^2$.
+                       נוודא תנאי התחלה: $u(x, 1) = x^2 (1)^2 = x^2$. מתקיים.
+                       נוודא משוואה: $u_x = 2xy^2$, $u_y = 2x^2y$. נציב במד"ח:
+                       $x (2xy^2) - y (2x^2y) = 2x^2y^2 - 2x^2y^2 = 0$. המשוואה מתקיימת.
+                       תחום ההגדרה:
+                       1. מתנאי ההתחלה, $s > 0$, כלומר $xy > 0$.
+                       2. מהביטוי ל-$t$, $y > 0$.
+                       3. שילוב התנאים נותן $x>0$ ו-$y>0$.
+                       התחום הוא הרביע הראשון הפתוח: $\{(x, y) \mid x > 0, y > 0\}$.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Question 4 (Generated) -->
+            <div class="question-block">
+                <p class="question-counter">שאלה 4 מתוך 5</p>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    $$
+                    \begin{cases}
+                        u_x(x, y) + u_y(x, y) = 1 \\
+                        u(x, -x) = x & ; x > 0
+                    \end{cases}
+                    $$
+                    <ol type="א">
+                        <li>כמה פתרונות יש לבעיה בסביבת עקום ההתחלה?</li>
+                        <li>מצאו את הקו האופייני של המשוואה העובר בנקודה $(1, -1, 1)$. מהו היטלו במישור ה־XY?</li>
+                        <li>מצאו את כל הפתרונות לבעיה ואת תחום ההגדרה שלהם.</li>
+                    </ol>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution" style="display: none;">
+                     <h4>פתרון:</h4>
+                     <p>המשוואה היא $1 \cdot u_x + 1 \cdot u_y = 1$. נזהה $a = 1$, $b = 1$, $c = 1$.
+                       עקום ההתחלה הוא הקו $y=-x$ עבור $x>0$, ועליו $u=x$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף א: קיום ויחידות</strong></p>
+                    <p>נרשום את עקום ההתחלה בצורה פרמטרית: $\Gamma(s) = (s, -s, s)$ עבור $s > 0$.
+                       נגזור לפי $s$: $x_0'(s) = 1$, $y_0'(s) = -1$.
+                       נחשב את $a$ ו-$b$ על העקום: $a(s, -s, s) = 1$, $b(s, -s, s) = 1$.
+                       נחשב את תנאי הטרנסברסליות:
+                       $$ J = \det \begin{pmatrix} a & b \\ x_0' & y_0' \end{pmatrix} = \det \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} = 1 \cdot (-1) - 1 \cdot 1 = -1 - 1 = -2 $$
+                       מכיוון ש $J = -2 \neq 0$ לכל $s > 0$, קיים פתרון יחיד לבעיה בסביבת עקום ההתחלה.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ב: קו אופייני דרך (1, -1, 1)</strong></p>
+                    <p>הנקודה $(1, -1, 1)$ נמצאת על עקום ההתחלה ומתקבלת עבור $s=1$.
+                       המשוואות האופייניות הן:
+                       $$ \frac{dx}{dt} = a = 1 $$
+                       $$ \frac{dy}{dt} = b = 1 $$
+                       $$ \frac{du}{dt} = c = 1 $$
+                       נפתור עם תנאי התחלה $x(0)=1$, $y(0)=-1$, $u(0)=1$.
+                    </p>
+                    <ol>
+                        <li>$\frac{dx}{dt} = 1 \implies x(t) = t + C_1$. עם $x(0)=1$, $C_1=1$. $x(t) = t + 1$.</li>
+                        <li>$\frac{dy}{dt} = 1 \implies y(t) = t + C_2$. עם $y(0)=-1$, $C_2=-1$. $y(t) = t - 1$.</li>
+                        <li>$\frac{du}{dt} = 1 \implies u(t) = t + C_3$. עם $u(0)=1$, $C_3=1$. $u(t) = t + 1$.</li>
+                    </ol>
+                    <p>הקו האופייני הוא $\gamma(t) = (t+1, t-1, t+1)$.
+                       היטל הקו האופייני על מישור XY הוא $(t+1, t-1)$.
+                       נשים לב ש $x = t+1$ ו $y = t-1$, לכן $x - y = (t+1) - (t-1) = 2$. ההיטל הוא הקו $x - y = 2$.
+                    </p>
+                    <hr>
+                     <p><strong>סעיף ג: פתרון כללי ותחום הגדרה</strong></p>
+                    <p>נפתור את המשוואות האופייניות עם תנאי התחלה כלליים $x(0)=s$, $y(0)=-s$, $u(0)=s$ (כאשר $s>0$).
+                       $$ x(t, s) = t + s $$
+                       $$ y(t, s) = t - s $$
+                       $$ u(t, s) = t + s $$
+                       נבטא את $s, t$ באמצעות $x, y$.
+                       נחסר את המשוואה השנייה מהראשונה: $x - y = (t+s) - (t-s) = 2s \implies s = (x-y)/2$.
+                       נחבר את שתי המשוואות הראשונות: $x + y = (t+s) + (t-s) = 2t \implies t = (x+y)/2$.
+                       נציב את $s$ ו-$t$ בביטוי ל-$u$:
+                       $$ u(x, y) = t + s = \frac{x+y}{2} + \frac{x-y}{2} = \frac{2x}{2} = x $$
+                       הפתרון הוא $u(x, y) = x$.
+                       נוודא תנאי התחלה: $u(x, -x) = x$. מתקיים.
+                       נוודא משוואה: $u_x = 1$, $u_y = 0$. נציב במד"ח:
+                       $1 \cdot (1) + 1 \cdot (0) = 1 \implies 1 = 1$. המשוואה מתקיימת.
+                       תחום ההגדרה:
+                       1. מתנאי ההתחלה, $s > 0$, כלומר $(x-y)/2 > 0 \implies x > y$.
+                       הפתרון $u(x,y)=x$ מוגדר בכל המישור, אך הוא הפתרון לבעיית ההתחלה הנתונה רק בתחום $x>y$.
+                    </p>
+                </div>
+            </div>
+
+             <!-- Question 5 (Generated) -->
+            <div class="question-block">
+                <p class="question-counter">שאלה 5 מתוך 5</p>
+                <div class="question-content">
+                    <p>נתונה הבעיה:</p>
+                    $$
+                    \begin{cases}
+                        y u_x(x, y) + x u_y(x, y) = u(x, y) & ; x>0, y>0 \\
+                        u(x, x) = e^x & ; x > 0
+                    \end{cases}
+                    $$
+                    <ol type="א">
+                        <li>כמה פתרונות יש לבעיה בסביבת עקום ההתחלה?</li>
+                        <li>מצאו את הקו האופייני של המשוואה העובר בנקודה $(1, 1, e)$. מהו היטלו במישור ה־XY?</li>
+                        <li>מצאו את כל הפתרונות לבעיה ואת תחום ההגדרה שלהם.</li>
+                    </ol>
+                </div>
+                <button class="toggle-solution">הצג פתרון</button>
+                <div class="solution" style="display: none;">
+                     <h4>פתרון:</h4>
+                     <p>המשוואה היא $y u_x + x u_y = u$. נזהה $a = y$, $b = x$, $c = u$.
+                       עקום ההתחלה הוא הקו $y=x$ עבור $x>0$, ועליו $u=e^x$.
+                    </p>
+                    <hr>
+                    <p><strong>סעיף א: קיום ויחידות</strong></p>
+                    <p>נרשום את עקום ההתחלה בצורה פרמטרית: $\Gamma(s) = (s, s, e^s)$ עבור $s > 0$.
+                       נגזור לפי $s$: $x_0'(s) = 1$, $y_0'(s) = 1$.
+                       נחשב את $a$ ו-$b$ על העקום: $a(s, s, e^s) = s$, $b(s, s, e^s) = s$.
+                       נחשב את תנאי הטרנסברסליות:
+                       $$ J = \det \begin{pmatrix} a & b \\ x_0' & y_0' \end{pmatrix} = \det \begin{pmatrix} s & s \\ 1 & 1 \end{pmatrix} = s \cdot 1 - s \cdot 1 = 0 $$
+                       מכיוון ש $J = 0$ לאורך כל עקום ההתחלה, תנאי הטרנסברסליות אינו מתקיים. משמעות הדבר היא ששיטת הקווים האופייניים אינה מבטיחה פתרון יחיד. ייתכן שיש אינסוף פתרונות או שאין פתרון כלל. נצטרך לבדוק תאימות בהמשך.
+                       (הערה: העובדה ש-$J=0$ פירושה שהכיוון האופייני $(a,b)=(s,s)$ מקביל לכיוון המשיק לעקום ההתחלה $(x_0', y_0')=(1,1)$).
+                    </p>
+                    <hr>
+                    <p><strong>סעיף ב: קו אופייני דרך (1, 1, e)</strong></p>
+                    <p>הנקודה $(1, 1, e)$ נמצאת על עקום ההתחלה ומתקבלת עבור $s=1$.
+                       המשוואות האופייניות הן:
+                       $$ \frac{dx}{dt} = a = y $$
+                       $$ \frac{dy}{dt} = b = x $$
+                       $$ \frac{du}{dt} = c = u $$
+                       נפתור עם תנאי התחלה $x(0)=1$, $y(0)=1$, $u(0)=e$.
+                    </p>
+                     <ol>
+                        <li>$\frac{du}{dt} = u \implies u(t) = C_3 e^t$. עם $u(0)=e$, $C_3=e$. $u(t) = e^{t+1}$.</li>
+                        <li>עבור $x, y$: $\frac{d^2x}{dt^2} = \frac{dy}{dt} = x$. אז $x'' - x = 0$. הפתרון הכללי הוא $x(t) = A e^t + B e^{-t}$. ואז $y(t) = x'(t) = A e^t - B e^{-t}$.
+                        נשתמש בתנאי התחלה:
+                        $x(0) = A+B = 1$
+                        $y(0) = A-B = 1$
+                        נחבר: $2A = 2 \implies A=1$. נציב: $1+B = 1 \implies B=0$.
+                        לכן $x(t) = e^t$ ו $y(t) = e^t$.</li>
+                    </ol>
+                     <p>הקו האופייני הוא $\gamma(t) = (e^t, e^t, e^{t+1})$.
+                       היטל הקו האופייני על מישור XY הוא $(e^t, e^t)$.
+                       ההיטל הוא הקרן $y=x$ היוצאת מ-$(1,1)$ (ללא הנקודה $(0,0)$ שמתקבלת כש-$t \to -\infty$). למעשה, זהו חלק מעקום ההתחלה עצמו!
+                    </p>
+                    <hr>
+                     <p><strong>סעיף ג: פתרון כללי ותחום הגדרה</strong></p>
+                     <p> מכיוון שהיעקוביאן התאפס ($J=0$), הקווים האופייניים משיקים או מתלכדים עם עקום ההתחלה. נבדוק אם תנאי ההתחלה "תואם" את המשוואה לאורך הקווים האופייניים.
+                        נמצא אינטגרלים ראשוניים למערכת האופיינית:
+                        $du/u = dt$.
+                        $dx = y dt, dy = x dt \implies x dx = xy dt, y dy = xy dt \implies x dx = y dy$. אינטגרציה נותנת $x^2/2 = y^2/2 + K_1 \implies x^2 - y^2 = C_1$.
+                        $dx = y dt, dy = x dt \implies dx + dy = (x+y) dt \implies \frac{d(x+y)}{x+y} = dt \implies \ln|x+y| = t + K_2$.
+                        $dx - dy = (y-x) dt \implies \frac{d(x-y)}{-(x-y)} = dt \implies -\ln|x-y| = t + K_3$.
+                        גם $\frac{du}{u} = dt = \frac{d(x+y)}{x+y}$, לכן $\ln|u| = \ln|x+y| + K_4 \implies u/(x+y) = C_2$.
+                        הפתרון הכללי למשוואה הוא מהצורה $u/(x+y) = F(x^2-y^2)$, או $u = (x+y) F(x^2-y^2)$ עבור פונקציה $F$ כלשהי.
+
+                        נחיל את תנאי ההתחלה $u(x, x) = e^x$:
+                        $e^x = (x+x) F(x^2 - x^2) = 2x F(0)$.
+                        $F(0) = \frac{e^x}{2x}$.
+                        הביטוי $F(0)$ חייב להיות קבוע, אך כאן הוא תלוי ב-$x$. זו סתירה.
+                        משמעות הסתירה היא שאין פונקציה $F$ שתקיים את תנאי ההתחלה הנתון. לכן, לבעיה זו אין פתרון כלל.
+                        (הערה: אם תנאי ההתחלה היה למשל $u(x,x)=k(2x)$ עבור קבוע $k$, אז $k(2x)=2x F(0)$, ואז $F(0)=k$ היה אפשרי והיו אינסוף פתרונות מהצורה $u=(x+y)F(x^2-y^2)$ עם $F(0)=k$).
+                    </p>
+                </div>
+            </div>
+
+        </div> <!-- end practice -->
+
+    </div> <!-- end container -->
+
+    <!-- JavaScript for Solution Toggling -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.toggle-solution');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const solutionDiv = this.nextElementSibling; // Assumes solution div is immediately after the button
+                    if (solutionDiv && solutionDiv.classList.contains('solution')) {
+                        if (solutionDiv.style.display === 'none' || solutionDiv.style.display === '') {
+                            solutionDiv.style.display = 'block';
+                            this.textContent = 'הסתר פתרון';
+                        } else {
+                            solutionDiv.style.display = 'none';
+                            this.textContent = 'הצג פתרון';
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

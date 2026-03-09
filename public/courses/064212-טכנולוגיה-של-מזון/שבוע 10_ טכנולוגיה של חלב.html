@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 10: טכנולוגיה של חלב</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 10: טכנולוגיה של חלב</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 10 ---
+
+        const flashcardData = [
+            { term: "חלב כקולואיד", definition: "חלב הוא מערכת קולואידית (תרחיף) שבה חלקיקים (טיפות שומן, מיצלות קזאין) מפוזרים בנוזל (מים)." },
+            { term: "שומן חלב", definition: "מורכב בעיקר מטריגליצרידים ומופיע בחלב כגלובולות (כדוריות) שומן יציבות המוקפות בממברנה." },
+            { term: "ממברנת גלובולת השומן", definition: "שכבה מורכבת (תלת-שכבתית בטקסט) העוטפת את טיפות השומן בחלב, מכילה פוספוליפידים וחלבונים, ומייצבת את האמולסיה (שומן במים)." },
+            { term: "חלבוני חלב", definition: "נחלקים לשתי קבוצות עיקריות: קזאינים (הרוב) וחלבונים מי גבינה." },
+            { term: "קזאינים", definition: "קבוצת החלבונים העיקרית בחלב (כ-80%). מאורגנים במבנים הנקראים 'מיצלות קזאין'. רגישים ל-pH וחיוניים לייצור גבינה." },
+            { term: "חלבוני מי גבינה (Whey Proteins)", definition: "קבוצת חלבונים הנשארת מסיסה בנוזל (מי גבינה) לאחר החמצה או הגבנה של קזאין. כוללים בטא-לקטוגלובולין, אלפא-לקטלבומין ועוד. רגישים לחום." },
+            { term: "מיצלת קזאין (Casein Micelle)", definition: "צבר חלבוני גדול ומורכב המכיל מולקולות קזאין שונות, סידן ופוספט. פיזור המיצלות תורם לצבע הלבן של החלב." },
+            { term: "תפקיד הסידן והפוספט במיצלה", definition: "קשורים לקזאין ומייצבים את מבנה המיצלה. מהווים גם דרך להובלת מינרלים חיוניים אלו בחלב." },
+            { term: "נקודת קיפאון של חלב", definition: "יציבה יחסית (בסביבות -0.5 מעלות צלזיוס) בגלל המלחים והלקטוז המומסים. משמשת לבדיקת מהילת חלב במים." },
+            { term: "מסטיטיס (דלקת העטין)", definition: "דלקת מיקרוביאלית של עטין הפרה, הגורמת לעלייה בתאים סומטיים בחלב, שינוי הרכב החלב (ירידה בקזאין, עלייה בפלסמין) ופגיעה באיכותו." },
+            { term: "תאים סומטיים", definition: "תאי גוף (בעיקר תאי דם לבנים) הנמצאים בחלב. רמה גבוהה שלהם מצביעה לרוב על דלקת (מסטיטיס)." },
+            { term: "פלסמין", definition: "אנזים פרוטאוליטי (מפרק חלבון) המצוי בדם ובחלב. רמתו עולה במסטיטיס והוא עלול לפרק קזאין ולפגוע באיכות החלב לגיבון." },
+            { term: "קביעת איכות חלב גולמי", definition: "מבוססת על בדיקות מיקרוביאליות (ספירת חיידקים כללית) וספירת תאים סומטיים." },
+            { term: "אחסון חלב גולמי בקירור", definition: "קירור מהיר ל-4-5 מעלות צלזיוס במכלים מבודדים (סילו) כדי להאט גדילת חיידקים פסיכרוטרופיים ולשמור על איכות החלב." },
+            { term: "חיידקים פסיכרוטרופיים", definition: "חיידקים המסוגלים לגדול בטמפרטורות קירור. עלולים לגרום לקלקול חלב גולמי באחסון ממושך (ייצור אנזימים)." },
+            { term: "תרמיזציה", definition: "טיפול תרמי מתון וקצר (כ-63-65 מעלות ל-15 שנ') הניתן לעיתים לחלב גולמי לפני אחסון ממושך כדי להפחית את העומס המיקרוביאלי." },
+            { term: "דאארציה (Deaeration)", definition: "תהליך לסילוק אוויר מומס וקצף מהחלב (לרוב בוואקום) למניעת חמצון ובעיות בעיבוד." },
+            { term: "קלריפיקציה (Clarification)", definition: "הפרדה צנטריפוגלית של לכלוך מוצק ותאים סומטיים מהחלב." },
+            { term: "ספרציה (Separation)/הפרדת שומן", definition: "הפרדה צנטריפוגלית של גלובולות השומן (שמנת) מהנוזל (חלב רזה)." },
+            { term: "סטנדרטיזציה", definition: "התאמת אחוז השומן (ולעיתים חלבון) בחלב לרמה הרצויה על ידי ערבוב מבוקר של חלב רזה ושמנת." },
+            { term: "פסטור חלב", definition: "תהליך חימום החלב להשמדת חיידקים פתוגניים ולהארכת חיי המדף. התנאים הנפוצים: 72°C ל-15 שניות (HTST)." },
+            { term: "הומוגניזציה (המגון)", definition: "תהליך מכני של הקטנת גודל גלובולות השומן בחלב למניעת הפרדת השמנת (הצפת שומן) ולקבלת מרקם אחיד." },
+            { term: "תהליך ההומוגניזציה", definition: "העברת החלב בלחץ גבוה דרך שסתום צר, הגורם לשבירת גלובולות השומן הגדולות לקטנות יותר. הממברנה המקורית נקרעת ונוצרת ממברנה חדשה מחלבוני החלב (בעיקר קזאין)." },
+            { term: "הומוגניזציה דו-שלבית", definition: "תהליך הכולל שסתום לחץ גבוה (שלב ראשון) ושסתום לחץ נמוך יותר (שלב שני) לפירוק צברי השומן שנוצרו בשלב הראשון." },
+            { term: "השפעות ההומוגניזציה", definition: "מניעת הצפת שומן, חלב לבן יותר, שינוי מרקם, הגברת רגישות לחמצון אור וליפאזות (אם לא עברו אינאקטיבציה)." },
+            { term: "פסטור HTST", definition: "High Temperature Short Time - פסטור בטמפרטורה גבוהה לזמן קצר (למשל 72°C ל-15 שנ'). השיטה הנפוצה כיום." },
+            { term: "פסטור על (Ultra-pasteurization)", definition: "פסטור בטמפרטורה גבוהה מזו של HTST (למשל 135°C ל-1-2 שנ') המקנה חיי מדף ארוכים יותר בקירור." },
+            { term: "UHT (Ultra-High Temperature)", definition: "טיפול תרמי בטמפרטורה גבוהה מאוד (כ-140°C למספר שניות), המיועד לעיקור החלב ומתבצע לרוב בתהליך אספטי." },
+            { term: "יוגורט", definition: "מוצר חלב מותסס על ידי חיידקי חומצה לקטית תרמופיליים (L. bulgaricus ו-S. thermophilus)." },
+            { term: "ייצור יוגורט", definition: "כולל סטנדרטיזציה (לרוב העלאת אחוז מוצקים), טיפול תרמי חזק (90-95°C ל-5-20 דקות), קירור לטמפ' התססה, הוספת מחמצת, התססה עד pH רצוי (סביב 4.6), קירור ואריזה." },
+            { term: "גבינה", definition: "מוצר המתקבל מהפרדת מוצקי החלב (בעיקר קזאין ושומן) ממי הגבינה, לרוב באמצעות הגבנה אנזימטית (רנין/חימום) ו/או החמצה." },
+            { term: "רנט (Rennet)", definition: "תערובת אנזימים (בעיקר כימוזין) המופקת מקיבת עגלים יונקים (או ממקורות מיקרוביאליים/צמחיים) ומשמשת להגבנת חלב בייצור גבינות." },
+            { term: "שלבי ייצור גבינה (כללי)", definition: "טיפול בחלב (פסטור, סטנדרטיזציה), הוספת מחמצת (חיידקים), הוספת רנט (להגבנה), חיתוך הגבן, הפרדת מי גבינה, המלחה, דחיסה/עיצוב, הבחלה." },
+            { term: "הבחלה (גבינה)", definition: "תהליך 'יישון' הגבינה בתנאים מבוקרים, שבו מתפתחים הטעם, המרקם והארומה האופייניים לגבינה." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהו המרכיב העיקרי בחלב פרה מבחינת אחוז משקל (לא כולל מים)?",
+                options: ["שומן", "חלבון", "לקטוז", "מינרלים"],
+                correctIndex: 2,
+                explanation: "לקטוז (סוכר החלב) הוא המוצק העיקרי בחלב מבחינת אחוז משקל (כ-4.6%), אחריו שומן (כ-4%) וחלבון (כ-3.3%)."
+            },
+            {
+                question: "איזו קבוצת חלבונים מהווה את הרוב בחלב פרה?",
+                options: ["אלבומינים", "גלובולינים", "חלבוני מי גבינה", "קזאינים"],
+                correctIndex: 3,
+                explanation: "קזאינים מהווים כ-80% מחלבוני החלב."
+            },
+            {
+                question: "מהו המבנה שבו מאורגנים חלבוני הקזאין בחלב?",
+                options: ["גלובולות שומן", "מיצלות קזאין", "סיבים ארוכים", "גבישים"],
+                correctIndex: 1,
+                explanation: "הקזאינים מאורגנים בצברים הנקראים מיצלות קזאין, הכוללים גם סידן ופוספט."
+            },
+            {
+                question: "מה תפקידה העיקרי של ממברנת גלובולת השומן?",
+                options: ["להוסיף טעם לחלב", "לייצב את אמולסיית השומן במים", "לקשור לקטוז", "להגן מפני חיידקים"],
+                correctIndex: 1,
+                explanation: "הממברנה, המכילה פוספוליפידים וחלבונים, עוטפת את טיפות השומן ההידרופוביות ומונעת מהן להתאחד ולהיפרד מהפאזה המימית."
+            },
+            {
+                question: "עלייה ברמה של איזה רכיב בחלב מצביעה בדרך כלל על מסטיטיס (דלקת עטין)?",
+                options: ["לקטוז", "שומן", "תאים סומטיים", "ויטמין D"],
+                correctIndex: 2,
+                explanation: "רמה גבוהה של תאים סומטיים (בעיקר תאי דם לבנים) היא אינדיקציה חזקה לדלקת בעטין."
+            },
+            {
+                question: "מהי מטרת הקלריפיקציה של חלב?",
+                options: ["הפרדת השמנת", "הקטנת גלובולות השומן", "סילוק לכלוך מוצק ותאים סומטיים", "הוספת ויטמינים"],
+                correctIndex: 2,
+                explanation: "קלריפיקציה היא תהליך צנטריפוגלי שמטרתו להסיר חלקיקים מוצקים לא רצויים מהחלב."
+            },
+            {
+                question: "מהי מטרת הסטנדרטיזציה של חלב?",
+                options: ["להרוג חיידקים", "להתאים את אחוז השומן לרמה הרצויה", "להפוך את החלב לעמיד יותר", "לערבב את החלב היטב"],
+                correctIndex: 1,
+                explanation: "סטנדרטיזציה היא תהליך התאמת אחוז השומן במוצר הסופי על ידי ערבוב מבוקר של שמנת וחלב רזה שהופרדו קודם לכן."
+            },
+            {
+                question: "מה התנאים הנפוצים לפסטור חלב בשיטת HTST?",
+                options: ["63°C ל-30 דקות", "140°C ל-2 שניות", "72°C ל-15 שניות", "100°C ל-5 דקות"],
+                correctIndex: 2,
+                explanation: "HTST (High Temperature Short Time) הוא לרוב 72-75 מעלות צלזיוס למשך 15-20 שניות."
+            },
+            {
+                question: "מהי המטרה העיקרית של הומוגניזציה (המגון) של חלב?",
+                options: ["להעלות את אחוז השומן", "למנוע את הפרדת השומן (שמנת) מהחלב", "להאריך את חיי המדף", "להרוג חיידקים"],
+                correctIndex: 1,
+                explanation: "הומוגניזציה מקטינה את גלובולות השומן ומונעת מהן לעלות ולהצטבר כשכבת שמנת על פני החלב."
+            },
+            {
+                question: "מה קורה לממברנת גלובולת השומן המקורית במהלך ההומוגניזציה?",
+                options: ["היא מתעבה ומתחזקת", "היא נקרעת ומוחלפת בחלבונים מהחלב", "היא מתמוססת לחלוטין", "היא אינה מושפעת"],
+                correctIndex: 1,
+                explanation: "הלחץ הגבוה קורע את הממברנה המקורית. כיוון ששטח הפנים גדל, נוצרת ממברנה חדשה סביב הטיפות הקטנות, המורכבת בעיקר מחלבוני קזאין ומי גבינה שנספחו."
+            },
+            {
+                question: "מדוע מומלץ לבצע הומוגניזציה לאחר פסטור (או בשילוב איתו)?",
+                options: ["כי הומוגניזציה דורשת חום", "כדי למנוע פעילות של ליפאזות שעלולה לגרום לטעמי לוואי", "כדי להרוג חיידקים שנוספו בהומוגניזציה", "אין סיבה מיוחדת"],
+                correctIndex: 1,
+                explanation: "הגדלת שטח הפנים של השומן בהומוגניזציה חושפת אותו לפעילות ליפאזות (אנזימים מפרקי שומן). פסטור מבצע אינאקטיבציה של ליפאזות אלו ומונע התפתחות טעמי לוואי."
+            },
+            {
+                question: "איזה טיפול תרמי מאפשר חיי מדף ארוכים ביותר לחלב בטמפרטורת החדר?",
+                options: ["תרמיזציה", "פסטור HTST", "פסטור על (Ultra-pasteurization)", "UHT (עיקור)"],
+                correctIndex: 3,
+                explanation: "טיפול UHT הוא טיפול עיקור המשיג סטריליות מסחרית ומאפשר לחלב חיי מדף ארוכים בטמפרטורת החדר (כאשר נארז אספטית)."
+            },
+             {
+                question: "אילו חיידקים משמשים בעיקר להתססת יוגורט?",
+                options: ["חיידקי קוליפורם", "חיידקי חומצה לקטית תרמופיליים (L. bulgaricus, S. thermophilus)", "שמרים", "חיידקי קלוסטרידיום"],
+                correctIndex: 1,
+                explanation: "יוגורט מותסס באופן מסורתי על ידי תרבית מעורבת של Streptococcus thermophilus ו-Lactobacillus delbrueckii subsp. bulgaricus."
+            },
+             {
+                question: "מה הגורם העיקרי לקרישת החלב בייצור יוגורט?",
+                options: ["חימום ל-95 מעלות", "הוספת רנט", "קירור מהיר", "ירידת ה-pH עקב יצירת חומצה לקטית"],
+                correctIndex: 3,
+                explanation: "החיידקים מתסיסים לקטוז לחומצה לקטית, מה שמוריד את ה-pH. כשה-pH מתקרב לנקודה האיזואלקטרית של הקזאין (סביב 4.6), החלבונים עוברים דנטורציה חלקית ואגרגציה ויוצרים ג'ל (קריש)."
+            },
+             {
+                question: "מדוע מבצעים טיפול תרמי חזק יחסית לחלב המיועד ליוגורט?",
+                options: ["כדי להרוג את חיידקי המחמצת", "כדי לבצע דנטורציה לחלבוני מי הגבינה ולשפר את מרקם היוגורט", "כדי להעלות את אחוז השומן", "כדי לזרז את התסיסה"],
+                correctIndex: 1,
+                explanation: "חימום חזק (90-95°C) גורם לדנטורציה של חלבוני מי הגבינה, מה שמשפר את יכולת קשירת המים של המערכת ותורם למרקם יציב וסמיך יותר של היוגורט."
+            },
+             {
+                question: "מה תפקידו העיקרי של רנט (Rennet) בייצור גבינה?",
+                options: ["להחמיץ את החלב", "לגרום להגבנה (קרישה) של הקזאין", "להוסיף טעם לגבינה", "לשמר את הגבינה"],
+                correctIndex: 1,
+                explanation: "רנט מכיל אנזימים (בעיקר כימוזין) המפרקים באופן ספציפי את חלבון הקאפה-קזאין, מה שגורם לערעור יציבות המיצלות ולקרישת (הגבנת) הקזאין."
+            },
+            {
+                question: "מהי מטרת חיתוך הגבן בייצור גבינה?",
+                options: ["להוסיף אוויר לגבן", "לאפשר יציאה יעילה יותר של מי הגבינה מהגבן", "לערבב את המחמצת", "להקנות צורה לגבינה"],
+                correctIndex: 1,
+                explanation: "חיתוך הגבן לקוביות קטנות מגדיל את שטח הפנים ומאפשר לנוזל (מי הגבינה) להיפרד מהמוצקים (הגבן) בצורה יעילה יותר (תהליך הנקרא סינרזיס)."
+            },
+            {
+                question: "מהי 'הבחלה' של גבינה?",
+                options: ["תהליך המלחת הגבינה", "תהליך דחיסת הגבינה לתבניות", "תהליך יישון הגבינה בתנאים מבוקרים לפיתוח טעם ומרקם", "תהליך חימום הגבינה המוגמרת"],
+                correctIndex: 2,
+                explanation: "הבחלה היא שלב היישון שבו אנזימים (מחומרי ההגבנה, מהחיידקים או שהוספו) ומיקרואורגניזמים (חיידקים, עובשים) מפרקים חלבונים ושומנים ויוצרים את הטעמים, הארומות והמרקמים האופייניים לגבינה."
+            },
+             {
+                question: "מה ההבדל בין קזאין לחלבוני מי גבינה מבחינת רגישות לחום?",
+                options: ["קזאין רגיש יותר לחום", "חלבוני מי גבינה רגישים יותר לחום", "שניהם רגישים באותה מידה", "אף אחד מהם אינו רגיש לחום"],
+                correctIndex: 1,
+                explanation: "חלבוני מי גבינה הם חלבונים גלובולריים הרגישים לדנטורציה בחום (כמו בפסטור חזק), בעוד שהקזאינים במיצלות יציבים יחסית לחום אך רגישים לשינויי pH וחומרי הגבנה."
+            },
+            {
+                question: "באיזה תהליך משתמשים בצנטריפוגה להפרדת רכיבים בחלב?",
+                options: ["פסטור והומוגניזציה", "קלריפיקציה והפרדת שומן (ספרציה)", "ייבוש חלב לאבקה", "ייצור יוגורט"],
+                correctIndex: 1,
+                explanation: "קלריפיקציה (הפרדת מוצקים) וספרציה (הפרדת שומן) מבוססות על הפעלת כוח צנטריפוגלי להפרדת רכיבים בעלי צפיפות שונה."
+            },
+            {
+                question: "מדוע בודקים נקודת קיפאון של חלב?",
+                options: ["כדי לקבוע את אחוז השומן", "כדי לוודא שהחלב לא התקלקל", "כדי לזהות אם הוסיפו מים לחלב", "כדי לקבוע את רמת החלבון"],
+                correctIndex: 2,
+                explanation: "נקודת הקיפאון תלויה בריכוז המומסים (בעיקר לקטוז ומלחים). הוספת מים לחלב תדלל את המומסים ותעלה את נקודת הקיפאון קרוב יותר לאפס, ולכן זו בדיקה רגישה לזיהוי מהילה."
+            },
+             {
+                question: "מה תפקידו של פלסמין בחלב?",
+                options: ["אנזים המפרק שומן", "אנזים המפרק לקטוז", "אנזים המפרק חלבון (קזאין)", "אנזים המייצר ויטמינים"],
+                correctIndex: 2,
+                explanation: "פלסמין הוא אנזים פרוטאוליטי (מפרק חלבון) המצוי בחלב ועלול לפרק קזאין, במיוחד ברמות גבוהות הנגרמות ממסטיטיס, ולפגוע בתכונות החלב לגיבון."
+            },
+            {
+                question: "איזה טיפול תרמי נחשב ל'מתון' ונועד בעיקר להפחתת עומס חיידקים בחלב גולמי לפני אחסון?",
+                options: ["UHT", "פסטור על", "פסטור HTST", "תרמיזציה"],
+                correctIndex: 3,
+                explanation: "תרמיזציה היא טיפול חום קל יחסית שנועד להפחית את כמות החיידקים הפסיכרוטרופיים בחלב גולמי המיועד לאחסון ממושך לפני עיבוד נוסף."
+            },
+            {
+                question: "מהו היתרון המרכזי של אחסון חלב גולמי בקירור?",
+                options: ["הוא הופך את החלב לסמיך יותר", "הוא מאט משמעותית את גדילת רוב החיידקים", "הוא מפריד את השומן ביעילות", "הוא הורג את כל החיידקים"],
+                correctIndex: 1,
+                explanation: "קירור לטמפרטורה נמוכה (4-5°C) מעכב את קצב הגידול של רוב החיידקים, כולל גורמי קלקול ופתוגנים, ובכך מאריך את הזמן שניתן לאחסן את החלב לפני עיבוד."
+            },
+            {
+                question: "מה קורה לאחוז המוצקים בחלב במהלך ייצור יוגורט?",
+                options: ["הוא יורד משמעותית", "הוא נשאר זהה לחלב המקורי", "הוא לרוב עולה (על ידי הוספת מוצקי חלב או אידוי)", "הוא הופך לאפס"],
+                correctIndex: 2,
+                explanation: "כדי לקבל מרקם יוגורט סמיך ויציב, לרוב מעלים את אחוז המוצקים בחלב לפני התסיסה, על ידי הוספת אבקת חלב, חלבוני מי גבינה, או על ידי אידוי חלקי של מים."
+            },
+            {
+                question: "מה מפרידים ממי הגבינה בייצור רוב סוגי הגבינות?",
+                options: ["לקטוז ומינרלים", "רק שומן", "בעיקר קזאין ושומן (הגבן)", "רק חלבוני מי גבינה"],
+                correctIndex: 2,
+                explanation: "תהליך הגיבון גורם לקזאין ולשומן הכלוא בתוכו להתגבש וליצור את הגבן המוצק, בעוד שמי הגבינה (הנוזל) מכילים בעיקר מים, לקטוז, חלבוני מי גבינה ומינרלים."
+            },
+             {
+                question: "איזה שלב אינו חלק הכרחי בייצור כל סוגי הגבינות?",
+                options: ["הגבנה (באמצעות רנט או החמצה)", "הפרדת מי גבינה", "הבחלה ממושכת", "המלחה"],
+                correctIndex: 2,
+                explanation: "גבינות טריות (כמו קוטג', צפתית) אינן עוברות תהליך הבחלה (יישון) ממושך, בניגוד לגבינות קשות או חצי-קשות."
+            },
+            {
+                question: "מדוע חלב שעבר הומוגניזציה נראה לבן יותר מחלב שלא עבר הומוגניזציה?",
+                options: ["כי מוסיפים לו צבע מאכל לבן", "כי יש בו פחות שומן", "כי גלובולות השומן הקטנות יותר מפזרות אור כחול ביעילות רבה יותר", "כי ההומוגניזציה מסלקת את הפיגמנט הצהוב (בטא-קרוטן)"],
+                correctIndex: 2, // Explanation based on light scattering principles (smaller particles scatter shorter wavelengths more effectively)
+                explanation: "הגלובולות הקטנות והרבות יותר שנוצרות בהומוגניזציה מגבירות את פיזור האור, ובמיוחד אורכי גל קצרים (כחול), מה שגורם לחלב להיראות לבן ובהיר יותר."
+            },
+            {
+                question: "איזה רכיב עיקרי נשאר במי הגבינה לאחר ייצור גבינה קשה?",
+                options: ["קזאין", "שומן חלב", "לקטוז וחלבוני מי גבינה", "סידן בלתי מסיס"],
+                correctIndex: 2,
+                explanation: "הגבן מכיל את רוב הקזאין והשומן. מי הגבינה מכילים את הרכיבים המסיסים: לקטוז, חלבוני מי גבינה, מינרלים מסיסים וויטמינים מסיסים במים."
+            },
+             {
+                question: "מה ההשפעה של מסטיטיס על תהליך ייצור גבינה?",
+                options: ["הוא מקצר את זמן הגיבון", "הוא מגדיל את תנובת הגבינה", "הוא עלול לפגוע בקרישה, להאריך זמן גיבון ולהוריד תנובה ואיכות", "אין לו כל השפעה"],
+                correctIndex: 2,
+                explanation: "העלייה ברמת הפלסמין והשינויים בהרכב החלב (פחות קזאין) כתוצאה ממסטיטיס עלולים לפגוע ביכולת החלב להתגבן כראוי, להאריך את זמן התהליך, להפחית את כמות הגבינה המתקבלת (תנובה) ולפגוע במרקם ובטעם."
+            }
+        ];
+
+        const tfData = [
+             { question: "חלב מורכב בעיקר משומן.", answer: false, explanation: "המרכיב העיקרי בחלב הוא מים (כ-87%). מבין המוצקים, לקטוז הוא העיקרי." },
+             { question: "קזאין הוא החלבון העיקרי המצוי במי גבינה.", answer: false, explanation: "קזאין הוא החלבון העיקרי בחלב שמתגבן ליצירת גבינה. חלבוני מי גבינה נשארים בנוזל." },
+             { question: "מיצלות קזאין אינן מכילות סידן או פוספט.", answer: false, explanation: "מיצלות קזאין מכילות כמויות משמעותיות של סידן ופוספט, החיוניים למבנה שלהן." },
+             { question: "נקודת הקיפאון של חלב נמוכה משמעותית מזו של מים בגלל השומן.", answer: false, explanation: "נקודת הקיפאון הנמוכה יותר נובעת מהחומרים המומסים בחלב (לקטוז, מלחים), לא מהשומן." },
+             { question: "רמה נמוכה של תאים סומטיים בחלב מעידה על בריאות העטין.", answer: true, explanation: "רמה נמוכה של תאים סומטיים היא מדד לאיכות חלב טובה ולבריאות העטין." },
+             { question: "תרמיזציה היא טיפול חום חזק יותר מפסטור HTST.", answer: false, explanation: "תרמיזציה היא טיפול מתון יותר מפסטור (טמפרטורה נמוכה יותר)." },
+             { question: "קלריפיקציה וספרציה הן אותו תהליך.", answer: false, explanation: "קלריפיקציה מסלקת מוצקים זרים, ספרציה מפרידה את השומן מהחלב הרזה. שניהם תהליכים צנטריפוגליים אך למטרות שונות." },
+             { question: "סטנדרטיזציה נועדה להתאים את רמת ה-pH בחלב.", answer: false, explanation: "סטנדרטיזציה נועדה להתאים את אחוז השומן (ולעיתים חלבון)." },
+             { question: "הומוגניזציה מגדילה את גודל גלובולות השומן.", answer: false, explanation: "הומוגניזציה מקטינה את גודל גלובולות השומן." },
+             { question: "מומלץ לבצע הומוגניזציה לפני פסטור כדי למנוע טעמי לוואי.", answer: false, explanation: "מומלץ לבצע פסטור לפני או מיד לאחר הומוגניזציה כדי לנטרל ליפאזות שעלולות לגרום לטעמי לוואי." },
+             { question: "חלב UHT הוא חלב שעבר פסטור קל בלבד.", answer: false, explanation: "חלב UHT עובר טיפול עיקור בטמפרטורה גבוהה מאוד." },
+             { question: "יוגורט מתקבל על ידי התססה של חלבוני מי גבינה.", answer: false, explanation: "יוגורט מתקבל על ידי התססת הלקטוז שבחלב לחומצה לקטית על ידי חיידקים." },
+             { question: "רנט הוא אנזים המפרק לקטוז.", answer: false, explanation: "רנט הוא אנזים (כימוזין) המפרק קזאין וגורם להגבנת החלב." },
+             { question: "חיתוך הגבן עוזר להפרדת מי הגבינה.", answer: true, explanation: "החיתוך מגדיל את שטח הפנים ומאפשר למי הגבינה לצאת מהגבן (סינרזיס)." },
+             { question: "הבחלה היא שלב חובה בכל סוגי הגבינות.", answer: false, explanation: "גבינות טריות אינן עוברות הבחלה." },
+             { question: "חלבוני מי גבינה יציבים יותר לחום מקזאינים.", answer: false, explanation: "חלבוני מי גבינה (גלובולריים) רגישים יותר לדנטורציה בחום מאשר הקזאינים (במבנה המיצלה)." },
+             { question: "חלב הומוגני נראה לבן פחות מחלב לא הומוגני.", answer: false, explanation: "חלב הומוגני נראה לבן ובהיר יותר בגלל פיזור אור מוגבר מהגלובולות הקטנות." },
+             { question: "מסטיטיס יכולה לפגוע בתהליך ייצור הגבינה.", answer: true, explanation: "השינויים בהרכב החלב ובפעילות האנזימטית (פלסמין) עלולים לפגוע בקרישה ובתנובת הגבינה." },
+             { question: "בייצור יוגורט, החלב מחומם לטמפרטורה גבוהה יחסית כדי לשפר מרקם.", answer: true, explanation: "חימום ל-90-95°C גורם לדנטורציה של חלבוני מי גבינה, התורמת למרקם סמיך ויציב יותר." },
+             { question: "הפרדת שומן בחלב (ספרציה) מתבצעת לרוב על ידי סינון.", answer: false, explanation: "הפרדת שומן מתבצעת ביעילות באמצעות צנטריפוגה (ספרטור)." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

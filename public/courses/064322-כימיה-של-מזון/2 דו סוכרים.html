@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: פחמימות בכימיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "סוכר אינברטי", definition: "תערובת אקווימולרית של גלוקוז ופרוקטוז, הנוצרת מהידרוליזה של סוכרוז. שמה נובע מהיפוך הסיבוב האופטי מדקסטרו-רוטטורי ללבו-רוטטורי." },
+            { term: "קשר גליקוזידי", definition: "קשר קוולנטי מסוג אצטל או קטאל המחבר בין יחידת סוכר למולקולה אחרת, שיכולה להיות סוכר נוסף. נוצר בתגובת דחיסה תוך שחרור מולקולת מים." },
+            { term: "סוכר מחזר", definition: "סוכר בעל קבוצת המיאצטל או המיקטאל חופשית, המאפשרת לו להיפתח למבנה שרשרת פתוחה עם קבוצת אלדהיד או קטון. מסוגל לחזר יונים כמו נחושת." },
+            { term: "סוכרוז", definition: "דו-סוכר לא-מחזר המורכב מגלוקוז ופרוקטוז המחוברים בקשר אלפא-1, בטא-2. הפחמן האנומרי של שתי היחידות מעורב בקשר." },
+            { term: "לקטוז", definition: "דו-סוכר מחזר המורכב מגלקטוז וגלוקוז בקשר בטא-1,4. ידוע כסוכר החלב ופירוקו דורש את האנזים לקטאז." },
+            { term: "אי-סבילות ללקטוז", definition: "מצב הנובע ממחסור באנזים לקטאז, המוביל לתסיסה של לקטוז על ידי חיידקי המעי הגס וגורם לתסמינים כמו גזים וכאבי בטן." },
+            { term: "מלטוז", definition: "דו-סוכר מחזר המורכב משתי יחידות גלוקוז בקשר אלפא-1,4. תוצר פירוק של עמילן ונפוץ בדגנים נובטים." },
+            { term: "צלוביוז", definition: "דו-סוכר מחזר המורכב משתי יחידות גלוקוז בקשר בטא-1,4. יחידת המבנה של תאית ואינו ניתן לעיכול על ידי בני אדם." },
+            { term: "המיאצטל", definition: "קבוצה פונקציונלית הנוצרת מתגובה של אלדהיד עם אלכוהול. במבנה הטבעתי של סוכרים, קבוצה זו מאפשרת את תכונת הסוכר המחזר." },
+            { term: "אצטל", definition: "קבוצה פונקציונלית הנוצרת מתגובה של המיאצטל עם מולקולת אלכוהול נוספת. הקשר הגליקוזידי הוא קשר מסוג אצטל." },
+            { term: "אינברטאז", definition: "אנזים המזרז את ההידרוליזה של סוכרוז לגלוקוז ופרוקטוז. משמש בתעשיית הממתקים למניעת התגבשות וליצירת מילויים נוזליים." },
+            { term: "אפימרים", definition: "דיאסטריאומרים הנבדלים זה מזה בקונפיגורציה של מרכז כיראלי אחד בלבד. לדוגמה, גלוקוז וגלקטוז הם אפימרים בפחמן מספר 4." }
+        ];
+
+        const mcqData = [
+            { question: "איזה מהמשפטים הבאים אינו מתאר נכונה את הסוכרוז?", options: ["הוא סוכר לא מחזר", "הידרוליזה שלו יוצרת סוכר אינברטי", "הקשר הגליקוזידי בו הוא מסוג בטא(1-4)", "הוא מורכב מיחידת גלוקוז ויחידת פרוקטוז"], correctIndex: 2, explanation: "הקשר הגליקוזידי בסוכרוז הוא אלפא-1,בטא-2. קשר בטא(1-4) מאפיין דו-סוכרים כמו לקטוז וצלוביוז." },
+            { question: "יצרן ממתקים רוצה ליצור מילוי קרמי שיישאר נוזלי בתוך ציפוי שוקולד קשה. באיזה אנזים הכי יעיל להשתמש?", options: ["לקטאז", "עמילאז", "אינברטאז", "צלולאז"], correctIndex: 2, explanation: "אינברטאז מפרק סוכרוז לגלוקוז ופרוקטוז (סוכר אינברטי). תערובת זו מסיסה יותר מסוכרוז ומתגבשת פחות בקלות, ולכן היא אידיאלית ליצירת מילויים נוזליים." },
+            { question: "מהי הסיבה הכימית לכך שלקטוז הוא סוכר מחזר, בעוד שסוכרוז אינו כזה?", options: ["ללקטוז מסה מולקולרית נמוכה יותר", "בלקטוז, ליחידת הגלוקוז יש קבוצת המיאצטל חופשית", "סוכרוז מורכב מפרוקטוז, שהוא קטוז", "לקטוז מכיל קשר בטא, בעוד שסוכרוז מכיל קשר אלפא"], correctIndex: 1, explanation: "תכונת החיזור נובעת מקיומה של קבוצת המיאצטל חופשית, היכולה להיפתח לשרשרת פתוחה עם אלדהיד. בלקטוז, הפחמן האנומרי של הגלוקוז פנוי. בסוכרוז, הפחמנים האנומריים של שני הסוכרים קשורים זה לזה." },
+            { question: "איזה מהבאים מהווה את ההבדל המבני העיקרי בין מלטוז לצלוביוז?", options: ["מלטוז מורכב משתי יחידות גלוקוז, צלוביוז מורכב מגלוקוז וגלקטוז", "הקשר במלטוז הוא אלפא(1-4), בעוד שבצלוביוז הוא בטא(1-4)", "מלטוז הוא סוכר מחזר, בעוד שצלוביוז אינו מחזר", "מלטוז מתוק יותר מצלוביוז"], correctIndex: 1, explanation: "שני הדו-סוכרים מורכבים משתי יחידות גלוקוז המחוברות בקשר 1-4. ההבדל היחיד הוא בקונפיגורציה של הפחמן האנומרי המעורב בקשר: אלפא במלטוז ובטא בצלוביוז." },
+            { question: "אדם הסובל מאי-סבילות ללקטוז צורך חלב שטופל באנזים לקטאז. מה מהבאים צפוי לקרות?", options: ["החלב יהיה פחות מתוק ולא יגרום לתסמינים", "החלב יהיה מתוק יותר ויגרום לתסמינים חמורים יותר", "החלב יהיה פחות מתוק ויגרום לתסמינים", "החלב יהיה מתוק יותר ולא יגרום לתסמינים"], correctIndex: 3, explanation: "האנזים לקטאז מפרק את הלקטוז לגלוקוז וגלקטוז. סוכרים אלו מתוקים יותר מהלקטוז המקורי, ולכן טעמו של החלב יהיה מתוק יותר. מכיוון שהלקטוז פורק, הוא לא יגיע למעי הגס ולא יגרום לתסמינים." },
+            { question: "מהי הסיבה המדויקת לשינוי בסיבוב האופטי הספציפי בעת הפיכת סוכרוז לסוכר אינברטי?", options: ["הידרוליזה משנה את המבנה הטבעתי של גלוקוז", "לפרוקטוז סיבוב אופטי שלילי חזק יותר מהסיבוב החיובי של גלוקוז", "נוצרת תערובת רצמית חסרת פעילות אופטית", "המים המשתתפים בתגובה הם כיראליים"], correctIndex: 1, explanation: "סוכרוז הוא דקסטרו-רוטטורי (+66.5). תוצרי ההידרוליזה הם גלוקוז (+52.7) ופרוקטוז (-92.4). מכיוון שהסיבוב השלילי של פרוקטוז גדול בערכו המוחלט מהסיבוב החיובי של גלוקוז, התערובת האקווימולרית היא לבו-רוטטורית." },
+            { question: "איזה מהדו-סוכרים הבאים אינו ניתן לעיכול על ידי בני אדם ומהווה את יחידת המבנה הבסיסית של הפוליסכריד הנפוץ ביותר בטבע?", options: ["מלטוז", "לקטוז", "סוכרוז", "צלוביוז"], correctIndex: 3, explanation: "צלוביוז הוא יחידת המבנה של תאית (צלולוז). לבני אדם אין אנזים (צלולאז) המסוגל לפרק את קשר הבטא-1,4 שבו, ולכן אינו ניתן לעיכול." },
+            { question: "במהלך ייצור בירה, גרעיני שעורה נובטים מייצרים אנזים המפרק עמילן. איזה דו-סוכר הוא התוצר העיקרי של תהליך זה?", options: ["סוכרוז", "לקטוז", "מלטוז", "פרוקטוז"], correctIndex: 2, explanation: "האנזים הוא עמילאז, והוא מפרק את קשרי האלפא-1,4 בעמילן ליצירת הדו-סוכר מלטוז (סוכר לתת), המורכב משתי יחידות גלוקוז בקשר אלפא-1,4." },
+            { question: "תופעת ה-sandiness (מרקם חולי) שעלולה להיווצר בגלידה במהלך אחסון מיוחסת בעיקר ל:", options: ["התגבשות של סוכרוז בריכוז גבוה", "התגבשות של לקטוז עקב מסיסותו הנמוכה בטמפרטורות קרות", "פירוק של שומנים ויצירת גבישים", "קפיאה איטית של המים"], correctIndex: 1, explanation: "ללקטוז, סוכר החלב, יש מסיסות נמוכה יחסית לסוכרים אחרים, במיוחד בטמפרטורות נמוכות. כאשר גלידה מאוחסנת, גבישי קרח קטנים יכולים להיווצר ולגדול, מה שגורם ללקטוז להתגבש וליצור תחושה חולית לא רצויה." },
+            { question: "איזה מהמשפטים הבאים מתאר נכונה את הקשר בין טמפרטורה למתיקות נתפסת?", options: ["כל הסוכרים מתוקים יותר בטמפרטורות גבוהות", "מתיקות הסוכרוז אינה מושפעת כלל מטמפרטורה", "פרוקטוז מתוק משמעותית יותר בטמפרטורות נמוכות מאשר בטמפרטורות גבוהות", "גלוקוז הופך למר בטמפרטורות נמוכות"], correctIndex: 2, explanation: "לפרוקטוז יש מתיקות גבוהה במיוחד כשהוא קר. זו הסיבה שמשקאות ממותקים בסירופ תירס עתיר פרוקטוז (HFCS) טעימים יותר כשהם קרים." },
+            { question: "איזה מהבאים אינו מהווה אסטרטגיה לניהול תזונתי של אי-סבילות ללקטוז?", options: ["צריכת מוצרי חלב מותססים כמו יוגורט", "צריכת חלב יחד עם ארוחה מלאה", "הימנעות מוחלטת מגבינות קשות", "שימוש במוצרי חלב דלי-לקטוז"], correctIndex: 2, explanation: "גבינות קשות, במיוחד צהובות, עוברות תהליך ייצור שבו רוב הלקטוז מסולק יחד עם מי הגבינה. לכן, הן מכילות כמות נמוכה מאוד של לקטוז ובדרך כלל נסבלות היטב." },
+            { question: "איזה מהממתיקים הבאים הוא נגזרת כימית של סוכרוז, שבה הוחלפו קבוצות הידרוקסיל באטומי כלור?", options: ["אספרטיים", "סכרין", "סטיביה", "סוכרלוז"], correctIndex: 3, explanation: "סוכרלוז מיוצר מסוכרוז בתהליך כימי שבו שלוש קבוצות הידרוקסיל מוחלפות באופן סלקטיבי באטומי כלור, מה שהופך אותו למתוק מאוד ומונע את פירוקו בגוף." },
+            { question: "הידרוליזה חומצית של תמיסת סוכרוז גורמת לשינויים הבאים, פרט לאחד. מהו היוצא דופן?", options: ["ירידה בערך ה-pH של התמיסה", "יצירת תערובת אקווימולרית של גלוקוז ופרוקטוז", "הפיכת התמיסה ללא-מחזרת", "שינוי הסיבוב האופטי של התמיסה משלילי לחיובי"], correctIndex: 3, explanation: "השינוי בסיבוב האופטי הוא הפוך: מחיובי (סוכרוז) לשלילי (סוכר אינברטי). כל שאר האפשרויות נכונות: התוצרים הם מחזרים, נוצרת תערובת גלוקוז-פרוקטוז, והידרוליזה חומצית דורשת סביבה חומצית." },
+            { question: "מהי הסיבה לכך שדבש, המכיל כ-80% סוכר, נשאר נוזלי בעוד שתמיסת סוכרוז בריכוז 80% תתגבש בקלות?", options: ["בדבש יש אנזימים המונעים התגבשות", "דבש מכיל בעיקר סוכר אינברטי, שהוא מסיס יותר מסוכרוז", "צמיגות הדבש מונעת פיזית את תנועת המולקולות", "ה-pH הנמוך של הדבש מונע התגבשות"], correctIndex: 1, explanation: "דבש מורכב בעיקר מגלוקוז ופרוקטוז (סוכר אינברטי). תערובת זו מסיסה במים באופן משמעותי יותר מאשר סוכרוז לבדו, ולכן דבש יכול להישאר במצב נוזלי רווי-על גם בריכוזי סוכר גבוהים." },
+            { question: "איזו תכונה כימית מאפשרת זיהוי של סוכר מחזר במעבדה, למשל במבחן בנדיקט?", options: ["יכולתו לעבור הידרוליזה", "יכולתו של ההמיאצטל הפתוח לחזר יוני נחושת(II) ליוני נחושת(I)", "הצבע האופייני שהוא יוצר עם יוד", "תגובתו עם חומצות ליצירת צבע"], correctIndex: 1, explanation: "מבחן בנדיקט מבוסס על היכולת של קבוצת האלדהיד החופשית (במבנה הפתוח של הסוכר) לחזר יוני נחושת (Cu2+, כחול) לתחמוצת נחושת (Cu2O, משקע אדום-כתום)." },
+            { question: "רפינוז וסטכיוז הם אוליגוסכרידים הגורמים לגזים. מהי הסיבה העיקרית לכך?", options: ["הם מכילים קשרים מסוג בטא שאינם ניתנים לעיכול על ידי אנזימי אנוש", "הם מתפרקים במהירות במעי הדק ויוצרים עודף גזים", "הם מגיבים עם חומצות הקיבה ומשחררים פחמן דו-חמצני", "הם מכילים חנקן במבנה שלהם"], correctIndex: 0, explanation: "אוליגוסכרידים אלו, המצויים בקטניות, מכילים קשרי אלפא-גלקטוזיד שאין לאדם אנזימים לפירוקם. לכן, הם מגיעים שלמים למעי הגס, שם הם מותססים על ידי חיידקים ויוצרים גזים." },
+            { question: "איזה מההיגדים הבאים אינו נכון לגבי לקטוז?", options: ["הוא מורכב מיחידת בטא-גלקטוז ויחידת אלפא/בטא-גלוקוז", "ריכוזו בחלב פרה גבוה מריכוזו בחלב אדם", "הוא פחות מתוק מסוכרוז", "הוא מספק כ-40% מהאנרגיה ליונקים יונקים"], correctIndex: 1, explanation: "ריכוז הלקטוז בחלב אדם (כ-7%) גבוה יותר מריכוזו בחלב פרה (כ-4.6%). כל שאר ההיגדים נכונים." },
+            { question: "היצירה של קשר גליקוזידי היא תגובה של:", options: ["חימצון, המשחררת מים", "דחיסה, הקולטת מים", "הידרוליזה, הקולטת מים", "דחיסה, המשחררת מים"], correctIndex: 3, explanation: "יצירת קשר גליקוזידי היא תגובת דחיסה (קונדנסציה) בין קבוצת הידרוקסיל (בדרך כלל מהמיאצטל) של סוכר אחד לקבוצת הידרוקסיל של מולקולה שנייה, תוך יציאה של מולקולת מים." },
+            { question: "מדוע סירופ תירס עתיר מלטוז (High-maltose corn syrup) עדיף לעיתים על פני סירופים אחרים בייצור מזון?", options: ["הוא מתוק במיוחד וזול לייצור", "הוא פחות היגרוסקופי ומונע דביקות ורטרוגרדציה של עמילן", "הוא בעל ערך קלורי אפסי", "הוא מתגבש בקלות ונותן מרקם קראנצ'י"], correctIndex: 1, explanation: "אחת התכונות הפונקציונליות החשובות של מלטוז היא שהוא פחות היגרוסקופי (סופח לחות), מה שעוזר למנוע דביקות במוצרים. בנוסף, הוא יעיל במניעת רטרוגרדציה (התגבשות מחדש) של עמילן, ובכך מאריך חיי מדף." },
+            { question: "איזו קבוצה פונקציונלית במבנה הטבעתי של חד-סוכר אלדוזי היא קריטית לקיומה של תופעת המוטרוטציה (שינוי בסיבוב האופטי בתמיסה)?", options: ["אצטל", "קטון", "הידרוקסיל אנומרי (המיאצטל)", "גשר חמצני"], correctIndex: 2, explanation: "קבוצת ההמיאצטל היא זו המאפשרת לטבעת להיפתח ולהיסגר מחדש. תהליך זה מאפשר מעבר בין אנומר אלפא לאנומר בטא דרך צורת השרשרת הפתוחה, מה שגורם לשינוי בסיבוב האופטי של התמיסה עד להגעה לשיווי משקל." },
+            { question: "איזה מהבאים אינו תוצר שנמצא בדרך כלל במולסה מקנה סוכר?", options: ["סוכרוז", "תרכובות אמינו", "צלולוז", "תוצרי תגובת מייאר"], correctIndex: 2, explanation: "מולסה היא הסירופ שנשאר לאחר התגבשות הסוכר. היא מכילה סוכרוז, גלוקוז, פרוקטוז, מלחים, חומצות, תרכובות אמינו ותוצרי השחמה (מייאר וקרמול). צלולוז הוא פוליסכריד מבני שאינו מסיס ואינו חלק מהמיץ." },
+            { question: "מהי הסיבה האבולוציונית המשוערת להתפתחות היכולת לעכל לקטוז בבגרות (Lactase persistence) באוכלוסיות מסוימות?", options: ["זוהי מוטציה אקראית ללא יתרון הישרדותי", "צריכת בשר מוגברת דרשה אנזימי עיכול חדשים", "ביות בקר וצריכת חלב כמקור מזון חיוני העניקו יתרון סלקטיבי", "התפתחות החקלאות דרשה יכולת לעכל פוליסכרידים מורכבים"], correctIndex: 2, explanation: "התפוצה הגיאוגרפית של יכולת עיכול לקטוז בבגרות חופפת לאזורים שבהם היה ביות בקר וחלב היווה מקור תזונה חשוב. היכולת לנצל מקור מזון זה העניקה יתרון הישרדותי משמעותי." },
+            { question: "במעבר ממבנה השרשרת הפתוחה של גלוקוז (אלדהיד) למבנה הטבעתי שלו (גלוקופירנוז), איזו תגובה כימית מתרחשת?", options: ["יצירת קשר אצטלי בין-מולקולרי", "תגובת סיפוח נוקלאופילי תוך-מולקולרית ליצירת המיאצטל", "תגובת חמצון-חיזור", "תגובת אסטריפיקציה"], correctIndex: 1, explanation: "הסגירה הטבעתית היא תגובה פנימית שבה אחת מקבוצות ההידרוקסיל (בדרך כלל מפחמן 5) תוקפת נוקלאופילית את פחמן הקרבוניל של האלדהיד (פחמן 1), ויוצרת קבוצת המיאצטל טבעתית." },
+            { question: "איזו מהתכונות הבאות אינה מאפיינת את סוכרלוז כממתיק מלאכותי?", options: ["יציבות גבוהה בטווח רחב של טמפרטורות ו-pH", "מתיקות נמוכה בהשוואה לסוכרוז", "התגלה במקרה במהלך חיפוש אחר חומרי הדברה", "אינו תורם קלוריות לגוף"], correctIndex: 1, explanation: "סוכרלוז מתוק פי כמה מאות מסוכרוז (בערך פי 600). כל שאר התכונות נכונות: הוא יציב מאוד, התגלה במקרה, והגוף אינו מפרק אותו ולכן אינו תורם קלוריות." },
+            { question: "איזה מהמשפטים הבאים מסביר בצורה הטובה ביותר מדוע דבש גולמי אינו מומלץ לתינוקות מתחת לגיל שנה?", options: ["הדבש מתוק מדי למערכת העיכול של תינוק", "הדבש עלול להכיל נבגים של חיידק הבוטולינום", "ה-pH הנמוך של הדבש עלול לפגוע בקיבה", "הדבש מכיל אוליגוסכרידים מורכבים שתינוקות לא יכולים לעכל"], correctIndex: 1, explanation: "דבש גולמי עלול להכיל נבגים של החיידק Clostridium botulinum. מערכת העיכול הבוגרת יכולה להתמודד עם נבגים אלו, אך אצל תינוקות הם עלולים לנבוט, להתרבות ולייצר רעלן מסוכן." },
+            { question: "איזה מהבאים אינו נכון לגבי הדו-סוכר לקטוז?", options: ["הוא מורכב מיחידת גלקטוז ויחידת גלוקוז", "הוא סוכר מחזר", "הקשר הגליקוזידי בו הוא אלפא(1-4)", "הוא נמצא בריכוז גבוה בחלב יונקים"], correctIndex: 2, explanation: "הקשר הגליקוזידי בלקטוז הוא מסוג בטא(1-4), המחבר בין גלקטוז לגלוקוז." },
+            { question: "איזה מהתהליכים הבאים אינו שלב בזיקוק סוכר מקנה סוכר?", options: ["סחיטת המיץ מהקנים", "צנטריפוגציה להפרדת הגבישים מהסירופ (מולסה)", "הידרוליזה חומצית להגברת המתיקות", "סינון וכביסה להסרת זיהומים וצבע"], correctIndex: 2, explanation: "תהליך זיקוק הסוכר מתמקד בבידוד וניקוי הסוכרוז. הידרוליזה חומצית היא תהליך נפרד ליצירת סוכר אינברטי, ולא חלק מתהליך הזיקוק הסטנדרטי." },
+            { question: "איזה מהצמדים הבאים מייצג סוכרים אפימריים?", options: ["גלוקוז ופרוקטוז", "מלטוז וסוכרוז", "גלוקוז וגלקטוז", "גלוקוז וריבוז"], correctIndex: 2, explanation: "אפימרים הם איזומרים הנבדלים בקונפיגורציה סביב פחמן אסימטרי אחד בלבד. גלוקוז וגלקטוז נבדלים זה מזה רק בקונפיגורציה של קבוצת ההידרוקסיל על פחמן מספר 4." },
+            { question: "איזה היגד אינו נכון לגבי מלטוז?", options: ["הוא תוצר של הידרוליזת עמילן", "הוא מורכב משתי יחידות גלוקוז", "הוא סוכר לא מחזר", "הוא מתוק פחות מסוכרוז"], correctIndex: 2, explanation: "מלטוז הוא סוכר מחזר. יש לו יחידת גלוקוז אחת שהפחמן האנומרי שלה אינו מעורב בקשר הגליקוזידי, ולכן יש לו קבוצת המיאצטל חופשית." },
+            { question: "למה משמשת פולרימטריה בתעשיית הסוכר?", options: ["למדוד את רמת החומציות של התמיסה", "לקבוע את צבע הסוכר המזוקק", "להעריך את ריכוז הסוכרוז בתמיסה על פי פעילותה האופטית", "לזהות נוכחות של ממתיקים מלאכותיים"], correctIndex: 2, explanation: "פולרימטריה מודדת את הזווית שבה חומר כיראלי מסובב אור מקוטב. מכיוון שלסוכרוז יש סיבוב אופטי ספציפי וידוע, ניתן להשתמש במדידה זו כדי להעריך את ריכוזו ואיכותו, למשל בתשלום לחקלאים." },
+            { question: "איזה מהבאים הוא ההסבר המדויק ביותר לכך שגבינה קשה מכילה מעט מאוד לקטוז?", options: ["החיידקים בגבינה מפרקים את כל הלקטוז", "הלקטוז מתפרק בחום במהלך הפסטור", "רוב הלקטוז מסיס במים ומופרד יחד עם מי הגבינה", "הלקטוז מתגבש ומוסר כמלח"], correctIndex: 2, explanation: "במהלך ייצור גבינה, לאחר הגיבון, הגבן מופרד ממי הגבינה (whey). הלקטוז מסיס מאוד במים, ולכן רובו נשאר במי הגבינה ומוסר מהמוצר הסופי. הכמות המעטה שנותרת מותססת על ידי חיידקים." },
+            { question: "בהשוואה בין סוכר אינברטי לסירופ תירס עתיר פרוקטוז (HFCS-55), איזה משפט נכון?", options: ["רק סוכר אינברטי מכיל פרוקטוז", "HFCS-55 מכיל כ-55% פרוקטוז, בעוד שסוכר אינברטי מכיל 50% פרוקטוז", "שניהם מיוצרים ישירות מקנה סוכר", "סוכר אינברטי אינו מחזר, בניגוד ל-HFCS"], correctIndex: 1, explanation: "סוכר אינברטי הוא תערובת אקווימולרית (50:50) של גלוקוז ופרוקטוז הנוצרת מהידרוליזה של סוכרוז. HFCS-55 מיוצר מעמילן תירס ומכיל כ-55% פרוקטוז וכ-42% גלוקוז." },
+            { question: "כל ההיגדים הבאים נכונים לגבי תכונות הדבש, פרט לאחד. מהו ההיגד שאינו נכון?", options: ["יש לו pH חומצי (סביב 3.4-5.5)", "הוא מכיל את האנזים גלוקוז אוקסידאז המייצר מי חמצן", "הלחץ האוסמוטי הגבוה שלו תורם לתכונותיו האנטי-מיקרוביאליות", "הוא מכיל אחוז חלבון גבוה התורם לערכו התזונתי"], correctIndex: 3, explanation: "דבש מכיל אחוז חלבון נמוך מאוד. יחס הפחמן לחנקן הגבוה הוא דווקא אחד הגורמים המעכבים צמיחת מיקרואורגניזמים. שאר התכונות נכונות ותורמות לפעילות האנטי-מיקרוביאלית של הדבש." },
+            { question: "בתהליך ייצור סוכר מסלק סוכר, מה תפקידם של סיד (lime) ופחמן דו-חמצני?", options: ["לשמש כזרזים בתהליך ההתגבשות", "להלבין את הסוכר ולהסיר טעמי לוואי", "לסייע בסחיטת המיץ מהסלק", "לשקע זיהומים מהמיץ הגולמי בתהליך הטיהור"], correctIndex: 3, explanation: "לאחר מיצוי המיץ מהסלק, מוסיפים סיד (Calcium hydroxide) ופחמן דו-חמצני. תהליך זה (carbonatation) גורם לשיקוע של זיהומים שונים מהמיץ, אשר לאחר מכן מסוננים החוצה." }
+        ];
+
+        const tfData = [
+            { question: "סוכרוז הוא סוכר מחזר מכיוון שהוא מורכב משני חד-סוכרים.", answer: false, explanation: "סוכרוז אינו מחזר. למרות היותו מורכב מגלוקוז ופרוקטוז, הפחמנים האנומריים של שניהם קשורים בקשר הגליקוזידי, ולכן אין לו קבוצת המיאצטל חופשית." },
+            { question: "הידרוליזה של צלוביוז והידרוליזה של מלטוז מניבות את אותו תוצר: שתי מולקולות של גלוקוז.", answer: true, explanation: "גם מלטוז וגם צלוביוז מורכבים משתי יחידות גלוקוז. ההבדל ביניהם הוא בסוג הקשר הגליקוזידי (אלפא במלטוז, בטא בצלוביוז), אך תוצרי ההידרוליזה זהים." },
+            { question: "תופעת ה-sandiness בגלידה נגרמת מהתגבשות של לקטוז, אשר מסיסותו נמוכה יחסית.", answer: true, explanation: "ללקטוז יש מסיסות נמוכה יחסית לסוכרים אחרים. בריכוזים גבוהים ובטמפרטורות נמוכות, כמו בגלידה, הוא נוטה להתגבש וליצור תחושה חולית." },
+            { question: "צריכת יוגורט המכיל חיידקים חיים עלולה להחמיר את התסמינים אצל אדם עם אי-סבילות ללקטוז.", answer: false, explanation: "ההפך הוא הנכון. חיידקי חומצה לקטית (LAB) ביוגורט מפרקים חלק מהלקטוז, ולכן יוגורט נסבל טוב יותר מחלב רגיל על ידי אנשים עם אי-סבילות ללקטוז." },
+            { question: "סוכר אינברטי מתוק יותר מסוכרוז באותה מסה, בעיקר בגלל נוכחות הגלוקוז.", answer: false, explanation: "סוכר אינברטי אכן מתוק יותר, אך הסיבה העיקרית היא נוכחות הפרוקטוז, שהוא מתוק משמעותית מסוכרוז. הגלוקוז פחות מתוק מסוכרוז." },
+            { question: "הקשר הגליקוזידי הוא למעשה קשר המיאצטלי.", answer: false, explanation: "הקשר הגליקוזידי הוא קשר מסוג אצטל (או קטאל), הנוצר מתגובה בין קבוצת המיאצטל של סוכר אחד לקבוצת הידרוקסיל של מולקולה שנייה." },
+            { question: "בני אדם מסוגלים לעכל מלטוז אך לא צלוביוז, למרות ששניהם מורכבים מגלוקוז.", answer: true, explanation: "מערכת העיכול האנושית מכילה אנזימים (כמו מלטאז) המסוגלים לפרק קשרי אלפא-1,4 כמו במלטוז, אך חסרה אנזימים (צלולאז) לפירוק קשרי בטא-1,4 כמו בצלוביוז." },
+            { question: "כל הדו-סוכרים המכילים יחידת גלוקוז הם סוכרים מחזרים.", answer: false, explanation: "סוכרוז מכיל יחידת גלוקוז אך אינו סוכר מחזר, מכיוון שהפחמן האנומרי של הגלוקוז קשור בקשר הגליקוזידי." },
+            { question: "לתהליך יצירת סוכר אינברטי יש השפעה על הסיבוב האופטי של התמיסה.", answer: true, explanation: "התהליך גורם להיפוך הסיבוב האופטי. סוכרוז הוא דקסטרו-רוטטורי (+66.5), בעוד שתערובת התוצרים (סוכר אינברטי) היא לבו-רוטטורית (בערך -20, תלוי בתנאים)." },
+            { question: "אי סבילות ללקטוז היא תופעה גנטית שנפוצה באותה מידה בכל אוכלוסיות העולם.", answer: false, explanation: "יש שונות גדולה בשכיחות התופעה בין אוכלוסיות שונות, הקשורה ככל הנראה להתפתחות היכולת לעכל חלב בבגרות (lactase persistence) באזורים בהם חלב היה מקור מזון חשוב." },
+            { question: "מולסה, תוצר לוואי של ייצור סוכר, מכילה אך ורק סוכרוז שלא התגבש.", answer: false, explanation: "מולסה מכילה סוכרוז, גלוקוז, פרוקטוז, מלחים, חומצות אורגניות, תרכובות אמינו ותוצרי תגובות מייאר וקרמול, התורמים לטעמה וצבעה האופייניים." },
+            { question: "הידרוליזה של לקטוז באמצעות האנזים לקטאז מייצרת תערובת מתוקה יותר מהלקטוז המקורי.", answer: true, explanation: "תוצרי הפירוק, גלוקוז וגלקטוז, מתוקים יותר (באופן יחסי לסוכרוז) מאשר לקטוז. זו הסיבה שחלב דל-לקטוז מרגיש מתוק יותר מחלב רגיל." },
+            { question: "הקשר בין גלוקוז לפרוקטוז בסוכרוז הוא קשר בטא (1->4).", answer: false, explanation: "הקשר בסוכרוז הוא קשר אלפא-1, בטא-2 גליקוזידי. הוא מחבר את פחמן 1 של גלוקוז (אלפא) עם פחמן 2 של פרוקטוז (בטא)." },
+            { question: "מלטוז פחות היגרוסקופי מגלוקוז.", answer: true, explanation: "אחת התכונות של מלטוז, למשל בסירופ תירס עתיר מלטוז, היא שהוא פחות היגרוסקופי (סופח לחות), מה שמונע דביקות במוצרים." },
+            { question: "היכולת לחוש טעם מתוק תלויה אך ורק בקולטנים המצויים על הלשון.", answer: false, explanation: "תפיסת הטעם הכוללת (flavor) היא שילוב של טעם (מהלשון) וריח (מהאף), ומושפעת גם מטמפרטורה ומרקם. כימיקלים מהמזון מגיעים לקולטני הריח דרך חלל הפה האחורי." },
+            { question: "טמפרטורה אינה משפיעה על המתיקות הנתפסת של סוכרים שונים.", answer: false, explanation: "טמפרטורה משפיעה על המתיקות, במיוחד של פרוקטוז. פרוקטוז מתוק יותר בטמפרטורות נמוכות, ולכן משקאות קרים המומתקים בפרוקטוז טעימים יותר." },
+            { question: "סוכר חום הוא סוג של סוכר גולמי שלא עבר זיקוק כלל.", answer: false, explanation: "סוכר חום הוא בדרך כלל סוכר לבן מזוקק שאליו הוסיפו בחזרה מולסה, המעניקה לו את צבעו וטעמו האופייניים." },
+            { question: "רפינוז וסטכיוז הם דו-סוכרים המצויים בקטניות וגורמים לגזים.", answer: false, explanation: "רפינוז הוא טרי-סכריד וסטכיוז הוא טטרא-סכריד. הם אכן מצויים בקטניות וגורמים לגזים מכיוון שאינם מתעכלים במעי הדק ועוברים תסיסה במעי הגס." },
+            { question: "האנזים אינברטאז משמש להכנת דבש על ידי דבורים.", answer: true, explanation: "דבורים מפיקות דבש מצוף עשיר בסוכרוז. הן מוסיפות אנזימים, כולל אינברטאז, המפרקים את הסוכרוז לסוכר אינברטי (גלוקוז ופרוקטוז)." },
+            { question: "סוכרלוז הוא ממתיק טבעי המופק מצמח הסטיביה.", answer: false, explanation: "סוכרלוז הוא ממתיק מלאכותי, המיוצר מסוכרוז על ידי החלפה של שלוש קבוצות הידרוקסיל באטומי כלור. סטיביה היא ממתיק טבעי המופק מהצמח." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

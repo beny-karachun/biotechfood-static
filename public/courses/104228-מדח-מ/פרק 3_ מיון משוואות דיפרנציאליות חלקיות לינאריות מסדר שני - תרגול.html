@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 3: מיון משוואות דיפרנציאליות חלקיות לינאריות מסדר שני - תרגול</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true // Important for correctly processing escaped backslashes
+            },
+            svg: {
+                fontCache: 'global' // Or 'local' or 'none'
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    // Additional setup after MathJax is ready, if needed
+                }
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        /* General body styling for dark mode */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333; /* Dark Gray background */
+            color: #E0E0E0; /* Light Gray/White text */
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* Container for centering content */
+        .container {
+            width: 90%;
+            max-width: 1000px; /* Max width for very large screens */
+            margin: 0 auto; /* Center horizontally */
+            background-color: #444; /* Slightly lighter than body for contrast */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Header styling */
+        header h1 {
+            color: #3D90D7; /* Blue accent */
+            text-align: center;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Section styling */
+        .theory-section, .interactive-practice, .problem-container, .all-problems-container .problem-item {
+            background-color: #555; /* Medium Gray containers */
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 6px;
+            border: 1px solid #666;
+        }
+
+        .theory-section h2, .interactive-practice h2 {
+            color: #A0D0F7; /* Lighter blue for section titles */
+            margin-top: 0;
+            border-bottom: 1px solid #666;
+            padding-bottom: 8px;
+        }
+
+        /* Problem navigation and counter */
+        .problem-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #problemCounter {
+            font-weight: bold;
+        }
+
+        /* Button styling */
+        button {
+            background-color: #3D90D7; /* Blue accent */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #3075b0; /* Darker blue on hover */
+        }
+
+        /* Problem statement and title */
+        #problemTitle {
+            color: #E0E0E0;
+            margin-top: 0;
+        }
+
+        #problemStatement, .solution {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        #problemStatement {
+             border: 1px dashed #777;
+        }
+
+        /* Solution area styling */
+        .solution {
+            background-color: #484848; /* Slightly different background for solution */
+            border: 1px solid #606060;
+            margin-top: 15px; /* Vertical spacing */
+        }
+
+        .solution p {
+            margin-bottom: 10px;
+        }
+        .solution p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 'View All Problems' section */
+        .all-problems-container .problem-item {
+            margin-bottom: 20px;
+        }
+        .all-problems-container .problem-item h4 {
+            margin-top: 0;
+            color: #C0E0FF;
+        }
+
+        /* MathJax output styling - ensure LTR for math */
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important; /* Align math expressions to the left */
+            overflow-x: auto; /* Allow horizontal scrolling for very wide equations */
+            overflow-y: hidden;
+            padding-bottom: 5px; /* Space for potential scrollbar without overlap */
+        }
+        mjx-container > svg {
+            display: inline-block; /* Ensures proper alignment and sizing */
+        }
+
+        /* Code comments style (example, not directly used in output) */
+        /*
+        .code-comment {
+            color: #88cc88;
+            font-style: italic;
+        }
+        */
+
+        /* Footer (optional) */
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #666;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>פרק 3: מיון משוואות דיפרנציאליות חלקיות לינאריות מסדר שני - תרגול</h1>
+        </header>
+
+        <section class="theory-section">
+            <h2>סיכום תיאורטי: פרק 3 - מיון משוואות לינאריות מסדר שני בשתי משתנים</h2>
+            <p>פרק זה עוסק במיון וניתוח של משוואות דיפרנציאליות חלקיות (מד"ח) לינאריות מסדר שני בשני משתנים בלתי תלויים (בדרך כלל $x$ ו-$y$, או $x$ ו-$t$).</p>
+            
+            <h3>1. צורה כללית והגדרות מפתח</h3>
+            <p>הצורה הכללית של מד"ח לינארית מסדר שני בשני משתנים היא:</p>
+            <p>$$a u_{xx} + 2b u_{xy} + c u_{yy} + d u_x + e u_y + f u = g \quad (*)$$</p>
+            <p>כאשר $a, b, c, d, e, f, g$ הן פונקציות של $x$ ו-$y$ בלבד. ההנחה הבסיסית היא שהפתרון $u$ גזיר ברציפות פעמיים ($u \in C^2$), מה שגורר $u_{xy} = u_{yx}$.</p>
+            
+            <ul>
+                <li><strong>החלק העיקרי (Principal Part):</strong> האיברים הכוללים את הנגזרות מהסדר הגבוה ביותר (שני):
+                $a u_{xx} + 2b u_{xy} + c u_{yy}$</li>
+                <li><strong>הדיסקרימיננטה (Discriminant):</strong> גודל מרכזי המשמש למיון המשוואה, מוגדר כ:
+                $\delta := b^2 - ac$</li>
+            </ul>
+
+            <h3>2. מיון על בסיס הדיסקרימיננטה</h3>
+            <p>המד"ח $(*)$ מסווגת בנקודה $(x,y)$ על פי הסימן של הדיסקרימיננטה $\delta(x,y)$:</p>
+            <ul>
+                <li><strong>היפרבולית (Hyperbolic):</strong> אם $\delta(x,y) > 0$</li>
+                <li><strong>פרבולית (Parabolic):</strong> אם $\delta(x,y) = 0$</li>
+                <li><strong>אליפטית (Elliptic):</strong> אם $\delta(x,y) < 0$</li>
+            </ul>
+            <p>נאמר על מד"ח שהיא מסוג מסוים בתחום $D$ אם היא מסוג זה בכל נקודה בתחום $D$.</p>
+            <p><strong>דוגמאות למיון:</strong></p>
+            <ul>
+                <li><strong>משוואת הגלים ($u_{tt} - c^2 u_{xx} = 0$):</strong> כאן, אם נסמן $x_1=x, x_2=t$, אז $a_{11}=-c^2, a_{22}=1, a_{12}=0$. לכן $b=0, a=-c^2, c=1$ (בסימון של $(*)$ עם החלפת משתנים). הדיסקרימיננטה היא $\delta = 0^2 - (-c^2)(1) = c^2 > 0$. לכן, היא <strong>היפרבולית</strong>.</li>
+                <li><strong>משוואת החום ($u_t - k u_{xx} = 0$):</strong> כאן, $a=-k, c=0, b=0$ (בהתייחס לנגזרות מסדר שני $u_{xx}, u_{tt}, u_{xt}$). הדיסקרימיננטה היא $\delta = 0^2 - (-k)(0) = 0$. לכן, היא <strong>פרבולית</strong>.</li>
+                <li><strong>משוואת לפלס ($u_{xx} + u_{yy} = 0$):</strong> כאן, $a=1, c=1, b=0$. הדיסקרימיננטה היא $\delta = 0^2 - (1)(1) = -1 < 0$. לכן, היא <strong>אליפטית</strong>.</li>
+            </ul>
+
+            <h3>3. חילוף משתנים (Change of Variables)</h3>
+            <p>חילוף משתנים הוא כלי המאפשר פישוט של המד"ח. טרנספורמציה מ-$(x,y)$ למשתנים חדשים $(s,t)$ הנתונה על ידי $s=s(x,y)$ ו-$t=t(x,y)$ היא חילוף משתנים תקף אם היעקוביאן שלה $J = s_x t_y - s_y t_x \neq 0$.</p>
+            <p>חילוף המשתנים מאפשר לכתוב מחדש את המד"ח במונחים של $s$ ו-$t$ עבור פונקציה נעלמת חדשה $v(s,t) = u(x(s,t), y(s,t))$. המד"ח החדשה שקולה למקורית.</p>
+            <p><strong>למה 3.4:</strong> סוג המד"ח (היפרבולית, פרבולית או אליפטית) <strong>אינו משתנה</strong> תחת חילוף משתנים.</p>
+
+            <h3>4. צורות קנוניות (Canonical Forms)</h3>
+            <p>המטרה העיקרית של חילוף משתנים בהקשר זה היא לפשט את החלק העיקרי של המד"ח. כל מד"ח לינארית מסדר שני ניתנת להעברה לאחת משלוש צורות קנוניות (סטנדרטיות):</p>
+            <ul>
+                <li><strong>היפרבולית:</strong> החלק העיקרי הופך ל-$w_{st}$ (או $w_{ss} - w_{tt}$ לאחר טרנספורמציה פשוטה נוספת).</li>
+                <li><strong>פרבולית:</strong> החלק העיקרי הופך ל-$w_{ss}$ (או $w_{tt}$).</li>
+                <li><strong>אליפטית:</strong> החלק העיקרי הופך ל-$w_{ss} + w_{tt}$.</li>
+            </ul>
+            <p>(כאן $w$ היא הפונקציה הנעלמת במשתנים החדשים $s,t$).</p>
+            <p><strong>דוגמה:</strong> המד"ח $u_{xx} - x u_{yy} = 0$.</p>
+            <ul>
+                <li>הדיסקרימיננטה היא $\delta = 0^2 - (1)(-x) = x$.
+                    <ul>
+                        <li>היפרבולית עבור $x > 0$.</li>
+                        <li>אליפטית עבור $x < 0$.</li>
+                    </ul>
+                </li>
+                <li>עבור $x > 0$ (מקרה היפרבולי), חילוף המשתנים $s = y + \frac{2}{3}x^{3/2}$ ו-$t = y - \frac{2}{3}x^{3/2}$ מוביל לצורה קנונית (עם איברים מסדר נמוך יותר): $v_{st} - \frac{1}{6(s-t)}(v_s - v_t) = 0$.</li>
+            </ul>
+            <p>מיון זה הוא קריטי מכיוון שהתכונות המתמטיות של הפתרונות תלויות באופן משמעותי בסוג המד"ח.</p>
+        </section>
+
+        <section class="interactive-practice">
+            <h2>תרגול אינטראקטיבי</h2>
+            <div class="problem-navigation">
+                <button id="prevProblemBtn">הבעיה הקודמת</button>
+                <span id="problemCounter">בעיה 1 / 25</span>
+                <button id="nextProblemBtn">הבעיה הבאה</button>
+            </div>
+
+            <div id="problemDisplay" class="problem-container">
+                <h3 id="problemTitle"></h3>
+                <div id="problemStatement"></div>
+                <button class="showSolutionBtn" data-problem-index-single>הצג פתרון</button>
+                <div class="solution" style="display: none;"></div>
+            </div>
+
+            <button id="viewAllProblemsBtn">הצג את כל הבעיות</button>
+            <div id="allProblemsContainer" class="all-problems-container" style="display:none;">
+                <!-- All problems will be injected here by JS -->
+            </div>
+        </section>
+        <footer>
+            <p>נוצר על בסיס רשימות הרצאה של שלומי גובר, מרץ 2025 (דמיוני).</p>
+        </footer>
+    </div>
+
+    <script>
+        // Array to hold all problems and their solutions
+        // IMPORTANT: LaTeX backslashes MUST be escaped (e.g., \\frac, \\sin)
+        const problems = [
+            {
+                title: "מיון מד\"ח פשוטה (1)",
+                statement: "מיינו את המשוואה הדיפרנציאלית החלקית הבאה: $3u_{xx} + 10u_{xy} + 3u_{yy} - u_x = 0$.",
+                solution: `
+                    <p>הצורה הכללית של מד\"ח לינארית מסדר שני היא $au_{xx} + 2bu_{xy} + cu_{yy} + du_x + eu_y + fu = g$.</p>
+                    <p>במשוואה הנתונה: $a=3$, $2b=10 \\implies b=5$, $c=3$.</p>
+                    <p>הדיסקרימיננטה $\\delta$ נתונה על ידי $\\delta = b^2 - ac$.</p>
+                    <p>נחשב את הדיסקרימיננטה:</p>
+                    <p>$\\delta = (5)^2 - (3)(3) = 25 - 9 = 16$.</p>
+                    <p>מכיוון ש- $\\delta = 16 > 0$, המשוואה היא <strong>היפרבולית</strong>.</p>
+                `
+            },
+            {
+                title: "מיון מד\"ח פשוטה (2)",
+                statement: "מיינו את המשוואה הדיפרנציאלית החלקית הבאה: $u_{xx} - 2u_{xy} + u_{yy} + 5u_y = \\cos(x)$.",
+                solution: `
+                    <p>במשוואה הנתונה: $a=1$, $2b=-2 \\implies b=-1$, $c=1$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac$.</p>
+                    <p>נחשב את הדיסקרימיננטה:</p>
+                    <p>$\\delta = (-1)^2 - (1)(1) = 1 - 1 = 0$.</p>
+                    <p>מכיוון ש- $\\delta = 0$, המשוואה היא <strong>פרבולית</strong>.</p>
+                `
+            },
+            {
+                title: "מיון מד\"ח פשוטה (3)",
+                statement: "מיינו את המשוואה הדיפרנציאלית החלקית הבאה: $2u_{xx} + 2u_{xy} + u_{yy} - u = 0$.",
+                solution: `
+                    <p>במשוואה הנתונה: $a=2$, $2b=2 \\implies b=1$, $c=1$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac$.</p>
+                    <p>נחשב את הדיסקרימיננטה:</p>
+                    <p>$\\delta = (1)^2 - (2)(1) = 1 - 2 = -1$.</p>
+                    <p>מכיוון ש- $\\delta = -1 < 0$, המשוואה היא <strong>אליפטית</strong>.</p>
+                `
+            },
+            {
+                title: "מיון מד\"ח עם מקדמים משתנים (1)",
+                statement: "מיינו את המשוואה $y u_{xx} + u_{yy} = 0$ בתחומים השונים של $y$.",
+                solution: `
+                    <p>במשוואה הנתונה: $a=y$, $2b=0 \\implies b=0$, $c=1$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac = (0)^2 - (y)(1) = -y$.</p>
+                    <p>המיון תלוי בסימן של $y$:</p>
+                    <ul>
+                        <li>אם $y > 0$, אז $\\delta = -y < 0$. המשוואה <strong>אליפטית</strong>.</li>
+                        <li>אם $y < 0$, אז $\\delta = -y > 0$. המשוואה <strong>היפרבולית</strong>.</li>
+                        <li>אם $y = 0$, אז $\\delta = 0$. המשוואה <strong>פרבולית</strong> (או מתנוונת, תלוי בהקשר).</li>
+                    </ul>
+                `
+            },
+            {
+                title: "מיון מד\"ח עם מקדמים משתנים (2)",
+                statement: "מיינו את המשוואה $u_{xx} + x u_{xy} + u_{yy} = 0$ בנקודה $(x,y) = (2,1)$.",
+                solution: `
+                    <p>במשוואה הנתונה: $a=1$, $2b=x \\implies b=x/2$, $c=1$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac = (x/2)^2 - (1)(1) = x^2/4 - 1$.</p>
+                    <p>בנקודה $(2,1)$, $x=2$. נציב בדיסקרימיננטה:</p>
+                    <p>$\\delta(2,1) = (2)^2/4 - 1 = 4/4 - 1 = 1 - 1 = 0$.</p>
+                    <p>מכיוון ש- $\\delta = 0$ בנקודה $(2,1)$, המשוואה היא <strong>פרבולית</strong> בנקודה זו.</p>
+                `
+            },
+            {
+                title: "זיהוי החלק העיקרי",
+                statement: "מהו החלק העיקרי של המשוואה $3u_{tt} - 5u_{tx} + u_{xx} + u_t - u_x + u = \\sin(t) \\cos(x)$ (בהנחה ש-$u=u(x,t)$)?",
+                solution: `
+                    <p>החלק העיקרי של מד\"ח לינארית מסדר שני כולל את כל האיברים עם הנגזרות מהסדר השני.</p>
+                    <p>במשוואה הנתונה $u=u(x,t)$, הנגזרות הן לפי $x$ ו-$t$. נסדר את המשוואה לפי הסימון $au_{xx} + 2bu_{xy} + cu_{yy} + ... = g$, כאשר $y$ מוחלף ב-$t$.</p>
+                    <p>האיברים מסדר שני הם $u_{tt}$, $u_{tx}$ (או $u_{xt}$), ו-$u_{xx}$.</p>
+                    <p>לכן, החלק העיקרי של המשוואה הוא: $u_{xx} - 5u_{xt} + 3u_{tt}$.</p>
+                    <p>(שים לב: סדר הכתיבה של הנגזרות אינו משנה את החלק העיקרי, אך חשוב לזיהוי המקדמים $a,b,c$ לצורך חישוב הדיסקרימיננטה. אם נתייחס ל-$x$ כמשתנה הראשון ול-$t$ כשני: $a=1, 2b=-5, c=3$).</p>
+                `
+            },
+            {
+                title: "חישוב דיסקרימיננטה",
+                statement: "חשבו את הדיסקרימיננטה של המשוואה $\\sin(x) u_{xx} + 2e^y u_{xy} + x^2 u_{yy} + u_x = 0$.",
+                solution: `
+                    <p>במשוואה הנתונה:</p>
+                    <p>$a = \\sin(x)$</p>
+                    <p>$2b = 2e^y \\implies b = e^y$</p>
+                    <p>$c = x^2$</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac$.</p>
+                    <p>$\\delta = (e^y)^2 - (\\sin(x))(x^2) = e^{2y} - x^2 \\sin(x)$.</p>
+                    <p>הדיסקרימיננטה היא $\\delta(x,y) = e^{2y} - x^2 \\sin(x)$. סוג המשוואה ישתנה בהתאם לערכי $x$ ו-$y$.</p>
+                `
+            },
+            {
+                title: "יעקוביאן של חילוף משתנים",
+                statement: "נתון חילוף המשתנים $s = x+y$ ו-$t = x-y$. חשבו את היעקוביאן $J = s_x t_y - s_y t_x$. האם זהו חילוף משתנים תקף?",
+                solution: `
+                    <p>נתונים המשתנים החדשים: $s(x,y) = x+y$ ו-$t(x,y) = x-y$.</p>
+                    <p>נחשב את הנגזרות החלקיות:</p>
+                    <p>$s_x = \\frac{\\partial s}{\\partial x} = 1$</p>
+                    <p>$s_y = \\frac{\\partial s}{\\partial y} = 1$</p>
+                    <p>$t_x = \\frac{\\partial t}{\\partial x} = 1$</p>
+                    <p>$t_y = \\frac{\\partial t}{\\partial y} = -1$</p>
+                    <p>היעקוביאן נתון על ידי $J = s_x t_y - s_y t_x$.</p>
+                    <p>$J = (1)(-1) - (1)(1) = -1 - 1 = -2$.</p>
+                    <p>מכיוון ש-$J = -2 \\neq 0$, חילוף המשתנים הוא תקף.</p>
+                `
+            },
+            {
+                title: "משוואת הגלים לצורה קנונית",
+                statement: "העבירו את משוואת הגלים $u_{tt} - c^2 u_{xx} = 0$ (כאשר $c > 0$ קבוע) לצורה קנונית $w_{st}=0$ באמצעות חילוף המשתנים $s = x+ct$ ו-$t' = x-ct$. (שים לב, נשתמש ב-$t'$ כדי למנוע בלבול עם $t$ המקורי, ובסוף נשמיט את התג).",
+                solution: `
+                    <p>המשוואה היא $u_{tt} - c^2 u_{xx} = 0$. זוהי משוואה היפרבולית.</p>
+                    <p>חילוף המשתנים המוצע (שמותאם למשוואה היפרבולית) הוא $s = x+ct$ ו-$t' = x-ct$.</p>
+                    <p>נשתמש בכלל השרשרת כדי לבטא את הנגזרות של $u$ לפי $x,t$ באמצעות הנגזרות של $w(s,t')$ לפי $s,t'$:</p>
+                    <p>$u_x = w_s s_x + w_{t'} t'_x = w_s (1) + w_{t'} (1) = w_s + w_{t'}$</p>
+                    <p>$u_{xx} = (w_s + w_{t'})_x = (w_{ss}s_x + w_{st'}t'_x) + (w_{t's}s_x + w_{t't'}t'_x) = w_{ss} + 2w_{st'} + w_{t't'}$ (בהנחה $w_{st'} = w_{t's}$)</p>
+                    <p>$u_t = w_s s_t + w_{t'} t'_t = w_s (c) + w_{t'} (-c) = c(w_s - w_{t'})$</p>
+                    <p>$u_{tt} = c(w_s - w_{t'})_t = c( (w_{ss}s_t + w_{st'}t'_t) - (w_{t's}s_t + w_{t't'}t'_t) ) = c(c w_{ss} -c w_{st'} - (c w_{t's} -c w_{t't'})) = c^2(w_{ss} - 2w_{st'} + w_{t't'})$</p>
+                    <p>נציב במשוואה המקורית $u_{tt} - c^2 u_{xx} = 0$:</p>
+                    <p>$c^2(w_{ss} - 2w_{st'} + w_{t't'}) - c^2(w_{ss} + 2w_{st'} + w_{t't'}) = 0$</p>
+                    <p>$c^2 w_{ss} - 2c^2 w_{st'} + c^2 w_{t't'} - c^2 w_{ss} - 2c^2 w_{st'} - c^2 w_{t't'} = 0$</p>
+                    <p>$-4c^2 w_{st'} = 0$</p>
+                    <p>מכיוון ש-$c \\neq 0$, נקבל $w_{st'} = 0$. זוהי הצורה הקנונית עבור משוואה היפרבולית (לאחר החלפת $t'$ ב-$t$ חדש).</p>
+                `
+            },
+            {
+                title: "אינווריאנטיות של סוג המד\"ח",
+                statement: "נתונה המד\"ח $u_{xy} = 0$. בצעו חילוף משתנים $x = s+t$, $y = s-t$. מהי המשוואה החדשה $w(s,t)$? מה סוג המד\"ח המקורית והחדשה?",
+                solution: `
+                    <p>המד\"ח המקורית היא $u_{xy} = 0$.</p>
+                    <p>עבור המד\"ח המקורית: $a=0, 2b=1 \\implies b=1/2, c=0$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac = (1/2)^2 - (0)(0) = 1/4 > 0$. לכן המד\"ח המקורית היפרבולית.</p>
+                    <p>חילוף המשתנים הוא $x = s+t$, $y = s-t$. נצטרך לבטא את $s,t$ באמצעות $x,y$ או להשתמש בנגזרות הפוכות.</p>
+                    <p>קל יותר למצוא $s=(x+y)/2$, $t=(x-y)/2$.</p>
+                    <p>$s_x = 1/2, s_y = 1/2, t_x = 1/2, t_y = -1/2$.</p>
+                    <p>$u_x = w_s s_x + w_t t_x = \\frac{1}{2}w_s + \\frac{1}{2}w_t$</p>
+                    <p>$u_{xy} = (u_x)_y = (\\frac{1}{2}w_s + \\frac{1}{2}w_t)_y = \\frac{1}{2}(w_{ss}s_y + w_{st}t_y) + \\frac{1}{2}(w_{ts}s_y + w_{tt}t_y)$</p>
+                    <p>$u_{xy} = \\frac{1}{2}(w_{ss}(\\frac{1}{2}) + w_{st}(-\\frac{1}{2})) + \\frac{1}{2}(w_{ts}(\\frac{1}{2}) + w_{tt}(-\\frac{1}{2}))$</p>
+                    <p>$u_{xy} = \\frac{1}{4}w_{ss} - \\frac{1}{4}w_{st} + \\frac{1}{4}w_{ts} - \\frac{1}{4}w_{tt} = \\frac{1}{4}(w_{ss} - w_{tt})$ (בהנחה $w_{st}=w_{ts}$)</p>
+                    <p>המד\"ח $u_{xy}=0$ הופכת ל- $\\frac{1}{4}(w_{ss} - w_{tt}) = 0$, או $w_{ss} - w_{tt} = 0$.</p>
+                    <p>עבור המד\"ח החדשה $w_{ss} - w_{tt} = 0$: $a_s=1, 2b_{st}=0 \\implies b_{st}=0, c_t=-1$.</p>
+                    <p>הדיסקרימיננטה $\\delta' = (b_{st})^2 - a_s c_t = (0)^2 - (1)(-1) = 1 > 0$. המד\"ח החדשה גם היא היפרבולית.</p>
+                    <p>זה מדגים את אינווריאנטיות סוג המד\"ח תחת חילוף משתנים.</p>
+                `
+            },
+            {
+                title: "צורות קנוניות - זיהוי",
+                statement: "לאיזו צורה קנונית תועבר משוואה אליפטית לאחר חילוף משתנים מתאים?",
+                solution: `
+                    <p>משוואה אליפטית, לאחר חילוף משתנים מתאים, תועבר לצורה קנונית שבה החלק העיקרי הוא מהצורה $w_{ss} + w_{tt}$.</p>
+                    <p>לדוגמה, משוואת לפלס $u_{xx} + u_{yy} = 0$ כבר נמצאת בצורתה הקנונית (אם נסמן $s=x, t=y$).</p>
+                `
+            },
+            {
+                title: "המשוואה $u_{xx} - x u_{yy} = 0$",
+                statement: "עבור המשוואה $u_{xx} - x u_{yy} = 0$, מהו סוג המשוואה כאשר $x = -4$?",
+                solution: `
+                    <p>המשוואה היא $u_{xx} - x u_{yy} = 0$.</p>
+                    <p>כאן $a=1, 2b=0 \\implies b=0, c=-x$.</p>
+                    <p>הדיסקרימיננטה היא $\\delta = b^2 - ac = 0^2 - (1)(-x) = x$.</p>
+                    <p>כאשר $x = -4$, הדיסקרימיננטה היא $\\delta = -4$.</p>
+                    <p>מכיוון ש- $\\delta = -4 < 0$, המשוואה היא <strong>אליפטית</strong> כאשר $x=-4$.</p>
+                `
+            },
+            {
+                title: "שיקול תיאורטי (1)",
+                statement: "מדוע חשוב למיין מד\"ח לסוגים היפרבולי, פרבולי ואליפטי?",
+                solution: `
+                    <p>מיון מד\"ח לסוגים היפרבולי, פרבולי ואליפטי הוא קריטי מכמה סיבות:</p>
+                    <ul>
+                        <li><strong>תכונות הפתרונות:</strong> לכל סוג של משוואה יש תכונות אופייניות לפתרונותיה. למשל, פתרונות למשוואות היפרבוליות (כמו משוואת הגלים) מתארים התפשטות של גלים והפרעות במהירות סופית, והן מושפעות מתנאי התחלה לאורך קווים אופייניים. פתרונות למשוואות פרבוליות (כמו משוואת החום) מתארים תהליכי דיפוזיה והחלקה, כאשר הפרעות מתפשטות במהירות אינסופית (אך דועכות). פתרונות למשוואות אליפטיות (כמו משוואת לפלס) מתארים מצבי שיווי משקל והם חלקים מאוד, וערכם בנקודה תלוי בערכים על שפת התחום כולו.</li>
+                        <li><strong>שיטות פתרון:</strong> שיטות הפתרון האנליטיות והנומריות המתאימות לכל סוג משוואה הן שונות. לדוגמה, שיטת הקווים האופייניים יעילה למשוואות היפרבוליות.</li>
+                        <li><strong>הצבת בעיות תנאי שפה/התחלה (Well-posedness):</strong> סוג הבעיה של תנאי שפה ו/או התחלה שניתן להציב באופן "טוב" (כלומר, שקיים פתרון יחיד התלוי באופן רציף בנתונים) תלוי בסוג המד\"ח. למשל, עבור משוואות היפרבוליות נפוץ להציב תנאי התחלה (בעיית קושי), בעוד שעבור משוואות אליפטיות נפוץ להציב תנאי שפה (כמו בעיית דיריכלה או נוימן).</li>
+                        <li><strong>צורות קנוניות:</strong> המיון מאפשר להביא את המשוואה לצורה קנונית פשוטה יותר, המקלה על הניתוח והפתרון.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "שיקול תיאורטי (2)",
+                statement: "מהי המשמעות של היעקוביאן $J \\neq 0$ בתהליך חילוף משתנים?",
+                solution: `
+                    <p>התנאי שהיעקוביאן $J = s_x t_y - s_y t_x \\neq 0$ (כאשר $s=s(x,y)$ ו-$t=t(x,y)$) הוא תנאי הכרחי ומספיק (מקומית) לכך שהטרנספורמציה מהקואורדינטות $(x,y)$ לקואורדינטות $(s,t)$ היא הפיכה וגזירה ברציפות. כלומר:</p>
+                    <ul>
+                        <li><strong>הפיכות מקומית:</strong> ניתן, לפחות בסביבה קטנה של כל נקודה, לבטא באופן יחיד את $(x,y)$ כפונקציה של $(s,t)$. זה מבטיח שלכל זוג $(s,t)$ חדש מתאים זוג $(x,y)$ מקורי יחיד (ולהיפך), כך שהטרנספורמציה היא חד-חד-ערכית ועל (מקומית).</li>
+                        <li><strong>שמירה על "צורות":</strong> אם $J \\neq 0$, הטרנספורמציה לא "מועכת" אלמנטי שטח לאלמנטי קו או נקודה. היא שומרת על ממדיות.</li>
+                        <li><strong>קיום נגזרות הפוכות:</strong> זה מאפשר לחשב את הנגזרות $x_s, x_t, y_s, y_t$ באמצעות כלל השרשרת וכלל קרמר (או מטריצה הפוכה), דבר חיוני להמרת הנגזרות של $u$ מהקואורדינטות הישנות לחדשות.</li>
+                    </ul>
+                    <p>אם $J=0$, הטרנספורמציה היא סינגולרית, והמשתנים $s$ ו-$t$ אינם בלתי תלויים פונקציונלית (למשל, $s$ יכול להיות פונקציה של $t$, או להיפך), מה שהופך את חילוף המשתנים ללא תקף עבור פישוט המד\"ח לשני משתנים בלתי תלויים חדשים.</p>
+                `
+            },
+            {
+                title: "מיון משוואת החום",
+                statement: "אמתו את המיון של משוואת החום $u_t - 5u_{xx} + u_x = 0$ כמשוואה פרבולית.",
+                solution: `
+                    <p>המשוואה היא $u_t - 5u_{xx} + u_x = 0$. נכתוב אותה בצורה $A u_{xx} + 2B u_{xt} + C u_{tt} + ... = 0$ (כאשר $x$ הוא המשתנה הראשון ו-$t$ הוא המשתנה השני). כאן נתייחס למשתנים כ-$x_1=x, x_2=t$.</p>
+                    <p>המקדמים של הנגזרות מסדר שני הם:</p>
+                    <p>מקדם של $u_{xx}$ (או $u_{x_1 x_1}$): $a = -5$</p>
+                    <p>מקדם של $u_{tt}$ (או $u_{x_2 x_2}$): $c = 0$ (אין איבר $u_{tt}$)</p>
+                    <p>מקדם של $u_{xt}$ (או $u_{x_1 x_2}$): $2b = 0 \\implies b = 0$ (אין איבר $u_{xt}$)</p>
+                    <p>הדיסקרימיננטה היא $\\delta = b^2 - ac$.</p>
+                    <p>$\\delta = (0)^2 - (-5)(0) = 0 - 0 = 0$.</p>
+                    <p>מכיוון ש- $\\delta = 0$, משוואת החום היא <strong>פרבולית</strong>.</p>
+                `
+            },
+            {
+                title: "מיון משוואת לפלס",
+                statement: "אמתו את המיון של משוואת לפלס $4u_{xx} + 4u_{yy} - u = \\sin(x)$ כמשוואה אליפטית.",
+                solution: `
+                    <p>המשוואה היא $4u_{xx} + 4u_{yy} - u = \\sin(x)$.</p>
+                    <p>המקדמים של הנגזרות מסדר שני הם:</p>
+                    <p>$a = 4$ (מקדם של $u_{xx}$)</p>
+                    <p>$c = 4$ (מקדם של $u_{yy}$)</p>
+                    <p>$2b = 0 \\implies b = 0$ (מקדם של $u_{xy}$, שאינו מופיע)</p>
+                    <p>הדיסקרימיננטה היא $\\delta = b^2 - ac$.</p>
+                    <p>$\\delta = (0)^2 - (4)(4) = 0 - 16 = -16$.</p>
+                    <p>מכיוון ש- $\\delta = -16 < 0$, משוואת לפלס (בצורה זו) היא <strong>אליפטית</strong>.</p>
+                `
+            },
+            {
+                title: "משוואה עם מקדם $2b$ מפורש",
+                statement: "מיינו את המשוואה $u_{xx} + 6u_{xy} + 9u_{yy} + u_x = 0$.",
+                solution: `
+                    <p>במשוואה הנתונה: $a=1$, $2b=6 \\implies b=3$, $c=9$.</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac$.</p>
+                    <p>נחשב את הדיסקרימיננטה:</p>
+                    <p>$\\delta = (3)^2 - (1)(9) = 9 - 9 = 0$.</p>
+                    <p>מכיוון ש- $\\delta = 0$, המשוואה היא <strong>פרבולית</strong>.</p>
+                `
+            },
+            {
+                title: "מציאת אזורי מיון שונים",
+                statement: "עבור המשוואה $u_{xx} + (x^2-1) u_{yy} = 0$, מצאו את התחומים במישור $xy$ (ליתר דיוק, על ציר $x$) בהם המשוואה היפרבולית, פרבולית או אליפטית.",
+                solution: `
+                    <p>המשוואה היא $u_{xx} + (x^2-1) u_{yy} = 0$.</p>
+                    <p>המקדמים הם: $a=1$, $2b=0 \\implies b=0$, $c=x^2-1$.</p>
+                    <p>הדיסקרימיננטה היא $\\delta = b^2 - ac = (0)^2 - (1)(x^2-1) = -(x^2-1) = 1-x^2$.</p>
+                    <p>ננתח את הסימן של $\\delta$:</p>
+                    <ul>
+                        <li><strong>היפרבולית:</strong> $\\delta > 0 \\implies 1-x^2 > 0 \\implies x^2 < 1 \\implies -1 < x < 1$.</li>
+                        <li><strong>פרבולית:</strong> $\\delta = 0 \\implies 1-x^2 = 0 \\implies x^2 = 1 \\implies x = 1$ או $x = -1$.</li>
+                        <li><strong>אליפטית:</strong> $\\delta < 0 \\implies 1-x^2 < 0 \\implies x^2 > 1 \\implies x > 1$ או $x < -1$.</li>
+                    </ul>
+                    <p>לסיכום:</p>
+                    <p>המשוואה היפרבולית עבור $x \\in (-1, 1)$.</p>
+                    <p>המשוואה פרבולית עבור $x = \\pm 1$.</p>
+                    <p>המשוואה אליפטית עבור $x \\in (-\\infty, -1) \\cup (1, \\infty)$.</p>
+                    <p>(המיון אינו תלוי ב-$y$ במקרה זה).</p>
+                `
+            },
+            {
+                title: "פירוק הדוגמה $u_{xx} - x u_{yy} = 0$ (1)",
+                statement: "בדוגמה מהסיכום, עבור המשוואה $u_{xx} - x u_{yy} = 0$ והמקרה ההיפרבולי ($x>0$), נתון חילוף המשתנים $s = y + \\frac{2}{3}x^{3/2}$ ו-$t = y - \\frac{2}{3}x^{3/2}$. חשבו את $s_x$ ו-$t_x$.",
+                solution: `
+                    <p>נתונים $s = y + \\frac{2}{3}x^{3/2}$ ו-$t = y - \\frac{2}{3}x^{3/2}$.</p>
+                    <p>נחשב את $s_x$:</p>
+                    <p>$s_x = \\frac{\\partial}{\\partial x} (y + \\frac{2}{3}x^{3/2}) = 0 + \\frac{2}{3} \\cdot \\frac{3}{2} x^{(3/2) - 1} = x^{1/2} = \\sqrt{x}$.</p>
+                    <p>נחשב את $t_x$:</p>
+                    <p>$t_x = \\frac{\\partial}{\\partial x} (y - \\frac{2}{3}x^{3/2}) = 0 - \\frac{2}{3} \\cdot \\frac{3}{2} x^{(3/2) - 1} = -x^{1/2} = -\\sqrt{x}$.</p>
+                    <p>לכן, $s_x = \\sqrt{x}$ ו-$t_x = -\\sqrt{x}$ (עבור $x>0$).</p>
+                `
+            },
+            {
+                title: "יישום כלל השרשרת",
+                statement: "בהמשך לדוגמה $u_{xx} - x u_{yy} = 0$ והטרנספורמציה $s = y + \\frac{2}{3}x^{3/2}$, $t = y - \\frac{2}{3}x^{3/2}$ (עבור $x>0$). מצאנו $s_x = \\sqrt{x}, t_x = -\\sqrt{x}, s_y = 1, t_y = 1$. בטאו את $u_x$ באמצעות נגזרות של $v(s,t)$.",
+                solution: `
+                    <p>לפי כלל השרשרת, עבור $u(x,y) = v(s(x,y), t(x,y))$:</p>
+                    <p>$u_x = v_s s_x + v_t t_x$.</p>
+                    <p>הנגזרות של $s,t$ לפי $x$ הן: $s_x = \\sqrt{x}$ ו-$t_x = -\\sqrt{x}$.</p>
+                    <p>לכן, $u_x = v_s (\\sqrt{x}) + v_t (-\\sqrt{x}) = \\sqrt{x}(v_s - v_t)$.</p>
+                `
+            },
+            {
+                title: "מיון עם מקדמים אקספוננציאליים",
+                statement: "מיינו את המשוואה $e^x u_{xx} + 2e^{x+y} u_{xy} + e^{2y} u_{yy} = 0$.",
+                solution: `
+                    <p>במשוואה הנתונה:</p>
+                    <p>$a = e^x$</p>
+                    <p>$2b = 2e^{x+y} \\implies b = e^{x+y}$</p>
+                    <p>$c = e^{2y}$</p>
+                    <p>הדיסקרימיננטה $\\delta = b^2 - ac$.</p>
+                    <p>$\\delta = (e^{x+y})^2 - (e^x)(e^{2y}) = e^{2(x+y)} - e^{x+2y} = e^{2x+2y} - e^{x+2y}$.</p>
+                    <p>נוציא גורם משותף $e^{x+2y}$:</p>
+                    <p>$\\delta = e^{x+2y}(e^x - 1)$.</p>
+                    <p>המיון תלוי בסימן של $(e^x - 1)$ (מכיוון ש-$e^{x+2y} > 0$ תמיד):</p>
+                    <ul>
+                        <li>אם $e^x - 1 > 0 \\implies e^x > 1 \\implies x > 0$: אז $\\delta > 0$, והמשוואה <strong>היפרבולית</strong>.</li>
+                        <li>אם $e^x - 1 = 0 \\implies e^x = 1 \\implies x = 0$: אז $\\delta = 0$, והמשוואה <strong>פרבולית</strong>.</li>
+                        <li>אם $e^x - 1 < 0 \\implies e^x < 1 \\implies x < 0$: אז $\\delta < 0$, והמשוואה <strong>אליפטית</strong>.</li>
+                    </ul>
+                `
+            },
+            {
+                title: "מה קורה אם היעקוביאן הוא אפס?",
+                statement: "נתונה טרנספורמציה $s = x+y$ ו-$t = 2x+2y$. מהו היעקוביאן? מה ניתן להסיק מכך?",
+                solution: `
+                    <p>נתונים $s = x+y$ ו-$t = 2x+2y$.</p>
+                    <p>$s_x = 1, s_y = 1$</p>
+                    <p>$t_x = 2, t_y = 2$</p>
+                    <p>היעקוביאן $J = s_x t_y - s_y t_x = (1)(2) - (1)(2) = 2 - 2 = 0$.</p>
+                    <p>כאשר היעקוביאן הוא אפס, הטרנספורמציה אינה תקפה כחילוף משתנים מלא לשני משתנים בלתי תלויים חדשים. זה מצביע על כך שהמשתנים $s$ ו-$t$ אינם בלתי תלויים פונקציונלית. במקרה זה, ניתן לראות ש-$t = 2(x+y) = 2s$. כלומר, $t$ הוא פשוט כפולה של $s$, והטרנספורמציה למעשה ממפה את המישור $(x,y)$ לקו ישר במרחב $(s,t)$ (הקו $t=2s$). לא ניתן להשתמש בטרנספורמציה כזו כדי לפשט מד\"ח לשני משתנים חדשים $s,t$ בצורה סטנדרטית, כי איבדנו מימד אחד של חופש.</p>
+                `
+            },
+            {
+                title: "מיון בנקודה ספציפית",
+                statement: "מיינו את המשוואה $(x^2+1)u_{xx} + 2(y+1)u_{xy} + u_{yy} + u_x - u_y = 0$ בנקודה $(x,y)=(0,0)$.",
+                solution: `
+                    <p>המשוואה היא $(x^2+1)u_{xx} + 2(y+1)u_{xy} + u_{yy} + u_x - u_y = 0$.</p>
+                    <p>המקדמים הם:</p>
+                    <p>$a(x,y) = x^2+1$</p>
+                    <p>$2b(x,y) = 2(y+1) \\implies b(x,y) = y+1$</p>
+                    <p>$c(x,y) = 1$</p>
+                    <p>הדיסקרימיננטה היא $\\delta(x,y) = (b(x,y))^2 - a(x,y)c(x,y) = (y+1)^2 - (x^2+1)(1) = (y+1)^2 - x^2 - 1$.</p>
+                    <p>נציב את הנקודה $(x,y)=(0,0)$:</p>
+                    <p>$a(0,0) = 0^2+1 = 1$</p>
+                    <p>$b(0,0) = 0+1 = 1$</p>
+                    <p>$c(0,0) = 1$</p>
+                    <p>$\\delta(0,0) = (1)^2 - (1)(1) = 1 - 1 = 0$.</p>
+                    <p>מכיוון ש- $\\delta(0,0) = 0$, המשוואה היא <strong>פרבולית</strong> בנקודה $(0,0)$.</p>
+                `
+            },
+            {
+                title: "פתרון כללי מצורה קנונית פרבולית",
+                statement: "אם הצורה הקנונית של מד\"ח לאחר חילוף משתנים היא $w_{ss} = 0$, מהו הפתרון הכללי $w(s,t)$?",
+                solution: `
+                    <p>נתונה המשוואה הקנונית $w_{ss} = 0$.</p>
+                    <p>ניתן לפתור זאת על ידי אינטגרציה פעמיים לפי $s$.</p>
+                    <p>אינטגרציה ראשונה לפי $s$ (כאשר $t$ נחשב קבוע):</p>
+                    <p>$w_s = \\int 0 \\, ds = f(t)$, כאשר $f(t)$ היא "קבוע" אינטגרציה שתלוי רק ב-$t$.</p>
+                    <p>אינטגרציה שנייה לפי $s$:</p>
+                    <p>$w(s,t) = \\int f(t) \\, ds = s f(t) + g(t)$, כאשר $g(t)$ היא "קבוע" אינטגרציה נוסף שתלוי רק ב-$t$.</p>
+                    <p>לכן, הפתרון הכללי הוא $w(s,t) = s f(t) + g(t)$, כאשר $f(t)$ ו-$g(t)$ הן פונקציות שרירותיות של $t$ (הגזירות ברציפות בהתאם לדרישות על $w$).</p>
+                `
+            },
+             {
+                title: "הנחת $u_{xy}=u_{yx}$",
+                statement: "מדוע ההנחה $u_{xy}=u_{yx}$ (משפט קלרו-שוורץ) חשובה בהקשר של הצורה הכללית $au_{xx} + 2bu_{xy} + cu_{yy} + ... = g$?",
+                solution: `
+                    <p>ההנחה $u_{xy}=u_{yx}$ (הנובעת ממשפט קלרו-שוורץ, בתנאי שהנגזרות השניות רציפות) חשובה מכמה סיבות בהקשר של הצורה הכללית של המד\"ח:</p>
+                    <ol>
+                        <li><strong>פישוט הצורה הכללית:</strong> אם $u_{xy} \\neq u_{yx}$, היינו צריכים לכתוב את המד\"ח עם שני איברים נפרדים לנגזרות המעורבות, למשל $B_1 u_{xy} + B_2 u_{yx}$. ההנחה מאפשרת לאחד אותם לאיבר יחיד $2b u_{xy}$ (או $2b u_{yx}$), כאשר $2b = B_1+B_2$ (אם היינו מתחילים מהצורה הכללית ביותר). זה מפשט את ניתוח המשוואה.</li>
+                        <li><strong>הגדרת הדיסקרימיננטה:</strong> הדיסקרימיננטה $\\delta = b^2 - ac$ מוגדרת תחת ההנחה שיש מקדם יחיד $2b$ לאיבר המעורב $u_{xy}$. אם לא הייתה סימטריה, הגדרת הדיסקרימיננטה והמיון היו מסתבכים או דורשים טיפול שונה. המיון הסטנדרטי מבוסס על ההנחה הזו.</li>
+                        <li><strong>רוב הפתרונות הפיזיקליים:</strong> ברוב הבעיות הפיזיקליות וההנדסיות שמתוארות על ידי מד\"ח, הפתרונות $u$ אכן מקיימים את תנאי הרציפות הנדרשים כך ש-$u_{xy}=u_{yx}$. לכן, ההנחה אינה מגבילה מדי ברוב היישומים המעשיים.</li>
+                        <li><strong>צורות קנוניות:</strong> תהליך ההעברה לצורות קנוניות והניתוח של משוואות אופייניות (characteristic equations) מסתמכים גם הם על הצורה הסטנדרטית עם איבר $u_{xy}$ יחיד (או סימטרי).</li>
+                    </ol>
+                    <p>בקורסים בסיסיים במד\"ח, ההנחה הזו כמעט תמיד מתקיימת או נלקחת כמובנת מאליה עבור הפתרונות ה"קלאסיים" או "האמיתיים" של המשוואות.</p>
+                `
+            }
+        ];
+
+        let currentProblemIndex = 0;
+
+        // DOM Elements
+        const problemTitleElement = document.getElementById('problemTitle');
+        const problemStatementElement = document.getElementById('problemStatement');
+        const singleSolutionButton = document.querySelector('#problemDisplay .showSolutionBtn');
+        const singleSolutionContainer = document.querySelector('#problemDisplay .solution');
+        const problemCounterElement = document.getElementById('problemCounter');
+        const prevProblemBtn = document.getElementById('prevProblemBtn');
+        const nextProblemBtn = document.getElementById('nextProblemBtn');
+        const viewAllProblemsBtn = document.getElementById('viewAllProblemsBtn');
+        const allProblemsContainer = document.getElementById('allProblemsContainer');
+
+        // Function to display a problem
+        function displayProblem(index) {
+            const problem = problems[index];
+            problemTitleElement.textContent = problem.title;
+            problemStatementElement.innerHTML = problem.statement; // Use innerHTML to render HTML tags if any
+            singleSolutionContainer.style.display = 'none'; // Hide solution when new problem is displayed
+            singleSolutionContainer.innerHTML = ''; // Clear previous solution
+            singleSolutionButton.setAttribute('data-problem-index-single', index); // Update index for the button
+            updateCounter(index);
+            MathJax.typesetPromise([problemStatementElement]); // Retypeset MathJax for the new content
+        }
+
+        // Function to show solution for the single problem view
+        function showSingleSolution() {
+            const index = parseInt(singleSolutionButton.getAttribute('data-problem-index-single'));
+            const problem = problems[index];
+            if (singleSolutionContainer.style.display === 'none' || singleSolutionContainer.innerHTML === '') {
+                singleSolutionContainer.innerHTML = problem.solution;
+                singleSolutionContainer.style.display = 'block';
+                MathJax.typesetPromise([singleSolutionContainer]);
+            } else {
+                singleSolutionContainer.style.display = 'none';
+                singleSolutionContainer.innerHTML = '';
+            }
+        }
+        
+        // Function to update problem counter
+        function updateCounter(index) {
+            problemCounterElement.textContent = `בעיה ${index + 1} / ${problems.length}`;
+        }
+
+        // Event listeners for navigation buttons
+        prevProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex > 0) {
+                currentProblemIndex--;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        nextProblemBtn.addEventListener('click', () => {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                displayProblem(currentProblemIndex);
+            }
+        });
+
+        // Event listener for the single "Show Solution" button
+        singleSolutionButton.addEventListener('click', showSingleSolution);
+        
+        // Function to display all problems
+        viewAllProblemsBtn.addEventListener('click', () => {
+            if (allProblemsContainer.style.display === 'none') {
+                allProblemsContainer.innerHTML = ''; // Clear previous content
+                problems.forEach((problem, index) => {
+                    const problemItem = document.createElement('div');
+                    problemItem.classList.add('problem-item');
+                    problemItem.innerHTML = `
+                        <h4>${index + 1}. ${problem.title}</h4>
+                        <div>${problem.statement}</div>
+                        <button class="showSolutionBtn" data-problem-index="${index}">הצג פתרון</button>
+                        <div class="solution" style="display: none;"></div>
+                    `;
+                    allProblemsContainer.appendChild(problemItem);
+                });
+                MathJax.typesetPromise([allProblemsContainer]); // Typeset all problems once
+                
+                // Add event listeners to all "Show Solution" buttons in the "View All" section
+                allProblemsContainer.querySelectorAll('.showSolutionBtn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const btn = event.target;
+                        const problemIdx = parseInt(btn.getAttribute('data-problem-index'));
+                        const solutionDiv = btn.nextElementSibling;
+                        if (solutionDiv.style.display === 'none' || solutionDiv.innerHTML === '') {
+                            solutionDiv.innerHTML = problems[problemIdx].solution;
+                            solutionDiv.style.display = 'block';
+                            MathJax.typesetPromise([solutionDiv]); // Typeset specific solution
+                        } else {
+                            solutionDiv.style.display = 'none';
+                            solutionDiv.innerHTML = '';
+                        }
+                    });
+                });
+                allProblemsContainer.style.display = 'block';
+                viewAllProblemsBtn.textContent = 'הסתר את כל הבעיות';
+            } else {
+                allProblemsContainer.style.display = 'none';
+                viewAllProblemsBtn.textContent = 'הצג את כל הבעיות';
+            }
+        });
+
+        // Initial display
+        displayProblem(currentProblemIndex);
+
+        // Comments for clarity
+        // MathJax configuration is at the top of the HTML head.
+        // It's set up for inline and display math, and SVG output.
+        // The 'problems' array stores LaTeX with escaped backslashes for JS strings.
+        // The displayProblem function updates the single problem view.
+        // The showSingleSolution function handles the solution for the single problem view.
+        // The viewAllProblemsBtn toggles the display of all problems,
+        // dynamically creating them and attaching independent solution buttons.
+        // MathJax.typesetPromise() is called after new content with math is added to the DOM.
+    </script>
+</body>
+</html>

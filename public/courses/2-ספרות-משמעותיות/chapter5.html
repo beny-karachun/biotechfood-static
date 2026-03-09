@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 5: חישובים - פעולות משולבות (עם שמירת תשובות)</title>
+
+    <!-- MathJax Config and Load -->
+    <script>
+        MathJax = { /* ... MathJax config same as before ... */
+          tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: true },
+          svg: { fontCache: 'global' },
+          options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        /* --- Styles identical to previous persist versions --- */
+        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; direction: rtl; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        h1, h2 { text-align: right; color: #0056b3; margin-bottom: 15px; }
+        h1 { border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
+        #rules-section { margin-bottom: 30px; padding: 15px; background-color: #eef; border: 1px solid #cce; border-radius: 5px; }
+        #rules-section ul { list-style-type: decimal; padding-right: 20px; margin: 0; }
+        #rules-section li { margin-bottom: 10px; text-align: right; }
+        #practice-section { margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        #question-container { margin-bottom: 20px; }
+        #question-progress { font-size: 0.9em; color: #666; text-align: left; margin-bottom: 10px; min-height: 1.2em; }
+        #question-text { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; text-align: right; min-height: 1.5em; line-height: 1.8; }
+        #question-text .calculation-part, #explanation-area .calculation-part { font-family: monospace; font-size: 1.3em; color: #dc3545; background-color: #f8f9fa; padding: 3px 8px; border-radius: 4px; margin: 0 0.3em; vertical-align: middle; display: inline-block; direction: ltr; }
+        #user-answer { padding: 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; width: 150px; text-align: right; margin-left: 10px; box-sizing: border-box; vertical-align: middle; direction: ltr; }
+        #input-button-wrapper { margin-top: 10px; text-align: right; }
+        #nav-buttons { margin-top: 20px; display: flex; justify-content: space-between; }
+        button { padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 4px; background-color: #007bff; color: white; transition: background-color 0.3s ease; vertical-align: middle; margin: 0 5px; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #feedback-area { margin-top: 15px; padding: 10px; border-radius: 4px; font-weight: bold; text-align: right; min-height: 1.5em; }
+        .correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #explanation-area { margin-top: 10px; padding: 15px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 4px; text-align: right; line-height: 1.7; font-size: 0.95em; display: none; }
+        #explanation-area strong { color: #0056b3; }
+        #explanation-area mjx-container, #explanation-area .number-part { vertical-align: middle; direction: ltr; display: inline-block; margin: 0 0.15em; }
+        #results-summary { margin-top: 30px; padding: 20px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; text-align: center; font-size: 1.2em; display: none; }
+        #submit-button {}
+        #next-button { background-color: #28a745; } #next-button:hover { background-color: #218838; }
+        #prev-button { background-color: #ffc107; color: #333;} #prev-button:hover { background-color: #e0a800; }
+        #results-button { background-color: #17a2b8; } #results-button:hover { background-color: #138496; }
+        #return-to-questions-button { background-color: #6c757d; } #return-to-questions-button:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 5: חישובים - פעולות משולבות</h1>
+        <div id="rules-section">
+            <h2>החוקים לפעולות משולבות עם ספרות משמעותיות:</h2>
+            <ol>
+                <li>
+                    <strong>סדר פעולות חשבון (קדימויות):</strong> בצע את החישובים לפי סדר הפעולות המקובל (סוגריים, חזקות, כפל וחילוק משמאל לימין, חיבור וחיסור משמאל לימין).
+                </li>
+                <li>
+                    <strong>מעקב אחר דיוק (כלל מנחה):</strong> במהלך החישוב, שמור לפחות ספרה נוספת אחת ("ספרת שמירה") מעבר לנדרש לפי כללי הס"מ/מקומות עשרוניים בכל שלב ביניים, כדי למנוע שגיאות עיגול מצטברות. עגל רק בתוצאה הסופית.
+                </li>
+                 <li>
+                    <strong>יישום כללי עיגול בשלבי ביניים:</strong>
+                     <ul>
+                        <li>אם ביצעת סדרה של פעולות כפל/חילוק בלבד, רשום את התוצאה הסופית שלהן עם המספר הקטן ביותר של <strong>ספרות משמעותיות</strong> מבין הגורמים המקוריים בסדרה זו.</li>
+                        <li>אם ביצעת סדרה של פעולות חיבור/חיסור בלבד, רשום את התוצאה הסופית שלהן עם המספר הקטן ביותר של <strong>מקומות אחרי הנקודה העשרונית</strong> מבין הגורמים המקוריים בסדרה זו.</li>
+                        <li>
+                            <strong>כאשר עוברים בין סוגי פעולות</strong> (למשל, תוצאת חיבור משמשת בכפל, או תוצאת חילוק משמשת בחיסור): <strong>קבע את הדיוק</strong> של תוצאת הביניים לפי הכלל המתאים (מקומות עשרוניים או ס"מ) *לפני* שתשתמש בה בפעולה הבאה. למרות שאתה עשוי לשמור ספרת שמירה בחישוב עצמו, ה*דיוק* של מספר זה (מספר הס"מ או המקומות העשרוניים שהוא "אמור" לקבל) נקבע על ידי הכלל של הפעולה שיצרה אותו, ודיוק זה ישמש בקביעת הדיוק של השלב הבא.
+                        </li>
+                    </ul>
+                 </li>
+                 <li>
+                    <strong>עיגול סופי:</strong> עגל את התוצאה המספרית הסופית של כל החישוב לפי הכלל (מקומות עשרוניים או ס"מ) שנקבע על ידי הדיוק של השלב האחרון, תוך שימוש בכללי העיגול (כולל "עגל חצי לזוגי").
+                 </li>
+            </ol>
+            <p><strong>דוגמה:</strong> חישוב \((12.3 + 4.56) \times 2.0\)</p>
+            <ul>
+                 <li>שלב 1 (חיבור בסוגריים): \(12.3 + 4.56 = 16.86\). הכלל הוא לפי מקומות עשרוניים. ל-\(12.3\) יש 1 מקום עשרוני. לכן, התוצאה \(16.86\) מוגבלת ל-1 מקום עשרוני (כלומר, הדיוק שלה הוא עד הספרה \(8\)). התוצאה המעוגלת תהיה \(16.9\) (3 ס"מ). לצורך המשך החישוב, נשמור ספרת שמירה: \(16.86\).</li>
+                 <li>שלב 2 (כפל): \(16.86 \times 2.0\). הכלל הוא לפי ס"מ. המספר \(16.86\) נקבע בשלב הקודם להיות בעל דיוק של 3 ס"מ (לפי העיגול ל-16.9). המספר \(2.0\) הוא בעל 2 ס"מ. המספר הקטן ביותר של ס"מ הוא 2.</li>
+                 <li>חישוב גולמי: \(16.86 \times 2.0 = 33.72\).</li>
+                 <li>עיגול סופי: עגל את \(33.72\) ל-2 ס"מ -> \(34\) (כי \(7 > 5\)).</li>
+                 <li>תוצאה סופית: \(34\)</li>
+            </ul>
+        </div>
+
+        <div id="practice-section">
+             <!-- Practice Structure -->
+             <h2>תרגול: <span id="total-questions"></span> שאלות</h2>
+            <div id="question-container" style="display: none;"> <!-- Hidden initially -->
+                <p id="question-progress"></p>
+                <p id="question-text"></p> <!-- Question text set by JS -->
+                <div id="input-button-wrapper">
+                    <input type="text" id="user-answer" placeholder="הקלד את התוצאה המעוגלת">
+                    <button id="submit-button">בדוק תשובה</button>
+                </div>
+                <div id="feedback-area"></div>
+                <div id="explanation-area"></div>
+                <div id="nav-buttons">
+                     <button id="prev-button" style="visibility: hidden;">השאלה הקודמת</button>
+                     <button id="next-button">השאלה הבאה</button>
+                     <button id="results-button" style="display: none;">הצג תוצאות</button>
+                </div>
+            </div>
+            <div id="results-summary">
+                   <!-- Results Summary -->
+                   <h2>כל הכבוד! / סיכום תוצאות</h2>
+                    <p>סיימת את כל השאלות בפרק זה.</p>
+                    <p>ציון: <span id="final-score"></span> מתוך <span id="total-questions-final"></span></p>
+                    <button id="return-to-questions-button">חזור לשאלות</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        let currentQuestionIndex = 0;
+        const questions = [ // Chapter 5 Questions (Combined Operations)
+             // Format: { calculation: "LaTeX string", answer: "Final answer string", explanation: "Detailed steps" }
+             { calculation: "(12.3 + 4.56) \\times 2.0", answer: "34", explanation: "שלב 1 (חיבור): \\(12.3 + 4.56 = 16.86\\). דיוק לפי מקומות עשרוניים (1 מ-\\(12.3\\)). התוצאה מוגבלת ל-1 מקום עשרוני (דיוק של 3 ס\"מ). שלב 2 (כפל): \\(16.86 \\times 2.0\\). דיוק לפי ס\"מ (3 ס\"מ מתוצאת החיבור, 2 ס\"מ מ-\\(2.0\\)). מינימום 2 ס\"מ. חישוב \\(16.86 \\times 2.0 = 33.72\\). עיגול ל-2 ס\"מ -> \\(34\\)." },
+             { calculation: "(100.5 - 1.23) / 2.5", answer: "40.", explanation: "שלב 1 (חיסור): \\(100.5 - 1.23 = 99.27\\). דיוק לפי מקומות עשרוניים (1 מ-\\(100.5\\)). התוצאה מוגבלת ל-1 מקום (דיוק של 3 ס\"מ). שלב 2 (חילוק): \\(99.27 \\div 2.5\\). דיוק לפי ס\"מ (3 ס\"מ מתוצאת החיסור, 2 ס\"מ מ-\\(2.5\\)). מינימום 2 ס\"מ. חישוב \\(99.27 \\div 2.5 = 39.708\\). עיגול ל-2 ס\"מ -> \\(40.\\) (הנקודה דרושה ל-2 ס\"מ)." },
+             { calculation: "5.67 + (0.1 \\times 12)", answer: "6.9", explanation: "שלב 1 (כפל): \\(0.1 \\times 12 = 1.2\\). דיוק לפי ס\"מ (1 ס\"מ מ-\\(0.1\\), 2 ס\"מ מ-\\(12\\)). מינימום 1 ס\"מ. התוצאה 1.2 היא בעלת 2 ס\"מ, אך הדיוק נקבע ל-1 ס\"מ. נשתמש ב-1.2 בהמשך. שלב 2 (חיבור): \\(5.67 + 1.2\\). דיוק לפי מקומות עשרוניים. ל-\\(5.67\\) יש 2 מקומות, ל-\\(1.2\\) יש 1 מקום. מינימום 1 מקום. חישוב \\(5.67 + 1.2 = 6.87\\). עיגול ל-1 מקום עשרוני -> \\(6.9\\)." },
+             { calculation: "(9.9 - 0.01) \\times 1.11", answer: "11.0", explanation: "שלב 1 (חיסור): \\(9.9 - 0.01 = 9.89\\). דיוק לפי מקומות עשרוניים (1 מ-\\(9.9\\)). התוצאה מוגבלת ל-1 מקום (דיוק של 3 ס\"מ, כמו \\(9.9\\)). שלב 2 (כפל): \\(9.89 \\times 1.11\\). דיוק לפי ס\"מ (3 ס\"מ מתוצאת החיסור, 3 ס\"מ מ-\\(1.11\\)). מינימום 3 ס\"מ. חישוב \\(9.89 \\times 1.11 = 10.9779\\). עיגול ל-3 ס\"מ -> \\(11.0\\). --- תיקון: 9.89 (3 ס\"מ) * 1.11 (3 ס\"מ) = 10.9779. עיגול ל-3 ס\"מ -> 11.0. **תשובה נכונה: 11.0**" }, // Corrected final rounding
+             { calculation: "50 / (1.23 + 0.5)", answer: "30", explanation: "שלב 1 (חיבור): \\(1.23 + 0.5 = 1.73\\). דיוק לפי מקומות עשרוניים (1 מ-\\(0.5\\)). התוצאה מוגבלת ל-1 מקום (דיוק של 2 ס\"מ, כמו \\(1.7\\)). שלב 2 (חילוק): \\(50 \\div 1.73\\). דיוק לפי ס\"מ (1 ס\"מ מ-\\(50\\), 2 ס\"מ מתוצאת החיבור). מינימום 1 ס\"מ. חישוב \\(50 \\div 1.73 \\approx 28.9017...\\). עיגול ל-1 ס\"מ -> \\(30\\). --- תיקון: 50 (1 ס\"מ) / 1.73 (2 ס\"מ) => מינימום 1 ס\"מ. 28.9 -> 30. **תשובה נכונה: 30**" }, // Corrected final rounding
+             { calculation: "(2.50 \\times 1.1) + 3.00", answer: "5.8", explanation: "שלב 1 (כפל): \\(2.50 \\times 1.1 = 2.75\\). דיוק לפי ס\"מ (3 ס\"מ מ-\\(2.50\\), 2 ס\"מ מ-\\(1.1\\)). מינימום 2 ס\"מ. התוצאה \\(2.75\\) כבר עם 3 ס\"מ, אבל דיוקה 2 ס\"מ. שלב 2 (חיבור): \\(2.75 + 3.00\\). דיוק לפי מקומות עשרוניים (2 מ-\\(2.75\\), 2 מ-\\(3.00\\)). מינימום 2 מקומות. חישוב \\(2.75 + 3.00 = 5.75\\). התוצאה כבר עם 2 מקומות עשרוניים. --- תיקון: כפל -> 2.75 (2 ס\"מ). חיבור: 2.75 + 3.00 = 5.75. הדיוק נקבע לפי מקומות עשרוניים: 2.75 (2 ס\"מ, 1 מקום עשרוני מ-1.1) + 3.00 (2 מקומות). מינימום 1 מקום. 5.75 עיגול ל-1 מקום -> 5.8. **תשובה נכונה: 5.8**" }, // Re-evaluated intermediate precision
+             { calculation: "(4.321 / 2.1) + 9.8", answer: "11.9", explanation: "שלב 1 (חילוק): \\(4.321 \\div 2.1 = 2.0576...\\). דיוק לפי ס\"מ (4 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. דיוק התוצאה הוא 2 ס\"מ (כמו \\(2.1\\)). שלב 2 (חיבור): \\(2.0576... + 9.8\\). דיוק לפי מקומות עשרוניים. ל-\\(2.0576...\\) (עם דיוק של 2 ס\"מ כמו 2.1) יש דיוק עד המקום העשרוני הראשון. ל-\\(9.8\\) יש מקום עשרוני אחד. מינימום 1 מקום. חישוב \\(2.0576... + 9.8 = 11.8576...\\). עיגול ל-1 מקום עשרוני -> \\(11.9\\) (כי 5 מעלה את 8). --- תיקון: 2.0576 (2 ס\"מ, 1 מקום עשרוני) + 9.8 (1 מקום עשרוני). => תוצאה ל-1 מקום עשרוני. 11.8576... -> 11.9. **תשובה נכונה: 11.9**" }, // Re-evaluated intermediate precision for addition
+             { calculation: "100.0 \\times (0.50 + 0.50)", answer: "100.", explanation: "שלב 1 (חיבור): \\(0.50 + 0.50 = 1.00\\). דיוק לפי מקומות עשרוניים (2 בשניהם). מינימום 2 מקומות. התוצאה \\(1.00\\) היא בעלת 3 ס\"מ ו-2 מקומות עשרוניים. שלב 2 (כפל): \\(100.0 \\times 1.00\\). דיוק לפי ס\"מ (4 ס\"מ, 3 ס\"מ). מינימום 3 ס\"מ. חישוב \\(100.0 \\times 1.00 = 100\\). רישום עם 3 ס\"מ -> \\(100.\\)." },
+            { calculation: "12 / (6.0 / 2.0)", answer: "4.0", explanation: "שלב 1 (חילוק בסוגריים): \\(6.0 \\div 2.0 = 3.0\\). דיוק לפי ס\"מ (2, 2). מינימום 2 ס\"מ. התוצאה \\(3.0\\) היא בעלת 2 ס\"מ. שלב 2 (חילוק): \\(12 \\div 3.0\\). דיוק לפי ס\"מ (2 מ-\\(12\\), 2 מ-\\(3.0\\)). מינימום 2 ס\"מ. חישוב \\(12 \\div 3.0 = 4\\). רישום עם 2 ס\"מ -> \\(4.0\\)." },
+             { calculation: "(1.5 + 2.5) \\times 3.5", answer: "14", explanation: "שלב 1 (חיבור): \\(1.5 + 2.5 = 4.0\\). דיוק לפי מקומות עשרוניים (1 בשניהם). מינימום 1 מקום. התוצאה \\(4.0\\) בעלת 2 ס\"מ ו-1 מקום עשרוני. שלב 2 (כפל): \\(4.0 \\times 3.5\\). דיוק לפי ס\"מ (2 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(4.0 \\times 3.5 = 14\\). התוצאה \\(14\\) כבר עם 2 ס\"מ." },
+            // Add 20 more questions here... (Generating these accurately is time-consuming)
+             { calculation: "8.88 / (2.2 + 1.1)", answer: "2.7", explanation: "שלב 1 (חיבור): \\(2.2 + 1.1 = 3.3\\). דיוק לפי 1 מקום עשרוני (משניהם). התוצאה \\(3.3\\) (2 ס\"מ). שלב 2 (חילוק): \\(8.88 \\div 3.3\\). דיוק לפי ס\"מ (3 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(8.88 \\div 3.3 \\approx 2.6909...\\). עיגול ל-2 ס\"מ -> \\(2.7\\)." },
+            { calculation: "(99.5 - 98.5) * 10.0", answer: "10.", explanation: "שלב 1 (חיסור): \\(99.5 - 98.5 = 1.0\\). דיוק לפי 1 מקום עשרוני (משניהם). התוצאה \\(1.0\\) (2 ס\"מ). שלב 2 (כפל): \\(1.0 \\times 10.0\\). דיוק לפי ס\"מ (2 ס\"מ, 3 ס\"מ). מינימום 2 ס\"מ. חישוב \\(1.0 \\times 10.0 = 10\\). רישום עם 2 ס\"מ -> \\(10.\\) --- תיקון: נדרש 2 ס\"מ. 10.0 הוא 3 ס\"מ. 10. הוא 2 ס\"מ. **תשובה נכונה: 10.**" }, // Corrected final precision
+             { calculation: "1.0 / (0.25 + 0.75)", answer: "1.0", explanation: "שלב 1 (חיבור): \\(0.25 + 0.75 = 1.00\\). דיוק לפי 2 מקומות עשרוניים (משניהם). התוצאה \\(1.00\\) (3 ס\"מ). שלב 2 (חילוק): \\(1.0 \\div 1.00\\). דיוק לפי ס\"מ (2 ס\"מ מ-\\(1.0\\), 3 ס\"מ מ-\\(1.00\\)). מינימום 2 ס\"מ. חישוב \\(1.0 \\div 1.00 = 1\\). רישום עם 2 ס\"מ -> \\(1.0\\)." },
+            { calculation: "(5.0 * 6.0) + 7.0", answer: "37", explanation: "שלב 1 (כפל): \\(5.0 \\times 6.0 = 30\\). דיוק לפי ס\"מ (2 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. התוצאה היא \\(30\\) (או \\(30.\\) לציון 2 ס\"מ). שלב 2 (חיבור): \\(30 + 7.0\\). דיוק לפי מקומות עשרוניים (0 מ-\\(30\\), 1 מ-\\(7.0\\)). מינימום 0 מקומות. חישוב \\(30 + 7.0 = 37.0\\). עיגול ל-0 מקומות -> \\(37\\)." },
+            { calculation: "20.0 / (1.5 + 0.5)", answer: "10.", explanation: "שלב 1 (חיבור): \\(1.5 + 0.5 = 2.0\\). דיוק לפי 1 מקום עשרוני (משניהם). התוצאה \\(2.0\\) (2 ס\"מ). שלב 2 (חילוק): \\(20.0 \\div 2.0\\). דיוק לפי ס\"מ (3 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(20.0 \\div 2.0 = 10\\). רישום עם 2 ס\"מ -> \\(10.\\)." },
+            { calculation: "(123 + 45) / 1.0", answer: "1.7e+2", explanation: "שלב 1 (חיבור): \\(123 + 45 = 168\\). דיוק לפי מקומות עשרוניים (0 בשניהם). התוצאה \\(168\\) (3 ס\"מ). שלב 2 (חילוק): \\(168 \\div 1.0\\). דיוק לפי ס\"מ (3 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(168 \\div 1.0 = 168\\). עיגול ל-2 ס\"מ -> \\(170\\). רישום בכתיב מדעי: \\(1.7 \\times 10^2\\) -> \\(1.7e+2\\)." },
+            { calculation: "(0.01 * 0.02) + 0.0003", answer: "0.0005", explanation: "שלב 1 (כפל): \\(0.01 \\times 0.02 = 0.0002\\). דיוק לפי ס\"מ (1 ס\"מ, 1 ס\"מ). מינימום 1 ס\"מ. התוצאה \\(0.0002\\) (1 ס\"מ). שלב 2 (חיבור): \\(0.0002 + 0.0003 = 0.0005\\). דיוק לפי מקומות עשרוניים (4, 4). מינימום 4 מקומות. התוצאה \\(0.0005\\) כבר עם 4 מקומות." },
+            { calculation: "7.0 * (10.5 - 10.0)", answer: "4", explanation: "שלב 1 (חיסור): \\(10.5 - 10.0 = 0.5\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. התוצאה \\(0.5\\) (1 ס\"מ). שלב 2 (כפל): \\(7.0 \\times 0.5\\). דיוק לפי ס\"מ (2 ס\"מ, 1 ס\"מ). מינימום 1 ס\"מ. חישוב \\(7.0 \\times 0.5 = 3.5\\). עיגול ל-1 ס\"מ -> \\(4\\)." },
+            { calculation: "1.00 / (2.00 + 3.00)", answer: "0.200", explanation: "שלב 1 (חיבור): \\(2.00 + 3.00 = 5.00\\). דיוק לפי 2 מקומות עשרוניים (משניהם). התוצאה \\(5.00\\) (3 ס\"מ). שלב 2 (חילוק): \\(1.00 \\div 5.00\\). דיוק לפי ס\"מ (3 ס\"מ, 3 ס\"מ). מינימום 3 ס\"מ. חישוב \\(1.00 \\div 5.00 = 0.2\\). רישום עם 3 ס\"מ -> \\(0.200\\)." },
+            { calculation: "(1.2e3 + 0.5e3) / 2.0", calculation_display: "(1.2 \\times 10^3 + 0.5 \\times 10^3) / 2.0", answer: "8.5e+2", explanation: "שלב 1 (חיבור): ניתן לחבר ישירות כי החזקות זהות. \\((1.2 + 0.5) \\times 10^3 = 1.7 \\times 10^3\\). דיוק לפי מקומות עשרוניים במנטיסות (1, 1). התוצאה \\(1.7 \\times 10^3\\) (2 ס\"מ). שלב 2 (חילוק): \\(1.7 \\times 10^3 \\div 2.0\\). דיוק לפי ס\"מ (2 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(1700 \\div 2.0 = 850\\). רישום עם 2 ס\"מ -> \\(8.5 \\times 10^2\\) -> \\(8.5e+2\\)." },
+            { calculation: "(10.0 * 5.0) / (2.0 + 3.0)", answer: "10.", explanation: "שלב 1 (כפל): \\(10.0 \\times 5.0 = 50\\). דיוק לפי ס\"מ (3, 2). מינימום 2 ס\"מ -> \\(50.\\) (2 ס\"מ). שלב 2 (חיבור): \\(2.0 + 3.0 = 5.0\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. התוצאה \\(5.0\\) (2 ס\"מ). שלב 3 (חילוק): \\(50. \\div 5.0\\). דיוק לפי ס\"מ (2, 2). מינימום 2 ס\"מ. חישוב \\(50 \\div 5.0 = 10\\). רישום עם 2 ס\"מ -> \\(10.\\)." },
+            { calculation: "6.6 / (2.2 * 1.0)", answer: "3.0", explanation: "שלב 1 (כפל): \\(2.2 \\times 1.0 = 2.2\\). דיוק לפי ס\"מ (2, 2). מינימום 2 ס\"מ. התוצאה \\(2.2\\) (2 ס\"מ). שלב 2 (חילוק): \\(6.6 \\div 2.2\\). דיוק לפי ס\"מ (2, 2). מינימום 2 ס\"מ. חישוב \\(6.6 \\div 2.2 = 3\\). רישום עם 2 ס\"מ -> \\(3.0\\)." },
+            { calculation: "100 * (1.0 + 0.01)", answer: "1.0e+2", explanation: "שלב 1 (חיבור): \\(1.0 + 0.01 = 1.01\\). דיוק לפי מקומות עשרוניים (1, 2). מינימום 1 מקום. התוצאה מוגבלת ל-1 מקום (דיוק של 2 ס\"מ כמו 1.0). שלב 2 (כפל): \\(100 \\times 1.01\\). דיוק לפי ס\"מ (1 ס\"מ מ-\\(100\\), 2 ס\"מ מתוצאת החיבור). מינימום 1 ס\"מ. חישוב \\(100 \\times 1.01 = 101\\). עיגול ל-1 ס\"מ -> \\(100\\) (או \\(1 \\times 10^2\\)). -> \\(1e+2\\)." },
+            { calculation: "(4.0 / 2.0) + (9.0 / 3.0)", answer: "5.0", explanation: "שלב 1א (חילוק): \\(4.0 \\div 2.0 = 2.0\\). דיוק 2 ס\"מ. שלב 1ב (חילוק): \\(9.0 \\div 3.0 = 3.0\\). דיוק 2 ס\"מ. שלב 2 (חיבור): \\(2.0 + 3.0\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. חישוב \\(2.0 + 3.0 = 5.0\\). התוצאה כבר עם 1 מקום." },
+            { calculation: "1.23 * (4.5 + 6.78)", answer: "13.9", explanation: "שלב 1 (חיבור): \\(4.5 + 6.78 = 11.28\\). דיוק לפי מקומות עשרוניים (1, 2). מינימום 1 מקום. התוצאה מוגבלת ל-1 מקום (דיוק של 3 ס\"מ כמו 11.3). שלב 2 (כפל): \\(1.23 \\times 11.28\\). דיוק לפי ס\"מ (3 ס\"מ מ-\\(1.23\\), 3 ס\"מ מתוצאת החיבור). מינימום 3 ס\"מ. חישוב \\(1.23 \\times 11.28 = 13.8744\\). עיגול ל-3 ס\"מ -> \\(13.9\\)." },
+            { calculation: "9.87 / (1.2 + 3.4)", answer: "2.1", explanation: "שלב 1 (חיבור): \\(1.2 + 3.4 = 4.6\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. התוצאה \\(4.6\\) (2 ס\"מ). שלב 2 (חילוק): \\(9.87 \\div 4.6\\). דיוק לפי ס\"מ (3 ס\"מ, 2 ס\"מ). מינימום 2 ס\"מ. חישוב \\(9.87 \\div 4.6 \\approx 2.1456...\\). עיגול ל-2 ס\"מ -> \\(2.1\\)." },
+            { calculation: "(1.0e-3 + 2.5e-3) * 100", calculation_display: "(1.0 \\times 10^{-3} + 2.5 \\times 10^{-3}) \\times 100", answer: "0.35", explanation: "שלב 1 (חיבור): \\((1.0 + 2.5) \\times 10^{-3} = 3.5 \\times 10^{-3}\\). דיוק לפי מקומות עשרוניים במנטיסות (1, 1). התוצאה \\(3.5 \\times 10^{-3}\\) (2 ס\"מ). שלב 2 (כפל): \\(3.5 \\times 10^{-3} \\times 100\\). דיוק לפי ס\"מ (2 ס\"מ, 1 ס\"מ מ-\\(100\\)). מינימום 1 ס\"מ. חישוב \\(0.0035 \\times 100 = 0.35\\). עיגול ל-1 ס\"מ -> \\(0.4\\). --- תיקון: אם 100 מדויק, אז מינימום 2 ס\"מ -> 0.35. נניח 100 מדויק. **תשובה נכונה: 0.35**" }, // Assume exact 100
+            { calculation: "5.0 + (10.0 / 2.0)", answer: "10.0", explanation: "שלב 1 (חילוק): \\(10.0 \\div 2.0 = 5.0\\). דיוק לפי ס\"מ (3, 2). מינימום 2 ס\"מ. התוצאה \\(5.0\\) (2 ס\"מ). שלב 2 (חיבור): \\(5.0 + 5.0\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. חישוב \\(5.0 + 5.0 = 10.0\\). התוצאה כבר עם 1 מקום." },
+            { calculation: "(3.0^2) + 1.1", calculation_display: "(3.0)^2 + 1.1", answer: "10.1", explanation: "שלב 1 (חזקה): \\((3.0)^2 = 3.0 \\times 3.0 = 9.0\\). דיוק לפי ס\"מ (2 ס\"מ). התוצאה \\(9.0\\) (2 ס\"מ). שלב 2 (חיבור): \\(9.0 + 1.1\\). דיוק לפי מקומות עשרוניים (1, 1). מינימום 1 מקום. חישוב \\(9.0 + 1.1 = 10.1\\). התוצאה כבר עם 1 מקום." }, // Added exponent
+            { calculation: "1000 / (5.0 * 4.0)", answer: "50", explanation: "שלב 1 (כפל): \\(5.0 \\times 4.0 = 20\\). דיוק לפי ס\"מ (2, 2). מינימום 2 ס\"מ -> \\(20.\\) (2 ס\"מ). שלב 2 (חילוק): \\(1000 \\div 20.\\). דיוק לפי ס\"מ (1 ס\"מ מ-\\(1000\\), 2 ס\"מ מ-\\(20.\\)). מינימום 1 ס\"מ. חישוב \\(1000 \\div 20 = 50\\). התוצאה \\(50\\) כבר עם 1 ס\"מ." }
+        ];
+        if (questions.length !== 30) { console.warn(`Warning: Expected 30 questions, found ${questions.length}`); }
+        const totalQuestions = questions.length;
+        let questionStates = Array(totalQuestions).fill(null).map(() => ({ userAnswer: null, isCorrect: null }));
+
+        // DOM Elements
+        let questionContainerEl, questionProgressEl, questionTextEl, userAnswerEl, submitButton, feedbackAreaEl, explanationAreaEl, nextButton, prevButton, resultsButton, resultsSummaryEl, finalScoreEl, totalQuestionsSpan, totalQuestionsFinalSpan, returnToQuestionsButton;
+
+        // --- Function Definitions (Identical JS logic to Chapter 3 persist version) ---
+        function loadQuestion(index) {
+            if (index < 0 || index >= totalQuestions) { console.error("Invalid index:", index); return; }
+            if (!questionContainerEl || !questionProgressEl || !questionTextEl || !userAnswerEl || !submitButton || !feedbackAreaEl || !explanationAreaEl || !prevButton || !nextButton || !resultsButton || !resultsSummaryEl) {
+                console.error("loadQuestion called before all elements were assigned! Aborting."); return;
+            }
+            currentQuestionIndex = index;
+            const currentQuestion = questions[index];
+            const currentState = questionStates[index] || { userAnswer: null, isCorrect: null };
+            console.log(`Loading Q${index + 1}. State:`, currentState);
+
+            questionProgressEl.textContent = `שאלה ${index + 1} מתוך ${totalQuestions}`;
+            const calculationDisplay = currentQuestion.calculation_display || currentQuestion.calculation; // Use display version if provided
+            const questionHTML = `חשב את התוצאה של <span class="calculation-part">\\(${calculationDisplay}\\)</span> ורשום אותה עם המספר הנכון של ספרות משמעותיות.`;
+            questionTextEl.innerHTML = questionHTML;
+
+            // Reset visual state first
+            userAnswerEl.value = '';
+            feedbackAreaEl.textContent = '';
+            feedbackAreaEl.className = 'feedback-area';
+            explanationAreaEl.style.display = 'none';
+            explanationAreaEl.innerHTML = '';
+            userAnswerEl.disabled = false;
+            submitButton.disabled = false;
+            submitButton.style.display = 'inline-block';
+
+             try {
+                if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                    MathJax.typesetPromise([questionTextEl])
+                        .then(() => console.log(`MathJax typeset Q${index + 1}`))
+                        .catch(err => console.error("MathJax Q error:", err));
+                } else { console.warn("MathJax not ready for question typesetting."); }
+            } catch (mjError) { console.error("Critical error during MathJax question typesetting:", mjError); }
+
+            // Restore Previous State IF exists
+            if (currentState.userAnswer !== null) {
+                userAnswerEl.value = currentState.userAnswer;
+                if (currentState.isCorrect !== null) {
+                    feedbackAreaEl.textContent = currentState.isCorrect ? 'נכון!' : 'לא נכון.';
+                    feedbackAreaEl.className = currentState.isCorrect ? 'feedback-area correct' : 'feedback-area incorrect';
+                    const answerDisplay = currentQuestion.answer.includes('e') ? currentQuestion.answer.replace(/e\+?(-?)/, '\\times 10^{$1') + '}' : currentQuestion.answer; // Improved e notation handling
+                    const explanationText = `<strong>התשובה הנכונה:</strong> <span class="number-part">\\(${answerDisplay}\\)</span><br><strong>הסבר:</strong> ${currentQuestion.explanation}`;
+                    explanationAreaEl.innerHTML = explanationText;
+                    explanationAreaEl.style.display = 'block';
+                     try {
+                        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                            MathJax.typesetPromise([explanationAreaEl])
+                                .then(() => console.log(`MathJax typeset Exp${index + 1}`))
+                                .catch(err => console.error("MathJax Exp restore error:", err));
+                        } else { console.warn("MathJax not ready for explanation typesetting."); }
+                    } catch (mjError) { console.error("Critical error during MathJax explanation typesetting:", mjError); }
+                    userAnswerEl.disabled = true;
+                    submitButton.disabled = true;
+                }
+            }
+
+            // Update Button Visibility
+            prevButton.style.visibility = (index === 0) ? 'hidden' : 'visible';
+            nextButton.style.display = (index === totalQuestions - 1) ? 'none' : 'inline-block';
+            resultsButton.style.display = (index === totalQuestions - 1) ? 'inline-block' : 'none';
+
+            // Ensure Container is Visible
+            resultsSummaryEl.style.display = 'none';
+            questionContainerEl.style.display = 'block'; // Make sure it's visible!
+
+            if (currentState.isCorrect === null) userAnswerEl.focus();
+        }
+
+        function checkAnswer() {
+            if (!userAnswerEl || !feedbackAreaEl || !explanationAreaEl || !submitButton ) {
+                console.error("Missing elements in checkAnswer"); return;
+            }
+            const index = currentQuestionIndex;
+            const userAnswer = userAnswerEl.value.trim();
+            const currentQuestion = questions[index];
+            const correctAnswer = currentQuestion.answer;
+            if (userAnswer === '') {
+                feedbackAreaEl.textContent = 'אנא הכנס תשובה.';
+                feedbackAreaEl.className = 'feedback-area incorrect';
+                return;
+            }
+            const isCorrect = (userAnswer === correctAnswer);
+            questionStates[index] = { userAnswer: userAnswer, isCorrect: isCorrect };
+            console.log(`Q${index+1} answered. Correct: ${isCorrect}. State:`, questionStates[index]);
+
+            const answerDisplay = correctAnswer.includes('e') ? correctAnswer.replace(/e\+?(-?)/, '\\times 10^{$1') + '}' : correctAnswer; // Improved e notation handling
+            const explanationText = `<strong>התשובה הנכונה:</strong> <span class="number-part">\\(${answerDisplay}\\)</span><br><strong>הסבר:</strong> ${currentQuestion.explanation}`;
+            explanationAreaEl.innerHTML = explanationText;
+            explanationAreaEl.style.display = 'block';
+
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([explanationAreaEl]).catch(err => console.error("MathJax Exp error:", err));
+            }
+
+            if (isCorrect) {
+                feedbackAreaEl.textContent = 'נכון!';
+                feedbackAreaEl.className = 'feedback-area correct';
+            } else {
+                feedbackAreaEl.textContent = 'לא נכון.';
+                feedbackAreaEl.className = 'feedback-area incorrect';
+            }
+            submitButton.disabled = true;
+            userAnswerEl.disabled = true;
+        }
+
+        function showResults() {
+            if (!questionContainerEl || !resultsSummaryEl || !finalScoreEl || !totalQuestionsFinalSpan) {
+                console.error("Missing elements in showResults"); return;
+            }
+            console.log("Showing results. Final State:", questionStates);
+            const finalScore = questionStates.filter(state => state && state.isCorrect).length;
+            finalScoreEl.textContent = finalScore;
+            totalQuestionsFinalSpan.textContent = totalQuestions;
+            questionContainerEl.style.display = 'none';
+            resultsSummaryEl.style.display = 'block';
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([resultsSummaryEl]).catch(err => console.error("MathJax Res error:", err));
+            }
+        }
+
+        // --- Initialization (Identical JS logic) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM loaded - Chapter 5 Persist");
+            // Assign Elements
+            questionContainerEl = document.getElementById('question-container');
+            questionProgressEl = document.getElementById('question-progress');
+            questionTextEl = document.getElementById('question-text');
+            userAnswerEl = document.getElementById('user-answer');
+            submitButton = document.getElementById('submit-button');
+            feedbackAreaEl = document.getElementById('feedback-area');
+            explanationAreaEl = document.getElementById('explanation-area');
+            nextButton = document.getElementById('next-button');
+            prevButton = document.getElementById('prev-button');
+            resultsButton = document.getElementById('results-button');
+            resultsSummaryEl = document.getElementById('results-summary');
+            finalScoreEl = document.getElementById('final-score');
+            totalQuestionsSpan = document.getElementById('total-questions');
+            totalQuestionsFinalSpan = document.getElementById('total-questions-final');
+            returnToQuestionsButton = document.getElementById('return-to-questions-button');
+
+            if (!questionContainerEl || !submitButton || !nextButton || !prevButton || !questionTextEl || !userAnswerEl) {
+                console.error("Essential DOM elements missing after DOM load! Aborting initialization.");
+                const container = document.querySelector('.container');
+                if(container) container.innerHTML = "<h1>שגיאה חמורה בטעינת הרכיבים. נסה לרענן את הדף.</h1>";
+                return;
+            }
+
+            totalQuestionsSpan.textContent = totalQuestions;
+            // Event Listeners
+            submitButton.addEventListener('click', checkAnswer);
+            nextButton.addEventListener('click', () => { if (currentQuestionIndex < totalQuestions - 1) loadQuestion(currentQuestionIndex + 1); });
+            prevButton.addEventListener('click', () => { if (currentQuestionIndex > 0) loadQuestion(currentQuestionIndex - 1); });
+            resultsButton.addEventListener('click', showResults);
+            returnToQuestionsButton.addEventListener('click', () => loadQuestion(currentQuestionIndex));
+            userAnswerEl.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !submitButton.disabled) { e.preventDefault(); checkAnswer(); } });
+            // Load first question after MathJax is ready
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => { console.log("MathJax ready."); loadQuestion(0); })
+                .catch((err) => { console.error("MathJax init failed.", err); loadQuestion(0); });
+            } else { console.error("MathJax object not found."); loadQuestion(0); }
+        });
+    </script>
+</body>
+</html>

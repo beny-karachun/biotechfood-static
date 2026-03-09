@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>חומרים אנטימיקרוביאליים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "חומר בקטריוסטטי (Bacteriostatic)", definition: "חומר שאינו הורג חיידקים אך מעכב את גידולם והתרבותם. לאחר הסרת החומר, הגידול יכול להתחדש." },
+            { term: "חומר בקטריוצידי (Bacteriocidal)", definition: "חומר שהורג חיידקים, אך בדרך כלל אינו גורם לפירוק (ליזיס) של התא. ספירת התאים הכוללת נשארת קבועה, אך ספירת התאים החיים יורדת." },
+            { term: "חומר בקטריוליטי (Bacteriolytic)", definition: "חומר שהורג חיידקים על ידי גרימת ליזיס (הרס ופירוק) של דופן התא. גורם לירידה גם בספירת התאים הכוללת וגם בספירת התאים החיים." },
+            { term: "MIC (Minimal Inhibitory Concentration)", definition: "הריכוז המינימלי של חומר אנטי-מיקרוביאלי הדרוש כדי לעכב את גידולו הנראה של מיקרואורגניזם בתנאי מבחנה." },
+            { term: "MLC (Minimal Lethal Concentration)", definition: "הריכוז המינימלי של חומר אנטי-מיקרוביאלי הדרוש כדי להרוג אחוז מסוים (למשל 99.9%) של אוכלוסיית החיידקים." },
+            { term: "מבחן קירבי-באואר (Kirby-Bauer)", definition: "שיטת דיפוזיה באגר לקביעת רגישות חיידקים לאנטיביוטיקות. קוטר אזור העיכוב סביב דיסקית האנטיביוטיקה מעיד על מידת יעילותה." },
+            { term: "אזור עיכוב (Zone of Inhibition)", definition: "האזור סביב דיסקית אנטיביוטיקה במבחן קירבי-באואר שבו לא מתרחש גידול חיידקים." },
+            { term: "סטריילנט (Sterilant)", definition: "כימיקל חזק המשמיד את כל צורות החיים המיקרוביאליות, כולל נבגים (ספורות). משמש לעיקור 'קר' של ציוד רגיש לחום." },
+            { term: "דזינפקטנט (Disinfectant)", definition: "כימיקל שהורג מיקרואורגניזמים פתוגניים אך אינו יעיל בהכרח נגד נבגים. מיועד לשימוש על משטחים דוממים וחפצים." },
+            { term: "אנטיספטי (Antiseptic)", definition: "כימיקל המעכב או הורג מיקרואורגניזמים ובטוח לשימוש חיצוני על רקמות חיות, כמו עור ופצעים." },
+            { term: "חומר כימותרפי (Chemotherapeutic agent)", definition: "חומר המשמש לטיפול מערכתי (פנימי) בגוף. חייב להיות בעל רעילות סלקטיבית גבוהה, כלומר פוגע במיקרוב אך לא במארח." },
+            { term: "שיטת מיהול במבחנה (Tube Dilution)", definition: "טכניקה לקביעת MIC על ידי הכנת סדרת מיהולים של החומר האנטי-מיקרוביאלי במצע נוזלי וזריעת חיידקים." },
+            { term: "Etest", definition: "פס פלסטיק עם גרדיאנט ריכוזים של אנטיביוטיקה, המאפשר קביעה כמותית ישירה של ה-MIC על צלחת אגר." },
+            { term: "פניצילינים (Penicillins)", definition: "קבוצת אנטיביוטיקות הפוגעות במנגנון סינתזת דופן התא החיידקי (פפטידוגליקן)." },
+            { term: "קווינולונים (Quinolones)", definition: "קבוצת אנטיביוטיקות הפוגעות באנזים DNA gyrase, ובכך מעכבות את שכפול ה-DNA החיידקי." }
+        ];
+
+        const mcqData = [
+            {
+                question: "בניסוי, הוספת חומר אנטי-מיקרוביאלי לתרבית חיידקים גרמה לעצירת העלייה בספירת התאים הכוללת ובספירת התאים החיים. לאחר הסרת החומר, שתי הספירות חזרו לעלות. איזה סוג חומר זה?",
+                options: ["בקטריוצידי", "בקטריוסטטי", "בקטריוליטי", "סטריילנט"],
+                correctIndex: 1,
+                explanation: "חומר בקטריוסטטי מעכב גידול מבלי להרוג את התאים. לכן, הספירות מתייצבות ועם הסרתו, הגידול מתחדש. חומר צידי היה מוריד את ספירת החיים, וחומר ליטי היה מוריד את שתי הספירות."
+            },
+            {
+                question: "מהו ההבדל העקרוני בין התוצאה הגרפית של פעולת חומר בקטריוצידי לבין זו של חומר בקטריוליטי?",
+                options: ["בקטריוצידי גורם לירידה בספירת החיים בלבד, בעוד בקטריוליטי גורם לירידה בספירת החיים והכוללת", "בקטריוצידי גורם לעלייה בספירת החיים, בעוד בקטריוליטי גורם לירידה", "בקטריוצידי אינו משפיע על ספירת התאים הכוללת, בעוד בקטריוליטי גורם לעלייתה", "אין הבדל גרפי משמעותי בין השניים"],
+                correctIndex: 0,
+                explanation: "חומר בקטריוצידי הורג תאים אך לא מפרק אותם, לכן ספירת התאים הכוללת (חיים ומתים) נשארת קבועה בעוד ספירת החיים יורדת. חומר בקטריוליטי מפרק תאים (ליזיס), ולכן גם ספירת התאים הכוללת יורדת."
+            },
+            {
+                question: "במבחן קירבי-באואר, נמצא כי לאנטיביוטיקה A יש אזור עיכוב בקוטר 20 ממ, ולאנטיביוטיקה B יש אזור עיכוב בקוטר 15 ממ. מהי המסקנה הבטוחה ביותר שניתן להסיק?",
+                options: ["אנטיביוטיקה A בהכרח יותר חזקה (פוטנטית) מ-B", "החיידק הנבדק רגיש יותר לאנטיביוטיקה A מאשר ל-B בתנאי המבחן", "אנטיביוטיקה B פחות מסיסה מאנטיביוטיקה A", "ה-MIC של אנטיביוטיקה A נמוך יותר מה-MIC של B"],
+                correctIndex: 1,
+                explanation: "התוצאה מראה שהחיידק רגיש יותר ל-A בתנאי הניסוי הספציפיים. לא ניתן להסיק בוודאות על חוזק, מסיסות או MIC, כיוון שגודל אזור העיכוב תלוי במכלול גורמים כולל קבוע הדיפוזיה והריכוז בדיסקית."
+            },
+            {
+                question: "איזה מהבאים הוא השלב ההגיוני הבא לאחר קביעת ערך MIC של אנטיביוטיקה במבחן מיהול נוזלי, במטרה לקבוע את ערך ה-MLC?",
+                options: ["ביצוע מבחן קירבי-באואר עם אותה אנטיביוטיקה", "ביצוע זריעה על מצע אגר נטול אנטיביוטיקה, ממבחנות שלא הראו גידול", "חזרה על מבחן ה-MIC עם אינוקולום (כמות חיידקים התחלתית) גדול יותר", "מדידת העכירות במבחנות לאחר 48 שעות נוספות של הדגרה"],
+                correctIndex: 1,
+                explanation: "כדי לקבוע MLC, יש לבדוק כמה תאים שרדו במבחנות שבהן הגידול עוכב (כלומר, בריכוזי MIC ומעלה). עושים זאת על ידי העברת דגימה ממבחנות אלו לצלחת אגר ללא אנטיביוטיקה ובדיקה אם מתפתחות מושבות."
+            },
+            {
+                question: "איזה מהבאים אינו מהווה גורם ישיר המשפיע על ערך ה-MIC המתקבל בניסוי סטנדרטי?",
+                options: ["זמן ההדגרה של התרבית", "הרכב מצע הגידול", "גודל האינוקולום ההתחלתי", "היצרן של כלי הזכוכית (מבחנות)"],
+                correctIndex: 3,
+                explanation: "היצרן של המבחנות אינו משפיע על התוצאה הביולוגית. לעומת זאת, זמן הדגרה, הרכב המצע וגודל האינוקולום הם פרמטרים קריטיים שחייבים להיות סטנדרטיים לקבלת תוצאות MIC אמינות והשוואתיות."
+            },
+            {
+                question: "בית חולים מעוניין לעקר אנדוסקופ פלסטי רגיש לחום. באיזה סוג חומר יש להשתמש למטרה זו?",
+                options: ["אנטיספטי כמו אלכוהול 70%", "דזינפקטנט כמו תרכובת כלור", "סטריילנט כמו אתילן אוקסיד", "סניטייזר על בסיס פנולי"],
+                correctIndex: 2,
+                explanation: "המטרה היא עיקור (השמדת כל החיים, כולל נבגים) של מכשיר רגיש לחום. סטריילנטים (חומרי עיקור 'קר') כמו אתילן אוקסיד מתאימים למשימה זו, בעוד שהאחרים אינם מבטיחים עיקור מלא או מיועדים למטרות אחרות."
+            },
+            {
+                question: "מה ההבחנה המדויקת ביותר בין דזינפקטנט לאנטיספטי?",
+                options: ["דזינפקטנטים הורגים וירוסים, אנטיספטים לא", "אנטיספטים בטוחים לשימוש על רקמה חיה, דזינפקטנטים מיועדים למשטחים דוממים", "דזינפקטנטים הם תמיד בקטריוצידים, ואנטיספטים הם תמיד בקטריוסטטים", "רק אנטיספטים יעילים נגד נבגים"],
+                correctIndex: 1,
+                explanation: "ההגדרה המבחינה העיקרית היא סביבת השימוש והרעילות למארח. אנטיספטים מיועדים לרקמות חיות (עור, פצעים), בעוד דזינפקטנטים, שלרוב רעילים יותר, מיועדים למשטחים דוממים."
+            },
+            {
+                question: "אנטיביוטיקות ממשפחת הפניצילינים פוגעות בסינתזת דופן התא. נגד איזה מהבאים הן צפויות להיות הכי פחות יעילות?",
+                options: ["חיידקי גראם-חיוביים עם דופן עבה", "חיידקי ספירוכטה", "מיקופלזמה (חיידק חסר דופן תא)", "חיידקי גראם-שליליים"],
+                correctIndex: 2,
+                explanation: "פניצילין פועל על בניית דופן הפפטידוגליקן. למיקופלזמה אין דופן תא כלל, ולכן מנגנון הפעולה של פניצילין אינו רלוונטי עבורה, והיא עמידה באופן טבעי."
+            },
+            {
+                question: "כיצד אלכוהול בריכוז 60-85% פועל כחומר חיטוי יעיל על העור?",
+                options: ["הוא מעכב באופן ספציפי את האנזים DNA gyrase", "הוא גורם לדנטורציה של חלבונים והמסת ליפידים בממברנה", "הוא מונע יצירת ATP בתא החיידק", "הוא משמיד ביעילות גבוהה נבגי חיידקים"],
+                correctIndex: 1,
+                explanation: "אלכוהול פועל במנגנון לא ספציפי של דנטורציית חלבונים (שינוי המבנה המרחבי שלהם) והמסת הממברנה השומנית של התא. הוא אינו יעיל במיוחד נגד נבגים."
+            },
+            {
+                question: "באיזו סיטואציה חיטוי ידיים באמצעות ג'ל אלכוהול יהיה פחות יעיל משטיפה במים וסבון?",
+                options: ["לפני إجراء ניתוחי", "כאשר הידיים מלוכלכות באופן נראה לעין", "לאחר מגע עם חולה שאינו מדבק", "בכניסה למחלקה בבית חולים"],
+                correctIndex: 1,
+                explanation: "ג'ל אלכוהול יעיל על משטחים נקיים יחסית. כאשר יש לכלוך אורגני נראה לעין, הוא עלול להפריע לפעולת האלכוהול. שטיפה במים וסבון מסירה פיזית את הלכלוך והמיקרובים, ולכן עדיפה במצב זה."
+            },
+            {
+                question: "מהי המגבלה העיקרית של שיטת מיהול במבחנה (Tube dilution) לקביעת MIC בלבד?",
+                options: ["היא אינה כמותית", "היא אינה מבחינה בין חומר בקטריוסטטי לחומר בקטריוצידי", "היא דורשת ציוד יקר ומסובך", "לא ניתן לבצע אותה על חיידקים אנאירוביים"],
+                correctIndex: 1,
+                explanation: "מבחנת MIC מראה רק את הריכוז המונע גידול נראה. היא לא מראה אם התאים במבחנה מתים (צידי) או רק 'רדומים' (סטטי). כדי לדעת זאת, יש צורך בבדיקת המשך (כמו קביעת MLC)."
+            },
+            {
+                question: "חומר כימותרפי, בניגוד לאנטיספטי, חייב להיות בעל:",
+                options: ["טווח פעולה רחב מאוד", "מנגנון פעולה בקטריוליטי", "רעילות סלקטיבית גבוהה", "מקור טבעי בלבד"],
+                correctIndex: 2,
+                explanation: "הדרישה המרכזית מחומר כימותרפי (תרופה) היא רעילות סלקטיבית: היכולת לפגוע במטרה (המיקроб) ביעילות גבוהה תוך גרימת נזק מינימלי לתאי המארח (האדם)."
+            },
+            {
+                question: "קווינולונים כמו Ciprofloxacin פוגעים באנזים DNA gyrase. תהליך זה מעכב באופן ישיר את:",
+                options: ["סינתזת חלבונים בריבוזום", "בניית דופן התא", "שכפול ה-DNA החיידקי", "סינתזת חומצה פולית"],
+                correctIndex: 2,
+                explanation: "DNA gyrase חיוני לתהליך פיתול-העל של ה-DNA, המאפשר את פתיחת הסליל לצורך שכפול. פגיעה בו עוצרת ישירות את שכפול החומר הגנטי של החיידק."
+            },
+            {
+                question: "מה היתרון המרכזי של Etest על פני מבחן קירבי-באואר סטנדרטי?",
+                options: ["הוא מהיר יותר ונותן תוצאה תוך שעה", "הוא מאפשר קביעה כמותית ישירה של ערך ה-MIC", "הוא בודק 10 אנטיביוטיקות שונות בו זמנית", "הוא אינו דורש תנאי גידול סטנדרטיים"],
+                correctIndex: 1,
+                explanation: "בעוד קירבי-באואר נותן הערכה איכותית (רגיש, בינוני, עמיד) המבוססת על קוטר, ה-Etest מספק ערך MIC כמותי ומדויק (למשל, 2 µg/ml) הנקרא ישירות מהפס."
+            },
+            {
+                question: "כימיקל המוגדר כ-viricidal הוא חומר אשר:",
+                options: ["מעכב שכפול של וירוסים בתוך תאי המארח", "הורג וירוסים, אך לא בהכרח חיידקים או פטריות", "הורג חיידקים ופטריות, אך לא וירוסים", "מעכב את כניסת הווירוס לתא המארח"],
+                correctIndex: 1,
+                explanation: "הסיומת 'cidal' משמעותה 'הורג'. 'viri' מתייחס לווירוסים. לכן, viricidal הוא חומר שהורג וירוסים."
+            },
+            {
+                question: "איזו קבוצת חומרים מיועדת להפחתת המטען המיקרוביאלי לרמות הנחשבות בטוחות, אך לא בהכרח להשמדה מלאה?",
+                options: ["Sterilants", "Disinfectants", "Antiseptics", "Sanitizers"],
+                correctIndex: 3,
+                explanation: "Sanitizers (כמו סבונים וחומצות חלשות) מיועדים להורדת העומס המיקרוביאלי לרמה בטוחה, למשל בתעשיית המזון או במטבחים, אך אינם מבצעים עיקור או חיטוי מלא."
+            },
+            {
+                question: "בניסוי, תרבית חיידקים טופלה בחומר X. מדידת עכירות (ספירת תאים כוללת) הראתה ירידה דרמטית, במקביל לירידה בספירת התאים החיים. מהי פעולתו של חומר X?",
+                options: ["בקטריוסטטית בלבד", "בקטריוצידית שאינה ליטית", "בקטריוליטית", "מעודדת יצירת ביופילם"],
+                correctIndex: 2,
+                explanation: "ירידה בספירת התאים הכוללת (הנמדדת על ידי עכירות) מעידה על כך שתאים נהרסים ומתפרקים פיזית (ליזיס). זוהי ההגדרה של פעילות בקטריוליטית."
+            },
+             {
+                question: "תרופות סולפה (Sulfonamides) מתחרות עם PABA ובכך מעכבות סינתזה של חומצה פולית. מדוע תרופות אלו רעילות באופן סלקטיבי לחיידקים ולא פוגעות באדם?",
+                options: ["לאדם יש דופן תא שונה", "הריבוזומים של האדם שונים", "האדם מקבל חומצה פולית מוכנה מהמזון ואינו מסנתז אותה", "לאדם אין DNA gyrase"],
+                correctIndex: 2,
+                explanation: "חיידקים מסנתזים חומצה פולית בעצמם, והיא חיונית להם. בני אדם אינם יכולים לסנתז אותה וחייבים לקבלה מהתזונה. לכן, עיכוב המסלול הזה פוגע בחיידקים אך לא בנו, וזו דוגמה קלאסית לרעילות סלקטיבית."
+            },
+            {
+                question: "איזה מהבאים מתאר בצורה הטובה ביותר את ההגדרה של 'רחב טווח' (broad spectrum) בהקשר של חומר אנטי-מיקרוביאלי?",
+                options: ["החומר יעיל נגד חיידקים, וירוסים ופטריות בו זמנית", "החומר יעיל נגד מגוון רחב של מיני חיידקים, למשל גם גראם-חיוביים וגם גראם-שליליים", "החומר פועל במנגנון בקטריוליטי חזק במיוחד", "החומר נשאר פעיל בגוף למשך זמן רב"],
+                correctIndex: 1,
+                explanation: "רחב טווח מתייחס ליעילות של החומר (בדרך כלל אנטיביוטיקה) כנגד קבוצות שונות ומגוונות של חיידקים. צר טווח, לעומת זאת, פועל על קבוצה מצומצמת יותר."
+            },
+            {
+                question: "איזה מהבאים פועל על ידי עיכוב סינתזת חלבון באמצעות קישור לתת-היחידה 30S של הריבוזום החיידקי?",
+                options: ["פניצילין", "ונקומיצין", "טטרציקלין", "ריפמפין"],
+                correctIndex: 2,
+                explanation: "טטרציקלינים הם קבוצת אנטיביוטיקות קלאסית שמעכבת את סינתזת החלבון על ידי היקשרות הפיכה לתת-היחידה 30S של הריבוזום, ובכך מונעת את קשירת ה-aminoacyl-tRNA לאתר A."
+            },
+            {
+                question: "חומר הגורם לעיכוב האנזים RNA פולימראז בחיידקים יפגע באופן ישיר בתהליך:",
+                options: ["שכפול DNA", "תיעתוק (יצירת mRNA)", "תרגום (יצירת חלבון)", "בניית דופן התא"],
+                correctIndex: 1,
+                explanation: "RNA פולימראז הוא האנזים האחראי על תהליך התיעתוק, שבו נוצרת מולקולת mRNA על בסיס תבנית DNA. פגיעה בו עוצרת את יצירת ה-mRNA."
+            },
+            {
+                question: "מדוע חשובה סטנדרטיזציה במבחני רגישות כמו קביעת MIC?",
+                options: ["כדי להבטיח שהתוצאות יהיו זהות בכל מעבדה בעולם", "כדי לאפשר השוואה אמינה של תוצאות בין מעבדות שונות ובין זמנים שונים", "כדי להוזיל את עלות הבדיקה", "כדי לקצר את זמן קבלת התוצאה"],
+                correctIndex: 1,
+                explanation: "כיוון שגורמים רבים (כמו גודל אינוקולום, מצע, טמפרטורה) משפיעים על התוצאה, יש לבצע את המבחן בתנאים מוגדרים וקבועים (סטנדרטיים) כדי שהתוצאות יהיו בעלות משמעות קלינית וניתנות להשוואה."
+            },
+            {
+                question: "חומר שפוגע במבנה ובתפקוד הממברנה הציטופלזמטית של החיידק, כמו Polymyxins, צפוי לגרום ל:",
+                options: ["עיכוב בסינתזת דופן התא", "דליפת תוכן התא החוצה ומוות מהיר", "עצירת שכפול ה-DNA", "מניעת יצירת חומצה פולית"],
+                correctIndex: 1,
+                explanation: "הממברנה הציטופלזמטית שומרת על הסביבה הפנימית של התא. פגיעה בשלמותה גורמת לדליפה בלתי מבוקרת של רכיבים חיוניים החוצה, מה שמוביל למות התא."
+            },
+            {
+                question: "איזו שיטה מאפשרת לקבוע MIC אך אינה מאפשרת לקבוע MLC באופן ישיר?",
+                options: ["מבחן מיהול במבחנה ואחריו זריעה על אגר", "מבחן קירבי-באואר", "ספירת חיידקים חיה לפני ואחרי טיפול", "שילוב של Etest וזריעה מהאזור שמתחת ל-MIC"],
+                correctIndex: 1,
+                explanation: "מבחן קירבי-באואר מודד עיכוב גידול (נותן אינדיקציה לרגישות, שקשורה ל-MIC) אך אינו מספק מידע אם התאים באזור העיכוב מתים או רק מעוכבים. לכן, לא ניתן לקבוע ממנו ישירות את ה-MLC."
+            },
+            {
+                question: "סטודנט במעבדה מצא כי ערך ה-MLC של אנטיביוטיקה מסוימת שווה לערך ה-MIC שלה. מה ניתן להסיק מכך?",
+                options: ["האנטיביוטיקה היא בקטריוסטטית", "האנטיביוטיקה היא בקטריוצידית", "התרחשה טעות בניסוי, מצב כזה אינו אפשרי", "האנטיביוטיקה יעילה רק בריכוזים גבוהים מאוד"],
+                correctIndex: 1,
+                explanation: "כאשר הריכוז המינימלי שמעכב גידול (MIC) הוא גם הריכוז שהורג את החיידקים (MLC), פירוש הדבר שהחומר הוא קטלני (צידי) ולא רק מעכב. אם החומר היה סטטי, ה-MLC היה גבוה משמעותית מה-MIC."
+            },
+            {
+                question: "השימוש בטכנולוגיית UV-A לחיטוי מתמשך בבתי חולים הוא דוגמה לשימוש ב:",
+                options: ["חומר אנטיספטי", "גורם פיזיקלי אנטי-מיקרוביאלי", "סטריילנט כימי", "אנטיביוטיקה רחבת טווח"],
+                correctIndex: 1,
+                explanation: "קרינת UV היא גורם פיזיקלי, לא כימי, המשמש להשמדת מיקרואורגניזמים על ידי גרימת נזק ל-DNA שלהם. זהו לא חומר כימי ולא אנטיביוטיקה."
+            },
+            {
+                question: "איזו קבוצת חומרים משמשת לחיטוי משטחים בבתי חולים, אך אינה נחשבת בטוחה להשמדת נבגים?",
+                options: ["Sanitizers", "Sterilants", "Disinfectants", "Germicides"],
+                correctIndex: 2,
+                explanation: "Disinfectants (חומרי חיטוי) יעילים נגד רוב הפתוגנים על משטחים דוממים, אך ההגדרה שלהם מציינת במפורש שהם לא בהכרח משמידים נבגים עמידים. לצורך השמדת נבגים נדרש Sterilant."
+            },
+            {
+                question: "במבחן קירבי-באואר, הגורם שהכי פחות סביר שישפיע על קוטר אזור העיכוב הוא:",
+                options: ["קבוע הדיפוזיה של האנטיביוטיקה באגר", "ריכוז האנטיביוטיקה בדיסקית", "מידת הרגישות של החיידק לאנטיביוטיקה", "צבע המושבות של החיידק"],
+                correctIndex: 3,
+                explanation: "צבע המושבות הוא תכונה פנוטיפית שאינה קשורה למנגנון הרגישות או לעקרונות הפיזיקליים של המבחן (דיפוזיה, ריכוז). כל שאר הגורמים משפיעים ישירות על גודל אזור העיכוב."
+            },
+            {
+                question: "איזה מנגנון פעולה אינו שייך לאנטיביוטיקות הפוגעות בסינתזת חלבון?",
+                options: ["קישור לתת-יחידה 50S של הריבוזום", "קישור לתת-יחידה 30S של הריבוזום", "פגיעה ב-tRNA", "עיכוב DNA פולימראז"],
+                correctIndex: 3,
+                explanation: "עיכוב DNA פולימראז (או DNA gyrase) הוא מנגנון הפוגע בשכפול ה-DNA, ולא בסינתזת חלבונים המתרחשת בריבוזום. כל שאר האפשרויות הן מטרות ידועות של אנטיביוטיקות המעכבות תרגום."
+            },
+            {
+                question: "חומר כמו Mupirocin פוגע בסינתזת חלבון על ידי עיכוב פעולת ה-tRNA. מדוע סביר להניח שהוא יהיה בעל רעילות סלקטיבית?",
+                options: ["כי תאי אדם אינם משתמשים ב-tRNA", "כי ה-tRNA והאנזימים הקשורים אליו שונים מהותית בין חיידקים לבני אדם", "כי לחיידקים יש דופן תא המאפשר חדירה טובה יותר", "כי הוא פועל רק על חיידקים גראם-שליליים"],
+                correctIndex: 1,
+                explanation: "רעילות סלקטיבית מתבססת על הבדלים בין התא הפרוקריוטי (חיידק) לתא האאוקריוטי (אדם). הבדלים במבנה ה-tRNA או באנזימים המפעילים אותו (aminoacyl-tRNA synthetases) יכולים להוות מטרה מצוינת לאנטיביוטיקה סלקטיבית."
+            }
+        ];
+
+        const tfData = [
+            { question: "חומר בקטריוצידי תמיד יגרום לירידה בעכירות של תרבית חיידקים.", answer: false, explanation: "לא נכון. רק חומר בקטריוליטי, הגורם לפירוק התא (ליזיס), יגרום לירידה בעכירות (ספירת תאים כוללת). חומר בקטריוצידי שאינו ליטי הורג תאים אך משאיר אותם שלמים, ולכן העכירות נשארת קבועה." },
+            { question: "ערך ה-MLC של אנטיביוטיקה לעולם לא יכול להיות נמוך מערך ה-MIC שלה.", answer: true, explanation: "נכון. MIC הוא הריכוז המינימלי שמעכב גידול. לא ייתכן שהריכוז הדרוש להרוג את החיידקים (MLC) יהיה נמוך מהריכוז הדרוש לעצירת הגידול שלהם." },
+            { question: "מבחן קירבי-באואר מספק תוצאה כמותית מדויקת של ערך ה-MIC.", answer: false, explanation: "לא נכון. מבחן קירבי-באואר הוא מבחן איכותי-למחצה. הוא מסווג את החיידק כ'רגיש', 'בינוני' או 'עמיד' על סמך קוטר אזור העיכוב, אך אינו נותן ערך MIC מספרי ישיר. לשם כך נדרש Etest או מבחן מיהול." },
+            { question: "ניתן להשתמש בדזינפקטנטים לחיטוי פצעים פתוחים על העור.", answer: false, explanation: "לא נכון. דזינפקטנטים מיועדים למשטחים דוממים והם לרוב רעילים לרקמות חיות. לחיטוי פצעים יש להשתמש באנטיספטיים." },
+            { question: "הוספת חומר בקטריוסטטי לתרבית תגרום לירידה מיידית בספירת התאים החיים.", answer: false, explanation: "לא נכון. חומר בקטריוסטטי עוצר את הגידול, כלומר ספירת התאים החיים תתייצב ותפסיק לעלות, אך היא לא תרד." },
+            { question: "גודל האינוקולום (כמות החיידקים ההתחלתית) הוא גורם זניח בקביעת MIC.", answer: false, explanation: "לא נכון. גודל האינוקולום הוא אחד הגורמים הקריטיים המשפיעים על תוצאת ה-MIC, ולכן חייבים להקפיד על סטנדרטיזציה שלו." },
+            { question: "סטריילנט הוא כימיקל שהורג את כל סוגי המיקרואורגניזמים, כולל נבגים עמידים.", answer: true, explanation: "נכון. זוהי ההגדרה של סטריילנט (חומר מעקר), מה שמבדיל אותו מדזינפקטנט." },
+            { question: "אלכוהול בריכוז 70% יעיל מאוד בהשמדת נבגים של חיידקים.", answer: false, explanation: "לא נכון. אלכוהול אינו יעיל במיוחד כנגד נבגים עמידים. נדרשים חומרים חזקים יותר כמו סטריילנטים להשמדתם." },
+            { question: "חומר כימותרפי חייב להיות בעל רעילות סלקטיבית.", answer: true, explanation: "נכון. זוהי הדרישה הבסיסית והחשובה ביותר מחומר המשמש כתרופה פנימית - לפגוע בפתוגן עם נזק מינימלי למארח." },
+            { question: "במבחן קירבי-באואר, אזור עיכוב גדול יותר מעיד בהכרח על אנטיביוטיקה חזקה יותר.", answer: false, explanation: "לא נכון. גודל אזור העיכוב מושפע לא רק מחוזק האנטיביוטיקה, אלא גם ממשקלה המולקולרי, מסיסותה וקצב הדיפוזיה שלה באגר. אנטיביוטיקה חזקה אך גדולה ואיטית בדיפוזיה עלולה לתת אזור קטן יותר." },
+            { question: "פניצילין הוא דוגמה לאנטיביוטיקה רחבת טווח הפועלת גם על חיידקים וגם על וירוסים.", answer: false, explanation: "לא נכון. פניצילין פועל על דופן התא החיידקי. לווירוסים אין דופן תא כזה, ולכן אנטיביוטיקות אינן יעילות נגדם." },
+            { question: "שיטת Etest מאפשרת לקבוע גם MIC וגם MLC בו-זמנית על אותה צלחת.", answer: false, explanation: "לא נכון. Etest מאפשר קביעה ישירה של MIC בלבד. כדי לקבוע MLC יש צורך בשלב נוסף של זריעה ממצע האגר למצע חדש ללא אנטיביוטיקה." },
+            { question: "כל החומרים האנטי-מיקרוביאליים הם ממקור טבעי, ומיוצרים על ידי פטריות וחיידקים אחרים.", answer: false, explanation: "לא נכון. ישנם חומרים טבעיים (אנטיביוטיקות), אך רבים אחרים הם סינתטיים לחלוטין או חצי-סינתטיים, ומיוצרים במעבדה." },
+            { question: "אנטיביוטיקות המעכבות את תת-יחידה 50S של הריבוזום פוגעות ישירות בשכפול ה-DNA.", answer: false, explanation: "לא נכון. הריבוזום אחראי על תהליך התרגום (סינתזת חלבונים). פגיעה בו עוצרת את ייצור החלבונים, לא את שכפול ה-DNA." },
+            { question: "Sanitizers נועדו לבצע עיקור מלא של משטחים בתעשיית המזון.", answer: false, explanation: "לא נכון. Sanitizers מורידים את העומס המיקרוביאלי לרמה בטוחה, אך אינם מבצעים עיקור (השמדה מוחלטת של כל החיים כולל נבגים)." },
+            { question: "תרופות סולפה יעילות מכיוון שבני אדם אינם מסנתזים חומצה פולית.", answer: true, explanation: "נכון. רעילותן הסלקטיבית נובעת מכך שהן פוגעות במסלול חיוני לחיידקים (סינתזת חומצה פולית), שבני אדם אינם תלויים בו כי הם מקבלים אותה מהמזון." },
+            { question: "חומר בקטריוצידי שאינו ליטי יוריד את ספירת התאים החיים, אך ישאיר את ספירת התאים הכוללת ללא שינוי.", answer: true, explanation: "נכון. התאים מתים אך לא מתפרקים, לכן ספירת החיים יורדת בעוד הספירה הכוללת (חיים+מתים) נשארת יציבה." },
+            { question: "ניתן להשתמש במונח 'אנטיספטי' ו'דזינפקטנט' לסירוגין, כיוון שמשמעותם זהה.", answer: false, explanation: "לא נכון. יש הבדל מהותי: אנטיספטי מיועד לרקמה חיה, בעוד דזינפקטנט מיועד למשטחים דוממים." },
+            { question: "פעולת חיטוי ידיים עם אלכוהול יעילה יותר כאשר הידיים יבשות לחלוטין לפני החיטוי.", answer: true, explanation: "נכון. מים על הידיים יכולים למהול את האלכוהול לריכוז נמוך יותר מהריכוז היעיל (60-85%) ולהפחית מיעילות החיטוי." },
+            { question: "חומר המוגדר כ'צר טווח' פועל רק נגד סוג אחד ספציפי של חיידק.", answer: false, explanation: "לא נכון. 'צר טווח' משמעו שהוא פועל נגד קבוצה מוגבלת של חיידקים (למשל, בעיקר גראם-חיוביים), אך לא בהכרח רק נגד מין אחד בודד." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: עיבוד וזיקוק שמנים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            {
+                term: "Degumming (הסרת גומי)",
+                definition: "שלב ראשוני בזיקוק שמנים להסרת פוספוליפידים (כגון לציטין) וגליקוליפידים, לרוב באמצעות הוספת מים או חומצה זרחתית."
+            },
+            {
+                term: "Neutralization (ניטרול)",
+                definition: "שלב להסרת חומצות שומן חופשיות (FFA) מהשמן הגולמי על ידי תגובה עם בסיס (סודה קאוסטית) ליצירת סבונים, המכונים soapstock."
+            },
+            {
+                term: "Bleaching (הבהרה)",
+                definition: "תהליך הסרת פיגמנטים (כמו קרוטנואידים וכלורופיל) ושאריות מתכות פרו-אוקסידנטיות באמצעות ספיחה על חומרים כמו אדמת ביהור (bentonite clay) או פחם פעיל."
+            },
+            {
+                term: "Deodorization (דאודוריזציה)",
+                definition: "שלב סופי להסרת תרכובות ריח וטעם לא רצויות (אלדהידים, קטונים) באמצעות זיקוק בקיטור תחת ואקום וטמפרטורה גבוהה (220-260°C)."
+            },
+            {
+                term: "Miscella (מיצלה)",
+                definition: "תערובת נוזלית של שמן גולמי והממס האורגני (לרוב הקסאן) שנוצרת במהלך שלב המיצוי (extraction) מהזרעים."
+            },
+            {
+                term: "Soapstock",
+                definition: "תוצר לוואי של שלב הניטרול, המורכב בעיקר מסבונים שנוצרו מתגובת חומצות השומן החופשיות עם בסיס."
+            },
+            {
+                term: "פרו-אוקסידנטים",
+                definition: "חומרים המאיצים תגובות חמצון בשמן, כגון יוני מתכת (ברזל, נחושת). הם מוסרים בשלבי הזיקוק כמו הבהרה ודאודוריזציה."
+            },
+            {
+                term: "חומצות שומן חופשיות (FFA)",
+                definition: "חומצות שומן שאינן קשורות כימית לגליצרול. ריכוזן הגבוה אינו רצוי והן מוסרות בשלב הניטרול."
+            },
+            {
+                term: "אדמת ביהור (Bentonite Clay)",
+                definition: "הסופח העיקרי המשמש בשלב ה-Bleaching לקשירה והסרה של פיגמנטים, זיהומים מתכתיים ותרכובות חמצון."
+            },
+            {
+                term: "חומצה ציטרית (בזיקוק שמן)",
+                definition: "מוספת בסוף הדאודוריזציה כחומר קושר מתכות (chelator) כדי לנטרל שאריות יוני מתכת פרו-אוקסידנטיים ולהגביר את יציבות השמן."
+            },
+            {
+                term: "שמן גולמי (Crude Oil)",
+                definition: "השמן המופק מהזרעים לפני שעבר תהליכי זיקוק. הוא מכיל טריגליצרידים וכן רכיבים מינוריים כמו פוספוליפידים, FFA, פיגמנטים וסטרואידים."
+            },
+            {
+                term: "Flaking (יצירת פתיתים)",
+                definition: "שלב בהכנת הזרעים לפני המיצוי, בו הזרעים נמעכים לפתיתים דקים כדי להגדיל את שטח הפנים ולאפשר מיצוי יעיל יותר של השמן."
+            }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי המטרה העיקרית של הוספת 0.01% חומצה ציטרית לשמן בסוף שלב הדאודוריזציה?",
+                options: ["לשפר את צבע השמן", "לנטרל שאריות מתכות פרו-אוקסידנטיות", "להסיר חומצות שומן חופשיות שנותרו", "לשמש כחומר משמר אנטי-מיקרוביאלי"],
+                correctIndex: 1,
+                explanation: "חומצה ציטרית היא חומר קושר מתכות (chelating agent) יעיל. היא קושרת יוני מתכת כמו ברזל ונחושת, המזרזים חמצון, ובכך מגבירה את יציבות השמן."
+            },
+            {
+                question: "איזה מהרכיבים הבאים מוסר באופן היעיל ביותר בשלב ה-Deodorization ולא בשלב ה-Bleaching?",
+                options: ["קרוטנואידים", "יוני נחושת", "אלדהידים וקטונים נדיפים", "כלורופיל"],
+                correctIndex: 2,
+                explanation: "שלב ה-Bleaching מסיר פיגמנטים ומתכות. שלב הדאודוריזציה, המתבצע בטמפרטורה גבוהה ובוואקום, מיועד להסיר תרכובות נדיפות בעלות ריח וטעם, כמו אלדהידים וקטונים שנוצרו מחמצון."
+            },
+            {
+                question: "תוצר הלוואי 'soapstock' נוצר כתוצאה ישירה מאיזה שלב בעיבוד שמן?",
+                options: ["Degumming", "Neutralization", "Bleaching", "Solvent Extraction"],
+                correctIndex: 1,
+                explanation: "בשלב הניטרול (Neutralization), מוסיפים בסיס חזק (סודה קאוסטית) שמגיב עם חומצות שומן חופשיות (FFA) ויוצר סבונים. תערובת זו נקראת soapstock."
+            },
+            {
+                question: "בהשוואה בין שמן סויה גולמי לשמן דקלים (palm oil) גולמי, איזה רכיב צפוי להימצא בריכוז גבוה משמעותית בשמן הדקלים, על פי הנתונים?",
+                options: ["פוספטידים", "קרוטנואידים", "כלורופיל", "טוקופרולים"],
+                correctIndex: 1,
+                explanation: "שמן דקלים גולמי עשיר מאוד בקרוטנואידים (500-800 ppm), המעניקים לו את צבעו האדום-כתום. בשמן סויה ריכוזם נמוך בהרבה (40-50 ppm)."
+            },
+            {
+                question: "איזה מהמשפטים הבאים אינו מתאר נכונה את שלב הסרת הגומי (Degumming)?",
+                options: ["מטרתו העיקרית היא הסרת פוספוליפידים", "הוא מבוצע בדרך כלל לפני שלב הניטרול", "הוא מסיר ביעילות חומצות שומן חופשיות", "ניתן להשתמש בחומצה זרחתית כדי לשפר את יעילותו"],
+                correctIndex: 2,
+                explanation: "שלב ה-Degumming מיועד להסרת פוספוליפידים (gums). הסרת חומצות שומן חופשיות (FFA) מתבצעת בשלב נפרד הנקרא ניטרול (Neutralization)."
+            },
+            {
+                question: "מדוע שלב ההבהרה (Bleaching) נחשב ליקר ביותר בתהליך זיקוק השמן?",
+                options: ["בגלל השימוש בטמפרטורות ולחצים גבוהים במיוחד", "בגלל העלות הגבוהה של חומרי הספיחה ואובדן שמן הנספח אליהם", "בגלל הזמן הארוך הדרוש להשלמת התהליך", "בגלל הצורך בממסים אורגניים יקרים"],
+                correctIndex: 1,
+                explanation: "העלות הגבוהה של ה-Bleaching נובעת ממחיר חומרי הספיחה (clays), מהצורך לסלקם כפסולת יקרה, ומכך שכמות מסוימת של שמן (עד 1%) נספחת אליהם והולכת לאיבוד."
+            },
+            {
+                question: "מהו התפקיד של 'אדמת ביהור' (bentonite clays) בתהליך הזיקוק?",
+                options: ["לזרז את תגובת הניטרול", "לשמש כממס להפקת השמן", "לספוח פיגמנטים וזיהומים מתכתיים", "לנדף תרכובות ריח"],
+                correctIndex: 2,
+                explanation: "אדמת ביהור היא חומר סופח עם שטח פנים גדול המשמש בשלב ה-Bleaching לקשור ולהסיר פיגמנטים (כמו כלורופיל), מתכות, ומוצרי חמצון."
+            },
+            {
+                question: "איזה מהתהליכים הבאים מתרחש לפני קבלת השמן הגולמי (Crude Oil)?",
+                options: ["Deodorization", "Neutralization", "Bleaching", "Flaking ו-Extraction"],
+                correctIndex: 3,
+                explanation: "הכנת הזרעים (שבירה, חימום, יצירת פתיתים) ומיצוי השמן (בכבישה או עם ממס) הם השלבים המקדימים לקבלת השמן הגולמי, שרק לאחר מכן עובר זיקוק."
+            },
+            {
+                question: "המונח 'מיצלה' (Miscella) מתאר:",
+                options: ["את השמן המזוכך המוכן לאריזה", "את תוצר הלוואי המוצק (קוספה) לאחר מיצוי השמן", "את תערובת השמן והממס (הקסאן) לפני הפרדתם", "את הסבונים המופרדים בשלב הניטרול"],
+                correctIndex: 2,
+                explanation: "מיצלה היא התמיסה הנוזלית המתקבלת לאחר שלב המיצוי בממס, והיא מכילה את השמן המומס בהקסאן. השלב הבא הוא זיקוק ההקסאן להשבת השמן הגולמי."
+            },
+            {
+                question: "על פי הנתונים, איזה שמן גולמי מבין הבאים מכיל את הריכוז ההתחלתי הגבוה ביותר של חומצות שומן חופשיות (FFA)?",
+                options: ["שמן סויה", "שמן קנולה", "שמן דקלים", "לכולם ריכוז דומה"],
+                correctIndex: 2,
+                explanation: "לשמן דקלים גולמי יש את ריכוז ה-FFA הגבוה ביותר (2.0-5.0%) בהשוואה לשמן סויה (0.3-0.8%) ושמן קנולה (0.3-1.0%), מה שמחייב שלב ניטרול יעיל."
+            },
+            {
+                question: "מדוע שלב ה-Bleaching מתבצע תחת ואקום?",
+                options: ["כדי למנוע חמצון של השמן בטמפרטורות הגבוהות של התהליך", "כדי להגביר את יכולת הספיחה של אדמת הביהור", "כדי לנדף את המים מהשמן", "כדי להוריד את טמפרטורת הרתיחה של הפיגמנטים"],
+                correctIndex: 0,
+                explanation: "שלב ה-Bleaching מערב חימום. ביצוע התהליך תחת ואקום מונע חמצון של השמן החם על ידי חמצן מהאוויר, מה שעלול ליצור טעמי לוואי ופרוקסידים."
+            },
+            {
+                question: "מהי הסיבה העיקרית לביצוע שלב ה-Degumming באמצעות הוספת חומצה (כמו חומצה זרחתית)?",
+                options: ["החומצה מפרקת את הטריגליצרידים", "החומצה מנטרלת את חומצות השומן החופשיות", "החומצה גורמת לפוספוליפידים להיות בלתי מסיסים בשמן ומזרזת את שיקועם", "החומצה מסירה פיגמנטים מהשמן"],
+                correctIndex: 2,
+                explanation: "החומצה הופכת פוספוליפידים מסוימים (non-hydratable) לצורה שכן מגיבה עם מים (hydratable), מה שמאפשר להם לשקוע ולהיפרד מהשמן ביעילות רבה יותר."
+            },
+            {
+                question: "איזה מהבאים אינו רכיב מינורי המצוי בשמן גולמי ודורש הסרה בתהליך הזיקוק?",
+                options: ["פוספוליפידים", "טריגליצרידים", "פיגמנטים כמו קרוטנואידים", "חומצות שומן חופשיות"],
+                correctIndex: 1,
+                explanation: "טריגליצרידים הם הרכיב העיקרי והרצוי בשמן (בדרך כלל מעל 95%). תהליך הזיקוק נועד להסיר את הרכיבים המינוריים הלא-רצויים, ולא את הטריגליצרידים."
+            },
+            {
+                question: "מהו ההבדל העיקרי בין המטרה של שלב הניטרול למטרת שלב הדאודוריזציה?",
+                options: ["ניטרול מסיר פוספוליפידים, ודאודוריזציה מסירה פיגמנטים", "ניטרול מסיר חומצות שומן חופשיות, ודאודוריזציה מסירה תרכובות ריח וטעם", "ניטרול מתבצע בטמפרטורה גבוהה, ודאודוריזציה בטמפרטורה נמוכה", "ניטרול משתמש בספיחה, ודאודוריזציה בתגובה כימית עם בסיס"],
+                correctIndex: 1,
+                explanation: "ניטרול מתמקד בהסרה כימית של FFA. דאודוריזציה מתמקדת בהסרה פיזיקלית (זיקוק) של מולקולות קטנות ונדיפות הגורמות לריחות וטעמי לוואי."
+            },
+            {
+                question: "איזו שיטת מיצוי שמן אינה מסתמכת על שימוש בממסים אורגניים כמו הקסאן?",
+                options: ["Direct solvent extraction", "Prepress solvent extraction", "Hard pressing", "כל התשובות נכונות ומשתמשות בממסים"],
+                correctIndex: 2,
+                explanation: "Hard pressing (כבישה קשה) היא שיטה מכנית שבה מופעל לחץ גבוה על הזרעים כדי להוציא את השמן. שיטות המשתמשות ב-solvent extraction מסתמכות על הקסאן."
+            },
+            {
+                question: "מה נכון לומר על תהליך ה-Tempering בהכנת זרעים לעיבוד?",
+                options: ["זהו תהליך קירור מהיר להקשחת הזרעים", "זהו שלב של הוספת מים לזרעים", "זהו תהליך חימום מבוקר לשיפור גמישות הזרע והכנתו לשלב ה-Flaking", "זהו שם אחר לתהליך הניקוי וההפרדה מהקליפות"],
+                correctIndex: 2,
+                explanation: "Tempering הוא חימום מבוקר שמטרתו לרכך את הזרעים, להפוך אותם לפחות שבירים ויותר פלסטיים, מה שמאפשר מעיכה יעילה לפתיתים (flakes) בשלב הבא."
+            },
+            {
+                question: "מהו ה-defatted meal (קוספה)?",
+                options: ["השמן לאחר שלב הניטרול", "המוצק שנשאר לאחר מיצוי השמן מהזרעים", "הפיגמנטים שהוסרו בשלב ה-Bleaching", "השמן הגולמי לפני כל עיבוד"],
+                correctIndex: 1,
+                explanation: "ה-defatted meal, או קוספה, הוא החומר המוצק העשיר בחלבון שנשאר לאחר שהשמן מוצה מהזרעים. הוא משמש לעתים קרובות כמזון לבעלי חיים."
+            },
+            {
+                question: "איזה מהרכיבים המינוריים הבאים, המצויים בשמן גולמי, נחשב רצוי ועשוי להישאר (או להיות מוסף) במוצר הסופי בשל תכונותיו נוגדות החמצון?",
+                options: ["כלורופיל", "פרוקסידים", "טוקופרולים (ויטמין E)", "יוני ברזל"],
+                correctIndex: 2,
+                explanation: "טוקופרולים הם נוגדי חמצון טבעיים. למרות שחלקם מוסר בדאודוריזציה, הם רצויים בשמן הסופי. שאר הרכיבים (כלורופיל, פרוקסידים, מתכות) הם פרו-אוקסידנטים או תוצרי חמצון לא רצויים."
+            },
+            {
+                question: "איזה שלב בתהליך הזיקוק אחראי להסרת לציטין מהשמן?",
+                options: ["Bleaching", "Deodorization", "Neutralization", "Degumming"],
+                correctIndex: 3,
+                explanation: "לציטין הוא השם המסחרי לפוספטידים המופרדים מהשמן. הסרתם מתבצעת בשלב ה-Degumming, שפירוש שמו הוא 'הסרת גומי' (פוספוליפידים)."
+            },
+            {
+                question: "ריכוז גבוה של איזה רכיב בשמן גולמי יגרום להיווצרות כמות גדולה של soapstock במהלך הניטרול?",
+                options: ["פוספטידים", "FFA (חומצות שומן חופשיות)", "קרוטנואידים", "סטרולים"],
+                correctIndex: 1,
+                explanation: "Soapstock מורכב מסבונים הנוצרים מתגובת FFA עם בסיס. ככל שריכוז ה-FFA ההתחלתי בשמן גבוה יותר, כך תיווצר כמות גדולה יותר של soapstock."
+            },
+            {
+                question: "מדוע שלב הדאודוריזציה מתבצע באמצעות הזרקת קיטור (steam injection)?",
+                options: ["הקיטור מגיב כימית עם תרכובות הריח", "הקיטור עוזר להוריד את הלחץ במערכת", "הקיטור פועל כגז נשא (stripping agent) המסייע לסחוף ולהרחיק את התרכובות הנדיפות", "הקיטור מנקה את הציוד תוך כדי התהליך"],
+                correctIndex: 2,
+                explanation: "הקיטור המוזרק לשמן החם תחת ואקום פועל כזרם סוחף (steam stripping). הוא מסייע להרחיק את המולקולות הנדיפות (ריחות וטעמי לוואי) מהפאזה הנוזלית של השמן."
+            },
+            {
+                question: "איזה מהבאים אינו מטרה של שלב ה-Bleaching?",
+                options: ["הסרת פיגמנטים כמו כלורופיל", "הסרת מתכות פרו-אוקסידנטיות", "הסרת תוצרי חמצון ראשוניים", "הסרת חומצות שומן חופשיות"],
+                correctIndex: 3,
+                explanation: "הסרת חומצות שומן חופשיות היא המטרה העיקרית של שלב הניטרול. Bleaching מתמקד בהסרת צבענים, מתכות ומוצרי חמצון על ידי ספיחה."
+            },
+            {
+                question: "לפי הטבלה, מהי שיטת ההפקה הנפוצה לשמן מסויה?",
+                options: ["Hard pressing בלבד", "Wet or dry rendering", "Direct solvent extraction", "Prepress solvent extraction"],
+                correctIndex: 2,
+                explanation: "פולי סויה הם בעלי תכולת שמן נמוכה יחסית (19%), ולכן השיטה היעילה והנפוצה להפקת השמן מהם היא מיצוי ישיר עם ממס (Direct solvent extraction)."
+            },
+            {
+                question: "מהו ההיגיון מאחורי סידור השלבים: Degumming, ואחריו Neutralization?",
+                options: ["הניטרול יעיל יותר בטמפרטורה גבוהה שמושגת ב-Degumming", "הפוספוליפידים המוסרים ב-Degumming מפריעים לתהליך הניטרול וגורמים לאובדן שמן", "הסרת ה-FFA בניטרול מונעת את פירוק הפוספוליפידים", "זהו סדר שרירותי וניתן להפוך אותו"],
+                correctIndex: 1,
+                explanation: "פוספוליפידים פועלים כחומרים מתחלבים. אם לא יוסרו ראשית, הם יגרמו להיווצרות אמולסיות יציבות במהלך הניטרול, מה שיקשה על הפרדת ה-soapstock ויגרום לאובדן גדול של שמן ניטרלי."
+            },
+            {
+                question: "איזה מהרכיבים הבאים, המצויים בשמן גולמי, תורם ישירות לערך הפרוקסידי (Peroxide Value)?",
+                options: ["פרוקסידים", "FFA", "פוספוליפידים", "סטרולים"],
+                correctIndex: 0,
+                explanation: "ערך פרוקסידי הוא מדד לכמות הפרוקסידים (תוצרי חמצון ראשוניים) בשמן. נוכחותם מעידה על תחילתו של תהליך קלקול חמצוני."
+            },
+            {
+                question: "שמן גולמי מגיע למפעל עם צבע ירוק חזק וערך פרוקסידי גבוה. אילו שני שלבים בזיקוק יהיו קריטיים ביותר לתיקון בעיות אלו?",
+                options: ["Degumming ו-Neutralization", "Extraction ו-Deodorization", "Bleaching ו-Deodorization", "Neutralization ו-Bleaching"],
+                correctIndex: 2,
+                explanation: "הצבע הירוק נובע מכלורופיל, המוסר ב-Bleaching. ערך פרוקסידי גבוה מעיד על חמצון. תוצרי החמצון (פרוקסידים ותרכובות נדיפות) מוסרים חלקית ב-Bleaching ובאופן יסודי ב-Deodorization."
+            },
+            {
+                question: "איזה משפט אינו נכון לגבי הרכיבים המינוריים בשמנים גולמיים?",
+                options: ["שמן קנולה ושמן סויה מכילים ריכוז גבוה יחסית של פוספטידים", "ריכוז הסטרולים דומה יחסית בין שמן סויה, קנולה ודקלים", "שמן דקלים עני בפיגמנטים טבעיים", "שמן סויה וקנולה מכילים ריכוז דומה של נחושת וברזל"],
+                correctIndex: 2,
+                explanation: "שמן דקלים גולמי הוא עשיר מאוד בפיגמנטים, במיוחד קרוטנואידים (500-800 ppm), המקנים לו צבע עז."
+            },
+            {
+                question: "הפרדת הקליפות מהזרעים (Dehulling) לפני המיצוי היא שלב חשוב כי:",
+                options: ["הקליפות מכילות חומרים מעכבי חמצון", "הקליפות דלות בשמן ועשירות בסיבים, והסרתן מעלה את תפוקת השמן ומפחיתה בלאי לציוד", "השמן שבקליפות הוא באיכות נמוכה יותר", "הקליפות מכילות בעיקר פוספוליפידים"],
+                correctIndex: 1,
+                explanation: "הסרת הקליפות (hulls) מעלה את ריכוז השמן היחסי בחומר הנכנס למיצוי, משפרת את איכות הקוספה (meal), ומפחיתה שחיקה של הציוד המכני."
+            },
+            {
+                question: "תהליך זיקוק השמן הוא למעשה סדרה של פעולות הפרדה. מהי הטכניקה הפיזיקלית העיקרית שעליה מבוסס שלב ה-Deodorization?",
+                options: ["ספיחה על פני שטח", "תגובת חומצה-בסיס", "זיקוק בקיטור (Steam Distillation)", "מיצוי נוזל-נוזל"],
+                correctIndex: 2,
+                explanation: "דאודוריזציה היא למעשה תהליך של זיקוק בקיטור תחת ואקום, שבו תרכובות נדיפות בעלות נקודת רתיחה נמוכה יחסית מורחקות מהשמן, שהוא בעל נקודת רתיחה גבוהה מאוד."
+            },
+            {
+                question: "מהי הסכנה העיקרית בהפעלת שלב ה-Bleaching בטמפרטורה גבוהה מדי או בנוכחות חמצן?",
+                options: ["פירוק לא רצוי של טריגליצרידים", "יצירת חומצות שומן חופשיות חדשות", "זירוז תגובות חמצון ויצירת טעמי לוואי", "שינוי צבע השמן לגוון כהה"],
+                correctIndex: 2,
+                explanation: "החימום מזרז תגובות כימיות. בנוכחות חמצן (אם הוואקום אינו מספק) ושמן חם, תגובות החמצון יואצו, וייווצרו תוצרי חמצון לא רצויים שיש להסיר בהמשך."
+            },
+            {
+                question: "מה ההבדל בין שיטת מיצוי 'prepress solvent extraction' ל-'direct solvent extraction'?",
+                options: ["Prepress כוללת שלב כבישה מכנית ראשוני לפני המיצוי בממס", "Direct משתמשת בממס שונה מ-Prepress", "Prepress מתאימה לזרעים דלי שמן ו-Direct לעשירי שמן", "אין הבדל משמעותי, אלו שמות נרדפים"],
+                correctIndex: 0,
+                explanation: "בשיטת Prepress, הנהוגה בזרעים עתירי שמן (כמו קנולה, חמניות), יש שלב כבישה ראשוני להוצאת חלק מהשמן, והמוצק הנותר (עוגה) עובר מיצוי בממס להוצאת השמן הנותר."
+            },
+            {
+                question: "מהו ההיגיון בביצוע שלב ה-Flaking (יצירת פתיתים) לפני המיצוי?",
+                options: ["לשבור את דפנות התאים ולחשוף את השמן", "להגדיל את שטח הפנים של החומר למיצוי יעיל יותר", "לקצר את נתיב הדיפוזיה של הממס לתוך החלקיק", "כל התשובות נכונות"],
+                correctIndex: 3,
+                explanation: "יצירת פתיתים דקים מגדילה מאוד את יחס שטח הפנים לנפח, שוברת את דפנות התאים בהם אגור השמן, ומאפשרת לממס לחדור ולהמיס את השמן במהירות וביעילות."
+            },
+            {
+                question: "בהינתן שמן גולמי עם ריכוז גבוה של פוספטידים בלתי-ניתנים להידרציה (non-hydratable), איזה תוסף יהיה היעיל ביותר להוסיף בשלב ה-Degumming?",
+                options: ["סודה קאוסטית", "חומצה זרחתית", "אדמת ביהור", "חומצה ציטרית"],
+                correctIndex: 1,
+                explanation: "פוספטידים בלתי-ניתנים להידרציה אינם מגיבים היטב עם מים בלבד. הוספת חומצה כמו חומצה זרחתית הופכת אותם לצורה שכן מגיבה עם מים, ומאפשרת את הפרדתם היעילה מהשמן."
+            },
+            {
+                question: "איזה משלבי הזיקוק הוא בעל ההשפעה הגדולה ביותר על הסרת פיגמנטים אדומים-כתומים מהשמן?",
+                options: ["Degumming", "Neutralization", "Bleaching", "Deodorization"],
+                correctIndex: 2,
+                explanation: "הפיגמנטים האדומים-כתומים בשמנים צמחיים הם בעיקר קרוטנואידים. שלב ה-Bleaching, באמצעות ספיחה על אדמת ביהור, הוא השלב העיקרי להסרתם."
+            },
+            {
+                question: "מהי אחת הסיבות לכך ששלב הדאודוריזציה מתבצע לקראת סוף תהליך הזיקוק?",
+                options: ["הוא השלב הזול ביותר ולכן מבוצע אחרון", "הוא מסיר תוצרי חמצון או טעמי לוואי שנוצרו בשלבים הקודמים (כמו חימום ב-Bleaching)", "הוא דורש שהשמן יהיה נקי מפוספוליפידים כדי למנוע הקצפה", "הוא יעיל רק כאשר ריכוז ה-FFA נמוך"],
+                correctIndex: 1,
+                explanation: "דאודוריזציה מסירה תרכובות נדיפות. מאחר ושלבים קודמים כמו Bleaching כוללים חימום שעלול ליצור כמות קטנה של תוצרי חמצון, ביצוע הדאודוריזציה בסוף 'מנקה' את השמן מכל ריחות וטעמי לוואי שנצברו."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "שלב ה-Bleaching (הבהרה) הוא השלב העיקרי להסרת חומצות שומן חופשיות (FFA) מהשמן.",
+                answer: false,
+                explanation: "לא נכון. שלב ה-Neutralization (ניטרול) הוא השלב העיקרי להסרת FFA. שלב ה-Bleaching מסיר בעיקר פיגמנטים ומתכות."
+            },
+            {
+                question: "הוספת חומצה ציטרית בסוף תהליך הזיקוק נועדה לפעול כנוגד חמצון ראשוני התורם פרוטון.",
+                answer: false,
+                explanation: "לא נכון. חומצה ציטרית פועלת כחומר קושר מתכות (chelator) המנטרל פרו-אוקסידנטים מתכתיים. היא אינה נוגד חמצון ראשוני כמו טוקופרול."
+            },
+            {
+                question: "על פי הנתונים, שמן דקלים גולמי מכיל ריכוז גבוה משמעותית של קרוטנואידים בהשוואה לשמן סויה גולמי.",
+                answer: true,
+                explanation: "נכון. שמן דקלים גולמי מכיל 500-800 ppm קרוטנואידים, בעוד שמן סויה מכיל רק 40-50 ppm."
+            },
+            {
+                question: "תהליך הדאודוריזציה מתבצע בטמפרטורה נמוכה ובלחץ אטמוספרי רגיל.",
+                answer: false,
+                explanation: "לא נכון. דאודוריזציה מתבצעת בתנאים קיצוניים של טמפרטורה גבוהה (220-260°C) ותת-לחץ (ואקום)."
+            },
+            {
+                question: "המונח 'מיצלה' (Miscella) מתייחס לתערובת של שמן וסודה קאוסטית בשלב הניטרול.",
+                answer: false,
+                explanation: "לא נכון. מיצלה היא תערובת השמן והממס (הקסאן) המתקבלת לאחר שלב המיצוי מהזרעים."
+            },
+            {
+                question: "הסרת מתכות כמו ברזל ונחושת בשלב ה-Bleaching תורמת להגברת היציבות החמצונית של השמן.",
+                answer: true,
+                explanation: "נכון. ברזל ונחושת הם פרו-אוקסידנטים חזקים המזרזים חמצון שומנים. הסרתם מאריכה את חיי המדף של השמן."
+            },
+            {
+                question: "שלב ה-Degumming מסיר בעיקר פוספוליפידים והוא תמיד השלב האחרון בתהליך הזיקוק.",
+                answer: false,
+                explanation: "לא נכון. Degumming אכן מסיר פוספוליפידים, אך הוא אחד השלבים הראשונים בזיקוק, המבוצע לפני ניטרול והבהרה."
+            },
+            {
+                question: "הקוספה (defatted meal) היא תוצר לוואי נוזלי ועשיר בשומן.",
+                answer: false,
+                explanation: "לא נכון. הקוספה היא המוצק שנשאר לאחר מיצוי השמן, והיא דלה בשומן ועשירה בחלבון."
+            },
+            {
+                question: "בשיטת מיצוי 'Hard pressing' נעשה שימוש בממס הקסאן להפקת השמן.",
+                answer: false,
+                explanation: "לא נכון. Hard pressing היא שיטה מכנית של כבישה בלחץ גבוה, ללא שימוש בממסים."
+            },
+            {
+                question: "ריכוז הפוספטידים בשמן סויה גולמי גבוה משמעותית מריכוזם בשמן דקלים גולמי.",
+                answer: true,
+                explanation: "נכון. על פי הטבלה, שמן סויה מכיל 1.0-3.0% פוספטידים, בעוד שמן דקלים מכיל רק 0.03-0.1%."
+            },
+            {
+                question: "ביצוע שלב ה-Bleaching תחת ואקום נועד בעיקר כדי להגביר את מהירות התהליך.",
+                answer: false,
+                explanation: "לא נכון. הוואקום נועד בעיקר למנוע חמצון של השמן החם על ידי חמצן מהאוויר."
+            },
+            {
+                question: "Soapstock הוא תוצר רצוי המשמש להעשרת השמן המזוכך.",
+                answer: false,
+                explanation: "לא נכון. Soapstock הוא תוצר לוואי המורכב מסבונים וחומרים נוספים, והוא מופרד מהשמן ומוסר מהמערכת."
+            },
+            {
+                question: "תהליך ה-Flaking נועד להקטין את שטח הפנים של הזרעים כדי להאט את ספיחת הממס.",
+                answer: false,
+                explanation: "לא נכון. Flaking נועד ליצור פתיתים דקים כדי להגדיל באופן דרמטי את שטח הפנים ולאפשר מיצוי מהיר ויעיל."
+            },
+            {
+                question: "טוקופרולים וסטרולים הם דוגמאות לחומרים בלתי מסתבנים (unsaponifiable matter) המצויים בשמן גולמי.",
+                answer: true,
+                explanation: "נכון. אלו הם רכיבים ליפידיים שאינם טריגליצרידים ואינם יוצרים סבון בתגובה עם בסיס. הם חלק מהרכיבים המינוריים בשמן."
+            },
+            {
+                question: "הסרת כלורופיל מהשמן חשובה לא רק מסיבות צבע, אלא גם כי הוא יכול לפעול כפרו-אוקסידנט בתנאים מסוימים (למשל, בנוכחות אור).",
+                answer: true,
+                explanation: "נכון. כלורופיל הוא פוטו-סנסיטייזר, ובנוכחות אור הוא יכול לזרז יצירת חמצן סינגלטי המאיץ את חמצון השמן."
+            },
+            {
+                question: "כל הרכיבים המוסרים בשלב הדאודוריזציה הם תוצרים של קלקול חמצוני.",
+                answer: false,
+                explanation: "לא נכון. אמנם דאודוריזציה מסירה תוצרי חמצון כמו אלדהידים, אך היא מסירה גם תרכובות ריח וטעם טבעיות של הזרע, וכן חלק מהטוקופרולים (ויטמין E) הרצויים."
+            },
+            {
+                question: "ריכוז ה-FFA בשמן המזוכך הסופי צריך להיות זהה לריכוזו בשמן הגולמי.",
+                answer: false,
+                explanation: "לא נכון. מטרת שלב הניטרול היא להוריד את ריכוז ה-FFA לרמה נמוכה מאוד, שכן ריכוז גבוה פוגע בטעם וביציבות השמן."
+            },
+            {
+                question: "תהליך זיקוק כימי (הכולל ניטרול עם בסיס) הוא תמיד עדיף על זיקוק פיזיקלי.",
+                answer: false,
+                explanation: "לא נכון. לכל שיטה יתרונות וחסרונות. זיקוק פיזיקלי, למשל, יעיל יותר לשמנים עם FFA גבוה כמו שמן דקלים, ומייצר פחות שפכים."
+            },
+            {
+                question: "על פי הטבלאות, גם שמן קוקוס וגם שמן דקלים מופקים בעיקר בשיטת כבישה קשה (Hard pressing).",
+                answer: true,
+                explanation: "נכון. שני השמנים הללו עשירים מאוד בשומן (66% ו-47% בהתאמה), מה שהופך את הכבישה המכנית לשיטה יעילה וכלכלית להפקתם."
+            },
+            {
+                question: "השלב שבו מופרד הממס (הקסאן) מהשמן נקרא דאודוריזציה.",
+                answer: false,
+                explanation: "לא נכון. השלב שבו מופרד ההקסאן מהשמן (מה-miscella) הוא שלב זיקוק הממס (solvent removal/distillation). דאודוריזציה הוא שלב אחר, מאוחר יותר, להסרת ריחות."
+            }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

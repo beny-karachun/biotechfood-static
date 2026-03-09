@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 2.5</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 2.5: Existence and Uniqueness (First-Order PDEs) - משפט הקיום והיחידות</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>Existence and Uniqueness Theorem (via Characteristics):</strong></p>
+            <p>For the first-order quasi-linear PDE $a(x,y,u)u_x + b(x,y,u)u_y = c(x,y,u)$, with initial data $u=u_0(s)$ prescribed on a curve $\Gamma$ parametrized by $s$ as $(x_0(s), y_0(s))$, a unique $C^1$ solution exists in a neighborhood of the curve $\Gamma$ provided:</p>
+            <ol>
+                <li>The functions $a, b, c$ are $C^1$ in a domain containing the initial data.</li>
+                <li>The functions $x_0(s), y_0(s), u_0(s)$ are $C^1$.</li>
+                <li>The **transversality condition** holds along $\Gamma$.</li>
+            </ol>
+            <p><strong>Key Condition (Transversality Condition):</strong></p>
+            <p>The crucial condition derived from the Method of Characteristics is that the initial curve $\Gamma$ must **not** be tangent to the characteristic curves projecting onto the $(x,y)$ plane at any point.</p>
+            <p>Mathematically, let the initial curve projection be $\vec{\Gamma}(s) = (x_0(s), y_0(s))$. The tangent vector to the curve is $\vec{\Gamma}'(s) = (\frac{dx_0}{ds}, \frac{dy_0}{ds})$. The projection of the characteristic direction at a point on the curve is $\vec{V}(s) = (a(x_0, y_0, u_0), b(x_0, y_0, u_0))$.</p>
+            <p>The condition for existence and uniqueness is that these two vectors are not parallel. This is typically checked using the determinant:</p>
+            $$ \det \begin{pmatrix} a(x_0, y_0, u_0) & b(x_0, y_0, u_0) \\ \frac{dx_0}{ds} & \frac{dy_0}{ds} \end{pmatrix} = a(x_0, y_0, u_0) \frac{dy_0}{ds} - b(x_0, y_0, u_0) \frac{dx_0}{ds} \neq 0 $$
+            <p><strong>Why?</strong> If the initial curve is characteristic (determinant is 0), the characteristic curves originating from it either overlap (potentially leading to infinitely many solutions if $u_0$ is compatible) or carry contradictory information (leading to no solution if $u_0$ is incompatible). When the condition holds (determinant $\neq 0$), the characteristics cross the initial curve transversally, ensuring that the specified $C^1$ initial data propagates uniquely into a neighborhood, yielding a unique $C^1$ solution.</p>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Checking the Condition -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">PDE: $u_x + u_y = 0$. Initial Curve $\Gamma: x_0(s)=0, y_0(s)=s$. Initial data $u_0(s) = \sin(s)$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=1, c=0$. Curve: $x_0=0, y_0=s$. Data: $u_0=\sin(s)$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=0, \frac{dy_0}{ds}=1$.</p>
+                    <p>Transversality Check: $a(x_0,y_0,u_0) \frac{dy_0}{ds} - b(x_0,y_0,u_0) \frac{dx_0}{ds} = (1)(1) - (1)(0) = 1$.</p>
+                    <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">PDE: $u_x + u_y = u$. Initial Curve $\Gamma: x_0(s)=s, y_0(s)=s$. Initial data $u_0(s)=\cos(s)$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=1, c=u$. Curve: $x_0=s, y_0=s$. Data: $u_0=\cos(s)$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=1, \frac{dy_0}{ds}=1$.</p>
+                    <p>Transversality Check: $a(x_0,y_0,u_0) \frac{dy_0}{ds} - b(x_0,y_0,u_0) \frac{dx_0}{ds} = (1)(1) - (1)(1) = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails (equals 0), the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">PDE: $xu_x + yu_y = 0$. Initial Curve $\Gamma: x_0(s)=1, y_0(s)=s$. Initial data $u_0(s) = s^2$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q3">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=x, b=y, c=0$. Curve: $x_0=1, y_0=s$. Data: $u_0=s^2$.</p>
+                     <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent: $\frac{dx_0}{ds}=0, \frac{dy_0}{ds}=1$.</p>
+                     <p>Evaluate $a, b$ on the curve: $a(x_0,y_0,u_0)=x_0=1$, $b(x_0,y_0,u_0)=y_0=s$.</p>
+                     <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (1)(1) - (s)(0) = 1$.</p>
+                     <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">PDE: $yu_x - xu_y = 0$. Initial Curve $\Gamma: x_0(s)=s, y_0(s)=0$. Initial data $u_0(s) = s^3$. Does a unique local $C^1$ solution exist near $\Gamma$ for $s \neq 0$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=y, b=-x, c=0$. Curve: $x_0=s, y_0=0$. Data: $u_0=s^3$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=1, \frac{dy_0}{ds}=0$.</p>
+                    <p>Evaluate $a, b$ on the curve: $a(x_0,y_0,u_0)=y_0=0$, $b(x_0,y_0,u_0)=-x_0=-s$.</p>
+                    <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (0)(0) - (-s)(1) = s$.</p>
+                    <p>The condition is $s \neq 0$. Since this is given, and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ (away from the point corresponding to $s=0$).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">PDE: $u_x + u_y = 1$. Initial Curve $\Gamma: x_0(s)=s, y_0(s)=-s$. Initial data $u_0(s) = e^s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=1, c=1$. Curve: $x_0=s, y_0=-s$. Data: $u_0=e^s$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=1, \frac{dy_0}{ds}=-1$.</p>
+                    <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (1)(-1) - (1)(1) = -1 - 1 = -2$.</p>
+                    <p>Since $-2 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">PDE: $u_t + c u_x = 0$ (c is constant). Initial Curve $\Gamma: t_0(s)=0, x_0(s)=s$. Initial data $u_0(s) = f(s)$ (assume $f$ is $C^1$). Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>Variables $(x, t)$. PDE: $cu_x + 1u_t = 0$. $a=c, b=1$ (in $(x,t)$ coordinates). $c=0$.</p>
+                    <p>Curve: $x_0=s, t_0=0$. Data: $u_0=f(s)$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, t_0$ are $C^\infty$. $u_0$ is $C^1$ by assumption. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=1, \frac{dt_0}{ds}=0$.</p>
+                    <p>Transversality Check (using $t$ for $y$): $a \frac{dt_0}{ds} - b \frac{dx_0}{ds} = (c)(0) - (1)(1) = -1$.</p>
+                    <p>Since $-1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">PDE: $u_t + x u_x = 0$. Initial Curve $\Gamma: t_0(s)=s, x_0(s)=e^s$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>Variables $(x, t)$. PDE: $xu_x + 1u_t = 0$. $a=x, b=1$. $c=0$.</p>
+                    <p>Curve: $x_0=e^s, t_0=s$. Data: $u_0=s$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, t_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=e^s, \frac{dt_0}{ds}=1$.</p>
+                    <p>Evaluate $a, b$ on the curve: $a(x_0,t_0,u_0)=x_0=e^s$, $b(x_0,t_0,u_0)=1$.</p>
+                    <p>Transversality Check: $a \frac{dt_0}{ds} - b \frac{dx_0}{ds} = (e^s)(1) - (1)(e^s) = e^s - e^s = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">PDE: $u_x + uu_y = 0$. Initial Curve $\Gamma: x_0(s)=0, y_0(s)=s$. Initial data $u_0(s)=s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q8">
+                     <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=u, c=0$. Curve: $x_0=0, y_0=s$. Data: $u_0=s$.</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent: $\frac{dx_0}{ds}=0, \frac{dy_0}{ds}=1$.</p>
+                    <p>Evaluate $a, b$ on the curve: $a(x_0,y_0,u_0)=1$, $b(x_0,y_0,u_0)=u_0(s)=s$.</p>
+                    <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (1)(1) - (s)(0) = 1$.</p>
+                    <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists near $\Gamma$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">PDE: $u_x + yu_y = u$. Initial Curve $\Gamma: x_0(s)=s^2, y_0(s)=1$. Initial data $u_0(s) = 2s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q9">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=1, b=y, c=u$. Curve: $x_0=s^2, y_0=1$. Data: $u_0=2s$.</p>
+                     <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent: $\frac{dx_0}{ds}=2s, \frac{dy_0}{ds}=0$.</p>
+                     <p>Evaluate $a, b$ on the curve: $a(x_0,y_0,u_0)=1, b(x_0,y_0,u_0)=y_0=1$.</p>
+                     <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (1)(0) - (1)(2s) = -2s$.</p>
+                     <p>The condition is $-2s \neq 0$, which means $s \neq 0$. The theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ for $s \neq 0$. At the point on $\Gamma$ corresponding to $s=0$ (which is $(0,1)$), the transversality condition fails, and uniqueness is not guaranteed there.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">PDE: $u_x - y u_y = 0$. Initial Curve $\Gamma: x_0(s)=\ln s, y_0(s)=1/s$ for $s>0$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q10">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=1, b=-y, c=0$. Curve: $x_0=\ln s, y_0=1/s$ ($s>0$). Data: $u_0=s$.</p>
+                     <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$ for $s>0$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent: $\frac{dx_0}{ds}=1/s, \frac{dy_0}{ds}=-1/s^2$.</p>
+                     <p>Evaluate $a, b$ on the curve: $a(x_0,y_0,u_0)=1, b(x_0,y_0,u_0)=-y_0=-1/s$.</p>
+                     <p>Transversality Check: $a \frac{dy_0}{ds} - b \frac{dx_0}{ds} = (1)(-1/s^2) - (-1/s)(1/s) = -1/s^2 + 1/s^2 = 0$.</p>
+                     <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                     <p>(Note: $ye^x = (1/s)e^{\ln s} = (1/s)s = 1$. The characteristics are $ye^x=C$. The initial curve lies entirely on the characteristic $ye^x=1$.)</p>
+                 </div>
+            </article>
+
+             <!-- Questions 11-30 -->
+
+             <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">PDE: $u_x + x u_y = u$. Initial curve $\Gamma: x_0=0, y_0=s$. Initial data $u_0(s) = e^{-s}$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=x, c=u$. Curve $x_0=0, y_0=s$. Data $u_0=e^{-s}$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=0, dy_0/ds=1$.</p>
+                    <p>On curve: $a(x_0,y_0,u_0)=1, b(x_0,y_0,u_0)=x_0=0$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(1) - (0)(0) = 1 \neq 0$.</p>
+                    <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">PDE: $u_x - u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=s^2$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=-1, c=0$. Curve $x_0=s, y_0=s^2$. Data $u_0=s$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=2s$.</p>
+                    <p>On curve: $a=1, b=-1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(2s) - (-1)(1) = 2s + 1$.</p>
+                    <p>The condition is $2s+1 \neq 0$, i.e., $s \neq -1/2$. The theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ provided $s \neq -1/2$. At $s=-1/2$, the condition fails, and uniqueness is not guaranteed.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">PDE: $u_x + u_y = 0$. Initial curve $\Gamma: x_0=\cos s, y_0=\sin s$. Initial data $u_0(s) = \cos(2s)$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=1, c=0$. Curve $x_0=\cos s, y_0=\sin s$. Data $u_0=\cos(2s)$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=-\sin s, dy_0/ds=\cos s$.</p>
+                    <p>On curve: $a=1, b=1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(\cos s) - (1)(-\sin s) = \cos s + \sin s$.</p>
+                    <p>The condition is $\cos s + \sin s \neq 0$, which means $\tan s \neq -1$. The theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ provided $s \neq -\pi/4 + k\pi$ for integer $k$. At points where $s = -\pi/4 + k\pi$, the condition fails.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">PDE: $xu_x - yu_y = 0$. Initial curve $\Gamma: x_0=s, y_0=1/s$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$ for $s\neq 0$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=x, b=-y, c=0$. Curve $x_0=s, y_0=1/s$. Data $u_0=s$. (Assume $s \neq 0$).</p>
+                    <p>Smoothness: $a,b,c$ are $C^\infty$. $x_0, y_0, u_0$ are $C^\infty$ for $s \neq 0$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=-1/s^2$.</p>
+                    <p>On curve: $a=x_0=s, b=-y_0=-1/s$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (s)(-1/s^2) - (-1/s)(1) = -1/s + 1/s = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails for all $s \neq 0$, the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                     <p>(Note: Characteristics are $xy=C$. The initial curve $y=1/x$ is the characteristic $xy=1$.)</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">PDE: $u_x + \cos(x) u_y = 0$. Initial curve $\Gamma: x_0=0, y_0=s$. Initial data $u_0(s) = 0$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=\cos x, c=0$. Curve $x_0=0, y_0=s$. Data $u_0=0$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=0, dy_0/ds=1$.</p>
+                    <p>On curve: $a=1, b=\cos(x_0)=\cos(0)=1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(1) - (1)(0) = 1 \neq 0$.</p>
+                    <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">PDE: $y u_x + u_y = 0$. Initial curve $\Gamma: x_0=s^2, y_0=s$. Initial data $u_0(s) = s^2$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q16">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=y, b=1, c=0$. Curve $x_0=s^2, y_0=s$. Data $u_0=s^2$.</p>
+                     <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=2s, dy_0/ds=1$.</p>
+                     <p>On curve: $a=y_0=s, b=1$.</p>
+                     <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (s)(1) - (1)(2s) = s - 2s = -s$.</p>
+                     <p>The condition is $-s \neq 0$, i.e., $s \neq 0$. The theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ provided $s \neq 0$. At $s=0$, the condition fails.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">PDE: $u_x + u_y = 2x$. Initial curve $\Gamma: x_0=s, y_0=-s$. Initial data $u_0(s) = 0$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q17">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=1, b=1, c=2x$. Curve $x_0=s, y_0=-s$. Data $u_0=0$.</p>
+                     <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dy_0/ds=-1$.</p>
+                     <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(-1) - (1)(1) = -1-1 = -2 \neq 0$.</p>
+                     <p>Since $-2 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">PDE: $u_t + x u_x = u$. Initial curve $\Gamma: t_0=0, x_0=s$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q18">
+                    <p><strong>Solution:</strong></p>
+                     <p>Variables $(x, t)$. PDE: $x u_x + 1 u_t = u$. $a=x, b=1$. $c=u$.</p>
+                     <p>Curve $x_0=s, t_0=0$. Data $u_0=s$.</p>
+                     <p>Smoothness: $a,b,c, x_0, t_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dt_0/ds=0$.</p>
+                     <p>On curve: $a(x_0,t_0,u_0)=x_0=s, b(x_0,t_0,u_0)=1$.</p>
+                     <p>Transversality Check (using $t$ for $y$): $a(dt_0/ds) - b(dx_0/ds) = (s)(0) - (1)(1) = -1 \neq 0$.</p>
+                     <p>Since $-1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">PDE: $u_x + 2 u_y = 0$. Initial curve $\Gamma: x_0=2s, y_0=s$. Initial data $u_0(s)=s^2$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=2, c=0$. Curve $x_0=2s, y_0=s$. Data $u_0=s^2$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=2, dy_0/ds=1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(1) - (2)(2) = 1 - 4 = -3 \neq 0$.</p>
+                    <p>Since $-3 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">PDE: $u_x - u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=-s$. Initial data $u_0(s) = \cos(s)$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q20">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=-1, c=0$. Curve $x_0=s, y_0=-s$. Data $u_0=\cos(s)$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=-1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(-1) - (-1)(1) = -1 - (-1) = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic ($y+x=0$). The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">PDE: $xu_x + u_y = 1$. Initial curve $\Gamma: x_0=1, y_0=s$. Initial data $u_0(s) = s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q21">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=x, b=1, c=1$. Curve $x_0=1, y_0=s$. Data $u_0=s$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=0, dy_0/ds=1$.</p>
+                    <p>On curve: $a(x_0,y_0,u_0)=x_0=1, b(x_0,y_0,u_0)=1$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(1) - (1)(0) = 1 \neq 0$.</p>
+                    <p>Since $1 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">PDE: $u_x + x^2 u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=s^3/3$. Initial data $u_0(s) = 1$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=x^2, c=0$. Curve $x_0=s, y_0=s^3/3$. Data $u_0=1$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=s^2$.</p>
+                    <p>On curve: $a=1, b(x_0,y_0,u_0)=x_0^2=s^2$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(s^2) - (s^2)(1) = s^2 - s^2 = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                    <p>(Note: $dy/dx = b/a = x^2 \implies y = x^3/3 + C$. The curve is $y=x^3/3$, a characteristic projection.)</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">PDE: $u_t + u u_x = 0$. Initial curve $\Gamma: t_0=s, x_0=s$. Initial data $u_0(s)=1$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q23">
+                     <p><strong>Solution:</strong></p>
+                     <p>Variables $(x,t)$. PDE: $u u_x + 1 u_t = 0$. $a=u, b=1$. $c=0$.</p>
+                     <p>Curve $x_0=s, t_0=s$. Data $u_0=1$.</p>
+                     <p>Smoothness: $a,b,c, x_0, t_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dt_0/ds=1$.</p>
+                     <p>On curve: $a(x_0,t_0,u_0)=u_0=1, b=1$.</p>
+                     <p>Transversality Check (using $t$ for $y$): $a(dt_0/ds) - b(dx_0/ds) = (1)(1) - (1)(1) = 0$.</p>
+                     <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic for this data. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">PDE: $u_x + yu_y = 0$. Initial curve $\Gamma: x_0=s, y_0=e^s$. Initial data $u_0(s) = s^2$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                <button onclick="toggleSolution('sol-d2.5-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=y, c=0$. Curve $x_0=s, y_0=e^s$. Data $u_0=s^2$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=e^s$.</p>
+                    <p>On curve: $a=1, b(x_0,y_0,u_0)=y_0=e^s$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(e^s) - (e^s)(1) = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic ($ye^{-x}=e^s e^{-s}=1$). The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">PDE: $u_t + u_x = x$. Initial curve $\Gamma: t_0=s, x_0=s$. Initial data $u_0(s) = 0$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q25">
+                    <p><strong>Solution:</strong></p>
+                     <p>Variables $(x,t)$. PDE: $1 u_x + 1 u_t = x$. $a=1, b=1$. $c=x$.</p>
+                     <p>Curve $x_0=s, t_0=s$. Data $u_0=0$.</p>
+                     <p>Smoothness: $a,b,c, x_0, t_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dt_0/ds=1$.</p>
+                     <p>Transversality Check (using $t$ for $y$): $a(dt_0/ds) - b(dx_0/ds) = (1)(1) - (1)(1) = 0$.</p>
+                     <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">PDE: $-u_x + u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=s$. Initial data $u_0(s) = \tanh(s)$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q26">
+                    <p><strong>Solution:</strong></p>
+                     <p>Given: $a=-1, b=1, c=0$. Curve $x_0=s, y_0=s$. Data $u_0=\tanh(s)$.</p>
+                     <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dy_0/ds=1$.</p>
+                     <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (-1)(1) - (1)(1) = -1-1 = -2 \neq 0$.</p>
+                     <p>Since $-2 \neq 0$ and smoothness conditions hold, the theorem guarantees a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">PDE: $u_x + 4u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=4s$. Initial data $u_0(s)=s^3$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q27">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=1, b=4, c=0$. Curve $x_0=s, y_0=4s$. Data $u_0=s^3$.</p>
+                     <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=1, dy_0/ds=4$.</p>
+                     <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(4) - (4)(1) = 4-4 = 0$.</p>
+                     <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic ($y-4x=0$). The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">PDE: $u_x + \sin(y) u_y = 0$. Initial curve $\Gamma: x_0=s, y_0=0$. Initial data $u_0(s)=s$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q28">
+                    <p><strong>Solution:</strong></p>
+                    <p>Given: $a=1, b=\sin y, c=0$. Curve $x_0=s, y_0=0$. Data $u_0=s$.</p>
+                    <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                    <p>Tangent $dx_0/ds=1, dy_0/ds=0$.</p>
+                    <p>On curve: $a=1, b(x_0,y_0,u_0)=\sin(y_0)=\sin(0)=0$.</p>
+                    <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(0) - (0)(1) = 0$.</p>
+                    <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic at $y=0$. The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">PDE: $u_x + u_y = 0$. Initial curve $\Gamma: x_0=s^3, y_0=s$. Initial data $u_0(s) = 0$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d2.5-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d2.5-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>Given: $a=1, b=1, c=0$. Curve $x_0=s^3, y_0=s$. Data $u_0=0$.</p>
+                     <p>Smoothness: $a,b,c, x_0, y_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=3s^2, dy_0/ds=1$.</p>
+                     <p>Transversality Check: $a(dy_0/ds) - b(dx_0/ds) = (1)(1) - (1)(3s^2) = 1 - 3s^2$.</p>
+                     <p>The condition is $1-3s^2 \neq 0$, i.e., $s \neq \pm 1/\sqrt{3}$. The theorem guarantees a unique local $C^1$ solution exists near $\Gamma$ provided $s \neq \pm 1/\sqrt{3}$. At points where $s = \pm 1/\sqrt{3}$, the condition fails.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">PDE: $u_t - u_x = 0$. Initial curve $\Gamma: t_0=s, x_0=-s$. Initial data $u_0(s) = e^{-s^2}$. Does a unique local $C^1$ solution exist near $\Gamma$?</p>
+                 <button onclick="toggleSolution('sol-d7-q30')">Show/Hide Solution</button> <!-- Note: ID has d7, should be d2.5 -->
+                 <div class="solution" id="sol-d7-q30"> <!-- Note: ID has d7, should be d2.5 -->
+                     <p><strong>Solution:</strong></p>
+                     <p>Variables $(x,t)$. PDE: $-1 u_x + 1 u_t = 0$. $a=-1, b=1$. $c=0$.</p>
+                     <p>Curve $x_0=-s, t_0=s$. Data $u_0=e^{-s^2}$.</p>
+                     <p>Smoothness: $a,b,c, x_0, t_0, u_0$ are $C^\infty$. Conditions 1 and 2 hold.</p>
+                     <p>Tangent $dx_0/ds=-1, dt_0/ds=1$.</p>
+                     <p>Transversality Check (using $t$ for $y$): $a(dt_0/ds) - b(dx_0/ds) = (-1)(1) - (1)(-1) = -1 - (-1) = 0$.</p>
+                     <p>Since the transversality condition (Condition 3) fails, the initial curve is characteristic ($x+t=0$). The theorem does **not** guarantee a unique local $C^1$ solution exists.</p>
+                 </div>
+            </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            // Correcting the ID for Q30 if necessary
+            if (id === 'sol-d7-q30') { id = 'sol-d2.5-q30'; }
+
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+         // Correct the button's onclick reference for Q30
+         document.addEventListener('DOMContentLoaded', (event) => {
+            const q30button = document.querySelector('button[onclick="toggleSolution(\'sol-d7-q30\')"]');
+            if (q30button) {
+                q30button.setAttribute('onclick', 'toggleSolution(\'sol-d2.5-q30\')');
+            }
+            const q30div = document.getElementById('sol-d7-q30');
+             if (q30div) {
+                q30div.setAttribute('id', 'sol-d2.5-q30');
+            }
+        });
+    </script>
+
+</body>
+</html>

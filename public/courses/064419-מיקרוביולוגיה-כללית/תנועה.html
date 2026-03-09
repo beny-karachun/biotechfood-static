@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>תנועת מיקרואורגניזמים ומבנים תאיים</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Peritrichous", definition: "סוג סידור שוטונים (פלג'לות) שבו הם מפוזרים על פני כל שטח פני התא החיידקי."},
+            { term: "Lophotrichous", definition: "סוג סידור שבו קיימת ציצת שוטונים (tuft) בקוטב אחד או בשני קטבי התא."},
+            { term: "Polar Flagellation", definition: "סוג סידור שבו יש שוטון בודד באחד מקטבי התא או בשניהם."},
+            { term: "Basal Body (גוף בסיסי)", definition: "החלק המנועי של הפלג'לום, המעוגן במעטפת התא ואחראי לסיבוב השוטון."},
+            { term: "Mot Proteins", definition: "חלבונים המרכיבים את הסטטור (החלק הנייח) במנוע הפלג'לום. הם יוצרים תעלה המאפשרת מעבר פרוטונים ומניעה את סיבוב הרוטור."},
+            { term: "Run and Tumble", definition: "מנגנון התנועה של חיידקים עם שוטונים. 'ריצה' היא תנועה ישרה ומתואמת (סיבוב נגד כיוון השעון, CCW), ו'היפוך' הוא שינוי כיוון אקראי (סיבוב עם כיוון השעון, CW)."},
+            { term: "Chemotaxis (כמוטקסיס)", definition: "תנועה מכוונת של אורגניזם בתגובה לגירוי כימי, הגורמת להארכת משך הריצה בכיוון הרצוי."},
+            { term: "Archaellum", definition: "אברון התנועה בארכאות, הדומה במראהו לפלג'לום החיידקי אך שונה ממנו במבנה, בהרכב החלבונים ובמקור האנרגיה (ATP במקום PMF)."},
+            { term: "Gliding Motility (תנועת גלישה)", definition: "תנועה על פני משטחים שאינה תלויה בשוטונים, ולעיתים קרובות מערבת מנגנונים כמו Type IV pili או הפרשת ריר."},
+            { term: "Type IV Pili", definition: "אברונים דמויי שערה שיכולים להתארך ולהתכווץ, ומאפשרים תנועת גלישה על ידי משיכת התא קדימה."},
+            { term: "Magnetosome (מגנטוזום)", definition: "אברון תוך-תאי בחיידקים מסוימים המכיל גבישים מגנטיים (כמו מגנטיט), הגורם לתא להסתדר במקביל לקווי השדה המגנטי של כדור הארץ."},
+            { term: "Gas Vesicle (בועית גז)", definition: "מבנה חלבוני חדיר לגז אך לא למים, המאפשר לחיידקים מימיים לשלוט בציפה שלהם בעמודת המים."},
+            { term: "Flagellin (פלג'לין)", definition: "החלבון המבני העיקרי המרכיב את הפילמנט (הסיב) של הפלג'לום החיידקי."},
+            { term: "Proton Motive Force (PMF)", definition: "מפל אלקטרוכימי של פרוטונים על פני הממברנה הציטופלזמטית, המשמש כמקור האנרגיה לסיבוב הפלג'לום החיידקי."},
+            { term: "Phototaxis (פוטוטקסיס)", definition: "תנועה מכוונת של אורגניזם בתגובה לגירוי של אור."}
+        ];
+
+        const mcqData = [
+            { question: "מהי התוצאה הסבירה ביותר של מוטציה בחלבוני ה-Fli (motor switch) בפלג'לום של חיידק Peritrichous?", options: ["הפלג'לום לא יורכב כלל", "החיידק יוכל לבצע 'ריצה' (run) אך לא 'היפוך' (tumble)", "החיידק יאבד את היכולת לנוע לחלוטין", "החיידק ינוע רק במעגלים ללא יכולת לשנות כיוון"], correctIndex: 1, explanation: "חלבוני Fli אחראים על שינוי כיוון הסיבוב של המנוע. פגיעה בהם תמנע את המעבר מסיבוב CCW (ריצה) ל-CW (היפוך), או להפך, ולכן תפגע ביכולת לשנות כיוון באופן יעיל." },
+            { question: "בהשוואה בין מנוע הפלג'לום החיידקי למנוע הארכאלום, איזה היגד הוא הנכון ביותר?", options: ["שניהם משתמשים ב-ATP כמקור אנרגיה ישיר", "הארכאלום משתמש בכוח מניע פרוטוני (PMF), והפלג'לום ב-ATP", "הפלג'לום משתמש ב-PMF, והארכאלום משתמש ב-ATP", "שניהם דומים במבנה החלבוני ובהרכב הטבעות הבסיסיות"], correctIndex: 2, explanation: "זהו הבדל מהותי: הפלג'לום החיידקי מונע על ידי PMF (זרימת יוני מימן), בעוד שהארכאלום בארכאה מונע על ידי הידרוליזה של ATP. הם מבנים אנלוגיים, לא הומולוגיים." },
+            { question: "איזה מבנה חסר בפלג'לום של חיידק גראם-חיובי בהשוואה לגראם-שלילי?", options: ["טבעות MS ו-C", "ה-Hook (וו) והפילמנט", "טבעות L ו-P", "חלבוני Mot"], correctIndex: 2, explanation: "לחיידקים גראם-חיוביים חסרה הממברנה החיצונית, ולכן אין להם צורך בטבעות L (המעוגנת בממברנה החיצונית) ו-P (המעוגנת בפריפלזמה/פפטידוגליקן) הקיימות בגראם-שליליים." },
+            { question: "בתהליך הביוסינתזה של הפלג'לום, כיצד מתווספות יחידות חלבון הפלג'לין כדי להאריך את הפילמנט?", options: ["הן מתווספות לבסיס הפילמנט, סמוך ל-Hook", "הן מורכבות בציטופלזמה לפילמנט שלם שמוחדר החוצה", "הן מועברות דרך תעלה חלולה במרכז הפילמנט ומתווספות לקצה המרוחק", "הן מופרשות החוצה ומתחברות באופן ספונטני לפילמנט הגדל"], correctIndex: 2, explanation: "יחידות הפלג'לין מסונתזות בציטופלזמה, עוברות דרך המבנה החלול של הגוף הבסיסי, ה-Hook והפילמנט עצמו, ומורכבות בקצה בעזרת חלבון מכסה (Cap protein)." },
+            { question: "מה מאפיין את תנועת ה-'Tumble' בחיידק בעל שוטונים מסוג Peritrichous?", options: ["סיבוב מתואם של כל השוטונים נגד כיוון השעון (CCW) ליצירת צרור", "הפסקת פעולת המנוע ועצירה מוחלטת של החיידק", "סיבוב של כל השוטונים עם כיוון השעון (CW), הגורם לפיזורם ושינוי כיוון אקראי", "התכווצות של השוטונים בדומה למנגנון של Type IV pili"], correctIndex: 2, explanation: "בסידור Peritrichous, סיבוב CW גורם לשוטונים להתפרק מהצרור המתואם, מה שמוביל לתנועה לא יציבה ולשינוי כיוון אקראי המכונה Tumble." },
+            { question: "חיידק מגנטוטקטי משתמש במגנטוזומים כדי:", options: ["להידבק למשטחים עשירים בברזל", "לנוע ישירות לעבר ריכוז גבוה של חומרי מזון", "להתגונן מפני טורפים על ידי יצירת שדה מגנטי", "להתכוונן לאורך קווי השדה המגנטי של כדור הארץ כדי למצוא תנאי חמצן אופטימליים"], correctIndex: 3, explanation: "המגנטוזומים פועלים כמצפן פנימי. הם מכוונים את החיידק, ששוחה קדימה, לנוע למטה לעבר אזורים דלי חמצן (מיקרו-אארוביים או אנארוביים) בסדימנט, שם הוא משגשג." },
+            { question: "איזו תכונה של בועיות הגז (Gas Vesicles) היא קריטית לתפקודן כמנגנון ציפה?", options: ["הן אטומות לחלוטין לגזים ומים גם יחד", "הן חדירות למים אך לא לגזים", "הן חדירות לגזים אך לא למים", "הן מתמלאות באופן פעיל בגז מטבולי המיוצר על ידי התא"], correctIndex: 2, explanation: "המבנה החלבוני של בועיות הגז, המורכב מ-GvpA ו-GvpC, יוצר מעטפת קשיחה החדירה לגזים מהסביבה אך דוחה מים. זה מאפשר לבועיות להתמלא בגז ולהקנות ציפה לתא מבלי להתמלא במים." },
+            { question: "כיצד משפיע חומר מושך (attractant) על תנועת חיידק כמוטקטי?", options: ["הוא מגביר את תדירות אירועי ה-Tumble", "הוא גורם לחיידק לשחות בקו ישר לחלוטין ללא כל Tumble", "הוא גורם לתנועה עם כיוון השעון (CW) בלבד", "הוא מפחית את תדירות אירועי ה-Tumble כל עוד החיידק נע במעלה מפל הריכוזים"], correctIndex: 3, explanation: "בנוכחות מפל ריכוזים של חומר מושך, מערכת החישה של החיידק מדכאת את אירועי ה-Tumble, מה שמאריך את משך הריצה (Run) בכיוון הנכון. התוצאה היא 'הליכה אקראית מוטה' לעבר מקור החומר." },
+            { question: "תנועת גלישה (Gliding motility) באמצעות Type IV pili מתרחשת על ידי:", options: ["הפרשת ריר דביק הדוחף את התא קדימה", "סיבוב מהיר של הפילי בדומה לפלג'לום", "התארכות הפילי, היצמדות למשטח והתכווצות המושכת את התא", "יצירת גלים מתכווצים לאורך הממברנה החיצונית"], correctIndex: 2, explanation: "מנגנון זה, המכונה Twitching motility, כולל התארכות של סיבי הפילי, היקשרות לקולטן על משטח, ואז התכווצות חזקה המושכת את גוף התא קדימה." },
+            { question: "איזה מהרכיבים הבאים במנוע הפלג'לום החיידקי מתפקד כסטטור (החלק הנייח)?", options: ["טבעת C וטבעת MS (הרוטור)", "ה-Hook והפילמנט", "חלבוני Fli (המתג)", "חלבוני Mot"], correctIndex: 3, explanation: "חלבוני ה-Mot מעוגנים בממברנה הציטופלזמטית סביב הרוטור (טבעות MS ו-C). הם אינם מסתובבים ויוצרים תעלות פרוטונים המניעות את סיבוב הרוטור." },
+            { question: "חיידק בעל שוטונים מסוג Lophotrichous יתואר בצורה הטובה ביותר כ:", options: ["בעל שוטונים רבים המפוזרים על כל פני התא", "בעל שוטון בודד באחד הקטבים", "בעל ציצת שוטונים באחד או יותר מהקטבים", "חסר שוטונים לחלוטין ונע בגלישה"], correctIndex: 2, explanation: "הקידומת 'Lopho' משמעותה ציצה (tuft). סידור זה מאופיין בקבוצת שוטונים המרוכזת באזור קוטבי של התא." },
+            { question: "בהינתן שדרושים כ-1000 פרוטונים לסיבוב אחד שלם של הפלג'לום, מה ניתן להסיק לגבי תא שנמצא בסביבה עם PMF נמוך מאוד?", options: ["מהירות סיבוב הפלג'לום תהיה גבוהה מאוד", "התא יעבור להשתמש ב-ATP להנעת הפלג'לום", "מהירות סיבוב הפלג'לום תהיה נמוכה או שהוא לא יסתובב כלל", "התא יתחיל מיד בביוסינתזה של שוטונים נוספים"], correctIndex: 2, explanation: "ה-PMF הוא הכוח המניע. אם מפל הפרוטונים חלש, זרימת הפרוטונים דרך חלבוני ה-Mot תהיה איטית, וכתוצאה מכך סיבוב הרוטור יהיה איטי או ייעצר לחלוטין." },
+            { question: "מהי הפונקציה העיקרית של חלבון ה-Cap בתהליך הרכבת הפלג'לום?", options: ["לעגן את הגוף הבסיסי לממברנה הציטופלזמטית", "לפעול כחיישן כימי בקצה הפלג'לום", "לתווך את החיבור בין ה-Hook לפילמנט", "לסייע בהרכבה נכונה של יחידות הפלג'לין בקצה המרוחק של הפילמנט"], correctIndex: 3, explanation: "חלבון ה-Cap נמצא בקצה הפילמנט הגדל ומסייע לשלב נכון את יחידות הפלג'לין המגיעות דרך התעלה החלולה, ומונע מהן להתפזר לסביבה." },
+            { question: "איזה סוג של טקסיס (taxis) אינו מתואר ישירות במצגת אך יכול להיות מסווג תחת כמוטקסיס?", options: ["Aerotaxis (תנועה בתגובה לחמצן)", "Hydrotaxis (תנועה בתגובה למים)", "Thermotaxis (תנועה בתגובה לחום)", "Geotaxis (תנועה בתגובה לכוח המשיכה)"], correctIndex: 0, explanation: "Aerotaxis הוא סוג ספציפי של כמוטקסיס, שבו הגירוי הכימי הוא ריכוז החמצן. חיידקים מגנטוטקטיים, למשל, משתמשים במגנטיות כדי למצוא ריכוזי חמצן אופטימליים." },
+            { question: "בהשוואה יחסית של 'אורכי גוף לשנייה', איזה אורגניזם מהיר יותר?", options: ["צ'יטה מהירה יותר באופן משמעותי", "חיידק מהיר יותר באופן משמעותי", "שניהם נעים במהירות יחסית דומה", "ההשוואה אינה אפשרית עקב הבדלי הגודל"], correctIndex: 1, explanation: "למרות שמהירותה האבסולוטית של הצ'יטה (110 קמ'ש) גבוהה בהרבה ממהירות החיידק, יחסית לגודלם, החיידק מהיר יותר. הוא נע כ-60 אורכי תא לשנייה, בעוד הצ'יטה נעה כ-25 אורכי גוף לשנייה." },
+            { question: "בתנועת גלישה המערבת הפרשת ריר (slime), מהו המנגנון העיקרי המניע את התא קדימה?", options: ["הריר מתכווץ ומושך את התא", "התא 'גולש' על שכבת הריר כחומר סיכה", "הידרציה מהירה של הריר המופרש מאחור דוחפת את התא קדימה", "הריר משמש כנקודת אחיזה לחלבונים בממברנה החיצונית הנעים לאורך התא"], correctIndex: 2, explanation: "בחלק ממנגנוני הגלישה, התא מפריש ריר מקצהו האחורי. כאשר הריר בא במגע עם מים, הוא מתרחב במהירות (הידרציה) ויוצר כוח דחיפה המניע את התא קדימה." },
+            { question: "איזה מרכיב של הפלג'לום בגראם-שליליים מעוגן בשכבת הפפטידוגליקן?", options: ["טבעת L", "טבעת P", "טבעת MS", "טבעת C"], correctIndex: 1, explanation: "טבעת L מעוגנת בממברנה החיצונית (LPS), טבעות MS ו-C נמצאות בממברנה הציטופלזמטית, וטבעת P מעוגנת בשכבת הפפטידוגליקן, הממוקמת בפריפלזמה." },
+            { question: "חיידק עם שוטון פולארי (polar) מסוג 'unidirectional' משנה כיוון על ידי:", options: ["היפוך כיוון הסיבוב של השוטון מ-CW ל-CCW", "עצירה מוחלטת של סיבוב השוטון, שינוי אוריינטציה אקראי, וחידוש הסיבוב באותו כיוון", "יצירת שוטון חדש בקוטב הנגדי", "הפרדת השוטון מהתא וגידול אחד חדש"], correctIndex: 1, explanation: "במנגנון זה, השוטון מסתובב בכיוון אחד בלבד. כדי לשנות כיוון תנועה, התא מפסיק את פעולת המנוע, מה שמאפשר לו לשנות את האוריינטציה שלו באופן פסיבי (עקב תנועה בראונית), ואז מפעיל מחדש את המנוע באותו כיוון סיבוב." },
+            { question: "מה ההבדל המהותי בין תנועת שחייה (swimming) לתנועת גלישה (gliding)?", options: ["שחייה מהירה יותר מגלישה", "שחייה דורשת משטח מוצק, וגלישה מתרחשת בנוזל", "שחייה תלויה בשוטונים ומתרחשת בנוזל, גלישה אינה תלויה בשוטונים ודורשת מגע עם משטח", "שחייה משתמשת ב-PMF וגלישה משתמשת ב-ATP"], correctIndex: 2, explanation: "זוהי ההבחנה הבסיסית. שחייה היא תנועה בנוזל המונעת על ידי שוטונים. גלישה היא קטגוריה רחבה של סוגי תנועה המתרחשים כאשר התא נמצא במגע עם משטח מוצק ואינם מערבים שוטונים." },
+            { question: "מהי התכונה המרכזית של חלבוני המבנה של בועית הגז (GvpA) ההופכת אותם למתאימים לתפקידם?", options: ["הם גמישים מאוד ומאפשרים לבועית לשנות צורה", "הם הידרופיליים מאוד ומושכים מים לתוך הבועית", "הם יוצרים מבנה בטא-שיט (beta-sheet) קשיח והידרופובי", "הם מכילים יוני מתכת המקנים קשיחות"], correctIndex: 2, explanation: "המבנה העיקרי של הבועית מורכב מחלבוני GvpA המסודרים כצלעות. חלבונים אלו קטנים, הידרופוביים מאוד, ויוצרים מבנה קשיח של משטחי בטא המונע קריסה תחת לחץ ומאפשר את דחיית המים." },
+            { question: "מדוע חיידק גראם-שלילי זקוק לטבעות L ו-P בעוד שגראם-חיובי לא?", options: ["כדי לעבור את שכבת הפפטידוגליקן העבה יותר בגראם-שליליים", "כי הממברנה החיצונית בגראם-שליליים דורשת נקודות עיגון נוספות", "כדי לייצר יותר כוח סיבוב בסביבה דלת אנרגיה", "כי הפילמנט שלהם ארוך יותר ודורש יותר תמיכה"], correctIndex: 1, explanation: "הגוף הבסיסי צריך לעבור דרך כל שכבות מעטפת התא ולהיות מעוגן בהן. בחיידק גראם-שלילי, יש ממברנה ציטופלזמטית, שכבת פפטידוגליקן דקה, וחשוב מכל - ממברנה חיצונית. טבעות L ו-P משמשות כמיסבים וכנקודות עיגון בממברנה החיצונית ובפריפלזמה/פפטידוגליקן, בהתאמה." },
+            { question: "איזו תופעה תתרחש בחיידק פוטוטקטי הנחשף לאור באורך גל שבו פיגמנטי הבליעה שלו (למשל בקטריוכלורופיל) אינם בולעים?", options: ["החיידק ינוע במהירות לעבר מקור האור", "החיידק יתרחק ממקור האור (פוטוטקסיס שלילי)", "החיידק יפסיק לנוע לחלוטין", "תנועת החיידק לא תושפע באופן משמעותי והוא ימשיך בתנועה אקראית"], correctIndex: 3, explanation: "פוטוטקסיס הוא תנועה בתגובה לאור באורכי גל ספציפיים הניתנים לחישה על ידי פוטורצפטורים או פיגמנטים של התא. אם האור הוא באורך גל שהתא אינו יכול לחוש, לא יהיה גירוי, ולכן התנועה לא תהיה מכוונת." },
+            { question: "במנגנון הגלישה של Myxococcus xanthus המערב Type IV pili, מה גורם לתחילת ההתכווצות של הפילי?", options: ["חישה של חומר מזון על המשטח", "מגע של קצה הפילי עם משטח מוצק", "שינוי ברמת ה-ATP בתא", "קליטת אות אור באורך גל מסוים"], correctIndex: 1, explanation: "המודל מתאר שהפילי מתארכים מקוטב התא. כאשר קצה הפילי נוגע במשטח, המגע עצמו מהווה אות המפעיל את מנגנון ההתכווצות (retraction), המושך את התא קדימה." },
+            { question: "מהי הסיבה האבולוציונית הסבירה לכך שחיידקים מגנטוטקטיים בדרך כלל חיים בסביבות מימיות עם גרדיאנט חמצן?", options: ["השדה המגנטי חזק יותר במים", "הברזל הדרוש למגנטוזומים זמין רק במים", "התנועה החד-ממדית המונחית על ידי השדה המגנטי היא אסטרטגיה יעילה למציאת אזור החמצן הצר והאופטימלי עבורם", "המים מגנים על החיידקים מפני קרינה הפוגעת במגנטוזומים"], correctIndex: 2, explanation: "לחיידקים אלה יש דרישות חמצן מאוד ספציפיות (לרוב מיקרו-אארופיליים). חיפוש אקראי תלת-ממדי אחר הרצועה הצרה הזו אינו יעיל. השימוש בשדה המגנטי מפשט את הבעיה לחיפוש חד-ממדי (למעלה/למטה), מה שמגדיל מאוד את הסיכוי למצוא את הנישה המתאימה." },
+            { question: "אם נבודד רק את טבעות MS ו-C יחד עם חלבוני Mot ונפעיל PMF, מה נצפה לראות?", options: ["הרכבה של פילמנט שלם באופן ספונטני", "סיבוב של טבעות MS ו-C כיחידה אחת", "תנועה קווית של המבנה על פני משטח", "הידרוליזה של ATP ללא תנועה"], correctIndex: 1, explanation: "טבעות MS ו-C מהוות את הרוטור, וחלבון Mot את הסטטור. יחד, הם מהווים את ליבת המנוע. הפעלת PMF תגרום לזרימת פרוטונים דרך הסטטור ותניע את סיבוב הרוטור, גם בהיעדר ה-Hook והפילמנט." },
+            { question: "איזו מהאפשרויות הבאות אינה דוגמה לתנועה תאית המונעת ישירות על ידי מבנים חלבוניים המשתנים קונפורמציה?", options: ["סיבוב פלג'לום חיידקי", "התכווצות Type IV pili", "תנועת ציפה באמצעות בועיות גז", "סיבוב ארכאלום"], correctIndex: 2, explanation: "סיבוב פלג'לום, התכווצות פילי וסיבוב ארכאלום כולם מונעים על ידי שינויי קונפורמציה בחלבונים (Mot, חלבוני התכווצות, FlaI/J). לעומת זאת, ציפה עם בועיות גז היא תהליך פיזיקלי פסיבי המבוסס על צפיפות, ולא תנועה המונעת באופן פעיל על ידי חלבונים." },
+            { question: "במה שונה תנועת חיידק בעל שוטון פולארי הפיך (reversible) מחיידק Peritrichous?", options: ["הוא אינו מבצע Tumble", "הוא משנה כיוון על ידי היפוך סיבוב השוטון הבודד שלו", "הוא נע לאחור במקום לשנות כיוון", "הוא איטי יותר באופן משמעותי"], correctIndex: 1, explanation: "חיידק peritrichous משנה כיוון על ידי Tumble, שזו תוצאה של פירוק צרור השוטונים. חיידק פולארי הפיך פשוט הופך את כיוון הסיבוב של השוטון הבודד שלו (למשל מ-CCW ל-CW), מה שגורם לו לנוע בכיוון ההפוך." },
+            { question: "מהי כמות חלבוני הפלג'לין הנדרשת בקירוב לבניית פילמנט אחד?", options: ["כ-200", "כ-2,000", "כ-20,000", "כ-200,000"], correctIndex: 2, explanation: "ההרכבה של פילמנט בודד היא תהליך מורכב הדורש מספר עצום של יחידות חלבון. לפי המצגת, דרושים כ-20,000 חלבוני פלג'לין ליצירת פילמנט אחד." },
+            { question: "מה ההיגיון בשימוש במגנטיט ($Fe_3O_4$) או גרייגיט ($Fe_3S_4$) ליצירת מגנטוזומים?", options: ["אלה התרכובות היחידות המכילות ברזל", "אלה חומרים פרומגנטיים בעלי מגנטיות קבועה חזקה", "הם קלים מאוד ומסייעים בציפה", "הם משמשים כמאגר אנרגיה בנוסף להיותם מגנטיים"], correctIndex: 1, explanation: "מגנטיט וגרייגיט הם מינרלים מגנטיים באופן טבעי (פרומגנטיים). יצירת גבישים ננומטריים מהם מאפשרת למגנטוזום כולו לתפקד כמחט מצפן קבועה, בניגוד לחומרים פאראמגנטיים שהיו מתמגנטים רק בנוכחות שדה חיצוני." },
+            { question: "חיידק נמצא בגרדיאנט של חומר דוחה (repellent). כיצד תשתנה תנועתו כשהוא נע במעלה הגרדיאנט (לעבר הריכוז הגבוה)?", options: ["תדירות ה-Tumble תפחת", "תדירות ה-Tumble תגבר", "מהירות הריצה תגדל באופן משמעותי", "הוא יפסיק לנוע לחלוטין"], correctIndex: 1, explanation: "באופן הפוך לאטרקטנט, כאשר חיידק חש שהוא נע לכיוון ריכוז גבוה יותר של חומר דוחה, מערכת החישה שלו תגביר את תדירות אירועי ה-Tumble כדי לאפשר לו לשנות כיוון במהירות ולהתרחק מהאזור המזיק." },
+            { question: "איזה שלב בביוסינתזת הפלג'לום מתרחש לפני הרכבת ה-Hook?", options: ["סינתזת הפילמנט", "יצירת חלבון ה-Cap", "התקנת חלבוני ה-Mot והרכבת טבעות MS/C", "עיגון טבעת L בממברנה החיצונית"], correctIndex: 2, explanation: "ההרכבה מתרחשת מהבסיס כלפי חוץ. השלב הראשון הוא הרכבת טבעות MS/C בממברנה הציטופלזמטית והתקנת חלבוני ה-Mot. רק לאחר מכן מורכבים ה-Rod, טבעות P ו-L (בגראם-שליליים), ה-Hook, ולבסוף הפילמנט." },
+            { question: "החלפת חומצת אמינו הידרופובית בחומצת אמינו טעונה על פני השטח החיצוני של חלבון GvpA, מה תהיה ההשפעה הסבירה ביותר על בועית הגז?", options: ["היא תהפוך לחדירה יותר לגז", "היא תהפוך לחזקה יותר מבנית", "היא עלולה לאבד את יכולתה לדחות מים ולקרוס", "היא תאבד את יכולתה להיקשר לחלבון GvpC"], correctIndex: 2, explanation: "התכונה ההידרופובית הקיצונית של פני השטח של הבועית חיונית לדחיית מולקולות מים. הפיכת פני השטח להידרופיליים תאפשר למים להיכנס, מה שיפגע בציפה ויגרום לקריסת המבנה." },
+            { question: "איזה מהבאים מהווה את ההבדל העיקרי בין Cilia ל-Flagella בתאים אאוקריוטים?", options: ["Flagella משמשים לתנועה ו-Cilia לחישה בלבד", "Flagella ארוכים ובדרך כלל מועטים, Cilia קצרים ורבים מאוד", "Flagella מונעים על ידי PMF ו-Cilia על ידי ATP", "Flagella יוצרים תנועת סיבוב ו-Cilia תנועת חתירה"], correctIndex: 1, explanation: "בתאים אאוקריוטים, ההבדל העיקרי הוא מורפולוגי ומספרי. פלג'לות הן ארוכות, בדרך כלל יש 1-2 לתא, ויוצרות תנועה גלית. סיליות הן קצרות מאוד, מכסות את פני התא באלפים, ויוצרות תנועת חתירה מתואמת. שניהם, עם זאת, חולקים מבנה פנימי דומה (axoneme) ומונעים על ידי ATP." },
+            { question: "מהי הפונקציה של ה-Hook בפלג'לום?", options: ["לסובב את הפילמנט", "לשמש כמפרק אוניברסלי גמיש המקשר בין הרוטור לפילמנט", "לעגן את המבנה כולו לממברנה", "לסנתז את חלבוני הפלג'לין"], correctIndex: 1, explanation: "ה-Hook הוא מבנה חלבוני גמיש המחבר בין ה-Rod (המוט) הקשיח שיוצא מהמנוע לבין הפילמנט הארוך. גמישות זו מאפשרת לפילמנט להסתובב ולהניע את התא מבלי לשבור את המבנה." },
+            { question: "אורגניזם המבצע פוטוטקסיס חיובי יצטבר באזורים:", options: ["חשוכים לחלוטין", "שבהם יש את אורכי הגל המתאימים לפוטורצפטורים שלו", "בעלי עוצמת האור הגבוהה ביותר, ללא תלות באורך הגל", "שבהם יש גרדיאנט של חומרים כימיים"], correctIndex: 1, explanation: "פוטוטקסיס הוא תגובה ספציפית לאורכי גל. האורגניזם ינוע לעבר אור שהוא יכול לקלוט ולהפיק ממנו תועלת (למשל, פוטוסינתזה) או שהוא משמש כאות סביבתי. הוא לא יגיב לאורכי גל שאינו חש." },
+            { question: "איזה חלק במנוע הפלג'לום החיידקי אחראי ישירות לאינטראקציה עם הפרוטונים הגורמת לסיבוב?", options: ["הפילמנט", "טבעת P", "חלבוני Mot והמטענים על טבעת MS", "חלבוני Fli"], correctIndex: 2, explanation: "המודל מראה שפרוטונים זורמים דרך תעלות בחלבוני ה-Mot (הסטטור). זרימה זו גורמת לאינטראקציה אלקטרוסטטית עם מטענים על פני טבעת ה-MS (הרוטור), מה שגורם לטבעת להסתובב צעד אחר צעד, בדומה לטורבינה." },
+            { question: "מה ההבדל בין סידור שוטונים Polar ל-Lophotrichous?", options: ["Polar הוא שוטון בודד, Lophotrichous הוא שני שוטונים בקטבים מנוגדים", "Polar הוא ציצת שוטונים, Lophotrichous הוא שוטון בודד", "Polar הוא שוטון בודד בקוטב, Lophotrichous הוא ציצת שוטונים בקוטב", "אין הבדל, אלו מונחים נרדפים"], correctIndex: 2, explanation: "שניהם סידורים קוטביים, אך Polar מתייחס לשוטון בודד בקוטב (או אחד בכל קוטב), בעוד Lophotrichous מתייחס לציצה (tuft) של מספר שוטונים היוצאת מאותו קוטב." },
+            { question: "מהי הדרך היעילה ביותר להבחין בין תנועת גלישה לתנועת שחייה במעבדה?", options: ["לבדוק נוכחות של גנים לפלג'לין", "לצפות בתאים תחת מיקרוסקופ על זכוכית נושאת (slide) לעומת תרבית נוזלית", "למדוד את מהירות התנועה האבסולוטית של התאים", "לבדוק אם התנועה נפגעת על ידי חומרים המשבשים את ה-PMF"], correctIndex: 1, explanation: "תנועת גלישה דורשת מגע עם משטח. לכן, צפייה בתאים על משטח מוצק (זכוכית נושאת) תאפשר לראות תנועת גלישה. לעומת זאת, בתרבית נוזלית (טיפה תלויה למשל), רק תאים עם יכולת שחייה יוכלו לנוע באופן פעיל." },
+            { question: "מדוע מבנה הארכאלום נחשב פחות יעיל אנרגטית ממבנה הפלג'לום החיידקי?", options: ["כי הוא דק יותר ונשבר בקלות", "כי בנייתו דורשת יותר סוגי חלבונים", "כי השימוש ב-ATP כיחידה אנרגטית נפרדת נחשב 'יקר' יותר מהשימוש הישיר ב-PMF שכבר קיים", "כי הוא מסתובב לאט יותר באופן משמעותי"], correctIndex: 2, explanation: "ה-PMF הוא תוצר לוואי הכרחי של נשימה תאית או פוטוסינתזה בחיידקים רבים. ניצול ישיר של זרם זה לתנועה הוא יעיל מאוד. לעומת זאת, ארכאות צריכות 'לשלם' במטבע האנרגיה האוניברסלי, ATP, עבור כל סיבוב, מה שנחשב לבזבוז אנרגטי יחסי." },
+            { question: "אם חלבון GvpC חסר, מה תהיה ההשפעה על בועיות הגז?", options: ["הן לא ייווצרו כלל", "הן יהיו רחבות יותר וחזקות פחות", "הן יהיו חדירות למים", "הן יהיו קטנות יותר אך חזקות יותר"], correctIndex: 1, explanation: "חלבון GvpA יוצר את הצלעות של המבנה, בעוד GvpC פועל כ'חיזוק' חיצוני המקשר בין הצלעות ומגביר את הקשיחות המבנית. בהיעדרו, הבועיות נוטות להיות רחבות יותר ופחות יציבות מכנית." }
+        ];
+
+        const tfData = [
+            { question: "האנרגיה לסיבוב הפלג'לום החיידקי מסופקת ישירות על ידי הידרוליזה של ATP בגוף הבסיסי.", answer: false, explanation: "הפלג'לום החיידקי מונע על ידי כוח מניע פרוטוני (PMF), כלומר זרימת פרוטונים דרך חלבוני ה-Mot. הארכאלום בארכאה, לעומת זאת, כן מונע על ידי ATP." },
+            { question: "בחיידקים עם סידור שוטונים מסוג Peritrichous, סיבוב נגד כיוון השעון (CCW) של השוטונים גורם ל-'Run' (ריצה) מתואמת.", answer: true, explanation: "סיבוב CCW גורם לשוטונים הבודדים להתאגד לצרור מסתובב אחד, המניע את החיידק קדימה בתנועת ריצה יציבה." },
+            { question: "תנועת גלישה (Gliding Motility) היא תמיד איטית יותר מתנועת שחייה באמצעות שוטונים.", answer: false, explanation: "אין כלל כזה. חלק ממנגנוני הגלישה יכולים להיות מהירים מאוד, לעיתים אף מהירים יותר משחייה של חיידקים מסוימים. המהירות תלויה במנגנון הספציפי ובאורגניזם." },
+            { question: "כל החיידקים בעלי היכולת לנוע מצוידים בשוטונים.", answer: false, explanation: "חיידקים רבים נעים באמצעות מנגנונים של תנועת גלישה, שאינם מערבים שוטונים, כמו שימוש ב-Type IV pili או הפרשת ריר." },
+            { question: "הארכאלום הוא מבנה הומולוגי לפלג'לום החיידקי, כלומר שניהם התפתחו מאב קדמון משותף.", answer: false, explanation: "הארכאלום והפלג'לום הם דוגמה קלאסית לאבולוציה מתכנסת (אנלוגיה). הם דומים בתפקוד (יצירת תנועה סיבובית) אך שונים לחלוטין במבנה, בהרכב החלבונים ובמקור האנרגיה." },
+            { question: "טבעת L של הפלג'לום בגראם-שליליים מעוגנת בממברנה הציטופלזמטית.", answer: false, explanation: "טבעת L (קיצור של Lipopolysaccharide) מעוגנת בממברנה החיצונית. טבעות MS ו-C הן אלו שמעוגנות בממברנה הציטופלזמטית." },
+            { question: "במהלך כמוטקסיס חיובי, חיידק מפסיק לחלוטין לבצע 'Tumbles'.", answer: false, explanation: "החיידק אינו מפסיק לחלוטין. הוא מפחית את תדירות ה-Tumbles כל עוד הוא חש שהוא נע בכיוון הנכון (במעלה מפל הריכוזים), מה שמאריך את הריצות בכיוון זה." },
+            { question: "יחידות חלבון הפלג'לין מורכבות על הפילמנט בבסיסו, ליד ה-Hook.", answer: false, explanation: "היחידות מועברות דרך התעלה החלולה של הפלג'לום ומתווספות בקצהו המרוחק, בתהליך המתווך על ידי חלבון מכסה (Cap)." },
+            { question: "בועיות הגז (Gas vesicles) אטומות לחלוטין למעבר מים ומולקולות גז קטנות.", answer: false, explanation: "בועיות הגז חדירות לגזים (כך הן מתמלאות בגז מהסביבה) אך אינן חדירות למים, וזו התכונה המאפשרת להן להקנות ציפה." },
+            { question: "מגנטוזומים מאפשרים לחיידקים לנוע ישירות לעבר מקורות מזון עשירים בברזל.", answer: false, explanation: "מטרת המגנטוזומים היא לפעול כמצפן פנימי, המכוון את תנועת החיידק לאורך קווי השדה המגנטי של כדור הארץ כדי להגיע לאזור עם ריכוז חמצן אופטימלי, לא ישירות למזון." },
+            { question: "כל סוגי התנועה הפולארית (polar) מערבים היפוך כיוון סיבוב של השוטון.", answer: false, explanation: "קיים מנגנון פולארי 'unidirectional', שבו השוטון מסתובב רק בכיוון אחד. שינוי כיוון התנועה מושג על ידי עצירת המנוע, שינוי אוריינטציה פסיבי, וחידוש הסיבוב." },
+            { question: "ה-Rod, ה-Hook וה-Filament של הפלג'לום מסתובבים כיחידה אחת.", answer: true, explanation: "הרוטור (טבעות MS/C) המונע על ידי חלבוני ה-Mot מסובב את ה-Rod המחובר אליו, אשר בתורו מסובב את ה-Hook ואת הפילמנט כולו כמקשה אחת." },
+            { question: "תנועת גלישה המבוססת על Type IV pili דורשת הידרוליזה של ATP.", answer: true, explanation: "התארכות והתכווצות של הפילי הם תהליכים פעילים הדורשים אנרגיה, המסופקת בדרך כלל על ידי הידרוליזה של ATP." },
+            { question: "ניתן למצוא חיידקים עם סידור שוטונים מסוג Lophotrichous וגם Peritrichous באותו המין.", answer: false, explanation: "סידור השוטונים הוא תכונה גנטית קבועה המאפיינת מין או סוג מסוים של חיידק. חיידק הוא או lophotrichous או peritrichous, אך לא שניהם." },
+            { question: "חלבוני Fli הם חלק מהסטטור (החלק הנייח) של מנוע הפלג'לום.", answer: false, explanation: "חלבוני Fli הם חלק מהרוטור (החלק המסתובב) ומהווים את המתג המוטורי (motor switch) שאחראי על שינוי כיוון הסיבוב." },
+            { question: "תנועת Cilia ו-Flagella בתאים אאוקריוטים מונעת על ידי אותו מקור אנרגיה כמו הפלג'לום החיידקי.", answer: false, explanation: "שוטונים אאוקריוטיים (cilia ו-flagella) מונעים על ידי ATP. הפלג'לום החיידקי מונע על ידי כוח מניע פרוטוני (PMF)." },
+            { question: "פוטוטקסיס תמיד יהיה תנועה לעבר מקור אור.", answer: false, explanation: "יכול להיות גם פוטוטקסיס שלילי, שבו אורגניזם נע להתרחק מאור, למשל אם עוצמת האור גבוהה מדי ועלולה לגרום נזק." },
+            { question: "המבנה הבסיסי של הגוף הבסיסי (Basal body) זהה לחלוטין בחיידקים גראם-חיוביים ובארכאות.", answer: false, explanation: "המבנה שונה מאוד. לחיידקים גראם-חיוביים יש טבעות MS ו-C. לארכאות אין מבנה טבעות כזה כלל, והארכאלום שלהם מורכב מחלבונים שונים לחלוטין." },
+            { question: "מהירות סיבוב של 300 סיבובים לשנייה בפלג'לום חיידקי היא מהירות גבוהה יחסית למנועים ביולוגיים.", answer: true, explanation: "זוהי מהירות סיבוב גבוהה ביותר, מה שהופך את מנוע הפלג'לום לאחד המנועים הסיבוביים המהירים והיעילים ביותר בעולם הביולוגי." },
+            { question: "חיידק יכול לשלוט בכמות בועיות הגז בתא כדי לווסת את מיקומו בעמודת המים.", answer: true, explanation: "היכולת לסנתז או לפרק בועיות גז מאפשרת לחיידק לשנות את צפיפותו הכוללת ובכך לעלות או לרדת בעמודת המים כדי להגיע לתנאים אופטימליים של אור או חומרי מזון." },
+            { question: "הפילמנט של הארכאלום, בדומה לפלג'לום החיידקי, חלול במרכזו.", answer: false, explanation: "שלא כמו הפלג'לום החיידקי, הפילמנט של הארכאלום אינו חלול. יחידות החלבון מתווספות לבסיס הפילמנט ולא לקצהו." },
+            { question: "כל תנועות הגלישה מערבות הפרשת ריר.", answer: false, explanation: "ישנם מנגנוני גלישה מגוונים. חלקם מערבים הפרשת ריר, אך אחרים, כמו זה המבוסס על Type IV pili, פועלים על ידי התכווצות מכנית ללא הפרשת ריר." },
+            { question: "חיידקים המכילים מגנטוזומים הם תמיד אנארוביים אובליגטוריים.", answer: false, explanation: "רבים מהם הם מיקרו-אארופיליים, כלומר הם דורשים ריכוז חמצן נמוך, אך לא אפסי. חלקם יכולים להיות אנארוביים פקולטטיביים." },
+            { question: "חלבון GvpC מחזק את מבנה בועית הגז על ידי פעולה כ'צלעות' המבניות העיקריות.", answer: false, explanation: "חלבון GvpA יוצר את הצלעות. חלבון GvpC פועל כרצועת חיזוק חיצונית המגבירה את קשיחות המבנה על ידי קישור לצלעות ה-GvpA." },
+            { question: "סיבוב עם כיוון השעון (CW) תמיד גורם לשינוי כיוון (Tumble).", answer: false, explanation: "זה נכון לחיידקים עם סידור peritrichous. עם זאת, בחיידקים עם שוטון פולארי הפיך, סיבוב CW יכול פשוט לגרום לתנועה לאחור, ולא ל-Tumble." },
+            { question: "דרושים כ-20,000 יוני מימן כדי לסובב את הפלג'לום סיבוב אחד מלא.", answer: false, explanation: "המספר המוערך הוא כ-1,000 פרוטונים (יוני מימן) לסיבוב אחד, לא 20,000. המספר 20,000 מתייחס למספר חלבוני הפלג'לין הדרושים לבניית הפילמנט." },
+            { question: "תנועת גלישה המערבת תנועה של חלבונים בממברנה החיצונית מונעת על ידי PMF.", answer: true, explanation: "במנגנון גלישה זה, חלבונים בממברנה החיצונית נעים לאורך התא תוך אחיזה במשטח. תנועת החלבונים הללו מונעת על ידי כוח מניע פרוטוני, בדומה למנוע הפלג'לום." },
+            { question: "ה-Hook (וו) בפלג'לום קשיח יותר מהפילמנט.", answer: false, explanation: "ה-Hook הוא מפרק גמיש. גמישותו היא שמאפשרת העברת כוח הסיבוב מה-Rod הקשיח לפילמנט הארוך בזוויות שונות." },
+            { question: "חיידק המבצע פוטוטקסיס חייב להיות פוטוסינתטי.", answer: false, explanation: "לא בהכרח. ייתכן שאורגניזם שאינו פוטוסינתטי ישתמש באור כאינדיקטור סביבתי כדי להימנע מנזקי קרינה (פוטוטקסיס שלילי) או כדי למצוא אזורים שבהם יש טרף פוטוסינתטי." },
+            { question: "גודלו של הפלג'לום החיידקי הוא כ-45 ננומטר.", answer: false, explanation: "45 ננומטר הוא קוטר הגוף הבסיסי. הפילמנט עצמו יכול להיות ארוך בהרבה, באורך של מספר מיקרונים, פי כמה מאורך התא." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

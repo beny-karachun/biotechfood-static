@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Canonical Forms</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Canonical Forms of Second-Order Linear PDEs</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p>Consider the general second-order linear PDE:</p>
+            $$ Au_{xx} + Bu_{xy} + Cu_{yy} + Du_x + Eu_y + Fu = G $$
+            <p>Where $A, B, C, D, E, F, G$ can be functions of $x$ and $y$. The classification and canonical form depend only on the principal part ($A, B, C$).</p>
+            <p><strong>1. Classification:</strong> Calculate the discriminant $\Delta = B^2 - 4AC$.</p>
+            <ul>
+                <li>$\Delta > 0$: Hyperbolic</li>
+                <li>$\Delta = 0$: Parabolic</li>
+                <li>$\Delta < 0$: Elliptic</li>
+            </ul>
+            <p><strong>2. Characteristic Equation:</strong> To find the transformation coordinates $(\xi, \eta)$ that simplify the PDE, we solve the characteristic equation for $dy/dx$:
+            $$ A \left(\frac{dy}{dx}\right)^2 - B \left(\frac{dy}{dx}\right) + C = 0 $$
+            This is a quadratic equation for $dy/dx$. Solving it gives the slopes of the characteristic curves. Integrating $dy/dx = \dots$ gives equations of the form $\phi(x,y) = \text{constant}$. These $\phi(x,y)$ functions are used as the new coordinates.</p>
+
+            <p><strong>3. Canonical Forms (via coordinate transformation $\xi=\phi_1(x,y), \eta=\phi_2(x,y)$):</strong></p>
+
+            <h3>Hyperbolic Case ($\Delta > 0$)</h3>
+            <ul>
+                <li>The characteristic equation has two distinct real roots for $dy/dx$.</li>
+                <li>Integrating gives two distinct families of real characteristic curves: $\phi_1(x,y) = C_1$ and $\phi_2(x,y) = C_2$.</li>
+                <li>Choose the transformation $\xi = \phi_1(x,y)$ and $\eta = \phi_2(x,y)$.</li>
+                <li>The PDE transforms into the first canonical form:
+                $$ u_{\xi\eta} + \text{(lower order terms in } u_\xi, u_\eta, u) = \tilde{G} $$
+                </li>
+                <li>Alternatively, a further linear transformation $\alpha = \xi+\eta, \beta = \xi-\eta$ leads to the second canonical form:
+                 $$ u_{\alpha\alpha} - u_{\beta\beta} + \text{(lower order terms)} = \tilde{\tilde{G}} $$
+                 (This resembles the standard wave equation form).</li>
+            </ul>
+
+            <h3>Parabolic Case ($\Delta = 0$)</h3>
+             <ul>
+                <li>The characteristic equation has one real repeated root for $dy/dx$.</li>
+                <li>Integrating gives one family of real characteristic curves: $\phi(x,y) = C_1$.</li>
+                <li>Choose the transformation $\xi = \phi(x,y)$. For the second coordinate, choose $\eta$ to be *any* function independent of $\xi$. Often $\eta=x$ or $\eta=y$ works conveniently.</li>
+                <li>The PDE transforms into the canonical form:
+                $$ u_{\eta\eta} + \text{(lower order terms)} = \tilde{G} $$
+                (Or possibly $u_{\xi\xi} + \dots = \tilde{G}$, depending on the choice of $\eta$).
+                </li>
+            </ul>
+
+            <h3>Elliptic Case ($\Delta < 0$)</h3>
+             <ul>
+                <li>The characteristic equation has two complex conjugate roots for $dy/dx$.</li>
+                <li>Integrating gives two families of complex characteristic curves $\phi(x,y) = C_1$ and $\bar{\phi}(x,y) = C_2$. Note $\phi$ will be complex.</li>
+                <li>Choose the transformation using the real and imaginary parts of one characteristic function: $\xi = \text{Re}(\phi(x,y))$ and $\eta = \text{Im}(\phi(x,y))$.</li>
+                <li>The PDE transforms into the canonical form (Laplace-like form):
+                 $$ u_{\xi\xi} + u_{\eta\eta} + \text{(lower order terms)} = \tilde{G} $$
+                 </li>
+            </ul>
+            <p><strong>Note:</strong> Transforming the lower-order terms ($D, E, F, G$) can be algebraically intensive and is often omitted unless specifically required. The primary goal is usually to simplify the principal part.</p>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Classify and find the canonical form (principal part only) for $u_{xx} - 5u_{xy} + 6u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=-5, C=6$. $\Delta = B^2 - 4AC = (-5)^2 - 4(1)(6) = 25 - 24 = 1 > 0$. Hyperbolic.</p>
+                    <p>Characteristic equation: $A(y')^2 - B y' + C = 0 \implies 1(y')^2 - (-5)y' + 6 = 0 \implies (y')^2 + 5y' + 6 = 0$.</p>
+                    <p>$(y'+2)(y'+3) = 0$. Roots: $y'=-2$ and $y'=-3$.</p>
+                    <p>Integrate: $dy/dx = -2 \implies y = -2x + C_1 \implies y+2x = C_1$. Let $\xi = y+2x$.</p>
+                    <p>Integrate: $dy/dx = -3 \implies y = -3x + C_2 \implies y+3x = C_2$. Let $\eta = y+3x$.</p>
+                    <p>Canonical form (principal part): $u_{\xi\eta} = 0$ (plus lower order terms, which are zero in this simple case after transformation).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Classify and find the canonical form (principal part only) for $u_{xx} + 4u_{xy} + 4u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=4, C=4$. $\Delta = B^2 - 4AC = 4^2 - 4(1)(4) = 16 - 16 = 0$. Parabolic.</p>
+                    <p>Characteristic equation: $A(y')^2 - B y' + C = 0 \implies 1(y')^2 - 4y' + 4 = 0 \implies (y'-2)^2 = 0$.</p>
+                    <p>Repeated root: $y'=2$.</p>
+                    <p>Integrate: $dy/dx = 2 \implies y = 2x + C_1 \implies y-2x = C_1$. Let $\xi = y-2x$.</p>
+                    <p>Choose $\eta$ independent, e.g., $\eta = x$.</p>
+                    <p>Canonical form (principal part): $u_{\eta\eta} = 0$ (plus lower order terms).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Classify and find the canonical form (principal part only) for $u_{xx} + u_{xy} + u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q3">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=1, C=1$. $\Delta = B^2 - 4AC = 1^2 - 4(1)(1) = 1 - 4 = -3 < 0$. Elliptic.</p>
+                     <p>Characteristic equation: $A(y')^2 - B y' + C = 0 \implies (y')^2 - y' + 1 = 0$.</p>
+                     <p>Roots: $y' = \frac{-(-1) \pm \sqrt{(-1)^2 - 4(1)(1)}}{2(1)} = \frac{1 \pm \sqrt{1-4}}{2} = \frac{1 \pm i\sqrt{3}}{2}$.</p>
+                     <p>Integrate one root, e.g., $dy/dx = \frac{1 + i\sqrt{3}}{2}$. $dy = (\frac{1 + i\sqrt{3}}{2}) dx$.</p>
+                     <p>$y = \frac{1 + i\sqrt{3}}{2} x + C$. So $y - \frac{1}{2}x = i\frac{\sqrt{3}}{2} x + C$. $\frac{2y-x}{2} = i\frac{\sqrt{3}}{2} x + C$.</p>
+                     <p>$2y-x - i\sqrt{3}x = C' = \phi(x,y)$.</p>
+                     <p>Choose real and imaginary parts: $\xi = \text{Re}(\phi) = 2y-x$. $\eta = \text{Im}(\phi) = -\sqrt{3}x$. (We can scale $\eta$ for convenience, let $\eta = \sqrt{3}x$).</p>
+                     <p>Canonical form (principal part): $u_{\xi\xi} + u_{\eta\eta} = 0$ (plus lower order terms).</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Classify $y u_{xx} + x u_{yy} = 0$ for $x>0, y>0$.</p>
+                <button onclick="toggleSolution('sol-cf-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q4">
+                    <p><strong>Solution:</strong></p>
+                     <p>$A=y, B=0, C=x$.</p>
+                     <p>$\Delta = B^2 - 4AC = 0^2 - 4(y)(x) = -4xy$.</p>
+                     <p>Since $x>0$ and $y>0$, $xy>0$. Therefore $\Delta = -4xy < 0$.</p>
+                     <p>The PDE is <strong>Elliptic</strong> in this region.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Find the characteristic curves for $u_{tt} - c^2 u_{xx} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d7-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>Let $y \to t$. PDE: $u_{tt} - c^2 u_{xx} = 0$. $A=-c^2, B=0, C=1$.</p>
+                     <p>Characteristic equation: $A(dt/dx)^2 - B(dt/dx) + C = 0$.</p>
+                     <p>$-c^2 (dt/dx)^2 - 0 + 1 = 0 \implies (dt/dx)^2 = 1/c^2 \implies dt/dx = \pm 1/c$.</p>
+                     <p>Integrate $dt/dx = 1/c \implies t = x/c + K_1 \implies x - ct = C_1$.</p>
+                     <p>Integrate $dt/dx = -1/c \implies t = -x/c + K_2 \implies x + ct = C_2$.</p>
+                     <p>The characteristic curves are the lines $x-ct = \text{constant}$ and $x+ct = \text{constant}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Classify and find the transformation to canonical form for $u_{xx} + 2u_{xy} + u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=2, C=1$. $\Delta = 2^2 - 4(1)(1) = 0$. Parabolic.</p>
+                    <p>Characteristic equation: $1(y')^2 - 2y' + 1 = 0 \implies (y'-1)^2 = 0$.</p>
+                    <p>Repeated root $y'=1$.</p>
+                    <p>Integrate: $dy/dx = 1 \implies y = x + C_1 \implies y-x = C_1$. Let $\xi = y-x$.</p>
+                    <p>Choose $\eta$ independent, e.g., $\eta = x$.</p>
+                    <p>The transformation is $\xi=y-x, \eta=x$. Canonical form: $u_{\eta\eta}=0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Classify and find the characteristic curves for $4u_{xx} - u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q7">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $x \to x, y \to y$. $A=4, B=0, C=-1$. $\Delta = 0^2 - 4(4)(-1) = 16 > 0$. Hyperbolic.</p>
+                    <p>Characteristic equation: $A(y')^2 - B y' + C = 0 \implies 4(y')^2 - 0 - 1 = 0$.</p>
+                    <p>$(y')^2 = 1/4 \implies y' = \pm 1/2$.</p>
+                    <p>Integrate $dy/dx = 1/2 \implies y = x/2 + C_1 \implies 2y - x = C_1'$. Let $\phi_1 = 2y-x$.</p>
+                    <p>Integrate $dy/dx = -1/2 \implies y = -x/2 + C_2 \implies 2y + x = C_2'$. Let $\phi_2 = 2y+x$.</p>
+                    <p>Characteristic curves: $2y-x = \text{constant}$ and $2y+x = \text{constant}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Classify $x^2 u_{xx} + 2xy u_{xy} + y^2 u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q8">
+                    <p><strong>Solution:</strong></p>
+                     <p>$A=x^2, B=2xy, C=y^2$.</p>
+                     <p>$\Delta = B^2 - 4AC = (2xy)^2 - 4(x^2)(y^2) = 4x^2y^2 - 4x^2y^2 = 0$.</p>
+                     <p>The PDE is <strong>Parabolic</strong> (where defined, i.e., not on axes if needed).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Find the canonical form (principal part) for the PDE in Question 8.</p>
+                 <button onclick="toggleSolution('sol-cf-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q9">
+                     <p><strong>Solution:</strong></p>
+                     <p>Characteristic equation: $A(y')^2 - B y' + C = 0 \implies x^2(y')^2 - 2xy y' + y^2 = 0$.</p>
+                     <p>This is $(xy' - y)^2 = 0$. So $xy' - y = 0$.</p>
+                     <p>$x \frac{dy}{dx} = y \implies \frac{dy}{y} = \frac{dx}{x}$.</p>
+                     <p>Integrate: $\ln|y| = \ln|x| + C_1' \implies \ln|y/x| = C_1'$. So $y/x = C_1$. Let $\xi = y/x$.</p>
+                     <p>Choose $\eta$ independent, e.g., $\eta = x$.</p>
+                     <p>Canonical form (principal part): $u_{\eta\eta} = 0$ (plus lower order terms).</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Classify and find the characteristics for $u_{xx} + 5u_{xy} + 4u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=5, C=4$. $\Delta = 5^2 - 4(1)(4) = 25 - 16 = 9 > 0$. Hyperbolic.</p>
+                    <p>Characteristic equation: $1(y')^2 - 5y' + 4 = 0 \implies (y'-1)(y'-4) = 0$.</p>
+                    <p>Roots $y'=1$ and $y'=4$.</p>
+                    <p>Integrate $dy/dx=1 \implies y = x + C_1 \implies y-x = C_1$.</p>
+                    <p>Integrate $dy/dx=4 \implies y = 4x + C_2 \implies y-4x = C_2$.</p>
+                    <p>Characteristics: $y-x = \text{constant}$ and $y-4x = \text{constant}$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Classify $u_{xx} + u_{yy} + u = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q11">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=0, C=1$. $\Delta = 0^2 - 4(1)(1) = -4 < 0$. Elliptic.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Classify $u_{tt} + 2u_{tx} + u_{xx} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $y \to t$. $A=1, B=2, C=1$. $\Delta = 2^2 - 4(1)(1) = 0$. Parabolic.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Find the characteristic equation for $3u_{xx} + 10u_{xy} + 3u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q13">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=3, B=10, C=3$. Characteristic equation: $A(y')^2 - B y' + C = 0$.</p>
+                     <p>$3(y')^2 - 10y' + 3 = 0$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Solve the characteristic equation from Q13 and classify the PDE.</p>
+                <button onclick="toggleSolution('sol-cf-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q14">
+                     <p><strong>Solution:</strong></p>
+                     <p>$3(y')^2 - 10y' + 3 = 0$. Using quadratic formula:</p>
+                     <p>$y' = \frac{-(-10) \pm \sqrt{(-10)^2 - 4(3)(3)}}{2(3)} = \frac{10 \pm \sqrt{100 - 36}}{6} = \frac{10 \pm \sqrt{64}}{6} = \frac{10 \pm 8}{6}$.</p>
+                     <p>Roots are $y' = \frac{18}{6} = 3$ and $y' = \frac{2}{6} = \frac{1}{3}$.</p>
+                     <p>Since there are two distinct real roots, the PDE is Hyperbolic. (Also $\Delta = B^2-4AC = 10^2-4(3)(3)=100-36=64>0$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Find the transformation coordinates $(\xi, \eta)$ for the PDE in Q13.</p>
+                 <button onclick="toggleSolution('sol-cf-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q15">
+                     <p><strong>Solution:</strong></p>
+                     <p>From Q14, the characteristic equations are $y'=3$ and $y'=1/3$.</p>
+                     <p>Integrate $dy/dx=3 \implies y=3x+C_1 \implies y-3x = C_1$. Let $\xi = y-3x$.</p>
+                     <p>Integrate $dy/dx=1/3 \implies y=x/3+C_2 \implies 3y-x = C_2'$. Let $\eta = 3y-x$.</p>
+                     <p>The transformation is $\xi = y-3x, \eta = 3y-x$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Classify $u_{xx} - 2 u_{xy} + 2 u_{yy} + \dots = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q16">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=-2, C=2$. $\Delta = (-2)^2 - 4(1)(2) = 4 - 8 = -4 < 0$. Elliptic.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Find the transformation $(\xi, \eta)$ for the PDE in Q16.</p>
+                <button onclick="toggleSolution('sol-cf-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equation: $1(y')^2 - (-2)y' + 2 = 0 \implies (y')^2 + 2y' + 2 = 0$.</p>
+                    <p>Roots: $y' = \frac{-2 \pm \sqrt{2^2 - 4(1)(2)}}{2(1)} = \frac{-2 \pm \sqrt{4-8}}{2} = \frac{-2 \pm \sqrt{-4}}{2} = \frac{-2 \pm 2i}{2} = -1 \pm i$.</p>
+                    <p>Integrate $dy/dx = -1+i$. $y = (-1+i)x + C$. $y+x = ix + C$. $y+x - ix = C' = \phi(x,y)$.</p>
+                    <p>Real part: $\xi = \text{Re}(\phi) = y+x$.</p>
+                    <p>Imaginary part: $\eta = \text{Im}(\phi) = -x$. (Can choose $\eta=x$ for simplicity).</p>
+                    <p>Transformation: $\xi = y+x, \eta = x$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Classify $u_{xx} - y u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-cf-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q18">
+                    <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=0, C=-y$.</p>
+                     <p>$\Delta = B^2 - 4AC = 0^2 - 4(1)(-y) = 4y$.</p>
+                     <ul>
+                        <li>If $y > 0$, $\Delta > 0 \implies$ Hyperbolic.</li>
+                        <li>If $y = 0$, $\Delta = 0 \implies$ Parabolic.</li>
+                        <li>If $y < 0$, $\Delta < 0 \implies$ Elliptic.</li>
+                     </ul>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Find the characteristic curves for $u_{xx} - y u_{yy} = 0$ where $y>0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q19">
+                     <p><strong>Solution:</strong></p>
+                     <p>In the region $y>0$, the PDE is hyperbolic.</p>
+                     <p>Characteristic equation: $A(y')^2 - By' + C = 0 \implies 1(y')^2 - 0 - y = 0$.</p>
+                     <p>$(y')^2 = y \implies y' = \pm \sqrt{y}$.</p>
+                     <p>Integrate $dy/dx = \sqrt{y} \implies y^{-1/2} dy = dx \implies 2y^{1/2} = x + C_1 \implies x - 2\sqrt{y} = C_1'$.</p>
+                     <p>Integrate $dy/dx = -\sqrt{y} \implies y^{-1/2} dy = -dx \implies 2y^{1/2} = -x + C_2 \implies x + 2\sqrt{y} = C_2$.</p>
+                     <p>Characteristic curves: $x \pm 2\sqrt{y} = \text{constant}$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Classify $u_{tt} - u_{xx} - u_{yy} = 0$ (2D Wave Equation).</p>
+                <button onclick="toggleSolution('sol-cf-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-cf-q20">
+                    <p><strong>Solution:</strong></p>
+                    <p>Classification is typically defined for PDEs in two independent variables. This PDE has three ($t, x, y$). While related concepts exist, the $B^2-4AC$ classification doesn't directly apply in its standard form.</p>
+                     <p>However, if we fix one variable or consider characteristics in higher dimensions, it exhibits hyperbolic behavior. For the purpose of the standard classification test, this problem is outside its scope.</p>
+                     <p>(Often considered Hyperbolic based on its wave-like solutions).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 21:</p>
+                 <p class="question-text">Classify and find canonical form (principal part) for $9u_{xx} + 6u_{xy} + u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q21')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q21">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=9, B=6, C=1$. $\Delta = 6^2 - 4(9)(1) = 36-36=0$. Parabolic.</p>
+                     <p>Char. Eq: $9(y')^2 - 6y' + 1 = 0 \implies (3y'-1)^2 = 0$.</p>
+                     <p>Repeated root $y'=1/3$.</p>
+                     <p>Integrate: $dy/dx=1/3 \implies y=x/3+C_1 \implies 3y-x=C_1'$. Let $\xi = 3y-x$.</p>
+                     <p>Choose $\eta=x$. Canonical form: $u_{\eta\eta}=0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 22:</p>
+                 <p class="question-text">Classify and find characteristics for $u_{xx} - u_{xy} - 2u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q22')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q22">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=-1, C=-2$. $\Delta = (-1)^2 - 4(1)(-2) = 1+8=9>0$. Hyperbolic.</p>
+                     <p>Char. Eq: $1(y')^2 - (-1)y' + (-2) = 0 \implies (y')^2 + y' - 2 = 0$.</p>
+                     <p>$(y'+2)(y'-1)=0$. Roots $y'=-2$ and $y'=1$.</p>
+                     <p>Integrate $y'=-2 \implies y+2x=C_1$.</p>
+                     <p>Integrate $y'=1 \implies y-x=C_2$.</p>
+                     <p>Characteristics: $y+2x=\text{const}, y-x=\text{const}$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 23:</p>
+                 <p class="question-text">Classify $u_{xx} + e^x u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q23')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q23">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=0, C=e^x$.</p>
+                     <p>$\Delta = 0^2 - 4(1)(e^x) = -4e^x$.</p>
+                     <p>Since $e^x$ is always positive, $\Delta < 0$. Elliptic.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 24:</p>
+                 <p class="question-text">Classify and find the canonical transformation for $u_{xx} + 2u_{xy} + 10u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q24')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q24">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=2, C=10$. $\Delta = 2^2 - 4(1)(10) = 4-40 = -36 < 0$. Elliptic.</p>
+                     <p>Char. Eq: $1(y')^2 - 2y' + 10 = 0$.</p>
+                     <p>$y' = \frac{-(-2) \pm \sqrt{(-2)^2 - 4(1)(10)}}{2(1)} = \frac{2 \pm \sqrt{4-40}}{2} = \frac{2 \pm \sqrt{-36}}{2} = \frac{2 \pm 6i}{2} = 1 \pm 3i$.</p>
+                     <p>Integrate $dy/dx = 1+3i$. $y = (1+3i)x + C$. $y-x = 3ix + C$. $y-x - 3ix = C' = \phi$.</p>
+                     <p>Real part $\xi = y-x$. Imaginary part $\eta = -3x$. (Choose $\eta = 3x$).</p>
+                     <p>Transformation: $\xi=y-x, \eta=3x$. Canonical form $u_{\xi\xi}+u_{\eta\eta}=0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 25:</p>
+                 <p class="question-text">Classify $u_{tt} - (t^2+1) u_{xx} = 0$ for $t>0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q25')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q25">
+                     <p><strong>Solution:</strong></p>
+                     <p>Let $y \to t$. $A=-(t^2+1), B=0, C=1$.</p>
+                     <p>$\Delta = 0^2 - 4(-(t^2+1))(1) = 4(t^2+1)$.</p>
+                     <p>Since $t^2+1 > 0$ for all real $t$, $\Delta > 0$. Hyperbolic.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 26:</p>
+                 <p class="question-text">Find the characteristics for $u_{xx} + 3u_{xy} + 2u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q26')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q26">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=3, C=2$. $\Delta = 3^2 - 4(1)(2) = 9-8=1>0$. Hyperbolic.</p>
+                     <p>Char. Eq: $1(y')^2 - 3y' + 2 = 0 \implies (y'-1)(y'-2) = 0$.</p>
+                     <p>Roots $y'=1, y'=2$.</p>
+                     <p>Integrate $y'=1 \implies y-x=C_1$.</p>
+                     <p>Integrate $y'=2 \implies y-2x=C_2$.</p>
+                     <p>Characteristics: $y-x=\text{const}, y-2x=\text{const}$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 27:</p>
+                 <p class="question-text">Classify the PDE $u_{xx} - 2u_{xy} + u_{yy} - u_x + 2u_y - u = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q27')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q27">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=-2, C=1$.</p>
+                     <p>$\Delta = B^2 - 4AC = (-2)^2 - 4(1)(1) = 4-4 = 0$.</p>
+                     <p>Parabolic.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 28:</p>
+                 <p class="question-text">Find the transformation to canonical form for the PDE in Q27.</p>
+                 <button onclick="toggleSolution('sol-cf-q28')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q28">
+                     <p><strong>Solution:</strong></p>
+                     <p>Char. Eq: $1(y')^2 - (-2)y' + 1 = 0 \implies (y')^2 + 2y' + 1 = 0 \implies (y'+1)^2 = 0$.</p>
+                     <p>Repeated root $y'=-1$.</p>
+                     <p>Integrate $dy/dx = -1 \implies y = -x+C_1 \implies y+x = C_1$. Let $\xi = y+x$.</p>
+                     <p>Choose $\eta$ independent, e.g., $\eta = x$.</p>
+                     <p>Transformation $\xi=y+x, \eta=x$. Canonical form $u_{\eta\eta} + \dots = 0$.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 29:</p>
+                 <p class="question-text">Classify $u_{xx} + 4u_{yy} = 0$.</p>
+                 <button onclick="toggleSolution('sol-cf-q29')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>$A=1, B=0, C=4$.</p>
+                     <p>$\Delta = 0^2 - 4(1)(4) = -16 < 0$. Elliptic.</p>
+                 </div>
+             </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 30:</p>
+                 <p class="question-text">Find the transformation $(\xi, \eta)$ for the PDE in Q29.</p>
+                 <button onclick="toggleSolution('sol-cf-q30')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-cf-q30">
+                     <p><strong>Solution:</strong></p>
+                     <p>Char. Eq: $1(y')^2 - 0y' + 4 = 0 \implies (y')^2 + 4 = 0$.</p>
+                     <p>$y' = \pm \sqrt{-4} = \pm 2i$.</p>
+                     <p>Integrate $dy/dx = 2i$. $y = 2ix + C$. $y - 2ix = C = \phi$.</p>
+                     <p>Real part $\xi = y$. Imaginary part $\eta = -2x$. (Choose $\eta = 2x$).</p>
+                     <p>Transformation $\xi=y, \eta=2x$. Canonical form $u_{\xi\xi}+u_{\eta\eta}=0$.</p>
+                 </div>
+             </article>
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

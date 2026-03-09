@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 7: בטיחות איכות, מניעה ושיטות ניהול</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 7: בטיחות איכות, מניעה ושיטות ניהול</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 7 ---
+
+        const flashcardData = [
+            { term: "תהליכי אינאקטיבציה", definition: "תהליכים שמטרתם להרוג או להשמיד מיקרואורגניזמים במזון. דוגמאות: טיפול בחום (פסטור, עיקור), הקרנה, לחץ גבוה." },
+            { term: "תהליכי עיכוב ומניעה", definition: "תהליכים שמטרתם למנוע או להאט את גדילת המיקרואורגניזמים במזון, אך לא בהכרח להרוג אותם. דוגמאות: קירור, הקפאה, הורדת aw (ייבוש, מלח, סוכר), הורדת pH (חומצה), חומרים משמרים, תסיסה." },
+            { term: "Hurdle Effect (שיטת המשוכות)", definition: "עיקרון בשימור מזון המבוסס על שילוב של מספר גורמי עיכוב (משוכות) ברמה נמוכה יחסית, אשר יחדיו יוצרים אפקט משמר חזק יותר מאשר כל גורם בנפרד." },
+            { term: "אפקט סינרגיסטי (בשיטת המשוכות)", definition: "ההשפעה המשולבת של מספר גורמי עיכוב גדולה מסכום ההשפעות של כל גורם בנפרד." },
+            { term: "גורמי קלקול פיזיקליים", definition: "שינויים במזון הנגרמים מגורמים פיזיקליים כמו טמפרטורה (גבוהה או נמוכה - נזקי הקפאה, התייבשות), אור (חמצון)." },
+            { term: "גורמי קלקול כימיים", definition: "שינויים במזון הנגרמים מתגובות כימיות כמו חמצון (למשל של שומנים), הידרוליזה, תגובות השחמה (מייארד)." },
+            { term: "גורמי קלקול אנזימטיים", definition: "שינויים במזון הנגרמים מפעילות של אנזימים טבעיים הנמצאים במזון עצמו (למשל, שינוי מרקם בפירות, חמצון בדגנים)." },
+            { term: "גורמי קלקול מיקרוביאליים", definition: "שינויים במזון הנגרמים מפעילות של מיקרואורגניזמים (חיידקים, שמרים, עובשים) הגורמים לתסיסה, שינויי טעם, ריח, מרקם, או מייצרים רעלנים." },
+            { term: "מיקוטוקסינים", definition: "חומרים כימיים רעילים המיוצרים על ידי עובשים מסוימים ועלולים לזהם מזון (בעיקר דגנים, אגוזים). נחשבים למסרטנים." },
+            { term: "ניהול סיכוני אלרגנים", definition: "מכלול הפעולות למניעת נוכחות בלתי מתוכננת של אלרגנים במוצר: הכרת חומרי הגלם, מניעת זיהום צולב בייצור ובאחסון, ניקוי יסודי, סימון ברור על האריזה." },
+            { term: "זיהום צולב (אלרגנים)", definition: "מעבר של אלרגן ממזון המכיל אותו למזון שאינו אמור להכיל אותו, למשל דרך משטחי עבודה, ציוד, אוויר או עובדים." },
+            { term: "אתגרי החקיקה והתקינה", definition: "הצורך לספק מידע נכון ואמין לצרכן, לעמוד בדרישות רגולטוריות מחמירות של הרשויות (משרד הבריאות, החקלאות), ולהתמודד עם תביעות משפטיות." },
+            { term: "ISO 9001", definition: "תקן בינלאומי למערכות ניהול איכות, המתמקד בשיפור מתמיד, שביעות רצון לקוח ותהליכים מבוקרים (אינו ספציפי למזון)." },
+            { term: "ISO 22000", definition: "תקן בינלאומי למערכות ניהול בטיחות מזון, המבוסס על עקרונות HACCP ומשלב דרישות ניהול איכות (ספציפי למזון)." },
+            { term: "BRC (British Retail Consortium)", definition: "תקן בריטי (שהפך לגלובלי) לבטיחות מזון ואיכות, הנדרש לעיתים קרובות על ידי קמעונאים גדולים." },
+            { term: "Global GAP (Good Agricultural Practice)", definition: "תקן בינלאומי המתמקד בבטיחות ואיכות בייצור חקלאי ראשוני (גידול פירות, ירקות וכו)." },
+            { term: "GMP (Good Manufacturing Practice)", definition: "תנאי ייצור נאותים - מכלול של הנחיות ונהלים להבטחת ייצור מזון (או תרופות) בתנאים היגייניים ובטוחים. בישראל, זהו גם תו תקן של משרד הבריאות." },
+            { term: "שיפור מתמיד (ב-ISO 9001)", definition: "עיקרון מרכזי בתקן, המחייב את הארגון לנתח ביצועים, לזהות הזדמנויות לשיפור ולפעול ליישומן באופן מחזורי (PDCA - Plan-Do-Check-Act)." },
+            { term: "עקרונות HACCP (כחלק מ-ISO 22000)", definition: "ניתוח סיכונים, זיהוי נקודות בקרה קריטיות (CCPs), קביעת גבולות קריטיים, ניטור, פעולות מתקנות, אימות ותיעוד." },
+            { term: "מעגל האיכות (כמו בתרשים עמ' 50)", definition: "תיאור סכמטי של הגורמים השונים המשפיעים ומושפעים ממערכת האיכות בארגון (צרכנים, ספקים, רגולציה, טכנולוגיה, עובדים וכו)." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מה ההבדל העיקרי בין תהליך אינאקטיבציה לתהליך עיכוב מיקרוביאלי?",
+                options: ["אינאקטיבציה רק מאטה גדילה, עיכוב הורג", "אינאקטיבציה הורגת מיקרואורגניזמים, עיכוב מונע או מאט את גדילתם", "שניהם תהליכים זהים", "אינאקטיבציה משתמשת בחום, עיכוב בקור"],
+                correctIndex: 1,
+                explanation: "תהליכי אינאקטיבציה (כמו פסטור, עיקור) נועדו להרוג מיקרואורגניזמים, בעוד תהליכי עיכוב (כמו קירור, הורדת aw) רק עוצרים או מאטים את התרבותם."
+            },
+            {
+                question: "איזה מהבאים הוא דוגמה לתהליך עיכוב ומניעה מיקרוביאלי?",
+                options: ["עיקור בחום גבוה", "הקרנת מזון", "הקפאת מזון", "פסטור חלב"],
+                correctIndex: 2,
+                explanation: "הקפאה היא תהליך עיכוב - היא עוצרת את גדילת רוב המיקרואורגניזמים אך לא בהכרח הורגת אותם. עיקור, הקרנה ופסטור הם תהליכי אינאקטיבציה."
+            },
+            {
+                question: "מהי המטרה של שיטת המשוכות (Hurdle Effect)?",
+                options: ["להרוג את כל המיקרואורגניזמים באמצעות גורם אחד חזק", "לשלב מספר גורמי עיכוב מתונים כדי להשיג אפקט משמר כולל חזק", "למנוע רק זיהום צולב", "להאיץ את גדילת החיידקים הרצויים"],
+                correctIndex: 1,
+                explanation: "שיטת המשוכות משלבת מספר מחסומים (כמו pH נמוך, aw נמוך, חומר משמר, קירור) שכל אחד בפני עצמו אינו מספיק, אך יחד יוצרים סביבה עוינת המונעת קלקול."
+            },
+            {
+                question: "איזה גורם קלקול אחראי להיווצרות מיקוטוקסינים?",
+                options: ["חיידקים", "שמרים", "אנזימים טבעיים", "עובשים"],
+                correctIndex: 3,
+                explanation: "מיקוטוקסינים הם רעלנים המיוצרים על ידי סוגים מסוימים של עובשים הגדלים על מזון."
+            },
+            {
+                question: "מהי הדרך היעילה ביותר למנוע זיהום צולב של אלרגנים בקו ייצור?",
+                options: ["לסמן את המוצר הסופי בלבד", "לנקות את הציוד באופן יסודי בין ייצור מוצרים שונים", "להשתמש באותם כלים לכל המוצרים", "להוסיף חומר המנטרל אלרגנים"],
+                correctIndex: 1,
+                explanation: "ניקוי קפדני והפרדה פיזית או בזמן בין ייצור מוצרים המכילים אלרגנים שונים למוצרים שאינם מכילים אותם הם חיוניים למניעת זיהום צולב."
+            },
+            {
+                question: "איזה תקן איכות מתמקד ספציפית בבטיחות מזון ומשלב עקרונות HACCP?",
+                options: ["ISO 9001", "ISO 14001 (איכות סביבה)", "ISO 22000", "BRC בלבד"],
+                correctIndex: 2,
+                explanation: "ISO 22000 הוא תקן בינלאומי ייעודי למערכות ניהול בטיחות מזון, המבוסס על HACCP וכולל גם דרישות ניהול כלליות."
+            },
+            {
+                question: "מהם תנאי ייצור נאותים (GMP)?",
+                options: ["תקן ספציפי לאריזות מזון", "שיטה לניתוח סיכונים מיקרוביאליים בלבד", "מכלול הנחיות ונהלים להבטחת ייצור היגייני ובטוח", "תקן להתנהגות עובדים במשרד"],
+                correctIndex: 2,
+                explanation: "GMP מכסה היבטים רבים של סביבת הייצור, כולל מבנה, ציוד, ניקיון, היגיינת עובדים ותהליכים, במטרה להבטיח שהמוצר מיוצר בתנאים בטוחים."
+            },
+            {
+                question: "איזה מהבאים אינו גורם קלקול ישיר המוזכר בטבלה (עמ' 16)?",
+                options: ["עובשים", "חמצון", "טמפרטורה גבוהה", "מחיר גבוה"],
+                correctIndex: 3,
+                explanation: "הטבלה מפרטת גורמי קלקול מיקרוביאליים, כימיים, אנזימטיים ופיזיקליים. מחיר אינו גורם קלקול ישיר של המזון עצמו."
+            },
+             {
+                question: "מה ההבדל בין מיונז אמיתי למיונז 'קל' שהוביל לצורך בחומר משמר במיונז הקל?",
+                options: ["במיונז קל יש יותר חומץ", "במיונז קל יש יותר שמן", "במיונז קל יש פחות שמן ויותר מים (ולכן aw גבוה יותר)", "במיונז קל אין ביצים"],
+                correctIndex: 2,
+                explanation: "ההסבר מציין שבמיונז קל יש פחות שמן ויותר מים, מה שמעלה את פעילות המים (aw) ומצריך הוספת חומר משמר כדי למנוע קלקול מיקרוביאלי."
+            },
+             {
+                question: "איזה תקן איכות מתמקד בשלב החקלאי הראשוני?",
+                options: ["ISO 9001", "HACCP", "GMP", "Global GAP"],
+                correctIndex: 3,
+                explanation: "Global GAP (Good Agricultural Practice) הוא תקן המתייחס לתהליכי הייצור החקלאי בשדה."
+            },
+             {
+                question: "מהו 'אפקט סינרגיסטי' בהקשר של שיטת המשוכות?",
+                options: ["כל משוכה פועלת בנפרד", "ההשפעה המשולבת של המשוכות קטנה מסכום השפעותיהן", "ההשפעה המשולבת של המשוכות גדולה מסכום השפעותיהן", "המשוכות מבטלות זו את זו"],
+                correctIndex: 2,
+                explanation: "סינרגיזם משמעו שהשלם גדול מסכום חלקיו, כלומר, השילוב של גורמי העיכוב יעיל יותר מאשר היישום הנפרד של כל אחד מהם."
+            },
+             {
+                question: "איזה תהליך אינאקטיבציה משתמש באנרגיה אלקטרומגנטית?",
+                options: ["פסטור", "עיקור בקיטור", "הקרנה", "לחץ גבוה"],
+                correctIndex: 2,
+                explanation: "הקרנת מזון משתמשת בקרינה מייננת (כמו קרני גמא או אלקטרונים מואצים) להשמדת מיקרואורגניזמים."
+            },
+            {
+                question: "מהי מטרת 'אימות' (Verification) במערכת HACCP?",
+                options: ["לזהות סיכונים חדשים", "לוודא שהמערכת פועלת כפי שתוכננה ואכן יעילה", "לשנות את הגבולות הקריטיים", "לכתוב את הנהלים מחדש"],
+                correctIndex: 1,
+                explanation: "אימות הוא תהליך הבודק באמצעות עדויות אובייקטיביות (בדיקות, תצפיות, סקירת רשומות) שהתוכנית מיושמת נכון ושהיא יעילה בשליטה על הסיכונים."
+            },
+             {
+                question: "מה עלול לקרות אם תהליך ניקוי של קו ייצור אינו מספק?",
+                options: ["המוצר יהיה זול יותר", "יתכן זיהום מיקרוביאלי או זיהום צולב של המוצר הבא", "חיי המדף של המוצר יתארכו", "הציוד יפעל מהר יותר"],
+                correctIndex: 1,
+                explanation: "ניקוי לא מספק משאיר שאריות מזון וחיידקים שעלולים לזהם את המנות הבאות ולגרום לקלקול או לבעיות בטיחות."
+            },
+             {
+                question: "איזה גורם פיזיקלי יכול לזרז תהליכי חמצון במזון?",
+                options: ["טמפרטורה נמוכה מאוד", "אריזה אטומה", "אור", "לחות גבוהה"],
+                correctIndex: 2,
+                explanation: "אור, במיוחד קרינה אולטרה-סגולה (UV), יכול לספק את האנרגיה הדרושה להתחלת תגובות חמצון ברכיבי מזון רגישים."
+            },
+            {
+                question: "מהו האתגר העיקרי בניהול סיכוני אלרגנים?",
+                options: ["למצוא תחליפים זולים לאלרגנים", "למנוע לחלוטין כל מגע אפשרי של אלרגן עם מזון שאינו מכיל אותו", "לשכנע צרכנים שהם אינם אלרגיים", "להסתיר את נוכחות האלרגן"],
+                correctIndex: 1,
+                explanation: "האתגר המרכזי הוא מניעת זיהום צולב, שכן גם כמויות זעירות של אלרגן עלולות לגרום לתגובה חריפה אצל אדם רגיש."
+            },
+             {
+                question: "ISO 9001 הוא תקן ל:",
+                options: ["ניהול בטיחות מזון בלבד", "ניהול איכות כללי (לא ספציפי למזון)", "ניהול איכות הסביבה", "ניהול פיננסי"],
+                correctIndex: 1,
+                explanation: "ISO 9001 הוא תקן גנרי למערכות ניהול איכות, שניתן ליישם בכל סוג של ארגון, לא רק בתעשיית המזון."
+            },
+            {
+                question: "מה מהבאים הוא דוגמה לעיכוב מיקרוביאלי באמצעות הורדת pH?",
+                options: ["הוספת מלח לשמירת בשר", "הוספת חומץ לירקות כבושים", "ייבוש פירות", "הקפאת דגים"],
+                correctIndex: 1,
+                explanation: "חומץ (חומצה אצטית) מוריד את ה-pH ויוצר סביבה חומצית המעכבת גדילת מיקרואורגניזמים רבים."
+            },
+            {
+                question: "איזה תהליך ביולוגי יכול לשמש כ'משוכה' לעיכוב קלקול?",
+                options: ["נשימה של הפרי", "פוטוסינתזה", "תסיסה על ידי חיידקים רצויים", "פעילות אנזימטית טבעית"],
+                correctIndex: 2,
+                explanation: "תסיסה (כמו ביוגורט או כרוב כבוש) יוצרת תוצרים כמו חומצה לקטית המורידים pH ומעכבים גדילת חיידקים גורמי קלקול ופתוגנים."
+            },
+             {
+                question: "מהי מטרת 'סימון פירוט מידע על הרכיבים האלרגניים'?",
+                options: ["לבלבל את הצרכן", "ליידע צרכנים אלרגיים על נוכחות אלרגנים במוצר", "להצדיק מחיר גבוה", "להגדיל את כמות הטקסט על האריזה"],
+                correctIndex: 1,
+                explanation: "סימון ברור ומדויק מאפשר לאנשים עם אלרגיות למזון לזהות מוצרים בטוחים עבורם ולהימנע מאלו המכילים אלרגנים."
+            },
+             {
+                question: "איזה מהבאים אינו חלק מעקרונות HACCP?",
+                options: ["ניתוח סיכונים", "קביעת גבולות קריטיים", "קביעת מחיר המוצר", "ניטור נקודות בקרה קריטיות"],
+                correctIndex: 2,
+                explanation: "קביעת מחיר המוצר היא שיקול מסחרי ואינה חלק משבעת העקרונות של HACCP המתמקדים בבטיחות מזון."
+            },
+            {
+                question: "מדוע יש הבדל בין שיטות עיכוב לשיטות אינאקטיבציה?",
+                options: ["עיכוב תמיד יעיל יותר", "אינאקטיבציה דורשת פחות אנרגיה", "בחירת השיטה תלויה בסוג המזון, במטרת השימור ובסיכונים הספציפיים", "אין הבדל מעשי"],
+                correctIndex: 2,
+                explanation: "הבחירה בין עיכוב (כמו קירור) לאינאקטיבציה (כמו עיקור) תלויה בגורמים רבים, כולל חיי המדף הנדרשים, הרגישות של המוצר לטיפול, והמיקרואורגניזמים שיש לשלוט בהם."
+            },
+            {
+                question: "איזה גורם קלקול כימי אחראי לטעמי לוואי בשמן ישן?",
+                options: ["הידרוליזה", "חמצון", "קרמליזציה", "תגובת מייארד"],
+                correctIndex: 1,
+                explanation: "חמצון של חומצות השומן בשמן (במיוחד בלתי רוויות) הוא הגורם העיקרי להתפתחות טעמי לוואי (Rancidity)."
+            },
+            {
+                question: "מהי דוגמה ליישום 'שיטת המשוכות' במזון?",
+                options: ["חלב מפוסטר", "ירקות קפואים", "נקניק יבש (שילוב aw נמוך, מלח, תרבית חיידקים, עישון)", "קמח לבן"],
+                correctIndex: 2,
+                explanation: "נקניק יבש משלב מספר גורמי שימור מתונים (פעילות מים מופחתת, מלח, pH נמוך מתסיסה, חומרים מהעישון) כדי להשיג יציבות."
+            },
+            {
+                question: "איזה אלמנט אינו חלק מניהול איכות לפי התרשים בעמוד 47?",
+                options: ["בקרת איכות חומרי גלם", "תהליך הייצור", "שביעות רצון לקוח", "חיזוי מזג האוויר"],
+                correctIndex: 3,
+                explanation: "התרשים מציג את התהליך החל מחומרי הגלם ועד ללקוח, כולל בקרות ומשוב, אך אינו כולל חיזוי מזג אוויר."
+            },
+            {
+                question: "מהי 'נקודת בקרה קריטית' (CCP) ב-HACCP?",
+                options: ["כל נקודה בתהליך הייצור", "נקודה שבה ניתן לבדוק את טעם המוצר", "שלב בתהליך שבו ניתן ליישם בקרה חיונית למניעה או הפחתה של סיכון בטיחותי לרמה קבילה", "הנקודה שבה המוצר נארז"],
+                correctIndex: 2,
+                explanation: "CCP היא שלב ספציפי בתהליך שחוסר שליטה בו עלול לגרום לסיכון בטיחותי, ושניתן וחיוני לבקר אותו כדי למנוע את הסיכון."
+            },
+             {
+                question: "איזו רשות ממשלתית אחראית בעיקר על פיקוח ואכיפה של בטיחות מזון בישראל?",
+                options: ["משרד התחבורה", "משרד האוצר", "משרד הבריאות ומשרד החקלאות", "משרד התרבות"],
+                correctIndex: 2,
+                explanation: "הטקסט מציין את משרד הבריאות ומשרד החקלאות (והרשויות המקומיות) כרשויות המוסמכות לפיקוח ואכיפה."
+            },
+            {
+                question: "מהי מטרת התיעוד (רשומות) במערכת HACCP?",
+                options: ["להקשות על העובדים", "לספק הוכחה שהמערכת פועלת כראוי ולאפשר מעקב ואנליזה", "למלא קלסרים", "לשמש כמתכונים"],
+                correctIndex: 1,
+                explanation: "תיעוד וניהול רשומות חיוניים להוכחת יישום התוכנית, למעקב אחר תוצאות הניטור, לביצוע פעולות מתקנות ולאימות יעילות המערכת."
+            },
+             {
+                question: "מהי דוגמה ל'תנאי ייצור' הקשורים ל-GMP?",
+                options: ["צבע הקירות במשרד ההנהלה", "רמת הניקיון וההיגיינה של ציוד הייצור והעובדים", "סוג המוזיקה המושמעת במפעל", "מספר החניות בחניון"],
+                correctIndex: 1,
+                explanation: "GMP עוסק ישירות בתנאים הפיזיים והתפעוליים של סביבת הייצור, כולל ניקיון, היגיינה, מצב הציוד, זרימת חומרים ועוד."
+            },
+            {
+                question: "איזה גורם עלול לגרום לקלקול אנזימטי בפרי לאחר הקטיף?",
+                options: ["חיידקים מהאוויר", "אנזימים טבעיים של הפרי עצמו", "קרינת השמש", "חומרי הדברה"],
+                correctIndex: 1,
+                explanation: "אנזימים המצויים באופן טבעי בפרי (כמו פוליפנול אוקסידאז הגורם להשחמה) ממשיכים לפעול גם לאחר הקטיף ויכולים לגרום לשינויים לא רצויים."
+            }
+        ];
+
+
+        const tfData = [
+            { question: "פסטור הוא תהליך עיכוב מיקרוביאלי, לא אינאקטיבציה.", answer: false, explanation: "פסטור הוא טיפול בחום שמטרתו להרוג מיקרואורגניזמים מסוימים (אינאקטיבציה), אם כי הוא פחות חמור מעיקור." },
+            { question: "קירור הוא תהליך אינאקטיבציה יעיל נגד כל סוגי החיידקים.", answer: false, explanation: "קירור הוא תהליך עיכוב, הוא מאט או עוצר גדילה אך לא הורג את רוב החיידקים." },
+            { question: "שיטת המשוכות משתמשת תמיד בחום גבוה כאחת המשוכות.", answer: false, explanation: "שיטת המשוכות יכולה לשלב מגוון גורמי עיכוב, לאו דווקא חום (למשל, pH, aw, חומר משמר)." },
+            { question: "מיקוטוקסינים מיוצרים על ידי חיידקים.", answer: false, explanation: "מיקוטוקסינים מיוצרים על ידי עובשים מסוימים." },
+            { question: "ניהול אלרגנים כולל רק סימון נכון על האריזה.", answer: false, explanation: "ניהול אלרגנים כולל גם מניעת זיהום צולב בתהליך הייצור ובאחסון." },
+            { question: "ISO 9001 הוא תקן ספציפי לתעשיית המזון.", answer: false, explanation: "ISO 9001 הוא תקן כללי למערכות ניהול איכות. ISO 22000 הוא התקן הספציפי לניהול בטיחות מזון." },
+            { question: "GMP מתייחס לתנאי הייצור במפעל.", answer: true, explanation: "GMP פירושו Good Manufacturing Practice (תנאי ייצור נאותים)." },
+            { question: "טמפרטורה גבוהה יכולה לגרום לקלקול פיזיקלי וכימי במזון.", answer: true, explanation: "טמפרטורה גבוהה יכולה לגרום להתייבשות (פיזיקלי) ולזרז תגובות כימיות כמו השחמה וחמצון." },
+            { question: "זיהום צולב של אלרגנים אינו מהווה סיכון משמעותי.", answer: false, explanation: "זיהום צולב הוא סיכון משמעותי כי גם כמויות קטנות של אלרגן עלולות לגרום לתגובה חריפה." },
+            { question: "תקן BRC פותח במקור על ידי קמעונאים בריטים.", answer: true, explanation: "BRC מייצג British Retail Consortium, והתקן פותח במקור על ידי איגוד קמעונאים זה." },
+            { question: "ניתן לעכב גדילת חיידקים על ידי הורדת ה-pH של המזון.", answer: true, explanation: "סביבה חומצית (pH נמוך) אינה אופטימלית לגדילת רוב החיידקים ולכן משמשת כגורם עיכוב." },
+            { question: "שיטת המשוכות דורשת שימוש בריכוז גבוה מאוד של כל גורם עיכוב.", answer: false, explanation: "הרעיון בשיטת המשוכות הוא להשתמש בריכוזים/רמות נמוכות יחסית של מספר גורמים, שהשילוב ביניהם יוצר את האפקט המשמר." },
+            { question: "אור יכול לגרום לקלקול כימי במזון.", answer: true, explanation: "אור, במיוחד UV, יכול לזרז תגובות חמצון ברכיבים רגישים." },
+            { question: "הידרוליזה היא סוג של קלקול מיקרוביאלי.", answer: false, explanation: "הידרוליזה (פירוק בעזרת מים) היא תגובה כימית, שיכולה להיות גם אנזימטית, אך אינה קלקול מיקרוביאלי ישיר." },
+            { question: "ISO 22000 מחליף לחלוטין את הצורך ב-GMP.", answer: false, explanation: "ISO 22000 מתבסס על קיום תוכניות קדם נדרשות (PRPs), ש-GMP הוא חלק מרכזי מהן." },
+            { question: "חומצה פראצטית משמשת לעיכוב גדילת חיידקים, לא להריגתם.", answer: false, explanation: "חומצה פראצטית היא חומר חיטוי חזק המשמש להשמדת (אינאקטיבציה) מיקרואורגניזמים." },
+            { question: "הפרדת אלרגנים באחסון היא חלק מניהול סיכוני אלרגנים.", answer: true, explanation: "אחסון נפרד של חומרי גלם אלרגניים חיוני למניעת זיהום צולב." },
+            { question: "פירוק חלבונים בבשר על ידי אנזימים טבעיים הוא דוגמה לקלקול אנזימטי.", answer: true, explanation: "אנזימים פרוטאוליטיים טבעיים ברקמת הבשר יכולים לגרום לפירוק חלבונים ושינוי מרקם." },
+            { question: "תקן Global GAP מתייחס לתהליכי הייצור במפעל המזון.", answer: false, explanation: "Global GAP מתייחס לשלב החקלאי הראשוני (Good Agricultural Practice)." },
+            { question: "אריזה בוואקום היא תהליך אינאקטיבציה מיקרוביאלי.", answer: false, explanation: "אריזה בוואקום היא תהליך עיכוב - היא מסלקת חמצן ומעכבת גדילת מיקרואורגניזמים אירוביים, אך לא הורגת אותם." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>פרק 3: חיבור וחיסור (עם שמירת תשובות - Fix)</title>
+
+    <!-- MathJax Config and Load -->
+    <script>
+        MathJax = { /* ... MathJax config same as before ... */
+          tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: true },
+          svg: { fontCache: 'global' },
+          options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+
+    <style>
+        /* --- Styles identical to previous persist versions --- */
+        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; direction: rtl; }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; background-color: #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        h1, h2 { text-align: right; color: #0056b3; margin-bottom: 15px; }
+        h1 { border-bottom: 2px solid #0056b3; padding-bottom: 10px; }
+        #rules-section { margin-bottom: 30px; padding: 15px; background-color: #eef; border: 1px solid #cce; border-radius: 5px; }
+        #rules-section ul { list-style-type: decimal; padding-right: 20px; margin: 0; }
+        #rules-section li { margin-bottom: 10px; text-align: right; }
+        #practice-section { margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        #question-container { margin-bottom: 20px; }
+        #question-progress { font-size: 0.9em; color: #666; text-align: left; margin-bottom: 10px; min-height: 1.2em; }
+        #question-text { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; text-align: right; min-height: 1.5em; line-height: 1.8; }
+        #question-text .calculation-part, #explanation-area .calculation-part { font-family: monospace; font-size: 1.3em; color: #dc3545; background-color: #f8f9fa; padding: 3px 8px; border-radius: 4px; margin: 0 0.3em; vertical-align: middle; display: inline-block; direction: ltr; }
+        #user-answer { padding: 10px; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; width: 150px; text-align: right; margin-left: 10px; box-sizing: border-box; vertical-align: middle; direction: ltr; }
+        #input-button-wrapper { margin-top: 10px; text-align: right; }
+        #nav-buttons { margin-top: 20px; display: flex; justify-content: space-between; }
+        button { padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 4px; background-color: #007bff; color: white; transition: background-color 0.3s ease; vertical-align: middle; margin: 0 5px; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #feedback-area { margin-top: 15px; padding: 10px; border-radius: 4px; font-weight: bold; text-align: right; min-height: 1.5em; }
+        .correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .incorrect { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #explanation-area { margin-top: 10px; padding: 15px; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 4px; text-align: right; line-height: 1.7; font-size: 0.95em; display: none; }
+        #explanation-area strong { color: #0056b3; }
+        #explanation-area mjx-container, #explanation-area .number-part { vertical-align: middle; direction: ltr; display: inline-block; margin: 0 0.15em; }
+        #results-summary { margin-top: 30px; padding: 20px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 5px; text-align: center; font-size: 1.2em; display: none; }
+        #submit-button {}
+        #next-button { background-color: #28a745; } #next-button:hover { background-color: #218838; }
+        #prev-button { background-color: #ffc107; color: #333;} #prev-button:hover { background-color: #e0a800; }
+        #results-button { background-color: #17a2b8; } #results-button:hover { background-color: #138496; }
+        #return-to-questions-button { background-color: #6c757d; } #return-to-questions-button:hover { background-color: #5a6268; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>פרק 3: חישובים - חיבור וחיסור</h1>
+        <div id="rules-section">
+             <!-- Rules for Chapter 3 -->
+            <h2>החוקים לחיבור וחיסור עם ספרות משמעותיות:</h2>
+            <ol>
+                <li>בצע את פעולת החיבור או החיסור כרגיל, ללא עיגול ביניים.</li>
+                <li>זהה את המספר (או המספרים) המשתתף בחישוב שהוא בעל **המספר הקטן ביותר של ספרות *אחרי* הנקודה העשרונית**.</li>
+                <li>עגל את התוצאה הסופית כך שיהיה לה **אותו מספר של ספרות אחרי הנקודה העשרונית** כמו המספר שזיהית בשלב 2.</li>
+                <li>השתמש בכללי העיגול שנלמדו בפרק 2 (כולל כלל "עגל חצי לזוגי" - Round Half to Even - כאשר הספרה המחליטה היא בדיוק 5).</li>
+            </ol>
+            <p><strong>דוגמה א':</strong> חישוב \(12.3 + 4.567\)</p>
+            <ul>
+                <li>חישוב גולמי: \(12.3 + 4.567 = 16.867\)</li>
+                <li>מספר המקומות העשרוניים הקטן ביותר: למספר \(12.3\) יש מקום עשרוני אחד.</li>
+                <li>עיגול התוצאה למקום עשרוני אחד: הספרה הראשונה להשמטה היא \(6\) (> 5), לכן נעגל את \(8\) כלפי מעלה ל-\(9\).</li>
+                <li>תוצאה סופית: \(16.9\)</li>
+            </ul>
+             <p><strong>דוגמה ב':</strong> חישוב \(102.55 - 99.4\)</p>
+            <ul>
+                <li>חישוב גולמי: \(102.55 - 99.4 = 3.15\)</li>
+                <li>מספר המקומות העשרוניים הקטן ביותר: למספר \(99.4\) יש מקום עשרוני אחד.</li>
+                <li>עיגול התוצאה למקום עשרוני אחד: הספרה הראשונה להשמטה היא \(5\) (בדיוק 5). הספרה האחרונה לשמירה היא \(1\) (אי-זוגי), לכן נעגל כלפי מעלה.</li>
+                <li>תוצאה סופית: \(3.2\)</li>
+            </ul>
+             <p><strong>שים לב:</strong> מספר הספרות המשמעותיות הכולל במספרים המקוריים *אינו* רלוונטי ישירות כאן, אלא רק מספר הספרות *אחרי הנקודה העשרונית*.</p>
+        </div>
+
+        <div id="practice-section">
+             <!-- Practice Structure -->
+             <h2>תרגול: <span id="total-questions"></span> שאלות</h2>
+            <div id="question-container" style="display: none;"> <!-- Still hidden initially -->
+                <p id="question-progress"></p>
+                <p id="question-text"></p> <!-- Question text set by JS -->
+                <div id="input-button-wrapper">
+                    <input type="text" id="user-answer" placeholder="הקלד את התוצאה המעוגלת">
+                    <button id="submit-button">בדוק תשובה</button>
+                </div>
+                <div id="feedback-area"></div>
+                <div id="explanation-area"></div>
+                <div id="nav-buttons">
+                     <button id="prev-button" style="visibility: hidden;">השאלה הקודמת</button>
+                     <button id="next-button">השאלה הבאה</button>
+                     <button id="results-button" style="display: none;">הצג תוצאות</button>
+                </div>
+            </div>
+            <div id="results-summary">
+                   <!-- Results Summary -->
+                    <h2>כל הכבוד! / סיכום תוצאות</h2>
+                    <p>סיימת את כל השאלות בפרק זה.</p>
+                    <p>ציון: <span id="final-score"></span> מתוך <span id="total-questions-final"></span></p>
+                    <button id="return-to-questions-button">חזור לשאלות</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables & Questions Array ---
+        let currentQuestionIndex = 0;
+        const questions = [ // Chapter 3 Questions Array (same as before)
+             { calculation: "12.3 + 4.56", answer: "16.9", explanation: "חישוב: \\(12.3 + 4.56 = 16.86\\). מינימום מקומות עשרוניים: 1 (מ-\\(12.3\\)). נעגל ל-1 מקום: \\(16.9\\) (כי \\(6 > 5\\))." },
+             { calculation: "100.5 - 1.23", answer: "99.3", explanation: "חישוב: \\(100.5 - 1.23 = 99.27\\). מינימום מקומות עשרוניים: 1 (מ-\\(100.5\\)). נעגל ל-1 מקום: \\(99.3\\) (כי \\(7 > 5\\))." },
+             { calculation: "5.67 + 0.1", answer: "5.8", explanation: "חישוב: \\(5.67 + 0.1 = 5.77\\). מינימום מקומות עשרוניים: 1 (מ-\\(0.1\\)). נעגל ל-1 מקום: \\(5.8\\) (כי \\(7 > 5\\))." },
+             { calculation: "23.456 + 7.8", answer: "31.3", explanation: "חישוב: \\(23.456 + 7.8 = 31.256\\). מינימום מקומות עשרוניים: 1 (מ-\\(7.8\\)). נעגל ל-1 מקום: \\(31.3\\) (כי \\(5\\) ואחריו עוד ספרות, מעגלים למעלה)." },
+             { calculation: "9.9 - 0.01", answer: "9.9", explanation: "חישוב: \\(9.9 - 0.01 = 9.89\\). מינימום מקומות עשרוניים: 1 (מ-\\(9.9\\)). נעגל ל-1 מקום: \\(9.9\\) (כי \\(9 > 5\\))." },
+             { calculation: "1.002 + 3.4", answer: "4.4", explanation: "חישוב: \\(1.002 + 3.4 = 4.402\\). מינימום מקומות עשרוניים: 1 (מ-\\(3.4\\)). נעגל ל-1 מקום: \\(4.4\\) (כי \\(0 < 5\\))." },
+             { calculation: "50 + 1.23", answer: "51", explanation: "חישוב: \\(50 + 1.23 = 51.23\\). מינימום מקומות עשרוניים: 0 (מ-\\(50\\)). נעגל ל-0 מקומות (מספר שלם): \\(51\\) (כי \\(2 < 5\\))." },
+             { calculation: "120. - 5.6", answer: "114", explanation: "חישוב: \\(120. - 5.6 = 114.4\\). מינימום מקומות עשרוניים: 0 (מ-\\(120.\\)). נעגל ל-0 מקומות: \\(114\\) (כי \\(4 < 5\\))." },
+             { calculation: "0.05 + 1.1", answer: "1.2", explanation: "חישוב: \\(0.05 + 1.1 = 1.15\\). מינימום מקומות עשרוניים: 1 (מ-\\(1.1\\)). נעגל ל-1 מקום: \\(1.2\\) (כי \\(5\\) בדיוק, והספרה \\(1\\) אי-זוגית)." },
+             { calculation: "10.05 + 2.2", answer: "12.2", explanation: "חישוב: \\(10.05 + 2.2 = 12.25\\). מינימום מקומות עשרוניים: 1 (מ-\\(2.2\\)). נעגל ל-1 מקום: \\(12.2\\) (כי \\(5\\) בדיוק, והספרה \\(2\\) זוגית)." },
+             { calculation: "3.14159 + 2.718", answer: "5.860", explanation: "חישוב: \\(3.14159 + 2.718 = 5.85959\\). מינימום מקומות עשרוניים: 3 (מ-\\(2.718\\)). נעגל ל-3 מקומות: הספרה הרביעית היא 5 ואחריה יש עוד ספרות (59). לכן מעגלים את הספרה השלישית (9) כלפי מעלה. 9 הופך ל-10, נושאים 1 ל-5 שהופך ל-6. התוצאה \\(5.860\\)." },
+             { calculation: "100 - 99.9", answer: "0.1", explanation: "חישוב: \\(100 - 99.9 = 0.1\\). נניח שמספרים שלמים ללא נקודה הם מדויקים לנושא זה. נקבע לפי \\(99.9\\) -> 1 מקום עשרוני. התוצאה היא \\(0.1\\) שכבר יש לה מקום עשרוני אחד." },
+             { calculation: "0.123 + 0.456 + 0.78", answer: "1.36", explanation: "חישוב: \\(0.123 + 0.456 + 0.78 = 1.359\\). מינימום מקומות עשרוניים: 2 (מ-\\(0.78\\)). נעגל ל-2 מקומות: \\(1.36\\) (כי \\(9 > 5\\))." },
+             { calculation: "500.0 - 1.234", answer: "498.8", explanation: "חישוב: \\(500.0 - 1.234 = 498.766\\). מינימום מקומות עשרוניים: 1 (מ-\\(500.0\\)). נעגל ל-1 מקום: \\(498.8\\) (כי \\(6 > 5\\))." },
+             { calculation: "1 + 0.0005", answer: "1", explanation: "חישוב: \\(1 + 0.0005 = 1.0005\\). מינימום מקומות עשרוניים: 0 (מ-\\(1\\), בהנחה שהוא מדידה). נעגל ל-0 מקומות: \\(1\\) (כי \\(0 < 5\\))." },
+             { calculation: "2.5 + 3.5", answer: "6.0", explanation: "חישוב: \\(2.5 + 3.5 = 6.0\\). מינימום מקומות עשרוניים: 1 (משניהם). התוצאה כבר עם מקום עשרוני אחד: \\(6.0\\)." },
+             { calculation: "2.50 + 3.50", answer: "6.00", explanation: "חישוב: \\(2.50 + 3.50 = 6.00\\). מינימום מקומות עשרוניים: 2 (משניהם). התוצאה כבר עם 2 מקומות עשרוניים: \\(6.00\\)." },
+             { calculation: "10.1 + 100.1 + 1000.1", answer: "1110.3", explanation: "חישוב: \\(10.1 + 100.1 + 1000.1 = 1110.3\\). מינימום מקומות עשרוניים: 1 (מכולם). התוצאה כבר עם מקום עשרוני אחד: \\(1110.3\\)." },
+             { calculation: "8.76 - 8.75", answer: "0.01", explanation: "חישוב: \\(8.76 - 8.75 = 0.01\\). מינימום מקומות עשרוניים: 2 (משניהם). התוצאה כבר עם 2 מקומות עשרוניים: \\(0.01\\)." },
+             { calculation: "8.765 - 8.755", answer: "0.010", explanation: "חישוב: \\(8.765 - 8.755 = 0.010\\). מינימום מקומות עשרוניים: 3 (משניהם). התוצאה היא בדיוק \\(0.010\\) ויש לה 3 מקומות." },
+             { calculation: "123 + 0.45", answer: "123", explanation: "חישוב: \\(123 + 0.45 = 123.45\\). מינימום מקומות עשרוניים: 0 (מ-\\(123\\)). נעגל ל-0 מקומות: \\(123\\) (כי \\(4 < 5\\))." },
+             { calculation: "99 + 1.1", answer: "100.", explanation: "חישוב: \\(99 + 1.1 = 100.1\\). מינימום מקומות עשרוניים: 0 (מ-\\(99\\)). נעגל ל-0 מקומות: \\(100\\) (כי \\(1 < 5\\)). נכתוב \\(100.\\) כדי לציין שעיגלנו למקום האחדות (0 עשרוניים)." },
+             { calculation: "0.55 + 0.65", answer: "1.20", explanation: "חישוב: \\(0.55 + 0.65 = 1.20\\). מינימום מקומות עשרוניים: 2 (משניהם). התוצאה כבר עם 2 מקומות: \\(1.20\\)." },
+             { calculation: "1.0 - 0.9", answer: "0.1", explanation: "חישוב: \\(1.0 - 0.9 = 0.1\\). מינימום מקומות עשרוניים: 1 (משניהם). התוצאה כבר עם מקום עשרוני אחד: \\(0.1\\)." },
+             { calculation: "100.0 - 99.9", answer: "0.1", explanation: "חישוב: \\(100.0 - 99.9 = 0.1\\). מינימום מקומות עשרוניים: 1 (משניהם). התוצאה כבר עם מקום עשרוני אחד: \\(0.1\\)." },
+             { calculation: "7.88 + 0.123", answer: "8.00", explanation: "חישוב: \\(7.88 + 0.123 = 8.003\\). מינימום מקומות עשרוניים: 2 (מ-\\(7.88\\)). נעגל ל-2 מקומות: \\(8.00\\) (כי \\(3 < 5\\))." },
+             { calculation: "5.5 + 6.6 + 7.7", answer: "19.8", explanation: "חישוב: \\(5.5 + 6.6 + 7.7 = 19.8\\). מינימום מקומות עשרוניים: 1 (מכולם). התוצאה כבר עם מקום עשרוני אחד: \\(19.8\\)." },
+             { calculation: "1.2345 + 5", answer: "6", explanation: "חישוב: \\(1.2345 + 5 = 6.2345\\). מינימום מקומות עשרוניים: 0 (מ-\\(5\\)). נעגל ל-0 מקומות: \\(6\\) (כי \\(2 < 5\\))." },
+             { calculation: "10 - 0.001", answer: "10", explanation: "חישוב: \\(10 - 0.001 = 9.999\\). מינימום מקומות עשרוניים: 0 (מ-\\(10\\)). נעגל ל-0 מקומות: \\(10\\) (כי \\(9 > 5\\) מעלה את 9 ל-10 וכן הלאה)." },
+             { calculation: "4.32 + 5.68", answer: "10.00", explanation: "חישוב: \\(4.32 + 5.68 = 10.00\\). מינימום מקומות עשרוניים: 2 (משניהם). התוצאה כבר עם 2 מקומות: \\(10.00\\)." },
+        ];
+        const totalQuestions = questions.length;
+        let questionStates = Array(totalQuestions).fill(null).map(() => ({ userAnswer: null, isCorrect: null }));
+
+        // DOM Elements
+        let questionContainerEl, questionProgressEl, questionTextEl, userAnswerEl, submitButton, feedbackAreaEl, explanationAreaEl, nextButton, prevButton, resultsButton, resultsSummaryEl, finalScoreEl, totalQuestionsSpan, totalQuestionsFinalSpan, returnToQuestionsButton;
+
+        // --- Function Definitions ---
+        // ** UPDATED loadQuestion function **
+        function loadQuestion(index) {
+             // --- Basic Checks & Setup ---
+            if (index < 0 || index >= totalQuestions) {
+                 console.error("Invalid index:", index);
+                 return;
+            }
+             // Ensure essential elements exist before proceeding
+             if (!questionContainerEl || !questionProgressEl || !questionTextEl || !userAnswerEl || !submitButton || !feedbackAreaEl || !explanationAreaEl || !prevButton || !nextButton || !resultsButton || !resultsSummaryEl) {
+                 console.error("loadQuestion called before all elements were assigned! Aborting.");
+                 return;
+             }
+
+            currentQuestionIndex = index;
+            const currentQuestion = questions[index];
+            const currentState = questionStates[index] || { userAnswer: null, isCorrect: null };
+
+            console.log(`Loading Q${index + 1}. State:`, currentState);
+
+            // --- Update Content ---
+            questionProgressEl.textContent = `שאלה ${index + 1} מתוך ${totalQuestions}`;
+            const questionHTML = `חשב את התוצאה של <span class="calculation-part">\\(${currentQuestion.calculation}\\)</span> ורשום אותה עם המספר הנכון של ספרות אחרי הנקודה.`;
+            questionTextEl.innerHTML = questionHTML;
+
+             // Reset visual state before restoring or setting defaults
+            userAnswerEl.value = '';
+            feedbackAreaEl.textContent = '';
+            feedbackAreaEl.className = 'feedback-area';
+            explanationAreaEl.style.display = 'none';
+            explanationAreaEl.innerHTML = '';
+            userAnswerEl.disabled = false;
+            submitButton.disabled = false;
+            submitButton.style.display = 'inline-block'; // Default to visible
+
+            // --- Typeset Math for Question ---
+             try {
+                 if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                      MathJax.typesetPromise([questionTextEl])
+                          .then(() => console.log(`MathJax typeset Q${index + 1}`))
+                          .catch(err => console.error("MathJax Q error:", err));
+                  } else { console.warn("MathJax not ready for question typesetting."); }
+             } catch (mjError) { console.error("Critical error during MathJax question typesetting:", mjError); }
+
+
+            // --- Restore Previous State IF exists ---
+            if (currentState.userAnswer !== null) {
+                userAnswerEl.value = currentState.userAnswer;
+
+                if (currentState.isCorrect !== null) { // Check if submitted before
+                    feedbackAreaEl.textContent = currentState.isCorrect ? 'נכון!' : 'לא נכון.';
+                    feedbackAreaEl.className = currentState.isCorrect ? 'feedback-area correct' : 'feedback-area incorrect';
+                    const explanationText = `<strong>התשובה הנכונה:</strong> <span class="number-part">\\(${currentQuestion.answer}\\)</span><br><strong>הסבר:</strong> ${currentQuestion.explanation}`;
+                    explanationAreaEl.innerHTML = explanationText;
+                    explanationAreaEl.style.display = 'block';
+
+                    try {
+                         if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                              MathJax.typesetPromise([explanationAreaEl])
+                                  .then(() => console.log(`MathJax typeset Exp${index + 1}`))
+                                  .catch(err => console.error("MathJax Exp restore error:", err));
+                          } else { console.warn("MathJax not ready for explanation typesetting."); }
+                     } catch (mjError) { console.error("Critical error during MathJax explanation typesetting:", mjError); }
+
+                    userAnswerEl.disabled = true;
+                    submitButton.disabled = true;
+                }
+            }
+
+             // --- Update Button Visibility ---
+            prevButton.style.visibility = (index === 0) ? 'hidden' : 'visible';
+            nextButton.style.display = (index === totalQuestions - 1) ? 'none' : 'inline-block';
+            resultsButton.style.display = (index === totalQuestions - 1) ? 'inline-block' : 'none';
+
+             // --- ** CRITICAL STEP: Ensure Container is Visible ** ---
+             resultsSummaryEl.style.display = 'none';      // Hide results summary
+             questionContainerEl.style.display = 'block';  // *** Explicitly show question container ***
+
+            // Focus only if not previously answered
+            if (currentState.isCorrect === null) {
+                 userAnswerEl.focus();
+            }
+        }
+
+
+        // checkAnswer, showResults functions remain the same as previous "persist" version
+        function checkAnswer() {
+            const index = currentQuestionIndex;
+            const userAnswer = userAnswerEl.value.trim();
+            const currentQuestion = questions[index];
+            const correctAnswer = currentQuestion.answer;
+            if (userAnswer === '') {
+                feedbackAreaEl.textContent = 'אנא הכנס תשובה.';
+                feedbackAreaEl.className = 'feedback-area incorrect';
+                return;
+            }
+            const isCorrect = (userAnswer === correctAnswer);
+            questionStates[index] = { userAnswer: userAnswer, isCorrect: isCorrect };
+            console.log(`Q${index+1} answered. Correct: ${isCorrect}. State:`, questionStates[index]);
+
+            const explanationText = `<strong>התשובה הנכונה:</strong> <span class="number-part">\\(${correctAnswer}\\)</span><br><strong>הסבר:</strong> ${currentQuestion.explanation}`;
+            explanationAreaEl.innerHTML = explanationText;
+            explanationAreaEl.style.display = 'block';
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([explanationAreaEl]).catch(err => console.error("MathJax Exp error:", err));
+            }
+
+            if (isCorrect) {
+                feedbackAreaEl.textContent = 'נכון!';
+                feedbackAreaEl.className = 'feedback-area correct';
+            } else {
+                feedbackAreaEl.textContent = 'לא נכון.';
+                feedbackAreaEl.className = 'feedback-area incorrect';
+            }
+            submitButton.disabled = true;
+            userAnswerEl.disabled = true;
+        }
+
+        function showResults() {
+            console.log("Showing results. Final State:", questionStates);
+            const finalScore = questionStates.filter(state => state && state.isCorrect).length;
+            finalScoreEl.textContent = finalScore;
+            totalQuestionsFinalSpan.textContent = totalQuestions;
+            questionContainerEl.style.display = 'none';
+            resultsSummaryEl.style.display = 'block';
+             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([resultsSummaryEl]).catch(err => console.error("MathJax Res error:", err));
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM loaded - Chapter 3 Persist Fix");
+            // Assign Elements
+            questionContainerEl = document.getElementById('question-container');
+            questionProgressEl = document.getElementById('question-progress');
+            questionTextEl = document.getElementById('question-text');
+            userAnswerEl = document.getElementById('user-answer');
+            submitButton = document.getElementById('submit-button');
+            feedbackAreaEl = document.getElementById('feedback-area');
+            explanationAreaEl = document.getElementById('explanation-area');
+            nextButton = document.getElementById('next-button');
+            prevButton = document.getElementById('prev-button');
+            resultsButton = document.getElementById('results-button');
+            resultsSummaryEl = document.getElementById('results-summary');
+            finalScoreEl = document.getElementById('final-score');
+            totalQuestionsSpan = document.getElementById('total-questions');
+            totalQuestionsFinalSpan = document.getElementById('total-questions-final');
+            returnToQuestionsButton = document.getElementById('return-to-questions-button');
+
+            // Check essential elements after assignment
+             if (!questionContainerEl || !submitButton || !nextButton || !prevButton || !questionTextEl || !userAnswerEl) {
+                 console.error("Essential DOM elements missing after DOM load! Aborting initialization.");
+                 // Optionally display a user-facing error message in the container
+                  const container = document.querySelector('.container');
+                  if(container) container.innerHTML = "<h1>שגיאה חמורה בטעינת הרכיבים. נסה לרענן את הדף.</h1>";
+                 return;
+             }
+
+            totalQuestionsSpan.textContent = totalQuestions;
+            // Event Listeners
+            submitButton.addEventListener('click', checkAnswer);
+            nextButton.addEventListener('click', () => { if (currentQuestionIndex < totalQuestions - 1) loadQuestion(currentQuestionIndex + 1); });
+            prevButton.addEventListener('click', () => { if (currentQuestionIndex > 0) loadQuestion(currentQuestionIndex - 1); });
+            resultsButton.addEventListener('click', showResults);
+            returnToQuestionsButton.addEventListener('click', () => loadQuestion(currentQuestionIndex));
+            userAnswerEl.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !submitButton.disabled) { e.preventDefault(); checkAnswer(); } });
+
+            // Load first question after MathJax is ready
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => { console.log("MathJax ready."); loadQuestion(0); })
+                .catch((err) => { console.error("MathJax init failed.", err); loadQuestion(0); });
+            } else { console.error("MathJax object not found."); loadQuestion(0); }
+        });
+    </script>
+</body>
+</html>

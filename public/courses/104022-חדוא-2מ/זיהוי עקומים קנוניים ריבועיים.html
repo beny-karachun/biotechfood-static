@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratic Curve Identification Practice</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" xintegrity="sha384-wcIxkf4k558AjM3Yz3BBfSUbkGjO/Lg1elRrtNtxv4hJkE/SUqSdsS/kvwYxChLw" crossorigin="anonymous">
+    <!-- KaTeX JS -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" xintegrity="sha384-hIoBPJpTadxHRDOjVRDtKsn2OKjGlFIfAtLe+bT+hT/e/vNlH/GfM6IaC9oY+LO/u" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use the 'Inter' font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the equation display */
+        #equation-display {
+            font-size: 1.5rem; /* 24px */
+            line-height: 2rem; /* 32px */
+            min-height: 3.5rem; /* Give it some height for rendering */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Style for theory equations */
+        .theory-equation {
+            font-size: 1.125rem; /* text-lg */
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        /* Make KaTeX text white for dark mode */
+        .katex {
+            color: #FFFFFF;
+        }
+        /* Custom styles for feedback buttons */
+        .btn-correct {
+            background-color: #22c55e; /* green-500 */
+            border-color: #16a34a; /* green-600 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl w-[90vw] h-[90vh] max-w-4xl max-h-[1200px] flex flex-col overflow-y-auto">
+        
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-white mb-6 flex-shrink-0">
+            Identify the Conic Section
+        </h1>
+
+        <!-- Theory Toggle Button -->
+        <button id="show-theory-btn" class="w-full p-2 mb-4 rounded-lg font-semibold text-white bg-gray-600 hover:bg-gray-700 transition-all duration-200 shadow flex-shrink-0">
+            Show Theory
+        </button>
+
+        <!-- Theory Section (Hidden by default) -->
+        <div id="theory-section" class="hidden mb-6 p-4 bg-gray-700 rounded-lg border border-gray-600 flex-shrink-0">
+            <h2 class="text-xl font-bold text-center text-white mb-4">Canonical Equations</h2>
+            <div class="space-y-4">
+                <!-- 1. Circle -->
+                <div>
+                    <strong class="text-gray-100">1. Circle:</strong>
+                    <div class="katex-theory theory-equation" data-katex="(x - x_0)^2 + (y - y_0)^2 = R^2"></div>
+                </div>
+                <!-- 2. Ellipse -->
+                <div>
+                    <strong class="text-gray-100">2. Ellipse:</strong>
+                    <div class="katex-theory theory-equation" data-katex="\frac{(x - x_0)^2}{a^2} + \frac{(y - y_0)^2}{b^2} = 1"></div>
+                </div>
+                <!-- 3. Parabola -->
+                <div>
+                    <strong class="text-gray-100">3. Parabola:</strong>
+                    <div class="katex-theory theory-equation" data-katex="y - y_0 = c(x - x_0)^2 \quad \text{or} \quad x - x_0 = c(y - y_0)^2"></div>
+                </div>
+                <!-- 4. Hyperbola -->
+                <div>
+                    <strong class="text-gray-100">4. Hyperbola:</strong>
+                    <div class="katex-theory theory-equation" data-katex="\frac{(x - x_0)^2}{a^2} - \frac{(y - y_0)^2}{b^2} = \pm 1"></div>
+                </div>
+                <!-- 5. Single Point -->
+                <div>
+                    <strong class="text-gray-100">5. Single Point:</strong>
+                    <div class="katex-theory theory-equation" data-katex="(x - x_0)^2 + (y - y_0)^2 = 0"></div>
+                </div>
+                <!-- 6. Parallel Lines -->
+                <div>
+                    <strong class="text-gray-100">6. Parallel Lines:</strong>
+                    <div class="katex-theory theory-equation" data-katex="(x - x_0)^2 = a^2 \quad \text{or} \quad (y - y_0)^2 = b^2 \quad (a, b \neq 0)"></div>
+                </div>
+                <!-- 7. Intersecting Lines -->
+                <div>
+                    <strong class="text-gray-100">7. Intersecting Lines:</strong>
+                    <div class="katex-theory theory-equation" data-katex="(x - x_0)^2 = c^2(y - y_0)^2 \quad (c \neq 0)"></div>
+                </div>
+                <!-- 8. Empty Set -->
+                <div>
+                    <strong class="text-gray-100">8. Empty Set:</strong>
+                    <div class="katex-theory theory-equation" data-katex="(x - x_0)^2 + (y - y_0)^2 = -R^2 \quad (R \neq 0)"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equation Display -->
+        <div class="bg-gray-900 rounded-lg p-6 my-6 text-center shadow-inner overflow-x-auto flex-shrink-0">
+            <div id="equation-display" class="text-white"></div>
+        </div>
+
+        <!-- Answer Buttons -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 flex-shrink-0">
+            <!-- Standard Conics -->
+            <button data-type="circle" class="answer-btn p-3 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-md">
+                Circle
+            </button>
+            <button data-type="ellipse" class="answer-btn p-3 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-md">
+                Ellipse
+            </button>
+            <button data-type="parabola" class="answer-btn p-3 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-md">
+                Parabola
+            </button>
+            <button data-type="hyperbola" class="answer-btn p-3 rounded-lg font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200 shadow-md">
+                Hyperbola
+            </button>
+            <!-- Degenerate Cases -->
+            <button data-type="point" class="answer-btn p-3 rounded-lg font-semibold text-white bg-teal-500 hover:bg-teal-600 transition-all duration-200 shadow-md">
+                Single Point
+            </button>
+            <button data-type="parallel-lines" class="answer-btn p-3 rounded-lg font-semibold text-white bg-teal-500 hover:bg-teal-600 transition-all duration-200 shadow-md">
+                Parallel Lines
+            </button>
+            <button data-type="intersecting-lines" class="answer-btn p-3 rounded-lg font-semibold text-white bg-teal-500 hover:bg-teal-600 transition-all duration-200 shadow-md">
+                Intersecting Lines
+            </A>
+            <button data-type="empty-set" class="answer-btn p-3 rounded-lg font-semibold text-white bg-teal-500 hover:bg-teal-600 transition-all duration-200 shadow-md">
+                Empty Set
+            </button>
+        </div>
+
+        <!-- Feedback and Score -->
+        <div id="feedback-message" class="mt-5 text-center text-lg font-semibold h-6 flex-shrink-0">
+            &nbsp; <!-- Placeholder for height -->
+        </div>
+        
+        <div id="score-display" class="mt-2 text-center text-gray-300 font-medium flex-shrink-0">
+            Score: 0 / 0
+        </div>
+
+        <!-- New Equation Button -->
+        <button id="new-equation-btn" class="w-full p-3 mt-5 rounded-lg font-bold text-white bg-green-500 hover:bg-green-600 transition-all duration-200 shadow-lg text-lg flex-shrink-0">
+            New Equation
+        </button>
+
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const equationDisplay = document.getElementById('equation-display');
+        const answerButtons = document.querySelectorAll('.answer-btn');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const scoreDisplay = document.getElementById('score-display');
+        const newEquationBtn = document.getElementById('new-equation-btn');
+        const showTheoryBtn = document.getElementById('show-theory-btn');
+        const theorySection = document.getElementById('theory-section');
+
+        // --- State Variables ---
+        let currentCorrectType = '';
+        let score = 0;
+        let total = 0;
+        let answered = false;
+
+        // --- Helper Functions ---
+
+        /** Generates a random integer between min and max (inclusive) */
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        /** Generates a random non-zero integer */
+        function randNonZeroInt(min, max) {
+            let val = 0;
+            while (val === 0) {
+                val = randInt(min, max);
+            }
+            return val;
+        }
+
+        /** Formats a (variable - value)² term */
+        function formatTerm(val, variable) {
+            if (val === 0) return `${variable}^2`;
+            if (val > 0) return `(${variable} - ${val})^2`;
+            return `(${variable} + ${-val})^2`; // val is negative
+        }
+
+        /** Formats a (variable - value) term */
+        function formatVar(val, variable) {
+            if (val === 0) return variable;
+            if (val > 0) return `(${variable} - ${val})`;
+            return `(${variable} + ${-val})`; // val is negative
+        }
+
+        /** Gets the English name for a type key */
+        function getTypeName(typeKey) {
+            const names = {
+                'circle': 'Circle',
+                'ellipse': 'Ellipse',
+                'parabola': 'Parabola',
+                'hyperbola': 'Hyperbola',
+                'point': 'Single Point',
+                'parallel-lines': 'Parallel Lines',
+                'intersecting-lines': 'Intersecting Lines',
+                'empty-set': 'Empty Set'
+            };
+            return names[typeKey] || 'Unknown';
+        }
+
+        /** Renders all theory equations using KaTeX */
+        function renderTheoryEquations() {
+            const theoryEquations = document.querySelectorAll('.katex-theory');
+            theoryEquations.forEach(el => {
+                const katexString = el.dataset.katex;
+                try {
+                    katex.render(katexString, el, {
+                        throwOnError: false,
+                        displayMode: true
+                    });
+                } catch (e) {
+                    console.error('KaTeX rendering error in theory:', e);
+                    el.textContent = katexString; // Fallback
+                }
+            });
+        }
+
+        // --- Core Logic ---
+
+        /** Generates a new random equation object */
+        function generateEquation() {
+            // Pick one of the 8 types randomly
+            const typeIndex = randInt(0, 7);
+            const x0 = randInt(-8, 8);
+            const y0 = randInt(-8, 8);
+            let eqString = '';
+            let type = '';
+
+            switch (typeIndex) {
+                case 0: // 1. Circle: (x - x₀)² + (y - y₀)² = R²
+                    const R2 = randInt(1, 100);
+                    eqString = `${formatTerm(x0, 'x')} + ${formatTerm(y0, 'y')} = ${R2}`;
+                    type = 'circle';
+                    break;
+                
+                case 1: // 2. Ellipse: (x - x₀)²/a² + (y - y₀)²/b² = 1
+                    let a2 = randInt(2, 50);
+                    let b2 = randInt(2, 50);
+                    while (a2 === b2) { // Ensure it's not a circle
+                        b2 = randInt(2, 50);
+                    }
+                    eqString = `\\frac{${formatTerm(x0, 'x')}}{${a2}} + \\frac{${formatTerm(y0, 'y')}}{${b2}} = 1`;
+                    type = 'ellipse';
+                    break;
+                
+                case 2: // 3. Parabola: y - y₀ = c(x - x₀)² or x - x₀ = c(y - y₀)²
+                    const c_parabola = randNonZeroInt(-5, 5);
+                    if (Math.random() > 0.5) { // y = c(x-x0)²
+                        eqString = `${formatVar(y0, 'y')} = ${c_parabola}${formatTerm(x0, 'x')}`;
+                    } else { // x = c(y-y0)²
+                        eqString = `${formatVar(x0, 'x')} = ${c_parabola}${formatTerm(y0, 'y')}`;
+                    }
+                    type = 'parabola';
+                    break;
+
+                case 3: // 4. Hyperbola: (x - x₀)²/a² - (y - y₀)²/b² = ±1
+                    const a2_hyper = randInt(1, 50);
+                    const b2_hyper = randInt(1, 50);
+                    const sign = Math.random() > 0.5 ? 1 : -1;
+                    if (sign === 1) {
+                         eqString = `\\frac{${formatTerm(x0, 'x')}}{${a2_hyper}} - \\frac{${formatTerm(y0, 'y')}}{${b2_hyper}} = 1`;
+                    } else {
+                         eqString = `\\frac{${formatTerm(y0, 'y')}}{${b2_hyper}} - \\frac{${formatTerm(x0, 'x')}}{${a2_hyper}} = 1`;
+                    }
+                    type = 'hyperbola';
+                    break;
+
+                case 4: // 5. Point: (x - x₀)² + (y - y₀)² = 0
+                    eqString = `${formatTerm(x0, 'x')} + ${formatTerm(y0, 'y')} = 0`;
+                    type = 'point';
+                    break;
+
+                case 5: // 6. Parallel Lines: (x - x₀)² = a² or (y - y₀)² = b²
+                    const val_parallel = randInt(1, 100);
+                    if (Math.random() > 0.5) {
+                        eqString = `${formatTerm(x0, 'x')} = ${val_parallel}`;
+                    } else {
+                        eqString = `${formatTerm(y0, 'y')} = ${val_parallel}`;
+                    }
+                    type = 'parallel-lines';
+                    break;
+
+                case 6: // 7. Intersecting Lines: (x - x₀)² = c²(y - y₀)²
+                    const c2_intersect = randInt(1, 25);
+                    eqString = `${formatTerm(x0, 'x')} = ${c2_intersect}${formatTerm(y0, 'y')}`;
+                    type = 'intersecting-lines';
+                    break;
+
+                case 7: // 8. Empty Set: (x - x₀)² + (y - y₀)² = -R²
+                    const negVal = -randInt(1, 100);
+                    eqString = `${formatTerm(x0, 'x')} + ${formatTerm(y0, 'y')} = ${negVal}`;
+                    type = 'empty-set';
+                    break;
+            }
+            
+            return { eqString, type };
+        }
+
+        /** Displays a new equation and resets the UI */
+        function displayNewEquation() {
+            const { eqString, type } = generateEquation();
+            currentCorrectType = type;
+            
+            // Render the equation using KaTeX
+            try {
+                katex.render(eqString, equationDisplay, {
+                    throwOnError: false, // Don't crash if there's a typo
+                    displayMode: true      // Render in display mode (centered, larger)
+                });
+            } catch (e) {
+                console.error('KaTeX rendering error:', e);
+                equationDisplay.textContent = eqString; // Fallback to plain text
+            }
+            
+            // Reset feedback
+            feedbackMessage.textContent = '\u00A0'; // Non-breaking space
+            feedbackMessage.classList.remove('text-green-400', 'text-red-400');
+            
+            // Reset button states
+            answered = false;
+            answerButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('btn-correct', 'btn-incorrect', 'opacity-70');
+            });
+        }
+
+        /** Checks the user's answer */
+        function checkAnswer(guessedType) {
+            if (answered) return; // Prevent multiple answers
+            answered = true;
+            total++;
+
+            if (guessedType === currentCorrectType) {
+                score++;
+                feedbackMessage.textContent = 'Correct!';
+                feedbackMessage.classList.add('text-green-400');
+                // Highlight the correct button
+                document.querySelector(`[data-type="${guessedType}"]`).classList.add('btn-correct');
+            } else {
+                feedbackMessage.textContent = `Incorrect. This is a ${getTypeName(currentCorrectType)}.`;
+                feedbackMessage.classList.add('text-red-440');
+                // Highlight the incorrect guess and the correct answer
+                document.querySelector(`[data-type="${guessedType}"]`).classList.add('btn-incorrect');
+                document.querySelector(`[data-type="${currentCorrectType}"]`).classList.add('btn-correct');
+            }
+
+            // Disable all buttons after answering
+            answerButtons.forEach(btn => {
+                btn.disabled = true;
+                if (!btn.classList.contains('btn-correct') && !btn.classList.contains('btn-incorrect')) {
+                    btn.classList.add('opacity-70');
+                }
+            });
+
+            // Update score display
+            scoreDisplay.textContent = `Score: ${score} / ${total}`;
+        }
+
+        // --- Event Listeners ---
+
+        // Load the first equation and render theory when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            displayNewEquation();
+            renderTheoryEquations();
+        });
+
+        // Set up the "New Equation" button
+        newEquationBtn.addEventListener('click', displayNewEquation);
+
+        // Set up the "Show Theory" button
+        showTheoryBtn.addEventListener('click', () => {
+            theorySection.classList.toggle('hidden');
+            const isHidden = theorySection.classList.contains('hidden');
+            showTheoryBtn.textContent = isHidden ? 'Show Theory' : 'Hide Theory';
+        });
+
+        // Set up all answer buttons
+        answerButtons.forEach(btn => {
+            btn.addEventListener('click', () => checkAnswer(btn.dataset.type));
+        });
+
+    </script>
+</body>
+</html>

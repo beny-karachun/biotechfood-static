@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי עזר ללימוד: סיסטמטיקה של חיידקים</title>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                macros: {
+                    // Define any custom macros here if needed
+                }
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                ready: function() {
+                    console.log('MathJax is ready.');
+                    MathJax.startup.defaultReady();
+                    // Custom function to initialize content and then typeset
+                    initializeContentAndTypeset();
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+    <style>
+        /* General page styling */
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #444; /* Slightly lighter than #333 for content background */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        /* Darker container for specific sections if needed, or use .container for all */
+        .content-section {
+            background-color: #666; /* Medium Gray containers */
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        h1, h2, h3 {
+            color: #3D90D7; /* Blue accents */
+        }
+
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 30px;
+        }
+
+        /* Theory section specific styling */
+        .theory-section ul {
+            list-style-type: disc;
+            margin-right: 20px; /* Indent for RTL */
+        }
+
+        .theory-section li {
+            margin-bottom: 10px;
+        }
+
+        .theory-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .theory-section th, .theory-section td {
+            border: 1px solid #888;
+            padding: 10px;
+            text-align: right; /* Default for RTL */
+        }
+
+        .theory-section th {
+            background-color: #555;
+            color: #E0E0E0;
+        }
+
+        /* Study card styling */
+        .study-card-container {
+            perspective: 1600px;
+            margin-bottom: 15px;
+            min-height: 200px; /* Ensure space for content */
+        }
+
+        .study-card {
+            width: 100%;
+            min-height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            background-color: #525252; /* Slightly different from #666 for cards */
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .study-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .study-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 8px;
+        }
+
+        .study-card-front {
+            background-color: #525252;
+            font-size: 1.5em;
+        }
+
+        .study-card-back {
+            background-color: #5a5a5a;
+            transform: rotateY(180deg);
+            font-size: 1.1em;
+        }
+        
+        /* MCQ and True/False styling */
+        .question-view {
+            background-color: #525252; /* Same as card front for consistency */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options-list li {
+            background-color: #777;
+            margin-bottom: 10px;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .options-list li:hover {
+            background-color: #888;
+        }
+
+        .options-list li.selected.correct {
+            background-color: #4CAF50; /* Green correct */
+            color: white;
+        }
+
+        .options-list li.selected.incorrect {
+            background-color: #F44336; /* Red incorrect */
+            color: white;
+        }
+        
+        .options-list li.correct-answer-reveal { /* For showing correct if user was wrong */
+            background-color: #4CAF50 !important; 
+            color: white !important;
+            border: 2px solid #388E3C;
+        }
+        
+        .options-list li.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #505050;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        
+        .explanation.hidden {
+            display: none;
+        }
+
+        /* Navigation and counters */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px; /* Vertical spacing */
+            margin-bottom: 20px; /* Vertical spacing */
+        }
+
+        .counter {
+            font-size: 1em;
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7; /* Blue accents */
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #357ABD;
+        }
+        
+        button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+
+        /* "View All" sections */
+        .all-questions-container .question-item {
+            background-color: #555;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        .all-questions-container .question-item .options-list li {
+             background-color: #6a6a6a;
+        }
+        .all-questions-container .question-item .options-list li:hover {
+             background-color: #7a7a7a;
+        }
+        
+        .math-inline { /* For inline math, to ensure LTR within RTL */
+            direction: ltr;
+            display: inline-block;
+        }
+        .math-display { /* For display math */
+            direction: ltr;
+            display: block;
+            margin: 10px auto;
+            text-align: center;
+        }
+        /* Ensure MathJax content itself is rendered LTR */
+        mjx-container {
+            direction: ltr !important;
+            text-align: left !important; /* For display math alignment */
+        }
+        mjx-math {
+             direction: ltr !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>כלי עזר ללימוד: סיסטמטיקה של חיידקים</h1>
+
+        <!-- Theory Section -->
+        <div id="theory-section" class="content-section theory-section">
+            <h2>מבוא לסיסטמטיקה של חיידקים</h2>
+            <p><strong>טקסונומיה</strong> הוא מדע העוסק בהגדרת חיידקים ומיונם, והוא מחולק לשני תחומים: זיהוי חיידקים ונומנקלטורה (מתן שמות). <strong>סיסטמטיקה</strong> היא התחום העוסק ביצירת הכלים להשוואה המשמשים לקביעת הטקסונומיה. כיום, תהליך הזיהוי והמיון של חיידקים מתבצע בעיקר על סמך רצף הגנום כולו או רצף מקטע DNA מסוים המשמש "חתימה" של החיידק.</p>
+            
+            <h3>שיטות זיהוי ומיון מודרניות ומסורתיות</h3>
+            <ul>
+                <li><strong>ריצוף גנומי:</strong> שימוש ברצף הגן $16S \text{ rRNA}$, המקודד לרנ"א ריבוזומלי של תת-היחידה הקטנה של הריבוזום, הוא כלי מרכזי. השוואת הומולוגיה בין רצפי $16S \text{ rRNA}$ מאפשרת לקבוע את מידת הקרבה האבולוציונית בין חיידקים.</li>
+                <li><strong>מורפולוגיה ומבנה:</strong>
+                    <ul>
+                        <li><strong>מורפולוגית התא:</strong> גודל התא וצורתו (קוקוס - coccus, מתג - rod/bacillus, מתג מכופף - vibrio, ספירילום - spirillum), התארגנות התאים (בודדים, שרשראות, זוגות, קבוצות), צביעת גרם, מבנים פנימיים (ספורות, קפסולות, פלגלות) ויכולת תנועה.</li>
+                        <li><strong>מורפולוגית המושבה:</strong> גודל, צורה (התרוממות: קמור, קעור, שטוח), שוליים (חלקים, משוננים), פני שטח, תכונות אופטיות (אטומה, שקופה, פיגמנט) וריח.</li>
+                    </ul>
+                </li>
+                <li><strong>תכונות פיזיולוגיות וביוכימיות:</strong> מתבססות על בדיקת נוכחות מקרומולקולות מסוימות בתא, הפרשת מטבוליטים, מבחני פעילות אנזימטית (למשל, קטלאז, אוקסידאז, ג'לטינאז), ובדיקת נוכחות טוקסינים.</li>
+                <li><strong>מבחנים סרולוגיים:</strong> בדיקת נוכחותם של מרכיבים ספציפיים (כגון חלבונים או סוכרים על פני שטח התא) בעזרת נוגדנים.</li>
+                <li><strong>מיון על סמך הרכב התא:</strong> לדוגמה, הרכב חומצות השומן בממברנה.</li>
+            </ul>
+            <p>מידע מפורט למיון וזיהוי בקטריאלי ניתן למצוא בספר Bergey's Manual of Determinative Bacteriology.</p>
+
+            <h2>מבחנים ביוכימיים עיקריים</h2>
+            
+            <h3>כושר התססת סוכרים</h3>
+            <ul>
+                <li>חיידקים מנצלים סוכרים (גלוקוז הוא המועדף לרוב) כמקור אנרגיה. יכולת ניצול מגוון סוכרים ייחודית משמשת לאבחון.</li>
+                <li>תהליכים: <strong>נשימה</strong> (חמצון מלא של סוכרים ל-$CO_2$) או <strong>פרמנטציה (תסיסה)</strong> (חמצון חלקי לתוצרים כמו חומצות אורגניות, כהלים, ומימן $H_2$).</li>
+                <li>תוצרי תסיסה:
+                    <ul>
+                        <li><strong>יצירת חומצה:</strong> גורמת לירידת pH. מזוהה באמצעות אינדיקטור pH, לדוגמה, <strong>Bromocresol purple</strong>. האינדיקטור משנה את צבעו מ<strong>סגול</strong> (בסביבה ניטרלית/בסיסית) ל<strong>צהוב</strong> (כאשר $pH < 6$).</li>
+                        <li><strong>יצירת גז:</strong> חלק מהחיידקים יוצרים גז במהלך התסיסה. מזוהה באמצעות <strong>מבחנות Durham</strong> הפוכות בתוך מצע הגידול הנוזלי, בהן נאגר הגז.</li>
+                    </ul>
+                </li>
+                 <li>מצע הבסיס לבדיקת התססת סוכרים הוא לרוב Purple Broth Base, המכיל את האינדיקטור Bromocresol purple וסוכר ספציפי.</li>
+            </ul>
+
+            <h3>פירוק טריפטופן לאינדול</h3>
+            <ul>
+                <li>טריפטופן היא חומצה אמינית המכילה טבעת אינדול.</li>
+                <li>חיידקים מסוימים, בעלי האנזים <strong>טריפטופאנאז (tryptophanase)</strong>, מסוגלים לפרק טריפטופן ולהשתמש בתוצרים כמקור אנרגיה. אחד התוצרים האפשריים הוא <strong>אינדול</strong>.</li>
+                <li>זיהוי אינדול: הוספת <strong>ריאגנט ארליך (Ehrlich's reagent)</strong> למצע הגידול. נוכחות אינדול גורמת להופעת טבעת סגולה.</li>
+            </ul>
+
+            <h3>מבחן קטלאז</h3>
+            <ul>
+                <li>מי חמצן ($H_2O_2$) הם תוצר לוואי רעיל של תהליכים מטבוליים בתא (כגון נשימה אירובית).</li>
+                <li>האנזים <strong>קטלאז (catalase)</strong> מפרק $H_2O_2$ למים ($H_2O$) וחמצן גזי ($O_2$): $2H_2O_2 \xrightarrow{\text{catalase}} 2H_2O + O_2 \uparrow$.</li>
+                <li>האנזים קשור לממברנה הציטופלסמטית.</li>
+                <li>זיהוי: הוספת תמיסת $H_2O_2$ (לרוב 3%) ישירות על מושבת חיידקים. תוצאה חיובית היא הופעת בועיות גז ($O_2$).</li>
+                <li>קטלאז נפוץ במרבית החיידקים האירוביים והפקולטטיביים המכילים ציטוכרומים. לרוב חסר במיקרואורגניזמים חסרי ציטוכרום.</li>
+            </ul>
+
+            <h3>מבחן אוקסידאז</h3>
+            <ul>
+                <li>האנזים <strong>ציטוכרום אוקסידאז</strong> הוא חלק משרשרת מעבר האלקטרונים בחיידקים מסוימים, ומשמש כמקבל האלקטרונים האחרון המעביר אותם לחמצן.</li>
+                <li>זיהוי: שימוש ב<strong>דיסק אוקסידאז</strong> (או ריאגנט נוזלי) המכיל תרכובת המשמשת כתורם אלקטרונים מלאכותי.</li>
+                <li>תוצאה חיובית: אם החיידק מכיל ציטוכרום אוקסידאז, הוא יחמצן את הריאגנט בדיסק, והדיסק ישנה את צבעו לכחול/סגול תוך זמן קצר (שניות עד דקות ספורות).</li>
+            </ul>
+            
+            <h3>ניצול ציטראט כמקור פחמן יחיד</h3>
+            <ul>
+                <li>חיידקים מסוימים מסוגלים לנצל <strong>ציטראט</strong> (למשל, $Na_3C_6H_5O_7$) כמקור פחמן ואנרגיה יחיד.</li>
+                <li>פירוק הציטראט מוביל ליצירת תוצרים בסיסיים (כגון סודיום קרבונט, $Na_2CO_3$, הנוצר מתגובת $CO_2$ עם נתרן) המעלים את ה-pH של המצע.</li>
+                <li>מצע הגידול (למשל, Simmons Citrate Agar) מכיל ציטראט כמקור פחמן יחיד ואינדיקטור pH, <strong>Bromothymol blue</strong>.</li>
+                <li>תוצאה חיובית: שינוי צבע המצע מ<strong>ירוק</strong> (pH ניטרלי) ל<strong>כחול</strong> (pH בסיסי), המעיד על ניצול הציטראט.</li>
+            </ul>
+
+            <h3>בדיקת יכולת תנועה באגר</h3>
+            <ul>
+                <li>הבדיקה קובעת יכולת תנועה (motility) של מיקרואורגניזמים.</li>
+                <li>מצע: אגר מוצק למחצה (למשל, בריכוז 0.25% אגר), המאפשר לחיידקים בעלי יכולת תנועה להתפשט.</li>
+                <li>זריעה: דקירה ישרה של תרבית חיידקים לתוך המצע.</li>
+                <li>תוצאה:
+                    <ul>
+                        <li><strong>חיידק בעל יכולת תנועה:</strong> יתפשט מרחק מקו הדקירה, ותיווצר עכירות מפושטת ברחבי המצע.</li>
+                        <li><strong>חיידק חסר יכולת תנועה:</strong> יגדל רק לאורך קו הדקירה.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>פירוק ג'לטין (מבחן ג'לטינאז)</h3>
+            <ul>
+                <li><strong>ג'לטין</strong> הוא חלבון (קולגן) המופק מרקמות חיבור של בעלי חיים. הוא מתמצק בטמפרטורות נמוכות מ-25°C.</li>
+                <li>האנזים החוץ-תאי <strong>ג'לטינאז (gelatinase)</strong> מפרק ג'לטין למולקולות קטנות יותר, המשמשות מקור אנרגיה לחיידק.</li>
+                <li>הידרוליזה של ג'לטין גורמת לאיבוד יכולתו ליצור ג'ל (התנזלות).</li>
+                <li>זיהוי: מצע גידול המכיל ג'לטין (Nutrient Gelatin). לאחר אינקובציה, המבחנה מקוררת.</li>
+                <li>תוצאה חיובית: המצע נשאר נוזלי גם לאחר קירור, המעיד על פירוק הג'לטין.</li>
+            </ul>
+
+            <h3>השפעת חמצן על גידול (מצע תיוגליקולט)</h3>
+            <ul>
+                <li>בדיקה זו מסייעת לקבוע את יחס החיידק לחמצן (אירובי, אנאירובי, פקולטטיבי וכו').</li>
+                <li><strong>מצע תיוגליקולט (Thioglycollate Broth):</strong>
+                    <ul>
+                        <li>מכיל חומרים מחזרים (כגון חומצה תיוגליקולית וציסטאין) היוצרים גרדיאנט של חמצן במבחנה – ריכוז חמצן גבוה בפני השטח וריכוז נמוך עד אפסי בתחתית.</li>
+                        <li>לעיתים מכיל אחוז נמוך של אגר (כ-0.05-0.25%) כדי למנוע ערבול ולהאט דיפוזיה של חמצן.</li>
+                        <li>מכיל אינדיקטור חמצון-חיזור, לרוב <strong>Resazurin</strong> או <strong>Methylene blue</strong>. מתילן בלו צבעו כחול בנוכחות חמצן והוא חסר צבע בהיעדרו. רזאזורין ורוד בנוכחות חמצן וחסר צבע בהיעדרו.</li>
+                        <li>מכיל גלוקוז כמקור אנרגיה.</li>
+                    </ul>
+                </li>
+                <li>דפוסי צמיחה אופייניים:
+                    <ul>
+                        <li><strong>אירוביים אובליגטוריים:</strong> גדלים רק בחלק העליון של המבחנה, היכן שריכוז החמצן גבוה.</li>
+                        <li><strong>אנאירוביים אובליגטוריים:</strong> גדלים רק בחלק התחתון של המבחנה, היכן שאין חמצן.</li>
+                        <li><strong>אנאירוביים פקולטטיביים:</strong> גדלים לכל אורך המבחנה, אך לרוב טוב יותר בחלק העליון (נשימה אירובית יעילה יותר מתסיסה).</li>
+                        <li><strong>מיקרוארופילים:</strong> גדלים ברצועה צרה מתחת לפני השטח, שם ריכוז החמצן נמוך אך לא אפסי.</li>
+                        <li><strong>אנאירוביים אוויר-סבילים (Aerotolerant anaerobes):</strong> גדלים באופן אחיד לכל אורך המבחנה, אינם משתמשים בחמצן אך אינם נפגעים מנוכחותו.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>חיזור ניטראט</h3>
+            <ul>
+                <li>חיידקים מסוימים מסוגלים להשתמש ב<strong>ניטראט ($NO_3^-$)</strong> כקולט אלקטרונים סופי בתהליך נשימה אנאירובית.</li>
+                <li>תהליך החיזור יכול להתרחש במספר שלבים:
+                    <ul>
+                        <li>$NO_3^- \rightarrow NO_2^-$ (ניטריט)</li>
+                        <li>$NO_2^- \rightarrow N_2O \text{ (דו-חנקן חמצני)} \rightarrow N_2 \text{ (גז חנקן)}$ (תהליך זה, חיזור מלא לגז חנקן, נקרא <strong>דניטריפיקציה</strong>).</li>
+                    </ul>
+                </li>
+                <li>זיהוי:
+                    <ol>
+                        <li>לאחר אינקובציה במצע ניטראט, מוסיפים <strong>ריאגנט A (חומצה סולפנילית)</strong> ו<strong>ריאגנט B ($\alpha$-נפטילאמין)</strong>.
+                            <ul>
+                                <li><strong>צבע אדום:</strong> מעיד על נוכחות ניטריט ($NO_2^-$), כלומר $NO_3^-$ חוזר ל-$NO_2^-$. (תוצאה חיובית).</li>
+                            </ul>
+                        </li>
+                        <li><strong>אם לא מתפתח צבע אדום:</strong>
+                            <ul>
+                                <li>אפשרות 1: הניטראט לא חוזר כלל (החיידק אינו מחזר ניטראט).</li>
+                                <li>אפשרות 2: הניטראט חוזר במלואו מעבר לשלב הניטריט (למשל, ל-$N_2$).</li>
+                            </ul>
+                        </li>
+                        <li>כדי להבחין בין שתי האפשרויות, מוסיפים <strong>אבקת אבץ (Zinc powder)</strong>. אבץ מחזר כימית $NO_3^-$ ל-$NO_2^-$.
+                            <ul>
+                                <li><strong>התפתחות צבע אדום לאחר הוספת אבץ:</strong> מעידה ש-$NO_3^-$ היה נוכח במצע ולא חוזר על ידי החיידק. (תוצאה שלילית לחיזור על ידי החיידק).</li>
+                                <li><strong>אי-התפתחות צבע אדום גם לאחר הוספת אבץ:</strong> מעידה שה-$NO_3^-$ המקורי חוזר במלואו על ידי החיידק מעבר לשלב הניטריט (ל-$N_2O$ או $N_2$). (תוצאה חיובית לדניטריפיקציה).</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </li>
+                <li><strong>מבחנת Durham</strong> יכולה לשמש לזיהוי יצירת גז (כגון $N_2$ או $N_2O$) בתהליך הדניטריפיקציה.</li>
+            </ul>
+
+            <h3>טבלאות סיכום</h3>
+            <h4>טבלה 1: גישות עיקריות בסיווג חיידקים</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>גישה</th>
+                        <th>תיאור קצר</th>
+                        <th>דוגמה/הערה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>גנומית</td>
+                        <td>השוואת רצפי DNA, למשל הגנום כולו או גנים ספציפיים</td>
+                        <td>רצף גן $16S \text{ rRNA}$</td>
+                    </tr>
+                    <tr>
+                        <td>מורפולוגית</td>
+                        <td>מאפייני צורת התא, מבנה התא, צורת המושבה והתארגנות התאים</td>
+                        <td>צורת קוקוס/מתג, צביעת גרם, נוכחות ספורות/קפסולות</td>
+                    </tr>
+                    <tr>
+                        <td>פיזיולוגית וביוכימית</td>
+                        <td>בדיקת מסלולים מטבוליים, נוכחות אנזימים, תוצרי פירוק, ניצול סובסטרטים</td>
+                        <td>התססת סוכרים, יצירת אינדול, פעילות קטלאז</td>
+                    </tr>
+                    <tr>
+                        <td>סרולוגית</td>
+                        <td>זיהוי אנטיגנים ספציפיים על פני התא (חלבונים, סוכרים) באמצעות נוגדנים</td>
+                        <td>מבחנים אימונולוגיים</td>
+                    </tr>
+                    <tr>
+                        <td>הרכב התא</td>
+                        <td>אנליזה של מרכיבים כימיים ייחודיים בדופן התא, בממברנה או בציטופלזמה</td>
+                        <td>הרכב חומצות שומן בממברנה</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>טבלה 2: מבחנים ביוכימיים עיקריים ומשמעותם</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>שם המבחן</th>
+                        <th>מטרה עיקרית</th>
+                        <th>ריאגנט/אינדיקטור מפתח</th>
+                        <th>תוצאה חיובית עיקרית</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>התססת סוכרים</td>
+                        <td>בדיקת יכולת החיידק לפרק סוכר ספציפי תוך יצירת חומצה ו/או גז</td>
+                        <td>Bromocresol purple, מבחנת Durham</td>
+                        <td>שינוי צבע המצע לצהוב (חומצה), הצטברות גז במבחנת Durham</td>
+                    </tr>
+                    <tr>
+                        <td>יצירת אינדול</td>
+                        <td>בדיקת יכולת פירוק טריפטופן לאינדול באמצעות האנזים טריפטופאנאז</td>
+                        <td>ריאגנט ארליך (Ehrlich's reagent)</td>
+                        <td>הופעת טבעת סגולה</td>
+                    </tr>
+                    <tr>
+                        <td>קטלאז</td>
+                        <td>בדיקת נוכחות האנזים קטלאז, המפרק מי חמצן ($H_2O_2$)</td>
+                        <td>תמיסת $H_2O_2 \text{ 3%}$</td>
+                        <td>הופעת בועיות גז ($O_2$)</td>
+                    </tr>
+                    <tr>
+                        <td>אוקסידאז</td>
+                        <td>בדיקת נוכחות האנזים ציטוכרום אוקסידאז בשרשרת מעבר אלקטרונים</td>
+                        <td>דיסק אוקסידאז</td>
+                        <td>הפיכת הדיסק לצבע כחול/סגול</td>
+                    </tr>
+                    <tr>
+                        <td>ניצול ציטראט</td>
+                        <td>בדיקת יכולת החיידק לנצל ציטראט כמקור פחמן יחיד</td>
+                        <td>Bromothymol blue</td>
+                        <td>שינוי צבע המצע מירוק לכחול (עקב עליית pH)</td>
+                    </tr>
+                    <tr>
+                        <td>פירוק ג'לטין (ג'לטינאז)</td>
+                        <td>בדיקת נוכחות האנזים החוץ-תאי ג'לטינאז, המפרק ג'לטין</td>
+                        <td>מצע ג'לטין</td>
+                        <td>התנזלות המצע (איבוד יכולת התמצקות בקירור)</td>
+                    </tr>
+                    <tr>
+                        <td>חיזור ניטראט</td>
+                        <td>בדיקת יכולת החיידק לחזר ניטראט ($NO_3^-$) לניטריט ($NO_2^-$) או לגז חנקני ($N_2$)</td>
+                        <td>ראגנט A (חומצה סולפנילית), ראגנט B ($\alpha$-נפטילאמין), אבקת אבץ</td>
+                        <td>צבע אדום לאחר A+B (נוצר $NO_2^-$); או: אין צבע אדום גם לאחר אבץ (חיזור מלא ל-$N_2$)</td>
+                    </tr>
+                     <tr>
+                        <td>יכולת תנועה</td>
+                        <td>קביעת יכולת תנועה של החיידק</td>
+                        <td>מצע אגר מוצק למחצה (למשל 0.25% אגר)</td>
+                        <td>התפשטות עכירות מהזריעה לרחבי המצע</td>
+                    </tr>
+                    <tr>
+                        <td>יחס לחמצן</td>
+                        <td>קביעת צורכי החמצן של החיידק (אירובי, אנאירובי, פקולטטיבי)</td>
+                        <td>מצע תיוגליקולט, Resazurin או Methylene blue</td>
+                        <td>דפוס צמיחה אופייני במבחנה (למעלה, למטה, לכל האורך)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>טבלה 3: אינדיקטורים נפוצים בבדיקות</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>אינדיקטור</th>
+                        <th>משמש במבחן</th>
+                        <th>תנאי/pH לשינוי צבע</th>
+                        <th>צבע במצב X</th>
+                        <th>צבע במצב Y</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Bromocresol purple</td>
+                        <td>התססת סוכרים</td>
+                        <td>pH < 6 (חומצי) לעומת pH ניטרלי/בסיסי</td>
+                        <td>צהוב (חומצי)</td>
+                        <td>סגול (ניטרלי/בסיסי)</td>
+                    </tr>
+                    <tr>
+                        <td>Bromothymol blue</td>
+                        <td>ניצול ציטראט</td>
+                        <td>עליית pH (בסיסי) לעומת pH ניטרלי</td>
+                        <td>ירוק (ניטרלי)</td>
+                        <td>כחול (בסיסי)</td>
+                    </tr>
+                    <tr>
+                        <td>Methylene blue (או Resazurin)</td>
+                        <td>יחס לחמצן (מצע תיוגליקולט)</td>
+                        <td>נוכחות חמצן (מחומצן) לעומת היעדר חמצן (מחוזר)</td>
+                        <td>כחול/ורוד (בנוכחות $O_2$)</td>
+                        <td>חסר צבע (בהיעדר $O_2$)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <!-- Study Cards Section -->
+        <div id="study-cards-section" class="content-section">
+            <h2>כרטיסיות לימוד</h2>
+            <div id="study-card-container" class="study-card-container">
+                <div id="study-card" class="study-card">
+                    <div id="study-card-front" class="study-card-face study-card-front">צד קדמי</div>
+                    <div id="study-card-back" class="study-card-face study-card-back">צד אחורי</div>
+                </div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prev-card-btn">הקודם</button>
+                <span id="card-counter" class="counter">כרטיסיה 1 / X</span>
+                <button id="next-card-btn">הבא</button>
+            </div>
+        </div>
+
+        <!-- MCQs Section -->
+        <div id="mcqs-section" class="content-section">
+            <h2>שאלות רב-ברירה (MCQ)</h2>
+            <div id="single-mcq-view" class="question-view">
+                <div id="mcq-question-text" class="question-text">טוען שאלה...</div>
+                <ul id="mcq-options-list" class="options-list">
+                    <!-- Options will be populated by JS -->
+                </ul>
+                <div id="mcq-explanation" class="explanation hidden">טוען הסבר...</div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prev-mcq-btn">הקודם</button>
+                <span id="mcq-counter" class="counter">שאלה 1 / X</span>
+                <button id="next-mcq-btn">הבא</button>
+            </div>
+            <button id="view-all-mcqs-btn" style="margin-top: 10px;">הצג את כל השאלות</button>
+            <div id="all-mcqs-container" class="all-questions-container" style="display: none;">
+                <!-- All MCQs will be populated here by JS -->
+            </div>
+        </div>
+
+        <!-- True/False Section -->
+        <div id="tf-section" class="content-section">
+            <h2>שאלות נכון/לא נכון</h2>
+            <div id="single-tf-view" class="question-view">
+                <div id="tf-question-text" class="question-text">טוען שאלה...</div>
+                <ul id="tf-options-list" class="options-list">
+                    <!-- Options (True/False) will be populated by JS -->
+                </ul>
+                <div id="tf-explanation" class="explanation hidden">טוען הסבר...</div>
+            </div>
+            <div class="navigation-controls">
+                <button id="prev-tf-btn">הקודם</button>
+                <span id="tf-counter" class="counter">שאלה 1 / X</span>
+                <button id="next-tf-btn">הבא</button>
+            </div>
+            <button id="view-all-tf-btn" style="margin-top: 10px;">הצג את כל השאלות</button>
+            <div id="all-tf-container" class="all-questions-container" style="display: none;">
+                <!-- All T/F questions will be populated here by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Data ---
+        const studyCardsData = [
+            { front: "טקסונומיה", back: "מדע העוסק בהגדרת חיידקים ומיונם, כולל זיהוי ונומנקלטורה." },
+            { front: "סיסטמטיקה", back: "תחום העוסק ביצירת הכלים להשוואה המשמשים לקביעת הטקסונומיה." },
+            { front: "גן $16S \\text{ rRNA}$", back: "מקטע DNA המקודד לרנא ריבוזומלי של תת היחידה הקטנה של הריבוזום, משמש כסמן מולקולרי למיון פילוגנטי של חיידקים." },
+            { front: "מורפולוגית התא", back: "כוללת גודל וצורת התא (קוקוס, מתג, ספירילום), התארגנות התאים, צביעת גרם, ומבנים כמו ספורות וקפסולות." },
+            { front: "מורפולוגית המושבה", back: "כוללת גודל, צורה, שוליים, פני שטח, ותכונות אופטיות של מושבת חיידקים על מצע מוצק." },
+            { front: "פרמנטציה (תסיסה)", back: "תהליך מטבולי של חמצון חלקי של תרכובות אורגניות (כגון סוכרים) ללא נוכחות חמצן חיצוני כמקבל אלקטרונים סופי. תוצרים יכולים להיות חומצות, כהלים וגזים." },
+            { front: "Bromocresol purple", back: "אינדיקטור pH המשנה צבעו מסגול (בסיסי/ניטרלי) לצהוב (חומצי, $pH < 6$), משמש לזיהוי יצירת חומצה בתסיסת סוכרים." },
+            { front: "מבחנות Durham", back: "מבחנות זכוכית קטנות והפוכות המוכנסות למצע נוזלי כדי לאסוף גזים הנוצרים במהלך תסיסה." },
+            { front: "טריפטופאנאז", back: "אנזים המפרק את החומצה האמינית טריפטופן, בין היתר, לאינדול." },
+            { front: "ריאגנט ארליך", back: "ריאגנט כימי המשמש לזיהוי נוכחות אינדול. תגובה חיובית מתבטאת בהופעת טבעת סגולה." },
+            { front: "קטלאז", back: "אנזים המפרק מי חמצן ($H_2O_2$) למים ($H_2O$) וחמצן גזי ($O_2$). מגן על התא מנזקי $H_2O_2$." },
+            { front: "ציטוכרום אוקסידאז", back: "אנזים המצוי בשרשרת מעבר האלקטרונים של חיידקים מסוימים, המעביר אלקטרונים לחמצן. נבדק במבחן אוקסידאז." },
+            { front: "ניצול ציטראט", back: "יכולת של חיידקים מסוימים להשתמש בציטראט כמקור פחמן יחיד. גורם לעליית pH במצע, המזוהה ע״י Bromothymol blue." },
+            { front: "Bromothymol blue", back: "אינדיקטור pH המשנה צבעו מירוק (ניטרלי) לכחול (בסיסי), משמש במבחן ניצול ציטראט." },
+            { front: "אגר מוצק למחצה", back: "מצע גידול המכיל ריכוז נמוך של אגר (כ-0.25%), משמש לבדיקת יכולת תנועה של חיידקים." },
+            { front: "ג'לטינאז", back: "אנזים חוץ-תאי המפרק ג'לטין. פירוק ג'לטין גורם להתנזלות המצע." },
+            { front: "מצע תיוגליקולט", back: "מצע נוזלי או מוצק למחצה המכיל חומרים מחזרים, היוצרים גרדיאנט חמצן ומשמש לקביעת יחס החיידק לחמצן." },
+            { front: "Resazurin / Methylene blue", back: "אינדיקטורי חמצון-חיזור המשמשים במצע תיוגליקולט לציון נוכחות חמצן (צבע ורוד/כחול בהתאמה) או היעדרו (חסר צבע)." },
+            { front: "חיזור ניטראט", back: "תהליך בו חיידקים משתמשים בניטראט ($NO_3^-$) כמקבל אלקטרונים סופי. יכול להוביל ליצירת ניטריט ($NO_2^-$) או גזים חנקניים." },
+            { front: "דניטריפיקציה", back: "תהליך חיזור מלא של ניטראט ($NO_3^-$) לגז חנקן ($N_2$) או $N_2O$." },
+            { front: "ריאגנט A ו-B (במבחן ניטראט)", back: "ריאגנט A (חומצה סולפנילית) וריאגנט B ($\alpha$-נפטילאמין) משמשים לזיהוי ניטריט ($NO_2^-$). יצירת צבע אדום מעידה על נוכחות ניטריט." },
+            { front: "אבקת אבץ (במבחן ניטראט)", back: "משמשת במבחן חיזור ניטראט כדי לחזר כימית $NO_3^-$ ל-$NO_2^-$, אם החיידק לא עשה זאת. עוזרת להבדיל בין אי-חיזור לחיזור מלא מעבר לניטריט." },
+            { front: "צביעת גרם", back: "שיטת צביעה דיפרנציאלית במיקרוביולוגיה המשמשת לסיווג ראשוני של חיידקים לשתי קבוצות עיקריות (גרם-חיוביים וגרם-שליליים) על בסיס הרכב דופן התא." },
+            { front: "ספורות (אנדוספורות)", back: "מבנים עמידים הנוצרים על ידי חיידקים מסוימים בתנאי עקה, ומאפשרים להם לשרוד בתנאים קשים." },
+            { front: "קפסולה", back: "שכבה רירית חיצונית המקיפה חיידקים מסוימים, תורמת להגנה מפני פגוציטוזה והתייבשות, ולהיצמדות למשטחים." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי השיטה העיקרית כיום לזיהוי ומיון חיידקים על בסיס קרבה אבולוציונית?",
+                options: ["מורפולוגית המושבה וצביעת גרם", "בדיקות סרולוגיות והרכב חומצות שומן", "ריצוף גן $16S \\text{ rRNA}$ והשוואת הומולוגיה", "יכולת התססת סוכרים וייצור אינדול"],
+                correctAnswer: 2,
+                explanation: "כיום, תהליך הזיהוי והמיון של החיידק מתבצע בעיקר על סמך רצף הגנום כולו או רצף מקטע DNA מסוים המשמש כחתימה של החיידק, כגון רצף הגן $16S \\text{ rRNA}$."
+            },
+            {
+                question: "במבחן התססת סוכרים, מה מציין שינוי צבע של האינדיקטור Bromocresol purple מסגול לצהוב?",
+                options: ["יצירת גז בלבד ללא שינוי חומציות", "ירידה ב-pH עקב יצירת תוצרים חומציים", "עלייה ב-pH עקב צריכת חומצות אורגניות", "הסוכר לא נוצל על ידי החיידק והמצע נשאר ניטרלי"],
+                correctAnswer: 1,
+                explanation: "האינדיקטור Bromocresol purple משנה את צבעו לצהוב כאשר ה-pH יורד מתחת ל-6, דבר המעיד על יצירת חומצה כתוצאה מתסיסת הסוכר."
+            },
+            {
+                question: "איזה אנזים אחראי לפירוק טריפטופן לאינדול?",
+                options: ["קטלאז", "אוקסידאז", "ג'לטינאז", "טריפטופאנאז"],
+                correctAnswer: 3,
+                explanation: "האנזים טריפטופאנאז (tryptophanase) מפרק את החומצה האמינית טריפטופן, בין היתר, לאינדול."
+            },
+            {
+                question: "מהי התוצאה החיובית במבחן קטלאז?",
+                options: ["הופעת צבע כחול על דיסק הבדיקה", "התנזלות מצע הג'לטין לאחר קירור", "הופעת בועיות גז ($O_2$) לאחר הוספת $H_2O_2$", "יצירת טבעת סגולה לאחר הוספת ריאגנט ארליך"],
+                correctAnswer: 2,
+                explanation: "תוצאה חיובית במבחן קטלאז היא הופעת בועיות גז חמצן ($O_2$) מיד לאחר הוספת מי חמצן ($H_2O_2$) לתרבית החיידקים."
+            },
+            {
+                question: "במבחן אוקסידאז, שינוי צבע הדיסק לכחול מעיד על:",
+                options: ["נוכחות האנזים קטלאז המסוגל לפרק מי חמצן", "יכולת החיידק לפרק טריפטופן לאינדול בתנאים מתאימים", "נוכחות האנזים ציטוכרום אוקסידאז בשרשרת מעבר האלקטרונים", "יכולת החיידק לנצל ציטראט כמקור פחמן יחיד ולשנות את רמת החומציות"],
+                correctAnswer: 2,
+                explanation: "שינוי צבע הדיסק לכחול במבחן אוקסידאז מעיד על כך שהחיידק מחמצן את הריאגנט בדיסק, דבר המצביע על נוכחות האנזים ציטוכרום אוקסידאז."
+            },
+            {
+                question: "במבחן ניצול ציטראט, מה גורם לשינוי צבע האינדיקטור Bromothymol blue מירוק לכחול?",
+                options: ["ירידת pH עקב יצירת חומצות מפירוק ציטראט", "עליית pH עקב יצירת תוצרים בסיסיים מפירוק ציטראט", "תגובה ישירה של ציטראט עם האינדיקטור ללא שינוי pH", "חמצון האינדיקטור על ידי תוצרי לוואי מטבוליים של החיידק"],
+                correctAnswer: 1,
+                explanation: "ניצול ציטראט מוביל ליצירת תוצרים בסיסיים (כמו סודיום קרבונט) המעלים את ה-pH של המצע, וגורמים ל-Bromothymol blue לשנות את צבעו מירוק לכחול."
+            },
+            {
+                question: "כיצד מזהים יכולת תנועה של חיידקים במצע אגר מוצק למחצה?",
+                options: ["צמיחה בצורת מושבות בודדות על פני האגר", "התפשטות עכירות מהזריעה לרחבי המצע", "שינוי צבע האגר סביב קו הזריעה בלבד", "יצירת בועות גז הנראות בתוך האגר המוצק"],
+                correctAnswer: 1,
+                explanation: "חיידקים בעלי יכולת תנועה יתפשטו במצע האגר המוצק למחצה, ותיווצר עכירות מפושטת מעבר לקו הדקירה הראשוני."
+            },
+            {
+                question: "מהו תפקידו של האנזים ג'לטינאז?",
+                options: ["לפרק מי חמצן למים וחמצן", "לפרק את החלבון ג'לטין למולקולות קטנות יותר", "לתווך העברת אלקטרונים לחמצן בנשימה אירובית", "לאפשר ניצול ציטראט כמקור פחמן יחיד בתאים חיים"],
+                correctAnswer: 1,
+                explanation: "ג'לטינאז הוא אנזים חוץ-תאי המפרק את החלבון ג'לטין למולקולות קטנות יותר, המשמשות מקור אנרגיה לחיידק."
+            },
+            {
+                question: "במצע תיוגליקולט, היכן יגדלו חיידקים אנאירוביים אובליגטוריים?",
+                options: ["רק בחלק העליון של המבחנה, בנוכחות חמצן", "לכל אורך המבחנה, עם העדפה לחלק העליון", "רק בחלק התחתון של המבחנה, בהיעדר חמצן", "ברצועה צרה מתחת לפני השטח, בריכוז חמצן נמוך"],
+                correctAnswer: 2,
+                explanation: "חיידקים אנאירוביים אובליגטוריים גדלים רק באזורים נטולי חמצן, ולכן במצע תיוגליקולט הם יתרכזו בחלק התחתון של המבחנה."
+            },
+            {
+                question: "במבחן חיזור ניטראט, אם לאחר הוספת ריאגנטים A ו-B לא מתפתח צבע אדום, וגם לאחר הוספת אבקת אבץ לא מתפתח צבע אדום, מהי המסקנה?",
+                options: ["החיידק לא חיזר ניטראט כלל", "החיידק חיזר ניטראט לניטריט בלבד", "החיידק חיזר ניטראט במלואו מעבר לשלב הניטריט (למשל ל-$N_2$)", "הבדיקה אינה תקינה ויש לחזור עליה עם ריאגנטים טריים יותר"],
+                correctAnswer: 2,
+                explanation: "אם אין צבע אדום לאחר A+B, וגם אין צבע אדום לאחר הוספת אבץ, זה מעיד שהניטראט המקורי ($NO_3^-$) חוזר במלואו על ידי החיידק מעבר לשלב הניטריט ($NO_2^-$), לדוגמה לגז חנקן ($N_2$)."
+            },
+            {
+                question: "איזה מהבאים אינו פרמטר לבחינת מורפולוגית החיידק עצמו?",
+                options: ["גודל התא וצורתו", "התארגנות התאים", "ריח המושבה", "נוכחות ספורות או קפסולות"],
+                correctAnswer: 2,
+                explanation: "ריח המושבה הוא פרמטר של מורפולוגית המושבה, ולא של החיידק הבודד."
+            },
+            {
+                question: "מהו תפקידן של מבחנות Durham במבחן התססת סוכרים?",
+                options: ["לשמור על pH קבוע במצע", "לספק חומרי מזון נוספים לחיידק", "לאסוף גזים המשתחררים במהלך התסיסה", "לשמש כביקורת שלילית לבדיקה"],
+                correctAnswer: 2,
+                explanation: "מבחנות Durham הן מבחנות קטנות והפוכות המוכנסות למצע נוזלי כדי ללכוד ולאפשר זיהוי ויזואלי של גזים הנוצרים בתהליך התסיסה."
+            },
+            {
+                question: "מי חמצן ($H_2O_2$) נוצרים בתא כתוצאה מ:",
+                options: ["פירוק אנאירובי של סוכרים בלבד", "תהליכי חיזור שונים, כולל נשימה אירובית", "סינתזת חלבונים בריבוזומים בתא", "פוטוסינתזה בחיידקים מסוימים"],
+                correctAnswer: 1,
+                explanation: "$H_2O_2$ נוצרים בראקציות חיזור שונות בתא, למשל כתוצר סופי בפירוק אירובי של סוכרים, או כתוצר לוואי בשרשרת מעבר האלקטרונים עקב חיזור חמצן מן האוויר."
+            },
+            {
+                question: "באיזה סוג מצע משתמשים בדרך כלל לבדיקת יכולת תנועה של חיידקים?",
+                options: ["מצע נוזלי עשיר בחומרי מזון", "מצע אגר מוצק בריכוז סטנדרטי (1.5% אגר)", "מצע אגר מוצק למחצה (כ-0.25% אגר)", "מצע סלקטיבי המעכב צמיחת חיידקים לא רצויים"],
+                correctAnswer: 2,
+                explanation: "לבדיקת יכולת תנועה משתמשים במצע אגר מוצק למחצה, המאפשר לחיידקים ניידים להתפשט דרכו, בעוד חיידקים לא ניידים יגדלו רק בקו הזריעה."
+            },
+            {
+                question: "מהי דניטריפיקציה?",
+                options: ["תהליך חיזור של סולפט לגז מימן גופריתי", "תהליך חיזור מלא של ניטראט ($NO_3^-$) לגז חנקן ($N_2$) או $N_2O$", "תהליך חמצון של אמוניה לניטריט ולאחר מכן לניטראט", "תהליך קיבוע של חנקן אטמוספרי ($N_2$) לתרכובות אורגניות זמינות"],
+                correctAnswer: 1,
+                explanation: "דניטריפיקציה היא תהליך חיזור מלא של ניטראט ($NO_3^-$) לתוצרים גזיים כמו $N_2O$ או $N_2$ על ידי חיידקים מסוימים בתנאים אנאירוביים."
+            },
+            {
+                question: "איזה אינדיקטור משמש לזיהוי שינוי pH במבחן ניצול ציטראט?",
+                options: ["Bromocresol purple", "Methylene blue", "Phenol red", "Bromothymol blue"],
+                correctAnswer: 3,
+                explanation: "במבחן ניצול ציטראט משתמשים באינדיקטור Bromothymol blue, אשר משנה את צבעו מירוק לכחול כאשר ה-pH עולה עקב ניצול הציטראט."
+            },
+            {
+                question: "קביעת הרכב חומצות שומן בתא החיידק היא דוגמה לשיטת סיווג המבוססת על:",
+                options: ["מורפולוגיה של המושבה", "תכונות פיזיולוגיות וביוכימיות כלליות", "מבחנים סרולוגיים", "הרכב כימי של התא"],
+                correctAnswer: 3,
+                explanation: "מיון על סמך הרכב התא, כגון הרכב חומצות השומן בממברנה, הוא אחת השיטות לסיווג חיידקים."
+            },
+            {
+                question: "מהו התפקיד של ציסטאין וחומצה תיוגליקולית במצע תיוגליקולט?",
+                options: ["לשמש כמקור פחמן עיקרי לחיידקים", "לשמש כחומרים מחזרים המורידים את פוטנציאל החמצון-חיזור", "לשמש כאינדיקטורים לשינויי pH במצע", "לעודד יצירת ספורות בחיידקים מסוימים"],
+                correctAnswer: 1,
+                explanation: "ציסטאין וחומצה תיוגליקולית הם חומרים מחזרים שמוסיפים למצע תיוגליקולט כדי להוריד את פוטנציאל החמצון-חיזור וליצור תנאים אנאירוביים בחלק מהמצע."
+            },
+            {
+                question: "חיידק הגדל רק ברצועה צרה מתחת לפני השטח במצע תיוגליקולט, שם ריכוז החמצן נמוך אך לא אפסי, יסווג כ:",
+                options: ["אנאירובי אובליגטורי", "אירובי אובליגטורי", "מיקרוארופילי", "אנאירובי אוויר-סביל"],
+                correctAnswer: 2,
+                explanation: "חיידקים מיקרוארופילים דורשים ריכוזי חמצן נמוכים מהריכוז האטמוספרי לצמיחתם, ולכן יגדלו ברצועה צרה מתחת לפני השטח במצע תיוגליקולט."
+            },
+            {
+                question: "במבחן חיזור ניטראט, אם לאחר הוספת ריאגנטים A ו-B מתקבל צבע אדום, מה המשמעות?",
+                options: ["החיידק לא חיזר ניטראט כלל והוא נשאר במצע", "החיידק חיזר ניטראט ($NO_3^-$) לניטריט ($NO_2^-$)", "החיידק חיזר ניטראט לגז חנקן ($N_2$) באופן מלא", "תוצאה לא חד משמעית ויש להוסיף אבקת אבץ"],
+                correctAnswer: 1,
+                explanation: "התפתחות צבע אדום לאחר הוספת ריאגנטים A ו-B מעידה על נוכחות ניטריט ($NO_2^-$) במצע, כלומר החיידק חיזר את הניטראט ($NO_3^-$) לניטריט ($NO_2^-$)."
+            },
+            {
+                question: "מהי אחת התכונות של ג'לטין הרלוונטית למבחן פירוק ג'לטין?",
+                options: ["הוא משנה צבע בנוכחות אנזימים פרוטאוליטיים", "הוא מתמצק בטמפרטורות גבוהות מ-30 מעלות צלזיוס", "הוא מתמצק בטמפרטורות נמוכות מ-25 מעלות צלזיוס", "הוא רעיל לרוב סוגי החיידקים ומונע צמיחה"],
+                correctAnswer: 2,
+                explanation: "ג'לטין יוצר ג'ל במים ומתמצק בטמפרטורות נמוכות מ-25 מעלות צלזיוס. פירוקו על ידי ג'לטינאז גורם לאיבוד יכולת זו."
+            },
+            {
+                question: "איזו צורת התארגנות תאים אינה מתוארת בטקסט כדוגמה?",
+                options: ["בודדים", "שרשראות", "סרקצינות (קבוצות תלת-ממדיות)", "זוגות"],
+                correctAnswer: 2,
+                explanation: "הטקסט מזכיר התארגנות תאים בבודדים, בשרשראות, בזוגות, ובקבוצות מסודרות או לא מסודרות. סרקצינות (Sarcinae) הן קבוצות תלת-ממדיות ספציפיות שלא הוזכרו במפורש."
+            },
+            {
+                question: "שימוש בנוגדנים לזיהוי מרכיבים ספציפיים על פני שטח התא הוא הבסיס ל:",
+                options: ["מבחנים מורפולוגיים", "מבחנים ביוכימיים של התססה", "מבחנים סרולוגיים", "מיון על סמך הרכב חומצות שומן"],
+                correctAnswer: 2,
+                explanation: "מבחנים סרולוגיים מבוססים על בדיקת נוכחותם של מרכיבים ספציפיים (אנטיגנים) בעזרת נוגדנים."
+            },
+            {
+                question: "מהו תוצר הפירוק של מי חמצן ($H_2O_2$) על ידי האנזים קטלאז?",
+                options: ["מים ($H_2O$) ופחמן דו-חמצני ($CO_2$)", "מים ($H_2O$) וחמצן גזי ($O_2$)", "מימן גזי ($H_2$) וחמצן גזי ($O_2$)", "חומצה פרובית ואמוניה בתהליך זה"],
+                correctAnswer: 1,
+                explanation: "האנזים קטלאז מפרק מי חמצן ($H_2O_2$) למולקולת מים ($H_2O$) ולמולקולת חמצן גזי ($O_2$)."
+            },
+            {
+                question: "חיידקים פקולטטיביים אנאירוביים במצע תיוגליקולט יגדלו:",
+                options: ["רק בחלק העליון של המבחנה", "רק בחלק התחתון של המבחנה", "לכל אורך המבחנה, לעיתים עם צמיחה טובה יותר למעלה", "רק ברצועה צרה במרכז המבחנה"],
+                correctAnswer: 2,
+                explanation: "חיידקים פקולטטיביים אנאירוביים מסוגלים לגדול הן בנוכחות והן בהיעדר חמצן, ולכן יצמחו לכל אורך המבחנה. לעיתים הצמיחה תהיה טובה יותר בחלק העליון שם נשימה אירובית אפשרית."
+            },
+            {
+                // שאלה 26
+                question: "מהי נומנקלטורה בהקשר של טקסונומיה של חיידקים?",
+                options: ["תהליך זיהוי החיידק על פי תכונותיו המורפולוגיות", "שיטת מתן שמות רשמיים ומדעיים לחיידקים", "התחום העוסק ביצירת כלים להשוואה בין חיידקים שונים", "בדיקת הרצף הגנטי של החיידק לקביעת שיוכו האבולוציוני"],
+                correctAnswer: 1,
+                explanation: "נומנקלטורה היא אחד משני התחומים של טקסונומיה, והיא עוסקת במתן שמות מדעיים לחיידקים (ולאורגניזמים אחרים) על פי כללים מוסכמים."
+            },
+            {
+                // שאלה 27
+                question: "איזה מהבאים הוא דוגמה למבנה פנימי של חיידק הנבדק במסגרת מורפולוגית התא?",
+                options: ["צורת המושבה על פני מצע אגר", "יכולת תנועה באמצעות שוטונים חיצוניים", "נוכחות ספורות (אנדוספורות) בתוך התא", "צבע הפיגמנט המופרש על ידי החיידק"],
+                correctAnswer: 2,
+                explanation: "ספורות (אנדוספורות) הן מבנים פנימיים הנוצרים על ידי חיידקים מסוימים. שוטונים (פלגלות) הם חיצוניים, צורת המושבה ופיגמנט הם מאפייני מושבה."
+            },
+            {
+                // שאלה 28
+                question: "מהי המטרה העיקרית של שימוש ב-Bergey's Manual of Determinative Bacteriology?",
+                options: ["לספק מתכונים מדויקים להכנת מצעי גידול לחיידקים", "להציג את ההתקדמות האחרונה במחקר הגנומי של חיידקים", "לשמש כמקור מידע מקיף למיון וזיהוי בקטריאלי מסורתי ומודרני", "לרכז מידע על מחלות הנגרמות על ידי חיידקים פתוגניים שונים"],
+                correctAnswer: 2,
+                explanation: "Bergey's Manual of Determinative Bacteriology הוא ספר مرכזי המספק מידע מפורט וכלים סיסטמטיים למיון וזיהוי של חיידקים."
+            },
+            {
+                // שאלה 29
+                question: "איזה מהבאים אינו תוצר אופייני של פרמנטציה (תסיסה) בחיידקים?",
+                options: ["חומצות אורגניות כמו חומצה לקטית", "פחמן דו-חמצני ($CO_2$) בתהליך נשימה אירובית", "כהלים כמו אתנול בתהליך זה", "גז מימן ($H_2$) בתהליך זה"],
+                correctAnswer: 1,
+                explanation: "פחמן דו-חמצני ($CO_2$) הוא תוצר עיקרי של נשימה (חמצון מלא), בעוד שפרמנטציה היא חמצון חלקי. למרות ש-$CO_2$ יכול להיווצר גם בפרמנטציות מסוימות, הוא מאפיין יותר נשימה. חומצות, כהלים ומימן הם תוצרים אופייניים לפרמנטציה."
+            },
+            {
+                // שאלה 30
+                question: "מדוע חשוב לא לערבב בוורטקס מבחנות המכילות מצע תיוגליקולט לאחר הזריעה?",
+                options: ["כדי למנוע שקיעה של החיידקים לתחתית המבחנה במהירות", "כדי לא להכניס חמצן למצע ולשבש את גרדיאנט החמצן", "כדי לא לגרום להתפרקות של האינדיקטור Resazurin במצע", "כדי למנוע זיהום של התרבית עם חיידקים מהסביבה החיצונית"],
+                correctAnswer: 1,
+                explanation: "ערבוב בוורטקס יכניס חמצן לכל חלקי המצע וישבש את גרדיאנט החמצן הדרוש לקביעת יחס החיידק לחמצן במבחן זה."
+            }
+        ];
+
+        const tfData = [
+            { question: "טקסונומיה וסיסטמטיקה הן מונחים נרדפים לחלוטין המתארים את אותו תחום מדעי.", answer: false, explanation: "טקסונומיה עוסקת בהגדרה ומיון, בעוד סיסטמטיקה עוסקת ביצירת הכלים להשוואה המשמשים לקביעת הטקסונומיה. הן קשורות אך לא זהות." },
+            { question: "רצף הגן $16S \\text{ rRNA}$ משמש לזיהוי קרבה אבולוציונית בין חיידקים שונים.", answer: true, explanation: "השוואת רצפי $16S \\text{ rRNA}$ היא כלי מרכזי בפילוגנטיקה בקטריאלית." },
+            { question: "מורפולוגית המושבה כוללת את צורת התא הבודד ואת נוכחות הפלגלות.", answer: false, explanation: "מורפולוגית המושבה מתארת מאפיינים של צבר התאים (גודל, צורה, שוליים וכו'), בעוד צורת התא ופלגלות הם חלק ממורפולוגית התא." },
+            { question: "במבחן התססת סוכרים, יצירת גז תמיד מלווה ביצירת חומצה.", answer: false, explanation: "חלק מהחיידקים יוצרים חומצה בלבד, חלק יוצרים חומצה וגז, וחלקם עשויים לא לפרק את הסוכר כלל. אין הכרח שתמיד ייווצר גז עם חומצה." },
+            { question: "ריאגנט ארליך משמש לזיהוי נוכחות האנזים קטלאז.", answer: false, explanation: "ריאגנט ארליך משמש לזיהוי אינדול. קטלאז מזוהה על ידי הוספת $H_2O_2$." },
+            { question: "האנזים קטלאז מפרק מי חמצן ($H_2O_2$) למים ($H_2O$) ולפחמן דו-חמצני ($CO_2$).", answer: false, explanation: "קטלאז מפרק $H_2O_2$ למים ($H_2O$) ולחמצן גזי ($O_2$), לא לפחמן דו-חמצני." },
+            { question: "מבחן אוקסידאז בודק נוכחות של האנזים טריפטופאנאז.", answer: false, explanation: "מבחן אוקסידאז בודק נוכחות של האנזים ציטוכרום אוקסידאז. טריפטופאנאז נבדק במבחן אינדול." },
+            { question: "ניצול ציטראט כמקור פחמן יחיד גורם לירידה ב-pH של המצע.", answer: false, explanation: "ניצול ציטראט מוביל ליצירת תוצרים בסיסיים הגורמים לעלייה ב-pH של המצע." },
+            { question: "בדיקת יכולת תנועה מתבצעת בדרך כלל במצע נוזלי כדי לאפשר תנועה חופשית.", answer: false, explanation: "בדיקת יכולת תנועה מתבצעת במצע אגר מוצק למחצה, המאפשר להבחין בין התפשטות (תנועה) לבין צמיחה מקומית." },
+            { question: "פירוק ג'לטין על ידי ג'לטינאז גורם להתמצקות המצע גם בטמפרטורות גבוהות.", answer: false, explanation: "פירוק ג'לטין גורם להתנזלות המצע, כלומר, הוא מאבד את יכולתו להתמצק בקירור." },
+            { question: "מצע תיוגליקולט מכיל ריכוז גבוה של חמצן לכל אורכו.", answer: false, explanation: "מצע תיוגליקולט מכיל חומרים מחזרים היוצרים גרדיאנט חמצן, עם ריכוז גבוה בפני השטח וריכוז נמוך עד אפסי בתחתית." },
+            { question: "חיידקים אירוביים אובליגטוריים יכולים לגדול רק בהיעדר מוחלט של חמצן.", answer: false, explanation: "חיידקים אירוביים אובליגטוריים דורשים חמצן לצמיחתם ויגדלו רק בנוכחותו." },
+            { question: "דניטריפיקציה היא תהליך חיזור של ניטראט ($NO_3^-$) לניטריט ($NO_2^-$) בלבד.", answer: false, explanation: "דניטריפיקציה היא תהליך חיזור מלא של ניטראט, לרוב עד ליצירת גז חנקן ($N_2$) או $N_2O$, ולא רק לניטריט." },
+            { question: "במבחן חיזור ניטראט, הוספת אבקת אבץ נעשית תמיד לפני הוספת ריאגנטים A ו-B.", answer: false, explanation: "אבקת אבץ מוספת רק אם לא התקבל צבע אדום לאחר הוספת ריאגנטים A ו-B, כדי לבדוק אם נותר ניטראט שלא חוזר." },
+            { question: "צבעו של האינדיקטור Bromocresol purple הוא צהוב בסביבה בסיסית.", answer: false, explanation: "Bromocresol purple הוא צהוב בסביבה חומצית ($pH < 6$) וסגול בסביבה ניטרלית או בסיסית." },
+            { question: "קוקוס (Coccus) הוא צורת חיידק מאורכת דמוית מתג.", answer: false, explanation: "קוקוס הוא חיידק בעל צורה כדורית. מתג (rod/bacillus) הוא חיידק מאורך." },
+            { "question": "במבחן קטלאז, תוצאה שלילית היא היעדר בועות גז לאחר הוספת $H_2O_2$.", "answer": true, "explanation": "תוצאה שלילית במבחן קטלאז פירושה שהחיידק אינו מייצר את האנזים קטלאז, ולכן לא ייווצרו בועות גז ($O_2$) כאשר מוסיפים $H_2O_2$." },
+            { "question": "מצע סימונס ציטראט (Simmons Citrate Agar) מכיל גלוקוז כמקור פחמן עיקרי.", "answer": false, "explanation": "מצע סימונס ציטראט מכיל ציטראט כמקור פחמן יחיד, ולא גלוקוז. הבדיקה נועדה לבדוק את יכולת החיידק לנצל ציטראט." },
+            { "question": "חיידקים אנאירוביים אוויר-סבילים (Aerotolerant anaerobes) אינם משתמשים בחמצן אך גם אינם נפגעים מנוכחותו.", "answer": true, "explanation": "אנאירוביים אוויר-סבילים מבצעים מטבוליזם אנאירובי (לרוב תסיסה) אך מסוגלים לשרוד ולהתרבות בנוכחות חמצן, בניגוד לאנאירוביים אובליגטוריים." },
+            { "question": "הספר Bergey's Manual מתמקד אך ורק בשיטות זיהוי מולקולריות מודרניות של חיידקים.", "answer": false, "explanation": "Bergey's Manual מכסה מגוון רחב של שיטות זיהוי, כולל שיטות מסורתיות (מורפולוגיות, ביוכימיות) לצד שיטות מודרניות יותר." }
+        ];
+
+
+        // --- DOM Elements ---
+        // Study Cards
+        const cardContainer = document.getElementById('study-card-container');
+        const cardElement = document.getElementById('study-card');
+        const cardFrontElement = document.getElementById('study-card-front');
+        const cardBackElement = document.getElementById('study-card-back');
+        const prevCardBtn = document.getElementById('prev-card-btn');
+        const nextCardBtn = document.getElementById('next-card-btn');
+        const cardCounterElement = document.getElementById('card-counter');
+
+        // MCQs
+        const singleMcqView = document.getElementById('single-mcq-view');
+        const mcqQuestionTextElement = document.getElementById('mcq-question-text');
+        const mcqOptionsListElement = document.getElementById('mcq-options-list');
+        const mcqExplanationElement = document.getElementById('mcq-explanation');
+        const prevMcqBtn = document.getElementById('prev-mcq-btn');
+        const nextMcqBtn = document.getElementById('next-mcq-btn');
+        const mcqCounterElement = document.getElementById('mcq-counter');
+        const viewAllMcqsBtn = document.getElementById('view-all-mcqs-btn');
+        const allMcqsContainer = document.getElementById('all-mcqs-container');
+
+        // True/False
+        const singleTfView = document.getElementById('single-tf-view');
+        const tfQuestionTextElement = document.getElementById('tf-question-text');
+        const tfOptionsListElement = document.getElementById('tf-options-list');
+        const tfExplanationElement = document.getElementById('tf-explanation');
+        const prevTfBtn = document.getElementById('prev-tf-btn');
+        const nextTfBtn = document.getElementById('next-tf-btn');
+        const tfCounterElement = document.getElementById('tf-counter');
+        const viewAllTfBtn = document.getElementById('view-all-tf-btn');
+        const allTfContainer = document.getElementById('all-tf-container');
+        
+        // --- State ---
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+        
+        let mcqUserAnswers = new Array(mcqData.length).fill(null);
+        let tfUserAnswers = new Array(tfData.length).fill(null);
+
+        // --- Functions ---
+
+        // Study Card Functions
+        function displayCard(index) {
+            if (index < 0 || index >= studyCardsData.length) return;
+            const card = studyCardsData[index];
+            cardFrontElement.innerHTML = card.front; // Use innerHTML for MathJax
+            cardBackElement.innerHTML = card.back;   // Use innerHTML for MathJax
+            cardElement.classList.remove('is-flipped');
+            cardCounterElement.textContent = `כרטיסיה ${index + 1} / ${studyCardsData.length}`;
+            currentCardIndex = index;
+            // Typeset MathJax for the current card content
+            MathJax.typesetPromise([cardFrontElement, cardBackElement]).catch(err => console.error("MathJax typesetting error for card:", err));
+        }
+
+        function flipCard() {
+            cardElement.classList.toggle('is-flipped');
+        }
+
+        // MCQ Functions
+        function displayMcq(index, targetElementPrefix = '', isAllView = false) {
+            if (index < 0 || index >= mcqData.length) return;
+            const question = mcqData[index];
+            
+            let questionTextEl, optionsListEl, explanationEl;
+
+            if (isAllView) {
+                questionTextEl = document.getElementById(`${targetElementPrefix}-question-text-${index}`);
+                optionsListEl = document.getElementById(`${targetElementPrefix}-options-list-${index}`);
+                explanationEl = document.getElementById(`${targetElementPrefix}-explanation-${index}`);
+            } else { // Single view
+                questionTextEl = mcqQuestionTextElement;
+                optionsListEl = mcqOptionsListElement;
+                explanationEl = mcqExplanationElement;
+                mcqCounterElement.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+                currentMcqIndex = index;
+            }
+
+            if (!questionTextEl || !optionsListEl || !explanationEl) {
+                console.error(`Elements not found for MCQ ${index}, prefix: ${targetElementPrefix}`);
+                return;
+            }
+            
+            questionTextEl.innerHTML = question.question; // Use innerHTML for MathJax
+            optionsListEl.innerHTML = ''; // Clear previous options
+
+            question.options.forEach((option, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = option; // Use innerHTML for MathJax
+                li.dataset.index = i;
+                li.onclick = () => selectMcqOption(index, i, isAllView, targetElementPrefix);
+                optionsListEl.appendChild(li);
+            });
+
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`; // Use innerHTML for MathJax
+            explanationEl.classList.add('hidden');
+            
+            // Restore previous answer state if exists
+            const userAnswer = mcqUserAnswers[index];
+            if (userAnswer !== null) {
+                const options = optionsListEl.querySelectorAll('li');
+                options.forEach(opt => opt.classList.add('disabled'));
+                const selectedOptionEl = options[userAnswer.selectedIndex];
+                if(selectedOptionEl) {
+                    selectedOptionEl.classList.add('selected');
+                    if (userAnswer.isCorrect) {
+                        selectedOptionEl.classList.add('correct');
+                    } else {
+                        selectedOptionEl.classList.add('incorrect');
+                        // Highlight the correct answer
+                        options[question.correctAnswer].classList.add('correct-answer-reveal');
+                    }
+                }
+                explanationEl.classList.remove('hidden');
+            }
+            
+            // Typeset MathJax for the current MCQ content
+            MathJax.typesetPromise([questionTextEl, optionsListEl, explanationEl]).catch(err => console.error("MathJax typesetting error for MCQ:", err));
+        }
+
+        function selectMcqOption(questionIndex, optionIndex, isAllView = false, targetElementPrefix = '') {
+            const question = mcqData[questionIndex];
+            const isCorrect = optionIndex === question.correctAnswer;
+            
+            mcqUserAnswers[questionIndex] = { selectedIndex: optionIndex, isCorrect: isCorrect };
+
+            let optionsListEl, explanationEl;
+            if (isAllView) {
+                optionsListEl = document.getElementById(`${targetElementPrefix}-options-list-${questionIndex}`);
+                explanationEl = document.getElementById(`${targetElementPrefix}-explanation-${questionIndex}`);
+            } else {
+                optionsListEl = mcqOptionsListElement;
+                explanationEl = mcqExplanationElement;
+            }
+            
+            const options = optionsListEl.querySelectorAll('li');
+            options.forEach(opt => opt.classList.add('disabled')); // Disable all options
+
+            const selectedOptionEl = options[optionIndex];
+            selectedOptionEl.classList.add('selected');
+            if (isCorrect) {
+                selectedOptionEl.classList.add('correct');
+            } else {
+                selectedOptionEl.classList.add('incorrect');
+                // Highlight the correct answer
+                options[question.correctAnswer].classList.add('correct-answer-reveal');
+            }
+            explanationEl.classList.remove('hidden');
+        }
+
+        function renderAllMcqs() {
+            allMcqsContainer.innerHTML = ''; // Clear previous
+            mcqData.forEach((mcq, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('question-item');
+                itemDiv.innerHTML = `
+                    <div id="all-mcq-question-text-${index}" class="question-text"></div>
+                    <ul id="all-mcq-options-list-${index}" class="options-list"></ul>
+                    <div id="all-mcq-explanation-${index}" class="explanation hidden"></div>
+                `;
+                allMcqsContainer.appendChild(itemDiv);
+                displayMcq(index, 'all-mcq', true);
+            });
+            allMcqsContainer.style.display = 'block';
+            viewAllMcqsBtn.textContent = 'הסתר את כל השאלות';
+            MathJax.typesetPromise([allMcqsContainer]).catch(err => console.error("MathJax typesetting error for all MCQs:", err));
+
+        }
+        
+        // True/False Functions
+        function displayTf(index, targetElementPrefix = '', isAllView = false) {
+            if (index < 0 || index >= tfData.length) return;
+            const question = tfData[index];
+
+            let questionTextEl, optionsListEl, explanationEl;
+
+            if (isAllView) {
+                questionTextEl = document.getElementById(`${targetElementPrefix}-question-text-${index}`);
+                optionsListEl = document.getElementById(`${targetElementPrefix}-options-list-${index}`);
+                explanationEl = document.getElementById(`${targetElementPrefix}-explanation-${index}`);
+            } else { // Single view
+                questionTextEl = tfQuestionTextElement;
+                optionsListEl = tfOptionsListElement;
+                explanationEl = tfExplanationElement;
+                tfCounterElement.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+                currentTfIndex = index;
+            }
+
+             if (!questionTextEl || !optionsListEl || !explanationEl) {
+                console.error(`Elements not found for T/F ${index}, prefix: ${targetElementPrefix}`);
+                return;
+            }
+
+            questionTextEl.innerHTML = question.question; // Use innerHTML for MathJax
+            optionsListEl.innerHTML = ''; // Clear previous options
+
+            const trueLi = document.createElement('li');
+            trueLi.textContent = 'נכון';
+            trueLi.dataset.value = true;
+            trueLi.onclick = () => selectTfOption(index, true, isAllView, targetElementPrefix);
+            optionsListEl.appendChild(trueLi);
+
+            const falseLi = document.createElement('li');
+            falseLi.textContent = 'לא נכון';
+            falseLi.dataset.value = false;
+            falseLi.onclick = () => selectTfOption(index, false, isAllView, targetElementPrefix);
+            optionsListEl.appendChild(falseLi);
+            
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${question.explanation}`; // Use innerHTML for MathJax
+            explanationEl.classList.add('hidden');
+
+            // Restore previous answer state if exists
+            const userAnswer = tfUserAnswers[index];
+            if (userAnswer !== null) {
+                const options = optionsListEl.querySelectorAll('li');
+                options.forEach(opt => opt.classList.add('disabled'));
+                const selectedOptionEl = userAnswer.selectedValue ? options[0] : options[1];
+                 if(selectedOptionEl){
+                    selectedOptionEl.classList.add('selected');
+                    if (userAnswer.isCorrect) {
+                        selectedOptionEl.classList.add('correct');
+                    } else {
+                        selectedOptionEl.classList.add('incorrect');
+                        // Highlight the correct answer
+                        const correctOptionEl = question.answer ? options[0] : options[1];
+                        correctOptionEl.classList.add('correct-answer-reveal');
+                    }
+                }
+                explanationEl.classList.remove('hidden');
+            }
+
+            // Typeset MathJax for the current T/F question content
+            MathJax.typesetPromise([questionTextEl, optionsListEl, explanationEl]).catch(err => console.error("MathJax typesetting error for T/F:", err));
+        }
+
+        function selectTfOption(questionIndex, selectedValue, isAllView = false, targetElementPrefix = '') {
+            const question = tfData[questionIndex];
+            const isCorrect = selectedValue === question.answer;
+
+            tfUserAnswers[questionIndex] = { selectedValue: selectedValue, isCorrect: isCorrect };
+            
+            let optionsListEl, explanationEl;
+            if (isAllView) {
+                optionsListEl = document.getElementById(`${targetElementPrefix}-options-list-${questionIndex}`);
+                explanationEl = document.getElementById(`${targetElementPrefix}-explanation-${questionIndex}`);
+            } else {
+                optionsListEl = tfOptionsListElement;
+                explanationEl = tfExplanationElement;
+            }
+
+            const options = optionsListEl.querySelectorAll('li');
+            options.forEach(opt => opt.classList.add('disabled')); // Disable all options
+
+            const selectedOptionEl = selectedValue ? options[0] : options[1]; // True is first, False is second
+            selectedOptionEl.classList.add('selected');
+            if (isCorrect) {
+                selectedOptionEl.classList.add('correct');
+            } else {
+                selectedOptionEl.classList.add('incorrect');
+                 // Highlight the correct answer
+                const correctOptionEl = question.answer ? options[0] : options[1];
+                correctOptionEl.classList.add('correct-answer-reveal');
+            }
+            explanationEl.classList.remove('hidden');
+        }
+        
+        function renderAllTf() {
+            allTfContainer.innerHTML = ''; // Clear previous
+            tfData.forEach((tf, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('question-item');
+                itemDiv.innerHTML = `
+                    <div id="all-tf-question-text-${index}" class="question-text"></div>
+                    <ul id="all-tf-options-list-${index}" class="options-list"></ul>
+                    <div id="all-tf-explanation-${index}" class="explanation hidden"></div>
+                `;
+                allTfContainer.appendChild(itemDiv);
+                displayTf(index, 'all-tf', true);
+            });
+            allTfContainer.style.display = 'block';
+            viewAllTfBtn.textContent = 'הסתר את כל השאלות';
+            MathJax.typesetPromise([allTfContainer]).catch(err => console.error("MathJax typesetting error for all T/F:", err));
+        }
+
+        // --- Event Listeners ---
+        // Cards
+        cardElement.addEventListener('click', flipCard);
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) displayCard(currentCardIndex - 1);
+        });
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < studyCardsData.length - 1) displayCard(currentCardIndex + 1);
+        });
+
+        // MCQs
+        prevMcqBtn.addEventListener('click', () => {
+            if (currentMcqIndex > 0) displayMcq(currentMcqIndex - 1);
+        });
+        nextMcqBtn.addEventListener('click', () => {
+            if (currentMcqIndex < mcqData.length - 1) displayMcq(currentMcqIndex + 1);
+        });
+        viewAllMcqsBtn.addEventListener('click', () => {
+            if (allMcqsContainer.style.display === 'none') {
+                renderAllMcqs();
+            } else {
+                allMcqsContainer.style.display = 'none';
+                viewAllMcqsBtn.textContent = 'הצג את כל השאלות';
+            }
+        });
+
+        // True/False
+        prevTfBtn.addEventListener('click', () => {
+            if (currentTfIndex > 0) displayTf(currentTfIndex - 1);
+        });
+        nextTfBtn.addEventListener('click', () => {
+            if (currentTfIndex < tfData.length - 1) displayTf(currentTfIndex + 1);
+        });
+        viewAllTfBtn.addEventListener('click', () => {
+            if (allTfContainer.style.display === 'none') {
+                renderAllTf();
+            } else {
+                allTfContainer.style.display = 'none';
+                viewAllTfBtn.textContent = 'הצג את כל השאלות';
+            }
+        });
+        
+        // --- Initial Load ---
+        function initializeContentAndTypeset() {
+            console.log("Initializing content and typesetting...");
+            displayCard(0);
+            displayMcq(0);
+            displayTf(0);
+            
+            // The MathJax.startup.ready function in the <head> already calls MathJax.typesetPromise()
+            // after this function. If it didn't, we would call it here:
+            // MathJax.typesetPromise().catch(err => console.error("Initial MathJax typesetting error:", err));
+            // However, due to the setup, MathJax.startup.defaultReady() handles the initial typesetting pass.
+            // If MathJax calls are needed within display functions for dynamically added content *after* initial load,
+            // they are already included in those functions.
+            // For the initial load, the structure is: MathJax ready -> initializeContentAndTypeset -> MathJax.startup.defaultReady (which includes typesetting)
+        }
+
+        // The call to initializeContentAndTypeset is made from MathJax.startup.ready
+        // ensuring MathJax is loaded before content population and typesetting.
+    </script>
+</body>
+</html>

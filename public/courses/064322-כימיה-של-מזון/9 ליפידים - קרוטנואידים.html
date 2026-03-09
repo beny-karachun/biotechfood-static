@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>כלי עזר ללמידה: קרוטנואידים בכימיה של מזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "קרוטנואידים", definition: "קבוצת פיגמנטים ליפופיליים (מסיסי שומן) טבעיים, האחראים לצבעים צהוב, כתום ואדום בצמחים רבים. בנויים כימית מ-40 אטומי פחמן (8 יחידות איזופרן)." },
+            { term: "קרוטנים (Carotenes)", definition: "תת-קבוצה של קרוטנואידים שהם פחמימנים טהורים, ללא אטומי חמצן. דוגמאות בולטות כוללות בטא-קרוטן וליקופן." },
+            { term: "קסנתופילים (Xanthophylls)", definition: "תת-קבוצה של קרוטנואידים המכילה אטומי חמצן בקבוצות פונקציונליות כגון הידרוקסיל, קטו או אפוקסי. דוגמאות כוללות לוטאין, זאקסנטין ואסטקסנטין." },
+            { term: "פיגמנטים מסייעים (Accessory pigments)", definition: "פיגמנטים כמו קרוטנואידים אשר קולטים אור באורכי גל שכלורופיל אינו קולט ביעילות, ומעבירים את האנרגיה הנקלטת אל הכלורופיל לצורך פוטוסינתזה." },
+            { term: "הגנה פוטו-כימית (Photoprotection)", definition: "אחד מתפקידיהם המרכזיים של קרוטנואידים בצמחים, בו הם מגינים על מולקולות כלורופיל מנזקי חמצון הנגרמים מעודף אור וחמצן, בעיקר על ידי נטרול חמצן סינגלט." },
+            { term: "כיבוי חמצן סינגלט (Singlet Oxygen Quenching)", definition: "מנגנון הגנה בו קרוטנואיד מנטרל מולקולת חמצן סינגלט (מצב מעורר וריאקטיבי) והופך אותה לחמצן טריפלט (מצב יסוד, פחות מזיק), תוך שהוא עצמו מתחמם ופולט את האנרגיה כחום." },
+            { term: "פרו-ויטמין A", definition: "תרכובת שהגוף יכול להפוך לוויטמין A. בטא-קרוטן הוא הפרו-ויטמין A החשוב ביותר מבין הקרוטנואידים. ההמרה מתרחשת במעי." },
+            { term: "זמינות ביולוגית (Bioavailability)", definition: "המידה שבה רכיב תזונתי משתחרר מהמזון, נספג וזמין לשימוש הגוף. הזמינות של קרוטנואידים נמוכה יחסית ומשתפרת על ידי עיבוד תרמי וצריכה עם שומן." },
+            { term: "אסטקסנטין (Astaxanthin)", definition: "קסנתופיל המשמש כפיגמנט עיקרי בדגים וסרטנאים. צבעו כחול כשהוא קשור לחלבון, והופך לאדום לאחר דנטורציה של החלבון בחום." },
+            { term: "אורז זהוב (Golden Rice)", definition: "זן אורז מהונדס גנטית המייצר בטא-קרוטן באנדוספרם (החלק האכיל). פותח במטרה להילחם בחסר בוויטמין A באוכלוסיות נזקקות." },
+            { term: "איזומריזציה טרנס-ציס", definition: "שינוי מבני בקשרים הכפולים של קרוטנואידים, בעיקר מצורת טרנס היציבה לצורת ציס. תהליך זה מואץ על ידי חום, אור וחומצות, ולרוב גורם לירידה בפעילות פרו-ויטמין A." },
+            { term: "ליקופן (Lycopene)", definition: "קרוטן בעל צבע אדום עז, המצוי בריכוז גבוה בעגבניות ובאבטיח. הוא נוגד חמצון חזק, אך אינו בעל פעילות פרו-ויטמין A." }
+        ];
+
+        const mcqData = [
+            { question: "מהי הסיבה הכימית המרכזית לכך שבישול לובסטר הופך את צבעו מכחלחל לאדום עז?", options: ["החום גורם לדנטורציה של החלבון הקשור לאסטקסנטין, ומשחרר את הפיגמנט האדום החופשי.", "תגובת מייאר בין חלבוני השריר לסוכרים יוצרת את הצבע האדום בטמפרטורה גבוהה.", "החום מחמצן פיגמנט חסר צבע והופך אותו לאסטקסנטין אדום.", "הקרוטנואידים הכחולים מתפרקים בחום, ונחשפים פיגמנטים אדומים שהיו מוסווים מתחתם."], correctIndex: 0, explanation: "אסטקסנטין קשור במצבו הטבעי לחלבון, מה שגורם לקומפלקס להיות בצבע כחול. חימום גורם לדנטורציה של החלבון ומשחרר את האסטקסנטין החופשי, שצבעו אדום." },
+            { question: "איזה מהמשפטים הבאים אינו מתאר נכונה את תפקיד הקרוטנואידים בפוטוסינתזה?", options: ["הם מרחיבים את טווח אורכי הגל הנקלטים לצורך פוטוסינתזה.", "הם מעבירים אנרגיה ישירות למסלול ייצור הסוכרים, ועוקפים את הכלורופיל.", "הם מגינים על כלורופיל מנזקי חמצון הנגרמים מעודף אור וחמצן.", "הם מבצעים העברת אנרגיה מסוג סינגלט-סינגלט אל הבקטריוכלורופיל."], correctIndex: 1, explanation: "קרוטנואידים הם פיגמנטים מסייעים; הם אינם יכולים להעביר אנרגיה ישירות למסלול הפוטוסינתטי, אלא חייבים להעביר את האנרגיה שקלטו אל הכלורופיל." },
+            { question: "מהו ההבדל הכימי המבני העיקרי בין קרוטנים (Carotenes) לקסנתופילים (Xanthophylls)?", options: ["לקסנתופילים יש קבוצות קצה טבעתיות, בעוד שלקרוטנים אין.", "קרוטנים הם פחמימנים טהורים, בעוד שקסנתופילים מכילים אטומי חמצן.", "קרוטנים מורכבים מ-40 פחמנים, וקסנתופילים מ-30 פחמנים.", "לקרוטנים יש קשרים כפולים מצומדים, ולקסנתופילים אין."], correctIndex: 1, explanation: "ההגדרה הבסיסית המבדילה בין שתי הקבוצות היא נוכחות חמצן. קסנתופילים הם נגזרות מחומצנות של קרוטנים." },
+            { question: "במטרה לשפר את הזמינות הביולוגית של קרוטנואידים מגזר חי, מהי הפעולה המומלצת ביותר?", options: ["אכילת הגזר עם כמות קטנה של שמן זית ובישול קצר.", "אחסון הגזר במקרר לפני האכילה.", "צריכת הגזר עם מיץ לימון כדי למנוע חמצון.", "אכילת הגזר על קיבה ריקה לספיגה מרבית."], correctIndex: 0, explanation: "הזמינות הביולוגית של קרוטנואידים משתפרת על ידי שבירת המטריצה הצמחית (עיבוד תרמי) ונוכחות של שומן בתזונה, המסייע לספיגתם במעי." },
+            { question: "איזה מהבאים אינו תוצר חמצון טיפוסי של קרוטנואידים?", options: ["אפוקסידים", "תרכובות נדיפות", "חומצות שומן חופשיות", "כהלים ואיזומרי ציס"], correctIndex: 2, explanation: "תוצרי חמצון של קרוטנואידים כוללים אפוקסידים, תרכובות נדיפות, כהלים, ואיזומרי ציס. חומצות שומן חופשיות הן תוצר של הידרוליזה של טריגליצרידים, לא של חמצון קרוטנואידים." },
+            { question: "כיצד קרוטנואידים מונעים נזק מתגובות פוטו-הרסניות בנוכחות חמצן?", options: ["על ידי העברת אנרגיה ממצב טריפלט מעורר של כלורופיל אל הקרוטנואיד.", "על ידי תחרות עם כלורופיל על קליטת אור השמש.", "על ידי יצירת קומפלקס יציב עם חמצן מולקולרי.", "על ידי הפחתת טמפרטורת הרקמה הצמחית."], correctIndex: 0, explanation: "בנוכחות חמצן, כלורופיל מעורר יכול ליצור חמצן סינגלט מזיק. קרוטנואידים יכולים לקבל את עודף האנרגיה מהכלורופיל המעורר (העברת טריפלט-טריפלט), ובכך למנוע את יצירת חמצן הסינגלט מלכתחילה." },
+            { question: "מהי מטרתו העיקרית של אורז זהוב (Golden Rice)?", options: ["להילחם בחסר של ויטמין A באוכלוסיות בסיכון.", "לשפר את טעמו ומרקמו של אורז מסורתי.", "לספק מקור חלבון איכותי יותר לאוכלוסיות צמחוניות.", "להגדיל את יבולי האורז העולמיים באמצעות עמידות למזיקים."], correctIndex: 0, explanation: "אורז זהוב פותח באמצעות הנדסה גנטית כדי לייצר בטא-קרוטן, פרו-ויטמין A, בחלק האכיל של האורז, במטרה לספק ויטמין זה לאוכלוסיות הסובלות מחסר תזונתי." },
+            { question: "איזה מהתהליכים הבאים יגרום ככל הנראה לאובדן הגדול ביותר של פעילות פרו-ויטמין A בבטא-קרוטן תוך שמירה יחסית על הצבע הכתום?", options: ["איזומריזציה מטרנס לציס הנגרמת מחימום דרסטי.", "חמצון מוחלט של המולקולה בנוכחות אוויר.", "הקפאה מהירה של המוצר.", "חליטה (Blanching) קצרה במים רותחים."], correctIndex: 0, explanation: "חימום, חשיפה לממסים אורגניים או חומצות גורמים לאיזומריזציה מטרנס לציס. תהליך זה מפחית משמעותית את פעילות פרו-ויטמין A, אך לרוב אינו גורם לאובדן צבע דרמטי כמו חמצון." },
+            { question: "איזה מהבאים אינו נכון לגבי תכונותיהם הפיזיקליות של קרוטנואידים?", options: ["הם ליפופיליים ומסיסים בממסים אורגניים.", "הם מסיסים היטב במים קרים.", "רובם בעלי מבנה לינארי וסימטרי.", "ניתן להפרידם באמצעות כרומטוגרפיה נוזלית בעלת ביצועים גבוהים (HPLC)."], correctIndex: 1, explanation: "קרוטנואידים הם מולקולות ליפופיליות (מסיסות בשומן) ולכן אינן מסיסות במים, שהם ממס פולארי." },
+            { question: "מדוע צבעם של עלים ירוקים הופך לצהוב-כתום בסתיו?", options: ["הכלורופיל הירוק מתפרק, וחושף את הקרוטנואידים הצהובים-כתומים שהיו קיימים בעלה כל הזמן.", "הטמפרטורות הנמוכות גורמות לקרוטנואידים לשנות את צבעם מירוק לכתום.", "הצמח מייצר קרוטנואידים חדשים כהכנה לחורף.", "הכלורופיל עובר המרה כימית לקרוטנואידים."], correctIndex: 0, explanation: "במהלך האביב והקיץ, הכלורופיל הירוק נמצא בריכוז גבוה וממסך את צבעם של הקרוטנואידים. בסתיו, הכלורופיל מתפרק ראשון, מה שמאפשר לפיגמנטים הצהובים והכתומים להיראות." },
+            { question: "בהקשר של תהליך הבשלת עגבנייה, איזה שינוי אנזימטי מרכזי מוביל להצטברות ליקופן?", options: ["ירידה בפעילות האנזים ליקופן בטא-ציקלאז.", "עלייה בפעילות האנזים פיטואן דסאטוראז בלבד.", "ירידה בפעילות האנזים פיטואן סינתאז.", "הפעלה של אנזימי כלורופילאז המפרקים כלורופיל."], correctIndex: 0, explanation: "במהלך ההבשלה, יש עלייה בביטוי האנזימים פיטואן סינתאז ופיטואן דסאטוראז (המייצרים ליקופן), ובמקביל יש ירידה בפעילות האנזים ליקופן בטא-ציקלאז, שהיה הופך את הליקופן לקרוטנואידים מורכבים יותר כמו בטא-קרוטן." },
+            { question: "איזה מהקרוטנואידים הבאים אינו בעל פעילות פרו-ויטמין A משמעותית?", options: ["אלפא-קרוטן", "בטא-קרוטן", "בטא-קריפטוקסנטין", "ליקופן"], correctIndex: 3, explanation: "ליקופן, למרות היותו נוגד חמצון חזק, חסר את מבנה טבעת הבטא-יונון הדרוש להמרה לוויטמין A בגוף האדם." },
+            { question: "מהי הסכנה העיקרית בצריכה עודפת של ויטמין A ממקורות של מזון מהחי (preformed vitamin A), בניגוד לצריכת קרוטנואידים ממקור צמחי?", options: ["ויטמין A מהחי עלול להיות רעיל בכמויות גבוהות, בעוד שקרוטנואידים אינם רעילים.", "קרוטנואידים עלולים לגרום לעיוורון לילה בעודף, בניגוד לוויטמין A.", "ויטמין A מהחי פחות זמין ביולוגית מקרוטנואידים.", "אין הבדל משמעותי בסכנות בין שני המקורות."], correctIndex: 0, explanation: "ויטמין A פעיל (רטינול) הוא מסיס שומן ונאגר בכבד. צריכה עודפת שלו עלולה להוביל לרעילות (היפרוויטמינוזיס A). לעומת זאת, הגוף מווסת את הפיכת הקרוטנואידים לוויטמין A, ולכן צריכה עודפת שלהם אינה גורמת לרעילות, אלא לכל היותר לקרוטנודרמיה (צביעת העור בכתום)." },
+            { question: "איזה מהבאים מתאר את המנגנון העיקרי שבו קרוטנואידים פועלים כנוגדי חמצון מסוג singlet oxygen quencher?", options: ["הם תורמים אלקטרון לחמצן הסינגלט ומנטרלים אותו.", "הם סופגים את האנרגיה העודפת מהחמצן הסינגלט ופולטים אותה כחום.", "הם מתחברים כימית לחמצן הסינגלט ויוצרים תרכובת יציבה.", "הם מזרזים את פירוק חמצן הסינגלט למים."], correctIndex: 1, explanation: "במנגנון כיבוי פיזיקלי, הקרוטנואיד סופח את האנרגיה ממולקולת החמצן המעוררת (סינגלט), הופך אותה לחמצן במצב היסוד (טריפלט), ופולט את האנרגיה העודפת כחום, ללא שינוי כימי קבוע לקרוטנואיד." },
+            { question: "פגיעה פיזית ברקמה צמחית (כמו חיתוך גזר) גורמת לשני תהליכים מנוגדים. מהם?", options: ["היא מפחיתה חמצון אך גם מפחיתה זמינות ביולוגית.", "היא מגבירה חשיפה לחמצון אך משפרת את הזמינות הביולוגית.", "היא גורמת לאיבוד צבע מיידי אך משמרת את ערך הוויטמין A.", "היא משפרת את המסיסות במים אך פוגעת במסיסות בשומן."], correctIndex: 1, explanation: "פגיעה פיזית שוברת את הקומפרטמנטליזציה בתאים, חושפת את הקרוטנואידים לאנזימים מחמצנים ולחמצן, מה שמגביר את הרגישות לחמצון. במקביל, שבירת דפנות התא משחררת את הקרוטנואידים מהמטריצה, מה שיכול לשפר את הזמינות הביולוגית שלהם במהלך העיכול." },
+            { question: "איזה גורם אינו מאיץ חמצון של קרוטנואידים במזון?", options: ["נוכחות יוני מתכת כמו ברזל ונחושת.", "פעילות האנזים ליפוקסיגנאז על חומצות שומן רב בלתי רוויות.", "אריזה כהה ואטומה לחמצן.", "חשיפה לאור וחום."], correctIndex: 2, explanation: "אריזה כהה ואטומה לחמצן היא שיטה למניעת חמצון, שכן היא מפחיתה את החשיפה לגורמים המזרזים את התהליך: אור וחמצן. יוני מתכת ורדיקלים הנוצרים מפעילות ליפוקסיגנאז הם פרו-אוקסידנטים." },
+            { question: "ריכוז הלוטאין והזאקסנטין בחלמון ביצה תלוי באופן משמעותי ב-:", options: ["גיל התרנגולת.", "זמן בישול הביצה.", "תזונת התרנגולת.", "גזע התרנגולת."], correctIndex: 2, explanation: "בעלי חיים אינם מסוגלים לסנתז קרוטנואידים. לכן, פרופיל הקרוטנואידים בחלמון הביצה (ובשומן של בעלי חיים אחרים) תלוי ישירות במקורות הקרוטנואידים במזון שהם צורכים." },
+            { question: "איזה מהתהליכים הבאים הוא דוגמה לייצוב צבע של ירקות המכילים קרוטנואידים לפני הקפאה?", options: ["הוספת מלח.", "חליטה (Blanching).", "השריה בשמן.", "ייבוש חלקי."], correctIndex: 1, explanation: "חליטה היא חימום קצר הגורם לאינאקטיבציה של אנזימים, כולל אנזימים מחמצנים כמו ליפוקסיגנאז, שיכולים לגרום לאובדן צבע במהלך אחסון בהקפאה. הקפאה ללא חליטה עלולה להוביל לאובדן צבע." },
+            { question: "מדוע הוספת גזר לא מבושל לשמן טיגון עשויה, תיאורטית, למנוע את חמצון השמן?", options: ["הקרוטן בגזר מתחמצן בקלות רבה יותר מהשמן ופועל כנוגד חמצון.", "הגזר סופח את יוני המתכת מהשמן.", "הגזר מקרר את השמן ומונע הגעה לטמפרטורת חמצון.", "הסיבים התזונתיים בגזר קושרים את החמצן המומס בשמן."], correctIndex: 0, explanation: "קרוטנואידים הם נוגדי חמצון יעילים שיכולים להגיב עם רדיקלים חופשיים. הם יכולים לפעול כ'קורבן' ולהתחמצן במקום חומצות השומן בשמן, ובכך לעכב את תחילת תהליך החמצון של השמן." },
+            { question: "מה ההסבר לכך שצריכה גבוהה מאוד של גזר עלולה לגרום לעור להפוך לכתום, אך לא גורמת לרעילות?", options: ["בטא-קרוטן רעיל רק כאשר הוא נצרך עם אלכוהול.", "הגוף הופך את כל הבטא-קרוטן לוויטמין A באופן מיידי.", "עודפי בטא-קרוטן שאינם הופכים לוויטמין A נאגרים בעור, וההמרה לוויטמין A מבוקרת.", "הצבע הכתום נובע מתגובה אלרגית ולא מרעילות."], correctIndex: 2, explanation: "הגוף מווסת את פעילות האנזים שהופך בטא-קרוטן לוויטמין A. כאשר יש מספיק ויטמין A, קצב ההמרה יורד. עודפי הבטא-קרוטן שאינם מומרים נאגרים ברקמות שומן, כולל בעור, ומקנים לו גוון כתום (קרוטנודרמיה), אך זו אינה תופעה רעילה." },
+            { question: "איזה מהבאים אינו תפקיד ביולוגי של קרוטנואידים?", options: ["הגנה פוטו-כימית בצמחים.", "משיכת בעלי חיים להאבקה והפצת זרעים.", "פעילות כפרו-ויטמין A בבני אדם.", "השתתפות ישירה בסינתזת חלבונים."], correctIndex: 3, explanation: "קרוטנואידים מעורבים בפוטוסינתזה, צבע, ותזונה, אך אין להם תפקיד ישיר בסינתזת חלבונים, שהיא תהליך המתרחש בריבוזומים על בסיס מידע מ-RNA." },
+            { question: "תהליך זיכוך שמן צמחי כולל שלב של הלבנה (bleaching). מהי אחת ההשפעות של שלב זה?", options: ["הסרת קרוטנואידים ופיגמנטים אחרים מהשמן.", "הגברת ריכוז נוגדי החמצון הטבעיים.", "הפיכת חומצות שומן טרנס לציס.", "הוספת קרוטנואידים לשמן למטרות צבע."], correctIndex: 0, explanation: "שלב ההלבנה בתהליך זיכוך שמן נועד להסיר פיגמנטים לא רצויים, כולל כלורופיל וקרוטנואידים, כדי לקבל שמן בעל צבע ניטרלי." },
+            { question: "איזה מהמזונות הבאים הוא מקור עשיר במיוחד בלוטאין וזאקסנטין, החשובים לבריאות העין?", options: ["עגבניות ואבטיח", "תרד, קייל וחלמון ביצה", "גזר ובטטה", "שמן זית ושמן דקלים"], correctIndex: 1, explanation: "ירקות עליים ירוקים כהים (כמו תרד וקייל) וחלמון ביצה הם מהמקורות העשירים ביותר ללוטאין וזאקסנטין, שני קסנתופילים המצטברים ברשתית העין ומסייעים בהגנה מפני נזקי אור." },
+            { question: "המבנה הבסיסי של כל הקרוטנואידים הוא שלד של 40 פחמנים הנוצר מ-:", options: ["4 יחידות של טרפן בן 10 פחמנים.", "8 יחידות של איזופרן בנות 5 פחמנים.", "2 יחידות של דיטרפן בנות 20 פחמנים.", "פולימריזציה של חומצה אצטית."], correctIndex: 1, explanation: "קרוטנואידים שייכים למשפחת הטרפנואידים. הם בנויים מ-8 יחידות של איזופרן (מולקולה בעלת 5 פחמנים), המחוברות ליצירת שרשרת של 40 פחמנים." },
+            { question: "מהי המשמעות של העובדה שקרוטנואידים הם 'מטבוליטים שניוניים' בצמחים?", options: ["הם אינם חיוניים להישרדות הבסיסית של התא הצמחי.", "הם נוצרים רק בשלב השני של הפוטוסינתזה.", "הם קיימים בריכוזים נמוכים מאוד בהשוואה לסוכרים.", "הם נוצרים בתהליכים שאינם דורשים אנזימים."], correctIndex: 0, explanation: "מטבוליטים ראשוניים (כמו סוכרים, חומצות אמינו) חיוניים לגדילה והתפתחות בסיסית. מטבוליטים שניוניים, כמו קרוטנואידים, אינם חיוניים ישירות להישרדות התא, אך מעניקים יתרונות אקולוגיים כמו הגנה, צבע למשיכת מאביקים ועוד." },
+            { question: "איזה מהמשפטים הבאים מתאר בצורה הטובה ביותר את תופעת האיזומריזציה של קרוטנואידים?", options: ["זהו תהליך בלתי הפיך של פירוק המולקולה לחלקים קטנים יותר.", "זהו שינוי הפיך של המבנה המרחבי סביב קשר כפול, ללא שינוי בהרכב האטומי.", "זהו תהליך של הוספת קבוצת הידרוקסיל למולקולה, ההופך קרוטן לקסנתופיל.", "זהו תהליך של יצירת טבעות בקצוות השרשרת הפחמימנית."], correctIndex: 1, explanation: "איזומריזציה היא שינוי בקונפורמציה של המולקולה. במקרה של קרוטנואידים, מדובר בעיקר במעבר בין איזומר טרנס לאיזומר ציס סביב אחד מהקשרים הכפולים. ההרכב האטומי נשאר זהה." },
+            { question: "האצה דונליאלה (Dunaliella) הגדלה בתנאי מליחות ועקה גבוהים, מייצרת כמויות גדולות של בטא-קרוטן. מה התפקיד העיקרי של הבטא-קרוטן באצה זו?", options: ["לשמש כמקור אנרגיה חלופי.", "להגנה מפני קרינת UV וחמצון.", "לשנות את לחצה האוסמוטי של האצה.", "לשמש כחומר מוצא לסינתזת דופן התא."], correctIndex: 1, explanation: "בתנאי עקה כמו קרינת UV חזקה, האצה מייצרת בטא-קרוטן כפיגמנט מגן. הבטא-קרוטן בולע חלק מהקרינה ופועל כנוגד חמצון רב עוצמה המגן על תא האצה מנזקי חמצון." },
+            { question: "איזה מהטיפולים הבאים אינו צפוי להגביר את קצב פירוק הקרוטנואידים במוצר מזון?", options: ["אחסון פתיתי גזר מיובשים בשקית שקופה על מדף מואר.", "טיגון עמוק של פלפל אדום בשמן משומש.", "הוספת חומצת לימון למיץ גזר.", "גלייזינג של גזר עם עמילן לפני ייבוש."], correctIndex: 3, explanation: "גלייזינג, או ציפוי בעמילן, יוצר שכבת מגן המפחיתה את המגע של הקרוטנואידים עם חמצן ואור, ובכך מסייעת בשימורם במהלך הייבוש והאחסון. כל שאר האפשרויות חושפות את הקרוטנואידים לחום, אור, חמצן או חומצה, המזרזים את פירוקם." },
+            { question: "בעת הבשלת עגבנייה מירוקה לאדומה, איזה מהבאים אינו מתרחש?", options: ["ריכוז הליקופן עולה באופן דרמטי.", "ריכוז בטא-קרוטן ולוטאין, שהיו קיימים בשלב הירוק, יורד.", "סינתזה מוחלטת של כל הקרוטנואידים מאפס.", "פירוק של כלורופיל."], correctIndex: 2, explanation: "בשלב הירוק, העגבנייה כבר מכילה קרוטנואידים כמו בטא-קרוטן ולוטאין. תהליך ההבשלה כולל שינוי במסלולים הביוסינתטיים: ייצור ליקופן מוגבר והמרה מופחתת של ליקופן לקרוטנואידים אחרים, אך הוא אינו מתחיל מסינתזה מוחלטת מאפס." },
+            { question: "צריכה עודפת של איזה מהבאים עלולה להוביל למצב של רעילות כרונית, כולל בחילות, כאבי ראש ופגיעה בכבד?", options: ["לוטאין ממקור של תרד", "ליקופן מעגבניות", "ויטמין A (רטינול) מכבד דג", "בטא-קרוטן מתוסף תזונה"], correctIndex: 2, explanation: "ויטמין A בצורתו הפעילה (רטינול), הנמצא במזונות מהחי כמו כבד, הוא רעיל בכמויות גבוהות מכיוון שהגוף אוגר אותו בכבד. קרוטנואידים כמו לוטאין, ליקופן ובטא-קרוטן אינם נחשבים רעילים גם בכמויות גבוהות." },
+            { question: "מהי הסיבה שבגללה הוספת קסנתופילים למזון לעופות (כמו תרנגולות מטילות) היא פרקטיקה נפוצה בתעשייה?", options: ["כדי לחזק את המערכת החיסונית של העופות.", "כדי להעניק לחלמון הביצה צבע צהוב-כתום עז יותר.", "כדי להאריך את חיי המדף של הביצים.", "כדי להגדיל את גודל הביצים."], correctIndex: 1, explanation: "הצבע של חלמון הביצה נקבע על ידי הקרוטנואידים, בעיקר קסנתופילים, בתזונת התרנגולת. הצרכנים מקשרים צבע חלמון עז עם איכות, ולכן יצרנים מוסיפים קסנתופילים (כמו לוטאין) למזון כדי להשיג את הצבע הרצוי." },
+            { question: "איזה היגד אינו נכון לגבי תכונות נוגדות החמצון של קרוטנואידים?", options: ["הם יעילים במיוחד בנטרול רדיקלים חופשיים.", "הם יכולים למנוע חמצון של שומנים בטמפרטורות גבוהות.", "יעילותם כנוגדי חמצון קשורה למערכת הקשרים הכפולים המצומדים.", "חמצון הקרוטנואידים עצמם תמיד מוביל לאובדן מוחלט של הצבע."], correctIndex: 3, explanation: "בעוד שחמצון קרוטנואידים גורם לאובדן צבע (bleaching), תהליכים אחרים כמו איזומריזציה טרנס-ציס יכולים לפגוע בפעילות הביולוגית (כמו פרו-ויטמין A) מבלי לגרום לאובדן צבע משמעותי." },
+            { question: "היכן בגוף האדם מתרחשת בעיקר ההמרה של בטא-קרוטן לוויטמין A (רטינול)?", options: ["בכבד", "בריריות המעי (מוקוזה)", "ברשתית העין", "בתאי העור"], correctIndex: 1, explanation: "האנזים בטא-קרוטן דיאוקסיגנאז, האחראי לביקוע מולקולת הבטא-קרוטן לשתי מולקולות רטינל (שהופך לרטינול), נמצא בעיקר בתאי רירית המעי הדק." },
+            { question: "פיטואן (Phytoene) הוא קודמן (precursor) ביוסינתטי של כל הקרוטנואידים. מה מאפיין אותו מבחינת צבע?", options: ["הוא בעל צבע צהוב חזק.", "הוא בעל צבע אדום עז.", "הוא חסר צבע.", "צבעו משתנה בהתאם לרמת החומציות."], correctIndex: 2, explanation: "לפיטואן יש רק שלושה קשרים כפולים מצומדים, מספר קטן מדי כדי לבלוע אור בתחום הנראה. לכן, הוא חסר צבע. הצבע של קרוטנואידים נובע ממערכת ארוכה של קשרים כפולים מצומדים (כרומופור)." },
+            { question: "איזה מהקרוטנואידים הבאים, הנמצא בפלפל אדום (פפריקה), הוא קסנתופיל?", options: ["אלפא-קרוטן", "בטא-קרוטן", "קפסנטין", "ליקופן"], correctIndex: 2, explanation: "קפסנטין הוא הקסנתופיל העיקרי המעניק לפפריקה את צבעה האדום. הוא מכיל קבוצות קטו והידרוקסיל, מה שהופך אותו לקסנתופיל על פי ההגדרה." }
+        ];
+
+        const tfData = [
+            { question: "קרוטנואידים יכולים להעביר אנרגיית אור שנקלטה ישירות למסלול הפוטוסינתטי לייצור סוכרים.", answer: false, explanation: "קרוטנואידים הם פיגמנטים מסייעים. הם חייבים להעביר את האנרגיה שקלטו למולקולת כלורופיל, ורק הכלורופיל יכול להעביר את האנרגיה למסלול ייצור הסוכרים." },
+            { question: "כל הקרוטנואידים הם בעלי פעילות של פרו-ויטמין A.", answer: false, explanation: "רק כ-50 סוגי קרוטנואידים, בעיקר בטא-קרוטן, אלפא-קרוטן ובטא-קריפטוקסנטין, יכולים להפוך לוויטמין A. לליקופן, למשל, אין פעילות כזו." },
+            { question: "נוכחות יוני מתכת מעכבת את חמצון הקרוטנואידים במזון.", answer: false, explanation: "יוני מתכת פועלים כפרו-אוקסידנטים, כלומר הם מזרזים ומאיצים את תהליכי החמצון של קרוטנואידים וליפידים אחרים." },
+            { question: "צבעו של אסטקסנטין כשהוא קשור לחלבון בסרטן חי הוא אדום.", answer: false, explanation: "כאשר אסטקסנטין קשור לחלבון (crustacyanin), צבע הקומפלקס הוא כחול-אפרפר. הצבע האדום מתקבל רק לאחר שהחלבון עובר דנטורציה בחום והאסטקסנטין משתחרר." },
+            { question: "טיפול תרמי, כמו בישול, תמיד פוגע בזמינות הביולוגית של קרוטנואידים.", answer: false, explanation: "טיפול תרמי עדין והומוגניזציה יכולים לשפר את הזמינות הביולוגית על ידי שבירת דפנות התא ושחרור הקרוטנואידים מהמטריצה הצמחית. עם זאת, חימום יתר עלול לגרום לפירוקם." },
+            { question: "קרוטנים הם נגזרות מחומצנות של קסנתופילים.", answer: false, explanation: "ההפך הוא הנכון. קסנתופילים הם נגזרות מחומצנות (המכילות חמצן) של קרוטנים (שהם פחמימנים טהורים)." },
+            { question: "אורז זהוב הוא זן אורז טבעי שנמצא באסיה העשיר בבטא-קרוטן.", answer: false, explanation: "אורז זהוב הוא תוצר של הנדסה גנטית. הוחדרו אליו גנים המאפשרים ייצור של בטא-קרוטן באנדוספרם, החלק האכיל של האורז, שבאופן טבעי אינו מכיל אותו." },
+            { question: "חליטת ירקות (Blanching) לפני הקפאה נועדה בעיקר להרוס ויטמינים.", answer: false, explanation: "חליטה נועדה לנטרל אנזימים (כמו ליפוקסיגנאז) שיכולים לגרום לאובדן צבע, טעם וערך תזונתי במהלך האחסון בהקפאה. היא דווקא משמרת את איכות המוצר." },
+            { question: "צריכה עודפת של גזר עלולה לגרום לרעילות ויטמין A.", answer: false, explanation: "צריכה עודפת של בטא-קרוטן מגזר אינה גורמת לרעילות, מכיוון שהגוף מווסת את הפיכתו לוויטמין A. העודף נאגר בעור וגורם לצבע כתום (קרוטנודרמיה), שאינו מזיק." },
+            { question: "הצבע האדום של עגבניות נובע מריכוז גבוה של בטא-קרוטן.", answer: false, explanation: "הצבע האדום של עגבניות נובע בעיקר מליקופן. עגבניות מכילות גם בטא-קרוטן, אך בריכוז נמוך בהרבה." },
+            { question: "קרוטנואידים מסיסים היטב בשומנים ובשמנים.", answer: true, explanation: "קרוטנואידים הם מולקולות ליפופיליות (מסיסות שומן) בשל השרשרת הפחמימנית הארוכה והלא-קוטבית שלהם." },
+            { question: "מנגנון ההגנה העיקרי של קרוטנואידים מפני חמצן סינגלט הוא תגובה כימית שמשנה את מבנה הקרוטנואיד לצמיתות.", answer: false, explanation: "המנגנון העיקרי הוא כיבוי פיזיקלי (physical quenching), שבו הקרוטנואיד סופג את האנרגיה מהחמצן ופולט אותה כחום, וחוזר למצבו המקורי ללא שינוי כימי." },
+            { question: "איזומריזציה מטרנס לציס של בטא-קרוטן מגבירה את פעילותו כפרו-ויטמין A.", answer: false, explanation: "איזומר הטרנס הוא הפעיל ביותר ביולוגית. המעבר לאיזומרי ציס, הנגרם מחום או אור, מפחית משמעותית את הפעילות של פרו-ויטמין A." },
+            { question: "האדם, כמו צמחים, מסוגל לסנתז קרוטנואידים בעצמו.", answer: false, explanation: "בעלי חיים, כולל בני אדם, אינם מסוגלים לסנתז קרוטנואידים וחייבים לקבל אותם מהתזונה, בעיקר ממקורות צמחיים." },
+            { question: "ככל שיש יותר קשרים כפולים מצומדים במולקולת קרוטנואיד, כך צבעה נוטה להיות יותר אדום.", answer: true, explanation: "מערכת הקשרים הכפולים המצומדים (הכרומופור) היא שקובעת את בליעת האור. ככל שהמערכת ארוכה יותר, היא בולעת אור באורכי גל ארוכים יותר, והצבע הנראה לעין נע מצהוב לכתום ולאדום." },
+            { question: "הוספת סיבים תזונתיים לארוחה משפרת את ספיגת הקרוטנואידים.", answer: false, explanation: "נוכחות סיבים תזונתיים נמצאה כבעלת השפעה שלילית על הזמינות הביולוגית של קרוטנואידים, ככל הנראה על ידי לכידתם במטריצת הסיבים ומניעת ספיגתם." },
+            { question: "ניתן להשתמש בלוטאין ובזאקסנטין כתוספי צבע במזון לעופות כדי להשפיע על צבע החלמון.", answer: true, explanation: "אכן, קסנתופילים אלו מוספים באופן חוקי למזון לעופות כדי להעניק לחלמון הביצה את הגוון הצהוב-כתום הרצוי על ידי הצרכנים." },
+            { question: "ליקופן הוא דוגמה לקסנתופיל.", answer: false, explanation: "ליקופן הוא פחמימן טהור (C40H56) ללא אטומי חמצן, ולכן הוא מסווג כקרוטן, לא כקסנתופיל." },
+            { question: "דהידת צבע בפפריקה טחונה במהלך אחסון היא דוגמה לחמצון של קרוטנואידים.", answer: true, explanation: "הצבע האדום של הפפריקה נובע מקפסנטין וקפסורובין. חשיפה לאור וחמצן גורמת לחמצון של פיגמנטים אלו, מה שמוביל לפירוקם ולאובדן הצבע האופייני (bleaching)." },
+            { question: "תהליך זיכוך שמן צמחי בדרך כלל מעלה את ריכוז הקרוטנואידים במוצר הסופי.", answer: false, explanation: "תהליך הזיכוך, ובמיוחד שלב ההלבנה (bleaching), נועד להסיר פיגמנטים, כולל קרוטנואידים, מהשמן כדי לקבל מוצר ניטרלי בצבעו." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

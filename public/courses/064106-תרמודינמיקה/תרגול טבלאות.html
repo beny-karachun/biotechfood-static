@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermo Table Trainer</title>
+    
+    <!-- Load MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['\\(','\\)']],
+          processEscapes: true
+        }
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+
+    <!-- Icons (Lucide) - We will use SVGs directly in HTML for zero dependencies -->
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --green-light: #dcfce7;
+            --green-border: #22c55e;
+            --green-text: #15803d;
+            --red-light: #fee2e2;
+            --red-border: #ef4444;
+            --red-text: #b91c1c;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 672px; /* max-w-2xl */
+            margin: 0 auto;
+            padding: 1.5rem;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Header */
+        .header-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .btn-text:hover { color: var(--primary); }
+
+        .streak-badge {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-sub);
+        }
+        .streak-count { color: var(--green-text); font-weight: 700; }
+
+        /* Menu */
+        .menu-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .menu-header h1 {
+            color: #1e3a8a; /* blue-900 */
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .menu-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .menu-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+        .menu-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: #93c5fd;
+        }
+        .menu-icon {
+            padding: 0.75rem;
+            background: #f1f5f9;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-card:hover .menu-icon { background: #eff6ff; }
+        .menu-content h3 { margin: 0 0 0.25rem 0; font-size: 1.125rem; color: var(--text-main); }
+        .menu-content p { margin: 0; font-size: 0.875rem; color: var(--text-sub); line-height: 1.5; }
+
+        /* Game Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .card-header {
+            background: #eff6ff; /* blue-50 */
+            border-bottom: 1px solid #dbeafe;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-label {
+            color: #1e40af;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .card-body { padding: 2rem; }
+        
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 640px) {
+            .options-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .option-btn {
+            padding: 1rem;
+            font-size: 1.125rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #60a5fa;
+            background: #eff6ff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .option-btn:disabled { cursor: default; }
+
+        /* Feedback States */
+        .btn-correct { background-color: var(--green-light) !important; border-color: var(--green-border) !important; color: var(--green-text) !important; }
+        .btn-incorrect { background-color: var(--red-light) !important; border-color: var(--red-border) !important; color: var(--red-text) !important; opacity: 0.7; }
+        .btn-disabled { opacity: 0.5; background-color: #f8fafc; border-color: var(--border); }
+
+        /* Feedback Area */
+        .feedback-area {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .fb-correct { background: var(--green-light); border-color: var(--green-border); }
+        .fb-incorrect { background: var(--red-light); border-color: var(--red-border); }
+        
+        .fb-header { display: flex; gap: 1rem; align-items: flex-start; }
+        .fb-icon { padding: 0.25rem; border-radius: 9999px; }
+        .fb-icon.correct { background: #dcfce7; color: #15803d; }
+        .fb-icon.incorrect { background: #fee2e2; color: #b91c1c; }
+        
+        .fb-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .fb-title.correct { color: #166534; }
+        .fb-title.incorrect { color: #991b1b; }
+
+        .fb-details { margin-bottom: 1rem; white-space: pre-line; color: var(--text-main); line-height: 1.5; }
+        .exact-val-box {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-sub);
+            margin-bottom: 1rem;
+        }
+
+        .next-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .next-btn:hover { background: #f8fafc; }
+
+        /* Footer */
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+        .history-list {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        .history-item {
+            flex-shrink: 0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+        .h-correct { background: var(--green-light); border-color: #bbf7d0; color: #15803d; }
+        .h-incorrect { background: var(--red-light); border-color: #fecaca; color: #991b1b; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none !important; }
+        .hint { text-align: center; color: var(--text-sub); font-style: italic; font-size: 0.875rem; margin-top: 1rem;}
+    </style>
+</head>
+<body>
+
+    <!-- App Container -->
+    <div id="app">
+        
+        <!-- Header -->
+        <div class="header-bar" id="header" style="display:none;">
+            <button class="btn-text" id="btn-back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> 
+                Back to Menu
+            </button>
+            <div id="mode-title" style="font-weight: 600;">Mode</div>
+            <div class="streak-badge">Streak: <span class="streak-count" id="streak-disp">0</span></div>
+        </div>
+
+        <div class="container">
+            
+            <!-- Menu View -->
+            <div id="menu-view">
+                <div class="menu-header">
+                    <h1>
+                        <!-- Book Icon SVG -->
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        Thermo Table Trainer
+                    </h1>
+                    <p style="color: var(--text-sub);">Select a training module based on Tables 1.1 - 1.5</p>
+                </div>
+                <div class="menu-grid" id="menu-grid">
+                    <!-- Menu items injected by JS -->
+                </div>
+                
+                <div style="margin-top: 3rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.5rem;">
+                    <h3 style="margin:0 0 0.5rem 0; font-size: 1rem;">How to use</h3>
+                    <p style="margin:0; font-size: 0.875rem; color: var(--text-sub);">
+                        Select a module to start practicing. You will be presented with Multiple Choice questions generated from your PDF data.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Game View -->
+            <div id="game-view" class="hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-label">Exercise</span>
+                        <span style="font-size: 0.75rem; color: #60a5fa;">Based on Select Data</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="question-text" class="question-text">Loading...</div>
+                        
+                        <div id="options-grid" class="options-grid">
+                            <!-- Options injected here -->
+                        </div>
+
+                        <div id="feedback-area" class="hidden">
+                            <!-- Feedback injected here -->
+                        </div>
+
+                        <div id="hint-area" class="hint"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div style="max-width: 672px; margin: 0 auto;">
+                <div style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Session History</div>
+                <div class="history-list" id="history-list">
+                    <span>No questions attempted yet.</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- DATA ---
+        const DATA = {
+          sat_temp: [
+            { t: 10, p: 1.2276, vf: 0.001000, vg: 106.38, uf: 42.00, ug: 2389.2, ufg: 2347.2, hf: 42.01, hfg: 2477.7, hg: 2519.8, sf: 0.1510, sg: 8.9008 },
+            { t: 50, p: 12.349, vf: 0.001012, vg: 12.03, uf: 209.32, ug: 2443.5, ufg: 2234.2, hf: 209.33, hfg: 2382.7, hg: 2592.1, sf: 0.7038, sg: 8.0763 },
+            { t: 100, p: 101.35, vf: 0.001044, vg: 1.6729, uf: 418.94, ug: 2506.5, ufg: 2087.6, hf: 419.04, hfg: 2257.0, hg: 2676.1, sf: 1.3069, sg: 7.3549 },
+            { t: 150, p: 475.8, vf: 0.001091, vg: 0.3928, uf: 631.68, ug: 2559.5, ufg: 1927.8, hf: 632.20, hfg: 2114.3, hg: 2746.5, sf: 1.8418, sg: 6.8379 },
+            { t: 200, p: 1553.8, vf: 0.001157, vg: 0.12736, uf: 850.65, ug: 2595.3, ufg: 1744.7, hf: 852.45, hfg: 1940.7, hg: 2793.2, sf: 2.3309, sg: 6.4323 },
+            { t: 250, p: 3973, vf: 0.001251, vg: 0.05013, uf: 1080.39, ug: 2602.4, ufg: 1522.0, hf: 1085.36, hfg: 1716.2, hg: 2801.5, sf: 2.7927, sg: 6.0730 },
+            { t: 300, p: 8581, vf: 0.001404, vg: 0.02167, uf: 1332.0, ug: 2563.0, ufg: 1231.0, hf: 1344.0, hfg: 1404.9, hg: 2749.0, sf: 3.2534, sg: 5.7045 },
+          ],
+          sat_press: [
+            { p: 10, t: 45.81, vf: 0.001010, vg: 14.67, uf: 191.82, ug: 2437.9, ufg: 2246.1, hf: 191.83, hfg: 2392.8, hg: 2584.7, sf: 0.6493, sg: 8.1502 },
+            { p: 100, t: 99.63, vf: 0.001043, vg: 1.6940, uf: 417.36, ug: 2506.1, ufg: 2088.7, hf: 417.46, hfg: 2258.0, hg: 2675.5, sf: 1.3026, sg: 7.3594 },
+            { p: 500, t: 151.86, vf: 0.001093, vg: 0.3749, uf: 639.68, ug: 2561.2, ufg: 1921.6, hf: 640.23, hfg: 2108.5, hg: 2748.7, sf: 1.8607, sg: 6.8213 },
+            { p: 1000, t: 179.91, vf: 0.001127, vg: 0.19444, uf: 761.68, ug: 2583.6, ufg: 1822.0, hf: 762.81, hfg: 2015.3, hg: 2778.1, sf: 2.1387, sg: 6.5865 },
+            { p: 4000, t: 250.40, vf: 0.001252, vg: 0.04978, uf: 1082.3, ug: 2602.3, ufg: 1520.0, hf: 1087.31, hfg: 1714.1, hg: 2801.4, sf: 2.7964, sg: 6.0701 },
+          ],
+          superheat: [
+            { p: 0.1, t: 150, v: 1.9364, u: 2582.8, h: 2776.4, s: 7.6134 },
+            { p: 0.1, t: 300, v: 2.639, u: 2810.4, h: 3074.3, s: 8.2158 },
+            { p: 0.1, t: 500, v: 3.565, u: 3131.6, h: 3488.1, s: 8.8342 },
+            { p: 0.5, t: 200, v: 0.4249, u: 2642.9, h: 2855.4, s: 6.9665 },
+            { p: 0.5, t: 400, v: 0.6173, u: 2963.2, h: 3271.9, s: 7.7938 },
+            { p: 0.5, t: 600, v: 0.8041, u: 3299.6, h: 3701.7, s: 8.2674 },
+            { p: 1.0, t: 200, v: 0.2060, u: 2621.9, h: 2827.9, s: 6.6940 },
+            { p: 1.0, t: 300, v: 0.2579, u: 2793.2, h: 3051.2, s: 7.1229 },
+            { p: 1.0, t: 400, v: 0.3066, u: 2957.3, h: 3263.9, s: 7.4651 },
+            { p: 4.0, t: 300, v: 0.05884, u: 2725.3, h: 2960.7, s: 6.3615 },
+            { p: 4.0, t: 450, v: 0.08002, u: 3010.2, h: 3330.3, s: 6.9363 },
+            { p: 4.0, t: 600, v: 0.09885, u: 3279.1, h: 3674.4, s: 7.3688 },
+          ],
+          compressed: [
+            // Corrected Data from Table 1.4
+            // P = 5 MPa
+            { p: 5, t: 100, v: 0.0010410, u: 417.52, h: 422.72, s: 1.3030 },
+            { p: 5, t: 200, v: 0.0011530, u: 848.1, h: 853.9, s: 2.3255 },
+            // P = 10 MPa
+            { p: 10, t: 100, v: 0.0010385, u: 416.12, h: 426.50, s: 1.2992 },
+            { p: 10, t: 200, v: 0.0011480, u: 844.5, h: 856.0, s: 2.3178 },
+            // P = 15 MPa (This was previously mislabelled as P=10)
+            { p: 15, t: 100, v: 0.0010361, u: 414.74, h: 430.28, s: 1.2955 },
+            { p: 15, t: 200, v: 0.0011433, u: 841.0, h: 858.2, s: 2.3104 },
+          ],
+          solid_vapor: [
+            { t: 0.01, p: 0.6113, hig: 2501.4, h_sub: 2834.8 },
+            { t: -10, p: 0.2602, hig: 2501.0, h_sub: 2837.0 },
+            { t: -20, p: 0.1035, hig: 2500.0, h_sub: 2838.4 },
+            { t: -30, p: 0.0381, hig: 2499.0, h_sub: 2839.0 },
+          ]
+        };
+
+        const MODES = {
+            'SAT_SIMPLE': 'Saturated (Simple Lookup)',
+            'SAT_QUALITY': 'Saturated (Quality Calc)',
+            'SUPERHEAT': 'Superheated Vapor',
+            'COMPRESSED': 'Compressed Liquid',
+            'SOLID': 'Solid-Vapor (Ice)',
+            'MIX': 'Mix Mode (Random Challenge)'
+        };
+
+        // --- STATE ---
+        let currentMode = 'MENU';
+        let question = null;
+        let streak = 0;
+        let history = [];
+        let feedbackShown = false;
+
+        // --- UTILS ---
+        const fmt = (num) => {
+            if (num === 0) return "0";
+            return Number(num).toFixed(10).replace(/\.?0+$/, "");
+        };
+
+        const randRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const sym = (key) => {
+            const map = {
+                vf: 'v_f', vg: 'v_g', hf: 'h_f', hfg: 'h_{fg}', hg: 'h_g', sf: 's_f', sg: 's_g',
+                uf: 'u_f', ug: 'u_g', ufg: 'u_{fg}',
+                v: 'v', u: 'u', h: 'h', s: 's',
+                'm³/kg': 'm^3/kg',
+                'kJ/kg·K': 'kJ/kg \\cdot K',
+                'kJ/kg': 'kJ/kg',
+                'h_sub': 'h_{sub}',
+                'h_ig': 'h_{ig}'
+            };
+            return map[key] || key;
+        };
+
+        const refreshMath = () => {
+            if (window.MathJax && window.MathJax.Hub) {
+                // We queue a typeset for the whole app container for simplicity
+                window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub, "app"]);
+            }
+        };
+
+        // --- LOGIC ---
+        function generateOptions(correctVal) {
+            // 1. Format correct value first to determine expected precision
+            const correctStr = fmt(correctVal);
+            
+            // 2. Count decimal places from the formatted string
+            let precision = 0;
+            if (correctStr.includes('.')) {
+                precision = correctStr.split('.')[1].length;
+            }
+
+            const opts = new Set();
+            opts.add(correctStr);
+
+            let safety = 0;
+            while(opts.size < 4 && safety < 50) {
+                safety++;
+                const variance = (Math.random() - 0.5) * 0.3; 
+                let distractor = correctVal * (1 + variance);
+                
+                // Add tiny offset for small numbers to avoid rounding collision
+                if (Math.abs(correctVal) < 0.1) {
+                    distractor += (Math.random() - 0.5) * 0.01;
+                }
+
+                // 3. Format distractor with EXACT same precision as correct answer
+                const distStr = distractor.toFixed(precision);
+                
+                if (distStr !== correctStr) {
+                    opts.add(distStr);
+                }
+            }
+            
+            // Fallbacks if variance loop fails (still respecting precision)
+            if (opts.size < 4) opts.add((correctVal + 1).toFixed(precision));
+            if (opts.size < 4) opts.add((correctVal + 2).toFixed(precision));
+            if (opts.size < 4) opts.add((correctVal + 5).toFixed(precision));
+
+            return Array.from(opts).sort(() => Math.random() - 0.5);
+        }
+
+        function createQuestion(mode) {
+            let targetMode = mode;
+            if (mode === 'MIX') {
+                const keys = ['SAT_SIMPLE', 'SAT_QUALITY', 'SUPERHEAT', 'COMPRESSED', 'SOLID'];
+                targetMode = keys[randRange(0, keys.length - 1)];
+            }
+
+            let q = {};
+            let ans = 0;
+
+            switch (targetMode) {
+                case 'SAT_SIMPLE': {
+                    const isTemp = Math.random() > 0.5;
+                    const table = isTemp ? DATA.sat_temp : DATA.sat_press;
+                    const row = table[randRange(0, table.length - 1)];
+                    const givenProp = isTemp ? 'Temperature (T)' : 'Pressure (P)';
+                    const givenVal = isTemp ? `\\( ${row.t} ^\\circ C \\)` : `\\( ${row.p} \\text{ kPa} \\)`;
+                    const keys = ['vf', 'vg', 'hf', 'hfg', 'hg', 'sf', 'sg'];
+                    const key = keys[randRange(0, keys.length - 1)];
+                    ans = row[key];
+                    q = {
+                        text: `For Saturated Water at ${givenProp} = ${givenVal}, find \\( ${sym(key)} \\).`,
+                        hint: `Look at Table ${isTemp ? '1.1 (Temp)' : '1.2 (Pressure)'}.`,
+                        explanation: `At ${givenProp}=${givenVal}, read the column for \\( ${sym(key)} \\).`
+                    };
+                    break;
+                }
+                case 'SAT_QUALITY': {
+                    const row = DATA.sat_press[randRange(0, DATA.sat_press.length - 1)];
+                    const x = Number(Math.random().toFixed(2));
+                    const prop = ['h', 'u', 's'][randRange(0, 2)];
+                    
+                    const fVal = row[`${prop}f`];
+                    // Correction logic priority: explicit ufg/hfg -> implicit g-f
+                    const fgVal = row[`${prop}fg`] || (row[`${prop}g`] - fVal);
+                    
+                    ans = fVal + x * fgVal;
+                    
+                    const fDisp = fVal;
+                    const gDisp = row[`${prop}g`];
+                    const fgDisp = fmt(fgVal);
+                    
+                    q = {
+                        text: `Saturated Mixture at \\( P = ${row.p} \\text{ kPa} \\) with Quality \\( x = ${x} \\). Calculate \\( ${sym(prop)} \\).`,
+                        hint: `Use formula: \\( ${sym(prop)} = ${sym(prop+'f')} + x \\cdot ${sym(prop+'fg')} \\) (Table 1.2)`,
+                        explanation: `At \\( P=${row.p} \\text{ kPa} \\):<br/>\\( ${sym(prop+'f')} = ${fDisp} \\)<br/>\\( ${sym(prop+'g')} = ${gDisp} \\)<br/>\\( ${sym(prop+'fg')} = ${fgDisp} \\)<br/>Calculation: \\( ${fDisp} + (${x} \\cdot ${fgDisp}) = ${fmt(ans)} \\)`
+                    };
+                    break;
+                }
+                case 'SUPERHEAT': {
+                    const row = DATA.superheat[randRange(0, DATA.superheat.length - 1)];
+                    const key = ['v', 'u', 'h', 's'][randRange(0, 3)];
+                    ans = row[key];
+                    q = {
+                        text: `Superheated Vapor at \\( P = ${row.p} \\text{ MPa} \\) and \\( T = ${row.t} ^\\circ C \\). Find \\( ${sym(key)} \\).`,
+                        hint: `Look at Table 1.3 (Superheated) in the \\( P=${row.p} \\text{ MPa} \\) block.`,
+                        explanation: `Locate the pressure block for \\( ${row.p} \\text{ MPa} \\), then find the row for \\( T=${row.t}^\\circ C \\).`
+                    };
+                    break;
+                }
+                case 'COMPRESSED': {
+                    const row = DATA.compressed[randRange(0, DATA.compressed.length - 1)];
+                    const key = ['v', 'u', 'h', 's'][randRange(0, 3)];
+                    ans = row[key];
+                    q = {
+                        text: `Compressed Liquid at \\( P = ${row.p} \\text{ MPa} \\) and \\( T = ${row.t} ^\\circ C \\). Find \\( ${sym(key)} \\).`,
+                        hint: `Look at Table 1.4 (Compressed Liquid).`,
+                        explanation: `Locate \\( P=${row.p} \\text{ MPa} \\) and \\( T=${row.t}^\\circ C \\) in Table 1.4.`
+                    };
+                    break;
+                }
+                case 'SOLID': {
+                    const row = DATA.solid_vapor[randRange(0, DATA.solid_vapor.length - 1)];
+                    ans = row.h_sub || (row.hig + 333);
+                    q = {
+                        text: `Saturated Solid-Vapor (Ice) at \\( T = ${row.t} ^\\circ C \\). Find Enthalpy of Sublimation \\( (h_{sub} \\text{ or } h_{ig}) \\).`,
+                        hint: `Look at Table 1.5 (Solid-Vapor).`,
+                        explanation: `At \\( T=${row.t}^\\circ C \\), read the Enthalpy of Sublimation column (\\( h_{ig} \\) or \\( h_{sub} \\)).`
+                    };
+                    break;
+                }
+            }
+            q.answer = ans;
+            q.options = generateOptions(ans);
+            return q;
+        }
+
+        function handleAnswer(selectedVal) {
+            if (feedbackShown) return;
+            feedbackShown = true;
+
+            const isCorrect = (selectedVal === fmt(question.answer));
+            
+            // UI Feedback
+            const feedbackEl = document.getElementById('feedback-area');
+            feedbackEl.classList.remove('hidden');
+            feedbackEl.className = 'feedback-area ' + (isCorrect ? 'fb-correct' : 'fb-incorrect');
+            
+            const title = isCorrect ? 'Correct!' : 'Incorrect.';
+            const titleClass = isCorrect ? 'correct' : 'incorrect';
+            
+            // Update Feedback Content
+            feedbackEl.innerHTML = `
+                <div class="fb-header">
+                    <div class="fb-icon ${titleClass}">
+                        ${isCorrect 
+                            ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' 
+                            : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+                    </div>
+                    <div>
+                        <div class="fb-title ${titleClass}">${title}</div>
+                        <div class="fb-details">${question.explanation}</div>
+                        <div class="exact-val-box">Exact Table Value: <strong>${fmt(question.answer)}</strong></div>
+                        <button class="next-btn" onclick="nextQuestion()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                            Next Question
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Style options
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(btn => {
+                const btnVal = btn.getAttribute('data-val');
+                if (btnVal === fmt(question.answer)) {
+                    btn.classList.add('btn-correct');
+                } else if (btnVal === selectedVal && !isCorrect) {
+                    btn.classList.add('btn-incorrect');
+                } else {
+                    btn.classList.add('btn-disabled');
+                }
+                btn.disabled = true;
+            });
+
+            // Update Stats
+            if (isCorrect) streak++; else streak = 0;
+            document.getElementById('streak-disp').textContent = streak;
+
+            // History
+            const qSummary = question.text.split('find')[0] + '...';
+            history.unshift({ summary: qSummary, correct: isCorrect, time: new Date().toLocaleTimeString() });
+            history = history.slice(0, 10);
+            renderHistory();
+            refreshMath();
+        }
+
+        function nextQuestion() {
+            startMode(currentMode);
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            if (history.length === 0) {
+                container.innerHTML = '<span>No questions attempted yet.</span>';
+                return;
+            }
+            container.innerHTML = history.map(h => `
+                <div class="history-item ${h.correct ? 'h-correct' : 'h-incorrect'}">
+                    <span>${h.summary}</span>
+                    <span style="margin:0 4px;">${h.correct ? '✓' : '✗'}</span>
+                    <span style="opacity:0.6;">| ${h.time}</span>
+                </div>
+            `).join('');
+            refreshMath();
+        }
+
+        // --- VIEWS ---
+        function startMode(modeKey) {
+            currentMode = modeKey;
+            question = createQuestion(modeKey);
+            feedbackShown = false;
+
+            // Show Game View
+            document.getElementById('menu-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('header').style.display = 'flex';
+            document.getElementById('mode-title').textContent = MODES[modeKey];
+
+            // Render Question
+            document.getElementById('question-text').innerHTML = question.text;
+            document.getElementById('hint-area').innerHTML = `Hint: ${question.hint}`;
+            
+            // Render Options
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = question.options.map(opt => `
+                <button class="option-btn" data-val="${opt}" onclick="handleAnswer('${opt}')">
+                    ${opt}
+                </button>
+            `).join('');
+
+            // Hide Feedback
+            document.getElementById('feedback-area').classList.add('hidden');
+            
+            refreshMath();
+        }
+
+        function showMenu() {
+            currentMode = 'MENU';
+            document.getElementById('menu-view').classList.remove('hidden');
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('header').style.display = 'none';
+        }
+
+        // --- INIT ---
+        function init() {
+            // Render Menu Items
+            const menuGrid = document.getElementById('menu-grid');
+            const menuItems = [
+                { id: 'MIX', title: 'Mix Mode (Random Challenge)', desc: 'Test your knowledge across all table types in a single session.', color: 'indigo', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>' },
+                { id: 'SAT_SIMPLE', title: 'Saturated Water', desc: 'Practice finding properties (\\( v, u, h, s \\)) using Temperature (1.1) and Pressure (1.2) tables.', color: 'blue', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M12 2.69l5.74 5.74c.98.98 1.51 2.27 1.51 3.66 0 2.87-2.33 5.2-5.2 5.2s-5.2-2.33-5.2-5.2c0-1.39.53-2.68 1.51-3.66L12 2.69z"/></svg>' },
+                { id: 'SAT_QUALITY', title: 'Quality Calculations', desc: 'Calculate properties for mixtures inside the saturation dome using \\( x \\) (Quality).', color: 'purple', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>' },
+                { id: 'SUPERHEAT', title: 'Superheated Vapor', desc: 'Lookup properties for steam at high temperatures from Table 1.3.', color: 'orange', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.243-2.143.706-3.138.682-1.463 2.143-2.657 2.794-6.362z"/></svg>' },
+                { id: 'COMPRESSED', title: 'Compressed Liquid', desc: 'High pressure scenarios from Table 1.4.', color: 'red', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' },
+                { id: 'SOLID', title: 'Solid-Vapor (Ice)', desc: 'Sublimation zone properties from Table 1.5.', color: 'cyan', icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-500"><polygon points="12 2 15 8.5 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 9 8.5 12 2"/></svg>' }
+            ];
+
+            menuGrid.innerHTML = menuItems.map(item => `
+                <div class="menu-card" onclick="startMode('${item.id}')">
+                    <div class="menu-icon">${item.icon}</div>
+                    <div class="menu-content">
+                        <h3>${item.title}</h3>
+                        <p>${item.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Back button logic
+            document.getElementById('btn-back').onclick = showMenu;
+            
+            // Initial MathJax render
+            refreshMath();
+        }
+
+        // Run
+        init();
+
+    </script>
+</body>
+</html>

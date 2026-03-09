@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional CFU Calculator</title>
+
+    <!-- KaTeX CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg: #0a0f1a;
+            --surface: #141b2d;
+            --surface-alt: #1f2940;
+            --surface-elevated: #263354;
+            --border: #2d3b5a;
+            --border-subtle: #232f4a;
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --primary-glow: rgba(99, 102, 241, 0.25);
+            --secondary: #a855f7;
+            --danger: #f43f5e;
+            --danger-hover: #fb7185;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --muted: #64748b;
+
+            /* Logic Colors */
+            --valid-bg: rgba(16, 185, 129, 0.15);
+            --valid-border: #10b981;
+            --est-bg: rgba(245, 158, 11, 0.15);
+            --est-border: #f59e0b;
+            --high-bg: rgba(244, 63, 94, 0.15);
+            --high-border: #f43f5e;
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+
+            /* Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+                radial-gradient(ellipse 60% 30% at 80% 60%, rgba(168, 85, 247, 0.08), transparent);
+            color: var(--text);
+            padding: var(--space-lg);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-md);
+        }
+
+        /* Header - Fixed Symmetry */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+            background: var(--surface);
+            padding: var(--space-lg) var(--space-xl);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.3),
+                0 10px 40px -10px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #6366f1 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background-position: 0% center;
+            }
+
+            50% {
+                background-position: 100% center;
+            }
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .settings {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            background: var(--surface-alt);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .settings label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* Unified Input Styles */
+        input[type="number"],
+        input[type="text"] {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            background: var(--surface);
+            color: var(--text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        input[type="number"]:hover,
+        input[type="text"]:hover {
+            border-color: var(--muted);
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+            background: var(--surface-alt);
+        }
+
+        /* Volume Buttons - Consistent Sizing */
+        .volume-presets {
+            display: flex;
+            gap: var(--space-xs);
+            background: var(--surface);
+            padding: var(--space-xs);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .volume-btn {
+            padding: var(--space-sm) var(--space-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            white-space: nowrap;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            min-width: 80px;
+        }
+
+        .volume-btn:hover {
+            color: var(--text);
+            background: var(--surface-alt);
+        }
+
+        .volume-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+        }
+
+        .volume-btn span {
+            font-size: 0.625rem;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        /* Systems Grid */
+        .systems-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .systems-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* System Card */
+        .system-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.2),
+                0 10px 30px -10px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .system-card:hover {
+            box-shadow:
+                0 8px 12px -2px rgba(0, 0, 0, 0.25),
+                0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        .system-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md) var(--space-lg);
+            background: var(--surface-alt);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .system-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .system-number {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-weight: 600;
+            padding: var(--space-xs) var(--space-md);
+            border-radius: var(--radius-sm);
+            font-size: 0.8125rem;
+            letter-spacing: 0.02em;
+        }
+
+        .system-name-input {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text);
+            font-size: 0.9375rem;
+            font-family: inherit;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            width: 160px;
+            transition: all 0.2s ease;
+        }
+
+        .system-name-input:hover {
+            background: var(--surface);
+            border-color: var(--border-subtle);
+        }
+
+        .system-name-input:focus {
+            background: var(--surface);
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .system-name-input::placeholder {
+            color: var(--muted);
+        }
+
+        /* Icon Buttons */
+        .remove-system-btn,
+        .col-remove-btn,
+        .row-remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .remove-system-btn:hover,
+        .col-remove-btn:hover,
+        .row-remove-btn:hover {
+            color: var(--danger);
+            background: var(--high-bg);
+        }
+
+        .system-body {
+            padding: var(--space-lg);
+        }
+
+        .system-result {
+            padding: var(--space-md) var(--space-lg);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .system-result-value {
+            font-size: 1.375rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .system-result-error {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: var(--space-xs);
+        }
+
+        /* Table Styles - Improved Symmetry */
+        .table-wrapper {
+            background: var(--surface-alt);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+            border: 1px solid var(--border-subtle);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: var(--space-sm);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-bottom: var(--space-md);
+        }
+
+        /* Column widths */
+        th:first-child,
+        td:first-child {
+            width: 120px;
+        }
+
+        th:not(:first-child),
+        td:not(:first-child) {
+            width: 100px;
+        }
+
+        /* Header cell with delete button */
+        .th-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Dilution cell - contains delete btn + input */
+        .dilution-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+        }
+
+        /* Count cell - just the input centered */
+        .count-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-dilution {
+            width: 80px;
+            text-align: center;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            background: var(--surface);
+            font-size: 1rem;
+            padding: 10px 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text);
+        }
+
+        .input-count {
+            width: 80px;
+            text-align: center;
+            font-size: 1rem;
+            font-variant-numeric: tabular-nums;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+            padding: 10px 8px;
+            background: var(--surface);
+            color: var(--text);
+            border-radius: var(--radius-md);
+        }
+
+        .input-count::placeholder {
+            color: var(--muted);
+            opacity: 0.5;
+        }
+
+        .input-count:focus,
+        .input-dilution:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        /* Status Colors */
+        .is-valid {
+            background-color: var(--valid-bg) !important;
+            border-color: var(--valid-border) !important;
+        }
+
+        .is-est {
+            background-color: var(--est-bg) !important;
+            border-color: var(--est-border) !important;
+        }
+
+        .is-high {
+            background-color: var(--high-bg) !important;
+            border-color: var(--high-border) !important;
+        }
+
+        /* Controls - Consistent Button Sizing */
+        .controls {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--surface-alt);
+            border: 1px solid var(--border);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            transition: all 0.2s ease;
+            font-size: 0.8125rem;
+            min-height: 36px;
+        }
+
+        .btn:hover {
+            background: var(--surface-elevated);
+            border-color: var(--muted);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn-danger {
+            color: var(--danger);
+            border-color: transparent;
+        }
+
+        .btn-danger:hover {
+            border-color: var(--danger);
+            background: var(--high-bg);
+        }
+
+        /* Legend */
+        .legend {
+            font-size: 0.75rem;
+            color: var(--muted);
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            justify-content: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .legend span {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* Summary Panel */
+        .summary-panel {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.2),
+                0 10px 30px -10px rgba(0, 0, 0, 0.4);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+        }
+
+        .summary-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .summary-item {
+            background: var(--surface-alt);
+            padding: var(--space-md);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+            transition: border-color 0.2s ease;
+        }
+
+        .summary-item:hover {
+            border-color: var(--border);
+        }
+
+        .summary-item-label {
+            font-size: 0.8125rem;
+            color: var(--muted);
+            margin-bottom: var(--space-sm);
+        }
+
+        .summary-item-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .summary-item-error {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: var(--space-xs);
+        }
+
+        .average-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .average-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .average-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .average-warning {
+            background: var(--est-bg);
+            border: 1px solid var(--est-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            color: var(--warning);
+            margin-top: var(--space-md);
+            font-size: 0.875rem;
+        }
+
+        .order-badge {
+            display: inline-block;
+            padding: 2px var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: 0.6875rem;
+            font-weight: 500;
+            margin-left: var(--space-sm);
+        }
+
+        .order-same {
+            background: var(--valid-bg);
+            color: var(--valid-border);
+        }
+
+        .order-diff {
+            background: var(--est-bg);
+            color: var(--est-border);
+        }
+
+        /* KaTeX */
+        .katex {
+            color: var(--text);
+        }
+
+        .no-systems {
+            text-align: center;
+            padding: var(--space-2xl);
+            color: var(--muted);
+            font-size: 1.125rem;
+        }
+
+        .unit {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-left: var(--space-xs);
+        }
+
+        /* Calculation Breakdown */
+        .calc-section {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.2),
+                0 10px 30px -10px rgba(0, 0, 0, 0.4);
+            margin-bottom: var(--space-xl);
+            overflow: hidden;
+        }
+
+        .calc-section-title {
+            background: var(--surface-alt);
+            padding: var(--space-md) var(--space-lg);
+            font-weight: 600;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .calc-section-body {
+            padding: var(--space-lg);
+        }
+
+        .calc-block {
+            background: var(--surface-alt);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            border-left: 3px solid var(--primary);
+        }
+
+        .calc-block:last-child {
+            margin-bottom: 0;
+        }
+
+        .calc-block-title {
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            color: var(--primary-hover);
+        }
+
+        .calc-block.average {
+            border-left-color: var(--success);
+        }
+
+        .calc-block.average .calc-block-title {
+            color: var(--success);
+        }
+
+        .math-row {
+            margin: var(--space-sm) 0;
+            overflow-x: auto;
+            padding: var(--space-xs) 0;
+        }
+
+        .math-note {
+            background: var(--est-bg);
+            border: 1px solid var(--est-border);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm) var(--space-md);
+            margin-top: var(--space-md);
+            font-size: 0.875rem;
+            color: var(--warning);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>CFU Calculator</h1>
+            <div class="header-controls">
+                <div class="settings" style="display: flex; align-items: center; gap: 10px;">
+                    <label>Volume (V):</label>
+                    <div class="volume-presets" style="display: flex; gap: 5px;">
+                        <button class="btn volume-btn active" data-volume="0.1" onclick="setVolume(0.1, this)"
+                            title="Spread/Drigalski plate">
+                            0.1 mL <span style="font-size: 0.7em; opacity: 0.7;">(Spread/Drigalski)</span>
+                        </button>
+                        <button class="btn volume-btn" data-volume="1" onclick="setVolume(1, this)" title="Pour plate">
+                            1 mL <span style="font-size: 0.7em; opacity: 0.7;">(Pour)</span>
+                        </button>
+                        <button class="btn volume-btn" data-volume="custom" onclick="showCustomVolume()"
+                            title="Custom volume">
+                            Custom
+                        </button>
+                    </div>
+                    <input type="number" id="volInput" value="0.1" step="0.01" style="width: 70px; display: none;"
+                        onchange="updateCustomVolume(this.value)">
+                    <span id="volUnit" style="display: none;">mL</span>
+                </div>
+
+                <button class="btn btn-primary" onclick="addSystem()">+ Add Biological Replicate</button>
+            </div>
+        </header>
+
+        <!-- Systems Container -->
+        <div id="systemsContainer" class="systems-container">
+            <!-- Dynamic system cards -->
+        </div>
+
+        <!-- Summary Panel (shown when multiple systems exist) -->
+        <div id="summaryPanel" class="summary-panel" style="display: none;">
+            <div class="summary-title">
+                <span>📊 Biological Replicates Summary</span>
+                <div class="error-method-toggle">
+                    <label style="font-size: 0.85rem; margin-right: 10px;">Error Method:</label>
+                    <button id="errorMethodBtn" class="btn" onclick="toggleErrorMethod()"
+                        style="padding: 6px 12px; font-size: 0.85rem;">
+                        📊 Average
+                    </button>
+                </div>
+            </div>
+            <div id="summaryGrid" class="summary-grid">
+                <!-- Dynamic summary items -->
+            </div>
+            <div id="averageSection" class="average-section">
+                <div class="average-label">Average CFU/mL (same order of magnitude)</div>
+                <div id="averageValue" class="average-value">-</div>
+            </div>
+            <div id="averageWarning" class="average-warning" style="display: none;">
+                ⚠️ Results differ by more than one order of magnitude. Averaging may not be appropriate.
+            </div>
+        </div>
+
+        <!-- Calculation Breakdown Section -->
+        <div id="calcSection" class="calc-section" style="display: none;">
+            <div class="calc-section-title">📐 Calculation Breakdown</div>
+            <div class="calc-section-body" id="calcBody">
+                <!-- Dynamic calculation blocks -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global State ---
+        let globalVol = 0.1;
+        let systems = [];
+        let systemCounter = 0;
+        let errorMethod = 'average'; // 'average' or 'propagation'
+
+        function toggleErrorMethod() {
+            errorMethod = errorMethod === 'average' ? 'propagation' : 'average';
+            const btn = document.getElementById('errorMethodBtn');
+            btn.innerHTML = errorMethod === 'average' ? '📊 Average' : '√ Propagation';
+            updateSummary();
+        }
+
+        // --- Volume Preset Functions ---
+        function setVolume(vol, btn) {
+            globalVol = vol;
+            document.getElementById('volInput').value = vol;
+            document.getElementById('volInput').style.display = 'none';
+            document.getElementById('volUnit').style.display = 'none';
+
+            // Update active button
+            document.querySelectorAll('.volume-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Recalculate all systems
+            systems.forEach(sys => recalcSystem(sys));
+            updateSummary();
+        }
+
+        function showCustomVolume() {
+            const input = document.getElementById('volInput');
+            input.style.display = 'inline-block';
+            document.getElementById('volUnit').style.display = 'inline';
+            input.focus();
+            input.select();
+
+            // Update active button
+            document.querySelectorAll('.volume-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.volume-btn[data-volume="custom"]').classList.add('active');
+        }
+
+        function updateCustomVolume(val) {
+            globalVol = parseFloat(val) || 0.1;
+            systems.forEach(sys => recalcSystem(sys));
+            updateSummary();
+        }
+
+        // --- Helper: Format number as LaTeX scientific notation ---
+        function toLatexSci(num, precision = 2) {
+            if (num === 0) return '0';
+            const exp = Math.floor(Math.log10(Math.abs(num)));
+            const mant = num / Math.pow(10, exp);
+            const mantRounded = mant.toFixed(precision - 1);
+            if (exp === 0) return mantRounded;
+            return `${mantRounded} \\times 10^{${exp}}`;
+        }
+
+        // --- Banker's Rounding (Round half to even) ---
+        function bankersRound(num, decimals) {
+            const d = decimals || 0;
+            const m = Math.pow(10, d);
+            const n = +(d ? num * m : num).toFixed(8);
+            const i = Math.floor(n), f = n - i;
+            const e = 1e-8;
+            const r = (f > 0.5 - e && f < 0.5 + e) ?
+                ((i % 2 === 0) ? i : i + 1) : Math.round(n);
+            return d ? r / m : r;
+        }
+
+        // --- Format result based on error (proper scientific rounding) ---
+        // The error determines precision: round error to 1 sig fig, then match result to same decimal place
+        function formatWithError(result, error) {
+            if (result === 0) return { mantissa: '0', exponent: 0, errorFormatted: '0', precision: 1 };
+
+            // Step 1: Determine the exponent of the result
+            const resultExp = Math.floor(Math.log10(Math.abs(result)));
+
+            // Step 2: Normalize error to same scale as mantissa
+            const errorNormalized = error / Math.pow(10, resultExp);
+
+            // Step 3: Round error to 1 significant figure
+            const errorMagnitude = Math.floor(Math.log10(Math.abs(errorNormalized)));
+            const errorDecimalPlaces = Math.max(0, -errorMagnitude);
+            const errorRounded = bankersRound(errorNormalized, errorDecimalPlaces);
+
+            // Step 4: Round the mantissa to match the error's decimal place
+            const mantissaDecimalPlaces = errorDecimalPlaces;
+            const resultNormalized = result / Math.pow(10, resultExp);
+            const mantissaRounded = bankersRound(resultNormalized, mantissaDecimalPlaces);
+
+            // Handle rollover (e.g., 9.5 -> 10)
+            let finalMantissa = mantissaRounded;
+            let finalExp = resultExp;
+            let finalErrorRounded = errorRounded;
+            if (Math.abs(finalMantissa) >= 10) {
+                finalMantissa /= 10;
+                finalExp += 1;
+                finalErrorRounded /= 10;
+            }
+
+            return {
+                mantissa: finalMantissa.toFixed(mantissaDecimalPlaces),
+                exponent: finalExp,
+                errorFormatted: finalErrorRounded.toFixed(errorDecimalPlaces),
+                precision: mantissaDecimalPlaces + 1
+            };
+        }
+
+
+
+        // --- System Template ---
+        function createSystem() {
+            systemCounter++;
+            return {
+                id: 'sys_' + systemCounter,
+                name: '',
+                number: systemCounter,
+                rows: [
+                    { id: 'r1', dilution: -1 },
+                    { id: 'r2', dilution: -2 },
+                    { id: 'r3', dilution: -3 }
+                ],
+                colCount: 2,
+                data: {},
+                result: null // { value, error, status, mantissa, exponent }
+            };
+        }
+
+        // --- Init ---
+        function init() {
+            addSystem(); // Start with one system
+            document.getElementById('volInput').addEventListener('input', (e) => {
+                globalVol = parseFloat(e.target.value) || 0.1;
+                systems.forEach(sys => recalcSystem(sys));
+                updateSummary();
+            });
+        }
+
+        // --- Add/Remove Systems ---
+        function addSystem() {
+            const sys = createSystem();
+            systems.push(sys);
+            renderSystems();
+            updateSummary();
+        }
+
+        function removeSystem(sysId) {
+            if (systems.length === 1) {
+                if (!confirm('Remove last system? This will reset the calculator.')) return;
+            }
+            systems = systems.filter(s => s.id !== sysId);
+            if (systems.length === 0) {
+                addSystem();
+            } else {
+                renderSystems();
+                updateSummary();
+            }
+        }
+
+        // --- Render All Systems ---
+        function renderSystems() {
+            const container = document.getElementById('systemsContainer');
+            container.innerHTML = '';
+
+            systems.forEach((sys, index) => {
+                const card = document.createElement('div');
+                card.className = 'system-card';
+                card.id = sys.id;
+
+                card.innerHTML = `
+                    <div class="system-header">
+                        <div class="system-title">
+                            <span class="system-number">System ${index + 1}</span>
+                            <input type="text" class="system-name-input" 
+                                   placeholder="Optional name..." 
+                                   value="${sys.name}"
+                                   onchange="updateSystemName('${sys.id}', this.value)">
+                        </div>
+                        <button class="remove-system-btn" onclick="removeSystem('${sys.id}')" title="Remove system">×</button>
+                    </div>
+                    <div class="system-body">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr id="headerRow_${sys.id}">
+                                        <th>Dilution<div style="font-size:0.7em; font-weight:normal; opacity:0.7;">(10<sup>x</sup>)</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gridBody_${sys.id}"></tbody>
+                            </table>
+                        </div>
+                        <div class="legend">
+                            <span><span class="dot" style="background:#22c55e"></span>Valid (30-300)</span>
+                            <span><span class="dot" style="background:#eab308"></span>Est (&lt;30)</span>
+                            <span><span class="dot" style="background:#ef4444"></span>High (&gt;300)</span>
+                        </div>
+                        <div class="controls">
+                            <button class="btn" onclick="addCol('${sys.id}')">+ Rep</button>
+                            <button class="btn" onclick="addRow('${sys.id}')">+ Dilution</button>
+                            <div style="flex-grow:1"></div>
+                            <button class="btn btn-danger" onclick="resetSystem('${sys.id}')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="system-result" id="result_${sys.id}" style="display:none;">
+                        <div class="system-result-value" id="resultValue_${sys.id}">-</div>
+                        <div class="system-result-error" id="resultError_${sys.id}">-</div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+                renderSystemGrid(sys);
+            });
+        }
+
+        // --- Render Single System Grid ---
+        function renderSystemGrid(sys) {
+            const thead = document.getElementById('headerRow_' + sys.id);
+            const tbody = document.getElementById('gridBody_' + sys.id);
+
+            // Clear old columns (keep first th)
+            while (thead.children.length > 1) thead.removeChild(thead.lastChild);
+
+            // Add column headers
+            for (let c = 0; c < sys.colCount; c++) {
+                const th = document.createElement('th');
+                th.innerHTML = `
+                    <div class="th-content">
+                        <span>Rep ${c + 1}</span>
+                        <button class="col-remove-btn" onclick="removeCol('${sys.id}', ${c})">×</button>
+                    </div>
+                `;
+                thead.appendChild(th);
+            }
+
+            // Render body
+            tbody.innerHTML = '';
+            sys.rows.forEach((row) => {
+                const tr = document.createElement('tr');
+
+                // Dilution cell
+                const tdDil = document.createElement('td');
+                const dilWrapper = document.createElement('div');
+                dilWrapper.className = 'dilution-cell';
+
+                const btnDel = document.createElement('button');
+                btnDel.className = 'row-remove-btn';
+                btnDel.innerHTML = '×';
+                btnDel.onclick = () => removeRow(sys.id, row.id);
+
+                const inpDil = document.createElement('input');
+                inpDil.type = 'number';
+                inpDil.className = 'input-dilution';
+                inpDil.value = row.dilution;
+                inpDil.oninput = (e) => {
+                    row.dilution = parseFloat(e.target.value);
+                    recalcSystem(sys);
+                    updateSummary();
+                };
+
+                dilWrapper.appendChild(btnDel);
+                dilWrapper.appendChild(inpDil);
+                tdDil.appendChild(dilWrapper);
+                tr.appendChild(tdDil);
+
+                // Count cells
+                for (let c = 0; c < sys.colCount; c++) {
+                    const td = document.createElement('td');
+                    const countWrapper = document.createElement('div');
+                    countWrapper.className = 'count-cell';
+
+                    const inp = document.createElement('input');
+                    inp.type = 'number';
+                    inp.className = 'input-count';
+                    inp.placeholder = '-';
+
+                    const key = `${row.id}_c${c}`;
+                    if (sys.data[key] !== undefined) {
+                        inp.value = sys.data[key];
+                    }
+
+                    inp.oninput = (e) => {
+                        const val = e.target.value;
+                        if (val === '') delete sys.data[key];
+                        else sys.data[key] = parseFloat(val);
+
+                        styleInput(inp);
+                        recalcSystem(sys);
+                        updateSummary();
+                    };
+
+                    styleInput(inp);
+                    countWrapper.appendChild(inp);
+                    td.appendChild(countWrapper);
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            });
+
+            recalcSystem(sys);
+        }
+
+        function styleInput(inp) {
+            inp.classList.remove('is-valid', 'is-est', 'is-high');
+            const val = parseFloat(inp.value);
+            if (isNaN(val)) return;
+
+            if (val > 300) inp.classList.add('is-high');
+            else if (val >= 30) inp.classList.add('is-valid');
+            else inp.classList.add('is-est');
+        }
+
+        // --- Grid Actions ---
+        function addRow(sysId) {
+            const sys = systems.find(s => s.id === sysId);
+            const lastDil = sys.rows.length > 0 ? sys.rows[sys.rows.length - 1].dilution : 0;
+            sys.rows.push({ id: 'r' + Date.now(), dilution: lastDil - 1 });
+            renderSystemGrid(sys);
+            updateSummary();
+        }
+
+        function removeRow(sysId, rowId) {
+            const sys = systems.find(s => s.id === sysId);
+            sys.rows = sys.rows.filter(r => r.id !== rowId);
+            Object.keys(sys.data).forEach(k => {
+                if (k.startsWith(rowId)) delete sys.data[k];
+            });
+            renderSystemGrid(sys);
+            updateSummary();
+        }
+
+        function addCol(sysId) {
+            const sys = systems.find(s => s.id === sysId);
+            sys.colCount++;
+            renderSystemGrid(sys);
+        }
+
+        function removeCol(sysId, index) {
+            const sys = systems.find(s => s.id === sysId);
+            let newData = {};
+            Object.keys(sys.data).forEach(key => {
+                const [rId, cPart] = key.split('_c');
+                const cIdx = parseInt(cPart);
+                if (cIdx < index) newData[key] = sys.data[key];
+                else if (cIdx > index) newData[`${rId}_c${cIdx - 1}`] = sys.data[key];
+            });
+            sys.data = newData;
+            sys.colCount = Math.max(1, sys.colCount - 1);
+            renderSystemGrid(sys);
+            updateSummary();
+        }
+
+        function resetSystem(sysId) {
+            if (!confirm('Clear all data for this system?')) return;
+            const sys = systems.find(s => s.id === sysId);
+            sys.data = {};
+            sys.rows = [
+                { id: 'r1', dilution: -1 },
+                { id: 'r2', dilution: -2 },
+                { id: 'r3', dilution: -3 }
+            ];
+            sys.colCount = 2;
+            renderSystemGrid(sys);
+            updateSummary();
+        }
+
+        function updateSystemName(sysId, name) {
+            const sys = systems.find(s => s.id === sysId);
+            sys.name = name;
+            updateSummary();
+        }
+
+        // --- Calculation ---
+        function recalcSystem(sys) {
+            const V = globalVol || 0.1;
+
+            let validPoints = [];
+            let highPoints = [];
+            let lowPoints = [];
+            let hasData = false;
+
+            sys.rows.forEach(row => {
+                const dilFactor = Math.pow(10, row.dilution);
+                for (let c = 0; c < sys.colCount; c++) {
+                    const key = `${row.id}_c${c}`;
+                    if (sys.data[key] !== undefined && !isNaN(sys.data[key])) {
+                        hasData = true;
+                        const N = sys.data[key];
+                        const pt = { N, dil: dilFactor, dilLog: row.dilution, id: key };
+
+                        if (N > 300) highPoints.push(pt);
+                        else if (N >= 30) validPoints.push(pt);
+                        else lowPoints.push(pt);
+                    }
+                }
+            });
+
+            const resultDiv = document.getElementById('result_' + sys.id);
+            const resultValue = document.getElementById('resultValue_' + sys.id);
+            const resultError = document.getElementById('resultError_' + sys.id);
+
+            if (!hasData) {
+                resultDiv.style.display = 'none';
+                sys.result = null;
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+
+            let points, status, prefix = '';
+            if (validPoints.length > 0) {
+                points = validPoints;
+                status = 'valid';
+            } else if (highPoints.length > 0) {
+                highPoints.sort((a, b) => a.dil - b.dil);
+                points = [highPoints[0]];
+                status = 'high';
+                prefix = '> ';
+            } else if (lowPoints.length > 0) {
+                const allZero = lowPoints.every(p => p.N === 0);
+                if (allZero) {
+                    // LOD calculation
+                    const maxDilFactor = Math.max(...lowPoints.map(p => p.dil));
+                    const result = 1 / (V * maxDilFactor);
+                    const resExp = result.toExponential(1);
+                    const [mant, exp] = resExp.split('e');
+                    const expNum = parseInt(exp);
+
+                    sys.result = {
+                        value: result,
+                        error: null,
+                        status: 'lod',
+                        mantissa: mant,
+                        exponent: expNum,
+                        prefix: '< '
+                    };
+
+                    resultValue.innerHTML = `< ${mant} × 10<sup>${expNum}</sup><span class="unit">CFU/mL</span>`;
+                    resultError.innerHTML = 'Below detection limit';
+                    return;
+                }
+                points = lowPoints;
+                status = 'est';
+            }
+
+            // Calculate weighted result
+            let sumN = 0, sumDenomParts = 0;
+            points.forEach(p => {
+                sumN += p.N;
+                sumDenomParts += p.dil;
+            });
+
+            const denom = V * sumDenomParts;
+            const result = sumN / denom;
+            const error = Math.sqrt(sumN) / denom;
+
+            // Use error-based formatting (scientifically correct)
+            const formatted = formatWithError(result, error);
+
+            sys.result = {
+                value: result,
+                error: error,
+                status: status,
+                mantissa: formatted.mantissa,
+                exponent: formatted.exponent,
+                errorScaled: formatted.errorFormatted,
+                precision: formatted.precision,
+                prefix: prefix
+            };
+
+            resultValue.innerHTML = `${prefix}${formatted.mantissa} × 10<sup>${formatted.exponent}</sup><span class="unit">CFU/mL</span>`;
+            resultError.innerHTML = `± ${formatted.errorFormatted} × 10<sup>${formatted.exponent}</sup>`;
+        }
+
+        // --- Summary & Averaging ---
+        function updateSummary() {
+            const panel = document.getElementById('summaryPanel');
+            const grid = document.getElementById('summaryGrid');
+            const avgSection = document.getElementById('averageSection');
+            const avgValue = document.getElementById('averageValue');
+            const avgWarning = document.getElementById('averageWarning');
+
+            // Get valid results
+            const validResults = systems.filter(s => s.result && s.result.value).map(s => ({
+                ...s.result,
+                name: s.name || `System ${systems.indexOf(s) + 1}`,
+                sysId: s.id
+            }));
+
+            if (validResults.length < 2) {
+                panel.style.display = 'none';
+                // Still render calculation breakdown for single system
+                renderAllCalculations();
+                return;
+            }
+
+            panel.style.display = 'block';
+
+            // Render summary grid
+            grid.innerHTML = '';
+            validResults.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'summary-item';
+                item.innerHTML = `
+                    <div class="summary-item-label">${r.name}</div>
+                    <div class="summary-item-value">${r.prefix || ''}${r.mantissa} × 10<sup>${r.exponent}</sup></div>
+                    ${r.error ? `<div class="summary-item-error">± ${r.errorScaled} × 10<sup>${r.exponent}</sup></div>` : ''}
+                `;
+                grid.appendChild(item);
+            });
+
+            // Check order of magnitude
+            const exponents = validResults.filter(r => r.status !== 'lod').map(r => r.exponent);
+            const minExp = Math.min(...exponents);
+            const maxExp = Math.max(...exponents);
+            const sameOrder = (maxExp - minExp) <= 0;
+
+            if (sameOrder && exponents.length >= 2) {
+                // Calculate average
+                const avgableResults = validResults.filter(r => r.status !== 'lod');
+                const avgVal = avgableResults.reduce((s, r) => s + r.value, 0) / avgableResults.length;
+
+                const avgExp = avgVal.toExponential(1);
+                const [avgMant, avgExpPart] = avgExp.split('e');
+                const avgExpNum = parseInt(avgExpPart);
+
+                avgValue.innerHTML = `${avgMant} × 10<sup>${avgExpNum}</sup><span class="unit">CFU/mL</span>`;
+                avgWarning.style.display = 'none';
+            } else if (exponents.length >= 2) {
+                avgValue.innerHTML = '-';
+                avgWarning.style.display = 'block';
+            } else {
+                avgValue.innerHTML = '-';
+                avgWarning.style.display = 'none';
+            }
+
+            // Render full calculation breakdown
+            renderAllCalculations();
+        }
+
+        // --- Render Full Calculation Breakdown ---
+        function renderAllCalculations() {
+            const calcSection = document.getElementById('calcSection');
+            const calcBody = document.getElementById('calcBody');
+
+            // Check if any system has data
+            const systemsWithData = systems.filter(sys => sys.result && sys.result.value);
+
+            if (systemsWithData.length === 0) {
+                calcSection.style.display = 'none';
+                return;
+            }
+
+            calcSection.style.display = 'block';
+            calcBody.innerHTML = '';
+
+            const V = globalVol || 0.1;
+
+            // Render calculation for each system
+            systemsWithData.forEach((sys, index) => {
+                const block = document.createElement('div');
+                block.className = 'calc-block';
+
+                const sysName = sys.name || `System ${systems.indexOf(sys) + 1}`;
+                block.innerHTML = `<div class="calc-block-title">${sysName}</div>`;
+
+                // Get points for this system
+                let validPoints = [];
+                let lowPoints = [];
+                let highPoints = [];
+
+                sys.rows.forEach(row => {
+                    const dilFactor = Math.pow(10, row.dilution);
+                    for (let c = 0; c < sys.colCount; c++) {
+                        const key = `${row.id}_c${c}`;
+                        if (sys.data[key] !== undefined && !isNaN(sys.data[key])) {
+                            const N = sys.data[key];
+                            const pt = { N, dil: dilFactor, dilLog: row.dilution };
+                            if (N > 300) highPoints.push(pt);
+                            else if (N >= 30) validPoints.push(pt);
+                            else lowPoints.push(pt);
+                        }
+                    }
+                });
+
+                let points;
+                let isEst = false;
+                if (validPoints.length > 0) {
+                    points = validPoints;
+                } else if (highPoints.length > 0) {
+                    points = [highPoints[0]];
+                    isEst = true;
+                } else if (lowPoints.length > 0) {
+                    points = lowPoints;
+                    isEst = true;
+                }
+
+                if (!points || points.length === 0) return;
+
+                // Calculate values
+                let sumN = 0, sumDenomParts = 0;
+                points.forEach(p => {
+                    sumN += p.N;
+                    sumDenomParts += p.dil;
+                });
+
+                const denom = V * sumDenomParts;
+                const result = sumN / denom;
+                const error = Math.sqrt(sumN) / denom;
+                const sqrtSumN = Math.sqrt(sumN);
+
+                // Build strings
+                let numSumStr, denSumStr;
+                if (points.length <= 4) {
+                    numSumStr = points.map(p => p.N).join(' + ');
+                    denSumStr = points.map(p => `10^{${p.dilLog}}`).join(' + ');
+                } else {
+                    numSumStr = `${points[0].N} + ... + ${points[points.length - 1].N}`;
+                    denSumStr = `10^{${points[0].dilLog}} + ... + 10^{${points[points.length - 1].dilLog}}`;
+                }
+
+                const sumDValSci = toLatexSci(sumDenomParts, 2);
+                const denomTotalSci = toLatexSci(denom, 2);
+                const rawResSci = toLatexSci(result, 3);
+                const rawErrSci = toLatexSci(error, 3);
+
+                // Use error-based formatting for final result
+                const formatted = formatWithError(result, error);
+                const finalResSci = `${formatted.mantissa} \\times 10^{${formatted.exponent}}`;
+                const finalErrSci = `${formatted.errorFormatted} \\times 10^{${formatted.exponent}}`;
+
+                const steps = `
+                    \\begin{aligned}
+                    C_{total} &= \\frac{\\sum C \\pm \\sqrt{\\sum C}}{V \\times \\sum d} \\\\[1em]
+                    &= \\frac{(${numSumStr}) \\pm \\sqrt{${numSumStr}}}{${V} \\times (${denSumStr})} \\\\[1em]
+                    &= \\frac{${sumN} \\pm ${toLatexSci(sqrtSumN, 2)}}{${V} \\times (${sumDValSci})} \\\\[1em]
+                    &= \\frac{${sumN} \\pm ${toLatexSci(sqrtSumN, 2)}}{${denomTotalSci}} \\\\[1em]
+                    &= ${rawResSci} \\pm ${rawErrSci} \\; (\\text{raw}) \\\\[1em]
+                    &\\approx \\boxed{${finalResSci} \\pm ${finalErrSci} \\; \\text{CFU/mL}} \\quad (\\text{${formatted.precision} sig. figs})
+                    \\end{aligned}
+                `;
+
+
+                const mathRow = document.createElement('div');
+                mathRow.className = 'math-row';
+                katex.render(steps, mathRow, { displayMode: true });
+                block.appendChild(mathRow);
+
+                if (isEst) {
+                    const note = document.createElement('div');
+                    note.className = 'math-note';
+                    note.innerText = "Note: Counts are outside the optimal 30-300 range. Result is an estimate.";
+                    block.appendChild(note);
+                }
+
+                calcBody.appendChild(block);
+            });
+
+            // Render average calculation if applicable
+            const validResults = systemsWithData.filter(s => s.result && s.result.status !== 'lod');
+            if (validResults.length >= 2) {
+                const exponents = validResults.map(s => s.result.exponent);
+                const minExp = Math.min(...exponents);
+                const maxExp = Math.max(...exponents);
+                const sameOrder = (maxExp - minExp) <= 0;
+
+                if (sameOrder) {
+                    const avgBlock = document.createElement('div');
+                    avgBlock.className = 'calc-block average';
+                    avgBlock.innerHTML = `<div class="calc-block-title">📊 Average of Biological Replicates</div>`;
+
+                    // Build the average formula
+                    const valuesStr = validResults.map((s, i) => {
+                        const name = s.name || `C_{${systems.indexOf(s) + 1}}`;
+                        return `${s.result.mantissa} \\times 10^{${s.result.exponent}}`;
+                    }).join(' + ');
+
+                    const avgVal = validResults.reduce((sum, s) => sum + s.result.value, 0) / validResults.length;
+                    const avgExp = avgVal.toExponential(1);
+                    const [avgMant, avgExpPart] = avgExp.split('e');
+                    const avgExpNum = parseInt(avgExpPart);
+
+                    let avgError, avgErrFormula, avgErrCalc;
+
+                    if (errorMethod === 'propagation') {
+                        // Error propagation: σ_avg = sqrt(Σσᵢ²) / n
+                        const sumSquaredErrors = validResults.reduce((sum, s) => sum + Math.pow(s.result.error || 0, 2), 0);
+                        avgError = Math.sqrt(sumSquaredErrors) / validResults.length;
+
+                        const errorTermsStr = validResults.map((s, i) => {
+                            return `(${s.result.errorScaled} \\times 10^{${s.result.exponent}})^2`;
+                        }).join(' + ');
+
+                        avgErrFormula = `\\sigma_{\\bar{C}} &= \\frac{\\sqrt{\\sum \\sigma_i^2}}{n}`;
+                        avgErrCalc = `&= \\frac{\\sqrt{${errorTermsStr}}}{${validResults.length}}`;
+                    } else {
+                        // Simple average of errors: σ_avg = (Σσᵢ) / n
+                        avgError = validResults.reduce((sum, s) => sum + (s.result.error || 0), 0) / validResults.length;
+
+                        const errorTermsStr = validResults.map((s, i) => {
+                            return `${s.result.errorScaled} \\times 10^{${s.result.exponent}}`;
+                        }).join(' + ');
+
+                        avgErrFormula = `\\sigma_{\\bar{C}} &= \\frac{1}{n} \\sum_{i=1}^{n} \\sigma_i`;
+                        avgErrCalc = `&= \\frac{${errorTermsStr}}{${validResults.length}}`;
+                    }
+
+                    const avgErrScaled = avgError / Math.pow(10, avgExpNum);
+                    const avgErrFormatted = avgErrScaled.toPrecision(2);
+
+                    const avgSteps = `
+                        \\begin{aligned}
+                        \\bar{C} &= \\frac{1}{n} \\sum_{i=1}^{n} C_i \\\\[1em]
+                        &= \\frac{${valuesStr}}{${validResults.length}} \\\\[1em]
+                        &= ${toLatexSci(avgVal, 2)} \\; \\text{CFU/mL} \\\\[1.5em]
+                        ${avgErrFormula} \\\\[1em]
+                        ${avgErrCalc} \\\\[1em]
+                        &= ${toLatexSci(avgError, 2)} \\; \\text{CFU/mL} \\\\[1.5em]
+                        \\text{Result} &\\approx \\boxed{${avgMant} \\times 10^{${avgExpNum}} \\pm ${avgErrFormatted} \\times 10^{${avgExpNum}} \\; \\text{CFU/mL}}
+                        \\end{aligned}
+                    `;
+
+                    const avgMathRow = document.createElement('div');
+                    avgMathRow.className = 'math-row';
+                    katex.render(avgSteps, avgMathRow, { displayMode: true });
+                    avgBlock.appendChild(avgMathRow);
+
+                    calcBody.appendChild(avgBlock);
+                }
+            }
+        }
+
+        // --- Start ---
+        init();
+    </script>
+
+</body>
+
+</html>

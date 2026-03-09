@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Uniqueness & Max Principles</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Uniqueness Proofs & Maximum/Mean Value Principles</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+
+            <h3>Uniqueness via Energy Methods</h3>
+            <p>The core idea is to consider the difference between two potential solutions, $w = u_1 - u_2$. If $u_1$ and $u_2$ solve the same linear PDE with the same boundary and initial conditions, then $w$ solves the corresponding *homogeneous* PDE with *zero* boundary and initial conditions.</p>
+            <p>We then define an "energy" functional $E(t)$ related to $w$ and show that $E(t)$ must be zero for all time, which implies $w=0$, meaning $u_1=u_2$.</p>
+
+            <h4>1. Wave Equation ($w_{tt} = c^2 w_{xx}$) on $[0, L]$</h4>
+            <ul>
+                <li>PDE for $w$: $w_{tt} = c^2 w_{xx}$</li>
+                <li>BCs for $w$: Typically $w(0,t)=w(L,t)=0$ or $w_x(0,t)=w_x(L,t)=0$.</li>
+                <li>ICs for $w$: $w(x,0) = 0, w_t(x,0) = 0$.</li>
+                <li>Energy: $E(t) = \frac{1}{2} \int_0^L [ (w_t)^2 + c^2 (w_x)^2 ] \, dx$. (Represents kinetic + potential energy).</li>
+                <li>Show $E'(t) = 0$ (Energy is conserved):
+                    $$ E'(t) = \int_0^L [ w_t w_{tt} + c^2 w_x w_{xt} ] \, dx $$
+                    Substitute $w_{tt} = c^2 w_{xx}$. Use integration by parts on the second term: $\int w_x w_{xt} dx = [w_x w_t]_0^L - \int w_{xx} w_t dx$.
+                    $$ E'(t) = \int_0^L [ w_t (c^2 w_{xx}) + c^2 w_x w_{xt} ] \, dx = \int_0^L c^2 w_t w_{xx} dx + c^2 [w_x w_t]_0^L - c^2 \int_0^L w_{xx} w_t dx $$
+                    The boundary terms $[w_x w_t]_0^L$ are zero if $w$ or $w_x$ are zero at the ends.
+                    $$ E'(t) = \int_0^L c^2 w_t w_{xx} dx - c^2 \int_0^L w_{xx} w_t dx = 0 $$
+                </li>
+                <li>Conclusion: $E(t) = E(0)$. Since $w(x,0)=0 \implies w_x(x,0)=0$ and $w_t(x,0)=0$, $E(0)=0$. Thus $E(t)=0$ for all $t$. Since the integrand $(w_t)^2 + c^2(w_x)^2$ is non-negative, it must be zero. This implies $w_t=0$ and $w_x=0$, so $w(x,t)$ is constant. Since $w(x,0)=0$, $w(x,t)=0$ for all $t$. Thus $u_1=u_2$.</li>
+            </ul>
+
+            <h4>2. Heat Equation ($w_t = k w_{xx}$) on $[0, L]$</h4>
+             <ul>
+                <li>PDE for $w$: $w_{t} = k w_{xx}$</li>
+                <li>BCs for $w$: Typically $w(0,t)=w(L,t)=0$ or $w_x(0,t)=w_x(L,t)=0$.</li>
+                <li>ICs for $w$: $w(x,0) = 0$.</li>
+                <li>Energy: $E(t) = \frac{1}{2} \int_0^L w^2 \, dx$.</li>
+                <li>Show $E'(t) \le 0$ (Energy decreases):
+                    $$ E'(t) = \frac{1}{2} \int_0^L \frac{\partial}{\partial t}(w^2) \, dx = \int_0^L w w_t \, dx $$
+                    Substitute $w_t = k w_{xx}$.
+                    $$ E'(t) = \int_0^L w (k w_{xx}) \, dx = k \int_0^L w w_{xx} \, dx $$
+                    Use integration by parts: $\int w w_{xx} dx = [w w_x]_0^L - \int (w_x)^2 dx$.
+                    $$ E'(t) = k [w w_x]_0^L - k \int_0^L (w_x)^2 \, dx $$
+                    The boundary terms $[w w_x]_0^L$ are zero if $w$ or $w_x$ are zero at the ends.
+                    $$ E'(t) = - k \int_0^L (w_x)^2 \, dx $$
+                </li>
+                <li>Conclusion: Since $k>0$ and $(w_x)^2 \ge 0$, we have $E'(t) \le 0$. Since $w(x,0)=0$, $E(0) = \frac{1}{2}\int_0^L 0^2 dx = 0$. Because $E(0)=0$ and $E'(t) \le 0$, $E(t)$ must be 0 for all $t \ge 0$. Since the integrand $w^2$ is non-negative, $w^2=0$, which means $w(x,t)=0$. Thus $u_1=u_2$.</li>
+            </ul>
+
+            <h3>Laplace Equation ($u_{xx} + u_{yy} = 0$) - Maximum/Minimum Principles</h3>
+            <p>Let $u(x,y)$ be a solution to Laplace's equation (i.e., harmonic) in a bounded domain $D$, and let $u$ be continuous on the closure $\bar{D} = D \cup \partial D$, where $\partial D$ is the boundary.</p>
+            <ul>
+                <li><strong>Weak Maximum/Minimum Principle:</strong> The maximum and minimum values of $u(x,y)$ on $\bar{D}$ are attained on the boundary $\partial D$.
+                    $$ \max_{(x,y)\in\bar{D}} u(x,y) = \max_{(x,y)\in\partial D} u(x,y) $$
+                    $$ \min_{(x,y)\in\bar{D}} u(x,y) = \min_{(x,y)\in\partial D} u(x,y) $$
+                </li>
+                 <li><strong>Strong Maximum/Minimum Principle:</strong> If $D$ is connected, then unless $u$ is a constant function, $u$ attains its maximum and minimum values *only* on the boundary $\partial D$, never inside $D$.</li>
+                 <li><strong>Uniqueness Consequence:</strong> If $u_1, u_2$ are two solutions to Laplace's equation in $D$ with $u_1 = u_2$ on the boundary $\partial D$, then $w = u_1 - u_2$ is harmonic in $D$ and $w=0$ on $\partial D$. By the Weak Maximum/Minimum Principle, the max and min of $w$ on $\bar{D}$ are both 0 (attained on the boundary). Therefore, $w(x,y)=0$ everywhere in $\bar{D}$, which means $u_1=u_2$. This proves uniqueness for the Dirichlet problem for Laplace's equation on bounded domains.</li>
+            </ul>
+
+            <h3>Mean Value Property (for Laplace's Equation)</h3>
+            <p>If $u$ is harmonic in a domain $D$, then for any disk $B_R(P)$ centered at $P=(x_0, y_0)$ with radius $R$ such that the disk is fully contained in $D$, the value of $u$ at the center $P$ is equal to the average value of $u$ on the boundary circle $\partial B_R(P)$.</p>
+            $$ u(x_0, y_0) = \frac{1}{2\pi R} \oint_{\partial B_R(P)} u \, ds = \frac{1}{2\pi} \int_0^{2\pi} u(x_0+R\cos\theta, y_0+R\sin\theta) \, d\theta $$
+
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Let $u_1, u_2$ be two solutions to $u_{tt}=c^2 u_{xx}$ on $x \in [0, L]$, with $u(0,t)=0, u(L,t)=0$ and $u(x,0)=f(x), u_t(x,0)=g(x)$. Let $w=u_1-u_2$. What PDE, BCs, and ICs does $w$ satisfy?</p>
+                <button onclick="toggleSolution('sol-um-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>PDE: $w_{tt} - c^2 w_{xx} = (u_1)_{tt} - c^2 (u_1)_{xx} - ((u_2)_{tt} - c^2 (u_2)_{xx}) = 0 - 0 = 0$. So, $w_{tt} = c^2 w_{xx}$.</p>
+                    <p>BCs: $w(0,t) = u_1(0,t)-u_2(0,t) = 0-0=0$. $w(L,t) = u_1(L,t)-u_2(L,t) = 0-0=0$.</p>
+                    <p>ICs: $w(x,0) = u_1(x,0)-u_2(x,0) = f(x)-f(x)=0$. $w_t(x,0) = (u_1)_t(x,0)-(u_2)_t(x,0) = g(x)-g(x)=0$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">What is the energy functional $E(t)$ used for the uniqueness proof of the wave equation $w_{tt}=c^2 w_{xx}$?</p>
+                <button onclick="toggleSolution('sol-um-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q2">
+                    <p><strong>Solution:</strong></p>
+                    $$ E(t) = \frac{1}{2} \int_0^L [ (w_t)^2 + c^2 (w_x)^2 ] \, dx $$
+                    <p>(Represents total kinetic + potential energy of the difference function $w$).</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Let $u_1, u_2$ be two solutions to $u_{t}=k u_{xx}$ on $x \in [0, L]$, with $u_x(0,t)=0, u_x(L,t)=0$ and $u(x,0)=f(x)$. Let $w=u_1-u_2$. What PDE, BCs, and ICs does $w$ satisfy?</p>
+                <button onclick="toggleSolution('sol-um-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q3">
+                     <p><strong>Solution:</strong></p>
+                     <p>PDE: $w_t - k w_{xx} = (u_1)_t - k (u_1)_{xx} - ((u_2)_t - k (u_2)_{xx}) = 0 - 0 = 0$. So, $w_t = k w_{xx}$.</p>
+                    <p>BCs: $w_x(0,t) = (u_1)_x(0,t)-(u_2)_x(0,t) = 0-0=0$. $w_x(L,t) = (u_1)_x(L,t)-(u_2)_x(L,t) = 0-0=0$.</p>
+                    <p>ICs: $w(x,0) = u_1(x,0)-u_2(x,0) = f(x)-f(x)=0$.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">What is the energy functional $E(t)$ used for the uniqueness proof of the heat equation $w_{t}=k w_{xx}$?</p>
+                <button onclick="toggleSolution('sol-um-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q4">
+                     <p><strong>Solution:</strong></p>
+                     $$ E(t) = \frac{1}{2} \int_0^L w^2 \, dx $$
+                     <p>(Represents a measure of the squared magnitude of the difference function $w$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">In the energy method for the heat equation $w_t = k w_{xx}$ with $w(0,t)=w(L,t)=0$, what is the sign of $E'(t)$ and why?</p>
+                 <button onclick="toggleSolution('sol-um-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q5">
+                     <p><strong>Solution:</strong></p>
+                     <p>As shown in the theory, $E'(t) = k [w w_x]_0^L - k \int_0^L (w_x)^2 \, dx$.</p>
+                     <p>Since $w(0,t)=0$ and $w(L,t)=0$, the boundary term $[w w_x]_0^L = w(L,t)w_x(L,t) - w(0,t)w_x(0,t) = 0 \cdot w_x(L,t) - 0 \cdot w_x(0,t) = 0$.</p>
+                     <p>So, $E'(t) = - k \int_0^L (w_x)^2 \, dx$.</p>
+                     <p>Since $k>0$ and $(w_x)^2 \ge 0$, the integral is non-negative. Therefore, $E'(t) \le 0$.</p>
+                     <p>The energy is non-increasing (usually decreasing, unless $w_x=0$).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Let $u$ solve Laplace's equation $u_{xx}+u_{yy}=0$ in the unit square $D=(0,1)\times(0,1)$. If $u(x,y)=5$ on the boundary $\partial D$, what is $u(x,y)$ inside $D$?</p>
+                 <button onclick="toggleSolution('sol-um-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>By the Weak Maximum/Minimum Principle, the maximum and minimum values of $u$ are attained on the boundary.</p>
+                    <p>Max on $\partial D = 5$. Min on $\partial D = 5$.</p>
+                    <p>Therefore, $\min u \le u(x,y) \le \max u \implies 5 \le u(x,y) \le 5$.</p>
+                    <p>This means $u(x,y)=5$ everywhere inside $D$. (Constants are harmonic).</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Let $u$ solve $u_{xx}+u_{yy}=0$ in the unit disk $D=\{x^2+y^2 < 1\}$. If $u(x,y)=\sin(\theta)$ on the boundary $r=1$ (where $\theta$ is the polar angle), what is the maximum value of $u$ in $D$?</p>
+                 <button onclick="toggleSolution('sol-um-q7')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q7">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Weak Maximum Principle, the maximum value of $u$ in the closed disk $\bar{D}$ occurs on the boundary $r=1$.</p>
+                     <p>On the boundary, $u = \sin(\theta)$. The maximum value of $\sin(\theta)$ is 1 (occurring at $\theta=\pi/2$).</p>
+                     <p>Therefore, the maximum value of $u$ in the disk $D$ is 1.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Let $u$ solve $u_{xx}+u_{yy}=0$ in the unit disk $D$. If $u(x,y)=3x^2+3y^2$ on the boundary $r=1$, what is $u(0,0)$?</p>
+                 <button onclick="toggleSolution('sol-um-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>On the boundary $r=1$, we have $x^2+y^2=1$. So $u(x,y)=3(x^2+y^2)=3(1)=3$ for all points on the boundary.</p>
+                    <p>By the Mean Value Property, the value at the center $(0,0)$ is the average of the values on any circle centered at $(0,0)$. In particular, it's the average value on the boundary circle $r=1$.</p>
+                    <p>$u(0,0) = \frac{1}{2\pi R} \oint_{\partial B_1(0)} u \, ds = \frac{1}{2\pi(1)} \oint_{r=1} 3 \, ds$.</p>
+                    <p>$u(0,0) = \frac{3}{2\pi} \oint_{r=1} ds = \frac{3}{2\pi} \times (\text{Circumference}) = \frac{3}{2\pi} (2\pi(1)) = 3$.</p>
+                    <p>Alternatively, by the Maximum/Minimum Principle, since $u=3$ on the boundary, $u$ must be equal to 3 everywhere inside. So $u(0,0)=3$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Use the Maximum Principle to prove uniqueness for the Dirichlet problem: $u_{xx}+u_{yy}=F(x,y)$ in $D$, $u=g(x,y)$ on $\partial D$. (Assume solutions exist).</p>
+                <button onclick="toggleSolution('sol-um-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $u_1$ and $u_2$ be two solutions to the problem.</p>
+                    <p>Let $w = u_1 - u_2$.</p>
+                    <p>PDE for $w$: $w_{xx}+w_{yy} = (u_1)_{xx}+(u_1)_{yy} - ((u_2)_{xx}+(u_2)_{yy}) = F(x,y) - F(x,y) = 0$. So $w$ is harmonic in $D$.</p>
+                    <p>BC for $w$: On $\partial D$, $w = u_1 - u_2 = g(x,y) - g(x,y) = 0$.</p>
+                    <p>By the Weak Maximum/Minimum Principle for the harmonic function $w$, the maximum and minimum values of $w$ are attained on the boundary $\partial D$.</p>
+                    <p>Max $w = \max_{\partial D} w = \max 0 = 0$.</p>
+                    <p>Min $w = \min_{\partial D} w = \min 0 = 0$.</p>
+                    <p>Since $0 \le w(x,y) \le 0$ for all $(x,y) \in \bar{D}$, we must have $w(x,y) = 0$ everywhere.</p>
+                    <p>Thus $u_1(x,y) - u_2(x,y) = 0$, so $u_1 = u_2$. The solution is unique.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                 <p class="question-number">Question 10:</p>
+                 <p class="question-text">Can a non-constant solution to $u_{xx}+u_{yy}=0$ in a bounded domain $D$ attain its maximum value at an interior point?</p>
+                 <button onclick="toggleSolution('sol-um-q10')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q10">
+                    <p><strong>Solution:</strong></p>
+                     <p>No. According to the Strong Maximum Principle, if $D$ is connected and $u$ is not constant, the maximum value is attained *only* on the boundary $\partial D$.</p>
+                 </div>
+             </article>
+
+             <!-- Questions 11-30 -->
+            <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">If $w$ solves $w_t = k w_{xx}$ with $w_x(0,t)=w_x(L,t)=0$ and $w(x,0)=0$, show using the energy method that $w(x,t)=0$.</p>
+                <button onclick="toggleSolution('sol-um-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q11">
+                    <p><strong>Solution:</strong></p>
+                     <p>Use energy $E(t) = \frac{1}{2}\int_0^L w^2 dx$.</p>
+                     <p>$E'(t) = k [w w_x]_0^L - k \int_0^L (w_x)^2 dx$.</p>
+                     <p>The boundary term is $k(w(L,t)w_x(L,t) - w(0,t)w_x(0,t))$. Since $w_x(L,t)=0$ and $w_x(0,t)=0$, the boundary term is 0.</p>
+                     <p>$E'(t) = -k \int_0^L (w_x)^2 dx \le 0$.</p>
+                     <p>$E(0) = \frac{1}{2}\int_0^L (w(x,0))^2 dx = \frac{1}{2}\int_0^L 0^2 dx = 0$.</p>
+                     <p>Since $E(0)=0$ and $E'(t)\le 0$, we must have $E(t)=0$ for all $t \ge 0$.</p>
+                     <p>Since $E(t)=\frac{1}{2}\int_0^L w^2 dx = 0$ and $w^2 \ge 0$, we must have $w(x,t)=0$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">If $u$ is harmonic in a disk $B_R(0)$ and $u(x,y)=x^2-y^2$ on the boundary $r=R$. What is $u(0,0)$?</p>
+                 <button onclick="toggleSolution('sol-um-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q12">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Mean Value Property:</p>
+                     <p>$u(0,0) = \frac{1}{2\pi} \int_0^{2\pi} u(R\cos\theta, R\sin\theta) d\theta$.</p>
+                     <p>On the boundary $x=R\cos\theta, y=R\sin\theta$, $u=x^2-y^2 = R^2\cos^2\theta - R^2\sin^2\theta = R^2(\cos^2\theta - \sin^2\theta) = R^2\cos(2\theta)$.</p>
+                     <p>$u(0,0) = \frac{1}{2\pi} \int_0^{2\pi} R^2\cos(2\theta) d\theta$.</p>
+                     <p>$u(0,0) = \frac{R^2}{2\pi} [\frac{\sin(2\theta)}{2}]_0^{2\pi} = \frac{R^2}{2\pi}[0-0] = 0$.</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Let $u$ solve $u_{xx}+u_{yy}=0$ in $D = (0,1)\times(0,1)$. If $u(x,y) \le 10$ on the boundary, can $u(0.5, 0.5) = 11$?</p>
+                 <button onclick="toggleSolution('sol-um-q13')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q13">
+                     <p><strong>Solution:</strong></p>
+                     <p>No. By the Weak Maximum Principle, the maximum value of $u$ in the closed square $\bar{D}$ must be attained on the boundary $\partial D$.</p>
+                     <p>Since $u(x,y) \le 10$ on $\partial D$, the maximum value on the boundary is at most 10.</p>
+                     <p>Therefore, $u(x,y) \le 10$ for all points $(x,y)$ inside $D$ as well. It cannot be 11 at $(0.5, 0.5)$.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">For the wave equation uniqueness proof, why is the term $[w_x w_t]_0^L$ zero for Dirichlet BCs $w(0,t)=w(L,t)=0$?</p>
+                 <button onclick="toggleSolution('sol-um-q14')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q14">
+                    <p><strong>Solution:</strong></p>
+                     <p>The boundary term is $w_x(L,t)w_t(L,t) - w_x(0,t)w_t(0,t)$.</p>
+                     <p>If $w(L,t)=0$ for all $t$, then differentiating with respect to $t$ gives $w_t(L,t)=0$.</p>
+                     <p>If $w(0,t)=0$ for all $t$, then differentiating with respect to $t$ gives $w_t(0,t)=0$.</p>
+                     <p>Therefore, the boundary term becomes $w_x(L,t)\cdot 0 - w_x(0,t)\cdot 0 = 0$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">For the wave equation uniqueness proof, why is the term $[w_x w_t]_0^L$ zero for Neumann BCs $w_x(0,t)=w_x(L,t)=0$?</p>
+                <button onclick="toggleSolution('sol-um-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q15">
+                    <p><strong>Solution:</strong></p>
+                    <p>The boundary term is $w_x(L,t)w_t(L,t) - w_x(0,t)w_t(0,t)$.</p>
+                    <p>The Neumann BCs directly state $w_x(L,t)=0$ and $w_x(0,t)=0$.</p>
+                    <p>Therefore, the boundary term becomes $0 \cdot w_t(L,t) - 0 \cdot w_t(0,t) = 0$.</p>
+                </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">If $u$ is harmonic and non-constant in a bounded connected domain $D$, where must $u$ achieve its maximum?</p>
+                 <button onclick="toggleSolution('sol-um-q16')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q16">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Strong Maximum Principle, the maximum must be achieved *only* on the boundary $\partial D$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                 <p class="question-number">Question 17:</p>
+                 <p class="question-text">If $u$ is harmonic in the disk $x^2+y^2<4$ and $u(x,y)=8$ on the boundary circle $x^2+y^2=4$. What is $u(1,0)$?</p>
+                 <button onclick="toggleSolution('sol-um-q17')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q17">
+                    <p><strong>Solution:</strong></p>
+                     <p>Since $u=8$ (a constant) on the boundary of the disk, by the Maximum/Minimum Principle, $u$ must be equal to 8 everywhere inside the disk.</p>
+                     <p>Therefore, $u(1,0)=8$.</p>
+                 </div>
+            </article>
+            <article class="question-block">
+                 <p class="question-number">Question 18:</p>
+                 <p class="question-text">Outline the steps to prove uniqueness for the heat equation $u_t=k u_{xx}$ with $u(0,t)=0, u_x(L,t)=0$ and $u(x,0)=f(x)$.</p>
+                 <button onclick="toggleSolution('sol-um-q18')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q18">
+                     <p><strong>Solution:</strong></p>
+                     <ol>
+                         <li>Assume $u_1, u_2$ are two solutions. Let $w=u_1-u_2$.</li>
+                         <li>Show $w$ satisfies $w_t=k w_{xx}$, $w(0,t)=0$, $w_x(L,t)=0$, $w(x,0)=0$.</li>
+                         <li>Define energy $E(t) = \frac{1}{2}\int_0^L w^2 dx$. Note $E(0)=0$.</li>
+                         <li>Calculate $E'(t) = \int_0^L w w_t dx = \int_0^L w (k w_{xx}) dx = k \int_0^L w w_{xx} dx$.</li>
+                         <li>Integrate by parts: $E'(t) = k[w w_x]_0^L - k\int_0^L (w_x)^2 dx$.</li>
+                         <li>Evaluate boundary terms: $w(L,t)w_x(L,t) - w(0,t)w_x(0,t) = w(L,t)\cdot 0 - 0 \cdot w_x(0,t) = 0$.</li>
+                         <li>So $E'(t) = -k \int_0^L (w_x)^2 dx \le 0$.</li>
+                         <li>Since $E(0)=0$ and $E'(t)\le 0$, conclude $E(t)=0$ for all $t$.</li>
+                         <li>Since $w^2 \ge 0$ and $\int w^2 dx = 0$, conclude $w(x,t)=0$.</li>
+                         <li>Therefore $u_1=u_2$.</li>
+                     </ol>
+                 </div>
+             </article>
+             <!-- Questions 19-30 Continue the pattern -->
+             <article class="question-block">
+                 <p class="question-number">Question 19:</p>
+                 <p class="question-text">If $u$ is harmonic in a disk $B_R(P)$ and $u(P)$ is the maximum value of $u$ in the closed disk $\bar{B}_R(P)$, what can you conclude about $u$?</p>
+                 <button onclick="toggleSolution('sol-um-q19')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q19">
+                     <p><strong>Solution:</strong></p>
+                     <p>By the Strong Maximum Principle, if a non-constant harmonic function attains its maximum at an interior point (like the center $P$), it must be constant throughout the connected domain (the disk).</p>
+                     <p>Therefore, $u$ must be a constant function within the disk.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 20:</p>
+                 <p class="question-text">Suppose $u$ solves $u_{xx}+u_{yy}=0$ in $D=(0,1)\times(0,1)$ with $u=x^2$ on the boundary. Is $u(x,y)=x^2$ the solution inside?</p>
+                 <button onclick="toggleSolution('sol-um-q20')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q20">
+                     <p><strong>Solution:</strong></p>
+                     <p>No. We must check if $u(x,y)=x^2$ satisfies Laplace's equation.</p>
+                     <p>$u_x = 2x$, $u_{xx}=2$.</p>
+                     <p>$u_y = 0$, $u_{yy}=0$.</p>
+                     <p>$u_{xx}+u_{yy} = 2+0 = 2 \neq 0$.</p>
+                     <p>Since $u=x^2$ does not satisfy the PDE, it cannot be the solution inside, even though it matches the boundary conditions.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 21:</p>
+                 <p class="question-text">What does the Mean Value Property imply about the location of local maxima/minima of a non-constant harmonic function?</p>
+                 <button onclick="toggleSolution('sol-um-q21')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q21">
+                    <p><strong>Solution:</strong></p>
+                    <p>If $u$ had a local maximum at an interior point $P$, then $u(P)$ would be strictly greater than the values of $u$ at some nearby points. Consider a small disk centered at $P$ contained within the domain. The average value of $u$ on the boundary of this disk would have to be strictly less than $u(P)$. However, the Mean Value Property states that $u(P)$ must equal this average. This is a contradiction.</p>
+                    <p>A similar argument holds for local minima.</p>
+                    <p>Therefore, the Mean Value Property implies that a non-constant harmonic function cannot have local maxima or minima at interior points.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 22:</p>
+                 <p class="question-text">If $E(t) = \frac{1}{2} \int_0^L w^2 dx$ and $E'(t) = -k \int_0^L (w_x)^2 dx \le 0$, why does $E(0)=0$ imply $w(x,t)=0$?</p>
+                 <button onclick="toggleSolution('sol-um-q22')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q22">
+                    <p><strong>Solution:</strong></p>
+                     <p>1. $E(t)$ represents the "energy" or squared magnitude, so $E(t) \ge 0$ for all $t$.</p>
+                     <p>2. We are given $E(0)=0$.</p>
+                     <p>3. We know $E'(t) \le 0$, meaning $E(t)$ is a non-increasing function of time.</p>
+                     <p>4. A non-negative function starting at 0 and never increasing must remain 0 for all $t \ge 0$. So, $E(t)=0$ for all $t$.</p>
+                     <p>5. $E(t) = \frac{1}{2} \int_0^L [w(x,t)]^2 dx = 0$.</p>
+                     <p>6. Since the integrand $[w(x,t)]^2$ is continuous (usually assumed) and non-negative, the only way its integral can be zero is if the integrand itself is zero everywhere.</p>
+                     <p>7. Therefore, $[w(x,t)]^2 = 0$, which implies $w(x,t) = 0$ for all $x \in [0,L]$ and $t \ge 0$.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 23:</p>
+                 <p class="question-text">Let $u$ be harmonic in the annulus $1 < r < 2$. If $u=5$ on $r=1$ and $u=10$ on $r=2$. What can be said about the range of $u$ inside the annulus?</p>
+                 <button onclick="toggleSolution('sol-um-q23')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q23">
+                    <p><strong>Solution:</strong></p>
+                     <p>The domain $D = \{1 < r < 2\}$ is bounded. The boundary $\partial D$ consists of the circles $r=1$ and $r=2$.</p>
+                     <p>By the Weak Maximum/Minimum Principle:</p>
+                     <p>Max value of $u$ on $\partial D = \max(5, 10) = 10$.</p>
+                     <p>Min value of $u$ on $\partial D = \min(5, 10) = 5$.</p>
+                     <p>Therefore, for all points $(x,y)$ inside the annulus, $5 \le u(x,y) \le 10$.</p>
+                 </div>
+             </article>
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Does the energy method prove existence of solutions?</p>
+                 <button onclick="toggleSolution('sol-um-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>No. The energy method, as typically applied here, is used to prove **uniqueness**. It starts by assuming two solutions ($u_1, u_2$) exist and shows they must be identical ($w=u_1-u_2=0$). It does not construct a solution or guarantee that even one solution exists in the first place.</p>
+                </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">If $u$ is harmonic in a disk $B_R(0)$ and $u(0,0)=5$. If $u(x,y) \le 5$ for all points on the boundary circle $r=R$. What can you conclude about $u$ inside the disk?</p>
+                <button onclick="toggleSolution('sol-um-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-um-q25">
+                    <p><strong>Solution:</strong></p>
+                    <p>By the Weak Maximum Principle, the maximum value of $u$ in the closed disk $\bar{B}_R(0)$ is attained on the boundary $r=R$. Since $u \le 5$ on the boundary, the maximum value is at most 5.</p>
+                    <p>However, we are given that $u$ attains the value 5 at an interior point $(0,0)$.</p>
+                    <p>By the Strong Maximum Principle, if a harmonic function attains its maximum value at an interior point, it must be constant throughout the connected domain.</p>
+                    <p>Therefore, $u(x,y) = 5$ for all points inside the disk.</p>
+                </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Outline the energy method proof for uniqueness of the wave equation $u_{tt}=c^2 u_{xx}$ with boundary conditions $u(0,t)=0, u_x(L,t)=0$.</p>
+                 <button onclick="toggleSolution('sol-um-q26')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q26">
+                    <p><strong>Solution:</strong></p>
+                    <ol>
+                         <li>Assume $u_1, u_2$ are two solutions. Let $w=u_1-u_2$.</li>
+                         <li>Show $w$ satisfies $w_{tt}=c^2 w_{xx}$, $w(0,t)=0$, $w_x(L,t)=0$, $w(x,0)=0, w_t(x,0)=0$.</li>
+                         <li>Define energy $E(t) = \frac{1}{2}\int_0^L [w_t^2 + c^2 w_x^2] dx$. Note $E(0)=0$.</li>
+                         <li>Calculate $E'(t) = \int_0^L [w_t w_{tt} + c^2 w_x w_{xt}] dx = \dots$</li>
+                         <li>Integrate $w_x w_{xt}$ by parts: $E'(t) = \int_0^L c^2 w_t w_{xx} dx + c^2[w_x w_t]_0^L - c^2\int_0^L w_{xx} w_t dx$.</li>
+                         <li>Evaluate boundary terms: $w_x(L,t)w_t(L,t) - w_x(0,t)w_t(0,t)$. Since $w_x(L,t)=0$, the first part is 0. Since $w(0,t)=0$, $w_t(0,t)=0$, so the second part is also 0. Boundary term is 0.</li>
+                         <li>So $E'(t) = 0$.</li>
+                         <li>Since $E(0)=0$ and $E'(t)=0$, conclude $E(t)=0$ for all $t$.</li>
+                         <li>Conclude $w_t=0, w_x=0$, so $w$ is constant. Since $w(x,0)=0$, $w(x,t)=0$.</li>
+                         <li>Therefore $u_1=u_2$.</li>
+                     </ol>
+                 </div>
+            </article>
+            <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">If $u$ is harmonic in the region $1 < x^2+y^2 < 4$ and $u=10$ on $x^2+y^2=1$ and $u=10$ on $x^2+y^2=4$, what is $u$ inside?</p>
+                 <button onclick="toggleSolution('sol-um-q27')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q27">
+                    <p><strong>Solution:</strong></p>
+                    <p>The domain is a bounded annulus. The boundary consists of the two circles. The maximum value on the boundary is 10, and the minimum value on the boundary is 10.</p>
+                    <p>By the Weak Maximum/Minimum Principle, $10 \le u(x,y) \le 10$ for all points in the annulus.</p>
+                    <p>Therefore, $u(x,y)=10$ everywhere inside.</p>
+                 </div>
+            </article>
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">State the Mean Value Property for harmonic functions.</p>
+                 <button onclick="toggleSolution('sol-um-q28')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q28">
+                    <p><strong>Solution:</strong></p>
+                     <p>If $u$ is harmonic in a domain $D$, then for any disk $B_R(P)$ centered at $P=(x_0, y_0)$ such that the closed disk $\bar{B}_R(P)$ is contained in $D$, the value of $u$ at the center $P$ is equal to the average value of $u$ on the boundary circle $\partial B_R(P)$.</p>
+                     $$ u(x_0, y_0) = \frac{1}{2\pi R} \oint_{\partial B_R(P)} u \, ds $$
+                 </div>
+             </article>
+            <article class="question-block">
+                 <p class="question-number">Question 29:</p>
+                 <p class="question-text">If $u$ is harmonic in a disk $B_1(0)$ and $u(0,0)=0$. Does this mean $u(x,y)=0$ everywhere in the disk?</p>
+                 <button onclick="toggleSolution('sol-um-q29')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q29">
+                     <p><strong>Solution:</strong></p>
+                     <p>No. For example, $u(x,y)=x$ is harmonic ($u_{xx}+u_{yy}=0+0=0$) and $u(0,0)=0$, but $u$ is not zero everywhere in the disk. The Mean Value Property only states the value at the center is the average on the boundary, it doesn't force the function to be zero just because the center value is zero.</p>
+                 </div>
+             </article>
+             <article class="question-block">
+                 <p class="question-number">Question 30:</p>
+                 <p class="question-text">True or False: The energy $E(t)=\frac{1}{2}\int_0^L w_t^2+c^2 w_x^2 dx$ for the wave equation is always non-negative.</p>
+                 <button onclick="toggleSolution('sol-um-q30')">Show/Hide Solution</button>
+                 <div class="solution" id="sol-um-q30">
+                    <p><strong>Solution:</strong></p>
+                    <p>True. The integrand is $(w_t(x,t))^2 + c^2 (w_x(x,t))^2$. Since squares of real numbers are non-negative, and $c^2 > 0$, the integrand is always greater than or equal to zero. The integral of a non-negative function is non-negative. The factor $1/2$ doesn't change the sign.</p>
+                 </div>
+             </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>

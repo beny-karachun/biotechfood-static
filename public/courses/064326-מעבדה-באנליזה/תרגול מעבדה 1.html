@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי למידה אינטראקטיבי: אנליזה של מזון וחומרים ביולוגיים</title>
+    <style>
+        :root {
+            --bg-color: #333;
+            --container-color: #666;
+            --text-color: #E0E0E0;
+            --accent-color: #3D90D7;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --button-hover-color: #3175b0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--container-color);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        h1, h2, h3 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        p, li {
+            font-size: 1.1em;
+        }
+
+        ul {
+            padding-right: 20px;
+        }
+
+        code {
+            background-color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, 'Courier New', monospace;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .question-container, .card-container {
+            padding: 20px;
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--button-hover-color);
+        }
+        
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .option {
+            display: block;
+            width: 100%;
+            text-align: right;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #777;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .option:hover:not(.disabled) {
+            background-color: #888;
+            border-color: var(--accent-color);
+        }
+
+        .option.correct {
+            background-color: var(--correct-color);
+            border-color: #388E3C;
+        }
+
+        .option.incorrect {
+            background-color: var(--incorrect-color);
+            border-color: #D32F2F;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #555;
+            border-right: 4px solid var(--accent-color);
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .view-all-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .view-all-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--accent-color);
+        }
+
+        .view-all-item p {
+            font-weight: bold;
+        }
+
+        .view-all-item .explanation {
+            display: block; /* Always show explanation in view-all mode */
+        }
+        
+        .study-card {
+            background-color: #777;
+            padding: 40px 20px;
+            min-height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.3em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid var(--text-color);
+            padding: 12px;
+            text-align: right;
+        }
+
+        th {
+            background-color: var(--accent-color);
+            color: white;
+        }
+    </style>
+    <script>
+        // MathJax 3 Configuration
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          },
+          options: {
+            enableMenu: false
+          },
+          startup: {
+            ready: () => {
+              MathJax.startup.defaultReady();
+              // Create and dispatch a custom event when MathJax is ready
+              document.dispatchEvent(new CustomEvent('mathJaxReady'));
+            }
+          }
+        };
+      </script>
+      <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+      
+      <script>
+        // ENTIRE APPLICATION SCRIPT IS INSIDE THIS EVENT LISTENER
+        document.addEventListener('mathJaxReady', function() {
+            
+            // --- DATA STRUCTURES ---
+            const mcqData = [
+                {
+                    question: "בשיטת קרל פישר, מה תפקידו העיקרי של האימידזול בתמיסת הטיטרנט?",
+                    options: [
+                        "לשמש כחומר מחמצן עיקרי בתגובה עם המים.",
+                        "לשמור על היוד ודו תחמוצת הגופרית בתמיסה ולמנוע את התנדפותם.",
+                        "לשנות את צבע התמיסה בנקודת הסיום של הטיטרציה.",
+                        "לשמש כממס אורגני הממיס דוגמאות שומניות."
+                    ],
+                    correct: 1,
+                    explanation: "לפי הטקסט, תמיסת הטיטרנט מכילה חומרים כמו פירידין או אימידזול כדי לשמור על הריאגנטים (יוד ודו תחמוצת הגופרית) בתמיסה, מכיוון שהם נוטים להתנדף בקלות."
+                },
+                {
+                    question: "איזו מהבדיקות הבאות אינה מתאימה לקביעת מידת החמצון של שמן שעבר טיגון עמוק?",
+                    options: [
+                        "קביעת מספר פרוקסיד.",
+                        "קביעת אחוז חומר בלתי מסתבן.",
+                        "קביעת מים בשיטת קרל פישר.",
+                        "קביעת רטיבות בשיטת הייבוש."
+                    ],
+                    correct: 0,
+                    explanation: "הטקסט מציין במפורש שבדיקת מספר פרוקסיד 'מתאימה לבדיקת מידת החמצון של שמן מחומצן אך לא שמן מטוגן או שמן שעבר טיפול תרמי כלשהו'."
+                },
+                {
+                    question: "מהו העיקרון המשותף לקביעת נקודת הסיום בטיטרצית קרל פישר (בשיטה הידנית) ובטיטרצית מספר פרוקסיד?",
+                    options: [
+                        "שינוי במוליכות החשמלית של התמיסה.",
+                        "שינוי פוטנציומטרי הנמדד על ידי אלקטרודה.",
+                        "הופעת צבע קבוע שאינו נעלם.",
+                        "שקילת משקע שנוצר בתום התגובה."
+                    ],
+                    correct: 2,
+                    explanation: "בשתי השיטות, נקודת הסיום מזוהה על ידי שינוי צבע. בקרל פישר, הופעת צבע חום קבוע של היוד. במספר פרוקסיד, היעלמות הצבע השחור של קומפלקס יוד-עמילן."
+                },
+                {
+                    question: "מדוע יש צורך לבצע 'קביעת ביקורת' (בלנק) בבדיקת מספר פרוקסיד?",
+                    options: [
+                        "כדי לכייל את תמיסת התיוסולפט לפני השימוש.",
+                        "כדי לוודא שהממסים (כלורופורם וחומצה אצטית) אינם מכילים חומרים מחמצנים המגיבים עם KI.",
+                        "כדי למדוד את כמות המים במערכת שעלולה להפריע לתגובה.",
+                        "כדי לקבוע את משקל השמן המדויק שהוכנס למערכת."
+                    ],
+                    correct: 1,
+                    explanation: "קביעת ביקורת נעשית 'בהעדר שמן'. מטרתה היא למדוד את נפח התיוסולפט הדרוש לטיטור יוד שנוצר מתגובות צדדיות של הריאגנטים עצמם (למשל, חמצון KI על ידי חמצן מהאוויר או זיהומים בממס), ולא מהשמן. ערך זה ($V_0$) מופחת מהערך המתקבל עם הדוגמה."
+                },
+                {
+                    question: "איזה מהבאים אינו נחשב לחומר בלתי מסתבן (חב\"מ) בשמן?",
+                    options: [
+                        "סטרולים.",
+                        "טריגליצרידים.",
+                        "טוקופרולים.",
+                        "פחמימנים."
+                    ],
+                    correct: 1,
+                    explanation: "הטקסט מגדיר חומר בלתי מסתבן כמרכיבי השמן הבלתי מסיסים במים לאחר סיבון מלא. הרשימה כוללת סטרולים, כהלים גבוהים, טוקופרולים ופחמימנים. טריגליצרידים הם אלו שעוברים את תהליך הסיבון ולכן אינם חלק מהחב\"מ."
+                },
+                {
+                    question: "במהלך קביעת אחוז חומר בלתי מסתבן (חב\"מ), מדוע שוטפים את הפרקציה האתרית במים מזוקקים עד שהתמיסה חופשיה מבסיס?",
+                    options: [
+                        "כדי להסיר שאריות שמן שלא עברו סיבון.",
+                        "כדי להסיר עודפי פטרול אתר מהתמיסה המימית.",
+                        "כדי להסיר סבונים (תוצרי הסיבון) שייתכן ועברו לפאזה האתרית ולהבטיח שרק החב\"מ נשאר.",
+                        "כדי לנטרל את חומציות הפטרול אתר."
+                    ],
+                    correct: 2,
+                    explanation: "הפאזה האתרית מכילה את החב\"מ. השטיפות במים נועדו להסיר כל זיהום מסיס במים, ובעיקר סבונים שנוצרו בתהליך ואולי עברו בכמות קטנה לפאזה האורגנית. התוצאה הסופית צריכה להיות רק החב\"מ הנקי."
+                },
+                {
+                    question: "בשיטה לקביעת רטיבות במזונות קולואידים, מהי מטרת הוספת האתנול לדוגמה?",
+                    options: [
+                        "לזרז את תהליך הייבוש על ידי הורדת נקודת הרתיחה של המים.",
+                        "לסייע באידוי ראשוני של המים וליצור תערובת אחידה יותר עם החול.",
+                        "למנוע קלקול מיקרוביאלי של הדוגמה במהלך הבדיקה.",
+                        "לשמש כאינדיקטור צבע לסיום תהליך הייבוש."
+                    ],
+                    correct: 1,
+                    explanation: "הטקסט מציין 'הוסף 4 מל' אתנול 95%... וערבב היטב' ולאחר מכן 'אדה את הכוהל על אמבט מים'. האתנול עוזר לפזר את הדוגמה באופן אחיד בחול ואידוי שלו מסייע בהוצאת חלק מהמים, מה שמוביל ליצירת 'עוגה' נקבובית המקלה על המשך אידוי המים בתנור."
+                },
+                {
+                    question: "איזו טכניקה משמשת לקביעת נקודת הסיום במערכת טיטרציה ממוחשבת של קרל פישר, על פי הטקסט?",
+                    options: [
+                        "שינוי צבע הנצפה ויזואלית.",
+                        "מדידת שינויים במוליכות התמיסה המתבטאים בשינויי מתח באלקטרודה.",
+                        "הופעת משקע בתמיסה.",
+                        "מדידת כמות הגז הנפלטת מהתגובה."
+                    ],
+                    correct: 1,
+                    explanation: "הטקסט מציין: 'במערכות טיטרציה ממוחשבות נקודת סוף הטיטרציה נקבעת בשיטה פוטנציומטרית, לפי שינויים במוליכות התמיסה בנק' סוף הטיטרציה המתבטאים בשינויי מתח באלקטרודה'."
+                },
+                {
+                    question: "מהו ההבדל המהותי בין שמן מזוכך לשמן גולמי בהקשר של בדיקת חב\"מ?",
+                    options: [
+                        "שמן גולמי מכיל אחוז חב\"מ גבוה יותר משמן מזוכך.",
+                        "שמן מזוכך מכיל אחוז חב\"מ גבוה יותר משמן גולמי.",
+                        "רק שמן גולמי מכיל חומרים הניתנים לסיבון.",
+                        "רק שמן מזוכך מכיל טוקופרולים וסטרולים."
+                    ],
+                    correct: 0,
+                    explanation: "הטקסט מציין: 'שמנים מזוככים מכילים פחות חומר בלתי מסתבן משמנים גולמיים'. לכן, אחוז חב\"מ נמוך יכול להוות מדד לזיכוך, ואחוז גבוה בשמן מזוכך יכול להעיד על אי-ניקיונות."
+                },
+                {
+                    question: "בבדיקת מספר פרוקסיד, התגובה הראשונה היא $ROOH + 2KI + 2H_2O \\rightarrow ROH + I_2 + 2KOH$. מה תפקידה של תמיסת התיוסולפט ($Na_2S_2O_3$) המוספת בשלב השני?",
+                    options: [
+                        "לחמצן את היודיד בחזרה ליוד.",
+                        "לסמן את נקודת הסיום על ידי יצירת קומפלקס צבעוני.",
+                        "לכמת את היוד ($I_2$) ששוחרר בתגובה הראשונה.",
+                        "לסבן את השמן כדי לשחרר את ההידרופרוקסידים."
+                    ],
+                    correct: 2,
+                    explanation: "היוד ($I_2$) שמשתחרר בתגובה הראשונה נמצא בכמות שקולה לכמות ההידרופרוקסידים בשמן. הטיטרציה עם תיוסולפט ($I_2 + 2Na_2S_2O_3 \\rightarrow ...$) מכמתת את היוד, ומכמות היוד ניתן לחשב את מספר הפרוקסיד המקורי."
+                },
+                {
+                    question: "איזו בדיקה דורשת שימוש במשפך מפריד ככלי מרכזי לביצועה?",
+                    options: [
+                        "קביעת מים בשיטת קרל פישר.",
+                        "קביעת רטיבות בייבוש בתנור.",
+                        "קביעת אחוז חומר בלתי מסתבן (חב\"מ).",
+                        "קביעת מספר פרוקסיד."
+                    ],
+                    correct: 2,
+                    explanation: "בבדיקת חב\"מ, לאחר סיבון השמן, משתמשים במשפך מפריד כדי לבצע מיצויים חוזרים עם פטרול אתר, להפרדת החומר הבלתי מסתבן (שנמס בפטרול אתר) מהפאזה המימית."
+                },
+                {
+                    question: "כל הבאים הם אמצעי בטיחות המוזכרים במפורש בפרוטוקולים, פרט ל:",
+                    options: [
+                        "עבודה במנדף בעת שימוש בכלורופורם ופטרול אתר.",
+                        "לבישת כפפות בעת שימוש באימידזול וחומצת חומץ קרחית.",
+                        "הרחקת חומצת חומץ קרחית ממקור אש.",
+                        "קירור תמיסת KOH בתוך אמבט קרח בעת הכנתה."
+                    ],
+                    correct: 3,
+                    explanation: "הטקסט אכן מזכיר עבודה במנדף, לבישת כפפות והרחקה ממקור אש עבור החומרים הרלוונטיים. קירור תמיסת KOH באמבט קרח בזמן ההכנה מוזכר בפרוטוקול, אך כאמצעי למניעת התחממות יתר של התגובה האקסותרמית, לא כאמצעי בטיחות אישי ישיר כמו האחרים, וחשוב מכך, זהו שלב בתהליך ההכנה עצמו."
+                },
+                {
+                    question: "בנוסחה לחישוב אחוז רטיבות בייבוש ($H = \\frac{W_1 - W_2}{W_1} \\times 100$), מה מייצג $W_2$?",
+                    options: [
+                        "משקל הגביע והחול לפני הוספת הדוגמה.",
+                        "משקל הדוגמה לפני הייבוש.",
+                        "משקל הדוגמה לאחר הייבוש.",
+                        "משקל המים שהתאדו מהדוגמה."
+                    ],
+                    correct: 2,
+                    explanation: "לפי ההגדרות בנוסחה, $W_1$ הוא משקל הדוגמה לפני הייבוש, ו-$W_2$ הוא משקל הדוגמה לאחר הייבוש. ההפרש ביניהם ($W_1 - W_2$) הוא משקל המים שהתאדו."
+                },
+                {
+                    question: "מהי הסיבה המרכזית לצורך בקביעת ה'טיטר' (titer) של תמיסת קרל פישר לפני כל שימוש?",
+                    options: [
+                        "כדי לוודא שהממס האורגני יבש לחלוטין.",
+                        "מכיוון שהאימידזול בתמיסה מתפרק במהירות.",
+                        "בשל נדיפותו של היוד, הגורמת לשינוי בריכוז האפקטיבי של התמיסה.",
+                        "כדי לכייל את האלקטרודה הפוטנציומטרית של המכשיר."
+                    ],
+                    correct: 2,
+                    explanation: "הטקסט מסביר: 'לאור נדיפותו של היוד מתמיסת הטיטראנט יש צורך לקבוע מהו הטיטר (titer) של התמיסה לפני השימוש בה'. הטיטר הוא מדד לכמות המים שמגיבה עם 1 מ\"ל של תמיסה, והוא משתנה עקב התנדפות היוד."
+                },
+                {
+                    question: "איזה מהחומרים הבאים משמש גם כממס וגם כריאגנט בבדיקת מספר פרוקסיד?",
+                    options: [
+                        "עמילן.",
+                        "תיוסולפט הנתרן.",
+                        "כלורופורם.",
+                        "חומצת חומץ קרחית."
+                    ],
+                    correct: 3,
+                    explanation: "חומצת חומץ קרחית משמשת, יחד עם כלורופורם, להמסת השמן. בנוסף, היא מספקת את הסביבה החומצית הדרושה לתגובה בין ההידרופרוקסידים ליודיד האשלגן ($KI$). הכלורופורם משמש רק כממס."
+                },
+                {
+                    question: "באיזו בדיקה התוצאה הסופית מתקבלת על ידי שקילת שארית לאחר אידוי ממס?",
+                    options: [
+                        "קביעת מספר פרוקסיד.",
+                        "קביעת אחוז חומר בלתי מסתבן.",
+                        "קביעת מים בשיטת קרל פישר.",
+                        "קביעת רטיבות בייבוש."
+                    ],
+                    correct: 1,
+                    explanation: "בבדיקת חב\"מ, לאחר מיצוי החומר הבלתי מסתבן עם פטרול אתר, הממס (פטרול אתר) מאודה, והשארית היבשה נשקלת. משקל זה ($W_2$) משמש לחישוב אחוז החב\"מ."
+                },
+                {
+                    question: "מה ההבדל העיקרי בין תמיסת Hydranal® Composite 5 לבין Hydranal® Solvent oil?",
+                    options: [
+                        "Composite 5 היא הטיטרנט המכיל יוד, ו-Solvent oil הוא הממס לקליטת הדוגמה.",
+                        "Solvent oil הוא הטיטרנט המכיל יוד, ו-Composite 5 הוא הממס לקליטת הדוגמה.",
+                        "שתיהן תמיסות טיטרנט, אך אחת מבוססת אימידזול והשנייה פירידין.",
+                        "Composite 5 משמש לדוגמאות נוזליות ו-Solvent oil לדוגמאות מוצקות."
+                    ],
+                    correct: 0,
+                    explanation: "הטקסט מגדיר את 'תמיסת טיטראנט – תמיסת Hydranal® Composite 5' ואת 'ממס אורגני - ממס אורגני Hydranal® Solvent oil'. הטיטרנט הוא התמיסה המוספת מהביורטה, והממס הוא החומר בכוס הטיטרציה אליו מוסיפים את הדוגמה."
+                },
+                {
+                    question: "מדוע יש לשמור תמיסת KI רוויה בבקבוק חום ובמקום מוגן מאור בבדיקת מספר פרוקסיד?",
+                    options: [
+                        "אור גורם לפירוק תרמי של היודיד.",
+                        "אור גורם לחמצון היודיד ($I^−$) ליוד ($I_2$) גם בהעדר פרוקסידים, מה שיוביל לתוצאה גבוהה שגויה.",
+                        "אור גורם לאידוי המים מהתמיסה ומשנה את ריכוזה.",
+                        "אור מזרז את תגובת היוד עם עמילן, וגורם לצביעה מוקדמת."
+                    ],
+                    correct: 1,
+                    explanation: "יודיד האשלגן רגיש לחמצון על ידי אור וחמצן מהאוויר. אם יוד ייווצר בתמיסה לפני הוספתה לדוגמת השמן, הוא יגיב עם התיוסולפט בטיטרציה וייחשב כאילו מקורו מהפרוקסידים בשמן, מה שיוביל לתוצאת PV גבוהה באופן שגוי."
+                },
+                {
+                    question: "איזו בדיקה דורשת חימום של הדוגמה באמבט מים רותחים כחלק מתהליך התגובה הכימית?",
+                    options: [
+                        "קביעת רטיבות בייבוש.",
+                        "קביעת מספר פרוקסיד.",
+                        "קביעת אחוז חומר בלתי מסתבן.",
+                        "קביעת מים בשיטת קרל פישר."
+                    ],
+                    correct: 2,
+                    explanation: "בבדיקת חב\"מ, לאחר הוספת תמיסת KOH באתנול לשמן, 'מרתיחים את התמיסה באמבט מים רותחים, במשך חצי שעה' כדי להבטיח שתגובת הסיבון תתרחש במלואה."
+                },
+                {
+                    question: "מהו התהליך המכונה 'conditioning' בטיטרטור של קרל פישר?",
+                    options: [
+                        "קביעת הטיטר של תמיסת הטיטרנט באמצעות הזרקת כמות ידועה של מים.",
+                        "ייבוש המערכת הסגורה על ידי טיטור כל המים הנמצאים בממס ובכלי הניסוי.",
+                        "כיול האלקטרודה של המכשיר באמצעות תמיסות בופר סטנדרטיות.",
+                        "שטיפת המערכת עם ממס אורגני לפני תחילת הבדיקה."
+                    ],
+                    correct: 1,
+                    explanation: "הטקסט מתאר את שלב ה-conditioning כתהליך 'ייבוש המערכת הסגורה, כלומר להגבת כל המים בכלי הניסוי ובממס'. זהו שלב קריטי כדי להבטיח שרק המים מהדוגמה יגיבו עם הטיטרנט במהלך המדידה."
+                },
+                {
+                    question: "כל הבאים מהווים סיכון בטיחותי הקשור לחומצת חומץ קרחית, על פי הטקסט, פרט ל:",
+                    options: [
+                        "היא חומר מאכל.",
+                        "היא חומר נדיף.",
+                        "היא חומר דליק.",
+                        "היא חומר מסרטן."
+                    ],
+                    correct: 3,
+                    explanation: "האזהרה לגבי חומצת חומץ קרחית מציינת שהיא 'חומר מאכל, נדיף ודליק'. האזהרה לגבי חומר מסרטן מצוינת עבור כלורופורם ואימידזול, אך לא עבור חומצת חומץ קרחית."
+                },
+                {
+                    question: "בבדיקת רטיבות בייבוש, מה הקריטריון לסיום תהליך הייבוש וקבלת 'משקל קבוע'?",
+                    options: [
+                        "הדוגמה משנה את צבעה לחום כהה.",
+                        "ההפרש בין שתי שקילות עוקבות, לאחר שעת ייבוש נוספת, אינו עולה על 25 מ\"ג.",
+                        "המכשיר מצפצף כאשר לא נמדד יותר אידוי מים.",
+                        "לאחר 3 שעות ייבוש בדיוק בטמפרטורה של 105 מעלות צלזיוס."
+                    ],
+                    correct: 1,
+                    explanation: "הטקסט מגדיר משקל קבוע באופן ברור: 'הפרש בין שתי שקילות אחרי יבוש נוסף במשך שעה לא יעלה על 25 מ\"ג'."
+                },
+                {
+                    question: "איזה מהבאים מתאר נכונה את התגובה הכימית הבסיסית בשיטת קרל פישר?",
+                    options: [
+                        "תגובת חומצה-בסיס בין מים לאימידזול.",
+                        "תגובת סיבון של מים עם שומנים.",
+                        "תגובת חמצון-חיזור בין מים, יוד ודו-תחמוצת הגופרית.",
+                        "תגובת שיקוע של מים עם יוני כסף."
+                    ],
+                    correct: 2,
+                    explanation: "התגובה המוצגת בטקסט היא $2H_2O + SO_2 + I_2 \\rightarrow H_2SO_4 + 2HI$. זוהי תגובת חמצון-חיזור קלאסית שבה היוד ($I_2$) מחמצן את דו-תחמוצת הגופרית ($SO_2$) בנוכחות מים."
+                },
+                {
+                    question: "בנוסחה לחישוב מספר פרוקסיד ($PV$), מה מייצג הפקטור $f$?",
+                    options: [
+                        "יעילות התגובה בין הפרוקסידים ל-KI.",
+                        "פקטור התיקון לנורמליות של תמיסת התיוסולפט.",
+                        "אחוז הלחות בדוגמת השמן.",
+                        "זמן התגובה בדקות."
+                    ],
+                    correct: 1,
+                    explanation: "ההגדרה בנוסחה מציינת ש-$f$ הוא 'פקטור תמיסת תיוסולפט הנתרן'. זהו פקטור תיקון המשמש להתאמת הריכוז הנומינלי (למשל, 0.01N) לריכוז האמיתי והמדויק של התמיסה כפי שנקבע בכיול."
+                },
+                {
+                    question: "מדוע יש צורך להשתמש במעבה מחזיר (רפלוקס) בעת חימום השמן עם תמיסת KOH בבדיקת חב\"מ?",
+                    options: [
+                        "כדי למנוע חדירת חמצן מהאוויר שעלול לחמצן את השמן.",
+                        "כדי לשמור על טמפרטורה קבועה של 100 מעלות צלזיוס בדיוק.",
+                        "כדי למנוע איבוד של הממס (אתנול) עקב התנדפות במהלך ההרתחה.",
+                        "כדי לזרז את תגובת הסיבון על ידי הגברת הלחץ במערכת."
+                    ],
+                    correct: 2,
+                    explanation: "התגובה מתבצעת באתנול רותח. מעבה מחזיר מקרר את אדי הממס וגורם להם להתעבות ולחזור לכלי התגובה. כך, נפח התמיסה נשאר קבוע ומונעים אובדן של הממס היקר והדליק לסביבה."
+                },
+                {
+                    question: "איזו בדיקה מיועדת ספציפית לחומרים בעלי מסיסות נמוכה במתנול, כמו שמנים?",
+                    options: [
+                        "קביעת רטיבות בייבוש בתנור.",
+                        "קביעת מספר פרוקסיד.",
+                        "קביעת מים בשיטת קרל פישר עם ממס אורגני ייעודי.",
+                        "קביעת אחוז חומר בלתי מסתבן."
+                    ],
+                    correct: 2,
+                    explanation: "הטקסט על שיטת קרל פישר מציין שימוש ב-'ממס אורגני Hydranal® Solvent oil ייעודי לקביעת תכולת לחות... של חומרים בעלי מסיסות נמוכה במתנול, כגון: שמנים'."
+                },
+                {
+                    question: "מהי המשמעות של תוצאת חב\"מ גבוהה בשמן שהוגדר כ'מזוכך'?",
+                    options: [
+                        "השמן עבר חמצון מתקדם.",
+                        "השמן מכיל כמות גדולה של מים.",
+                        "השמן עלול להיות לא נקי או מזויף בשמן גולמי.",
+                        "תהליך הזיכוך היה יעיל במיוחד."
+                    ],
+                    correct: 2,
+                    explanation: "הטקסט מסביר כי 'שמנים מזוככים מכילים פחות חומר בלתי מסתבן משמנים גולמיים'. לכן, 'אחוז חב\"מ גבוהה בשמן מזוכך יכול להעיד על אי נקיונות' או על זיוף עם שמן פחות מזוכך."
+                },
+                {
+                    question: "בבדיקת מספר פרוקסיד, מדוע מוסיפים את אינדיקטור העמילן לקראת סוף הטיטרציה ולא בתחילתה?",
+                    options: [
+                        "העמילן מגיב עם השמן ועלול להפריע לתגובה הראשונית.",
+                        "בריכוזים גבוהים של יוד, העמילן יוצר קומפלקס יציב מאוד שקשה לפרק, מה שגורם לנקודת סיום לא חדה.",
+                        "העמילן מתפרק בסביבה החומצית של התמיסה אם הוא נמצא בה זמן רב מדי.",
+                        "הצבע הכחול הכהה ימסך את צבע התמיסה ויקשה על זיהוי התקדמות התגובה."
+                    ],
+                    correct: 1,
+                    explanation: "זוהי פרקטיקה סטנדרטית בטיטרציות יודומטריות. אם מוסיפים עמילן בריכוז יוד גבוה, נוצר קומפלקס יוד-עמילן חזק. היוד 'נכלא' בתוך סליל העמילן והתגובה שלו עם תיוסולפט הופכת איטית ולא מדויקת, מה שמוביל לתוצאה שגויה. מוסיפים אותו לקראת הסוף, כשהתמיסה בצבע צהוב-קש (ריכוז יוד נמוך)."
+                },
+                {
+                    question: "מהו ההבדל המרכזי בין 'קביעת רטיבות בייבוש' ל'קביעת מים בשיטת קרל פישר' מבחינת מה שנמדד?",
+                    options: [
+                        "שיטת הייבוש מודדת רק מים חופשיים, בעוד קרל פישר מודד גם מים קשורים.",
+                        "שיטת הייבוש מודדת אובדן מסה כללי (כולל חומרים נדיפים אחרים), בעוד קרל פישר ספציפית למים.",
+                        "שיטת הייבוש מתאימה רק לנוזלים, וקרל פישר רק למוצקים.",
+                        "אין הבדל מהותי, שתיהן מודדות את תכולת המים הכוללת."
+                    ],
+                    correct: 1,
+                    explanation: "שיטת הייבוש מודדת את כל מה שמתנדף ב-105 מעלות צלזיוס, כולל אלכוהולים, חומצות שומן קצרות וחומרי ארומה. לעומת זאת, התגובה הכימית של קרל פישר היא ספציפית למים, ולכן נחשבת לשיטה מדויקת יותר כאשר יש חשש לחומרים נדיפים אחרים בדוגמה."
+                },
+                {
+                    question: "במהלך ביצוע מיצויים עם פטרול אתר במשפך מפריד, מדוע חיוני לשחרר לחץ באופן תדיר?",
+                    options: [
+                        "כדי למנוע יצירת ואקום שמונע הפרדה טובה של הפאזות.",
+                        "כדי לאפשר כניסת אוויר הדרוש לתהליך המיצוי.",
+                        "בשל לחץ האדים הגבוה של הפטרול אתר, שעלול לגרום להתזת חומרים או פיצוץ המשפך.",
+                        "כדי לערבב טוב יותר את שתי הפאזות וליצור אמולסיה."
+                    ],
+                    correct: 2,
+                    explanation: "פטרול אתר הוא חומר נדיף מאוד. אפילו חום היד המחזיקה את המשפך גורם לו להתאדות, מה שיוצר לחץ גז בתוך המערכת הסגורה. שחרור הלחץ הוא אמצעי בטיחות קריטי למניעת השפרצת תוכן המשפך כאשר פותחים אותו."
+                }
+            ];
+
+            const tfData = [
+                { question: "בדיקת מספר פרוקסיד מודדת את תוצרי החמצון הראשוניים והשניוניים של חומצות שומן.", answer: false, explanation: "הטקסט מציין שההידרופרוקסידים הם 'תוצרי החמצון הראשוניים' של חומצות שומן. הבדיקה אינה מודדת תוצרים שניוניים כמו אלדהידים וקטונים." },
+                { question: "בשיטת קרל פישר, תגובת המים עם היוד היא ביחס מולרי של 1:1.", answer: false, explanation: "לפי התגובה $2H_2O + SO_2 + I_2 \\rightarrow ...$, שתי מולקולות מים מגיבות עם מולקולה אחת של יוד. היחס הוא 2:1." },
+                { question: "ניתן להשתמש בשיטת הייבוש בתנור לקביעת רטיבות בדבש.", answer: true, explanation: "הכותרת של הפרוטוקול מציינת במפורש שהשיטה מיועדת למזונות 'קולואידים' וכוללת ברשימה דבש, בשר, גבינה ומולסה." },
+                { question: "בבדיקת חב\"מ, החומר הבלתי מסתבן מסיס בפאזה המימית-אלכוהולית לאחר תגובת הסיבון.", answer: false, explanation: "החומר הבלתי מסתבן אינו מסיס במים. הוא מופרד מהפאזה המימית על ידי מיצוי עם ממס אורגני (פטרול אתר), שבו הוא כן מסיס." },
+                { question: "יש צורך לבצע את כל שלבי הטיטרציה בבדיקת מספר פרוקסיד בתוך מנדף כימי.", answer: false, explanation: "הטקסט מציין: 'הניסוי מתבצע במנדף הכימי למעט הטיטרציה'. שלב הטיטרציה עצמו יכול להתבצע מחוץ למנדף." },
+                { question: "שמן מזוכך תמיד יכיל אחוז חב\"מ נמוך יותר משמן גולמי מאותו מקור.", answer: true, explanation: "הטקסט מסביר שתהליך הזיכוך מסיר חלק מהחומרים הבלתי מסתבנים, ולכן 'שמנים מזוככים מכילים פחות חומר בלתי מסתבן משמנים גולמיים'." },
+                { question: "תהליך ה-'conditioning' בשיטת קרל פישר מבצע טיטרציה של המים הנמצאים בדוגמה המוזרקת.", answer: false, explanation: "ה-conditioning מתבצע לפני הזרקת הדוגמה, והוא מנטרל את המים שכבר נמצאים בממס ובכלי התגובה, לא בדוגמה." },
+                { question: "פנול פתלאין משמש כאינדיקטור בבדיקת מספר פרוקסיד.", answer: false, explanation: "פנול פתלאין מוזכר כאינדיקטור בבדיקת חב\"מ (לוידוא סילוק הבסיס). בבדיקת מספר פרוקסיד, האינדיקטור הוא עמילן." },
+                { question: "היחידות של מספר פרוקסיד (PV) הן מיליאקוויוולנט של חמצן פעיל לקילוגרם שמן.", answer: true, explanation: "ההגדרה במבוא לבדיקת PV היא: 'מבוטא כמיליאקוויולנט של חמצן פעיל באחד קילוגרם שמן'. הנוסחה עם פקטור 1000 אכן מובילה ליחידות אלו." },
+                { question: "הוספת חול בבדיקת רטיבות בייבוש נועדה להגדיל את משקל הדוגמה.", answer: false, explanation: "החול נועד להגדיל את שטח הפנים של הדוגמה הקולואידית וליצור 'עוגה' נקבובית, המאפשרת למים להתנדף ביעילות ומונעת יצירת קרום אטום." },
+                { question: "תמיסת KOH באתנול משמשת לסיבון השמן בבדיקת חב\"מ.", answer: true, explanation: "הפרוטוקול של חב\"מ מציין הוספת '50 מ\"ל תמיסת KOH באתנול' לשמן והרתחה לצורך ביצוע הסיבון." },
+                { question: "היעלמות הצבע הכחול-שחור מסמנת את נקודת הסיום בטיטרצית קרל פישר.", answer: false, explanation: "היעלמות צבע כחול-שחור היא נקודת הסיום בטיטרציית מספר פרוקסיד. בקרל פישר (בשיטה ידנית), הופעת צבע חום קבוע של עודף יוד מסמנת את הסיום." },
+                { question: "כלורופורם משמש כממס בבדיקת חב\"מ.", answer: false, explanation: "בבדיקת חב\"מ הממס למיצוי הוא פטרול אתר. כלורופורם משמש כממס (יחד עם חומצה אצטית) בבדיקת מספר פרוקסיד." },
+                { question: "ערך ה'טיטר' בשיטת קרל פישר מייצג את נפח הטיטרנט הדרוש לנטרול 1 מ\"ג מים.", answer: false, explanation: "הטיטר הוא 'מדד לכמות המים שמגיבה עם 1ml של תמיסת טיטראנט'. כלומר, הוא מבוטא ביחידות של מסת מים לנפח טיטרנט (למשל, מ\"ג/מ\"ל)." },
+                { question: "השימוש בתמיסת Hydranal® המכילה אימידזול הוא לצמצום התנדפות הריאגנטים.", answer: true, explanation: "הטקסט מציין שהתמיסה 'מבוססת על שימוש באימידזול לצמצום התנדפות הריאגנטים'." },
+                { question: "ניתן לבצע בדיקת חב\"מ על שמן שעבר טיגון.", answer: true, explanation: "אין בטקסט שום מגבלה על ביצוע בדיקת חב\"מ לשמן מטוגן. המגבלה על טיפול תרמי הוזכרה רק בהקשר של בדיקת מספר פרוקסיד." },
+                { question: "התגובה הראשונית בבדיקת מספר פרוקסיד היא חמצון של יוד על ידי הידרופרוקסידים.", answer: false, explanation: "התגובה היא חמצון של יודיד ($KI$) ליוד ($I_2$) על ידי ההידרופרוקסידים ($ROOH$). היודיד מתחמצן, וההידרופרוקסיד מתחזר." },
+                { question: "בשיטת הייבוש, יש לאדות את האתנול על אמבט מים לפני הכנסת הדוגמה לתנור.", answer: true, explanation: "הפרוטוקול מורה בפירוש: 'אדה את הכוהל על אמבט מים' ורק לאחר מכן 'העבר את הכוריות לתנור יבוש'." },
+                { question: "בטיטרציית קרל פישר ממוחשבת, נורית 'cond' דולקת באופן קבוע כאשר המערכת יבשה ומוכנה לבדיקה.", answer: true, explanation: "הטקסט מציין שבסיום תהליך ה-conditioning 'תדלק באופן קבוע נורית cond'." },
+                { question: "משקל הדוגמה ($W$) נמצא במכנה בנוסחאות החישוב של PV וגם של אחוז רטיבות ($H$).", answer: true, explanation: "הנוסחה ל-PV היא $.../W$, והנוסחה ל-$H$ היא $.../W_1$. בשני המקרים, משקל הדוגמה ההתחלתי נמצא במכנה, כיוון שהתוצאה מבוטאת ביחס למסת הדוגמה." }
+            ];
+
+            const cardData = [
+                { term: "מספר פרוקסיד (PV)", definition: "מדד לכמות ההידרופרוקסידים (תוצרי חמצון ראשוניים) בשמן. מבוטא כמיליאקוויוולנט של חמצן פעיל לק\"ג שמן." },
+                { term: "חומר בלתי מסתבן (חב\"מ / USF)", definition: "מרכיבי השמן שאינם עוברים סיבון (הידרוליזה בסיסית) ואינם מסיסים במים, כגון סטרולים, טוקופרולים ופחמימנים." },
+                { term: "טיטרצית קרל פישר", definition: "שיטה כימית לקביעת תכולת מים, המבוססת על תגובת חמצון-חיזור בין מים, יוד ודו-תחמוצת הגופרית." },
+                { term: "Titer (בקרל פישר)", definition: "מדד לכמות המים (במ\"ג) המגיבה עם 1 מ\"ל של תמיסת הטיטרנט. יש לקבוע אותו לפני השימוש עקב נדיפות היוד." },
+                { term: "Conditioning (בקרל פישר)", definition: "תהליך ייבוש אוטומטי של הממס וכלי הטיטרציה על ידי טיטור כל רטיבות הרקע לפני הוספת הדוגמה." },
+                { term: "סיבון (Saponification)", definition: "תגובת הידרוליזה של אסטרים (כמו טריגליצרידים בשמן) בסביבה בסיסית (למשל, KOH), ליצירת אלכוהול (גליצרול) ומלחי חומצות שומן (סבון)." },
+                { term: "קביעת ביקורת (Blank)", definition: "ביצוע תהליך הבדיקה ללא הוספת דוגמה, כדי למדוד את תגובת הרקע של הריאגנטים עצמם. התוצאה מופחתת מתוצאת הדוגמה." },
+                { term: "משקל קבוע", definition: "מצב המושג בשיטת הייבוש כאשר שקילות עוקבות של הדוגמה (לאחר פרקי ייבוש נוספים) מראות הפרש מסה קטן מאוד (למשל, פחות מ-25 מ\"ג), המעיד שכל המים התאדו." }
+            ];
+
+            // --- STATE MANAGEMENT ---
+            let currentMcqIndex = 0;
+            let currentTfIndex = 0;
+            let currentCardIndex = 0;
+
+            // --- SELECTORS ---
+            const mcqQuestionDisplay = document.getElementById('mcq-question-display');
+            const mcqOptionsContainer = document.getElementById('mcq-options-container');
+            const mcqExplanation = document.getElementById('mcq-explanation');
+            const mcqCounter = document.getElementById('mcq-counter');
+            const mcqPrevBtn = document.getElementById('mcq-prev');
+            const mcqNextBtn = document.getElementById('mcq-next');
+            const mcqViewAllBtn = document.getElementById('mcq-view-all-btn');
+            const mcqSingleViewContainer = document.getElementById('mcq-single-view-container');
+            const mcqViewAllContainer = document.getElementById('mcq-view-all-container');
+            
+            const tfQuestionDisplay = document.getElementById('tf-question-display');
+            const tfOptionsContainer = document.getElementById('tf-options-container');
+            const tfExplanation = document.getElementById('tf-explanation');
+            const tfCounter = document.getElementById('tf-counter');
+            const tfPrevBtn = document.getElementById('tf-prev');
+            const tfNextBtn = document.getElementById('tf-next');
+            const tfViewAllBtn = document.getElementById('tf-view-all-btn');
+            const tfSingleViewContainer = document.getElementById('tf-single-view-container');
+            const tfViewAllContainer = document.getElementById('tf-view-all-container');
+            
+            const card = document.getElementById('study-card');
+            const cardCounter = document.getElementById('card-counter');
+            const cardPrevBtn = document.getElementById('card-prev');
+            const cardNextBtn = document.getElementById('card-next');
+            let isCardFront = true;
+
+            // --- MCQ FUNCTIONS ---
+            function renderMcq() {
+                const q = mcqData[currentMcqIndex];
+                mcqQuestionDisplay.textContent = q.question;
+                mcqOptionsContainer.innerHTML = '';
+                q.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'option';
+                    button.textContent = option;
+                    button.onclick = () => checkMcqAnswer(index);
+                    mcqOptionsContainer.appendChild(button);
+                });
+                mcqExplanation.style.display = 'none';
+                mcqCounter.textContent = `שאלה ${currentMcqIndex + 1} / ${mcqData.length}`;
+                mcqPrevBtn.disabled = currentMcqIndex === 0;
+                mcqNextBtn.disabled = currentMcqIndex === mcqData.length - 1;
+            }
+
+            function checkMcqAnswer(selectedIndex) {
+                const q = mcqData[currentMcqIndex];
+                const options = mcqOptionsContainer.children;
+                for (let i = 0; i < options.length; i++) {
+                    options[i].classList.add('disabled');
+                    if (i === q.correct) {
+                        options[i].classList.add('correct');
+                    } else if (i === selectedIndex) {
+                        options[i].classList.add('incorrect');
+                    }
+                }
+                mcqExplanation.textContent = q.explanation;
+                mcqExplanation.style.display = 'block';
+            }
+            
+            function renderAllMcqs() {
+                mcqViewAllContainer.innerHTML = '';
+                mcqData.forEach((q, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'view-all-item';
+                    let optionsHtml = '';
+                    q.options.forEach((opt, optIndex) => {
+                        let className = 'option disabled';
+                        if(optIndex === q.correct) className += ' correct';
+                        optionsHtml += `<button class="${className}">${opt}</button>`;
+                    });
+                    item.innerHTML = `
+                        <p>${index + 1}. ${q.question}</p>
+                        ${optionsHtml}
+                        <div class="explanation">${q.explanation}</div>
+                    `;
+                    mcqViewAllContainer.appendChild(item);
+                });
+            }
+
+            // --- TRUE/FALSE FUNCTIONS ---
+            function renderTf() {
+                const q = tfData[currentTfIndex];
+                tfQuestionDisplay.textContent = q.question;
+                tfExplanation.style.display = 'none';
+                tfOptionsContainer.innerHTML = `
+                    <button class="option" onclick="checkTfAnswer(true)">נכון</button>
+                    <button class="option" onclick="checkTfAnswer(false)">לא נכון</button>
+                `;
+                tfCounter.textContent = `שאלה ${currentTfIndex + 1} / ${tfData.length}`;
+                tfPrevBtn.disabled = currentTfIndex === 0;
+                tfNextBtn.disabled = currentTfIndex === tfData.length - 1;
+            }
+
+            function checkTfAnswer(userAnswer) {
+                const q = tfData[currentTfIndex];
+                const options = tfOptionsContainer.children;
+                const correctOption = q.answer ? options[0] : options[1];
+                const incorrectOption = q.answer ? options[1] : options[0];
+
+                options[0].classList.add('disabled');
+                options[1].classList.add('disabled');
+
+                correctOption.classList.add('correct');
+                if (userAnswer !== q.answer) {
+                    incorrectOption.classList.add('incorrect');
+                }
+                
+                tfExplanation.textContent = q.explanation;
+                tfExplanation.style.display = 'block';
+            }
+
+            function renderAllTf() {
+                tfViewAllContainer.innerHTML = '';
+                tfData.forEach((q, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'view-all-item';
+                    const answerText = q.answer ? 'נכון' : 'לא נכון';
+                    item.innerHTML = `
+                        <p>${index + 1}. ${q.question}</p>
+                        <p><strong>התשובה הנכונה: ${answerText}</strong></p>
+                        <div class="explanation">${q.explanation}</div>
+                    `;
+                    tfViewAllContainer.appendChild(item);
+                });
+            }
+            
+            // --- STUDY CARD FUNCTIONS ---
+            function renderCard() {
+                const c = cardData[currentCardIndex];
+                isCardFront = true;
+                card.textContent = c.term;
+                cardCounter.textContent = `כרטיס ${currentCardIndex + 1} / ${cardData.length}`;
+                cardPrevBtn.disabled = currentCardIndex === 0;
+                cardNextBtn.disabled = currentCardIndex === cardData.length - 1;
+            }
+
+            function flipCard() {
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    const c = cardData[currentCardIndex];
+                    if (isCardFront) {
+                        card.textContent = c.definition;
+                    } else {
+                        card.textContent = c.term;
+                    }
+                    isCardFront = !isCardFront;
+                    card.style.opacity = '1';
+                }, 300);
+            }
+
+            // --- EVENT LISTENERS ---
+            mcqPrevBtn.onclick = () => {
+                if (currentMcqIndex > 0) {
+                    currentMcqIndex--;
+                    renderMcq();
+                }
+            };
+            mcqNextBtn.onclick = () => {
+                if (currentMcqIndex < mcqData.length - 1) {
+                    currentMcqIndex++;
+                    renderMcq();
+                }
+            };
+            mcqViewAllBtn.onclick = () => {
+                const isHidden = mcqSingleViewContainer.style.display === 'none';
+                if (isHidden) {
+                    mcqSingleViewContainer.style.display = 'block';
+                    mcqViewAllContainer.style.display = 'none';
+                    mcqViewAllBtn.textContent = 'הצג את כל השאלות';
+                } else {
+                    mcqSingleViewContainer.style.display = 'none';
+                    mcqViewAllContainer.style.display = 'block';
+                    mcqViewAllBtn.textContent = 'חזור לתצוגה רגילה';
+                }
+            };
+            
+            tfPrevBtn.onclick = () => {
+                if (currentTfIndex > 0) {
+                    currentTfIndex--;
+                    renderTf();
+                }
+            };
+            tfNextBtn.onclick = () => {
+                if (currentTfIndex < tfData.length - 1) {
+                    currentTfIndex++;
+                    renderTf();
+                }
+            };
+            tfViewAllBtn.onclick = () => {
+                const isHidden = tfSingleViewContainer.style.display === 'none';
+                if (isHidden) {
+                    tfSingleViewContainer.style.display = 'block';
+                    tfViewAllContainer.style.display = 'none';
+                    tfViewAllBtn.textContent = 'הצג את כל השאלות';
+                } else {
+                    tfSingleViewContainer.style.display = 'none';
+                    tfViewAllContainer.style.display = 'block';
+                    tfViewAllBtn.textContent = 'חזור לתצוגה רגילה';
+                }
+            };
+
+            card.onclick = flipCard;
+            cardPrevBtn.onclick = () => {
+                if (currentCardIndex > 0) {
+                    currentCardIndex--;
+                    renderCard();
+                }
+            };
+            cardNextBtn.onclick = () => {
+                if (currentCardIndex < cardData.length - 1) {
+                    currentCardIndex++;
+                    renderCard();
+                }
+            };
+
+            // --- INITIAL RENDER ---
+            renderMcq();
+            renderAllMcqs(); // Pre-render for "view all"
+            renderTf();
+            renderAllTf(); // Pre-render for "view all"
+            renderCard();
+
+        }); // End of mathJaxReady event listener
+      </script>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <h1>סיכום ומבחן: שיטות אנליטיות במזון</h1>
+
+        <!-- THEORY SECTION -->
+        <div class="section" id="theory">
+            <h2>סיכום תיאורטי</h2>
+
+            <h3>1. קביעת מים בשיטת קרל פישר</h3>
+            <p>
+                שיטה זו מאפשרת קביעה כמותית ומדויקת של מים בדוגמאות, והיא יעילה במיוחד עבור מוצרים בעלי תכולת לחות נמוכה. העיקרון מבוסס על תגובת חמצון-חיזור בין מים, יוד ($I_2$) ודו-תחמוצת הגופרית ($SO_2$) בסביבה בסיסית (אימידזול).
+            </p>
+            <p><strong>התגובה הכימית:</strong></p>
+            $$2H_2O + SO_2 + I_2 \rightarrow H_2SO_4 + 2HI$$
+            <p>
+                המים משמשים כריאגנט מגביל בתגובה. נקודת הסיום של הטיטרציה, המציינת שכל המים בדוגמה הגיבו, מזוהה על ידי עודף קל של יוד. במערכות מודרניות, הזיהוי נעשה אלקטרונית (פוטנציומטרית) על ידי מדידת שינוי במתח האלקטרודה, ובמערכות ידניות על ידי הופעת צבע חום קבוע של היוד.
+            </p>
+            <ul>
+                <li><strong>ריאגנטים עיקריים:</strong>
+                    <ul>
+                        <li><code>Hydranal® Composite 5</code>: תמיסת טיטרנט המכילה יוד, $SO_2$ ואימידזול. האימידזול מייצב את הריאגנטים ומונע את התנדפותם.</li>
+                        <li><code>Hydranal® Solvent oil</code>: ממס אורגני לקליטת דוגמאות שומניות שאינן מסיסות במתנול.</li>
+                    </ul>
+                </li>
+                <li><strong>שלבים מרכזיים:</strong>
+                    <ol>
+                        <li><strong>Conditioning:</strong> ייבוש המערכת על ידי טיטור של כל שאריות המים בממס ובכלי התגובה.</li>
+                        <li><strong>קביעת Titer:</strong> הזרקת כמות מדודה של מים וביצוע טיטרציה כדי לקבוע את היחס המדויק בין נפח הטיטרנט למסת המים (מ"ג/מ"ל). שלב זה חיוני עקב נדיפות היוד.</li>
+                        <li><strong>מדידת דוגמה:</strong> הזרקת דוגמה שקולה וביצוע טיטרציה עד לנקודת הסיום.</li>
+                    </ol>
+                </li>
+            </ul>
+            <p><strong>חישוב תכולת המים (%w/w):</strong></p>
+            $$ \text{Water Content}[\%w/w] = \frac{\text{Titrant volume} \times \text{titer} \times 0.1}{\text{Sample size}} $$
+
+            <h3>2. קביעת מספר פרוקסיד בשמן (PV)</h3>
+            <p>
+                בדיקה זו מעריכה את רמת החמצון הראשונית של שמן, על ידי כימות של הידרופרוקסידים ($ROOH$), שהם תוצרי החמצון הראשוניים של חומצות שומן. ערך גבוה מעיד על חמצון מתקדם. השיטה אינה מתאימה לשמנים שעברו טיפול תרמי (כמו טיגון).
+            </p>
+            <p><strong>עקרון כימי (שני שלבים):</strong></p>
+            <ol>
+                <li>ההידרופרוקסידים בשמן מחמצנים יודיד ($KI$) ליוד ($I_2$) בסביבה חומצית.</li>
+                $$ROOH + 2KI + 2H_2O \rightarrow ROH + I_2 + 2KOH$$
+                <li>היוד ששוחרר מטוטר עם תמיסה מכוילת של נתרן תיוסולפט ($Na_2S_2O_3$) בנוכחות אינדיקטור עמילן. נקודת הסיום היא היעלמות הצבע הכחול-שחור.</li>
+                 $$I_2 + 2Na_2S_2O_3 \rightarrow 2NaI + Na_2S_4O_6$$
+            </ol>
+            <ul>
+                <li><strong>ריאגנטים עיקריים:</strong>
+                    <ul>
+                        <li>תערובת ממסים: כלורופורם וחומצת חומץ קרחית, להמסת השמן.</li>
+                        <li>תמיסה רוויה של יודיד אשלגן ($KI$).</li>
+                        <li>תמיסת נתרן תיוסולפט בריכוז ידוע (למשל, $0.01N$).</li>
+                        <li>אינדיקטור עמילן.</li>
+                    </ul>
+                </li>
+            </ul>
+             <p><strong>חישוב מספר הפרוקסיד:</strong></p>
+            $$ PV = \frac{N \times (V - V_0) \times f}{W} \times 1000 $$
+            <p>כאשר $V_0$ הוא נפח הטיטרנט בבדיקת הביקורת (בלנק).</p>
+
+            <h3>3. קביעת אחוז חומר בלתי מסתבן (חב"מ / USF)</h3>
+            <p>
+                שיטה זו קובעת את אחוז המרכיבים בשמן שאינם עוברים תהליך סיבון (הידרוליזה בסיסית). מרכיבים אלה כוללים סטרולים, טוקופרולים, כהלים גבוהים ופחמימנים. שמנים מזוככים מכילים פחות חב"מ משמנים גולמיים, ולכן הבדיקה יכולה להעיד על מידת הזיכוך או על זיופים.
+            </p>
+             <p><strong>עקרון הפעולה:</strong></p>
+             <ol>
+                <li><strong>סיבון:</strong> השמן מחומם עם בסיס חזק (KOH) בתמיסה אתנולית. הטריגליצרידים הופכים לסבונים (מסיסים במים) וגליצרול. החב"מ אינו מגיב.</li>
+                <li><strong>מיצוי:</strong> החב"מ, שאינו מסיס בתמיסה המימית-סבונית, ממוצה ממנה באמצעות ממס אורגני שאינו מתערבב במים, כמו פטרול אתר.</li>
+                <li><strong>כימות:</strong> הממס האורגני מאודה, והשארית היבשה (החב"מ) נשקלת.</li>
+            </ol>
+             <p><strong>חישוב אחוז החב"מ:</strong></p>
+             $$ \%USF = \frac{W_2}{W_1} \times 100 $$
+            <p>כאשר $W_1$ הוא משקל דוגמת השמן ו-$W_2$ הוא משקל השארית לאחר הייבוש.</p>
+            
+            <h3>4. קביעת רטיבות בייבוש בתנור (מזונות קולואידים)</h3>
+            <p>
+                זוהי שיטה לקביעת תכולת הלחות במזונות בעלי מרקם קולואידי או צמיגי (כמו דבש, בשר, גבינה), הנוטים ליצור קרום אטום המונע אידוי יעיל של מים. השיטה מבוססת על מדידת אובדן המסה של הדוגמה לאחר ייבוש בטמפרטורה מוגדרת (לרוב, $105^\circ C$) עד הגעה למשקל קבוע.
+            </p>
+            <p><strong>עקרון הפעולה:</strong></p>
+            <ul>
+                <li>ערבוב הדוגמה עם חול אנליטי נועד להגדיל באופן משמעותי את שטח הפנים ולמנוע יצירת קרום.</li>
+                <li>הוספת כמות קטנה של אתנול ואידויו הראשוני על אמבט מים מסייעת ליצירת "עוגה" נקבובית, המאפשרת יציאה קלה של אדי המים מהדוגמה בתנור.</li>
+                <li>התוצאה מתקבלת כהפרש בין משקל הדוגמה לפני ואחרי הייבוש, עד להגעה ל'משקל קבוע' (הפרש זניח בין שקילות עוקבות).</li>
+            </ul>
+             <p><strong>חישוב אחוז הרטיבות:</strong></p>
+            $$ H = \frac{W_1 - W_2}{W_1} \times 100 $$
+            <p>כאשר $W_1$ הוא משקל הדוגמה לפני הייבוש ו-$W_2$ הוא משקל הדוגמה לאחר הייבוש.</p>
+            
+            <h3>טבלת השוואה בין השיטות</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>פרמטר</th>
+                        <th>קרל פישר</th>
+                        <th>מספר פרוקסיד</th>
+                        <th>חומר בלתי מסתבן</th>
+                        <th>ייבוש בתנור</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>מה נמדד</strong></td>
+                        <td>תכולת מים (ספציפי)</td>
+                        <td>הידרופרוקסידים (חמצון ראשוני)</td>
+                        <td>מרכיבים שאינם עוברים סיבון</td>
+                        <td>אובדן מסה בחימום (בעיקר מים)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>עיקרון</strong></td>
+                        <td>טיטרציית חמצון-חיזור</td>
+                        <td>טיטרציית חמצון-חיזור (יודומטרית)</td>
+                        <td>סיבון, מיצוי, שקילה</td>
+                        <td>גרבימטריה (שקילה)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ריאגנט מפתח</strong></td>
+                        <td>יוד, $SO_2$, אימידזול</td>
+                        <td>$KI$, נתרן תיוסולפט</td>
+                        <td>$KOH$ (בסיס חזק)</td>
+                        <td>חול אנליטי</td>
+                    </tr>
+                    <tr>
+                        <td><strong>זיהוי נקודת סיום/כימות</strong></td>
+                        <td>אלקטרודה פוטנציומטרית / צבע יוד</td>
+                        <td>אינדיקטור עמילן</td>
+                        <td>שקילת שארית</td>
+                        <td>הגעה למשקל קבוע</td>
+                    </tr>
+                    <tr>
+                        <td><strong>יישום טיפוסי</strong></td>
+                        <td>מוצרים עם לחות נמוכה, שמנים</td>
+                        <td>בדיקת טריות/חמצון שמן</td>
+                        <td>בדיקת איכות וזיכוך שמן</td>
+                        <td>מזונות קולואידים ולחים</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+        </div>
+
+        <!-- MCQ SECTION -->
+        <div class="section" id="mcq">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view-container">
+                <div class="question-container">
+                    <p id="mcq-question-display"></p>
+                    <div id="mcq-options-container"></div>
+                    <div class="explanation" id="mcq-explanation"></div>
+                </div>
+                <div class="nav-controls">
+                    <button id="mcq-prev" class="btn">הקודם</button>
+                    <span id="mcq-counter" class="counter"></span>
+                    <button id="mcq-next" class="btn">הבא</button>
+                </div>
+            </div>
+            <div id="mcq-view-all-container" class="view-all-container"></div>
+            <button id="mcq-view-all-btn" class="btn" style="margin-top: 15px;">הצג את כל השאלות</button>
+        </div>
+
+        <!-- TRUE/FALSE SECTION -->
+        <div class="section" id="tf">
+            <h2>שאלות נכון / לא נכון</h2>
+            <div id="tf-single-view-container">
+                <div class="question-container">
+                    <p id="tf-question-display"></p>
+                    <div id="tf-options-container"></div>
+                    <div class="explanation" id="tf-explanation"></div>
+                </div>
+                <div class="nav-controls">
+                    <button id="tf-prev" class="btn">הקודם</button>
+                    <span id="tf-counter" class="counter"></span>
+                    <button id="tf-next" class="btn">הבא</button>
+                </div>
+            </div>
+            <div id="tf-view-all-container" class="view-all-container"></div>
+            <button id="tf-view-all-btn" class="btn" style="margin-top: 15px;">הצג את כל השאלות</button>
+        </div>
+        
+        <!-- STUDY CARDS SECTION -->
+        <div class="section" id="cards">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="card-container">
+                <div id="study-card" class="study-card"></div>
+                <div class="nav-controls">
+                    <button id="card-prev" class="btn">הקודם</button>
+                    <span id="card-counter" class="counter"></span>
+                    <button id="card-next" class="btn">הבא</button>
+                </div>
+            </div>
+        </div>
+
+    </div> 
+
+</body>
+</html>

@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לומדה: אומדן כמותי של חיידקים - חלק 2 (שיטות עקיפות)</title>
+    <style>
+        /* General Styles & Dark Mode */
+        body {
+            background-color: #333;
+            color: #E0E0E0;
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 90%; /* Adjusted slightly from 2/3rds for better content fit */
+            margin: 20px auto;
+            background-color: #444; /* Slightly lighter than body for contrast */
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2, h3 {
+            color: #E0E0E0;
+            border-bottom: 1px solid #666;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #3D90D7; /* Accent color for main title */
+        }
+
+        /* Buttons */
+        button {
+            background-color: #3D90D7;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2a6ead;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        /* Collapsible Theory Section */
+        details {
+            background-color: #555;
+            border: 1px solid #666;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            padding: 15px;
+        }
+
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #3D90D7;
+            font-size: 1.1em;
+        }
+
+        /* Study Cards */
+        .study-cards-container,
+        .mcq-container,
+        .tf-container {
+            background-color: #666;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .card-navigation,
+        .question-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 15px; /* Added vertical spacing */
+        }
+
+        .card-counter,
+        .question-counter {
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: transparent;
+            width: 100%;
+            min-height: 150px; /* Ensure minimum height */
+            perspective: 1000px;
+            margin-bottom: 15px; /* Vertical spacing */
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 150px; /* Match parent */
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border: 1px solid #888;
+            border-radius: 5px;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box; /* Include padding in height/width */
+            background-color: #5a5a5a;
+            color: #E0E0E0;
+            border-radius: 5px;
+            font-size: 1.1em;
+        }
+
+        .card-back {
+            background-color: #5a5a5a; /* Same background, different content */
+            transform: rotateY(180deg);
+        }
+
+        /* MCQ and T/F Questions */
+        .question-area {
+            background-color: #555;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px; /* Vertical spacing */
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option {
+            background-color: #777;
+            margin: 8px 0;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .option:hover:not(.disabled) {
+            background-color: #888;
+        }
+
+        .option.selected {
+             border: 2px solid #3D90D7;
+        }
+
+        .option.correct {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            border-color: #388E3C;
+        }
+
+        .option.incorrect {
+            background-color: #F44336; /* Red */
+            color: white;
+            border-color: #D32F2F;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #555;
+        }
+
+        .feedback.correct {
+            border-left: 5px solid #4CAF50; /* Green */
+        }
+
+        .feedback.incorrect {
+             border-left: 5px solid #F44336; /* Red */
+        }
+
+        .view-all-container {
+             margin-top: 20px;
+             padding-top: 20px;
+             border-top: 1px solid #666;
+        }
+
+        /* MathJax SVG Styling */
+        mjx-container {
+            display: inline-block; /* Prevent block display for inline math */
+            direction: ltr; /* Ensure math renders LTR */
+            margin: 0 0.2em; /* Add slight horizontal spacing */
+            vertical-align: middle; /* Align better with text */
+        }
+        mjx-container[display="true"] {
+            display: block; /* Allow display math to be block */
+            margin: 1em 0; /* Add vertical spacing for display math */
+        }
+
+        /* Ensure correct spacing around math in lists etc. */
+        .option mjx-container {
+            vertical-align: baseline; /* Adjust alignment within options */
+        }
+
+        /* Ensure code comments are not displayed (if any accidentally slip through) */
+        code-comment { display: none; }
+
+        /* Ensure technical terms remain LTR even in RTL context */
+        .ltr-term {
+            direction: ltr;
+            unicode-bidi: embed;
+            display: inline-block; /* Keeps it inline */
+        }
+
+    </style>
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global' // Use global cache for better performance
+          },
+          startup: {
+            ready: () => {
+              console.log('MathJax is ready');
+              MathJax.startup.defaultReady();
+              // Ensure initial rendering if content is static
+              // MathJax.typesetPromise(); // Usually not needed if script is at end
+            }
+          }
+        };
+    </script>
+    <!-- MathJax Library -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+
+</head>
+<body>
+
+    <div class="container">
+        <h1>אומדן כמותי של חיידקים - חלק 2: שיטות עקיפות</h1>
+
+        <!-- Theory Section -->
+        <details>
+            <summary>סקירת תיאוריה (לחץ לפתיחה/סגירה)</summary>
+            <div>
+                <h2>מטרות</h2>
+                <ul>
+                    <li>הכרת שיטות עקיפות לספירת חיידקים.</li>
+                    <li>הבנת השיקולים בבחירת שיטת ספירה מתאימה לאומדן כמותי.</li>
+                </ul>
+
+                <h2>שיטות עקיפות להערכה כמותית</h2>
+                <p>
+                    שיטות אלו לא סופרות תאים בודדים באופן ישיר, אלא מעריכות את כמותם דרך מדידת פרמטרים הקשורים לכמות התאים או לפעילותם.
+                </p>
+
+                <h3>מעקב אחר מסת התאים או מרכיבי התאים</h3>
+                <p>
+                    במהלך גידול חיידקים, המסה הכוללת של התאים עולה באופן פרופורציונלי למספרם. עלייה זו נובעת מעלייה בכמות מרכיבי התא (כגון <span class="ltr-term">DNA</span>, <span class="ltr-term">RNA</span>, חלבונים) ומהגברת הפעילות האנזימטית. מדידת ריכוז מרכיבים אלו או הפעילות האנזימטית (למשל, קצב יצירת חומצה, שחרור גז, צריכת חמצן) יכולה לשמש אומדן לכמות התאים, במיוחד בהשוואה לעקומת כיול ידועה.
+                </p>
+
+                <h4>אומדן כמותי בעזרת מדידת מסת התאים (משקל יבש)</h4>
+                <p>
+                    ניתן למדוד את משקל התאים היבש בנפח ידוע של דגימה לאחר סילוק המים (סרכוז וייבוש). תהליך זה ארוך ועלול להשפיע על הדיוק. כלל אצבע גס הוא ש-$10^9$ חיידקים שוקלים כ-1 מ"ג לאחר ייבוש. שיטה זו מתאימה בעיקר להערכה כללית, או לחיידקים הגדלים בצברים (<span class="ltr-term">biofilm</span>, אגרגטים גדולים) שקשה להפרידם לספירה ישירה. היא אינה מתאימה לדגימות המכילות חלקיקים אחרים.
+                </p>
+
+                <h4>אומדן כמותי ע"י מעקב אחר כמות <span class="ltr-term">DNA</span> או חלבונים (<span class="ltr-term">PCR</span> כמותי)</h4>
+                <p>
+                    מכיוון שהרכב התא קבוע יחסית, ניתן לעקוב אחר השינוי בכמות מרכיביו. כמות ה-<span class="ltr-term">DNA</span> היא מדד טוב לכמות החיידקים. ניתן לקבוע את ריכוזו באמצעים כימיים או בשיטת <span class="ltr-term">PCR</span> כמותי (<span class="ltr-term">qPCR</span>). <span class="ltr-term">qPCR</span>, הנעשה ביחס לעקומת כיול, מאפשר הערכה מדויקת מאוד של מספר החיידקים (וגם נגיפים). בתרבית מעורבת, ניתן להשתמש בפריימרים אוניברסליים (לכמות כללית) או ספציפיים (לכמות של זנים מסוימים או מוטציות).
+                </p>
+                <p>
+                    <strong>יתרונות <span class="ltr-term">qPCR</span>:</strong> מהירות יחסית (שעות), דיוק גבוה.
+                </p>
+                 <p>
+                    <strong>חסרונות <span class="ltr-term">qPCR</span>:</strong> יקרה, דורשת מומחיות או ציוד רובוטי, רגישה לזיהומים. חיסרון מרכזי נוסף הוא שמדידת <span class="ltr-term">DNA</span> אינה מבחינה בין תאים חיים ומתים, כיוון שמולקולת ה-<span class="ltr-term">DNA</span> יציבה יחסית (לדוגמה, כמות ה-<span class="ltr-term">DNA</span> בחלב מפוסטר תהיה דומה לכמות לפני הפיסטור).
+                </p>
+                <p>
+                    חלבונים מהווים כ-50% מהמשקל היבש של התא. מדידת כלל החלבון או ריכוז החנקן (כ-16% ממשקל החלבון) היא מדד טוב לכמות החיידקים, בתנאי שהתמיסה אינה מכילה חלבון ממקור אחר.
+                </p>
+
+                <h5>רקע על <span class="ltr-term">PCR</span> (רשות)</h5>
+                 <p>
+                    <span class="ltr-term">PCR</span> (תגובת שרשרת של פולימראז) היא שיטה להגברה (שיכפול מרובה) של רצפי <span class="ltr-term">DNA</span> ספציפיים. התהליך משתמש בזוג פריימרים (רצפי <span class="ltr-term">DNA</span> חד-גדיליים קצרים) הנקשרים לרצף המטרה. אנזים <span class="ltr-term">DNA</span> פולימראז עמיד לחום מאריך את הפריימרים ויוצר עותק של הרצף. כל מחזור כולל:
+                    <ol>
+                        <li><strong>דנטורציה:</strong> חימום להפרדת גדילי ה-<span class="ltr-term">DNA</span>.</li>
+                        <li><strong>איחוי (<span class="ltr-term">Annealing</span>):</strong> קירור המאפשר לפריימרים להיקשר לרצפי המטרה.</li>
+                        <li><strong>הארכה (<span class="ltr-term">Extension</span>):</strong> ה-<span class="ltr-term">DNA</span> פולימראז מסנתז גדיל חדש המשלים לרצף המטרה.</li>
+                    </ol>
+                    חזרה על מחזורים אלו מביאה להגברה מעריכית של רצף המטרה.
+                </p>
+                 <h5>רקע על <span class="ltr-term">qPCR</span> (רשות)</h5>
+                 <p>
+                    <span class="ltr-term">qPCR</span> (<span class="ltr-term">Real-Time PCR</span>) מאפשר כימות של כמות ה-<span class="ltr-term">DNA</span> ההתחלתית בדגימה. הדבר נעשה על ידי מעקב אחר ההצטברות של תוצר ה-<span class="ltr-term">PCR</span> בזמן אמת, בדרך כלל באמצעות סמנים פלואורסצנטיים המשולבים ב-<span class="ltr-term">DNA</span> או נקשרים אליו. ככל שכמות ה-<span class="ltr-term">DNA</span> ההתחלתית גבוהה יותר, כך יידרשו פחות מחזורי <span class="ltr-term">PCR</span> כדי להגיע לסף פלואורסצנציה הניתן למדידה (ערך ה-<span class="ltr-term">Ct</span> או <span class="ltr-term">Cq</span>). על ידי השוואת ערך ה-<span class="ltr-term">Ct</span> של הדגימה לעקומת כיול (שנוצרה מדגימות עם ריכוזי <span class="ltr-term">DNA</span> ידועים), ניתן לקבוע את הכמות ההתחלתית. הגדרת סף הפלואורסצנציה משפיעה על הרגישות והספציפיות (סיכון לתוצאות חיוביות/שליליות שגויות).
+                </p>
+
+                <h3>מדידת צפיפות אופטית (מדידת עכירות - <span class="ltr-term">Turbidity</span>)</h3>
+                <p>
+                    שיטה פשוטה, מהירה וזולה למעקב אחר שינויים בכמות החיידקים, נפוצה במחקר. מבוססת על כך שתרחיף חיידקים מפזר ובולע אור העובר דרכו. העכירות נמדדת בספקטרופוטומטר, בדרך כלל באורך גל של כ-600 ננומטר (אורך גל שבו בליעת מצע המזון ומרכיבי התא נמוכה).
+                </p>
+                <p>
+                    הצפיפות האופטית (<span class="ltr-term">Optical Density - OD</span>) מחושבת לפי הנוסחה:
+                    $$OD = \log \left( \frac{I_0}{I} \right)$$
+                    כאשר $I_0$ היא עוצמת האור הנכנס ו-$I$ היא עוצמת האור היוצא. ערך <span class="ltr-term">OD=1</span> מציין שעוצמת האור פחתה פי 10.
+                </p>
+                 <p>
+                    עד ריכוז של כ-$10^6$ חיידקים/מ"ל, התמיסה לרוב צלולה. מעל ריכוז זה, העכירות עולה ככל שיש יותר חיידקים. תחום המדידה הלינארי הוא בדרך כלל בין $OD \approx 0.1$ ל-$OD \approx 1$. מעל $OD=1$, יש למהול את הדגימה למדידה מדויקת. הקשר בין מספר החיידקים לעכירות בתחום הלינארי תלוי בגודל וצורת החיידק, ולכן נדרשת <strong>עקומת כיול</strong> ספציפית לחיידק ולתנאי הגידול לקבלת אומדן כמותי מדויק.
+                </p>
+                <p>
+                    <strong>יתרונות OD:</strong> מהירה (דקות), פשוטה, זולה, לא הרסנית לדגימה.
+                </p>
+                <p>
+                    <strong>חסרונות OD:</strong> לא מבחינה בין חיים למתים (שלא עברו ליזיס), רגישות מוגבלת (מתאימה לריכוזים של $10^6$ עד $10^7$/$10^8$ חיידקים/מ"ל), מתאימה רק לתמיסות צלולות (ללא חלקיקים אחרים), דורשת עקומת כיול לכימות מדויק. ניתן לשלב מדידת OD עם ספירה חיה כדי לקבל מושג על טווח המיהולים הנדרש.
+                </p>
+
+                <h3>המספר המסתבר ביותר (<span class="ltr-term">Most Probable Number - MPN</span>)</h3>
+                <p>
+                    שיטה להערכה כמותית של חיידקים בריכוזים נמוכים מאוד (לרוב, מתחת ל-30 חיידקים/מ"ל), כאשר שיטות אחרות פחות רגישות. משמשת לבדיקת סטריליות (תרופות, מזון לתינוקות) או מי שתייה.
+                </p>
+                 <p>
+                    השיטה כוללת הכנת סדרת מיהולים עשרוניים מהדגימה. מכל מיהול זורעים נפח ידוע (למשל, 1 מ"ל) למספר חזרות (למשל, 3 או 5 מבחנות) המכילות מצע נוזלי מתאים. לאחר הדגרה (למשל, 17 שעות), בודקים נוכחות עכירות (גידול חיידקים) בכל מבחנה. ההנחה היא שכל מבחנה עכורה התחילה עם לפחות חיידק אחד.
+                </p>
+                <p>
+                    סופרים את מספר המבחנות העכורות בכל רמת מיהול. השילוב של מספר התוצאות החיוביות במיהולים השונים משמש לאיתור הערך המתאים בטבלאות סטטיסטיות (<span class="ltr-term">MPN tables</span>). ערך זה מייצג את המספר המסתבר ביותר של חיידקים ביחידת נפח בדגימה המקורית, בדרך כלל עם רווח בר-סמך. השיטה דורשת הקפדה על תנאים סטנדרטיים (זמני הדגרה, טמפרטורה, הרכב מצע וכו').
+                </p>
+                <p>
+                    <strong>יתרונות MPN:</strong> רגישה מאוד לריכוזים נמוכים.
+                </p>
+                <p>
+                    <strong>חסרונות MPN:</strong> דורשת עבודה רבה, זמן הדגרה ארוך, מספקת הערכה סטטיסטית ולא ספירה מדויקת, פחות מדויקת משיטות אחרות בריכוזים גבוהים יותר.
+                </p>
+
+
+                <h2>סיכום ושיקולים בבחירת שיטה</h2>
+                 <p>
+                    אין שיטה אחת מושלמת לכל המטרות. הבחירה תלויה במטרה הספציפית, בסוג הדגימה, במשאבים הזמינים ובדרישות הדיוק והרגישות.
+                </p>
+                <p><strong>עשרת השיקולים המרכזיים בבחירת שיטה:</strong></p>
+                <ol>
+                    <li><strong>רגישות:</strong> לכמות חיידקים מינימלית/מקסימלית ולגודל התא.</li>
+                    <li><strong>דיוק:</strong> רמת הקרבה הנדרשת לערך האמיתי.</li>
+                    <li><strong>הבחנה בין חיים/מתים:</strong> האם נדרש מידע על חיוניות התאים?</li>
+                    <li><strong>אופי הדגימה:</strong> צלולה, עכורה, מכילה חלקיקים אחרים, מוצקה?</li>
+                    <li><strong>זמן:</strong> זמן לביצוע הבדיקה ולקבלת תוצאות.</li>
+                    <li><strong>עלות ומומחיות:</strong> מחיר ציוד, חומרים, והכשרה נדרשת.</li>
+                    <li><strong>ידע קודם:</strong> האם נדרש מידע על תנאי גידול אופטימליים (לספירה חיה)?</li>
+                    <li><strong>הרסנות:</strong> האם ניתן להשתמש בדגימה לאחר המדידה?</li>
+                    <li><strong>מידע נוסף:</strong> האם השיטה מספקת מידע על מורפולוגיה, הרכב אוכלוסייה?</li>
+                    <li><strong>ספציפיות/אוניברסליות:</strong> האם השיטה מתאימה לחיידק/ים הספציפי/ים?</li>
+                </ol>
+                 <p>מומלץ להכין טבלה מסכמת של כל השיטות (ישירות ועקיפות) ולדרג אותן לפי פרמטרים אלו.</p>
+
+            </div>
+        </details>
+
+        <!-- Study Cards Section -->
+        <div class="study-cards-container">
+            <h2>כרטיסיות לימוד</h2>
+            <div id="study-card" class="card">
+                <div class="card-inner">
+                    <div class="card-front"></div>
+                    <div class="card-back"></div>
+                </div>
+            </div>
+            <div class="card-navigation">
+                <button id="prev-card">הקודם</button>
+                <span id="card-counter" class="card-counter"></span>
+                <button id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="mcq-container">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-area">
+                <!-- MCQ content will be loaded here -->
+            </div>
+            <div class="question-navigation">
+                <button id="prev-mcq">הקודם</button>
+                <span id="mcq-counter" class="question-counter"></span>
+                <button id="next-mcq">הבא</button>
+            </div>
+             <button id="view-all-mcq">הצג את כל השאלות</button>
+             <div id="all-mcq-container" class="view-all-container" style="display: none;">
+                 <h3>כל שאלות ה-MCQ:</h3>
+                 <!-- All MCQs will be displayed here -->
+             </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="tf-container">
+            <h2>שאלות נכון/לא נכון</h2>
+            <div id="tf-area">
+                <!-- T/F content will be loaded here -->
+            </div>
+            <div class="question-navigation">
+                <button id="prev-tf">הקודם</button>
+                <span id="tf-counter" class="question-counter"></span>
+                <button id="next-tf">הבא</button>
+            </div>
+             <button id="view-all-tf">הצג את כל השאלות</button>
+             <div id="all-tf-container" class="view-all-container" style="display: none;">
+                  <h3>כל שאלות הנכון/לא נכון:</h3>
+                 <!-- All T/F questions will be displayed here -->
+             </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Data ---
+
+            // Study Cards Data
+            const studyCards = [
+                { front: "מדוע לעיתים מעדיפים למדוד מסה (משקל יבש) במקום ספירה ישירה עבור חיידקים פילמנטיים?", back: "חיידקים פילמנטיים יוצרים לרוב צברים (אגרגטים) שקשה להפריד ולספור באופן ישיר. הגידול במסה נמצא ביחס ישר לגידול במספר התאים ומאפשר מעקב נוח יותר במקרים אלו." },
+                { front: "מהו העיקרון של מדידת עכירות (<span class='ltr-term'>OD</span>) להערכת כמות חיידקים?", back: "השיטה מבוססת על פיזור ובליעת אור על ידי תאים בתרחיף. ככל שיש יותר תאים, יותר אור מתפזר/נבלע, ועוצמת האור שעוברת דרך התמיסה פוחתת. העכירות פרופורציונלית למספר התאים בתחום מסוים." },
+                { front: "מהי הנוסחה לחישוב צפיפות אופטית (<span class='ltr-term'>OD</span>)?", back: "$$OD = \\log \\left( \\frac{I_0}{I} \\right)$$, כאשר $I_0$ היא עוצמת האור ההתחלתית ו-$I$ היא עוצמת האור לאחר שעבר בתמיסה." },
+                { front: "מדוע מבצעים מדידת עכירות בדרך כלל באורך גל סביב 600 ננומטר?", back: "באורך גל זה, הבליעה של רוב מצעי המזון ומרכיבי התא (שאינם החיידק עצמו) היא נמוכה יחסית, מה שמפחית הפרעות למדידה. בנוסף, מנורות טונגסטן הפולטות אור בתחום זה זולות יחסית." },
+                { front: "מהו הטווח הלינארי האופייני למדידת <span class='ltr-term'>OD</span>, ומה עושים אם המדידה חורגת ממנו?", back: "הטווח הלינארי הוא בדרך כלל בין $OD \\approx 0.1$ ל-$OD \\approx 1$. אם הערך גבוה מ-1, יש למהול את הדגימה במיהול ידוע ולמדוד שוב, ואז להכפיל את התוצאה בפקטור המיהול." },
+                { front: "מהו חיסרון מרכזי של מדידת <span class='ltr-term'>OD</span> ושל מדידת כמות <span class='ltr-term'>DNA</span> (<span class='ltr-term'>qPCR</span>)?", back: "שתי השיטות אינן מבחינות בין תאים חיים לתאים מתים (בהנחה שהמתים לא עברו פירוק/ליזיס), מכיוון שגם תאים מתים מפזרים אור (<span class='ltr-term'>OD</span>) וה-<span class='ltr-term'>DNA</span> שלהם עדיין קיים (<span class='ltr-term'>qPCR</span>)." },
+                { front: "מתי משתמשים בשיטת המספר המסתבר ביותר (<span class='ltr-term'>MPN</span>)?", back: "כאשר רוצים להעריך כמותית חיידקים בריכוזים נמוכים מאוד (למשל, פחות מ-30 תאים למ'ל), כגון בבדיקת סטריליות של מוצרים או בבדיקת איכות מי שתייה." },
+                { front: "מהו העיקרון של שיטת ה-<span class='ltr-term'>MPN</span>?", back: "זורעים מיהולים עשרוניים של הדגימה למבחנות מרובות עם מצע נוזלי. לאחר הדגרה, בודקים נוכחות גידול (עכירות). מספר המבחנות החיוביות בכל רמת מיהול מאפשר, בעזרת טבלאות סטטיסטיות, להעריך את הריכוז ההתחלתי הסביר ביותר של חיידקים בדגימה." },
+                { front: "מהו היתרון העיקרי של שימוש ב-<span class='ltr-term'>qPCR</span> להערכה כמותית?", back: "השיטה מאפשרת הערכה מדויקת מאוד של מספר החיידקים (או נגיפים) על ידי כימות ישיר של כמות ה-<span class='ltr-term'>DNA</span> שלהם, ויכולה להיות ספציפית לזנים או מוטציות מסוימות באמצעות שימוש בפריימרים מתאימים." },
+                { front: "מדוע משתמשים באנזים <span class='ltr-term'>DNA</span> פולימראז עמיד לחום בתגובת <span class='ltr-term'>PCR</span>?", back: "כל מחזור <span class='ltr-term'>PCR</span> כולל שלב דנטורציה בטמפרטורה גבוהה (מעל 90°C) להפרדת גדילי ה-<span class='ltr-term'>DNA</span>. אנזים שאינו עמיד לחום היה עובר דנטורציה ונהרס בשלב זה, מה שהיה מונע את המשך התגובה." },
+                { front: "מהו 'כלל האצבע' לקשר בין מספר חיידקים למשקל יבש?", back: "להערכה כללית בלבד, מקובל ש-$10^9$ (מיליארד) חיידקים שוקלים כ-1 מיליגרם (מ'ג) לאחר ייבוש." },
+                { front: "מהי עקומת כיול (<span class='ltr-term'>calibration curve</span>) ואיך היא קשורה למדידת <span class='ltr-term'>OD</span>?", back: "עקומת כיול היא גרף המראה את הקשר בין מדידת <span class='ltr-term'>OD</span> למספר החיידקים (שנקבע בשיטה אחרת, למשל ספירה חיה) עבור חיידק ספציפי ותנאי גידול מסוימים. היא נחוצה כדי לתרגם קריאת <span class='ltr-term'>OD</span> לאומדן כמותי מדויק, מכיוון שהקשר תלוי בגודל וצורת החיידק." }
+             ];
+
+            // MCQ Data
+            const mcqData = [
+                 // Provided MCQs
+                {
+                    question: "מדוע משתמשים באנזים <span class='ltr-term'>DNA</span> פולימראז עמיד לטמפרטורה גבוהה ב-<span class='ltr-term'>PCR</span>?",
+                    options: [
+                        "אלו הן פולימראזות עם דם קר אשר זקוקות לחום כדי לפעול ביעילות",
+                        "דרושה טמפרטורה גבוהה לריאקציה לצורך הפרדה בין הגדילים של ה-<span class='ltr-term'>DNA</span> ולכן צריך אנזים עמיד לחום",
+                        "הפריימרים ו-<span class='ltr-term'>DNA</span> המטרה מחממים את התמיסה באופן משמעותי ולכן צריך אנזים עמיד לחום",
+                        "המגנזיום כלוריד (<span class='ltr-term'>MgCl2</span>) המשמש כקו-פקטור מתחמם במהלך הריאקציה ולכן צריך אנזים עמיד לחום"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "שלב הפרדת הגדילים (דנטורציה) בכל מחזור <span class='ltr-term'>PCR</span> חייב להתבצע בחום גבוה (בדרך כלל 94-98°C). פולימראז רגיש לחום יעבור דנטורציה בלתי הפיכה בשלב זה ולא יוכל לתפקד במחזורים הבאים, מה שיגביל מאוד את יעילות ההגברה."
+                },
+                {
+                    question: "מה יקרה אם סטודנט ישתמש רק בפריימר קדמי ולא בזוג פריימרים (קדמי ואחורי) ב-<span class='ltr-term'>PCR</span>?",
+                    options: [
+                        "ה-<span class='ltr-term'>DNA</span> המטרה יוגבר באופן מעריכי כדו-גדיל",
+                        "ה-<span class='ltr-term'>DNA</span> המטרה יוגבר באופן מעריכי כחד-גדיל",
+                        "ה-<span class='ltr-term'>DNA</span> המטרה יוגבר באופן ליניארי כדו-גדיל",
+                        "ה-<span class='ltr-term'>DNA</span> המטרה יוגבר באופן ליניארי כחד-גדיל",
+                        "ה-<span class='ltr-term'>DNA</span> המטרה לא יוגבר כלל או כמעט ולא יוגבר בצורה מדידה"
+                    ],
+                    correctAnswer: 3,
+                    explanation: "הגברה מעריכית ב-<span class='ltr-term'>PCR</span> דורשת זוג פריימרים (קדמי ואחורי) שתוחמים את אזור המטרה ומאפשרים יצירת תבניות חדשות בכל מחזור. עם פריימר אחד בלבד, תתרחש רק הארכה ליניארית של הגדיל המשלים לפריימר, והכמות שתצטבר תהיה קטנה מאוד בהשוואה להגברה מעריכית."
+                },
+                {
+                    question: "מה מהבאים לא ניתן להגביר או לכמת ישירות בעזרת <span class='ltr-term'>PCR</span> סטנדרטי או <span class='ltr-term'>qPCR</span>?",
+                    options: [
+                        "<span class='ltr-term'>DNA</span> ויראלי מדגימה קלינית",
+                        "כמות חיידקים חיים בלבד בדוגמה שמכילה גם חיידקים מתים",
+                        "רמת ביטוי של גן מסוים (כמות <span class='ltr-term'>mRNA</span>) בתא, לאחר שלב מקדים",
+                        "כמות כוללת של חיידקים מסוג מסוים בדגימה סביבתית",
+                        "נוכחות מוטציות ידועות ברצפים שמורים של חיידקים"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "<span class='ltr-term'>PCR</span> ו-<span class='ltr-term'>qPCR</span> מגבירות ומכמתות <span class='ltr-term'>DNA</span>. הן אינן יכולות להבדיל בין <span class='ltr-term'>DNA</span> שמקורו בתא חי לבין <span class='ltr-term'>DNA</span> מתא מת (כל עוד ה-<span class='ltr-term'>DNA</span> שלם יחסית). ניתן לכמת <span class='ltr-term'>RNA</span> (אפשרות 3) באמצעות שילוב עם שלב שעתוק הפוך (<span class='ltr-term'>RT-PCR</span>), אך לא ב-<span class='ltr-term'>PCR</span> סטנדרטי ישיר."
+                },
+                {
+                     question: "סטודנט גידל חיידקים ועקב אחר השינוי במספרם באמצעות מדידת עכירות (<span class='ltr-term'>OD</span>) בספקטרופוטומטר. הוא ראה שהעכירות עלתה מערך התחלתי נמוך ל-$OD=1.5$ כעבור 16 שעות, ולאחר מכן החלה לרדת. מהי הסיבה הסבירה ביותר לירידה בעכירות?",
+                    options: [
+                        "החיידקים נכנסו לשלב הגידול הלוגריתמי המואץ שלהם",
+                        "התרחשה מוטציה ספונטנית שהגבירה את קצב הגידול עוד יותר",
+                        "החיידקים החלו למות ולעבור ליזיס (פירוק תאים) משמעותי",
+                        "המכשיר כובה בטעות וחזר לפעול באופן אוטומטי עם קריאה נמוכה יותר",
+                        "הסטודנט החליף בטעות את אורך הגל במכשיר לאורך גל שבו הבליעה נמוכה יותר"
+                     ],
+                    correctAnswer: 2,
+                    explanation: "ירידה בעכירות לאחר שהגיעה לשיא מעידה בדרך כלל על כניסה לשלב התמותה בתרבית, שבו תאים מתחילים למות וליזיס (פירוק) מפחית את מספר החלקיקים המפזרים אור בתמיסה. ערך $OD=1.5$ הוא כבר מחוץ לתחום הלינארי, אך המגמה של ירידה לאחר שיא היא אופיינית לשלב התמותה."
+                },
+                 {
+                     question: "חוקר רוצה לכמת חיידקים בדגימת מי שתייה החשודים כמזוהמים ברמה נמוכה מאוד. איזו שיטה תהיה הרגישה והמתאימה ביותר למטרה זו?",
+                    options: [
+                        "ספירה ישירה במיקרוסקופ עם תא ספירה",
+                        "מדידת עכירות (<span class='ltr-term'>OD</span>) בספקטרופוטומטר באורך גל 600 ננומטר",
+                        "מדידת משקל יבש של החיידקים לאחר סינון וייבוש הדגימה כולה",
+                        "שיטת המספר המסתבר ביותר (<span class='ltr-term'>MPN</span>) עם מספר חזרות ומיהולים",
+                        "כימות כמות ה-<span class='ltr-term'>DNA</span> הכוללת בדגימה באמצעות <span class='ltr-term'>qPCR</span> עם פריימרים אוניברסליים"
+                     ],
+                    correctAnswer: 3,
+                    explanation: "שיטת ה-<span class='ltr-term'>MPN</span> תוכננה במיוחד להערכה כמותית של חיידקים בריכוזים נמוכים מאוד (מתחת לרגישות של שיטות אחרות כמו <span class='ltr-term'>OD</span> או ספירה ישירה סטנדרטית), ולכן היא המתאימה ביותר למצב זה."
+                },
+                // Start generating new MCQs (Need 25 more)
+                {
+                    question: "איזה פרמטר נמדד ישירות בשיטת ה-<span class='ltr-term'>MPN</span> כדי להעריך את מספר החיידקים?",
+                    options: [
+                        "עוצמת הפלואורסצנציה הנפלטת מהדגימה לאחר הוספת סמן",
+                        "הזמן שלוקח לתרבית להגיע לרמת עכירות מסוימת במכשיר",
+                        "מספר המבחנות שהראו עכירות (גידול) בכל רמת מיהול לאחר הדגרה",
+                        "המשקל הכולל של החיידקים שהצטברו על פילטר לאחר סינון",
+                        "מספר התאים הנצפים בשדה ראייה מוגדר תחת המיקרוסקופ"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "שיטת ה-<span class='ltr-term'>MPN</span> מסתמכת על בדיקת נוכחות או היעדר גידול (המתבטא בעכירות) בסדרת מבחנות המכילות מיהולים שונים של הדגימה. ספירת התוצאות החיוביות בכל מיהול משמשת להערכה סטטיסטית."
+                },
+                 {
+                     question: "מהי אחת הסיבות לכך שמדידת משקל יבש אינה שיטה מדויקת לאומדן מספר חיידקים?",
+                    options: [
+                        "תהליך הייבוש גורם לחיידקים להכפיל את משקלם באופן בלתי צפוי",
+                        "השיטה רגישה מדי וקולטת אפילו חיידקים בודדים בנפח גדול מאוד של דגימה",
+                        "משקלו של תא חיידק בודד נמוך מאוד וקשה למדוד כמויות קטנות בדיוק",
+                        "השיטה דורשת שימוש בחומרים רדיואקטיביים מסוכנים לסביבה",
+                        "ניתן לבצע אותה רק על חיידקים פתוגניים בעלי מעטפת עבה במיוחד"
+                     ],
+                    correctAnswer: 2,
+                    explanation: "מכיוון שכל תא חיידק שוקל מעט מאוד (לפי כלל האצבע, כ-$10^{-9}$ מ'ג), יש צורך בכמות גדולה מאוד של תאים כדי לקבל מסה שניתנת לשקילה מדויקת. הדבר מגביל את הדיוק, במיוחד בריכוזי חיידקים נמוכים או בינוניים."
+                 },
+                 {
+                    question: "באיזה מצב מדידת כמות החלבון הכוללת בדגימה יכולה לשמש אומדן אמין יחסית לכמות החיידקים?",
+                    options: [
+                        "כאשר הדגימה היא תרבית טהורה של חיידקים הגדלה במים מזוקקים בלבד",
+                        "כאשר החיידקים גדלים במצע מזון עשיר בחלבונים ממקור חיצוני (למשל, קזאין)",
+                        "כאשר הדגימה אינה מכילה חלבון ממקור אחר פרט לחיידקים עצמם",
+                        "כאשר רוצים להבדיל באופן ספציפי בין חיידקים חיים למתים בתרבית",
+                         "רק כאשר מדובר בחיידקים המבטאים חלבון פלואורסצנטי רקומביננטי"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "מדידת חלבון כולל (או חנקן) מהווה מדד לכמות החיידקים רק אם אין מקורות חלבון משמעותיים אחרים בדגימה שיתרמו למדידה וישבשו את הקשר בין כמות החלבון לכמות החיידקים."
+                },
+                {
+                    question: "איזו מהשיטות הבאות נחשבת לשיטה לא הרסנית, המאפשרת מדידה חוזרת של אותה דגימה?",
+                    options: [
+                        "מדידת משקל יבש לאחר סרכוז וייבוש בחום גבוה",
+                        "ספירה חיה בשיטת זריעת הפלטה (<span class='ltr-term'>Plate Count</span>)",
+                        "שיטת המספר המסתבר ביותר (<span class='ltr-term'>MPN</span>)",
+                        "מדידת עכירות (<span class='ltr-term'>OD</span>) בספקטרופוטומטר",
+                        "כימות <span class='ltr-term'>DNA</span> בשיטת <span class='ltr-term'>qPCR</span> לאחר מיצוי <span class='ltr-term'>DNA</span> מהתאים"
+                    ],
+                    correctAnswer: 3,
+                    explanation: "מדידת עכירות (<span class='ltr-term'>OD</span>) אינה פוגעת בתאים או משנה את הרכב הדגימה, ולכן ניתן למדוד את אותה תרבית מספר פעמים לאורך זמן. שיטות אחרות כמו משקל יבש, ספירה חיה, <span class='ltr-term'>MPN</span> ו-<span class='ltr-term'>qPCR</span> (הדורשת מיצוי) הן הרסניות או צורכות חלק מהדגימה."
+                },
+                 {
+                     question: "מדוע נדרשת עקומת כיול ספציפית עבור כל סוג חיידק ותנאי גידול בעת שימוש במדידת עכירות (<span class='ltr-term'>OD</span>) לכימות?",
+                    options: [
+                        "כי הספקטרופוטומטר מאבד את הכיול שלו בכל פעם שמודדים סוג חיידק חדש",
+                        "כי לחיידקים שונים יש יכולת שונה לגרום למכשיר להתחמם יתר על המידה",
+                        "כי הקשר בין מספר תאים לעכירות תלוי בגודל, צורה ומאפיינים נוספים של החיידק",
+                        "כי אורכי הגל המשמשים למדידה משתנים באופן דרמטי בין זני חיידקים שונים",
+                        "כי עקומת הכיול נדרשת רק אם רוצים למדוד חיידקים מתים ולא חיים"
+                     ],
+                    correctAnswer: 2,
+                    explanation: "מידת פיזור האור (הגורמת לעכירות) תלויה במאפיינים הפיזיקליים של החלקיקים המפזרים, כלומר החיידקים. גודל תא, צורתו, נוכחות קפסולה או אגרגציה משפיעים על הקשר בין מספר התאים לקריאת ה-<span class='ltr-term'>OD</span>. לכן, נדרשת עקומת כיול ייעודית."
+                 },
+                 {
+                    question: "מה ההבדל העקרוני בין <span class='ltr-term'>PCR</span> ל-<span class='ltr-term'>qPCR</span>?",
+                    options: [
+                        "<span class='ltr-term'>PCR</span> מגביר <span class='ltr-term'>DNA</span> ו-<span class='ltr-term'>qPCR</span> מגביר <span class='ltr-term'>RNA</span>",
+                        "<span class='ltr-term'>qPCR</span> משתמש בטמפרטורות נמוכות יותר מ-<span class='ltr-term'>PCR</span> רגיל",
+                        "<span class='ltr-term'>PCR</span> רק מגביר <span class='ltr-term'>DNA</span>, בעוד <span class='ltr-term'>qPCR</span> גם מגביר וגם מודד את כמות התוצר בזמן אמת",
+                        "<span class='ltr-term'>qPCR</span> דורש פי 10 יותר פריימרים מאשר <span class='ltr-term'>PCR</span> רגיל להגברה יעילה",
+                         "<span class='ltr-term'>PCR</span> משמש לזיהוי חיידקים ו-<span class='ltr-term'>qPCR</span> משמש לזיהוי וירוסים בלבד"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "ההבדל המרכזי הוא ש-<span class='ltr-term'>qPCR</span> (או <span class='ltr-term'>Real-Time PCR</span>) כולל מערכת מדידה (לרוב פלואורסצנטית) שעוקבת אחר כמות תוצר ה-<span class='ltr-term'>PCR</span> המצטבר בכל מחזור. דבר זה מאפשר לכמת את כמות ה-<span class='ltr-term'>DNA</span> ההתחלתית, בעוד ש-<span class='ltr-term'>PCR</span> 'רגיל' (נקודת-סוף) בדרך כלל רק מזהה נוכחות/היעדר של תוצר בסוף התהליך."
+                },
+                 {
+                     question: "איזה מרכיב תאי מהווה כ-50% מהמשקל היבש של רוב תאי החיידקים?",
+                     options: [
+                         "<span class='ltr-term'>DNA</span> גנומי וכרומוזומלי",
+                         "פפטידוגליקן המרכיב את דופן התא",
+                         "ליפידים המרכיבים את הממברנה הציטופלזמטית",
+                         "חלבונים בעלי תפקידים מגוונים בתא",
+                         "<span class='ltr-term'>RNA</span> ריבוזומלי המשמש לתרגום חלבונים"
+                     ],
+                     correctAnswer: 3,
+                     explanation: "על פי הטקסט, חלבונים מהווים כ-50% ממשקל החומר היבש של תא חיידק, ולכן מדידת כמות החלבון הכוללת יכולה לשמש מדד לכמות התאים (בהיעדר מקורות חלבון אחרים)."
+                 },
+                 {
+                    question: "סטודנט קיבל תוצאת <span class='ltr-term'>OD</span> של 2.5 מדגימת תרבית חיידקים. מה עליו לעשות כדי לקבל מדידה כמותית מדויקת יותר?",
+                    options: [
+                        "להכפיל את התוצאה ב-2.5 כדי לקבל את הריכוז האמיתי של החיידקים",
+                        "לסמוך על התוצאה כפי שהיא כי היא מצביעה על ריכוז גבוה מאוד של תאים",
+                        "למהול את הדגימה במיהול ידוע (למשל 1:10 או 1:20) ולמדוד שוב את העכירות",
+                        "לחמם את הדגימה ל-60 מעלות צלזיוס ולמדוד שוב מיד לאחר מכן",
+                        "להוסיף לדגימה טיפה של חומר מלבין כדי להקטין את העכירות באופן מלאכותי"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "קריאת <span class='ltr-term'>OD</span> של 2.5 נמצאת הרבה מעל התחום הלינארי (שבדרך כלל מסתיים סביב $OD=1$). במצב זה, אין קשר ישר בין העכירות למספר התאים. יש למהול את הדגימה באופן מדויק כך שהקריאה החדשה תיפול בתוך התחום הלינארי (0.1-1.0), ואז לכפול את התוצאה בפקטור המיהול."
+                },
+                {
+                    question: "איזה סוג של פריימרים ישמשו ב-<span class='ltr-term'>qPCR</span> כדי להעריך את הכמות הכללית של כלל החיידקים בדגימה מעורבת?",
+                    options: [
+                        "פריימרים הספציפיים לגן עמידות לאנטיביוטיקה מסוימת",
+                        "פריימרים המזהים רצף <span class='ltr-term'>DNA</span> ויראלי נפוץ",
+                        "פריימרים אוניברסליים המזהים רצף שמור הקיים ברוב או בכל החיידקים (למשל, גן $16S$ <span class='ltr-term'>rRNA</span>)",
+                        "פריימרים המיועדים להגברת רצפי <span class='ltr-term'>DNA</span> מיטוכונדריאלי בלבד",
+                        "פריימרים אקראיים לחלוטין באורך של 6 בסיסים כל אחד"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "כדי להעריך את כמות החיידקים הכוללת בתרבית מעורבת, יש להשתמש בפריימרים המכוונים לרצף <span class='ltr-term'>DNA</span> שנמצא בכל או ברוב המוחלט של החיידקים, כמו הגן המקודד ל-<span class='ltr-term'>RNA</span> ריבוזומלי $16S$. פריימרים ספציפיים ישמשו לכימות של זן או קבוצה מסוימת."
+                },
+                 {
+                     question: "מה החיסרון העיקרי של שיטת ה-<span class='ltr-term'>MPN</span> בהשוואה לשיטות אחרות כמו ספירה חיה?",
+                    options: [
+                        "היא דורשת ציוד ספקטרופוטומטר יקר ומסובך לתפעול",
+                        "היא מספקת הערכה סטטיסטית בלבד ופחות מדויקת משיטות ספירה ישירות",
+                        "היא אינה יכולה לזהות חיידקים אנאירוביים אובליגטוריים",
+                        "היא מהירה מאוד אך הורסת לחלוטין את הדגימה הנבדקת",
+                        "ניתן להשתמש בה רק עבור חיידקים בצורת מתג (rod-shaped)"
+                     ],
+                    correctAnswer: 1,
+                    explanation: "שיטת ה-<span class='ltr-term'>MPN</span> מבוססת על הסתברות וטבלאות סטטיסטיות, ולכן מספקת 'מספר מסתבר' ולא ספירה מדויקת. הדיוק שלה נמוך יותר משיטות כמו ספירה חיה או ספירה ישירה במיקרוסקופ, במיוחד כאשר הריכוז ההתחלתי אינו נמוך מאוד."
+                 },
+                 {
+                     question: "איזו שיטה עקיפה מסתמכת על העובדה שהמסה של כלל התאים עולה באופן פרופורציונלי למספרם?",
+                     options: [
+                         "שיטת ה-<span class='ltr-term'>MPN</span> (המספר המסתבר ביותר)",
+                         "מדידת עכירות באמצעות ספקטרופוטומטר",
+                         "מדידת משקל יבש של התאים",
+                         "<span class='ltr-term'>qPCR</span> באמצעות פריימרים ספציפיים",
+                         "ספירה ישירה באמצעות תא ספירה פטרוף-האוזר"
+                     ],
+                     correctAnswer: 2,
+                     explanation: "מדידת משקל יבש היא שיטה המודדת ישירות את מסת התאים לאחר סילוק המים. העלייה במסה זו משקפת, באופן עקרוני, עלייה במספר התאים בתרבית."
+                 },
+                 {
+                     question: "לפי כלל האצבע שהוזכר, כמה חיידקים צפויים להיות בדגימה שמשקלה היבש הוא 0.5 מיליגרם?",
+                    options: [
+                        "כחצי מיליון ($5 \times 10^5$) חיידקים",
+                        "כחמישה מיליון ($5 \times 10^6$) חיידקים",
+                        "כחמישים מיליון ($5 \times 10^7$) חיידקים",
+                        "כחמש מאות מיליון ($5 \times 10^8$) חיידקים",
+                        "כחמישה מיליארד ($5 \times 10^9$) חיידקים"
+                    ],
+                     correctAnswer: 3,
+                     explanation: "כלל האצבע קובע שכ-$10^9$ (מיליארד) חיידקים שוקלים כ-1 מיליגרם לאחר ייבוש. לכן, 0.5 מיליגרם יכילו כמחצית מכמות זו, שהיא $0.5 \times 10^9 = 5 \times 10^8$ חיידקים (חמש מאות מיליון)."
+                 },
+                {
+                    question: "חוקר השתמש בשיטת ה-<span class='ltr-term'>MPN</span> עם 3 מיהולים עשרוניים ו-3 חזרות בכל מיהול. הוא קיבל תוצאה של 3 מבחנות חיוביות במיהול הראשון (0.1), 1 מבחנה חיובית במיהול השני (0.01), ו-0 מבחנות חיוביות במיהול השלישי (0.001). מהו ה-<span class='ltr-term'>MPN</span> המוערך למ'ל לפי הטבלה שסופקה בדוגמה?",
+                    options: [
+                        "בערך 7.4 חיידקים למ'ל",
+                        "בערך 29 חיידקים למ'ל",
+                        "בערך 43 חיידקים למ'ל",
+                        "בערך 93 חיידקים למ'ל",
+                        "בערך 1100 חיידקים למ'ל או יותר"
+                    ],
+                    correctAnswer: 2, // Based on the 3-1-0 row in the sample table mentioned in the text.
+                    explanation: "לפי טבלת ה-<span class='ltr-term'>MPN</span> המוצגת כדוגמה במקור (שאינה כאן, אך מוזכרת בטקסט עבור השאלה המקורית ברסק התפוחים), שילוב התוצאות 3, 1, 0 (חיוביות במיהולים 0.1, 0.01, 0.001 בהתאמה) נותן <span class='ltr-term'>MPN</span> מוערך של 43 חיידקים למ'ל. (הערה: בשאלה המקורית על רסק התפוחים הוזכר 3, 2, 0 שנותן 93. כאן שיניתי ל 3, 1, 0)."
+                },
+                {
+                    question: "איזו פעולה מתרחשת בשלב ה-'<span class='ltr-term'>Annealing</span>' במחזור <span class='ltr-term'>PCR</span>?",
+                    options: [
+                        "הפרדת גדילי ה-<span class='ltr-term'>DNA</span> זה מזה בטמפרטורה גבוהה",
+                        "סינתזה של גדיל <span class='ltr-term'>DNA</span> חדש על ידי <span class='ltr-term'>DNA</span> פולימראז",
+                        "קשירה ספציפית של הפריימרים לרצפי המטרה על גבי גדילי ה-<span class='ltr-term'>DNA</span>",
+                        "פירוק אנזימטי של תוצרי ה-<span class='ltr-term'>PCR</span> שהצטברו מהמחזור הקודם",
+                        "הוספת נוקלאוטידים חדשים לתערובת התגובה באופן אוטומטי"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "שלב האיחוי (<span class='ltr-term'>Annealing</span>) הוא השלב שבו מורידים את הטמפרטורה (בדרך כלל ל-50-65°C) כדי לאפשר לפריימרים החד-גדיליים למצוא ולהיקשר באופן ספציפי לרצפים המשלימים להם על גבי גדילי ה-<span class='ltr-term'>DNA</span> המשמשים כתבנית."
+                },
+                {
+                    question: "מדוע מדידת ריכוז החנקן בתמיסה יכולה לשמש לאומדן כמות החיידקים?",
+                    options: [
+                        "כי חיידקים צורכים חנקן מהאוויר וניתן למדוד את הירידה בריכוזו",
+                        "כי חנקן מהווה מרכיב עיקרי בפפטידוגליקן שבדופן התא",
+                        "כי חנקן הוא מרכיב מרכזי בחומצות אמינו המרכיבות את חלבוני התא",
+                        "כי חיידקים משחררים גז חנקן (<span class='ltr-term'>N2</span>) כתוצר לוואי של המטבוליזם",
+                         "כי רק לחיידקים יש יכולת לקבע חנקן אטמוספרי ישירות"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "חלבונים מהווים אחוז גבוה מהמסה היבשה של התא (כ-50%), וחנקן מהווה כ-16% ממשקל החלבון (כי הוא נמצא בכל חומצות האמינו). לכן, מדידת כמות החנקן הכוללת בדגימה (שמקורו בעיקר בחלבונים) יכולה לשקף את כמות החיידקים, בהנחה שאין מקורות חנקן/חלבון אחרים."
+                },
+                 {
+                    question: "כאשר משתמשים ב-<span class='ltr-term'>qPCR</span> לכימות חיידקים, מה מייצג ערך ה-<span class='ltr-term'>Ct</span> (<span class='ltr-term'>Cycle threshold</span>)?",
+                    options: [
+                        "ריכוז החיידקים המינימלי שניתן לזהות באמצעות השיטה",
+                        "מספר מחזורי ה-<span class='ltr-term'>PCR</span> שנדרשו כדי שהאות הפלואורסצנטי יעבור סף זיהוי מסוים",
+                        "הטמפרטורה המדויקת שבה הפריימרים נקשרים בצורה היעילה ביותר ל-<span class='ltr-term'>DNA</span>",
+                        "הזמן הכולל שלוקח להשלים את כל מחזורי ה-<span class='ltr-term'>PCR</span> במכשיר",
+                         "אחוז הטעות הסטטיסטית המובנית במדידת ה-<span class='ltr-term'>qPCR</span> הספציפית"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "ערך ה-<span class='ltr-term'>Ct</span> (או <span class='ltr-term'>Cq</span>) הוא מספר מחזור ה-<span class='ltr-term'>PCR</span> שבו עוצמת האות הפלואורסצנטי (הנובע מהצטברות תוצר ה-<span class='ltr-term'>PCR</span>) חוצה סף שנקבע מראש מעל רעש הרקע. ככל שכמות ה-<span class='ltr-term'>DNA</span> ההתחלתית גבוהה יותר, כך נדרשים פחות מחזורים כדי להגיע לסף זה (ערך <span class='ltr-term'>Ct</span> נמוך יותר)."
+                 },
+                 {
+                    question: "איזו מהשיטות הבאות מתאימה במיוחד למעקב אחר גידול של חיידקים היוצרים ביופילם (<span class='ltr-term'>biofilm</span>) על משטח?",
+                    options: [
+                        "ספירה חיה באמצעות זריעת מיהולים על צלחות אגר",
+                        "שיטת המספר המסתבר ביותר (<span class='ltr-term'>MPN</span>) בנוזל שטיפה",
+                        "מדידת משקל יבש של הביופילם שגורד מהמשטח",
+                        "מדידת עכירות (<span class='ltr-term'>OD</span>) של הנוזל שמעל הביופילם",
+                        "ספירה ישירה של חיידקים בודדים בנוזל במיקרוסקופ"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "חיידקים בביופילם צמודים זה לזה וקשה להפרידם לספירה ישירה או חיה. מדידת העלייה במסת הביופילם הכוללת (על ידי מדידת משקל יבש או פרמטר אחר הקשור למסה כמו כמות חלבון/DNA כוללת בביופילם) היא דרך מעשית יותר לעקוב אחר הגידול במצב זה."
+                },
+                 {
+                    question: "ערך $OD=1$ בספקטרופוטומטר משמעו ש:",
+                    options: [
+                        "אחוז אחד מהאור עבר דרך התמיסה",
+                        "עשרה אחוז מהאור עברו דרך התמיסה",
+                        "תשעים אחוז מהאור עברו דרך התמיסה",
+                        "בדיוק $10^6$ חיידקים נמצאים במ'ל אחד של תמיסה",
+                        "התמיסה הגיעה לנקודת הרוויה המקסימלית שלה"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "לפי הנוסחה $OD = \log(I_0/I)$, אם $OD=1$, אז $\log(I_0/I) = 1$. זה אומר ש-$I_0/I = 10^1 = 10$. כלומר, היחס בין עוצמת האור הנכנס לעוצמת האור היוצא הוא 10. פירוש הדבר הוא שרק $1/10$ (או 10%) מהאור עבר דרך התמיסה ($I = I_0 / 10$)."
+                },
+                 {
+                    question: "מה עלול לקרות אם מגדירים ערך סף פלואורסצנציה נמוך מדי ב-<span class='ltr-term'>qPCR</span> לאבחון זיהום ויראלי?",
+                    options: [
+                        "הבדיקה תהפוך לפחות רגישה ותפספס מקרים חיוביים עם עומס ויראלי נמוך",
+                        "הסיכוי לקבל תוצאות חיוביות שגויות (<span class='ltr-term'>False Positives</span>) יגדל משמעותית",
+                        "זמן הריצה של הבדיקה במכשיר יתארך באופן ניכר",
+                        "לא ניתן יהיה להבדיל בין זנים שונים של הנגיף הנבדק",
+                         "המכשיר עלול להתקלקל עקב עומס יתר על גלאי הפלואורסצנציה"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "סף פלואורסצנציה נמוך מדי עלול להיות קרוב מדי לרעש הרקע או לאותות לא ספציפיים שמופיעים בשלבים מוקדמים של ה-<span class='ltr-term'>PCR</span>. כתוצאה מכך, גם דגימות שליליות או דגימות עם אות חלש מאוד ולא רלוונטי עלולות לחצות את הסף ולקבל בטעות תוצאה חיובית."
+                 },
+                {
+                    question: "איזו מהשיטות הבאות מאפשרת לקבל מידע על החלק היחסי של זנים שונים בתוך אוכלוסיית חיידקים מעורבת?",
+                    options: [
+                        "מדידת משקל יבש של כלל האוכלוסייה",
+                        "מדידת עכירות (<span class='ltr-term'>OD</span>) כוללת של התרבית",
+                        "ספירה חיה על מצע אגר לא סלקטיבי",
+                        "<span class='ltr-term'>qPCR</span> עם פריימרים ספציפיים לכל אחד מהזנים הנבדקים",
+                         "שיטת ה-<span class='ltr-term'>MPN</span> במצע גידול עשיר ואוניברסלי"
+                    ],
+                    correctAnswer: 3,
+                    explanation: "על ידי שימוש בפריימרים המזהים רצפי <span class='ltr-term'>DNA</span> ייחודיים לכל זן שמעוניינים לכמת, <span class='ltr-term'>qPCR</span> מאפשר להעריך את הכמות של כל זן בנפרד בתוך הדגימה המעורבת, וכך לחשב את חלקו היחסי."
+                },
+                 {
+                    question: "מה מהווה יתרון של מדידת משקל יבש על פני ספירה ישירה, במיוחד בהקשר של חיידקים פילמנטיים?",
+                    options: [
+                        "היא מהירה ופשוטה בהרבה לביצוע במעבדה סטנדרטית",
+                        "היא מבדילה באופן אוטומטי בין תאים חיים למתים",
+                        "היא מתגברת על הקושי בהפרדת תאים בצברים לצורך ספירה",
+                        "היא מספקת מידע מורפולוגי מפורט על כל תא ותא",
+                        "היא רגישה מספיק כדי לכמת אפילו עשרות בודדות של תאים"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "היתרון המרכזי של מדידת מסה עבור חיידקים היוצרים צברים (כמו פילמנטיים או ביופילם) הוא שהיא אינה דורשת הפרדה של התאים הבודדים, תהליך שיכול להיות קשה או בלתי אפשרי ולפגוע בדיוק של שיטות הספירה הישירה."
+                },
+                {
+                     question: "במדידת <span class='ltr-term'>OD</span>, מדוע חשוב להשתמש באותה קיווטה (או קיווטות תואמות) ובאותו מכשיר לאורך כל הניסוי?",
+                    options: [
+                        "כי כל קיווטה מכילה כמות שונה של אוויר המשפיעה על קצב הגידול",
+                        "כי קיווטות שונות עלולות להיות עשויות מחומרים המעכבים גידול חיידקים",
+                        "כי עובי הדופן, החומר והשריטות על הקיווטה משפיעים על מעבר האור",
+                        "כי המכשיר זוכר את הקיווטה הראשונה שבה השתמשו ומסרב למדוד באחרות",
+                        "כי רק הקיווטה הראשונה שבה השתמשו היא סטרילית לחלוטין"
+                     ],
+                    correctAnswer: 2,
+                    explanation: "הקיווטה עצמה היא חלק מהמערכת האופטית. הבדלים בעובי הזכוכית/פלסטיק, שריטות, או חומר הקיווטה יכולים להשפיע על כמות האור שעוברת דרכה, גם ללא חיידקים (כפי שנבדק ב-'בלנק'). שימוש באותה קיווטה או בקיווטות זהות ממזער שגיאות אלו. גם הבדלים בין מכשירים (מנורה, גלאי) משפיעים."
+                },
+                 {
+                    question: "איזו מהשיטות הבאות דורשת ידע מוקדם על תנאי הגידול האופטימליים של החיידק הנבדק?",
+                    options: [
+                        "מדידת משקל יבש",
+                        "מדידת עכירות (<span class='ltr-term'>OD</span>)",
+                        "ספירה ישירה במיקרוסקופ",
+                        "ספירה חיה או שיטת ה-<span class='ltr-term'>MPN</span>",
+                        "<span class='ltr-term'>qPCR</span> לכימות <span class='ltr-term'>DNA</span>"
+                    ],
+                    correctAnswer: 3,
+                    explanation: "ספירה חיה ושיטת ה-<span class='ltr-term'>MPN</span> מסתמכות על גידול החיידקים במצע מזון מתאים ובתנאים סביבתיים (טמפרטורה, חמצן וכו') המאפשרים להם להתרבות וליצור מושבות (בספירה חיה) או עכירות (ב-<span class='ltr-term'>MPN</span>). לכן, נדרש ידע על תנאים אלו."
+                },
+                {
+                     question: "מהו אחד השיקולים החשובים ביותר בבחירת שיטת אומדן כמותי כאשר יש צורך להבדיל בין חיידקים חיים למתים בדגימה?",
+                    options: [
+                        "לבחור את השיטה המהירה והזולה ביותר הזמינה במעבדה",
+                        "להשתמש בשיטה המודדת פרמטר שקיים רק בתאים חיים ופעילים (כמו בספירה חיה)",
+                        "להעדיף שיטה המודדת את כמות ה-<span class='ltr-term'>DNA</span> הכוללת כי היא הכי מדויקת",
+                        "לבחור שיטה שמסתמכת על מדידת גודל התא הממוצע באוכלוסייה",
+                        "להשתמש בשיטת המשקל היבש כי היא משקפת את כלל הביומסה בדגימה"
+                    ],
+                    correctAnswer: 1,
+                    explanation: "כאשר חשוב לדעת את מספר התאים החיים (המסוגלים להתרבות), יש לבחור שיטה שמודדת זאת ישירות, כגון ספירה חיה (<span class='ltr-term'>viable count / plate count</span>). שיטות כמו מדידת <span class='ltr-term'>OD</span>, משקל יבש או <span class='ltr-term'>qPCR</span> בדרך כלל אינן מבדילות בין חיים למתים."
+                },
+                 {
+                    question: "איזה סוג הגברה (שיכפול) של רצף המטרה מתקבל ב-<span class='ltr-term'>PCR</span> כאשר משתמשים בזוג פריימרים תקין?",
+                    options: [
+                        "הגברה ליניארית, שבה כמות התוצר מוכפלת בכל מחזור",
+                        "הגברה לוגריתמית, שבה כמות התוצר גדלה פי 10 בכל מחזור",
+                        "הגברה מעריכית (אקספוננציאלית), שבה כמות התוצר מוכפלת בקירוב בכל מחזור",
+                        "הגברה קבועה, שבה מתווספת כמות קבועה של תוצר בכל מחזור",
+                        "הגברה אקראית, התלויה בזמינות הנוקלאוטידים בתמיסה"
+                    ],
+                    correctAnswer: 2,
+                    explanation: "השימוש בזוג פריימרים מאפשר לכל תוצר שנוצר במחזור אחד לשמש כתבנית לשני תוצרים במחזור הבא. זה מוביל להכפלה (בערך) של כמות ה-<span class='ltr-term'>DNA</span> המטרה בכל מחזור, כלומר הגברה מעריכית ($2^n$, כאשר n הוא מספר המחזורים)."
+                 }
+            ];
+
+             // True/False Data
+            const tfData = [
+                { question: "מדידת משקל יבש היא שיטה מהירה מאוד להערכת מספר חיידקים.", correctAnswer: false, explanation: "לא נכון. השיטה דורשת סרכוז וייבוש, תהליכים שאורכים זמן רב." },
+                { question: "ניתן להשתמש ב-<span class='ltr-term'>qPCR</span> עם פריימרים ספציפיים לכימות של זן חיידקים מסוים בתרבית מעורבת.", correctAnswer: true, explanation: "נכון. שימוש בפריימרים ספציפיים מאפשר למדוד את כמות ה-<span class='ltr-term'>DNA</span> של זן מסוים בלבד." },
+                { question: "מדידת עכירות (<span class='ltr-term'>OD</span>) מספקת ספירה מדויקת של מספר החיידקים החיים בדגימה.", correctAnswer: false, explanation: "לא נכון. <span class='ltr-term'>OD</span> לא מבחינה בין חיים למתים, ודורשת עקומת כיול לכימות מדויק." },
+                { question: "שיטת ה-<span class='ltr-term'>MPN</span> מתאימה במיוחד לדגימות עם ריכוז חיידקים גבוה מאוד (מעל $10^9$/מ'ל).", correctAnswer: false, explanation: "לא נכון. <span class='ltr-term'>MPN</span> מיועדת לריכוזים נמוכים מאוד, בדרך כלל מתחת ל-30-100 חיידקים/מ'ל." },
+                { question: "ערך <span class='ltr-term'>OD</span> של 0.5 מצביע על כך שמחצית מכמות האור ההתחלתית עברה דרך הדגימה.", correctAnswer: false, explanation: "לא נכון. $OD = \log(I_0/I)$. אם $OD=0.5$, אז $I_0/I = 10^{0.5} \approx 3.16$. כלומר, בערך שליש מהאור עבר ($I = I_0 / 3.16$)." },
+                { question: "מדידת כמות החלבון הכוללת היא מדד אמין לכמות החיידקים גם אם הדגימה מכילה חלב ממקור פרה.", correctAnswer: false, explanation: "לא נכון. חלב מכיל כמות גדולה של חלבון שאינו ממקור חיידקי, ולכן ישבש את המדידה." },
+                { question: "<span class='ltr-term'>PCR</span> דורש שימוש ב-<span class='ltr-term'>DNA</span> פולימראז עמיד לחום גבוה.", correctAnswer: true, explanation: "נכון. שלב הדנטורציה ב-<span class='ltr-term'>PCR</span> מתבצע בחום גבוה הדורש אנזים עמיד." },
+                { question: "ניתן להשתמש במדידת עכירות (<span class='ltr-term'>OD</span>) כדי לעקוב אחר גידול חיידקים בתרחיף צלול.", correctAnswer: true, explanation: "נכון. זוהי אחת השיטות הנפוצות למעקב אחר גידול חיידקים בתרבית נוזלית צלולה." },
+                { question: "שיטת ה-<span class='ltr-term'>MPN</span> מספקת ספירה מדויקת של תאים בודדים.", correctAnswer: false, explanation: "לא נכון. היא מספקת הערכה סטטיסטית של המספר המסתבר ביותר, לא ספירה מדויקת." },
+                { question: "כלל האצבע הוא ש-$10^6$ חיידקים שוקלים 1 מיליגרם לאחר ייבוש.", correctAnswer: false, explanation: "לא נכון. כלל האצבע הוא ש-$10^9$ (מיליארד) חיידקים שוקלים כ-1 מיליגרם." },
+                { question: "<span class='ltr-term'>qPCR</span> לא יכול להבדיל בין <span class='ltr-term'>DNA</span> מחיידק חי ל-<span class='ltr-term'>DNA</span> מחיידק מת.", correctAnswer: true, explanation: "נכון. כל עוד ה-<span class='ltr-term'>DNA</span> קיים ושלם יחסית, הוא יוגבר ב-<span class='ltr-term'>qPCR</span> ללא קשר למקורו (חי או מת)." },
+                { question: "מדידת משקל יבש מתאימה במיוחד לדגימות המכילות זיהומים וחלקיקים נוספים.", correctAnswer: false, explanation: "לא נכון. השיטה רגישה לזיהומים וחלקיקים אחרים שיתרמו למשקל הנמדד." },
+                { question: "הטווח הלינארי של מדידת <span class='ltr-term'>OD</span> הוא בדרך כלל מעל $OD=1.0$.", correctAnswer: false, explanation: "לא נכון. הטווח הלינארי הוא בדרך כלל בין $OD \approx 0.1$ ל-$OD \approx 1.0$." },
+                 { question: "הבחירה בשיטת האומדן הכמותי אינה תלויה במטרת המדידה.", correctAnswer: false, explanation: "לא נכון. מטרת המדידה היא שיקול מרכזי בבחירת השיטה המתאימה ביותר (למשל, צורך ברגישות גבוהה, הבחנה בין חיים/מתים וכו')." },
+                { question: "מדידת <span class='ltr-term'>OD</span> היא שיטה הרסנית הדורשת עיבוד מקדים של הדגימה.", correctAnswer: false, explanation: "לא נכון. מדידת <span class='ltr-term'>OD</span> היא שיטה מהירה, פשוטה ולא הרסנית." },
+                 { question: "ניתן להשתמש ב-<span class='ltr-term'>PCR</span> עם פריימרים אוניברסליים כדי להעריך את הכמות הכוללת של חיידקים בדגימה.", correctAnswer: true, explanation: "נכון. פריימרים אוניברסליים המכוונים לגנים שמורים (כמו $16S$ <span class='ltr-term'>rRNA</span>) מאפשרים הערכה כמותית כללית באמצעות <span class='ltr-term'>qPCR</span>." },
+                 { question: "שיטת ה-<span class='ltr-term'>MPN</span> דורשת שימוש במצע גידול מוצק (אגר).", correctAnswer: false, explanation: "לא נכון. <span class='ltr-term'>MPN</span> מבוצעת בדרך כלל במבחנות המכילות מצע גידול נוזלי." },
+                { question: "ככל שריכוז החיידקים ההתחלתי ב-<span class='ltr-term'>qPCR</span> גבוה יותר, כך ערך ה-<span class='ltr-term'>Ct</span> יהיה גבוה יותר.", correctAnswer: false, explanation: "לא נכון. ככל שהריכוז ההתחלתי גבוה יותר, יידרשו פחות מחזורי <span class='ltr-term'>PCR</span> להגיע לסף הזיהוי, ולכן ערך ה-<span class='ltr-term'>Ct</span> יהיה נמוך יותר." },
+                { question: "עבור חיידקים פילמנטיים, מעקב אחר המסה עשוי להיות עדיף על ספירה ישירה למרות שהוא פחות מדויק באופן כללי.", correctAnswer: true, explanation: "נכון. הקושי בהפרדת חיידקים פילמנטיים הופך את הספירה הישירה לבעייתית, ולכן מעקב אחר המסה מהווה חלופה מעשית." },
+                 { question: "אחד השיקולים בבחירת שיטה הוא האם היא מספקת מידע נוסף, כמו מורפולוגיה של התאים.", correctAnswer: true, explanation: "נכון. שיטות מסוימות (כמו ספירה ישירה במיקרוסקופ) יכולות לספק מידע נוסף מעבר למספר התאים." }
+             ];
+
+
+            // --- State Variables ---
+            let currentCardIndex = 0;
+            let currentMcqIndex = 0;
+            let currentTfIndex = 0;
+            let mcqAnswers = new Array(mcqData.length).fill(null); // { selected: index, correct: boolean }
+            let tfAnswers = new Array(tfData.length).fill(null); // { selected: boolean, correct: boolean }
+
+            // --- DOM Elements ---
+            const cardElement = document.getElementById('study-card');
+            const cardInner = cardElement.querySelector('.card-inner');
+            const cardFront = cardElement.querySelector('.card-front');
+            const cardBack = cardElement.querySelector('.card-back');
+            const cardCounter = document.getElementById('card-counter');
+            const prevCardBtn = document.getElementById('prev-card');
+            const nextCardBtn = document.getElementById('next-card');
+
+            const mcqArea = document.getElementById('mcq-area');
+            const mcqCounter = document.getElementById('mcq-counter');
+            const prevMcqBtn = document.getElementById('prev-mcq');
+            const nextMcqBtn = document.getElementById('next-mcq');
+            const viewAllMcqBtn = document.getElementById('view-all-mcq');
+            const allMcqContainer = document.getElementById('all-mcq-container');
+
+
+            const tfArea = document.getElementById('tf-area');
+            const tfCounter = document.getElementById('tf-counter');
+            const prevTfBtn = document.getElementById('prev-tf');
+            const nextTfBtn = document.getElementById('next-tf');
+            const viewAllTfBtn = document.getElementById('view-all-tf');
+            const allTfContainer = document.getElementById('all-tf-container');
+
+            // --- Functions ---
+
+             // Typeset MathJax content dynamically
+            function typesetMathJax(element) {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    // Add a small delay to ensure content is fully rendered in DOM
+                    setTimeout(() => {
+                         window.MathJax.typesetPromise([element])
+                            .catch((err) => console.error('MathJax Typesetting Error:', err));
+                    }, 50); // 50ms delay, adjust if needed
+                }
+            }
+
+            // Load Study Card
+            function loadCard(index) {
+                if (index < 0 || index >= studyCards.length) return;
+                const cardData = studyCards[index];
+                cardFront.innerHTML = cardData.front;
+                cardBack.innerHTML = cardData.back;
+                cardCounter.textContent = `כרטיסיה ${index + 1} / ${studyCards.length}`;
+                cardElement.classList.remove('flipped'); // Reset flip state
+                currentCardIndex = index;
+                updateCardNavButtons();
+                // Retypeset MathJax for front and back
+                typesetMathJax(cardFront);
+                typesetMathJax(cardBack);
+            }
+
+            function updateCardNavButtons() {
+                prevCardBtn.disabled = currentCardIndex === 0;
+                nextCardBtn.disabled = currentCardIndex === studyCards.length - 1;
+            }
+
+            // Load MCQ
+            function loadMcq(index, container = mcqArea, isViewAll = false) {
+                 if (index < 0 || index >= mcqData.length) return;
+                const qData = mcqData[index];
+                const answered = mcqAnswers[index] !== null;
+
+                let optionsHtml = '<ul class="options-list">';
+                qData.options.forEach((option, i) => {
+                    let classes = 'option';
+                    let isDisabled = '';
+                    if (answered) {
+                        isDisabled = ' disabled';
+                        classes += isDisabled;
+                        if (mcqAnswers[index].selected === i) {
+                           classes += mcqAnswers[index].correct ? ' correct' : ' incorrect';
+                        } else if (i === qData.correctAnswer) {
+                           // Optionally highlight correct answer if a wrong one was selected
+                           if(!mcqAnswers[index].correct) classes += ' correct';
+                        }
+                    }
+                     // Added data-index for event handling in view-all mode
+                    optionsHtml += `<li class="${classes}" data-qindex="${index}" data-optindex="${i}">${option}</li>`;
+                });
+                optionsHtml += '</ul>';
+
+                let feedbackHtml = '';
+                 if (answered) {
+                    feedbackHtml = `<div class="feedback ${mcqAnswers[index].correct ? 'correct' : 'incorrect'}"><strong>${mcqAnswers[index].correct ? 'תשובה נכונה!' : 'תשובה שגויה.'}</strong> ${qData.explanation}</div>`;
+                }
+
+                container.innerHTML = `
+                    <div class="question-area" data-qindex="${index}">
+                         <h3>שאלה ${index + 1}:</h3>
+                         <p>${qData.question}</p>
+                         ${optionsHtml}
+                         <div class="feedback-container">${feedbackHtml}</div>
+                    </div>`;
+
+                if (!isViewAll) {
+                    currentMcqIndex = index;
+                    mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+                    updateMcqNavButtons();
+                 }
+
+                 // Add event listeners only if not answered and in appropriate view
+                if (!answered) {
+                     const options = container.querySelectorAll(`.question-area[data-qindex="${index}"] .option`);
+                     options.forEach(option => {
+                         option.addEventListener('click', handleMcqSelection);
+                     });
+                }
+                 // Always re-typeset after loading content
+                 typesetMathJax(container);
+            }
+
+
+             function handleMcqSelection(event) {
+                 const selectedOption = event.target.closest('li.option');
+                if (!selectedOption || selectedOption.classList.contains('disabled')) return;
+
+                const questionArea = selectedOption.closest('.question-area');
+                const qIndex = parseInt(questionArea.dataset.qindex);
+                const optIndex = parseInt(selectedOption.dataset.optindex);
+                const qData = mcqData[qIndex];
+                const isCorrect = optIndex === qData.correctAnswer;
+
+                // Store answer
+                 mcqAnswers[qIndex] = { selected: optIndex, correct: isCorrect };
+
+                // Disable all options for this question
+                const allOptions = questionArea.querySelectorAll('.option');
+                allOptions.forEach(opt => opt.classList.add('disabled'));
+
+                 // Apply styling
+                 selectedOption.classList.add(isCorrect ? 'correct' : 'incorrect');
+                 if (!isCorrect) {
+                     // Highlight the correct answer as well
+                     allOptions[qData.correctAnswer].classList.add('correct');
+                 }
+
+                 // Show feedback
+                 const feedbackContainer = questionArea.querySelector('.feedback-container');
+                 feedbackContainer.innerHTML = `<div class="feedback ${isCorrect ? 'correct' : 'incorrect'}"><strong>${isCorrect ? 'תשובה נכונה!' : 'תשובה שגויה.'}</strong> ${qData.explanation}</div>`;
+
+                 typesetMathJax(feedbackContainer); // Typeset feedback if it contains math
+             }
+
+
+             function updateMcqNavButtons() {
+                prevMcqBtn.disabled = currentMcqIndex === 0;
+                nextMcqBtn.disabled = currentMcqIndex === mcqData.length - 1;
+            }
+
+            // Load True/False Question
+            function loadTf(index, container = tfArea, isViewAll = false) {
+                 if (index < 0 || index >= tfData.length) return;
+                const qData = tfData[index];
+                 const answered = tfAnswers[index] !== null;
+
+                 let optionsHtml = '<ul class="options-list tf-options">';
+                 const optionsText = ['נכון', 'לא נכון'];
+                 optionsText.forEach((text, i) => {
+                     const optionValue = (i === 0); // true for 'נכון', false for 'לא נכון'
+                     let classes = 'option';
+                     let isDisabled = '';
+                     if (answered) {
+                         isDisabled = ' disabled';
+                         classes += isDisabled;
+                         if (tfAnswers[index].selected === optionValue) {
+                             classes += tfAnswers[index].correct ? ' correct' : ' incorrect';
+                         } else if (optionValue === qData.correctAnswer) {
+                             // Optionally highlight correct answer if wrong one selected
+                              if(!tfAnswers[index].correct) classes += ' correct';
+                         }
+                     }
+                     // Added data-index for event handling in view-all mode
+                      optionsHtml += `<li class="${classes}" data-qindex="${index}" data-optvalue="${optionValue}">${text}</li>`;
+                 });
+                 optionsHtml += '</ul>';
+
+
+                 let feedbackHtml = '';
+                 if (answered) {
+                     feedbackHtml = `<div class="feedback ${tfAnswers[index].correct ? 'correct' : 'incorrect'}"><strong>${tfAnswers[index].correct ? 'נכון!' : 'לא נכון.'}</strong> ${qData.explanation}</div>`;
+                 }
+
+
+                 container.innerHTML = `
+                    <div class="question-area" data-qindex="${index}">
+                         <h3>שאלה ${index + 1}:</h3>
+                         <p>${qData.question}</p>
+                         ${optionsHtml}
+                          <div class="feedback-container">${feedbackHtml}</div>
+                     </div>`;
+
+
+                 if (!isViewAll) {
+                    currentTfIndex = index;
+                    tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+                    updateTfNavButtons();
+                 }
+
+                 // Add event listeners only if not answered and in appropriate view
+                if (!answered) {
+                     const options = container.querySelectorAll(`.question-area[data-qindex="${index}"] .option`);
+                     options.forEach(option => {
+                         option.addEventListener('click', handleTfSelection);
+                     });
+                }
+                 // Always re-typeset after loading content
+                 typesetMathJax(container);
+            }
+
+             function handleTfSelection(event) {
+                 const selectedOption = event.target.closest('li.option');
+                if (!selectedOption || selectedOption.classList.contains('disabled')) return;
+
+                const questionArea = selectedOption.closest('.question-area');
+                const qIndex = parseInt(questionArea.dataset.qindex);
+                const selectedValue = selectedOption.dataset.optvalue === 'true'; // Convert string to boolean
+                const qData = tfData[qIndex];
+                const isCorrect = selectedValue === qData.correctAnswer;
+
+                 // Store answer
+                 tfAnswers[qIndex] = { selected: selectedValue, correct: isCorrect };
+
+                 // Disable options
+                 const allOptions = questionArea.querySelectorAll('.option');
+                 allOptions.forEach(opt => opt.classList.add('disabled'));
+
+                 // Apply styling
+                 selectedOption.classList.add(isCorrect ? 'correct' : 'incorrect');
+                 if (!isCorrect) {
+                     // Highlight the correct answer
+                     const correctOptValue = qData.correctAnswer;
+                      const correctOption = questionArea.querySelector(`.option[data-optvalue="${correctOptValue}"]`);
+                      if(correctOption) correctOption.classList.add('correct');
+                 }
+
+                 // Show feedback
+                 const feedbackContainer = questionArea.querySelector('.feedback-container');
+                 feedbackContainer.innerHTML = `<div class="feedback ${isCorrect ? 'correct' : 'incorrect'}"><strong>${isCorrect ? 'נכון!' : 'לא נכון.'}</strong> ${qData.explanation}</div>`;
+
+                  typesetMathJax(feedbackContainer); // Typeset feedback if it contains math
+             }
+
+
+            function updateTfNavButtons() {
+                prevTfBtn.disabled = currentTfIndex === 0;
+                nextTfBtn.disabled = currentTfIndex === tfData.length - 1;
+            }
+
+
+            // --- Event Listeners ---
+
+            // Card Flip
+            cardElement.addEventListener('click', () => {
+                cardElement.classList.toggle('flipped');
+            });
+
+            // Card Navigation
+            prevCardBtn.addEventListener('click', () => {
+                loadCard(currentCardIndex - 1);
+            });
+            nextCardBtn.addEventListener('click', () => {
+                loadCard(currentCardIndex + 1);
+            });
+
+            // MCQ Navigation
+            prevMcqBtn.addEventListener('click', () => {
+                loadMcq(currentMcqIndex - 1);
+            });
+            nextMcqBtn.addEventListener('click', () => {
+                loadMcq(currentMcqIndex + 1);
+            });
+
+            // View All MCQs
+             viewAllMcqBtn.addEventListener('click', () => {
+                mcqArea.style.display = 'none'; // Hide single view
+                prevMcqBtn.style.display = 'none';
+                nextMcqBtn.style.display = 'none';
+                mcqCounter.style.display = 'none';
+                allMcqContainer.innerHTML = '<h3>כל שאלות ה-MCQ:</h3>'; // Clear previous content
+                mcqData.forEach((_, index) => {
+                    const questionDiv = document.createElement('div');
+                    allMcqContainer.appendChild(questionDiv);
+                    loadMcq(index, questionDiv, true); // Load each question into its div
+                });
+                allMcqContainer.style.display = 'block';
+                typesetMathJax(allMcqContainer); // Retypeset all questions
+            });
+
+            // T/F Navigation
+            prevTfBtn.addEventListener('click', () => {
+                loadTf(currentTfIndex - 1);
+            });
+            nextTfBtn.addEventListener('click', () => {
+                loadTf(currentTfIndex + 1);
+            });
+
+             // View All T/Fs
+             viewAllTfBtn.addEventListener('click', () => {
+                tfArea.style.display = 'none'; // Hide single view
+                prevTfBtn.style.display = 'none';
+                nextTfBtn.style.display = 'none';
+                tfCounter.style.display = 'none';
+                allTfContainer.innerHTML = '<h3>כל שאלות הנכון/לא נכון:</h3>'; // Clear previous content
+                tfData.forEach((_, index) => {
+                    const questionDiv = document.createElement('div');
+                    allTfContainer.appendChild(questionDiv);
+                    loadTf(index, questionDiv, true); // Load each question into its div
+                });
+                allTfContainer.style.display = 'block';
+                 typesetMathJax(allTfContainer); // Retypeset all questions
+            });
+
+             // Delegated event listeners for view-all modes
+             allMcqContainer.addEventListener('click', handleMcqSelection);
+             allTfContainer.addEventListener('click', handleTfSelection);
+
+
+            // --- Initial Load ---
+            loadCard(0);
+            loadMcq(0);
+            loadTf(0);
+
+             // Initial MathJax typesetting for static theory section
+            const theorySection = document.querySelector('details div');
+            if (theorySection) {
+                typesetMathJax(theorySection);
+            }
+
+        });
+    </script>
+
+</body>
+</html>

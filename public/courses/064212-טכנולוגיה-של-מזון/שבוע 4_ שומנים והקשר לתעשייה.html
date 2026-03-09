@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 4: שומנים והקשר לתעשייה</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 4: שומנים והקשר לתעשייה</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 4 ---
+
+        const flashcardData = [
+            { term: "טריגליצרידים", definition: "הצורה העיקרית של שומן במזון ובגוף. מורכבים ממולקולת גליצרול שאליה קשורות שלוש חומצות שומן בקשרים אסתריים." },
+            { term: "חומצת שומן רוויה", definition: "חומצת שומן שבה כל הקשרים בין אטומי הפחמן בשרשרת הם קשרים יחידים. לרוב ישרה במבנה ומוצקה בטמפרטורת החדר." },
+            { term: "חומצת שומן בלתי רוויה", definition: "חומצת שומן המכילה קשר כפול אחד לפחות בין אטומי פחמן בשרשרת. קשרים כפולים גורמים ל'כיפוף' השרשרת. לרוב נוזלית בטמפרטורת החדר." },
+            { term: "מבנה ציס (Cis)", definition: "תצורה של קשר כפול בחומצת שומן בלתי רוויה, שבה אטומי המימן נמצאים באותו צד של הקשר הכפול, מה שגורם לכיפוף משמעותי של השרשרת." },
+            { term: "מבנה טראנס (Trans)", definition: "תצורה של קשר כפול בחומצת שומן בלתי רוויה, שבה אטומי המימן נמצאים בצדדים מנוגדים של הקשר הכפול, מה שגורם למבנה ישר יותר, הדומה לחומצת שומן רוויה." },
+            { term: "שומן טראנס", definition: "שומן המכיל חומצות שומן במבנה טראנס. נוצר בעיקר בתהליכים תעשייתיים (הידרוגנציה חלקית) ונחשב בעל השפעות בריאותיות שליליות." },
+            { term: "חמצון שומנים", definition: "תהליך כימי הפוגע בשומנים, במיוחד בלתי רוויים, גורם ליצירת רדיקלים חופשיים, ומשפיע לרעה על הטעם, הריח והערך התזונתי של המזון." },
+            { term: "תפקיד סנסורי של שומנים", definition: "תרומה למרקם ('חומר סיכה'), לטעם ולריח אופייניים במזונות (טיגון, אפייה, שוקולד)." },
+            { term: "אינטראקציה שומן-חלבון/עמילן", definition: "שומנים יכולים להשפיע על מבנה ותכונות של רכיבים אחרים במזון, למשל עיכוב רטרוגרדציה של עמילן." },
+            { term: "אתגרי תעשיית המזון", definition: "מענה לציפיות הצרכן, הבטחת איכות ואמינות, עמידה ברגולציה, תחרותיות." },
+            { term: "היררכיית המגמות", definition: "מבנה המתאר רמות שונות של מגמות המשפיעות על הצרכן: מגמות-על (Mega Trends), מגמות תרבותיות-חברתיות, מגמות בקטגוריית המזון." },
+            { term: "מגמות-על (Mega Trends)", definition: "מגמות גלובליות ארוכות טווח המשפיעות על תחומי חיים רבים. דוגמאות: גלובליזציה, קידמה טכנולוגית, בריאות ואיכות חיים, קצב חיים מהיר, קיימות, המשפחה החדשה." },
+            { term: "מגמת הבריאות והתזונה", definition: "התמקדות הצרכנים במזון התורם לבריאות ואיכות חיים (Well-being). מענה טכנולוגי: מזון אפוי, % שומן נמוך, מופחת קלוריות, דגנים מלאים, פרו/פרה-ביוטיקה, אורגני." },
+            { term: "מגמת הנוחות", definition: "העדפת הצרכנים לפתרונות מזון מהירים וקלים להכנה או צריכה, המתאימים לאורח חיים דינמי. מענה טכנולוגי: מוצרי 'On the go', ארוחות מוכנות, ירקות חתוכים, תרסיסי שמן, טיגון בוואקום." },
+            { term: "מגמת ההנאה והפינוק", definition: "חשיבות החוויה החושית והרגשית הקשורה לאכילה. מענה טכנולוגי: פיתוח טעמים, מרקמים וחוויות אכילה חדשות." },
+            { term: "פרו-ביוטיקה", definition: "תוספת חיידקים 'טובים' (חיים) למזון, במטרה לשפר את אוכלוסיית חיידקי המעי." },
+            { term: "פרה-ביוטיקה", definition: "תוספת רכיבי מזון (לרוב סיבים מסוימים) המשמשים מצע גידול לחיידקים ה'טובים' הקיימים במעי." },
+            { term: "טיגון בוואקום", definition: "שיטת טיגון המבוצעת בתת-לחץ, המאפשרת אידוי מים בטמפרטורה נמוכה יותר. מונעת השחמה (קרמליזציה) ומאפשרת טיגון פירות וירקות תוך שמירה על צבע בהיר יותר." },
+            { term: "מגמת השקיפות", definition: "דרישת הצרכנים למידע זמין, אמין ומלא על מוצרי המזון, הרכבם ומקורם." },
+            { term: "מגמת הגיוון והחדשנות", definition: "רצון הצרכנים להתנסות בטעמים, מרקמים ומוצרים חדשים באופן תדיר." },
+            { term: "צרכן חכם/חשדן/דעתן", definition: "תוצאה של הקידמה הטכנולוגית והנגישות למידע, הצרכן כיום מצפה ליותר מידע, בודק ומשווה." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהו המבנה הבסיסי של טריגליצריד?",
+                options: ["גליצרול + חומצת שומן אחת", "גליצרול + 2 חומצות שומן", "גליצרול + 3 חומצות שומן", "גליצרול + פוספט"],
+                correctIndex: 2,
+                explanation: "טריגליצריד מורכב ממולקולת גליצרול אחת שאליה קשורות שלוש חומצות שומן."
+            },
+            {
+                question: "מה מאפיין חומצת שומן רוויה?",
+                options: ["מכילה לפחות קשר כפול אחד", "כל הקשרים בין הפחמנים הם יחידים", "תמיד נוזלית בטמפרטורת החדר", "תמיד במבנה טראנס"],
+                correctIndex: 1,
+                explanation: "בחומצת שומן רוויה, אין קשרים כפולים בין אטומי הפחמן בשרשרת הפחמימנית."
+            },
+            {
+                question: "איזו תכונה מאפיינת לרוב שומנים העשירים בחומצות שומן בלתי רוויות?",
+                options: ["מוצקים בטמפרטורת החדר", "נוזליים בטמפרטורת החדר (שמן)", "בעלי מבנה ישר", "עמידים מאוד לחמצון"],
+                correctIndex: 1,
+                explanation: "ה'כיפופים' במבנה הנגרמים מהקשרים הכפולים (במיוחד ציס) מפריעים לאריזה צפופה של המולקולות, ולכן שומנים אלו נוטים להיות נוזליים (שמנים)."
+            },
+            {
+                question: "מה ההבדל המרכזי בין מבנה ציס למבנה טראנס בקשר כפול?",
+                options: ["בציס יש שני קשרים כפולים, בטראנס אחד", "בטראנס השרשרת ישרה יותר, בציס היא מכופפת", "ציס יציב יותר לחום מטראנס", "טראנס נוצר באופן טבעי בלבד, ציס רק תעשייתי"],
+                correctIndex: 1,
+                explanation: "במבנה טראנס, אטומי המימן נמצאים בצדדים מנוגדים של הקשר הכפול, מה שמאפשר לשרשרת להישאר יחסית ישרה. במבנה ציס, הם באותו צד וגורמים לכיפוף."
+            },
+            {
+                question: "מדוע שומן טראנס נחשב לבעייתי מבחינה בריאותית?",
+                options: ["כי הוא חסר טעם", "כי הוא נוטה להתחמצן בקלות", "כי הוא תורם להצטברות כולסטרול בכלי הדם", "כי הוא יקר לייצור"],
+                correctIndex: 2,
+                explanation: "הטקסט מציין ששומן טראנס תורם להצטברות כולסטרול בדפנות כלי הדם, בדומה לשומן רווי."
+            },
+            {
+                question: "איזה סוג חומצת שומן רגיש יותר לחמצון?",
+                options: ["חומצות שומן רוויות", "חומצות שומן בלתי רוויות", "חומצות שומן קצרות שרשרת", "כל חומצות השומן רגישות באותה מידה"],
+                correctIndex: 1,
+                explanation: "הקשרים הכפולים בחומצות שומן בלתי רוויות הם נקודות תורפה המועדות יותר לתקיפה על ידי חמצן וליצירת תהליכי חמצון."
+            },
+            {
+                question: "מהי דוגמה לתפקיד סנסורי של שומן במזון?",
+                options: ["הסמכת רוטב", "שימור המוצר", "תרומה למרקם חלק ועסיסי (כמו בשוקולד)", "העלאת נקודת הקיפאון"],
+                correctIndex: 2,
+                explanation: "שומן משמש כ'חומר סיכה', תורם לתחושת פה חלקה ונימוחה ומשפיע על מרקמים אופייניים כמו בשוקולד או מוצרי מאפה."
+            },
+            {
+                question: "כיצד שומן יכול להשפיע על רטרוגרדציה של עמילן?",
+                options: ["הוא מזרז רטרוגרדציה", "הוא מעכב רטרוגרדציה", "אין לו השפעה", "הוא גורם לעמילן להתמוסס"],
+                correctIndex: 1,
+                explanation: "הטקסט מציין ששומן יוצר אינטראקציה במערכות מורכבות ומעכב רטרוגרדציה, מה שתורם לשמירה על מרקם רך יותר לאורך זמן (למשל, בלחם)."
+            },
+            {
+                question: "מהי הדרישה המרכזית מהמזון לפי 'טכנולוגיה של מזון' בהקשר לאתגרים?",
+                options: ["שיהיה ארוז בצבע כחול", "שיעמוד בציפיות הצרכן, באיכות, ברגולציה ובתחרותיות", "שיהיה מיובא בלבד", "שיהיה בעל חיי מדף קצרים"],
+                correctIndex: 1,
+                explanation: "הטקסט בעמוד 9 מפרט את 4 הדרישות/אתגרים המרכזיים: ציפיות צרכן, איכות ואמינות, עמידה ברגולציה ותחרותיות."
+            },
+            {
+                question: "איזו רמה נמצאת בבסיס היררכיית המגמות המשפיעות על הצרכן?",
+                options: ["מגמות בקטגוריית המזון", "מגמות תרבותיות-חברתיות", "מגמות-על (Mega Trends)", "מגמות אופנה"],
+                correctIndex: 2,
+                explanation: "התרשים בעמוד 9 מראה שמגמות-על הן הרמה הבסיסית והרחבה ביותר, המשפיעה על המגמות ברמות שמעליה."
+            },
+            {
+                question: "איזו מהבאים אינה 'מגה-טרנד' המוזכר בטקסט?",
+                options: ["גלובליזציה", "בריאות ואיכות חיים", "עלייה בצריכת בשר אדום", "קצב חיים מהיר ומשתנה"],
+                correctIndex: 2,
+                explanation: "הטקסט מונה מספר מגה-טרנדים, אך עלייה בצריכת בשר אדום אינה אחת מהם (למעשה, המגמה כיום נוטה לעיתים לכיוון הפחתה)."
+            },
+            {
+                question: "פיתוח מזון מופחת שומן ואפוי הוא מענה טכנולוגי לאיזו מגמה מרכזית?",
+                options: ["נוחות", "הנאה ופינוק", "בריאות ותזונה", "גלובליזציה"],
+                correctIndex: 2,
+                explanation: "מוצרים דלי שומן או אפויים נתפסים כבריאים יותר ומהווים מענה לדרישת הצרכנים למזון התורם לבריאות."
+            },
+            {
+                question: "מה ההבדל בין פרו-ביוטיקה לפרה-ביוטיקה?",
+                options: ["פרו-ביוטיקה הם ויטמינים, פרה-ביוטיקה הם מינרלים", "פרו-ביוטיקה הם חיידקים 'טובים', פרה-ביוטיקה הם 'מזון' לחיידקים אלו", "פרו-ביוטיקה הם סיבים, פרה-ביוטיקה הם חיידקים", "אין הבדל"],
+                correctIndex: 1,
+                explanation: "פרו-ביוטיקה מכילה את החיידקים החיים עצמם, בעוד פרה-ביוטיקה מכילה רכיבים (כמו סיבים) המעודדים את שגשוג החיידקים המועילים הקיימים במעי."
+            },
+            {
+                question: "מה היתרון של 'טיגון בוואקום'?",
+                options: ["מזרז את תהליך הקרמליזציה", "מאפשר טיגון בטמפרטורה גבוהה יותר", "מונע קרמליזציה ומאפשר טיגון פירות/ירקות בצבע בהיר", "מוסיף שומן למוצר"],
+                correctIndex: 2,
+                explanation: "הטיגון בתת-לחץ מוריד את טמפרטורת הרתיחה של המים, מאפשר אידוי מהיר בטמפרטורה נמוכה יותר, ובכך מונע או מפחית תגובות השחמה כמו קרמליזציה."
+            },
+            {
+                question: "פיתוח ירקות חתוכים וארוזים הוא מענה טכנולוגי בעיקר לאיזו מגמה?",
+                options: ["בריאות ותזונה", "נוחות", "קיימות", "הנאה ופינוק"],
+                correctIndex: 1,
+                explanation: "ירקות חתוכים חוסכים זמן הכנה ומתאימים לאורח חיים מהיר, ולכן מהווים מענה ישיר למגמת הנוחות."
+            },
+             {
+                question: "מדוע מגמת השקיפות מתחזקת בקרב צרכנים?",
+                options: ["כי הצרכנים פחות מתעניינים במה שהם אוכלים", "בגלל הנגישות המוגברת למידע והפיכת הצרכן ל'חכם וחשדן'", "כי החברות רוצות להסתיר מידע", "בגלל ירידה במחירי המזון"],
+                correctIndex: 1,
+                explanation: "הטקסט מקשר את מגמת השקיפות ל'צרכן חכם, חשדן ודעתן' הנובע מהקידמה הטכנולוגית והיכולת לגשת למידע רב."
+            },
+            {
+                question: "איזו מהבאים היא דוגמה ל'מוצר פונקציונלי' בהקשר למגמת הבריאות?",
+                options: ["משקה מוגז ממותק", "מזון עם תוספת סיבים תזונתיים לתחושת שובע", "חטיף שוקולד עשיר בסוכר", "לחם לבן רגיל"],
+                correctIndex: 1,
+                explanation: "מוצר פונקציונלי הוא מזון שמעבר לערכו התזונתי הבסיסי, מיוחס לו תפקיד בריאותי נוסף, כמו סיבים המשפרים שובע."
+            },
+            {
+                question: "מדוע חשובה 'התאמה לצרכים ושימושים של הצרכן' בתכנון מוצר מזון?",
+                options: ["זה לא חשוב, רק המחיר קובע", "כי זה מייקר את הייצור", "כי מוצר שלא עונה על צורך או שימוש לא יירכש", "כי זה מקצר את חיי המדף"],
+                correctIndex: 2,
+                explanation: "זהו אחד מארבעת האתגרים/דרישות המרכזיים. מוצר צריך להתאים למה שהצרכן מחפש (טעם, נוחות, ערך תזונתי, אופן שימוש) כדי שתהיה לו הצדקה קיומית בשוק."
+            },
+             {
+                question: "מהי היררכיית המגמות מהרחבה ביותר למצומצמת ביותר?",
+                options: ["מזון -> תרבות -> מגה", "מגה -> תרבות -> מזון", "תרבות -> מגה -> מזון", "מזון -> מגה -> תרבות"],
+                correctIndex: 1,
+                explanation: "התרשים מראה שמגמות-על (Mega) הן הרחבות ביותר, משפיעות על מגמות תרבותיות-חברתיות, ואלו משפיעות על מגמות ספציפיות בקטגוריית המזון."
+            },
+             {
+                question: "חטיפי אנרגיה ויוגורטים 'On the go' הם דוגמה למענה טכנולוגי לאיזו מגמה?",
+                options: ["קיימות ואיכות סביבה", "המשפחה החדשה", "נוחות וקצב חיים מהיר", "בריאות בלבד"],
+                correctIndex: 2,
+                explanation: "מוצרים אלו מיועדים לצריכה מהירה ונוחה מחוץ לבית או בין פעילויות, ומתאימים למגמת הנוחות וקצב החיים המהיר."
+            },
+             {
+                question: "מה הבעיה העיקרית בחמצון שומנים במזון?",
+                options: ["הוא משפר את המרקם", "הוא מאריך את חיי המדף", "הוא פוגע בטעם, בריח ובערכים תזונתיים", "הוא הופך את השומן למסיס במים"],
+                correctIndex: 2,
+                explanation: "חמצון שומנים (Rancidity) גורם ליצירת תוצרי לוואי בעלי טעם וריח לא נעימים ופוגע באיכות הכללית של המוצר."
+            },
+             {
+                question: "מהו 'חומר סיכה' בהקשר לתפקיד השומן במזון?",
+                options: ["חומר המשמש לשימון מכונות הייצור", "שומן התורם לתחושת פה חלקה ומונע הידבקות", "חומר המווסת את טמפרטורת המזון", "תוסף מזון מלאכותי"],
+                correctIndex: 1,
+                explanation: "שומן תורם לתחושת 'סיכוך' בפה, מפחית חיכוך ומעניק תחושה חלקה ונימוחה למזון."
+            },
+             {
+                question: "איזה סוג חומצת שומן נפוץ בשמנים צמחיים נוזליים כמו שמן זית?",
+                options: ["חומצות שומן רוויות", "חומצות שומן טראנס", "חומצות שומן בלתי רוויות (בעיקר ציס)", "חומצות שומן קצרות מאוד"],
+                correctIndex: 2,
+                explanation: "שמנים צמחיים נוזליים עשירים בחומצות שומן בלתי רוויות, בעיקר במבנה ציס, שתורם לנזילותם בטמפרטורת החדר."
+            },
+             {
+                question: "מדוע חשובה התאמת הזנים והגידולים לעיבוד תעשייתי?",
+                options: ["כדי להקשות על הקטיף המכני", "כדי לקבל חומר גלם אחיד ובעל תכונות רצויות לתהליך", "כדי להוריד את הערך התזונתי", "זה לא חשוב כלל"],
+                correctIndex: 1,
+                explanation: "התעשייה דורשת חומרי גלם בעלי תכונות ספציפיות (גודל אחיד, צבע, מרקם, מועד הבשלה) המתאימות לתהליכי העיבוד והמוצר הסופי, בניגוד לשוק הטרי שבו יש גמישות רבה יותר."
+            },
+            {
+                question: "מהי המטרה העיקרית של קירור מהיר של פירות וירקות לאחר הקטיף?",
+                options: ["להקפיא את המוצר", "להאט תהליכים פיזיולוגיים ואנזימטיים ולהאריך חיי מדף", "לשנות את צבע הפרי", "להוסיף מים למוצר"],
+                correctIndex: 1,
+                explanation: "קירור מהיר מוריד את קצב הנשימה ותהליכים מטבוליים אחרים בפרי/ירק, מאט את ההזדקנות והקלקול, ומאריך את חיי המדף."
+            },
+            {
+                question: "מה פירוש 'אמינות' בהקשר לאתגרי תעשיית המזון?",
+                options: ["שהמוצר יהיה תמיד באותו מחיר", "שהמוצר יהיה זמין בכל חנות", "שהמוצר יעמוד באופן עקבי בהבטחות האיכות והבטיחות שלו", "שהפרסומת תהיה אמינה"],
+                correctIndex: 2,
+                explanation: "אמינות מתייחסת לכך שהצרכן יכול לסמוך על כך שהמוצר שהוא קונה יהיה בטוח, איכותי ועקבי בפעם הזו ובפעמים הבאות."
+            },
+            {
+                question: "המעבר לצריכת דגנים מלאים קשור לאיזו מגמה עיקרית?",
+                options: ["נוחות", "הנאה", "בריאות ותזונה", "גלובליזציה"],
+                correctIndex: 2,
+                explanation: "דגנים מלאים נתפסים כבריאים יותר (מכילים יותר סיבים, ויטמינים ומינרלים) וצריכתם עונה על מגמת הבריאות."
+            },
+             {
+                question: "מדוע התחרותיות היא אתגר לתעשיית המזון?",
+                options: ["כי יש מעט מדי מוצרים על המדף", "כי היא מחייבת פיתוח מתמיד, שמירה על איכות ומחיר אטרקטיבי", "כי היא מונעת כניסת חברות חדשות", "כי היא גורמת לירידת איכות"],
+                correctIndex: 1,
+                explanation: "התחרות הגבוהה בשוק המזון דורשת מהחברות להיות יעילות, חדשניות, להציע איכות טובה ומחיר תחרותי כדי לשרוד ולשגשג."
+            },
+             {
+                question: "מהי דוגמה למענה טכנולוגי למגמת ה'הנאה והפינוק'?",
+                options: ["פיתוח אריזה קלה לפתיחה", "הורדת אחוז השומן", "פיתוח מרקמים חדשים וטעמים מיוחדים", "הוספת ויטמינים"],
+                correctIndex: 2,
+                explanation: "מגמת ההנאה קשורה לחוויה הסנסורית, ולכן פיתוח טעמים, ריחות ומרקמים חדשים ומעניינים מהווה מענה ישיר למגמה זו."
+            },
+             {
+                question: "איזה מהבאים מתאר את הקשר בין 'קצב חיים מהיר' ומוצרי מזון?",
+                options: ["אנשים מחפשים מוצרים הדורשים זמן בישול ארוך", "יש דרישה גוברת למוצרים מוכנים לאכילה או מהירי הכנה", "אנשים אוכלים פחות ארוחות ביום", "אין קשר בין השניים"],
+                correctIndex: 1,
+                explanation: "קצב החיים המהיר מגביר את הדרישה לפתרונות מזון נוחים ומהירים, כמו ארוחות מוכנות, חטיפים, ומוצרים הדורשים מינימום הכנה."
+            }
+        ];
+
+        const tfData = [
+            { question: "טריגליצרידים מורכבים מגליצרול ופוספט.", answer: false, explanation: "טריגליצרידים מורכבים מגליצרול ושלוש חומצות שומן." },
+            { question: "חומצות שומן רוויות מכילות קשרים כפולים רבים.", answer: false, explanation: "חומצות שומן רוויות אינן מכילות קשרים כפולים בין הפחמנים בשרשרת." },
+            { question: "שמנים נוזליים בטמפרטורת החדר עשירים לרוב בחומצות שומן רוויות.", answer: false, explanation: "שמנים נוזליים עשירים לרוב בחומצות שומן בלתי רוויות, הגורמות למבנה פחות מסודר." },
+            { question: "מבנה טראנס של חומצת שומן גורם לכיפוף משמעותי בשרשרת.", answer: false, explanation: "מבנה טראנס מאפשר שרשרת ישרה יחסית, בעוד מבנה ציס גורם לכיפוף." },
+            { question: "צריכת שומן טראנס אינה מומלצת מבחינה בריאותית.", answer: true, explanation: "שומן טראנס נקשר לעלייה בסיכון למחלות לב וכלי דם." },
+            { question: "חומצות שומן בלתי רוויות עמידות יותר לחמצון מחומצות שומן רוויות.", answer: false, explanation: "הקשרים הכפולים בחומצות שומן בלתי רוויות הופכים אותן לרגישות יותר לחמצון." },
+            { question: "שומן במזון תורם רק קלוריות ואין לו תפקידים נוספים.", answer: false, explanation: "לשומן תפקידים חשובים בתרומה לטעם, למרקם וליצירת אינטראקציות עם רכיבים אחרים." },
+            { question: "שומן יכול לעכב רטרוגרדציה של עמילן במוצרי מאפה.", answer: true, explanation: "אינטראקציה בין שומן לעמילן יכולה להאט את תהליך ההתקשות של עמילן (רטרוגרדציה)." },
+            { question: "התאמה לציפיות הצרכן היא האתגר היחיד של תעשיית המזון.", answer: false, explanation: "קיימים אתגרים נוספים כמו איכות, רגולציה ותחרותיות." },
+            { question: "מגמות-על (Mega Trends) משפיעות רק על קטגוריית המזון.", answer: false, explanation: "מגמות-על הן גלובליות ומשפיעות על תחומי חיים רבים, כולל אך לא רק מזון." },
+            { question: "גלובליזציה היא דוגמה למגה-טרנד.", answer: true, explanation: "הטקסט מציין גלובליזציה כאחת ממגמות-העל המשפיעות." },
+            { question: "טיגון בוואקום מתבצע בלחץ אטמוספרי רגיל.", answer: false, explanation: "טיגון בוואקום מתבצע בתת-לחץ (לחץ נמוך מהאטמוספרי)." },
+            { question: "פרו-ביוטיקה ופרה-ביוטיקה הם מושגים נרדפים.", answer: false, explanation: "פרו-ביוטיקה הם החיידקים עצמם, פרה-ביוטיקה הם רכיבים המזינים חיידקים אלו." },
+            { question: "הצרכן המודרני פחות מתעניין במידע על המזון שהוא צורך.", answer: false, explanation: "מגמת השקיפות והגדרת הצרכן כ'חכם וחשדן' מעידות על עניין גובר במידע." },
+            { question: "פיתוח טעמים חדשים אינו קשור למגמות הצרכנים.", answer: false, explanation: "פיתוח טעמים חדשים קשור למגמת ההנאה והפינוק ולמגמת הגיוון והחדשנות." },
+            { question: "מזון אורגני הוא דוגמה למענה טכנולוגי למגמת הנוחות.", answer: false, explanation: "מזון אורגני הוא מענה למגמת הבריאות והקיימות, לאו דווקא לנוחות." },
+            { question: "היררכיית המגמות מראה שהצרכן מושפע רק ממגמות ספציפיות למזון.", answer: false, explanation: "ההיררכיה מראה השפעה מרמות רחבות יותר (מגה, תרבות) על הרמה הספציפית למזון." },
+            { question: "חומצות שומן במבנה ציס גורמות לשרשרת להיות ישרה יותר.", answer: false, explanation: "מבנה ציס גורם לכיפוף בשרשרת." },
+            { question: "תעשיית המזון צריכה להתאים את עצמה לשינויים בהרגלי החיים של הצרכנים.", answer: true, explanation: "מגמות כמו קצב חיים מהיר או הדגש על בריאות מחייבות את התעשייה להתאים את מוצריה." },
+            { question: "טריגליצריד הוא סוג של חלבון.", answer: false, explanation: "טריגליצריד הוא סוג של ליפיד (שומן)." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

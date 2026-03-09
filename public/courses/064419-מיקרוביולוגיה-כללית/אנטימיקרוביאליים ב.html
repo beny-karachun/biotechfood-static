@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>חומרים אנטימיקרוביאליים ועמידות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Sterilants (סטרילנטים)", definition: "כימיקלים המיועדים לעיקור מושלם, כולל השמדת נבגים (ספורות). משמשים לציוד רגיש לחום. דוגמאות: אתילן אוקסיד, מי חמצן." },
+            { term: "Disinfectants (חומרי חיטוי)", definition: "כימיקלים שהורגים אורגניזמים אך אינם משמידים ספורות. מיועדים לחיטוי חפצים ומשטחים דוממים." },
+            { term: "Sanitizers (סניטייזרים)", definition: "חומרים המורידים את המטען המיקרוביאלי לרמה בטוחה, אך לא משמידים אותו לחלוטין. משמשים בתעשיית המזון ובמטבחים." },
+            { term: "Antiseptics (אנטיספטיים)", definition: "כימיקלים שהורגים או מעכבים גידול חיידקים ומיועדים לשימוש חיצוני על רקמות חיות (עור ופצעים)." },
+            { term: "Chemotherapeutic agents", definition: "חומרים אנטימיקרוביאליים בעלי רעילות סלקטיבית, הניתנים לשימוש בתוך הגוף להריגה או מניעת גידול מיקרואורגניזמים." },
+            { term: "תרופות סולפה (Sulfa drugs)", definition: "מעכבים תחרותיים של האנזים המייצר חומצה פולית בחיידקים, על ידי היותם אנלוגים למולקולת PABA." },
+            { term: "פניצילין (Penicillin)", definition: "אנטיביוטיקה ממשפחת הבטא-לקטם המעכבת את סינתזת דופן התא החיידקי על ידי קשירה לאנזים טרנספפטידאז." },
+            { term: "טבעת בטא-לקטם (β-Lactam ring)", definition: "המבנה הכימי הפעיל בפניצילינים ובצפלוספורינים, האחראי לעיכוב האנזים הבונה את דופן התא." },
+            { term: "בטא-לקטמאז (β-Lactamase)", definition: "אנזים המיוצר על ידי חיידקים עמידים ומפרק את טבעת הבטא-לקטם, ובכך מנטרל את האנטיביוטיקה." },
+            { term: "טרנספפטידאז (Transpeptidase)", definition: "האנזים החיידקי שאחראי על יצירת קשרי הצילוב בפפטידוגליקן של דופן התא. זהו אתר המטרה של פניצילין." },
+            { term: "אנטיביוטיקה רחבת-טווח", definition: "אנטיביוטיקה הפועלת נגד מגוון רחב של מיקרואורגניזמים, למשל גם נגד חיידקי גרם חיוביים וגם שליליים." },
+            { term: "רעילות סלקטיבית", definition: "העיקרון לפיו חומר כימותרפי פוגע במטרה ייחודית במיקרואורגניזם (כמו דופן התא) אך אינו פוגע בתאי המאכסן." },
+            { term: "ביופילם (Biofilm)", definition: "קהילת חיידקים המאורגנת במבנה מורכב ומוקפת במטריצה חוץ-תאית, המקנה עמידות מוגברת לאנטיביוטיקה ולמערכת החיסון." },
+            { term: "קוניוגציה (Conjugation)", definition: "מנגנון העברת חומר גנטי (לרוב פלסמיד) בין חיידקים באמצעות מגע ישיר, המהווה דרך מרכזית להפצת עמידות לאנטיביוטיקה." },
+            { term: "טרנספורמציה (Transformation)", definition: "מנגנון שבו חיידק קולט מקטעי DNA חופשי מסביבתו ומשלב אותם בגנום שלו." },
+            { term: "טרנסדוקציה (Transduction)", definition: "מנגנון העברת DNA בין חיידקים המתווך על ידי וירוס בקטריופאג׳." },
+            { term: "אנטיביוטיקה חצי-סינתטית", definition: "אנטיביוטיקה טבעית שעברה שינויים כימיים במעבדה כדי לשפר את תכונותיה, כגון הרחבת טווח הפעולה או עמידות לחומצה." }
+        ];
+
+        const mcqData = [
+            { question: "איזו קטגוריה של חומר אנטימיקרוביאלי נדרשת כדי להבטיח עיקור מוחלט של מכשור כירורגי רגיש לחום, כולל השמדת אנדוספורות?", options: ["Sanitizer", "Antiseptic", "Disinfectant", "Sterilant"], correctIndex: 3, explanation: "רק Sterilant מסוגל להשמיד את כל צורות החיים המיקרוביאליות, כולל נבגים (ספורות) עמידים ביותר, ולכן הוא הכרחי לעיקור ציוד רפואי." },
+            { question: "מהי הסיבה העיקרית לרעילות הסלקטיבית הגבוהה של פניצילין כלפי חיידקים, לעומת רעילות נמוכה לתאי אדם?", options: ["חיידקים מבצעים נשימה אנאירובית, בעוד שתאי אדם מבצעים נשימה אירובית", "מנגנון שכפול ה-DNA החיידקי שונה מהותית מזה של תאי אדם", "לתאי אדם אין דופן תא המורכב מפפטידוגליקן", "ריבוזומים של חיידקים קטנים יותר מריבוזומים של תאי אדם"], correctIndex: 2, explanation: "פניצילין פוגע בסינתזת דופן התא החיידקי. מכיוון שלתאי אדם אין דופן תא, התרופה אינה פוגעת בהם, מה שמוביל לרעילות סלקטיבית גבוהה." },
+            { question: "חיידק המייצר את האנזים בטא-לקטמאז יהיה עמיד ככל הנראה לאנטיביוטיקה מסוג...?", options: ["טטרציקלין, המעכב סינתזת חלבונים", "אמפיצילין, הפוגע בדופן התא", "סולפונאמיד, המעכב יצירת חומצה פולית", "ריפמפין, המעכב RNA פולימראז"], correctIndex: 1, explanation: "בטא-לקטמאז מפרק באופן ספציפי את טבעת הבטא-לקטם, המהווה את החלק הפעיל באנטיביוטיקות כמו אמפיצילין (ופניצילינים אחרים). לכן, החיידק יהיה עמיד אליה." },
+            { question: "מהו ההבדל המהותי בין המנגנון של תרופות סולפה לבין המנגנון של פניצילין?", options: ["סולפה פוגעת בממברנת התא, ופניצילין פוגע בריבוזומים", "סולפה מעכבת מסלול מטבולי, ופניצילין מעכב בניית דופן התא", "סולפה גורמת לדנטורציה של חלבונים, ופניצילין מונע שכפול DNA", "סולפה פועלת רק על חיידקים גרם-שליליים, ופניצילין רק על גרם-חיוביים"], correctIndex: 1, explanation: "תרופות סולפה הן מעכבים תחרותיים במסלול הסינתזה של חומצה פולית, בעוד שפניצילין מעכב את בניית דופן התא על ידי פגיעה באנזים טרנספפטידאז." },
+            { question: "מדוע שטיפת ידיים עם אלכוהול-ג׳ל יעילה פחות באופן משמעותי על משטחים מלוכלכים מאוד בהשוואה לשטיפה במים וסבון?", options: ["הלכלוך מנטרל כימית את האלכוהול", "האלכוהול אינו יכול לחדור דרך שכבות לכלוך אורגני כדי להגיע לחיידקים", "מים וסבון יעילים יותר נגד וירוסים", "אלכוהול דורש זמן מגע ארוך יותר מאשר סבון"], correctIndex: 1, explanation: "אלכוהול צריך לבוא במגע ישיר עם המיקרואורגניזם כדי לפעול. לכלוך פיזי מהווה מחסום המונע מהאלכוהול להגיע אל החיידקים ולהשמידם. סבון ומים מסירים פיזית את הלכלוך ואת החיידקים איתו." },
+            { question: "איזו מהתרופות הבאות פועלת כאנלוג מבני (analog) למולקולה חיונית לחיידק?", options: ["פניצילין G", "ונקומיצין", "סולפנילאמיד", "טטרציקלין"], correctIndex: 2, explanation: "סולפנילאמיד הוא אנלוג מבני של PABA. דמיון זה מאפשר לו להתחרות עם PABA על האתר הפעיל של האנזים המייצר חומצה פולית, ובכך לעכב את התהליך." },
+            { question: "חיידק החי בתוך ביופילם עשוי להיות עמיד יותר לאנטיביוטיקה. איזה מהבאים אינו מנגנון עמידות הקשור ישירות לביופילם?", options: ["קצב גידול איטי של החיידקים במרכז הביופילם", "רכישת פלסמיד עמידות באמצעות קוניוגציה מחיידק אחר", "חדירות נמוכה של האנטיביוטיקה דרך מטריצת הביופילם", "ביטוי של חלבונים ייחודיים המגנים על החיידק"], correctIndex: 1, explanation: "רכישת פלסמיד היא מנגנון גנטי כללי של עמידות שיכול להתרחש בכל מקום, ולא תכונה אינהרנטית של מבנה הביופילם עצמו. שאר האפשרויות הן מנגנוני הגנה הנובעים ישירות מהחיים בקהילת הביופילם." },
+            { question: "פניצילין G טבעי הוא בעל חסרונות מסוימים. איזו תכונה של פניצילין חצי-סינתטי כמו אמפיצילין מהווה שיפור ישיר על פני פניצילין G?", options: ["עמידות מוחלטת לכל סוגי הבטא-לקטמאז", "יכולת לפעול גם נגד חיידקי גרם-שליליים", "מנגנון פעולה חדש לחלוטין", "אינו גורם לתגובות אלרגיות"], correctIndex: 1, explanation: "השינוי הכימי שהופך פניצילין G לאמפיצילין מאפשר לו לחדור דרך הממברנה החיצונית של חיידקי גרם-שליליים, ובכך מרחיב את טווח הפעולה שלו, בניגוד לפניצילין G שפועל בעיקר על גרם-חיוביים." },
+            { question: "מהי הדרך העיקרית שבה חיידקים רוכשים גנים חדשים לעמידות לאנטיביוטיקה בטבע?", options: ["מוטציות ספונטניות אקראיות בגן המטרה", "העברה אנכית מהורה לצאצא במהלך חלוקת התא", "העברה גנטית אופקית (HGT) מחיידקים אחרים", "חשיפה הדרגתית לריכוזים עולים של האנטיביוטיקה"], correctIndex: 2, explanation: "בעוד שמוטציות אכן מתרחשות, הדרך המהירה והנפוצה ביותר להפצת עמידות היא באמצעות העברה אופקית של גנים קיימים (לרוב על פלסמידים) בין חיידקים, למשל באמצעות קוניוגציה." },
+            { question: "כאשר אנטיביוטיקה ממשפחת הבטא-לקטם נקשרת לאנזים טרנספפטידאז, מהי התוצאה המיידית בתא החיידק?", options: ["ה-DNA של החיידק מתפרק באופן מיידי", "סינתזת החלבונים בריבוזומים נעצרת", "התא מפסיק לייצר את שרשראות הפפטידוגליקן", "נוצר דופן תא פגום ללא קשרי הצלבה יציבים"], correctIndex: 3, explanation: "התא ממשיך לייצר את אבני הבניין של הדופן, אך האנזים שאחראי לחבר אותן בקשרי הצלבה חזקים (טרנספפטידאז) מעוכב. התוצאה היא דופן חלש ופגום שאינו עומד בלחץ האוסמוטי." },
+            { question: "איזו מהתופעות הבאות היא הדוגמה המובהקת ביותר ללחץ סלקציה אבולוציוני המתרחש בבית חולים?", options: ["התפתחות אלרגיה לפניצילין בקרב מטופלים", "עלייה בשכיחות זני חיידקים עמידים למספר רב של תרופות", "העדפת רופאים להשתמש באנטיביוטיקה רחבת-טווח", "הופעת זיהומים ויראליים עמידים לאנטיביוטיקה"], correctIndex: 1, explanation: "השימוש הנרחב באנטיביוטיקות בבתי חולים יוצר לחץ סלקציה חזק, המעדיף שרידה והתרבות של חיידקים שבמקרה נושאים גנים לעמידות. זיהומים ויראליים אינם מושפעים מאנטיביוטיקה." },
+            { question: "במעבדה, מפתחים אנטיביוטיקה חדשה הפוגעת ב-DNA גיראז. לאיזו משפחת אנטיביוטיקות קיימות היא תהיה הדומה ביותר בפעולתה?", options: ["פניצילינים", "מקרולידים", "קווינולונים", "סולפונאמידים"], correctIndex: 2, explanation: "קווינולונים (כמו ציפרופלוקסצין) הם משפחת אנטיביוטיקות ידועה הפועלת על ידי עיכוב האנזים DNA גיראז, החיוני לשכפול ה-DNA החיידקי." },
+            { question: "חומר המשמש לניקוי משטחי עבודה במטבח תעשייתי, שמטרתו להפחית את כמות החיידקים לרמה בטוחה אך לא בהכרח להשמיד את כולם, יוגדר כ:", options: ["אנטיספטי", "סניטייזר", "סטרילנט", "כימותרפי"], correctIndex: 1, explanation: "ההגדרה של סניטייזר היא חומר המוריד את העומס המיקרוביאלי לרמה הנחשבת בטוחה, בניגוד לדיסאינפקטנט שהורג את רוב האורגניזמים, או סטרילנט שהורג את כולם." },
+            { question: "מהי הסיבה לכך שתרופות סולפה אינן פוגעות בתאי אדם?", options: ["תאי אדם אינם זקוקים לחומצה פולית", "לתאי אדם יש אנזים המפרק תרופות סולפה", "תאי אדם סופגים חומצה פולית מהמזון ואינם מייצרים אותה מ-PABA", "ממברנת תא האדם אינה חדירה לתרופות סולפה"], correctIndex: 2, explanation: "חיידקים חייבים לסנתז חומצה פולית בעצמם באמצעות מסלול שמתחיל ב-PABA. בני אדם מקבלים חומצה פולית (ויטמין B9) מוכנה מהתזונה. לכן, פגיעה במסלול זה ספציפית לחיידקים." },
+            { question: "איזה מהבאים אינו מנגנון ישיר שבאמצעותו חיידק יכול לרכוש עמידות לפניצילין?", options: ["ייצור אנזים המפרק את התרופה", "שינוי מבני של אתר המטרה (טרנספפטידאז)", "הגברת ייצור החומצה הפולית בתא", "מוטציה המקשה על חדירת התרופה לתא"], correctIndex: 2, explanation: "הגברת ייצור חומצה פולית אינה רלוונטית לעמידות לפניצילין, שפוגע בדופן התא. מנגנון זה יכול להיות רלוונטי לעמידות נגד תרופות סולפה. שאר האפשרויות הן מנגנוני עמידות קלאסיים לפניצילין." },
+            { question: "מה היתרון של שימוש באלכוהול בריכוז של 70% לצורך חיטוי על פני שימוש באלכוהול בריכוז של 99%?", options: ["אלכוהול 99% יקר יותר לייצור", "אלכוהול 99% מתאדה מהר מדי ואינו מספיק לפעול", "מים בריכוז של 30% חיוניים לתהליך דנטורציית החלבונים בחיידק", "אלכוהול 99% רעיל יותר לעור האדם"], correctIndex: 2, explanation: "אלכוהול פועל על ידי דנטורציה של חלבונים, תהליך הדורש נוכחות של מים. אלכוהול כמעט טהור גורם לקרישה מהירה של החלבונים בשכבה החיצונית של החיידק, מה שיוצר שכבת מגן ומונע חדירה והרג יעיל. 70% הוא הריכוז האופטימלי." },
+            { question: "על פי התחזיות, מהו הגורם המרכזי הצפוי להוביל לעלייה הדרמטית בתמותה מזיהומים חיידקיים עד שנת 2050?", options: ["הופעת זני חיידקים אלימים יותר באופן טבעי", "היעדר פיתוח של אנטיביוטיקות חדשות על ידי חברות התרופות", "שינויי אקלים המעודדים התפשטות מחלות", "ירידה ביעילות החיסונים הקיימים"], correctIndex: 1, explanation: "הדוח מציין שחברות התרופות אינן מפתחות אנטיביוטיקות חדשות משיקולי רווח, מה שמותיר את הרפואה ללא כלים חדשים להתמודד עם חיידקים שכבר פיתחו עמידות לתרופות הקיימות." },
+            { question: "איזה מבין מנגנוני העברת הגנים האופקית כרוך בשימוש בוירוס (בקטריופאג) כנשא של חומר גנטי מחיידק אחד לאחר?", options: ["טרנספורמציה", "קוניוגציה", "טרנסדוקציה", "וסידוקציה"], correctIndex: 2, explanation: "טרנסדוקציה היא התהליך שבו בקטריופאג אורז בטעות מקטע DNA מהחיידק המאכסן הראשון, וכאשר הוא מדביק חיידק שני, הוא מחדיר אליו את ה-DNA הזה." },
+            { question: "אדם נוטל פניצילין דרך הפה. מהו אחד החסרונות הפוטנציאליים של פניצילין G טבעי בשיטה זו?", options: ["הוא אינו נספג במעי הדק", "הוא רגיש לתנאים החומציים של הקיבה ומתפרק", "הוא מנוטרל על ידי אנזימי כבד באופן מיידי", "הוא פוגע בחיידקי המעיים المفيدים"], correctIndex: 1, explanation: "פניצילין G הטבעי אינו יציב בסביבה חומצית כמו זו שבקיבה, ולכן חלק גדול ממנו מתפרק לפני שהוא מספיק להיספג. פניצילינים חצי-סינתטיים פותחו כדי להיות יציבים יותר בחומצה." },
+            { question: "איזה מהבאים מתאר בצורה הטובה ביותר אנטיביוטיקה צרת-טווח?", options: ["תרופה הפועלת נגד חיידקים, וירוסים ופטריות", "תרופה היעילה רק נגד חיידקים הנמצאים בשלב הגידול המהיר", "תרופה הפועלת על קבוצה מצומצמת של אורגניזמים, למשל רק על חיידקי גרם-חיוביים מסוימים", "תרופה הניתנת במינון נמוך מאוד"], correctIndex: 2, explanation: "המונחים רחב-טווח וצר-טווח מתייחסים למגוון המיקרואורגניזמים שהתרופה יעילה נגדם. צר-טווח פירושו ספקטרום פעולה מצומצם." },
+            { question: "מדוע שימוש נרחב באנטיביוטיקה כהורמון גדילה בחקלאות מהווה בעיה בריאותית עולמית?", options: ["האנטיביוטיקה נשארת בבשר וגורמת לאלרגיות בבני אדם", "השימוש יוצר לחץ סלקציה המעודד התפתחות זנים עמידים שעלולים לעבור לבני אדם", "הוא גורם לבעלי החיים לסבול מתופעות לוואי קשות", "הוא יקר מאוד ופוגע בכלכלת החקלאים"], correctIndex: 1, explanation: "הסביבה החקלאית הופכת לכר פורה להתפתחות והתרבות של חיידקים עמידים. חיידקים אלה או הגנים שלהם יכולים להגיע לבני אדם דרך המזון, הסביבה, או מגע ישיר, ולהקשות על הטיפול בזיהומים." },
+            { question: "במהלך תהליך הטרנספורמציה, מהו המקור של החומר הגנטי הנקלט על ידי החיידק?", options: ["פלסמיד המועבר ישירות מחיידק תורם", "DNA שהוחדר על ידי בקטריופאג", "DNA חופשי שנמצא בסביבה, לרוב מחיידקים שמתו והתפרקו", "מוטציה שמתרחשת באופן ספונטני בגנום החיידק"], correctIndex: 2, explanation: "טרנספורמציה מוגדרת כתהליך שבו החיידק קולט באופן פעיל מקטעי DNA עירומים מהסביבה החיצונית שלו." },
+            { question: "מהי התוצאה הסופית של פעולת פניצילין על חיידק בסביבה היפוטונית (דלת מומסים)?", options: ["החיידק נכנס למצב רדום (VBNC)", "החיידק מתחלק במהירות ללא בקרה", "החיידק מתפוצץ כתוצאה מכניסת מים עודפת (lysis)", "החיידק פולט את הפניצילין החוצה באמצעות משאבות"], correctIndex: 2, explanation: "הדופן הפגום אינו יכול לעמוד בלחץ האוסמוטי הפנימי של התא, שגורם למים לחדור פנימה. ללא דופן חזק שיעמוד בלחץ, התא מתנפח ומתפוצץ." },
+            { question: "איזו מהאנטיביוטיקות הבאות היא דוגמה לתרופה חצי-סינתטית שפותחה כדי להיות עמידה לאנזים בטא-לקטמאז מסוגים מסוימים?", options: ["פניצילין G", "סולפנילאמיד", "מתיצילין (Methicillin)", "טטרציקלין"], correctIndex: 2, explanation: "מתיצילין פותח במיוחד כדי להתמודד עם זני סטאפילוקוקוס אוראוס שהחלו לייצר בטא-לקטמאז. המבנה שלו מגן על טבעת הבטא-לקטם מפני פירוק על ידי האנזים." },
+            { question: "שני חיידקים, אחד עמיד לפניצילין והשני רגיש, גדלים יחד. החיידק העמיד מפריש לסביבה את האנזים בטא-לקטמאז. מה תהיה ההשפעה על החיידק הרגיש?", options: ["הוא יהפוך לעמיד באופן גנטי קבוע", "הוא ימות מיד במגע עם החיידק העמיד", "הוא יקבל הגנה זמנית מהפניצילין כל עוד האנזים נמצא בסביבה", "לא תהיה כל השפעה עליו"], correctIndex: 2, explanation: "האנזים המופרש יפרק את הפניצילין בסביבה המשותפת, ובכך יגן גם על החיידק הרגיש שלא מייצר את האנזים בעצמו. זוהי הגנה סביבתית, לא שינוי גנטי." },
+            { question: "מהי המשמעות של המונח 'עמידות צולבת' (cross-resistance)?", options: ["חיידק שעמיד לתרופה אחת, יהיה עמיד גם לתרופות אחרות בעלות מנגנון פעולה דומה", "העברת גן עמידות מחיידק אחד לזן אחר של חיידק", "יכולת של תרופה לפגוע גם בחיידקים וגם בפטריות", "הגנה שחיידק עמיד מעניק לחיידק רגיש בסביבתו"], correctIndex: 0, explanation: "עמידות צולבת מתרחשת כאשר מנגנון עמידות יחיד (למשל, משאבת efflux) מקנה עמידות למספר תרופות שונות, לרוב מאותה משפחה כימית או בעלות מנגנון דומה." },
+            { question: "מדוע אלכוהול בריכוז 60-85% מסווג גם כ-Disinfectant וגם כ-Antiseptic?", options: ["כי הוא הורג גם וירוסים וגם חיידקים", "כי ניתן להשתמש בו גם על משטחים דוממים וגם על העור", "כי הוא פועל גם על ידי דנטורציית חלבונים וגם על ידי המסת ליפידים", "כי הוא יעיל גם בריכוז נמוך וגם בריכוז גבוה"], correctIndex: 1, explanation: "הסיווג תלוי בשימוש. כאשר משתמשים בו על שולחן, הוא Disinfectant. כאשר משתמשים בו על העור לחיטוי פצע, הוא Antiseptic. החומר עצמו זהה." },
+            { question: "תרכובות פנוליות, כמו אלה הנמצאות בסבונים מסוימים, פועלות בעיקר על ידי...", options: ["פגיעה בסינתזת דופן התא", "עיכוב שכפול ה-DNA", "פגיעה בממברנת התא והרס שלה", "נטרול רעלנים שהחיידק מפריש"], correctIndex: 2, explanation: "הטקסט מציין במפורש שתרכובות שמכילות פנול הורסות את ממברנת התא, מה שמוביל לדליפת תוכן התא ולמותו." },
+            { question: "באיזה מהמצבים הבאים צפוי להיות המספר הגבוה ביותר של חיידקים במצב 'חי אך לא בר-תרבות' (VBNC)?", options: ["בתרבית חיידקים צעירה הגדלה בתנאים אופטימליים במעבדה", "בסביבה טבעית עם תנאים קשים, כמו מחסור במזון או טמפרטורה קיצונית", "בתוך זיהום אקוטי בגוף המארח עם מערכת חיסון חלשה", "על צלחת אגר עשירה בחומרי מזון לאחר 24 שעות דגירה"], correctIndex: 1, explanation: "מצב VBNC הוא אסטרטגיית הישרדות של חיידקים בתגובה לתנאי עקה סביבתיים. בתנאים קשים, חיידקים רבים נכנסים למצב מטבולי נמוך זה במקום למות." },
+            { question: "איזה מהבאים מתאר באופן המדויק ביותר את המושג 'אנטיביוטיקה' בהגדרתו הקלאסית?", options: ["כל חומר כימי שהורג חיידקים", "חומר המיוצר על ידי מיקרואורגניזם אחד ומעכב גדילה של מיקרואורגניזם אחר", "תרכובת סינתטית לחלוטין שפותחה במעבדה לטיפול בזיהומים", "חומר הפועל באופן ספציפי נגד וירוסים"], correctIndex: 1, explanation: "ההגדרה המקורית והקלאסית של אנטיביוטיקה היא חומר טבעי המופק מיצור חי (לרוב פטריות או חיידקים) שפוגע ביצורים חיים אחרים." }
+        ];
+
+        const tfData = [
+            { question: "חומרי חיטוי (Disinfectants) יעילים בהשמדת כל סוגי המיקרואורגניזמים, כולל נבגים של חיידקים.", answer: false, explanation: "חומרי חיטוי הורגים אורגניזמים, אך בדרך כלל אינם יעילים נגד נבגים (ספורות) עמידים. רק סטרילנטים מסוגלים להשמיד גם נבגים." },
+            { question: "פניצילין מיוצר באופן טבעי על ידי חיידק מהסוג Staphylococcus.", answer: false, explanation: "פניצילין מיוצר על ידי פטרייה מהסוג Penicillium, לא על ידי חיידק." },
+            { question: "השימוש העיקרי באנטיביוטיקה בעולם, מבחינת כמות, הוא לצרכים חקלאיים ולא לרפואת אדם.", answer: true, explanation: "על פי הנתונים, כ-64% מכלל השימוש באנטיביוטיקה הוא בחקלאות (לטיפול, מניעה והאצת גדילה), לעומת כ-36% ברפואת אדם." },
+            { question: "תרופות סולפה פועלות על ידי עיכוב סינתזת דופן התא החיידקי.", answer: false, explanation: "תרופות סולפה מעכבות מסלול מטבולי חיוני - סינתזת חומצה פולית. פניצילינים הם אלו שמעכבים את סינתזת דופן התא." },
+            { question: "אנטיביוטיקה רחבת-טווח תמיד עדיפה על אנטיביוטיקה צרת-טווח.", answer: false, explanation: "עדיף להשתמש באנטיביוטיקה צרת-טווח כאשר החיידק הגורם לזיהום ידוע, כדי למזער פגיעה בחיידקים המועילים (המיקרוביום) ולהפחית את לחץ הסלקציה לעמידות." },
+            { question: "האנזים בטא-לקטמאז מקנה עמידות על ידי הוצאת הפניצילין מתוך התא החיידקי.", answer: false, explanation: "בטא-לקטמאז אינו מוציא את התרופה, אלא מפרק אותה כימית על ידי שבירת טבעת הבטא-לקטם, ובכך מנטרל את פעילותה." },
+            { question: "כל החיידקים החיים בדגימה סביבתית יגדלו וייצרו מושבות על צלחת אגר בתנאי מעבדה.", answer: false, explanation: "חיידקים רבים יכולים להיות במצב 'חי אך לא בר-תרבות' (VBNC) שבו הם אינם גדלים על מצעי תרבית סטנדרטיים, למרות שהם חיים." },
+            { question: "רכישת עמידות לאנטיביוטיקה מתרחשת אך ורק באמצעות מוטציות אקראיות בגנום החיידק.", answer: false, explanation: "בעוד שמוטציות הן דרך אחת, הדרך העיקרית והמהירה להפצת עמידות היא העברה אופקית של גנים קיימים (למשל על פלסמידים) מחיידקים אחרים." },
+            { question: "החלק הפעיל במולקולת הפניצילין, האחראי לפעילותה האנטי-בקטריאלית, הוא טבעת התיאזולידין.", answer: false, explanation: "החלק הפעיל והחיוני היא טבעת הבטא-לקטם. היא זו שנקשרת לאנזים טרנספפטידאז ומעכבת אותו." },
+            { question: "שימוש באלכוהול בריכוז 100% הוא הדרך היעילה ביותר לחיטוי העור.", answer: false, explanation: "אלכוהול דורש נוכחות של מים כדי לגרום לדנטורציה יעילה של חלבונים. ריכוז של כ-70% נחשב לאופטימלי, מכיוון שאלכוהול נקי מדי מתאדה מהר ואינו חודר ביעילות לתא." },
+            { question: "עמידות לאנטיביוטיקה היא תופעה חדשה שהופיעה רק לאחר שהאדם החל להשתמש באנטיביוטיקות באופן נרחב.", answer: false, explanation: "תכונות עמידות היו קיימות בטבע במיקרואורגניזמים הרבה לפני עידן האנטיביוטיקה. השימוש המוגבר פשוט יצר לחץ סלקציה חזק שהוביל לשכיחות גבוהה של זנים עמידים." },
+            { question: "ניתן להשתמש באותו ריכוז של אלכוהול גם כחומר חיטוי (disinfectant) וגם כחומר אנטיספטי (antiseptic).", answer: true, explanation: "ההבחנה בין המונחים תלויה ביישום: על משטח דומם זהו חומר חיטוי, ועל רקמה חיה זהו חומר אנטיספטי. החומר הכימי יכול להיות זהה." },
+            { question: "קוניוגציה היא תהליך שבו חיידק קולט DNA חופשי מהסביבה.", answer: false, explanation: "זהו התיאור של טרנספורמציה. קוניוגציה היא העברת DNA (לרוב פלסמיד) באמצעות מגע ישיר בין שני חיידקים." },
+            { question: "פניצילינים חצי-סינתטיים פותחו בין היתר כדי להיות יציבים יותר בתנאי חומצה, מה שמאפשר נטילה דרך הפה.", answer: true, explanation: "אחד החסרונות של פניצילין G טבעי הוא רגישותו לחומצת הקיבה. מודיפיקציות סינתטיות רבות נועדו לשפר את יציבותו ולאפשר ספיגה יעילה יותר לאחר בליעה." },
+            { question: "היעדר פיתוח של אנטיביוטיקות חדשות נובע בעיקר מקושי מדעי למצוא מטרות חדשות בחיידקים.", answer: false, explanation: "הסיבה העיקרית המצוינת במאמר היא כלכלית - חברות התרופות אינן רואות בפיתוח אנטיביוטיקות חדשות מודל עסקי רווחי מספיק." },
+            { question: "חיידקים בתוך ביופילם גדלים מהר יותר מאשר חיידקים פלנקטוניים (חופשיים), ולכן הם רגישים יותר לאנטיביוטיקה.", answer: false, explanation: "להיפך, חיידקים רבים בביופילם נמצאים במצב גידול איטי או רדום, מה שהופך אותם לפחות רגישים לאנטיביוטיקות רבות, במיוחד אלו הפועלות על תאים מתחלקים." },
+            { question: "מתן מרשם לאנטיביוטיקה עבור הצטננות (מחלה ויראלית) הוא דוגמה לשימוש מושכל בתרופות.", answer: false, explanation: "זהו שימוש מיותר ומוטעה, מכיוון שאנטיביוטיקה אינה פועלת נגד וירוסים. שימוש כזה תורם להתפתחות עמידות ללא כל תועלת קלינית." },
+            { question: "האנזים טרנספפטידאז חיוני לחיידק לצורך שכפול ה-DNA שלו.", answer: false, explanation: "טרנספפטידאז חיוני לבניית דופן התא על ידי יצירת קשרי הצלבה. האנזים המרכזי בשכפול DNA הוא DNA פולימראז." },
+            { question: "אלרגיה לפניצילין היא ביטוי של עמידות החיידק לתרופה.", answer: false, explanation: "אלרגיה היא תגובת יתר של מערכת החיסון של המטופל (האדם) למולקולת התרופה. עמידות היא תכונה של החיידק המאפשרת לו לשרוד בנוכחות התרופה." },
+            { question: "חיידק יכול להיות עמיד לאנטיביוטיקה גם אם התרופה מצליחה לחדור לתוכו.", answer: true, explanation: "כן. החיידק יכול לנטרל את התרופה לאחר כניסתה (למשל עם בטא-לקטמאז), לשנות את אתר המטרה שלה כך שהיא לא תוכל להיקשר, או לשאוב אותה החוצה באופן פעיל." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

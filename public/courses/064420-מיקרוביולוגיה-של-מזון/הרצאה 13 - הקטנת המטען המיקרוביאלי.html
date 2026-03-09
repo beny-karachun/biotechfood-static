@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <style>
+        /* --- Root Variables for Consistent Theming --- */
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-bg: #5a5a5a;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%; /* As per prompt */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* --- Study Cards Styling (Fade Animation) --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out; /* Fade transition */
+        }
+        
+        .flashcard-front-style {
+             font-size: 1.5em;
+             font-weight: bold;
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.1em;
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right;
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8;
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        /* Specific styling to override disabled opacity for correct/incorrect answers */
+        .options button.correct, .tf-options button.correct { opacity: 1; }
+        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
+
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* --- Navigation & Utility Styling --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px;
+        }
+
+    </style>
+    <!-- MathJax for rendering math equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>הקטנת המטען המיקרוביאלי בתעשיית המזון</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "מניעת זיהום", definition: "גישה להקטנת המטען המיקרוביאלי הכוללת סניטציה ועבודה אספטית כדי למנוע כניסת מיקרואורגניזמים למוצר." },
+            { term: "הרחקת זיהום", definition: "סילוק או השמדה של מיקרואורגניזמים שכבר נמצאים במוצר, באמצעות שטיפה, קילוף, פיסטור או סטרליזציה." },
+            { term: "שימור", definition: "עיכוב הגידול של מיקרואורגניזמים במזון על ידי שינוי תנאים פנימיים או חיצוניים." },
+            { term: "חללים מתים", definition: "אזורים במערך הייצור שקשה לנקותם, בהם עלולים להצטבר מיקרואורגניזמים ולהוות מקור זיהום מתמשך." },
+            { term: "גורמים פנימיים", definition: "תכונות של המוצר עצמו המשפיעות על גידול מיקרוביאלי, כגון חומציות, פעילות מים, פוטנציאל חמצון-חיזור וערך תזונתי." },
+            { term: "גורמים חיצוניים", definition: "תנאי הסביבה בהם נשמר המוצר, כגון טמפרטורת אחסון, לחות הסביבה והרכב הגזים." },
+            { term: "פעילות מים", definition: "היחס בין לחץ אדי המים בתמיסת המוצר ללחץ אדים של מים נקיים באותה טמפרטורה, מסומן כמודל ($a_w$)." },
+            { term: "פוטנציאל חמצון-חיזור", definition: "מדד לנטיית הסביבה למסור או לקבל אלקטרונים, מסומן כמודל ($Eh$), המשפיע על סוג המיקרואורגניזמים שיתפתחו." },
+            { term: "שלב ההשהיה", definition: "פרק הזמן שלוקח למיקרואורגניזמים להסתגל לסביבה חדשה לפני תחילת התרבות מואצת, מתארך בתנאי חומציות נמוכה." },
+            { term: "לחץ אוסמוטי", definition: "עקה הנוצרת עקב ריכוז גבוה של מומסים כמו מלח או סוכר, הגורמת לירידה בפעילות המים." },
+            { term: "ביופילם", definition: "שכבת מגן שמיקרואורגניזמים עשויים לייצר כתגובה ללחץ סביבתי, המקשה על הרחקתם." },
+            { term: "מפל פוטנציאלים מברנלי", definition: "הפרש מתחים על פני קרום התא החיוני ליצירת אנרגיה, אשר עלול להיפגע משינויים בחומציות הסביבה." },
+            { term: "דקרבוקסילאזות", definition: "אנזימים המפרקים חומצות אמינו ומשחררים אמינים, תהליך התורם להעלאת רמת החומציות בסביבה." },
+            { term: "מידור שלבים", definition: "הפרדה פיזית או תהליכית בין שלבי ייצור שונים כדי למנוע זיהום צולב במפעל המזון." },
+            { term: "עבודה אספטית", definition: "שיטות עבודה שנועדו למנוע חדירת מיקרואורגניזמים לסביבת העבודה ולמוצר במהלך תהליך הייצור." }
+        ];
+
+        const mcqData = [
+            { question: "איזה מהאמצעים הבאים נחשב לשיטה של הרחקת זיהום ולא למניעת זיהום?", options: ["הקפדה על עבודה אספטית", "ביצוע סניטציה בסביבת המפעל", "פיסטור המוצר", "מידור שלבי הייצור"], correctIndex: 2, explanation: "פיסטור פועל על מיקרואורגניזמים שכבר נמצאים במוצר כדי לסלקם, ולכן הוא מוגדר כהרחקת זיהום, בעוד סניטציה, מידור ועבודה אספטית נועדו למנוע את הגעתם מראש." },
+            { question: "כיצד משפיעה ירידה בערך ה- ($pH$) על עקומת הגידול של מיקרואורגניזמים?", options: ["מקצרת את שלב ההשהיה ומאיצה את קצב הגידול", "מאריכה את שלב ההשהיה ומאיטה את קצב הגידול", "עוצרת את הגידול לחלוטין ללא קשר לסוג המיקרואורגניזם", "גורמת למעבר מיידי לשלב התמותה"], correctIndex: 1, explanation: "בסביבה בעלת חומציות נמוכה, למיקרואורגניזמים לוקח זמן רב יותר להסתגל, מה שמאריך את שלב ההשהיה ומאט את קצב הגידול הכללי." },
+            { question: "מהי ההשפעה של חללים מתים במערך הייצור על בטיחות המזון?", options: ["הם מאפשרים קירור מהיר יותר של המוצר", "הם מהווים מוקד להצטברות מיקרואורגניזמים שקשה לנקות", "הם מסייעים בהפרדה בין אצוות שונות", "הם מעלים את פוטנציאל החמצון-חיזור של המוצר"], correctIndex: 1, explanation: "חללים מתים הם אזורים במכשור או בצנרת שאינם נשטפים היטב, ולכן מצטברים בהם מזהמים המהווים מקור זיהום מתמשך." },
+            { question: "איזה מהגורמים הבאים מוגדר כגורם חיצוני המשפיע על גידול מיקרוביאלי?", options: ["פעילות מים", "פוטנציאל חמצון-חיזור", "הרכב הגזים בסביבה", "מרכיבים אנטי-מיקרוביאליים במוצר"], correctIndex: 2, explanation: "הרכב הגזים מתייחס לסביבה שבה המזון מאוחסן, ולכן הוא גורם חיצוני, בעוד השאר הם תכונות פנימיות של המזון עצמו." },
+            { question: "מהו הקשר המתמטי בין פעילות מים למודל ($RH$) לחות יחסית?", options: ["הלחות היחסית שווה לפעילות המים חלקי מאה", "הלחות היחסית שווה לפעילות המים כפול מאה", "הלחות היחסית שווה לפעילות המים בחזקת שתיים", "אין קשר ישיר בין המדדים"], correctIndex: 1, explanation: "הנוסחה המגדירה את הקשר היא שהלחות היחסית שווה למאה כפול פעילות המים." },
+            { question: "מהי התגובה הפיזיולוגית של מיקרואורגניזמים ללחץ אוסמוטי גבוה?", options: ["פירוק דפנות התא כדי להשוות ריכוזים", "צבירת מומסים בתוך התא ליצירת איזון אוסמוטי", "העלאת פעילות המים בסביבה החיצונית", "הפחתת ייצור פולי-סוכרים"], correctIndex: 1, explanation: "כדי להתמודד עם סביבה עתירת מלח או סוכר, מיקרואורגניזמים צוברים מומסים בתא כדי למנוע יציאת מים מהתא אל הסביבה." },
+            { question: "איזה מהתהליכים הבאים יגרום להעלאת רמת ה- ($pH$) בסביבה?", options: ["חיזור חומצה בוטירית לבוטנול", "יצירת חומצת חלב מתסיסת סוכרים", "פירוק אויריאה לאמוניה", "הוספת מלח בישול למוצר"], correctIndex: 2, explanation: "פירוק אויריאה לאמוניה משחרר בסיס לסביבה, מה שגורם לעלייה ברמת החומציות, כלומר העלאת ערך ה- ($pH$)." },
+            { question: "מדוע תהליכי עיבוד במפעל עלולים להגביר את רגישות המוצר לקלקול מיקרוביאלי?", options: ["מפני שהם תמיד מעלים את פעילות המים של המוצר", "מפני שהם פוגעים בהגנה הטבעית ובמבנה הביולוגי של חומר הגלם", "מפני שהם מחסלים את כל המיקרופלורה הטבעית", "מפני שהם מורידים את הערך התזונתי של המזון"], correctIndex: 1, explanation: "תהליכי עיבוד כמו חיתוך, קילוף או חימום עלולים להרוס את המעטפת החיצונית והמבנה התאי שמגינים באופן טבעי על המזון מפני חדירת מזהמים." },
+            { question: "מה מאפיין את רמת פעילות המים ברוב המוצרים הטריים?", options: ["היא נמוכה מ- 0.6", "היא נעה סביב 0.85", "היא גבוהה מ- 0.99", "היא שווה בדיוק ל- 1.0"], correctIndex: 2, explanation: "במוצרים טריים שלא עברו ייבוש או המלחה, פעילות המים קרובה מאוד לזו של מים טהורים והיא לרוב מעל 0.99." },
+            { question: "איזו קבוצת מיקרואורגניזמים מסוגלת בדרך כלל להתפתח בערכי פעילות מים הנמוכים ביותר?", options: ["חיידקים גראם שליליים", "שמרים אוסמופיליים", "חיידקי קלקול רגילים", "חיידקים הלופיליים"], correctIndex: 1, explanation: "שמרים אוסמופיליים ועובשים קסרופיליים מסוגלים לגדול בערכי פעילות מים נמוכים במיוחד, סביב 0.61, בעוד חיידקים דורשים ערכים גבוהים יותר." },
+            { question: "כיצד חיידק מסוג קלוסטרידיום אצטובוטיליקום משפיע על סביבתו?", options: ["הוא מפרק חומצות אמינו ומעלה את החומציות", "הוא מחזר חומצה בוטירית לבוטנול ובכך מעלה את ה- ($pH$)", "הוא מייצר אמוניה שגורמת לירידה ב- ($pH$)", "הוא מגדיל את מפל הפוטנציאלים הממברנלי"], correctIndex: 1, explanation: "החיידק ממיר חומצה לתרוכובת כוהלית, תהליך שמפחית את כמות החומצה בסביבה ולכן תורם לעלייה בערך ה- ($pH$)." },
+            { question: "איזה מהבאים אינו מנגנון תגובה של מיקרואורגניזמים ללחץ אוסמוטי?", options: ["יצירת ביופילם", "שחרור ועיבוי דפנות פולי-סוכריות", "צבירת מומסים", "הגברת חדירות קרום התא למים"], correctIndex: 3, explanation: "הגברת חדירות קרום התא למים תגרום לאובדן מהיר של נוזלים בסביבה היפרטונית, בעוד המנגנונים האחרים נועדו להגן על התא מפני אובדן מים." },
+            { question: "מהו מאפיין של פוטנציאל החמצון-חיזור במוצרים מותססים?", options: ["יש להם פוטנציאל חמצון גבוה מאוד", "יש להם פוטנציאל חיזור גבוה", "הפוטנציאל שלהם משתנה במהירות בחשיפה לאוויר", "הם אינם מושפעים כלל מחמצן"], correctIndex: 1, explanation: "בתהליך תסיסה, מיקרואורגניזמים מנצלים חמצן ומייצרים תרכובות מחזרות, מה שמוביל לסביבה בעלת פוטנציאל חיזור גבוה." },
+            { question: "מניעת גישה של עובדים שאינם ממוגנים לאזור הייצור משרתת בעיקר איזו מטרה?", options: ["עיכוב גידול מיקרוביאלי", "מניעת זיהום", "הרחקת זיהום", "הורדת פעילות המים"], correctIndex: 1, explanation: "חוסר מגע ידי אדם הוא אמצעי למניעת כניסת מזהמים חדשים לתהליך, ולכן הוא מוגדר כמניעת זיהום." },
+            { question: "איזה מנגנון התגוננות טבעי קיים באדם כנגד פתוגנים, המקביל לשיטת שימור במזון?", options: ["העלאת טמפרטורת הגוף", "הורדת רמת אלמנטים חיוניים וברזל זמינים", "ייצור אלכוהול בדם", "העלאת פעילות המים ברקמות"], correctIndex: 1, explanation: "הגוף מגביל את זמינותם של מינרלים חיוניים כמו ברזל כדי להרעיב פתוגנים, מנגנון הדומה להורדת ערך תזונתי כאמצעי שימור במזון." },
+            { question: "איזו מהפעולות הבאות מהווה דוגמה לעיכוב גידול מיקרוביאלי?", options: ["שטיפת ירקות בכלור", "הוספת מלח למוצר", "קילוף מכני של פירות", "העברת חלב בתהליך סטרליזציה"], correctIndex: 1, explanation: "הוספת מלח מורידה את פעילות המים ומונעת התרבות, שזהו מנגנון של עיכוב גידול, בעוד השאר הם אמצעים להרחקת זיהום." },
+            { question: "מה משמעות המושג מידור שלבים בתהליך העיבוד?", options: ["חלוקת זמן העבודה למשמרות קצרות", "הפרדה פיזית בין אזורי ייצור שונים כדי למנוע מעבר מזהמים", "דיגום המזון במספר שלבים שונים לאורך פס הייצור", "הורדת הטמפרטורה באופן מדורג"], correctIndex: 1, explanation: "מידור משמעו יצירת מחסומים מפרידים בין שלבים שונים, למשל בין אזור טיפול בחומר גלם לאזור אריזת מוצר סופי, למניעת זיהום צולב." },
+            { question: "כיצד אנזימים מסוג דקרבוקסילאזות של חומצות אמינו משפיעים על סביבת הגידול?", options: ["הם מפרקים סוכרים ומורידים את ה- ($pH$)", "הם משחררים אמינים וגורמים לעלייה ב- ($pH$)", "הם מפרקים חלבונים ומונעים יצירת ביופילם", "הם קושרים מים ומורידים את פעילות המים"], correctIndex: 1, explanation: "פעילות אנזימים אלו מובילה לשחרור תרכובות בסיסיות ממשפחת האמינים, אשר מעלות את רמת החומציות של הסביבה." },
+            { question: "איזה יתרון יש לקיצור זמנים של שלבים בעייתיים בתהליך הייצור?", options: ["הוא מאפשר חיסכון באנרגיה של קירור", "הוא מונע ממיקרואורגניזמים להשלים את שלב ההשהיה ולהתחיל להתרבות", "הוא מבטיח פירוק מלא של חומצות אמינו", "הוא מאפשר העלאה מהירה יותר של פעילות המים"], correctIndex: 1, explanation: "כאשר שלב רגיש מתבצע במהירות, המיקרואורגניזמים לא מספיקים להסתגל לסביבה ולהתרבות בטרם המוצר עובר לשלב הבא או לקירור." },
+            { question: "מה מאפיין את התפלגות החומרים המעכבים הטבעיים במזון מן החי?", options: ["הם מצויים במידה שווה בכל המוצרים", "הם שכיחים יותר בחלב מאשר בביצים", "הם שכיחים יותר בביצים לעומת חלב", "הם קיימים רק במוצרים שעברו תסיסה"], correctIndex: 2, explanation: "על פי המקור, חומרים מעכבים טבעיים שכיחים יותר במוצרים כמו ביצים, אשר מכילות מגוון חלבונים אנטי-מיקרוביאליים, לעומת חלב." },
+            { question: "מהי מטרת שיטת ניהול מדגם מבוססת האספ?", options: ["לזהות ולשלוט בנקודות תורפה קריטיות למניעת זיהום בתהליך", "להחליף את הצורך בפיסטור המוצר הסופי", "להעלות את הערך התזונתי של המזון", "לזרז את קצב הגידול של מיקרופלורה טבעית חיובית"], correctIndex: 0, explanation: "האספ היא שיטת ניהול שנועדה לאתר ולבקר נקודות קריטיות בתהליך הייצור על מנת למנוע סיכונים בטיחותיים, כולל זיהום מיקרוביאלי." },
+            { question: "מה מתאר המונח מיקרופלורה טבעית של צמחים ובעלי חיים בהקשר של תעשיית המזון?", options: ["מיקרואורגניזמים שהוספו במכוון לשיפור הטעם", "אחד ממקורות הזיהום הפוטנציאליים של חומר הגלם", "חיידקים המצויים רק באדמה ובמים", "מיקרואורגניזמים שאינם מסוגלים לגרום לקלקול"], correctIndex: 1, explanation: "המיקרופלורה הטבעית שנישאת על גבי חומרי הגלם עצמם נחשבת לאחד ממקורות הזיהום הראשוניים שיש לטפל בהם בתהליך העיבוד." },
+            { question: "מדוע מים המוספים ישירות למוצר מהווים סיכון משמעותי?", options: ["כי הם תמיד מכילים חיידקים פתוגניים", "כי הם עלולים להוות מקור זיהום אם אינם מטופלים כראוי", "כי הם מורידים את ה- ($pH$) של המוצר באופן דרסטי", "כי הם מונעים פעילות של חומרים משמרים"], correctIndex: 1, explanation: "מים משמשים בתהליכים רבים במפעל, ואם המים המוספים למוצר אינם נקיים, הם מהווים וקטור ישיר להחדרת זיהום." },
+            { question: "כיצד משפיע מבנה ביולוגי של חומר גלם על שימורו?", options: ["הוא קובע את טמפרטורת האחסון הנדרשת", "קליפות ומעטפות טבעיות מהוות מחסום פיזי מפני חדירת מיקרואורגניזמים", "הוא משנה את פוטנציאל החיזור של האוויר סביבו", "הוא מונע יצירת ביופילם על ידי המיקרופלורה"], correctIndex: 1, explanation: "המבנה הביולוגי, כגון קליפת הפרי או הקליפה של ביצה, משמש כהגנה טבעית המקשה על מזהמים לחדור אל פנים המוצר." },
+            { question: "מהי ההשפעה של מפל פוטנציאלים מברנלי על התא המיקרוביאלי?", options: ["הוא אחראי על יצירת דופן התא", "פגיעה בו עקב שינויי חומציות משבשת את ייצור האנרגיה ומעבר החומרים בתא", "הוא מונע כניסת חמצן לתא", "הוא גורם להפרשת אנזימים מפרקי חלבון"], correctIndex: 1, explanation: "מפל הפוטנציאלים חיוני לתהליכי נשימה תאית והכנסת חומרי הזנה. שינוי דרסטי ב- ($pH$) פוגע במפל זה ובכך מעכב את גידול התא." },
+            { question: "איזה מהמשפטים הבאים מתאר נכונה את השפעת ה- ($pH$) על גידול מיקרוביאלי בהתאם לגרפים המקובלים?", options: ["קצב הגידול קבוע כל עוד ה- ($pH$) מתחת ל- 7", "קצב הגידול תלוי אך ורק ב- ($pH$) ואינו מושפע מחומרים אחרים", "קצב הגידול תלוי ב- ($pH$) אך מושפע גם מנוכחות מלחים וגורמים סביבתיים נוספים", "ישנה רמת ($pH$) אחת אופטימלית לכל סוגי המיקרואורגניזמים"], correctIndex: 2, explanation: "עקומת הגידול כתלות ב- ($pH$) יכולה להשתנות אם מוסיפים לסביבה חומרים כמו מלח או ציטראט, המעידים על השפעה משולבת של גורמי סביבה." },
+            { question: "מה קורה כאשר מיקרואורגניזם נחשף לסביבה בעלת פעילות מים נמוכה מאוד?", options: ["הוא מתרבה בקצב מואץ כדי לפצות על תמותת תאים", "הוא מאבד מים לסביבה, מה שעלול להוביל לעצירת פעילותו המטבולית", "הוא סופג מים מהסביבה ומתפוצץ", "הוא מפריש חומצות כדי להעלות את פעילות המים"], correctIndex: 1, explanation: "בסביבה היפרטונית (פעילות מים נמוכה), מים נוטים לצאת מהתא החוצה, תהליך שמייבש את התא ועוצר את התרבותו אם אינו מצליח להתאזן." },
+            { question: "מה מייחד מיקרואורגניזמים הלופיליים?", options: ["הם דורשים סביבה נטולת חמצן לחלוטין", "הם משגשגים בטמפרטורות קיפאון", "הם מסוגלים לגדול בסביבות בעלות ריכוז מלח גבוה ופעילות מים נמוכה", "הם מפרקים סוכרים ללא ייצור חומצה"], correctIndex: 2, explanation: "חיידקים הלופיליים (אוהבי מלח) מותאמים לחיים בסביבות מלוחות מאוד, שבהן פעילות המים נמוכה יחסית." },
+            { question: "כיצד תסיסה משמשת כגורם פנימי לשימור מזון?", options: ["היא מעלה את פוטנציאל החמצון של המוצר", "היא מורידה את מקורות האנרגיה הזמינים ומייצרת חומרים מעכבים כמו חומצה", "היא מעלה את פעילות המים של המוצר", "היא מונעת יצירת ביופילם במערכות הצנרת"], correctIndex: 1, explanation: "תסיסה מנצלת את הסוכרים (מקורות האנרגיה) במזון ובמקביל מייצרת תוצרי לוואי כמו חומצה או אלכוהול שמעכבים מיקרואורגניזמים אחרים." },
+            { question: "מדוע דיגום וניטור מהירים חשובים בתהליך העיבוד?", options: ["כדי לאפשר תיקון מיידי של חריגות לפני שהזיהום מתפשט לאצוות נוספות", "כדי להחליף את הצורך בניקוי משטחים", "כדי להגדיל את כמות המיקרופלורה הטבעית", "כדי להוריד את עלויות הקירור של המפעל"], correctIndex: 0, explanation: "ניטור מהיר מאפשר זיהוי מוקדם של בעיות, מה שמאפשר התערבות מהירה ומניעת פסילה של כמויות גדולות של מוצר." },
+            { question: "איזה מהתנאים הבאים אינו מהווה גורם פנימי של המזון?", options: ["ריכוז הוויטמינים במוצר", "טמפרטורת חדר הקירור בו המוצר מאוחסן", "נוכחות חומרים אנטי-מיקרוביאליים טבעיים", "פוטנציאל החמצון-חיזור של תערובת המזון"], correctIndex: 1, explanation: "טמפרטורת האחסון היא תנאי סביבתי חיצוני, בעוד השאר מתארים את ההרכב הפיזיקלי והכימי של המזון עצמו." },
+            { question: "מהי המשמעות של הימצאות מיקרואורגניזמים במזון?", options: ["כל נוכחות מיקרוביאלית מעידה על סכנה בריאותית ויש לפסול את המוצר", "נוכחותם תמיד גורמת לקלקול פיזי של המזון", "לא כל נוכחות היא שלילית, חלקם חיוניים לתהליכי ייצור כמו תסיסה", "הם מעידים בהכרח על כשל בתהליך הסטרליזציה"], correctIndex: 2, explanation: "כפי שמצוין במקור, יש לזכור שלא כל נוכחות של מיקרואורגניזמים היא שלילית; חלקם משמשים לייצור מוצרים רצויים ואינם מהווים סכנה." },
+            { question: "כיצד משפיע חוסר בויטמינים וגורמי גידול במזון על המטען המיקרוביאלי?", options: ["הוא מאיץ את קצב הגידול של פתוגנים", "הוא פועל כמנגנון עמידות ושימור המעכב התפתחות מיקרואורגניזמים", "הוא גורם לעלייה בפעילות המים", "הוא מעודד יצירת חללים מתים במוצר"], correctIndex: 1, explanation: "היעדר חומרי הזנה חיוניים מקשה על מיקרואורגניזמים להתרבות, ולכן מהווה גורם פנימי המעכב את גידולם." },
+            { question: "מהו התפקיד של שחרור ועיבוי דפנות פולי-סוכריות על ידי חיידקים?", options: ["להעלות את חומציות הסביבה", "להתגונן מפני לחץ אוסמוטי ושינויים קיצוניים בפעילות המים", "לפרק חלבונים במזון", "להגביר את מפל הפוטנציאלים הממברנלי"], correctIndex: 1, explanation: "עיבוי הדופן וייצור חומרים פולימריים מחוץ לתא עוזרים לחיידק לשמור על סביבה פנימית יציבה ולהתגונן מפני התייבשות בסביבה עתירת מומסים." },
+            { question: "באיזה אופן מיקרואורגניזמים יכולים להשפיע זה על זה בתוך מוצר מזון?", options: ["הם תמיד משתפים פעולה כדי להעלות את פעילות המים", "סוג אחד עשוי לייצר חומרים המעכבים את גידולו של סוג אחר", "הם אינם משפיעים זה על זה כלל", "הם מתחרים רק על מקורות חמצן ולא על מזון"], correctIndex: 1, explanation: "מיקרואורגניזמים רבים מייצרים מטבוליטים, חומצות או בקטריוצינים אשר מעכבים או מחסלים מיקרואורגניזמים מתחרים הנמצאים באותה סביבה." },
+            { question: "מהי המשמעות של הערך של פעילות המים כאשר מודל ($a_w = 1$)?", options: ["המוצר יבש לחלוטין ואין בו מים חופשיים", "לחץ אדי המים במוצר שווה ללחץ אדי מים טהורים, מצב אופייני למים נקיים", "המוצר מכיל ריכוז מלח של עשרים ושניים אחוזים", "המוצר נמצא בלחץ אוסמוטי מקסימלי"], correctIndex: 1, explanation: "הערך 1 מתקבל כאשר לחץ האדים של התמיסה שווה ללחץ האדים של מים טהורים, כלומר אין מומסים המורידים את פעילות המים." },
+            { question: "איזו פעולה בתהליך הייצור עלולה להוביל להרס המעטפת המגנה של חומר הגלם?", options: ["אחסון בטמפרטורה מבוקרת", "שטיפה עדינה במים נקיים", "תהליכי חיתוך וקילוף", "דיגום באמצעות משטחי מגע"], correctIndex: 2, explanation: "פעולות מכניות כמו קילוף או חיתוך מסירות את הקליפה הטבעית וחושפות את הרקמות הפנימיות העשירות במזון לזיהום מיקרוביאלי." },
+            { question: "כיצד בדיקת חומרי גלם בכניסה למפעל מסייעת להקטנת המטען המיקרוביאלי?", options: ["היא משמידה את החיידקים לפני תחילת העיבוד", "היא מונעת הכנסת מנות מזוהמות במיוחד שעלולות לזהם את פסי הייצור", "היא מעלה את פוטנציאל החמצון של חומרי הגלם", "היא גורמת לעיבוי הדפנות של המיקרופלורה הטבעית"], correctIndex: 1, explanation: "סינון קפדני בכניסה למפעל מבטיח שחומרי גלם בעלי עומס מיקרוביאלי חריג לא ייכנסו ויזהמו את המכשור ואת שאר התוצרת." },
+            { question: "מהי התוצאה של הפרדה בין אצוות בתהליך הייצור?", options: ["היא מאפשרת לערבב מוצרים בעלי פעילות מים שונה", "היא מונעת מצב שבו זיהום באצווה אחת יתפשט לכלל הייצור של אותו יום", "היא מקצרת את זמן הפיסטור הנדרש", "היא מעלה את לחץ האדים של המוצר"], correctIndex: 1, explanation: "חלוקת הייצור לאצוות נפרדות מבטיחה שאם חלה תקלה או חדר זיהום לחלק מהמוצר, ניתן לבודד ולפסול רק את אותה אצווה מבלי לפגוע בשאר." },
+            { question: "איזה מבין הבאים אינו מנגנון לעיכוב גידול מיקרוביאלי?", options: ["הורדת טמפרטורת האחסון", "הפחתת הלחות בסביבה", "הוספת גזים מעכבים לאריזה", "הזרמת מים חמים לניקוי צנרת"], correctIndex: 3, explanation: "הזרמת מים חמים לניקוי היא פעולה של הרחקת זיהום וסניטציה, בעוד קירור, ייבוש ואריזה באווירה שונה הם אמצעים לעיכוב הגידול של חיידקים קיימים." }
+        ];
+
+        const tfData = [
+            { question: "פיסטור וסטרליזציה נחשבים לשיטות של מניעת זיהום.", answer: false, explanation: "פיסטור וסטרליזציה הם שיטות להרחקת זיהום קיים, ולא למניעת כניסתו מלכתחילה." },
+            { question: "פעילות מים מוגדרת כיחס בין לחץ אדי המים במוצר ללחץ אדים של מים טהורים באותה טמפרטורה.", answer: true, explanation: "זוהי ההגדרה הפיזיקלית המדויקת של פעילות מים." },
+            { question: "בסביבה בעלת חומציות נמוכה, שלב ההשהיה של המיקרואורגניזמים מתקצר.", answer: false, explanation: "בסביבה כזו שלב ההשהיה דווקא מתארך משום שלמיקרואורגניזם קשה יותר להסתגל ולייצר אנרגיה." },
+            { question: "לחות יחסית בסביבה היא למעשה פעילות המים מוכפלת במאה.", answer: true, explanation: "הקשר מוגדר על ידי הנוסחה המתמטית המקשרת בין שני המדדים." },
+            { question: "כל נוכחות של מיקרואורגניזמים במזון מעידה על קלקול או סכנה בריאותית.", answer: false, explanation: "ישנם מיקרואורגניזמים חיוביים המשמשים בתהליכי ייצור מזון, כגון תסיסה, ונוכחותם רצויה." },
+            { question: "חללים מתים בצנרת המפעל מסייעים לעיכוב גידול מיקרוביאלי בשל חוסר חמצן.", answer: false, explanation: "חללים מתים מהווים מוקד להצטברות לכלוך וזיהום שקשה לנקות, ולכן הם מגבירים את הסיכון המיקרוביאלי." },
+            { question: "תהליכי עיבוד כמו חיתוך עלולים לפגוע בהגנה הטבעית של חומר הגלם.", answer: true, explanation: "חיתוך הורס את הרקמות החיצוניות וחושף את פנים המוצר לזיהומים." },
+            { question: "מיקרואורגניזמים אינם מסוגלים לשנות את רמת החומציות של סביבת הגידול שלהם.", answer: false, explanation: "מיקרואורגניזמים משחררים תוצרי לוואי, כגון אמוניה או חומצות, המשנים משמעותית את החומציות בסביבתם." },
+            { question: "חיידקים מסוימים מגיבים ללחץ אוסמוטי על ידי צבירת מומסים בתוך התא.", answer: true, explanation: "זהו מנגנון הגנה המונע יציאת מים מהתא אל הסביבה המרוכזת." },
+            { question: "פוטנציאל חמצון-חיזור הוא גורם חיצוני המשפיע על גידול מיקרוביאלי.", answer: false, explanation: "פוטנציאל חמצון-חיזור תלוי בהרכב המוצר עצמו ולכן הוא נחשב לגורם פנימי." },
+            { question: "לרוב המוצרים הטריים יש פעילות מים נמוכה מ- 0.85.", answer: false, explanation: "לרוב המוצרים הטריים יש פעילות מים גבוהה מאוד, לרוב מעל 0.99." },
+            { question: "שמרים ועובשים מסוגלים בדרך כלל להתפתח בפעילות מים נמוכה יותר מאשר חיידקים רגילים.", answer: true, explanation: "עובשים ושמרים אוסמופיליים עמידים יותר ליובש ויכולים לגדול בערכי פעילות מים נמוכים עד 0.61." },
+            { question: "הורדת מקורות אנרגיה במזון, למשל על ידי תסיסה, מקשה על התפתחות של חיידקי קלקול.", answer: true, explanation: "ניצול הרכיבים התזונתיים על ידי חיידקי התסיסה מרעיב את חיידקי הקלקול ומונע את גידולם." },
+            { question: "חומרים אנטי-מיקרוביאליים טבעיים שכיחים יותר בחלב מאשר בביצים.", answer: false, explanation: "על פי המקור, חומרים אלו שכיחים יותר בביצים לעומת חלב." },
+            { question: "שיטת ניהול האספ נועדה לזהות נקודות קריטיות בתהליך ולמנוע זיהומים באופן שיטתי.", answer: true, explanation: "האספ היא גישה מניעתית לניהול בטיחות מזון המבוססת על ניתוח סיכונים." },
+            { question: "אנזימים מסוג דקרבוקסילאזות מפרקים חומצות אמינו וגורמים לירידה ברמת ה- ($pH$).", answer: false, explanation: "פירוק זה משחרר אמינים שהם בסיסיים, ולכן גורם לעלייה ברמת ה- ($pH$)." },
+            { question: "יצירת ביופילם היא אחת הדרכים של מיקרואורגניזמים להתמודד עם תנאי סביבה קשים.", answer: true, explanation: "הביופילם מספק שכבת הגנה פיזית וכימית למושבת החיידקים." },
+            { question: "קיצור זמנים של שלבי ייצור בעייתיים מאפשר לחיידקים זמן רב יותר להתרבות.", answer: false, explanation: "מטרת קיצור הזמנים היא בדיוק ההיפך - למנוע מהחיידקים את הזמן הדרוש להם להשלים את שלב ההשהיה ולהתרבות." },
+            { question: "פגיעה במפל הפוטנציאלים הממברנלי משבשת את פעילות התא המיקרוביאלי.", answer: true, explanation: "מפל זה קריטי לייצור אנרגיה ולהכנסת חומרי הזנה לתא." },
+            { question: "מוצרים מותססים מתאפיינים לרוב בפוטנציאל חמצון גבוה מאוד.", answer: false, explanation: "תהליך התסיסה צורך חמצן ומייצר סביבה בעלת פוטנציאל חיזור גבוה." },
+            { question: "מים המשמשים לקירור במפעל אינם יכולים להוות מקור לזיהום מיקרוביאלי.", answer: false, explanation: "מים מכל סוג, כולל מי קירור, עלולים להכיל מזהמים ולהוות מקור זיהום משמעותי." },
+            { question: "הפרדה בין אצוות ייצור מסייעת בהגבלת היקף הנזק במקרה של חדירת זיהום.", answer: true, explanation: "הפרדה זו מונעת זיהום צולב ומאפשרת לפסול רק חלק מהתוצרת במקרה של תקלה." },
+            { question: "גוף האדם מתגונן מפני פתוגנים, בין היתר, על ידי הורדת רמת האלמנטים החיוניים הזמינים להם.", answer: true, explanation: "זהו מנגנון טבעי המקביל לשיטת השימור של הורדת ערך תזונתי במזון." },
+            { question: "טמפרטורת האחסון של המזון מסווגת כגורם פנימי המשפיע על המטען המיקרוביאלי.", answer: false, explanation: "טמפרטורת אחסון היא תנאי של הסביבה בה נמצא המזון ולכן היא גורם חיצוני." },
+            { question: "מיקרואורגניזמים מסוימים מסוגלים לייצר חומרים המעכבים גידול של מיקרואורגניזמים אחרים.", answer: true, explanation: "תחרות אקולוגית מובילה לייצור חומרים כמו בקטריוצינים המעכבים מתחרים." },
+            { question: "הוספת מלח למזון היא שיטה להרחקת זיהום קיים.", answer: false, explanation: "הוספת מלח מורידה פעילות מים ובכך מעכבת גידול, ולכן זו שיטת שימור ולא הרחקה." },
+            { question: "חיידק קלוסטרידיום אצטובוטיליקום מעלה את החומציות על ידי ייצור חומצה בוטירית.", answer: false, explanation: "הוא מחזר חומצה בוטירית לבוטנול, תהליך שמפחית את כמות החומצה ומעלה את ערך ה- ($pH$)." },
+            { question: "שחרור ועיבוי של דפנות פולי-סוכריות מעלה את רגישות החיידק ללחץ אוסמוטי.", answer: false, explanation: "פעולה זו היא מנגנון הגנה שמטרתו להתמודד עם הלחץ האוסמוטי ולהגן על התא." },
+            { question: "מידור שלבים במפעל נועד למנוע מגע בין חומרי גלם גולמיים למוצרים סופיים.", answer: true, explanation: "המידור מונע מעבר של מזהמים מהשלבים הראשוניים המלוכלכים לשלבים הנקיים יותר." },
+            { question: "דיגום וניטור מהירים מאפשרים שליטה טובה יותר על בטיחות התהליך.", answer: true, explanation: "קבלת תוצאות מהירות מאפשרת תגובה ותיקון בזמן אמת לפני שהמוצר יוצא לשיווק." }
+        ];
+
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            if(window.MathJax) MathJax.typesetPromise([flashcardContent]);
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                if(window.MathJax) MathJax.typesetPromise([flashcardContent]);
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            if(window.MathJax) MathJax.typesetPromise([mcqQuestion, mcqOptions]);
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--correct-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.style.backgroundColor = 'var(--incorrect-color)';
+                    button.style.color = '#fff';
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            if(window.MathJax) MathJax.typesetPromise([explanationEl]);
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            if(window.MathJax) MathJax.typesetPromise([mcqAllQuestionsContainer]);
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = '';
+                 button.style.color = '';
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            if(window.MathJax) MathJax.typesetPromise([tfQuestion]);
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                     button.style.color = '#fff';
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             if(window.MathJax) MathJax.typesetPromise([explanationEl]);
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             if(window.MathJax) MathJax.typesetPromise([tfAllQuestionsContainer]);
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

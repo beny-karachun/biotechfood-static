@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שבוע 8: עיבוד תרמי - עקרונות</title>
+    <style>
+        :root {
+            --primary-bg: #333333;
+            --secondary-bg: #666666;
+            --accent-color: #3D90D7;
+            --text-color: #E0E0E0;
+            --correct-color: #4CAF50;
+            --incorrect-color: #F44336;
+            --card-front-bg: #5a5a5a;
+            --card-back-bg: #707070;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 90%; /* Roughly 2/3rds on wider screens */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--secondary-bg);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1, h2 {
+            color: var(--accent-color);
+            text-align: center;
+            border-bottom: 1px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background-color: var(--primary-bg);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-container {
+            perspective: 1000px;
+            height: 250px;
+            margin-bottom: 15px; /* Reduced spacing */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box; /* Include padding in size */
+        }
+
+        .flashcard-front {
+            background-color: var(--card-front-bg);
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: var(--card-back-bg);
+            transform: rotateY(180deg);
+        }
+
+        /* Questions Styling */
+         .question-container-single, .question-container-all {
+            margin-bottom: 15px; /* Reduced spacing */
+            padding: 15px;
+            border: 1px solid var(--secondary-bg);
+            border-radius: 5px;
+         }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options button, .tf-options button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: right; /* Align text right for Hebrew */
+            transition: background-color 0.3s;
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
+            background-color: #357ab8; /* Darker blue on hover */
+        }
+
+        .options button:disabled, .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background-color: var(--correct-color);
+            color: #fff;
+        }
+
+        .feedback.incorrect {
+            background-color: var(--incorrect-color);
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px;
+            background-color: var(--secondary-bg);
+            border-radius: 4px;
+        }
+
+        /* Navigation Styling */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px; /* Reduced spacing from interactive element */
+            margin-bottom: 10px; /* Space before View All button */
+        }
+
+        .nav-button, .view-all-button {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .nav-button:disabled {
+             opacity: 0.5;
+             cursor: not-allowed;
+        }
+
+        .counter {
+            font-size: 0.9em;
+        }
+
+        /* View All Questions Button */
+        .view-all-container {
+            text-align: center;
+            margin-top: 15px; /* Ensure spacing */
+            margin-bottom: 15px;
+        }
+
+        /* Hidden by default */
+        .hidden {
+            display: none;
+        }
+
+        /* Styling for "View All" mode */
+        #mcq-all-questions .question-container-all,
+        #tf-all-questions .question-container-all {
+            margin-bottom: 20px; /* Spacing between questions in all view */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>שבוע 8: עיבוד תרמי - עקרונות</h1>
+
+        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face flashcard-front" id="flashcard-front"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-back"></div>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Questions Section -->
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                <!-- All MCQs will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- True/False Questions Section -->
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 <!-- All T/F Questions will be dynamically inserted here -->
+             </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Week 8 ---
+
+        const flashcardData = [
+            { term: "עיבוד תרמי", definition: "שימוש בחום לטיפול במזון למטרות שונות כגון שימור, הכנה, שיפור בטיחות, פיתוח טעם ומרקם, או שיפור זמינות תזונתית." },
+            { term: "חליטה (Blanching)", definition: "טיפול חום קצר (לרוב במים חמים או קיטור) הניתן בעיקר לירקות ופירות בשלבי עיבוד ראשוניים, במטרה עיקרית של אינאקטיבציה אנזימטית." },
+            { term: "אינאקטיבציה אנזימטית", definition: "נטרול או הפסקת הפעילות של אנזימים טבעיים במזון, העלולים לגרום לשינויים לא רצויים בצבע, בטעם או במרקם במהלך אחסון." },
+            { term: "קטלאז ופראוקסידאז", definition: "אנזימים המצויים בירקות, יציבים יחסית לחום. אינאקטיבציה שלהם בחליטה משמשת לעיתים קרובות כמדד (תיקוף) ליעילות התהליך." },
+            { term: "פוליפנולאוקסידאז (PPO)", definition: "אנזים הגורם להשחמה אנזימטית בפירות וירקות חתוכים או פגועים." },
+            { term: "יתרונות החליטה", definition: "אינאקטיבציה אנזימטית, הוצאת אוויר מהרקמה, הקטנת זיהום מיקרוביאלי וכימי (שאריות הדברה), ריכוך הרקמה." },
+            { term: "חסרונות החליטה", definition: "פגיעה במרקם (ריכוך יתר), מיצוי (איבוד) של רכיבים מסיסים במים (טעם, ויטמינים, סוכרים)." },
+            { term: "שימור מזון (פסטור/עיקור)", definition: "תהליכים תרמיים שמטרתם העיקרית היא הריגת מיקרואורגניזמים כדי למנוע קלקול ולהבטיח בטיחות, ולאפשר חיי מדף ארוכים יותר." },
+            { term: "חיידקים יוצרי נבגים (Spores)", definition: "חיידקים מסוימים היכולים ליצור מבנה עמיד (נבג) בתנאי עקה. נבגים עמידים מאוד לחום, יובש וחומרים כימיים, ודורשים טיפול תרמי חמור יותר להשמדתם." },
+            { term: "Clostridium botulinum", definition: "חיידק יוצר נבגים, אנאירובי, המייצר רעלן עצבי מסוכן. מהווה את מיקרואורגניזם המטרה העיקרי בעיקור של מזונות דלי חומצה." },
+            { term: "Listeria, Salmonella, E.coli", definition: "דוגמאות לחיידקים פתוגניים שאינם יוצרי נבגים, ולכן רגישים יותר לחום וניתנים להשמדה בטיפולי פסטור." },
+            { term: "קינטיקה של אינאקטיבציה תרמית", definition: "השמדת מיקרואורגניזמים בחום קבוע מתנהגת לרוב לפי קינטיקה מסדר ראשון (קצב ההשמדה פרופורציונלי למספר החיידקים החיים)." },
+            { term: "D-value (Decimal Reduction Time)", definition: "הזמן (בדקות) הנדרש בטמפרטורה קבועה כדי להפחית את אוכלוסיית המיקרואורגניזמים פי 10 (או ב-90%, ירידה של לוג אחד)." },
+            { term: "Z-value", definition: "השינוי בטמפרטורה (במעלות צלזיוס או פרנהייט) הנדרש כדי לשנות את ה-D-value פי 10. מדד לרגישות המיקרואורגניזם לשינויי טמפרטורה." },
+            { term: "סטריליות מסחרית", definition: "מצב המושג על ידי טיפול תרמי (עיקור), שבו הושמדו כל המיקרואורגניזמים הפתוגניים המסוגלים לגדול במזון בתנאי אחסון רגילים, וכן מיקרואורגניזמים העלולים לגרום לקלקול. אין פירושו היעדר מוחלט של כל חיים מיקרוביאליים." },
+            { term: "מזון דל חומצה (Low Acid Food)", definition: "מזון בעל pH גבוה מ-4.6. מזונות אלה דורשים טיפול עיקור להשמדת נבגי Clostridium botulinum." },
+            { term: "מזון חומצי (Acid Food)", definition: "מזון בעל pH נמוך מ-4.6. נבגי C. botulinum אינם יכולים לנבוט ולגדול בתנאים אלו, ולכן נדרש טיפול פסטור בלבד להשמדת חיידקים וגטטיביים, שמרים ועובשים." },
+            { term: "עיקור (Sterilization)", definition: "תהליך תרמי חמור (מעל 100°C, לרוב 115-125°C) המיועד להשגת סטריליות מסחרית במזונות דלי חומצה." },
+            { term: "פסטור (Pasteurization)", definition: "תהליך תרמי מתון יחסית (מתחת ל-100°C, לרוב 60-85°C) המיועד להשמדת פתוגנים וגטטיביים ולהפחתת אוכלוסיית גורמי קלקול במזונות חומציים או במזונות המיועדים לאחסון בקירור." },
+            { term: "העדפה לטמפ' גבוהה וזמן קצר", definition: "בעיבוד תרמי, לרוב עדיף להשתמש בטמפרטורה גבוהה יותר למשך זמן קצר יותר כדי להשיג את ההשמדה המיקרוביאלית הנדרשת תוך פגיעה מינימלית באיכות התזונתית והסנסורית של המזון (בגלל הבדלים בערכי Z)." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי המטרה העיקרית של חליטת ירקות לפני הקפאה?",
+                options: ["להוסיף טעם", "לרכך את הירקות מאוד", "לבצע אינאקטיבציה של אנזימים", "להקפיא את הירקות מהר יותר"],
+                correctIndex: 2,
+                explanation: "חליטה לפני הקפאה נועדה בעיקר לעצור פעילות אנזימטית שעלולה לפגוע בצבע, בטעם ובמרקם של הירקות במהלך האחסון הקפוא."
+            },
+            {
+                question: "איזה אנזים גורם להשחמה של פירות חתוכים?",
+                options: ["קטלאז", "פראוקסידאז", "פוליפנולאוקסידאז", "עמילאז"],
+                correctIndex: 2,
+                explanation: "פוליפנולאוקסידאז (PPO) הוא האנזים העיקרי האחראי לתגובת ההשחמה האנזימטית בפירות וירקות רבים כאשר הרקמה נחשפת לחמצן."
+            },
+            {
+                question: "מהו חיסרון אפשרי של תהליך החליטה?",
+                options: ["השמדה לא מספקת של אנזימים", "פגיעה במרקם ואיבוד רכיבים מסיסים", "הארכת חיי המדף יתר על המידה", "יצירת צבעים לא רצויים"],
+                correctIndex: 1,
+                explanation: "חליטה, במיוחד במים, עלולה לגרום לריכוך יתר של הרקמה ולאיבוד ויטמינים ומינרלים מסיסים למים."
+            },
+            {
+                question: "מה ההבדל העיקרי בין חיידקים יוצרי נבגים לאלו שאינם יוצרים נבגים מבחינת עיבוד תרמי?",
+                options: ["יוצרי נבגים רגישים יותר לחום", "לא יוצרי נבגים דורשים טמפרטורות גבוהות יותר", "נבגים עמידים מאוד לחום ודורשים טיפול חמור יותר להשמדתם", "אין הבדל בעמידות לחום"],
+                correctIndex: 2,
+                explanation: "נבגי חיידקים הם מבנים עמידים ביותר לחום, ולכן טיפול תרמי שנועד להשמידם (עיקור) חייב להיות חמור יותר מטיפול להשמדת חיידקים וגטטיביים (פסטור)."
+            },
+            {
+                question: "מהו ה-D-value?",
+                options: ["הטמפרטורה שבה מתים כל החיידקים", "הזמן הנדרש להורדת אוכלוסיית חיידקים פי 10 בטמפרטורה קבועה", "מספר החיידקים ההתחלתי", "רמת ה-pH האופטימלית לחיידק"],
+                correctIndex: 1,
+                explanation: "D-value (זמן הפחתה עשרוני) הוא הזמן הנדרש, בטמפרטורה ספציפית, כדי להרוג 90% מהאוכלוסייה המיקרוביאלית."
+            },
+            {
+                question: "מה מודד ה-Z-value?",
+                options: ["את הזמן להשמדה", "את מספר החיידקים הסופי", "את השינוי בטמפרטורה הנדרש לשינוי ה-D-value פי 10", "את רמת החומציות"],
+                correctIndex: 2,
+                explanation: "Z-value מבטא את הרגישות של מיקרואורגניזם לשינויי טמפרטורה; זהו מספר המעלות שצריך לשנות כדי שה-D-value ישתנה פי 10."
+            },
+            {
+                question: "מהי סטריליות מסחרית?",
+                options: ["היעדר מוחלט של כל מיקרואורגניזם", "השמדת כל המיקרואורגניזמים המסוגלים לגדול במזון בתנאי אחסון רגילים", "נוכחות חיידקים רצויים בלבד", "המצב לאחר פסטור רגיל"],
+                correctIndex: 1,
+                explanation: "סטריליות מסחרית מבטיחה שהמזון בטוח וחופשי מקלקול מיקרוביאלי בתנאי אחסון רגילים, אך אינה בהכרח היעדר מוחלט של כל צורות החיים המיקרוסקופיות (כמו נבגים מסוימים)."
+            },
+            {
+                question: "איזה סוג מזון דורש טיפול עיקור?",
+                options: ["מיץ תפוזים (pH 3.5)", "ירקות משומרים במים (pH 6.0)", "יוגורט (pH 4.2)", "חמוצים (pH 3.8)"],
+                correctIndex: 1,
+                explanation: "ירקות משומרים במים הם מזון דל חומצה (pH>4.6) ולכן דורשים עיקור להשמדת נבגי C. botulinum. שאר הדוגמאות הן מזונות חומציים."
+            },
+            {
+                question: "מדוע ניתן להסתפק בפסטור עבור מזונות חומציים?",
+                options: ["כי אין בהם חיידקים כלל", "כי החיידקים בהם עמידים יותר לחום", "כי נבגי C. botulinum אינם יכולים לגדול ב-pH נמוך מ-4.6", "כי פסטור יעיל יותר מעיקור"],
+                correctIndex: 2,
+                explanation: "הסיכון העיקרי במזון דל חומצה הוא C. botulinum. במזון חומצי, נבגים אלו אינם נובטים, ולכן מספיק טיפול פסטור מתון יותר להשמדת חיידקים פתוגניים אחרים (וגטטיביים) וגורמי קלקול."
+            },
+            {
+                question: "מה היתרון העיקרי של שימוש בטמפרטורה גבוהה לזמן קצר (HTST) בעיבוד תרמי?",
+                options: ["זה חוסך יותר אנרגיה", "זה גורם לפחות נזק תזונתי וסנסורי למזון עבור אותה רמת השמדה מיקרוביאלית", "זה מאפשר שימוש בציוד פשוט יותר", "זה מבטיח השמדה טובה יותר של נבגים"],
+                correctIndex: 1,
+                explanation: "בגלל ההבדלים בערכי Z בין מיקרואורגניזמים לרכיבי איכות (כמו ויטמינים), טיפול בטמפרטורה גבוהה לזמן קצר הורס פחות את איכות המזון מאשר טיפול בטמפרטורה נמוכה לזמן ארוך יותר."
+            },
+             {
+                question: "מהי קינטיקה מסדר ראשון בהקשר להשמדה תרמית?",
+                options: ["קצב ההשמדה קבוע ללא תלות במספר החיידקים", "קצב ההשמדה עולה ככל שיש פחות חיידקים", "קצב ההשמדה פרופורציונלי למספר החיידקים החיים", "ההשמדה מתרחשת בבת אחת"],
+                correctIndex: 2,
+                explanation: "בקינטיקה מסדר ראשון, שיעור ההשמדה (אחוז החיידקים המושמדים ליחידת זמן) הוא קבוע, ולכן הקצב (מספר החיידקים המושמדים ליחידת זמן) יורד ככל שמספר החיידקים החיים קטן."
+            },
+            {
+                question: "אם D121 = 2 דקות עבור חיידק מסוים, כמה זמן ייקח להפחית את האוכלוסייה פי 1000 ב-121°C?",
+                options: ["2 דקות", "4 דקות", "6 דקות", "8 דקות"],
+                correctIndex: 2,
+                explanation: "הפחתה פי 1000 היא 3 הפחתות עשרוניות (10^3). כל הפחתה עשרונית דורשת D דקות. לכן, נדרשות 3 * D = 3 * 2 = 6 דקות."
+            },
+            {
+                question: "חיידק A רגיש יותר לחום מחיידק B. איזה מהבאים סביר להניח?",
+                options: ["לחיידק A יש D-value גבוה יותר", "לחיידק B יש Z-value נמוך יותר", "לחיידק A יש D-value נמוך יותר", "לחיידק B יש D-value נמוך יותר"],
+                correctIndex: 2,
+                explanation: "D-value נמוך יותר משמעו שנדרש פחות זמן להשמדת החיידק באותה טמפרטורה, כלומר הוא רגיש יותר לחום."
+            },
+            {
+                question: "מהי ההשפעה העיקרית של ה-pH על הדרישות לעיבוד תרמי?",
+                options: ["pH נמוך דורש תמיד טמפרטורה גבוהה יותר", "pH גבוה (מעל 4.6) דורש עיקור, pH נמוך מאפשר פסטור", "pH אינו משפיע על הדרישות", "pH גבוה דורש זמן טיפול קצר יותר"],
+                correctIndex: 1,
+                explanation: "ה-pH קובע את הסיכון מ-C. botulinum. במזון דל חומצה (pH>4.6) הסיכון קיים ויש צורך בעיקור. במזון חומצי (pH<4.6) הסיכון אינו קיים וניתן להסתפק בפסטור."
+            },
+            {
+                question: "איזה אנזים משמש לעיתים קרובות לאימות יעילות תהליך החליטה?",
+                options: ["עמילאז", "פראוקסידאז", "ליפאז", "פרוטאז"],
+                correctIndex: 1,
+                explanation: "פראוקסידאז (וקטלאז) הם אנזימים יציבים יחסית לחום. אם הם עברו אינאקטיבציה, סביר להניח שגם אנזימים רגישים יותר (כמו PPO) עברו אינאקטיבציה."
+            },
+            {
+                question: "מהי המטרה העיקרית של שימור מזון באמצעות פסטור או עיקור?",
+                options: ["לשפר את טעם המזון", "להוסיף ערכים תזונתיים", "להרוג מיקרואורגניזמים מזיקים או גורמי קלקול", "לרכך את מרקם המזון"],
+                correctIndex: 2,
+                explanation: "המטרה המרכזית של טיפולים תרמיים אלו היא בטיחות (השמדת פתוגנים) והארכת חיי מדף (השמדת גורמי קלקול)."
+            },
+            {
+                question: "מדוע לעיתים מעדיפים טיפול תרמי עדין יותר (כמו פסטור) על פני עיקור?",
+                options: ["כי עיקור אינו יעיל", "כי עיקור יקר מדי", "כדי למנוע פגיעה בטעם ובמרקם של המוצר", "כי פסטור הורג גם נבגים"],
+                correctIndex: 2,
+                explanation: "במקרים שבהם עיקור אינו הכרחי (למשל במזון חומצי), ניתן להשתמש בפסטור עדין יותר כדי לשמר טוב יותר את התכונות הסנסוריות והתזונתיות של המוצר."
+            },
+             {
+                question: "ערך Z נמוך מעיד על:",
+                options: ["עמידות גבוהה של החיידק לחום", "רגישות גבוהה של החיידק לשינויי טמפרטורה", "רגישות נמוכה של החיידק לשינויי טמפרטורה", "גודל גדול של החיידק"],
+                correctIndex: 1,
+                explanation: "ערך Z נמוך אומר ששינוי קטן בטמפרטורה גורם לשינוי גדול ב-D-value (כלומר, שינוי גדול בקצב ההשמדה). זה מעיד על רגישות גבוהה לשינויי טמפרטורה."
+            },
+             {
+                question: "באיזה תהליך עיבוד תרמי ניתן להשתמש בזמן קצר יותר בטמפרטורה נתונה כדי להשיג אותה רמת השמדה?",
+                options: ["תהליך עם Z-value גבוה", "תהליך עם Z-value נמוך", "ה-Z-value אינו משפיע על הזמן", "תהליך המתבצע בלחץ גבוה"],
+                correctIndex: 1,
+                explanation: "השאלה קצת מבלבלת. בהינתן D-value, הזמן קבוע. אך אם משווים שני חיידקים עם אותו D-value בטמפ' אחת, ולחיידק אחד Z נמוך יותר, אז בטמפ' גבוהה יותר, ה-D שלו ירד מהר יותר ולכן יידרש זמן קצר יותר להשמדה. השאלה כפי שנוסחה עוסקת יותר ביחס בין זמן וטמפרטורה."
+            },
+            {
+                question: "מה נכון לגבי ערכי D?",
+                options: ["הם זהים לכל סוגי החיידקים", "הם תלויים בסוג החיידק ובטמפרטורה", "הם נמדדים רק ב-100 מעלות צלזיוס", "הם תמיד מספר שלם"],
+                correctIndex: 1,
+                explanation: "ערך D תלוי במיקרואורגניזם הספציפי (עמידותו הטבועה לחום) ובתנאי הטיפול, בעיקר הטמפרטורה (ככל שהטמפ' גבוהה יותר, D נמוך יותר)."
+            },
+            {
+                question: "מהו pH הגבול המקובל להבחנה בין מזון חומצי למזון דל חומצה?",
+                options: ["pH 7.0", "pH 5.5", "pH 4.6", "pH 2.0"],
+                correctIndex: 2,
+                explanation: "pH 4.6 הוא הערך המקובל בתעשיית המזון להבחנה, בעיקר בגלל שהוא הגבול התחתון המשוער לגדילת C. botulinum."
+            },
+             {
+                question: "הוצאת אוויר מהרקמה היא יתרון של איזה תהליך?",
+                options: ["עיקור", "פסטור", "חליטה", "הקפאה"],
+                correctIndex: 2,
+                explanation: "חליטה מסייעת בהוצאת גזים כלואים מרקמת הצמח, מה שיכול לשפר את תהליך האריזה (למשל, בשימורים) ולהפחית חמצון."
+            },
+             {
+                question: "איזה סוג מיקרואורגניזם מהווה את המטרה העיקרית בעיקור מזון דל חומצה?",
+                options: ["שמרים", "עובשים", "חיידקים לא יוצרי נבגים", "Clostridium botulinum"],
+                correctIndex: 3,
+                explanation: "בגלל הסיכון הבריאותי הגבוה והעמידות הגבוהה של נבגיו, C. botulinum הוא מיקרואורגניזם המטרה הקובע את עוצמת העיקור הנדרשת למזון דל חומצה."
+            },
+             {
+                question: "מה החיסרון העיקרי של איבוד רכיבים מסיסים בחליטה?",
+                options: ["פגיעה בבטיחות המוצר", "ירידה בערך התזונתי ובטעם", "עלייה במשקל המוצר", "קושי באריזה"],
+                correctIndex: 1,
+                explanation: "איבוד ויטמינים מסיסים במים, סוכרים ומינרלים פוגע בערך התזונתי, ואיבוד רכיבי טעם פוגע בתכונות הסנסוריות."
+            },
+             {
+                question: "מדוע אין צורך בעיקור עבור מיץ תפוזים (pH<4.6)?",
+                options: ["כי אין בו חיידקים כלל", "כי החיידקים שבו עמידים לחום", "כי נבגים מסוכנים כמו C. botulinum אינם גדלים בו", "כי הוא עובר סינון קפדני"],
+                correctIndex: 2,
+                explanation: "ה-pH הנמוך מונע גדילה של C. botulinum, ולכן ניתן להסתפק בפסטור להשמדת חיידקים פתוגניים פחות עמידים וגורמי קלקול."
+            },
+             {
+                question: "מה יקרה לערך ה-D אם נעלה את טמפרטורת הטיפול?",
+                options: ["הוא יעלה", "הוא ירד", "הוא לא ישתנה", "הוא ישתנה באופן אקראי"],
+                correctIndex: 1,
+                explanation: "ככל שטמפרטורת הטיפול גבוהה יותר, קצב ההשמדה מהיר יותר, ולכן נדרש פחות זמן להפחתה עשרונית, כלומר ערך ה-D יורד."
+            },
+             {
+                question: "כיצד נקבעים זמן וטמפרטורה לתהליך חליטה?",
+                options: ["באופן שרירותי", "תמיד 100 מעלות לדקה", "מותאמים ניסיונית לכל סוג ירק/פרי ולציוד", "לפי צבע הירק"],
+                correctIndex: 2,
+                explanation: "התנאים האופטימליים לחליטה (זמן וטמפרטורה) תלויים בסוג הירק/פרי, בגודלו, ובסוג הציוד, ונקבעים לרוב בניסויים כדי להשיג אינאקטיבציה אנזימטית תוך פגיעה מינימלית באיכות."
+            },
+             {
+                question: "מהי המטרה המשותפת לפסטור ועיקור?",
+                options: ["שיפור המרקם", "השמדת מיקרואורגניזמים", "הוספת טעם", "ריכוך המזון"],
+                correctIndex: 1,
+                explanation: "שני התהליכים הם טיפולים תרמיים שמטרתם העיקרית היא להרוג מיקרואורגניזמים כדי לשפר בטיחות ולהאריך חיי מדף."
+            },
+            {
+                question: "מהו ההבדל המרכזי בין פסטור לעיקור מבחינת עוצמת הטיפול?",
+                options: ["פסטור תמיד ארוך יותר", "עיקור משתמש בטמפרטורות נמוכות יותר", "עיקור הוא טיפול תרמי חמור יותר מפסטור", "אין הבדל בעוצמה"],
+                correctIndex: 2,
+                explanation: "עיקור מתבצע בטמפרטורות גבוהות יותר (מעל 100°C) ולעיתים לזמן ארוך יותר מפסטור (מתחת ל-100°C) כדי להבטיח השמדת נבגים עמידים."
+            },
+             {
+                question: "מהי ההגדרה של מזון דל חומצה?",
+                options: ["מזון עם pH=7", "מזון עם pH נמוך מ-4.0", "מזון עם pH גבוה מ-4.6", "מזון ללא חומצות כלל"],
+                correctIndex: 2,
+                explanation: "ההגדרה המקובלת למזון דל חומצה בתעשייה היא מזון שה-pH שלו גבוה מ-4.6."
+            }
+        ];
+
+
+        const tfData = [
+             { question: "המטרה העיקרית של חליטה היא הריגת כל החיידקים במזון.", answer: false, explanation: "המטרה העיקרית של חליטה היא אינאקטיבציה אנזימטית." },
+             { question: "פראוקסידאז הוא אנזים רגיש מאוד לחום.", answer: false, explanation: "פראוקסידאז (וקטלאז) נחשבים יציבים יחסית לחום ומשמשים כמדד ליעילות החליטה." },
+             { question: "חליטה תמיד משפרת את מרקם הירקות.", answer: false, explanation: "חליטה עלולה לגרום לריכוך יתר ולפגוע במרקם, במיוחד אם היא ממושכת מדי." },
+             { question: "חיידקים יוצרי נבגים עמידים יותר לחום מחיידקים וגטטיביים.", answer: true, explanation: "נבגים הם מבנים עמידים ביותר לחום ולתנאי סביבה קשים." },
+             { question: "Clostridium botulinum הוא חיידק שאינו יוצר נבגים.", answer: false, explanation: "C. botulinum הוא חיידק אנאירובי יוצר נבגים." },
+             { question: "השמדה תרמית של חיידקים מתנהגת תמיד לפי קינטיקה מסדר אפס.", answer: false, explanation: "השמדה תרמית מתנהגת לרוב לפי קינטיקה מסדר ראשון." },
+             { question: "D-value גבוה יותר פירושו שהחיידק רגיש יותר לחום.", answer: false, explanation: "D-value גבוה יותר פירושו שנדרש זמן ארוך יותר להשמדה באותה טמפרטורה, כלומר החיידק עמיד יותר לחום." },
+             { question: "Z-value נמוך פירושו שהחיידק רגיש יותר לשינויי טמפרטורה.", answer: true, explanation: "Z-value נמוך מצביע על כך ששינוי קטן בטמפרטורה גורם לשינוי גדול בקצב ההשמדה (וב-D-value)." },
+             { question: "סטריליות מסחרית פירושה הרס מוחלט של כל צורות החיים במזון.", answer: false, explanation: "סטריליות מסחרית פירושה השמדת מיקרואורגניזמים המסוגלים לגדול במזון בתנאי אחסון רגילים, אך ייתכנו נבגים מסוימים שישרדו." },
+             { question: "מזון בעל pH 5.0 נחשב למזון חומצי.", answer: false, explanation: "מזון בעל pH 5.0 נחשב למזון דל חומצה (מעל 4.6)." },
+             { question: "עיקור נדרש תמיד לכל סוגי המזונות המשומרים.", answer: false, explanation: "עיקור נדרש בעיקר למזונות דלי חומצה. מזונות חומציים דורשים לרוב פסטור בלבד." },
+             { question: "פסטור תמיד מתבצע בטמפרטורה של 121 מעלות צלזיוס.", answer: false, explanation: "פסטור מתבצע בטמפרטורות נמוכות מ-100 מעלות צלזיוס. 121 מעלות היא טמפרטורה אופיינית לעיקור." },
+             { question: "טיפול בטמפרטורה גבוהה לזמן קצר עדיף לרוב לשמירת איכות המזון.", answer: true, explanation: "טיפול HTST (High Temperature Short Time) גורם לפגיעה מופחתת ברכיבי איכות לעומת טיפול LTLT (Low Temperature Long Time) עבור אותה רמת השמדה מיקרוביאלית." },
+             { question: "ניתן למדוד יעילות חליטה על ידי בדיקת פעילות שרידית של אנזימים כמו פראוקסידאז.", answer: true, explanation: "בדיקת פעילות אנזימים יציבים לחום לאחר חליטה משמשת כתיקוף ליעילות התהליך." },
+             { question: "ה-pH של המזון אינו משפיע על סוג הטיפול התרמי הנדרש.", answer: false, explanation: "ה-pH הוא גורם מרכזי הקובע אם נדרש עיקור (למזון דל חומצה) או פסטור (למזון חומצי)." },
+             { question: "חליטה מסייעת בהוצאת אוויר מרקמת הירק.", answer: true, explanation: "זהו אחד היתרונות של חליטה, התורם לאריזה טובה יותר ומפחית חמצון." },
+             { question: "נבגים של חיידקים יכולים לנבוט ולהפוך לתאים וגטטיביים בתנאים מתאימים.", answer: true, explanation: "כאשר התנאים משתפרים (למשל, טמפרטורה, לחות, נוכחות רכיבי תזונה), נבגים יכולים לנבוט ולהתחיל להתרבות כתאים פעילים." },
+             { question: "ערך D נמדד ביחידות של מעלות צלזיוס.", answer: false, explanation: "ערך D נמדד ביחידות של זמן (לרוב דקות)." },
+             { question: "ערך Z נמדד ביחידות של זמן.", answer: false, explanation: "ערך Z נמדד ביחידות של טמפרטורה (מעלות צלזיוס או פרנהייט)." },
+             { question: "מזון שעבר פסטור הוא בעל חיי מדף ארוכים יותר ממזון שעבר עיקור.", answer: false, explanation: "עיקור הוא טיפול חמור יותר המשיג סטריליות מסחרית ולכן מאפשר חיי מדף ארוכים יותר בטמפרטורת החדר מאשר פסטור." }
+        ];
+
+
+        // --- Global Variables ---
+        let currentCardIndex = 0;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null); // To store user answers for MCQ
+        let tfAnswers = new Array(tfData.length).fill(null); // To store user answers for T/F
+
+
+        // --- DOM Elements ---
+        const flashcard = document.getElementById('flashcard');
+        const flashcardFront = document.getElementById('flashcard-front');
+        const flashcardBack = document.getElementById('flashcard-back');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+
+        const mcqContainer = document.getElementById('mcq-container');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+
+
+        const tfContainer = document.getElementById('tf-container');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptions = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+
+        // --- Flashcard Functions ---
+        function displayCard(index) {
+            flashcardFront.textContent = flashcardData[index].term;
+            flashcardBack.textContent = flashcardData[index].definition;
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            flashcard.classList.remove('is-flipped'); // Show front first
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+        }
+
+        function flipCard() {
+            flashcard.classList.toggle('is-flipped');
+        }
+
+        // --- MCQ Functions ---
+        function displayMCQuestion(index) {
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = ''; // Clear previous options
+            mcqFeedback.classList.add('hidden'); // Hide feedback initially
+            mcqExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Create buttons for options
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i, qData.correctIndex, qData.explanation);
+                 // Reset button styles
+                button.disabled = false;
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.style.opacity = '';
+                mcqOptions.appendChild(button);
+            });
+
+             mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+             prevMCQBtn.disabled = index === 0;
+             nextMCQBtn.disabled = index === mcqData.length - 1;
+
+             // Restore previous answer state if exists
+             if (mcqAnswers[index] !== null) {
+                 highlightMCQAnswer(index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+             }
+        }
+
+         function handleMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation);
+         }
+
+         function highlightMCQAnswer(qIndex, selectedIndex, correctIndex, explanation) {
+             const buttons = mcqOptions.querySelectorAll('button');
+             buttons.forEach((button, i) => {
+                 button.disabled = true; // Disable all buttons after selection
+                 if (i === correctIndex) {
+                     button.style.backgroundColor = 'var(--correct-color)'; // Highlight correct green
+                     button.style.color = '#fff'; // White text for contrast
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     button.style.backgroundColor = 'var(--incorrect-color)'; // Highlight incorrect red
+                      button.style.color = '#fff';
+                 }
+                 if (i !== selectedIndex && i !== correctIndex) {
+                     button.style.opacity = '0.6'; // Dim unselected, incorrect options
+                 }
+             });
+
+             mcqFeedback.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             mcqFeedback.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`; // Keep hidden class removed
+             mcqExplanation.textContent = `הסבר: ${explanation}`;
+             mcqExplanation.classList.remove('hidden');
+         }
+
+
+        function displayAllMCQ() {
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container-all');
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleMCQAnswerAllView(button);
+                 });
+
+                 // Restore state if already answered
+                 if (mcqAnswers[index] !== null) {
+                     highlightMCQAnswerAllView(questionDiv, index, mcqAnswers[index].selected, qData.correctIndex, qData.explanation);
+                 }
+            });
+
+            mcqAllQuestionsContainer.classList.remove('hidden');
+        }
+
+         function handleMCQAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedIndex = parseInt(button.getAttribute('data-oindex'));
+             const qData = mcqData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (mcqAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedIndex === qData.correctIndex;
+             mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect }; // Store answer
+             highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, qData.correctIndex, qData.explanation);
+         }
+
+         function highlightMCQAnswerAllView(questionDiv, qIndex, selectedIndex, correctIndex, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach((btn, i) => {
+                 btn.disabled = true;
+                 if (i === correctIndex) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (i === selectedIndex && i !== correctIndex) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                  if (i !== selectedIndex && i !== correctIndex) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedIndex === correctIndex ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedIndex === correctIndex ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- True/False Functions ---
+        function displayTFQuestion(index) {
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden'); // Hide feedback initially
+            tfExplanation.classList.add('hidden'); // Hide explanation initially
+
+            // Reset buttons state
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.style.backgroundColor = 'var(--accent-color)'; // Reset color
+                  button.style.color = 'var(--text-color)';
+                 button.style.opacity = '1';
+                 // Re-attach click listeners for the current question
+                 button.onclick = () => handleTFAnswer(index, button.getAttribute('data-answer') === 'true', qData.answer, qData.explanation);
+             });
+
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+
+            // Restore previous answer state if exists
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(index, tfAnswers[index].selected, qData.answer, qData.explanation);
+            }
+        }
+
+         function handleTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === correctAnswer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation);
+         }
+
+         function highlightTFAnswer(qIndex, selectedAnswer, correctAnswer, explanation) {
+             const buttons = tfOptions.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.getAttribute('data-answer') === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     button.style.backgroundColor = 'var(--correct-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.backgroundColor = 'var(--incorrect-color)';
+                      button.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     button.style.opacity = '0.6';
+                 }
+             });
+
+             tfFeedback.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             tfFeedback.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             tfExplanation.textContent = `הסבר: ${explanation}`;
+             tfExplanation.classList.remove('hidden');
+         }
+
+         function displayAllTF() {
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = ''; // Clear previous
+
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.classList.add('question-container-all');
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+
+                 // Add event listeners for options in this questionDiv
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => handleTFAnswerAllView(button);
+                 });
+
+                  // Restore state if already answered
+                 if (tfAnswers[index] !== null) {
+                     highlightTFAnswerAllView(questionDiv, index, tfAnswers[index].selected, qData.answer, qData.explanation);
+                 }
+             });
+
+             tfAllQuestionsContainer.classList.remove('hidden');
+         }
+
+         function handleTFAnswerAllView(button) {
+             const qIndex = parseInt(button.getAttribute('data-qindex'));
+             const selectedAnswer = button.getAttribute('data-answer') === 'true';
+             const qData = tfData[qIndex];
+             const questionDiv = button.closest('.question-container-all');
+
+             if (tfAnswers[qIndex] !== null) return; // Prevent re-answering
+
+             const isCorrect = selectedAnswer === qData.answer;
+             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect }; // Store answer
+             highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, qData.answer, qData.explanation);
+         }
+
+
+         function highlightTFAnswerAllView(questionDiv, qIndex, selectedAnswer, correctAnswer, explanation) {
+             const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+             const feedbackDiv = questionDiv.querySelector('.feedback');
+             const explanationDiv = questionDiv.querySelector('.explanation');
+
+             optionButtons.forEach(btn => {
+                  const buttonAnswer = btn.getAttribute('data-answer') === 'true';
+                 btn.disabled = true;
+                 if (buttonAnswer === correctAnswer) {
+                     btn.style.backgroundColor = 'var(--correct-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.backgroundColor = 'var(--incorrect-color)';
+                      btn.style.color = '#fff';
+                 }
+                 if (buttonAnswer !== selectedAnswer && buttonAnswer !== correctAnswer) {
+                     btn.style.opacity = '0.6';
+                 }
+             });
+
+             feedbackDiv.textContent = selectedAnswer === correctAnswer ? "נכון!" : "לא נכון.";
+             feedbackDiv.className = `feedback ${selectedAnswer === correctAnswer ? 'correct' : 'incorrect'}`;
+             explanationDiv.textContent = `הסבר: ${explanation}`;
+             explanationDiv.classList.remove('hidden');
+         }
+
+        // --- Initial Display ---
+        displayCard(currentCardIndex);
+        displayMCQuestion(currentMCQIndex);
+        displayTFQuestion(currentTFIndex);
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', flipCard);
+
+        prevCardBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        nextCardBtn.addEventListener('click', () => {
+            if (currentCardIndex < flashcardData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        prevMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex > 0) {
+                currentMCQIndex--;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        nextMCQBtn.addEventListener('click', () => {
+            if (currentMCQIndex < mcqData.length - 1) {
+                currentMCQIndex++;
+                displayMCQuestion(currentMCQIndex);
+            }
+        });
+
+        viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+
+
+         prevTFBtn.addEventListener('click', () => {
+            if (currentTFIndex > 0) {
+                currentTFIndex--;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+
+        nextTFBtn.addEventListener('click', () => {
+            if (currentTFIndex < tfData.length - 1) {
+                currentTFIndex++;
+                displayTFQuestion(currentTFIndex);
+            }
+        });
+         viewAllTFBtn.addEventListener('click', displayAllTF);
+
+    </script>
+</body>
+</html>

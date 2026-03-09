@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>כלי למידה: סיסטמטיקה של חיידקים</title>
+    
+    <!-- MathJax 3 Configuration -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Embedded CSS -->
+    <style>
+        /* General Body & Layout Styling */
+        body {
+            background-color: #333333;
+            color: #E0E0E0;
+            font-family: 'Arial', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-container {
+            max-width: 90%;
+            width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        /* Section Styling */
+        section {
+            background-color: #4a4a4a; /* Slightly lighter than #666 for better contrast */
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 1px solid #666666;
+        }
+
+        /* Headers */
+        h1, h2 {
+            color: #3D90D7;
+            border-bottom: 2px solid #3D90D7;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        /* Navigation Controls (Buttons, Counters) */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+
+        .counter {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        /* General Button Styling */
+        button {
+            background-color: #3D90D7;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #2a7ab8;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+        
+        .view-all-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            background-color: #557c9a;
+        }
+
+        /* Study Card Specific Styling */
+        .card-container {
+            perspective: 1000px;
+            min-height: 200px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            transition: transform 0.7s;
+            transform-style: preserve-3d;
+        }
+
+        .card-container.is-flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #666666;
+            border-radius: 8px;
+            border: 1px solid #777;
+        }
+
+        .card-front {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            font-size: 1.1em;
+        }
+        
+        .card-back ul {
+            text-align: right;
+            padding-right: 20px;
+        }
+        
+        .card-back ul li {
+            margin-bottom: 10px;
+        }
+
+        /* MCQ and True/False Styling */
+        .question-view {
+            padding: 15px;
+            background-color: #555;
+            border-radius: 8px;
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option-button, .tf-button {
+            width: 100%;
+            text-align: right;
+            padding: 12px;
+            background-color: #777;
+            color: #E0E0E0;
+            border: 1px solid #888;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .option-button:not(:disabled):hover, .tf-button:not(:disabled):hover {
+            background-color: #888;
+        }
+
+        .option-button.correct, .tf-button.correct {
+            background-color: #4CAF50 !important;
+            color: white !important;
+            border-color: #388E3C !important;
+        }
+        
+        .option-button.incorrect, .tf-button.incorrect {
+            background-color: #F44336 !important;
+            color: white !important;
+            border-color: #D32F2F !important;
+        }
+        
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px dashed #3D90D7;
+            border-radius: 5px;
+            background-color: rgba(61, 144, 215, 0.1);
+            font-size: 1.1em;
+        }
+        
+        .all-questions-container {
+            margin-top: 20px;
+            border-top: 2px solid #3D90D7;
+            padding-top: 20px;
+        }
+        
+        .all-questions-container .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #555;
+            border-radius: 8px;
+        }
+        
+        .all-questions-container .question-block .question-text {
+             font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <h1>כלי למידה: עקרונות המצעים בסיסטמטיקה של חיידקים</h1>
+
+        <!-- Theory Section -->
+        <section id="theory">
+            <h2>סיכום עקרונות תאורטיים</h2>
+            <p>במעבדה לסיסטמטיקה של חיידקים, אנו משתמשים במגוון מצעי גידול כדי לזהות ולאפיין חיידקים על בסיס תכונותיהם הביוכימיות. המטרה אינה לזכור את הרכבי המצעים המדויקים, אלא להבין את העיקרון מאחורי כל מבחן: מהו הסובסטרט (החומר שהחיידק מפרק), מהו האינדיקטור (החומר שמשנה צבע או מצב), ומה משמעותה של תוצאה חיובית או שלילית.</p>
+            <p><strong>מרק סוכרים (Sugar Broth):</strong> בודק יכולת תסיסה של פחמימה ספציפית. המצע מכיל מקור חנקן (טריפטון), מלחים לאיזון אוסמוטי, ואינדיקטור pH ‏(Bromcresol purple). תסיסה יוצרת חומצה, המורידה את ה-pH וגורמת לאינדיקטור לשנות את צבעו מסגול לצהוב.</p>
+            <p><strong>פירוק טריפטופן (מבחן אינדול):</strong> בודק נוכחות האנזים טריפטופנאז, המפרק את חומצת האמינו טריפטופן לאינדול. לאחר גידול החיידק במצע עשיר בטריפטון, מוסיפים ריאגנט קובאץ' (Kovacs' Reagent). תגובה חיובית היא הופעת טבעת אדומה-ורודה בחלק העליון של המבחנה, המעידה על נוכחות אינדול.</p>
+            <p><strong>פירוק ג'לטין (מבחן ג'לטינאז):</strong> בודק נוכחות האנזים ג'לטינאז, המפרק את החלבון ג'לטין. המצע מכיל ג'לטין, שבטמפרטורת החדר הוא נוזלי אך בקירור מתמצק. אם החיידק פירק את הג'לטין, המצע יישאר נוזלי גם לאחר קירור ($4^\circ C$).</p>
+            <p><strong>פעילות אוראז (Urease Test):</strong> בודק נוכחות האנזים אוראז, המפרק שתנן (Urea) לאמוניה ($\text{NH}_3$) ופחמן דו-חמצני ($\text{CO}_2$). האמוניה היא בסיס חזק, המעלה את ה-pH של המצע. האינדיקטור Phenol Red משנה את צבעו מכתום-צהוב לוורוד עז בסביבה בסיסית, מה שמעיד על תוצאה חיובית.</p>
+            <p><strong>ניצול ציטראט (Citrate Utilization):</strong> בודק את יכולתו של חיידק להשתמש בציטראט כמקור הפחמן היחיד שלו ובאמוניום כמקור החנקן היחיד. חיידקים המבצעים זאת מפרישים תוצרים בסיסיים. האינדיקטור Bromo Thymol Blue משנה את צבעו מירוק לכחול בסביבה בסיסית, וצמיחה על המצע מעידה על תוצאה חיובית.</p>
+            <p><strong>פירוק קזאין (Caseinase Test):</strong> בודק נוכחות האנזים החוץ-תאי קזאינאז, המפרק את חלבון החלב קזאין. המצע (Skim Milk Agar) הוא אטום ולבן עקב נוכחות הקזאין. אם החיידק מפריש קזאינאז, תיווצר סביב המושבה הילה (אזור) שקופה, המעידה על פירוק החלבון.</p>
+            <p><strong>בדיקת מוביליות (תנועתיות):</strong> מצע זה הוא חצי-מוצק (ריכוז אגר נמוך, כ-0.5%). דוקרים את המצע עם מחט ישרה המכילה תרבית חיידקים. חיידקים מוביליים (בעלי שוטונים) ינועו ויתפשטו מהדקירה, וצמיחתם תיראה עכורה ומפוזרת ברחבי המבחנה. חיידקים לא-מוביליים יגדלו רק לאורך קו הדקירה.</p>
+            <p><strong>הידרוליזת אסקולין בנוכחות מרה (Bile Esculin Test):</strong> זהו מצע סלקטיבי ודיפרנציאלי. מלחי המרה (Ox bile) מעכבים צמיחה של חיידקים רבים. אסקולין הוא הסובסטרט. חיידקים המסוגלים לגדול בנוכחות מרה ולפרק אסקולין, ייצרו אסקולטין. אסקולטין מגיב עם יוני ברזל ($\text{Fe}^{3+}$) במצע (מ-Ferric ammonium citrate) ליצירת קומפלקס שחור-חום. הופעת צבע שחור במצע היא תוצאה חיובית.</p>
+            <p><strong>חיזור ניטרט (Nitrate Reduction):</strong> בודק את יכולת החיידק לחזר ניטרט ($\text{NO}_3^−$) לניטריט ($\text{NO}_2^−$) או לגז חנקן ($\text{N}_2$). לאחר הגידול, מוסיפים ריאגנטים. הופעת צבע אדום מעידה על נוכחות ניטריט (תוצאה חיובית). אם לא מופיע צבע, מוסיפים אבץ. אם אז מופיע צבע אדום, התוצאה שלילית (האבץ חיזר את הניטרט). אם גם לאחר הוספת אבץ אין צבע, התוצאה חיובית (הניטרט חוזר עד לגז חנקן).</p>
+            <p><strong>השפעת חמצן (Thioglycollate Medium):</strong> מצע זה מכיל חומרים מחזרים (כמו Sodium thioglycollate) היוצרים גרדיאנט (מפל) ריכוזי חמצן. בחלק העליון הריכוז גבוה, והוא יורד עד לתנאים אנארוביים בתחתית המבחנה. מיקום צמיחת החיידקים במבחנה מעיד על דרישות החמצן שלהם (אירובי, אנאירובי, פקולטטיבי וכו').</p>
+        </section>
+
+        <!-- Study Cards Section -->
+        <section id="cards">
+            <h2>כרטיסיות לימוד</h2>
+            <div class="navigation-controls">
+                <button id="card-prev-btn">« קודם</button>
+                <div id="card-counter" class="counter"></div>
+                <button id="card-next-btn">הבא »</button>
+            </div>
+            <div id="card-container" class="card-container">
+                <div class="card-inner">
+                    <div class="card-face card-front" id="card-front"></div>
+                    <div class="card-face card-back" id="card-back"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Multiple Choice Questions Section -->
+        <section id="mcq">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="navigation-controls">
+                    <button id="mcq-prev-btn">« קודם</button>
+                    <div id="mcq-counter" class="counter"></div>
+                    <button id="mcq-next-btn">הבא »</button>
+                </div>
+                <div id="mcq-question-container" class="question-view">
+                    <div id="mcq-question-text" class="question-text"></div>
+                    <div id="mcq-options-container" class="options-container"></div>
+                    <div id="mcq-explanation" class="explanation" style="display: none;"></div>
+                </div>
+            </div>
+            <button id="mcq-view-all-btn" class="view-all-btn">הצג את כל השאלות</button>
+            <div id="mcq-all-container" class="all-questions-container" style="display: none;"></div>
+        </section>
+
+        <!-- True/False Questions Section -->
+        <section id="tf">
+            <h2>שאלות נכון / לא נכון</h2>
+            <div id="tf-single-view">
+                <div class="navigation-controls">
+                    <button id="tf-prev-btn">« קודם</button>
+                    <div id="tf-counter" class="counter"></div>
+                    <button id="tf-next-btn">הבא »</button>
+                </div>
+                <div id="tf-question-container" class="question-view">
+                    <div id="tf-question-text" class="question-text"></div>
+                    <div id="tf-options-container" class="options-container">
+                        <button class="tf-button" data-answer="true">נכון</button>
+                        <button class="tf-button" data-answer="false">לא נכון</button>
+                    </div>
+                    <div id="tf-explanation" class="explanation" style="display: none;"></div>
+                </div>
+            </div>
+            <button id="tf-view-all-btn" class="view-all-btn">הצג את כל השאלות</button>
+            <div id="tf-all-container" class="all-questions-container" style="display: none;"></div>
+        </section>
+
+    </div>
+
+    <!-- Embedded JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- DATA ---
+        
+        // Data for Study Cards
+        const studyCardsData = [
+            { front: 'מבחן תסיסת סוכרים', back: '<ul><li><b>עיקרון:</b> בדיקת יכולת חיידק לתסוס פחמימה ספציפית וליצור חומצה.</li><li><b>סובסטרט:</b> פחמימה ספציפית (לדוגמה: גלוקוז, לקטוז).</li><li><b>אינדיקטור:</b> ברומוקרזול סגול (Bromcresol purple).</li><li><b>תוצאה חיובית:</b> שינוי צבע המצע מסגול לצהוב עקב ירידה ב-pH.</li></ul>' },
+            { front: 'מבחן אינדול (פירוק טריפטופן)', back: '<ul><li><b>עיקרון:</b> בדיקת נוכחות האנזים טריפטופנאז המפרק טריפטופן לאינדול.</li><li><b>סובסטרט:</b> טריפטופן (מתוך טריפטון).</li><li><b>אינדיקטור:</b> ריאגנט קובאץ (Kovacs Reagent).</li><li><b>תוצאה חיובית:</b> הופעת טבעת אדומה-ורודה לאחר הוספת הריאגנט.</li></ul>' },
+            { front: 'מבחן ג׳לטינאז (פירוק ג׳לטין)', back: '<ul><li><b>עיקרון:</b> בדיקת נוכחות האנזים ג׳לטינאז המפרק את החלבון ג׳לטין.</li><li><b>סובסטרט:</b> ג׳לטין.</li><li><b>אינדיקטור:</b> מצב הצבירה של המצע לאחר קירור.</li><li><b>תוצאה חיובית:</b> המצע נשאר נוזלי גם לאחר קירור בטמפרטורה של $4^\\circ C$.</li></ul>' },
+            { front: 'מבחן אוראז (Urease)', back: '<ul><li><b>עיקרון:</b> בדיקת נוכחות האנזים אוראז המפרק שתנן (Urea) לאמוניה בסיסית.</li><li><b>סובסטרט:</b> שתנן (Urea).</li><li><b>אינדיקטור:</b> פנול אדום (Phenol Red).</li><li><b>תוצאה חיובית:</b> שינוי צבע המצע מכתום-צהוב לוורוד עז עקב עלייה ב-pH.</li></ul>' },
+            { front: 'מבחן ניצול ציטראט', back: '<ul><li><b>עיקרון:</b> בדיקת יכולת החיידק להשתמש בציטראט כמקור פחמן יחיד.</li><li><b>סובסטרט:</b> נתרן ציטראט (Sodium citrate).</li><li><b>אינדיקטור:</b> ברומותימול כחול (Bromo Thymol Blue).</li><li><b>תוצאה חיובית:</b> צמיחה על המצע ושינוי צבעו מירוק לכחול.</li></ul>' },
+            { front: 'מבחן קזאינאז (פירוק קזאין)', back: '<ul><li><b>עיקרון:</b> בדיקת יכולת פירוק חלבון החלב, קזאין, על ידי אנזים חוץ-תאי.</li><li><b>סובסטרט:</b> קזאין (מתוך אבקת חלב רזה).</li><li><b>אינדיקטור:</b> הופעת אזור שקוף סביב המושבות.</li><li><b>תוצאה חיובית:</b> יצירת הילה שקופה סביב מושבות החיידקים על המצע האטום.</li></ul>' },
+            { front: 'מבחן מוביליות (תנועתיות)', back: '<ul><li><b>עיקרון:</b> בדיקת יכולת תנועה של חיידקים במצע חצי-מוצק.</li><li><b>סובסטרט:</b> אין סובסטרט ספציפי, המצע מזין כללי.</li><li><b>אינדיקטור:</b> פיזור העכירות במצע.</li><li><b>תוצאה חיובית:</b> עכירות מפוזרת הרחק מקו הדקירה.</li></ul>' },
+            { front: 'מבחן Bile Esculin', back: '<ul><li><b>עיקרון:</b> בדיקת הידרוליזת אסקולין בנוכחות מלחי מרה.</li><li><b>סובסטרט:</b> אסקולין.</li><li><b>אינדיקטור:</b> ציטראט ברזל-אמוניום (Ferric ammonium citrate).</li><li><b>תוצאה חיובית:</b> הופעת צבע שחור/חום כהה במצע.</li></ul>' },
+            { front: 'מבחן חיזור ניטרט', back: '<ul><li><b>עיקרון:</b> בדיקת נוכחות האנזים ניטרט רדוקטאז.</li><li><b>סובסטרט:</b> ניטרט ($\text{KNO}_3$).</li><li><b>אינדיקטור:</b> ריאגנטים (סולפנילאמיד וחומצה אלפא-נפתילאמין) ואבץ.</li><li><b>תוצאה חיובית:</b> הופעת צבע אדום לאחר הוספת ריאגנטים, או אי-הופעת צבע גם לאחר הוספת אבץ.</li></ul>' },
+            { front: 'מצע Thioglycollate', back: '<ul><li><b>עיקרון:</b> קביעת דרישות החמצן של חיידק.</li><li><b>סובסטרט:</b> אין, מצע מזין כללי.</li><li><b>אינדיקטור:</b> מיקום הצמיחה לאורך עמוד המצע.</li><li><b>תוצאה:</b> צמיחה למעלה (אירובי), למטה (אנאירובי), לכל האורך (פקולטטיבי) וכו׳.</li></ul>' }
+        ];
+
+        // Data for Multiple Choice Questions
+        const mcqData = [
+            { question: 'מהי מטרתו העיקרית של ריאגנט קובאץ (Kovacs Reagent)?', options: ['לבדוק נוכחות של חומצות אמינו במצע', 'לזהות את תוצר הפירוק של טריפטופן, אינדול', 'לשמש כאינדיקטור pH במבחן תסיסת סוכר', 'לעכב צמיחה של חיידקים גראם-שליליים במצע'], correctIndex: 1, explanation: 'ריאגנט קובאץ מגיב ספציפית עם אינדול, תוצר הפירוק של חומצת האמינו טריפטופן, ויוצר תרכובת בעלת צבע אדום-ורוד.' },
+            { question: 'במצע Simmons Citrate, שינוי צבע האינדיקטור מכחול לירוק מעיד על:', options: ['תוצאה חיובית לניצול ציטראט', 'תוצאה שלילית או היעדר צמיחה', 'זיהום המצע בחיידק אחר', 'המצע הוכן בצורה לא נכונה וה-pH ההתחלתי היה בסיסי מדי'], correctIndex: 1, explanation: 'הצבע ההתחלתי של מצע סימונס ציטראט הוא ירוק. תוצאה חיובית, המעידה על ניצול ציטראט והפיכת הסביבה לבסיסית, גורמת לשינוי צבע לכחול. לכן, שינוי מכחול לירוק אינו אפשרי במבחן תקין ומעיד על תוצאה שלילית.' },
+            { question: 'איזה רכיב במצע Bile Esculin אחראי על הסלקטיביות שלו?', options: ['אסקולין (Esculin)', 'ציטראט ברזל-אמוניום (Ferric ammonium citrate)', 'מלחי מרה (Ox bile)', 'אגר (Agar) בריכוז גבוה'], correctIndex: 2, explanation: 'מלחי המרה (Ox bile) הם גורם סלקטיבי המעכב צמיחה של חיידקים רבים, במיוחד חיידקי גראם-חיובי שאינם שייכים לקבוצת האנטרוקוקים.' },
+            { question: 'תוצאה חיובית במבחן אוראז (Urease) מתבטאת בשינוי צבע של המצע ל:', options: ['צהוב עקב יצירת חומצה', 'כחול עקב צריכת ציטראט', 'ורוד עז עקב יצירת אמוניה', 'שחור עקב יצירת משקע גופריתי'], correctIndex: 2, explanation: 'האנזים אוראז מפרק שתנן לאמוניה, שהיא חומר בסיסי. העלייה ב-pH גורמת לאינדיקטור פנול אדום להפוך לוורוד עז.' },
+            { question: 'מדוע משתמשים בריכוז נמוך של אגר במבחן מוביליות?', options: ['כדי לחסוך בעלות הכנת המצע', 'כדי לאפשר תנועה של חיידקים מוביליים דרך המצע', 'כדי ליצור גרדיאנט חמצן בתוך המבחנה', 'כדי שהאינדיקטור במצע יתפזר בצורה אחידה'], correctIndex: 1, explanation: 'ריכוז אגר נמוך (כ-0.5%) יוצר מצע חצי-מוצק (semi-solid) שמאפשר לחיידקים בעלי שוטונים לנוע ולהתפשט, בניגוד למצע מוצק (כ-1.5% אגר) שמגביל את תנועתם.' },
+            { question: 'מהו הסובסטרט שאותו מפרק האנזים הנבדק במצע Skim Milk Agar?', options: ['לקטוז, סוכר החלב', 'ג׳לטין, חלבון רקמת חיבור', 'קזאין, חלבון החלב העיקרי', 'טריפטופן, חומצת אמינו'], correctIndex: 2, explanation: 'Skim Milk Agar בודק נוכחות של האנזים החוץ-תאי קזאינאז, אשר מפרק את חלבון הקזאין. פירוק זה גורם להופעת הילה שקופה סביב המושבות.' },
+            { question: 'חיידק אנאירובי אובליגטורי צפוי לגדול במצע Thioglycollate:', options: ['רק בחלק העליון של המבחנה, במגע עם האוויר', 'באופן אחיד לכל אורך המבחנה', 'רק בתחתית המבחנה, היכן שאין חמצן', 'בצורה של טבעת דקה מתחת לפני המצע'], correctIndex: 2, explanation: 'חיידקים אנאירוביים אובליגטוריים אינם יכולים לסבול נוכחות חמצן, ולכן יגדלו רק באזור האנאירובי (חסר החמצן) שבתחתית מצע ה-Thioglycollate.' },
+            { question: 'במבחן תסיסת סוכר, מה גורם לשינוי הצבע של האינדיקטור?', options: ['ייצור תוצרים בסיסיים כמו אמוניה', 'פירוק חלבונים במצע', 'ייצור תוצרי תסיסה חומציים', 'תגובה כימית עם ריאגנט שמוסיפים בסוף'], correctIndex: 2, explanation: 'תסיסה של פחמימות על ידי חיידקים מייצרת חומצות אורגניות. הצטברות חומצות אלו מורידה את ה-pH של המצע, וגורמת לשינוי הצבע של אינדיקטור ה-pH.' },
+            { question: 'במבחן חיזור ניטרט, לאחר הוספת ריאגנטים A ו-B לא נצפה שינוי צבע. מהי הפעולה הבאה שיש לבצע?', options: ['לזרוק את המבחנה, התוצאה שלילית', 'לחמם את המבחנה ולבדוק אם מתפתח צבע', 'להוסיף אבקת אבץ (Zinc)', 'להוסיף ריאגנט קובאץ'], correctIndex: 2, explanation: 'היעדר צבע יכול означать שתי אפשרויות: או שהניטרט לא חוזר כלל (תוצאה שלילית), או שהוא חוזר במלואו לגז חנקן ($\text{N}_2$) (תוצאה חיובית). הוספת אבץ מבדילה בין המקרים: האבץ יחזר ניטרט שנותר לניטריט וייצר צבע אדום (תוצאה שלילית). אם לא יתפתח צבע, זה אומר שלא נותר ניטרט, כלומר התוצאה חיובית.' },
+            { question: 'תוצאה חיובית במבחן ג׳לטינאז נקבעת על ידי:', options: ['הופעת צבע כחול לאחר הוספת אינדיקטור', 'היוותרות המצע במצב נוזלי לאחר קירור', 'הופעת בועות גז במבחנה', 'יצירת משקע שחור בתחתית המבחנה'], correctIndex: 1, explanation: 'ג׳לטין הוא חלבון שמתמצק בטמפרטורות נמוכות. אם החיידק הפיק את האנזים ג׳לטינאז ופירק את הג׳לטין לפפטידים קצרים, המצע לא יוכל להתמצק ויישאר נוזלי גם בקירור.' },
+            { question: 'איזה מהבאים מהווה את מקור הפחמן היחיד במצע סימונס ציטראט?', options: ['גלוקוז', 'טריפטון', 'נתרן ציטראט', 'אמוניום פוספט'], correctIndex: 2, explanation: 'מצע סימונס ציטראט הוא מצע מוגדר כימית שבו נתרן ציטראט (Sodium citrate) הוא מקור הפחמן היחיד, ואמוניום פוספט הוא מקור החנקן היחיד.' },
+            { question: 'הופעת הילה שקופה סביב מושבה על מצע המכיל אבקת חלב רזה מעידה על:', options: ['יכולת החיידק לנוע', 'פעילות של האנזים אוראז', 'פירוק של חלבון הקזאין', 'תסיסה של סוכר הלקטוז'], correctIndex: 2, explanation: 'אבקת חלב רזה מכילה קזאין, חלבון שהופך את המצע לאטום. פירוק הקזאין על ידי האנזים קזאינאז יוצר אזור שקוף (הילה) סביב המושבה.' },
+            { question: 'חיידק פקולטטיבי, הגדל במצע Thioglycollate, ייראה כ:', options: ['צמיחה מרוכזת רק בתחתית המבחנה', 'צמיחה מרוכזת רק בחלק העליון', 'צמיחה מפוזרת לכל אורך המבחנה, עם ריכוז גבוה יותר למעלה', 'צמיחה בצורת קו ישר וברור במרכז המבחנה'], correctIndex: 2, explanation: 'חיידק פקולטטיבי יכול לגדול גם עם וגם בלי חמצן, אך לרוב יגדל טוב יותר בנוכחות חמצן (נשימה אירובית יעילה יותר). לכן, צמיחתו תהיה מפוזרת לכל האורך, אך צפופה יותר בחלק העליון העשיר בחמצן.' },
+            { question: 'במבחן Bile Esculin, מה תפקידו של Ferric ammonium citrate?', options: ['לעכב צמיחה של חיידקים לא רצויים', 'לשמש כסובסטרט לפירוק על ידי החיידק', 'להגיב עם תוצר פירוק האסקולין וליצור צבע', 'לייצב את ה-pH של המצע בערך ניטרלי'], correctIndex: 2, explanation: 'כאשר חיידק מפרק אסקולין, נוצר תוצר בשם אסקולטין. אסקולטין מגיב עם יוני הברזל ($\text{Fe}^{3+}$) שמקורם ב-Ferric ammonium citrate, ויוצר קומפלקס שחור-חום המהווה את האינדיקציה החיובית.' },
+            { question: 'מהו העיקרון המשותף למבחן אוראז ולמבחן ניצול ציטראט?', options: ['בשניהם נבדק פירוק של חלבון', 'בשניהם תוצאה חיובית גורמת לעלייה ב-pH', 'בשניהם משתמשים באותו אינדיקטור pH', 'בשניהם יש צורך בהוספת ריאגנט בסוף המבחן'], correctIndex: 1, explanation: 'במבחן אוראז, פירוק שתנן יוצר אמוניה בסיסית. במבחן ציטראט, ניצול הציטראט מוביל ליצירת תוצרים בסיסיים. בשני המקרים, התוצאה החיובית מתבטאת בעלייה ב-pH של המצע.' },
+            { question: 'איזה מבחן דורש קירור של המבחנה לקבלת תוצאה סופית?', options: ['מבחן אינדול', 'מבחן אוראז', 'מבחן ג׳לטינאז', 'מבחן מוביליות'], correctIndex: 2, explanation: 'במבחן ג׳לטינאז, יש לקרר את המבחנה (למשל, ב-$4^\circ C$) כדי לבדוק אם הג׳לטין, שהיה נוזלי בטמפרטורת האינקובציה, התמצק. אם הוא נשאר נוזלי, התוצאה חיובית.' },
+            { question: 'חיידק שאינו מסוגל לפרק טריפטופן ייתן במבחן אינדול תוצאה של:', options: ['טבעת אדומה עזה', 'צבע צהוב לאורך כל המבחנה', 'היעדר שינוי צבע לאחר הוספת ריאגנט קובאץ', 'משקע שחור בתחתית המבחנה'], correctIndex: 2, explanation: 'ריאגנט קובאץ מגיב עם אינדול. אם החיידק אינו מפרק טריפטופן, לא ייווצר אינדול, ולכן לא יתרחש שינוי צבע והתוצאה תהיה שלילית.' },
+            { question: 'מהי מטרת הטריפטון במצע לתסיסת סוכרים?', options: ['לשמש כסובסטרט לתסיסה', 'לספק מקור חנקן וחומרי גדילה לחיידק', 'לשמש כאינדיקטור pH', 'לשמור על לחץ אוסמוטי קבוע'], correctIndex: 1, explanation: 'טריפטון הוא תוצר פירוק אנזימטי של חלבונים והוא עשיר בפפטידים וחומצות אמינו. הוא מספק את חומרי המזון הבסיסיים (מקור חנקן, פחמן וויטמינים) הדרושים לחיידק כדי לגדול, גם אם אינו מסוגל לתסוס את הפחמימה הספציפית במצע.' },
+            { question: 'צמיחה המוגבלת אך ורק לקו הדקירה במצע מוביליות מעידה על:', options: ['החיידק הוא אנאירובי אובליגטורי', 'החיידק אינו מובילי (חסר תנועה)', 'המצע זוהם במהלך הדקירה', 'החיידק מת בזמן האינקובציה'], correctIndex: 1, explanation: 'חיידקים שאינם מוביליים (ללא שוטונים) אינם יכולים לנוע דרך המצע החצי-מוצק ולכן יגדלו רק במקום שבו הודגרו, כלומר לאורך קו הדקירה.' },
+            { question: 'במבחן חיזור ניטרט, הוספת ריאגנטים A ו-B גרמה להופעת צבע אדום עז. מהי המסקנה?', options: ['התוצאה שלילית, לא התרחש חיזור', 'התוצאה חיובית, ניטרט חוזר לניטריט', 'התוצאה חיובית, ניטרט חוזר לגז חנקן', 'יש להוסיף אבץ כדי לקבוע את התוצאה'], correctIndex: 1, explanation: 'הריאגנטים A ו-B מזהים נוכחות של ניטריט ($\text{NO}_2^−$). הופעת צבע אדום מעידה שניטריט נוכח במצע, כלומר החיידק ביצע את השלב הראשון של חיזור ניטרט ($\text{NO}_3^−$) לניטריט. זוהי תוצאה חיובית.' },
+            { question: 'מה יקרה אם נשתמש במצע סימונס ציטראט ללא מקור חנקן (אמוניום)?', options: ['המצע ישנה את צבעו לכחול באופן מיידי', 'לא תתאפשר צמיחה של חיידקים, גם אם הם יכולים לנצל ציטראט', 'רק חיידקים המסוגלים לקבע חנקן מהאוויר יוכלו לגדול', 'התוצאה תהיה זהה, כי החנקן אינו חיוני במבחן זה'], correctIndex: 1, explanation: 'חנקן הוא יסוד חיוני לבניית חלבונים וחומצות גרעין. ללא מקור חנקן זמין, חיידקים אינם יכולים לגדול ולהתרבות, ולכן המבחן לא ייתן תוצאה חיובית גם אם לחיידק יש את המסלול המטבולי לניצול ציטראט.' },
+            { question: 'איזה מהחומרים הבאים משמש גם כסובסטרט וגם כגורם המאפשר את זיהוי התוצאה במצבו הפיזיקלי?', options: ['אוראה (Urea)', 'ציטראט (Citrate)', 'ג׳לטין (Gelatin)', 'אסקולין (Esculin)'], correctIndex: 2, explanation: 'ג׳לטין הוא גם הסובסטרט (החומר המפורק) וגם האינדיקטור. מצבו המוצק בקירור הוא המצב השלילי, ומצבו הנוזלי בקירור (לאחר פירוק) הוא המצב החיובי.' },
+            { question: 'מדוע חשוב להשתמש במצע טריפטון במבחן אינדול?', options: ['כי הוא מכיל ריכוז גבוה של טריפטופן', 'כי הוא מכיל אינדיקטור pH מובנה', 'כי הוא מעודד יצירת שוטונים', 'כי הוא חצי-מוצק ומאפשר תנועה'], correctIndex: 0, explanation: 'מבחן אינדול בודק פירוק של חומצת האמינו טריפטופן. מצע טריפטון, המופק מחלבון קזאין, עשיר במיוחד בטריפטופן ולכן מספק שפע של סובסטרט לאנזים טריפטופנאז.' },
+            { question: 'מה ההבדל העיקרי בין מצע סלקטיבי למצע דיפרנציאלי?', options: ['מצע סלקטיבי צבעוני ומצע דיפרנציאלי שקוף', 'מצע סלקטיבי תמיד נוזלי ומצע דיפרנציאלי תמיד מוצק', 'מצע סלקטיבי מעודד צמיחת קבוצה מסוימת, בעוד מצע דיפרנציאלי מבדיל בין חיידקים שגדלים עליו', 'מצע סלקטיבי מכיל פחמימות ומצע דיפרנציאלי מכיל חלבונים'], correctIndex: 2, explanation: 'מצע סלקטיבי מכיל רכיבים המעכבים צמיחה של סוגי חיידקים מסוימים ומאפשרים צמיחה של אחרים. מצע דיפרנציאלי מכיל רכיבים (כמו סובסטרט ואינדיקטור) המאפשרים להבחין ויזואלית בין חיידקים שונים הגדלים עליו, על סמך תכונה ביוכימית.' },
+            { question: 'מצע Bile Esculin Agar הוא דוגמה למצע:', options: ['סלקטיבי בלבד', 'דיפרנציאלי בלבד', 'גם סלקטיבי וגם דיפרנציאלי', 'מצע מועשר שאינו סלקטיבי או דיפרנציאלי'], correctIndex: 2, explanation: 'הוא סלקטיבי כי מלחי המרה מעכבים חיידקים רבים. הוא דיפרנציאלי כי הוא מבדיל בין חיידקים המסוגלים לפרק אסקולין (הופכים את המצע לשחור) לבין אלה שלא.' },
+            { question: 'מה עלול לגרום לתוצאה חיובית שגויה (false positive) במבחן אוראז?', options: ['אינקובציה קצרה מדי', 'שימוש בכמות קטנה מדי של חיידקים', 'אינקובציה ארוכה מאוד הגורמת לפירוק פפטונים במצע', 'הוספת ריאגנט לא נכון בסוף הבדיקה'], correctIndex: 2, explanation: 'באינקובציה ממושכת, חיידקים מסוימים עשויים למצות את מקורות הפחמן ולהתחיל לפרק פפטונים (חלבונים) במצע. פירוק פפטונים משחרר אמינים בסיסיים, שעלולים להעלות את ה-pH ולגרום לשינוי צבע של הפנול אדום, בדומה לפעילות אוראז.' },
+            { question: 'מהו תפקידו של Phenol Red במצע Urea Agar?', options: ['לשמש כמקור פחמן לחיידק', 'לעכב צמיחה של חיידקים גראם-חיוביים', 'לשמש כאינדיקטור pH המזהה סביבה בסיסית', 'להגיב עם אמוניה וליצור משקע צבעוני'], correctIndex: 2, explanation: 'Phenol Red הוא אינדיקטור pH שצבעו כתום-צהוב ב-pH ניטרלי או חומצי, והוא הופך לוורוד-אדום (Fuchsia) ב-pH בסיסי (מעל 8.2), כמו זה הנוצר מפעילות אוראז.' },
+            { question: 'חיידק הגדל במרק סוכרים אך אינו משנה את צבע המצע מראה כי הוא:', options: ['אינו מסוגל לגדול במצע זה', 'מסוגל לנצל את הפפטונים אך לא לתסוס את הסוכר', 'מבצע תסיסה בסיסית ולא חומצית', 'אנאירובי אובליגטורי ולכן אינו גדל'], correctIndex: 1, explanation: 'צמיחה (עכירות) ללא שינוי צבע מעידה שהחיידק חי ומתרבה על ידי שימוש במקורות המזון האחרים במצע (כמו טריפטון), אך אין לו את האנזימים הדרושים לתסוס את הפחמימה הספציפית שנוספה למצע זה.' },
+            { question: 'במבחן חיזור ניטרט, לאחר הוספת ריאגנטים ולאחר מכן אבץ, הופיע צבע אדום. מהי התוצאה?', options: ['חיובית - חיזור לניטריט', 'חיובית - חיזור לגז חנקן', 'שלילית', 'לא ניתן לקבוע, יש לחזור על המבחן'], correctIndex: 2, explanation: 'הופעת צבע אדום רק לאחר הוספת אבץ מעידה שהניטרט המקורי עדיין היה במבחנה (ולא חוזר על ידי החיידק), והאבץ הוא זה שחיזר אותו לניטריט. לכן, החיידק לא ביצע חיזור ניטרט והתוצאה היא שלילית.' },
+            { question: 'איזה אנזים נבדק כאשר מחפשים הילה שקופה במצע המכיל חלב?', options: ['לקטאז', 'עמילאז', 'ג׳לטינאז', 'קזאינאז'], correctIndex: 3, explanation: 'החלבון העיקרי בחלב, הגורם למראה האטום שלו, הוא קזאין. האנזים החוץ-תאי המפרק אותו ויוצר הילה שקופה הוא קזאינאז.' }
+        ];
+
+        // Data for True/False Questions
+        const trueFalseData = [
+            { question: 'במבחן אוראז חיובי, ה-pH של המצע יורד וגורם לשינוי צבע.', correctAnswer: false, explanation: 'לא נכון. פירוק שתנן על ידי אוראז מייצר אמוניה, שהיא בסיסית ומעלה את ה-pH של המצע, מה שגורם לשינוי צבע האינדיקטור פנול אדום לוורוד.' },
+            { question: 'מצע סימונס ציטראט הוא מצע דיפרנציאלי בלבד, לא סלקטיבי.', correctAnswer: false, explanation: 'לא נכון. המצע הוא גם סלקטיבי מכיוון שהוא מאפשר צמיחה רק של חיידקים שיכולים להשתמש בציטראט כמקור פחמן יחיד ובאמוניום כמקור חנקן יחיד.' },
+            { question: 'תוצאה חיובית במבחן אינדול תלויה בהוספת ריאגנט קובאץ.', correctAnswer: true, explanation: 'נכון. אינדול הוא חומר חסר צבע. ניתן לזהות את נוכחותו רק לאחר הוספת ריאגנט קובאץ, אשר מגיב עמו ליצירת תרכובת צבעונית (אדומה-ורודה).' },
+            { question: 'חיידק מובילי יגדל רק לאורך קו הדקירה במצע מוביליות.', correctAnswer: false, explanation: 'לא נכון. חיידק מובילי יתפשט מהדקירה ויגרום לעכירות מפוזרת בכל המצע. חיידק לא-מובילי הוא זה שיגדל רק לאורך קו הדקירה.' },
+            { question: 'הופעת צבע שחור במצע Bile Esculin מעידה על יכולת החיידק לפרק מלחי מרה.', correctAnswer: false, explanation: 'לא נכון. הצבע השחור מעיד על פירוק אסקולין. היכולת לגדול במצע מלכתחילה היא זו שמעידה על עמידות למלחי מרה.' },
+            { question: 'במבחן תסיסת סוכר, האינדיקטור ברומוקרזול סגול הופך צהוב בסביבה בסיסית.', correctAnswer: false, explanation: 'לא נכון. ברומוקרזול סגול הופך צהוב בסביבה חומצית (pH נמוך), הנוצרת כתוצאה מתסיסה. בסביבה בסיסית הוא נשאר סגול.' },
+            { question: 'מצע Thioglycollate מכיל ריכוז גבוה של אגר כדי למנוע כניסת חמצן.', correctAnswer: false, explanation: 'לא נכון. מצע זה מכיל ריכוז נמוך של אגר כדי לאפשר דיפוזיה של חמצן וליצור גרדיאנט, וגם כדי להאט את תנועת הנוזל, אך לא למנוע אותה לחלוטין.' },
+            { question: 'תוצאה חיובית במבחן ג׳לטינאז נראית באופן מיידי לאחר האינקובציה.', correctAnswer: false, explanation: 'לא נכון. כדי לקבוע את התוצאה יש לקרר את המבחנה. רק אם המצע נשאר נוזלי לאחר הקירור, התוצאה נחשבת חיובית.' },
+            { question: 'מצע Skim Milk Agar בודק נוכחות של אנזים תוך-תאי.', correctAnswer: false, explanation: 'לא נכון. קזאינאז הוא אנזים חוץ-תאי (exoenzyme), שהחיידק מפריש לסביבתו כדי לפרק את הקזאין, שהוא מולקולה גדולה שלא יכולה להיכנס לתא.' },
+            { question: 'במבחן חיזור ניטרט, אם לא מופיע צבע אדום לאחר הוספת ריאגנטים, התוצאה היא תמיד שלילית.', correctAnswer: false, explanation: 'לא נכון. היעדר צבע אדום יכול להעיד גם על חיזור מלא של הניטרט לגז חנקן (תוצאה חיובית). יש להוסיף אבץ כדי להבדיל בין האפשרויות.' },
+            { question: 'חיידק אירובי אובליגטורי יגדל לכל אורך מצע ה-Thioglycollate.', correctAnswer: false, explanation: 'לא נכון. חיידק אירובי אובליגטורי דורש חמצן ולכן יגדל רק בחלק העליון של המבחנה, היכן שריכוז החמצן הוא הגבוה ביותר.' },
+            { question: 'הסובסטרט העיקרי במבחן אוראז הוא חומצת אמינו.', correctAnswer: false, explanation: 'לא נכון. הסובסטרט במבחן אוראז הוא שתנן (Urea), לא חומצת אמינו.' },
+            { question: 'הופעת צבע כחול במצע סימונס ציטראט מעידה על סביבה חומצית.', correctAnswer: false, explanation: 'לא נכון. האינדיקטור ברומותימול כחול הוא ירוק ב-pH ניטרלי והופך לכחול בסביבה בסיסית, הנוצרת מניצול הציטראט.' },
+            { question: 'ניתן להשתמש במרק סוכרים כדי לבדוק יכולת פירוק של כל פחמימה שהיא.', correctAnswer: true, explanation: 'נכון. העיקרון של המבחן הוא כללי. ניתן להכין את המצע הבסיסי ולהוסיף לו כל פחמימה רצויה (גלוקוז, סוכרוז, מניטול וכו׳) כדי לבדוק את יכולת התסיסה שלה.' },
+            { question: 'מלחי מרה במצע Bile Esculin משמשים כאינדיקטור.', correctAnswer: false, explanation: 'לא נכון. מלחי המרה הם הגורם הסלקטיבי (מעכב צמיחה). האינדיקטור הוא Ferric ammonium citrate, המגיב עם תוצר פירוק האסקולין.' },
+            { question: 'פירוק ג׳לטין הוא תהליך הפיך, והמצע יתמצק אם יחומם מחדש.', correctAnswer: false, explanation: 'לא נכון. פירוק הג׳לטין על ידי ג׳לטינאז הוא פירוק כימי (הידרוליזה) של קשרים פפטידיים. זהו תהליך בלתי הפיך.' },
+            { question: 'טריפטון הוא שם נרדף לחומצת האמינו טריפטופן.', correctAnswer: false, explanation: 'לא נכון. טריפטון הוא תערובת של פפטידים וחומצות אמינו המתקבלת מפירוק אנזימטי של חלבון הקזאין. הוא עשיר בטריפטופן, אך אינו טריפטופן טהור.' },
+            { question: 'תוצאה חיובית במבחן קזאינאז היא הפיכת כל המצע לשקוף.', correctAnswer: false, explanation: 'לא נכון. תוצאה חיובית מתבטאת בהילה שקופה סביב מושבות החיידקים בלבד, באזור שאליו הופרש האנזים. שאר המצע יישאר אטום.' },
+
+            { question: 'מבחן מוביליות ומבחן Thioglycollate משתמשים שניהם במצע חצי-מוצק.', correctAnswer: true, explanation: 'נכון. בשני המבחנים משתמשים בריכוז אגר נמוך. במבחן מוביליות כדי לאפשר תנועה, ובמצע Thioglycollate כדי להאט את תנועת הנוזל ולאפשר יצירת גרדיאנט חמצן יציב.' },
+            { question: 'אם חיידק מסוגל להשתמש בציטראט, הוא בהכרח יוכל לתסוס גלוקוז.', correctAnswer: false, explanation: 'לא נכון. היכולת לבצע מסלול מטבולי אחד (כמו ניצול ציטראט) אינה מעידה על היכולת לבצע מסלול אחר (כמו תסיסת גלוקוז). אלו שתי תכונות ביוכימיות נפרדות הנבדקות במבחנים שונים.' }
+        ];
+
+        // --- STATE VARIABLES ---
+        
+        let currentCardIndex = 0;
+        let currentMcqIndex = 0;
+        let currentTfIndex = 0;
+        
+        // --- DOM ELEMENTS ---
+
+        // Cards
+        const cardContainer = document.getElementById('card-container');
+        const cardInner = cardContainer.querySelector('.card-inner');
+        const cardFront = document.getElementById('card-front');
+        const cardBack = document.getElementById('card-back');
+        const cardCounter = document.getElementById('card-counter');
+        const cardPrevBtn = document.getElementById('card-prev-btn');
+        const cardNextBtn = document.getElementById('card-next-btn');
+
+        // MCQ
+        const mcqCounter = document.getElementById('mcq-counter');
+        const mcqQuestionText = document.getElementById('mcq-question-text');
+        const mcqOptionsContainer = document.getElementById('mcq-options-container');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqPrevBtn = document.getElementById('mcq-prev-btn');
+        const mcqNextBtn = document.getElementById('mcq-next-btn');
+        const mcqViewAllBtn = document.getElementById('mcq-view-all-btn');
+        const mcqAllContainer = document.getElementById('mcq-all-container');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+
+        // True/False
+        const tfCounter = document.getElementById('tf-counter');
+        const tfQuestionText = document.getElementById('tf-question-text');
+        const tfOptionsContainer = document.getElementById('tf-options-container');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfPrevBtn = document.getElementById('tf-prev-btn');
+        const tfNextBtn = document.getElementById('tf-next-btn');
+        const tfViewAllBtn = document.getElementById('tf-view-all-btn');
+        const tfAllContainer = document.getElementById('tf-all-container');
+        const tfSingleView = document.getElementById('tf-single-view');
+        
+        // --- FUNCTIONS ---
+
+        /**
+         * Generic function to typeset a given element with MathJax
+         * @param {HTMLElement|string} element - The element or selector to typeset.
+         */
+        function typesetElement(element) {
+            if (window.MathJax && window.MathJax.typeset) {
+                // Ensure elements are queued for typesetting
+                MathJax.typesetPromise([element]).catch(function (err) {
+                    console.error('MathJax typesetting error:', err);
+                });
+            }
+        }
+
+        // --- Study Cards Logic ---
+
+        function displayCard(index) {
+            // Reset flip state
+            cardContainer.classList.remove('is-flipped');
+            
+            // Wait for flip back animation to start before changing content
+            setTimeout(() => {
+                const card = studyCardsData[index];
+                cardFront.textContent = card.front;
+                cardBack.innerHTML = card.back;
+                cardCounter.textContent = `כרטיסיה ${index + 1} / ${studyCardsData.length}`;
+                cardPrevBtn.disabled = index === 0;
+                cardNextBtn.disabled = index === studyCardsData.length - 1;
+                // Typeset math on the card back
+                typesetElement(cardBack);
+            }, 200);
+        }
+
+        cardContainer.addEventListener('click', () => {
+            cardContainer.classList.toggle('is-flipped');
+        });
+
+        cardPrevBtn.addEventListener('click', () => {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        cardNextBtn.addEventListener('click', () => {
+            if (currentCardIndex < studyCardsData.length - 1) {
+                currentCardIndex++;
+                displayCard(currentCardIndex);
+            }
+        });
+
+        // --- MCQ Logic ---
+
+        function displayMcq(index) {
+            const q = mcqData[index];
+            mcqQuestionText.textContent = q.question;
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            mcqOptionsContainer.innerHTML = '';
+            mcqExplanation.style.display = 'none';
+
+            q.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = option;
+                button.addEventListener('click', () => handleMcqAnswer(i, q.correctIndex, q.explanation));
+                mcqOptionsContainer.appendChild(button);
+            });
+
+            mcqPrevBtn.disabled = index === 0;
+            mcqNextBtn.disabled = index === mcqData.length - 1;
+            typesetElement(mcqQuestionText.parentElement);
+        }
+
+        function handleMcqAnswer(selectedIndex, correctIndex, explanation) {
+            const buttons = mcqOptionsContainer.querySelectorAll('.option-button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === correctIndex) {
+                    button.classList.add('correct');
+                } else if (i === selectedIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            mcqExplanation.innerHTML = `<b>הסבר:</b> ${explanation}`;
+            mcqExplanation.style.display = 'block';
+            typesetElement(mcqExplanation);
+        }
+        
+        mcqPrevBtn.addEventListener('click', () => {
+            if (currentMcqIndex > 0) {
+                currentMcqIndex--;
+                displayMcq(currentMcqIndex);
+            }
+        });
+
+        mcqNextBtn.addEventListener('click', () => {
+            if (currentMcqIndex < mcqData.length - 1) {
+                currentMcqIndex++;
+                displayMcq(currentMcqIndex);
+            }
+        });
+        
+        mcqViewAllBtn.addEventListener('click', () => {
+            mcqSingleView.style.display = 'none';
+            mcqViewAllBtn.style.display = 'none';
+            mcqAllContainer.style.display = 'block';
+            mcqAllContainer.innerHTML = ''; // Clear previous content
+
+            mcqData.forEach((q, index) => {
+                const block = document.createElement('div');
+                block.className = 'question-block';
+
+                const qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.textContent = `${index + 1}. ${q.question}`;
+                block.appendChild(qText);
+
+                const optsContainer = document.createElement('div');
+                optsContainer.className = 'options-container';
+
+                q.options.forEach((option, i) => {
+                    const button = document.createElement('button');
+                    button.className = 'option-button';
+                    button.textContent = option;
+                    optsContainer.appendChild(button);
+                    button.addEventListener('click', () => {
+                        handleAllMcqAnswer(button, i, q.correctIndex, q.explanation, optsContainer);
+                    });
+                });
+                
+                block.appendChild(optsContainer);
+                mcqAllContainer.appendChild(block);
+            });
+            typesetElement(mcqAllContainer);
+        });
+
+        function handleAllMcqAnswer(selectedButton, selectedIndex, correctIndex, explanation, container) {
+            const buttons = container.querySelectorAll('.option-button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === correctIndex) {
+                    button.classList.add('correct');
+                } else if (i === selectedIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            let explanationDiv = container.nextElementSibling;
+            if (!explanationDiv || !explanationDiv.classList.contains('explanation')) {
+                explanationDiv = document.createElement('div');
+                explanationDiv.className = 'explanation';
+                container.parentNode.appendChild(explanationDiv);
+            }
+            explanationDiv.innerHTML = `<b>הסבר:</b> ${explanation}`;
+            explanationDiv.style.display = 'block';
+            typesetElement(explanationDiv);
+        }
+
+        // --- True/False Logic ---
+
+        function displayTf(index) {
+            const q = trueFalseData[index];
+            tfQuestionText.textContent = q.question;
+            tfCounter.textContent = `שאלה ${index + 1} / ${trueFalseData.length}`;
+            tfExplanation.style.display = 'none';
+
+            const buttons = tfOptionsContainer.querySelectorAll('.tf-button');
+            buttons.forEach(button => {
+                button.disabled = false;
+                button.classList.remove('correct', 'incorrect');
+            });
+
+            tfPrevBtn.disabled = index === 0;
+            tfNextBtn.disabled = index === trueFalseData.length - 1;
+            typesetElement(tfQuestionText.parentElement);
+        }
+
+        function handleTfAnswer(selectedIndex) {
+            const q = trueFalseData[selectedIndex];
+            const buttons = tfOptionsContainer.querySelectorAll('.tf-button');
+            
+            buttons.forEach(button => {
+                button.disabled = true;
+                const buttonAnswer = button.dataset.answer === 'true';
+                if (buttonAnswer === q.correctAnswer) {
+                    button.classList.add('correct');
+                } else {
+                     // Only mark the clicked wrong answer as incorrect
+                    if (button.matches(':focus')) {
+                        button.classList.add('incorrect');
+                    }
+                }
+            });
+
+            tfExplanation.innerHTML = `<b>תשובה: ${q.correctAnswer ? 'נכון' : 'לא נכון'}.</b> ${q.explanation}`;
+            tfExplanation.style.display = 'block';
+            typesetElement(tfExplanation);
+        }
+        
+        tfOptionsContainer.querySelectorAll('.tf-button').forEach(button => {
+            button.addEventListener('click', () => handleTfAnswer(currentTfIndex));
+        });
+
+        tfPrevBtn.addEventListener('click', () => {
+            if (currentTfIndex > 0) {
+                currentTfIndex--;
+                displayTf(currentTfIndex);
+            }
+        });
+
+        tfNextBtn.addEventListener('click', () => {
+            if (currentTfIndex < trueFalseData.length - 1) {
+                currentTfIndex++;
+                displayTf(currentTfIndex);
+            }
+        });
+
+        tfViewAllBtn.addEventListener('click', () => {
+            tfSingleView.style.display = 'none';
+            tfViewAllBtn.style.display = 'none';
+            tfAllContainer.style.display = 'block';
+            tfAllContainer.innerHTML = ''; // Clear previous content
+
+            trueFalseData.forEach((q, index) => {
+                const block = document.createElement('div');
+                block.className = 'question-block';
+
+                const qText = document.createElement('div');
+                qText.className = 'question-text';
+                qText.textContent = `${index + 1}. ${q.question}`;
+                block.appendChild(qText);
+
+                const optsContainer = document.createElement('div');
+                optsContainer.className = 'options-container';
+
+                const trueBtn = document.createElement('button');
+                trueBtn.className = 'tf-button';
+                trueBtn.textContent = 'נכון';
+                trueBtn.dataset.answer = 'true';
+                optsContainer.appendChild(trueBtn);
+
+                const falseBtn = document.createElement('button');
+                falseBtn.className = 'tf-button';
+                falseBtn.textContent = 'לא נכון';
+                falseBtn.dataset.answer = 'false';
+                optsContainer.appendChild(falseBtn);
+
+                const clickHandler = (event) => {
+                    const selectedAnswer = event.target.dataset.answer === 'true';
+                    handleAllTfAnswer(selectedAnswer, q.correctAnswer, q.explanation, optsContainer);
+                };
+
+                trueBtn.addEventListener('click', clickHandler);
+                falseBtn.addEventListener('click', clickHandler);
+
+                block.appendChild(optsContainer);
+                tfAllContainer.appendChild(block);
+            });
+            typesetElement(tfAllContainer);
+        });
+
+        function handleAllTfAnswer(selectedAnswer, correctAnswer, explanation, container) {
+            const buttons = container.querySelectorAll('.tf-button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                const buttonAnswer = button.dataset.answer === 'true';
+                if (buttonAnswer === correctAnswer) {
+                    button.classList.add('correct');
+                } else if (buttonAnswer === selectedAnswer) {
+                    button.classList.add('incorrect');
+                }
+            });
+            let explanationDiv = container.nextElementSibling;
+            if (!explanationDiv || !explanationDiv.classList.contains('explanation')) {
+                explanationDiv = document.createElement('div');
+                explanationDiv.className = 'explanation';
+                container.parentNode.appendChild(explanationDiv);
+            }
+            explanationDiv.innerHTML = `<b>תשובה: ${correctAnswer ? 'נכון' : 'לא נכון'}.</b> ${explanation}`;
+            explanationDiv.style.display = 'block';
+            typesetElement(explanationDiv);
+        }
+
+        // --- INITIALIZATION ---
+
+        function init() {
+            displayCard(currentCardIndex);
+            displayMcq(currentMcqIndex);
+            displayTf(currentTfIndex);
+        }
+
+        init();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 1. MathJax Configuration and Loading -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']], // Use $...$ for inline math
+            displayMath: [['$$', '$$'], ['\\[', '\\]']] // Use $$...$$ for display math
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <title>PDE Practice - Day 1</title>
+
+    <!-- 2. Embedded CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        #theory {
+            background-color: #e7f3ff;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .question-block {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .solution {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f0fff0;
+            border: 1px dashed #28a745;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .MathJax_Display {
+             display: block;
+             text-align: center;
+             margin: 1em 0em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Day 1: Method of Characteristics & Classification</h1>
+        </header>
+
+        <section id="theory">
+            <h2>Theory Focus</h2>
+            <p><strong>Method of Characteristics (First-Order Quasi-Linear PDE):</strong></p>
+            <p>Solves PDEs of the form $a(x,y,u)u_x + b(x,y,u)u_y = c(x,y,u)$.</p>
+            <ol>
+                <li>Set up the characteristic ODE system:
+                   $$ \frac{dx}{dt} = a(x,y,u), \quad \frac{dy}{dt} = b(x,y,u), \quad \frac{du}{dt} = c(x,y,u) $$</li>
+                <li>Find two independent first integrals (constants of motion) of the system. These are functions $\phi_1(x,y,u) = C_1$ and $\phi_2(x,y,u) = C_2$ that are constant along the characteristic curves defined by the ODEs. Common techniques involve forming ratios like $\frac{dx}{a} = \frac{dy}{b} = \frac{du}{c}$.</li>
+                <li>The general solution is implicitly defined by $F(\phi_1, \phi_2) = 0$, or explicitly as $\phi_2 = f(\phi_1)$ (or $\phi_1 = g(\phi_2)$), where $F$, $f$, $g$ are arbitrary functions.</li>
+                <li>For an Initial Value Problem (IVP), the solution $u$ is specified on an initial curve $\Gamma$. Parametrize this curve (e.g., $(x_0(s), y_0(s), u_0(s))$). Use these initial conditions evaluated along the characteristics to determine the specific form of the arbitrary function $F$, $f$, or $g$.</li>
+            </ol>
+
+            <p><strong>Classification of Second-Order Linear PDEs:</strong></p>
+            <p>For a PDE of the form $Au_{xx} + Bu_{xy} + Cu_{yy} + Du_x + Eu_y + Fu = G$ (where A, B, C can be functions of x, y):</p>
+            <ol>
+                <li>Calculate the discriminant: $\Delta = B^2 - 4AC$.</li>
+                <li>Classify based on the sign of $\Delta$:
+                    <ul>
+                        <li>If $\Delta > 0$: The PDE is <strong>Hyperbolic</strong> (like the wave equation).</li>
+                        <li>If $\Delta = 0$: The PDE is <strong>Parabolic</strong> (like the heat equation).</li>
+                        <li>If $\Delta < 0$: The PDE is <strong>Elliptic</strong> (like the Laplace equation).</li>
+                    </ul>
+                </li>
+                <li>Note: The lower-order terms ($D, E, F, G$) do not affect the classification. If A, B, C depend on $x, y$, the type can change in different regions of the domain.</li>
+            </ol>
+        </section>
+
+        <section id="practice">
+            <h2>Practice Questions</h2>
+
+            <!-- Method of Characteristics -->
+            <article class="question-block">
+                <p class="question-number">Question 1:</p>
+                <p class="question-text">Find the general solution to $3u_x - 2u_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q1')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q1">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{3} = \frac{dy}{-2} = \frac{du}{0}$.</p>
+                    <p>From $\frac{du}{0}$, we get $du=0 \implies u = C_1$.</p>
+                    <p>From $\frac{dx}{3} = \frac{dy}{-2}$, we get $-2dx = 3dy \implies -2x = 3y + C_2'$, or $2x+3y = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(2x+3y)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 2:</p>
+                <p class="question-text">Find the general solution to $u_x + u_y = u$.</p>
+                <button onclick="toggleSolution('sol-d1-q2')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q2">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{u}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{1}$, we get $dx=dy \implies y-x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u}$, we get $\frac{du}{u} = dx \implies \ln|u| = x + C_2' \implies u = e^{x+C_2'} = C_2 e^x$.</p>
+                    <p>So $u e^{-x} = C_2$.</p>
+                    <p>The general solution is $F(y-x, ue^{-x}) = 0$, or $ue^{-x} = f(y-x)$, which gives $u(x,y) = e^x f(y-x)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 3:</p>
+                <p class="question-text">Find the general solution to $xu_x + yu_y = 0$ for $x>0, y>0$.</p>
+                <button onclick="toggleSolution('sol-d1-q3')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q3">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{x} = \frac{dy}{y} = \frac{du}{0}$.</p>
+                    <p>From $\frac{du}{0}$, we get $du=0 \implies u = C_1$.</p>
+                    <p>From $\frac{dx}{x} = \frac{dy}{y}$, we get $\ln x = \ln y + C_2' \implies \ln x - \ln y = C_2' \implies \ln(x/y) = C_2'$. So $x/y = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(x/y)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 4:</p>
+                <p class="question-text">Solve the IVP: $u_x + 2u_y = 0$, $u(0,y) = \sin(y)$.</p>
+                <button onclick="toggleSolution('sol-d1-q4')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q4">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{2} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$. From $\frac{dx}{1} = \frac{dy}{2}$, $2dx = dy \implies y-2x = C_2$.</p>
+                    <p>General solution: $u(x,y) = F(y-2x)$.</p>
+                    <p>Apply IVP: $u(0,y) = F(y-2(0)) = F(y) = \sin(y)$.</p>
+                    <p>So $F(z) = \sin(z)$.</p>
+                    <p>The solution is $u(x,y) = \sin(y-2x)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 5:</p>
+                <p class="question-text">Find the general solution to $yu_x - xu_y = 0$ for $x, y \neq 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q5')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q5">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{y} = \frac{dy}{-x} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{y} = \frac{dy}{-x}$, we get $-xdx = ydy \implies -\frac{x^2}{2} = \frac{y^2}{2} + C_2' \implies x^2+y^2 = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(x^2+y^2)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 6:</p>
+                <p class="question-text">Find the general solution to $u_x + u_y = 1$.</p>
+                <button onclick="toggleSolution('sol-d1-q6')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q6">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{1}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{1}$, $y-x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{1}$, $u-x = C_2$.</p>
+                    <p>The general solution is $F(y-x, u-x) = 0$, or $u-x = f(y-x)$, so $u(x,y) = x + f(y-x)$.</p>
+                    <p>(Alternatively, using $\frac{dy}{1} = \frac{du}{1}$ gives $u-y=C_3$, leading to $u(x,y) = y + g(y-x)$ which is equivalent).</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 7:</p>
+                <p class="question-text">Solve the IVP: $u_x + yu_y = 0$, $u(0,y) = y^2$ for $y>0$.</p>
+                <button onclick="toggleSolution('sol-d1-q7')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q7">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{y} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{y}$, $dx = \frac{dy}{y} \implies x = \ln|y| + C_2' \implies x - \ln y = C_2'$ (since y>0). So $ye^{-x} = C_2$.</p>
+                    <p>General solution: $u(x,y) = F(ye^{-x})$.</p>
+                    <p>Apply IVP: $u(0,y) = F(ye^{-0}) = F(y) = y^2$.</p>
+                    <p>So $F(z) = z^2$.</p>
+                    <p>The solution is $u(x,y) = (ye^{-x})^2 = y^2e^{-2x}$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 8:</p>
+                <p class="question-text">Find the general solution to $xu_x - yu_y = u$.</p>
+                <button onclick="toggleSolution('sol-d1-q8')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q8">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{x} = \frac{dy}{-y} = \frac{du}{u}$.</p>
+                    <p>From $\frac{dx}{x} = \frac{dy}{-y}$, $\ln|x| = -\ln|y| + C_1' \implies \ln|x| + \ln|y| = C_1' \implies \ln|xy| = C_1'$. So $xy = C_1$.</p>
+                    <p>From $\frac{dx}{x} = \frac{du}{u}$, $\ln|x| = \ln|u| + C_2' \implies \ln|x| - \ln|u| = C_2' \implies \ln|x/u| = C_2'$. So $x/u = C_2$.</p>
+                    <p>The general solution is $F(xy, x/u) = 0$, or $x/u = f(xy)$, which gives $u(x,y) = x / f(xy)$, or $u(x,y) = x \cdot g(xy)$ where $g=1/f$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 9:</p>
+                <p class="question-text">Find the general solution to $u_x + uu_y = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q9')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q9">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{u} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>Substitute $u=C_1$ into $\frac{dx}{1} = \frac{dy}{u} \implies \frac{dx}{1} = \frac{dy}{C_1}$.</p>
+                    <p>Integrating gives $C_1 dx = dy \implies C_1 x = y + C_2$. Substituting back $u=C_1$, we get $ux - y = C_2$.</p>
+                    <p>The general solution is $F(u, ux-y) = 0$, or $u = f(ux-y)$. This is an implicit solution.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 10:</p>
+                <p class="question-text">Solve the IVP: $u_x + u_y = u^2$, $u(x,0) = x+1$.</p>
+                <button onclick="toggleSolution('sol-d1-q10')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q10">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{u^2}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{1}$, $y-x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u^2}$, $dx = u^{-2}du \implies x = -u^{-1} + C_2$. So $x + 1/u = C_2$.</p>
+                    <p>General solution: $x + 1/u = F(y-x)$.</p>
+                    <p>Apply IVP: $x + 1/u(x,0) = F(0-x) \implies x + 1/(x+1) = F(-x)$.</p>
+                    <p>Let $z = -x$, so $x = -z$. Then $F(z) = -z + 1/(-z+1) = -z + 1/(1-z)$.</p>
+                    <p>Substitute back $z = y-x$: $F(y-x) = -(y-x) + 1/(1-(y-x)) = x-y + 1/(1-y+x)$.</p>
+                    <p>The solution is $x + 1/u = x-y + 1/(1-y+x)$.</p>
+                    <p>$1/u = -y + 1/(1-y+x) = \frac{-y(1-y+x)+1}{1-y+x} = \frac{-y+y^2-xy+1}{1-y+x}$.</p>
+                    <p>$u(x,y) = \frac{1-y+x}{1-y-xy+y^2}$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 11:</p>
+                <p class="question-text">Find the general solution to $x u_x + 2y u_y = -u$.</p>
+                <button onclick="toggleSolution('sol-d1-q11')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q11">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{x} = \frac{dy}{2y} = \frac{du}{-u}$.</p>
+                    <p>From $\frac{dx}{x} = \frac{dy}{2y}$, $\ln|x| = \frac{1}{2}\ln|y| + C_1' \implies 2\ln|x| = \ln|y| + C_1'' \implies \ln(x^2) - \ln|y| = C_1''$. So $x^2/y = C_1$.</p>
+                    <p>From $\frac{dx}{x} = \frac{du}{-u}$, $\ln|x| = -\ln|u| + C_2' \implies \ln|x| + \ln|u| = C_2'$. So $xu = C_2$.</p>
+                    <p>The general solution is $F(x^2/y, xu) = 0$, or $xu = f(x^2/y)$.</p>
+                    <p>$u(x,y) = \frac{1}{x} f\left(\frac{x^2}{y}\right)$.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 12:</p>
+                <p class="question-text">Find the general solution to $u_x \sin x + u_y \cos x = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q12')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q12">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{\sin x} = \frac{dy}{\cos x} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{\sin x} = \frac{dy}{\cos x}$, $\frac{dy}{dx} = \frac{\cos x}{\sin x} = \cot x$.</p>
+                    <p>Integrating gives $y = \int \cot x dx = \ln|\sin x| + C_2$. So $y - \ln|\sin x| = C_2$.</p>
+                    <p>The general solution is $u(x,y) = F(y - \ln|\sin x|)$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 13:</p>
+                <p class="question-text">Solve the IVP: $y u_x + x u_y = 0$, $u(x,0) = x^4$.</p>
+                <button onclick="toggleSolution('sol-d1-q13')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q13">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{y} = \frac{dy}{x} = \frac{du}{0}$.</p>
+                    <p>$u = C_1$.</p>
+                    <p>From $\frac{dx}{y} = \frac{dy}{x}$, $xdx = ydy \implies \frac{x^2}{2} = \frac{y^2}{2} + C_2' \implies x^2-y^2 = C_2$.</p>
+                    <p>General solution: $u(x,y) = F(x^2-y^2)$.</p>
+                    <p>Apply IVP: $u(x,0) = F(x^2-0^2) = F(x^2) = x^4$.</p>
+                    <p>Let $z=x^2$. Then $F(z) = (x^2)^2 = z^2$.</p>
+                    <p>The solution is $u(x,y) = (x^2-y^2)^2$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 14:</p>
+                <p class="question-text">Find the general solution to $u_x + x u_y = u$.</p>
+                <button onclick="toggleSolution('sol-d1-q14')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q14">
+                    <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{x} = \frac{du}{u}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{x}$, $x dx = dy \implies \frac{x^2}{2} = y + C_1$. So $y - x^2/2 = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{u}$, $dx = \frac{du}{u} \implies x = \ln|u| + C_2' \implies u e^{-x} = C_2$.</p>
+                    <p>The general solution is $F(y - x^2/2, u e^{-x}) = 0$, or $u e^{-x} = f(y-x^2/2)$.</p>
+                    <p>$u(x,y) = e^x f(y - x^2/2)$.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 15:</p>
+                <p class="question-text">Find the general solution to $u_x + u_y = x$.</p>
+                <button onclick="toggleSolution('sol-d1-q15')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q15">
+                     <p><strong>Solution:</strong></p>
+                    <p>Characteristic equations: $\frac{dx}{1} = \frac{dy}{1} = \frac{du}{x}$.</p>
+                    <p>From $\frac{dx}{1} = \frac{dy}{1}$, $y-x = C_1$.</p>
+                    <p>From $\frac{dx}{1} = \frac{du}{x}$, $du = x dx$. We need to express x in terms of t or another constant. Let $x=t+c$. Then $du = (t+c) dt$. $u = \frac{1}{2}(t+c)^2 + C_2 = \frac{1}{2}x^2 + C_2$. So $u - x^2/2 = C_2$.</p>
+                    <p>The general solution is $F(y-x, u - x^2/2) = 0$, or $u - x^2/2 = f(y-x)$.</p>
+                    <p>$u(x,y) = \frac{x^2}{2} + f(y-x)$.</p>
+                </div>
+            </article>
+
+
+            <!-- Classification -->
+            <article class="question-block">
+                <p class="question-number">Question 16:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + 6u_{xy} + 9u_{yy} + u_x = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q16')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q16">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=6, C=9$.</p>
+                    <p>$\Delta = B^2 - 4AC = 6^2 - 4(1)(9) = 36 - 36 = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong>.</p>
+                </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 17:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + 2u_{xy} + 5u_{yy} - u = \sin(x)$.</p>
+                <button onclick="toggleSolution('sol-d1-q17')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q17">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=2, C=5$.</p>
+                    <p>$\Delta = B^2 - 4AC = 2^2 - 4(1)(5) = 4 - 20 = -16$.</p>
+                    <p>Since $\Delta < 0$, the PDE is <strong>Elliptic</strong>.</p>
+                 </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 18:</p>
+                <p class="question-text">Classify the PDE $u_{tt} - c^2 u_{xx} = 0$ where $c$ is a non-zero constant.</p>
+                <button onclick="toggleSolution('sol-d1-q18')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q18">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $t$ be like $y$ and $x$ be $x$. $A=-c^2, B=0, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(-c^2)(1) = 4c^2$.</p>
+                    <p>Since $c \neq 0$, $4c^2 > 0$. The PDE is <strong>Hyperbolic</strong>.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 19:</p>
+                <p class="question-text">Classify the PDE $u_t - k u_{xx} = 0$ where $k>0$.</p>
+                <button onclick="toggleSolution('sol-d1-q19')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q19">
+                    <p><strong>Solution:</strong></p>
+                    <p>Let $t$ be like $y$ and $x$ be $x$. $A=-k, B=0, C=0$. (Note: $u_{yy}$ term is missing, so $C=0$).</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(-k)(0) = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong>.</p>
+                 </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 20:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + u_{yy} = f(x,y)$.</p>
+                <button onclick="toggleSolution('sol-d1-q20')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q20">
+                     <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=0, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(1)(1) = -4$.</p>
+                    <p>Since $\Delta < 0$, the PDE is <strong>Elliptic</strong>.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 21:</p>
+                <p class="question-text">Classify the PDE $x u_{xx} + u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q21')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q21">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=x, B=0, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(x)(1) = -4x$.</p>
+                    <ul>
+                        <li>If $x > 0$, $\Delta < 0 \implies$ <strong>Elliptic</strong>.</li>
+                        <li>If $x = 0$, $\Delta = 0 \implies$ <strong>Parabolic</strong>.</li>
+                        <li>If $x < 0$, $\Delta > 0 \implies$ <strong>Hyperbolic</strong>.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 22:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + 2 u_{xy} + (1-y^2) u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q22')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q22">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=2, C=1-y^2$.</p>
+                    <p>$\Delta = B^2 - 4AC = 2^2 - 4(1)(1-y^2) = 4 - 4 + 4y^2 = 4y^2$.</p>
+                     <ul>
+                        <li>If $y \neq 0$, $\Delta > 0 \implies$ <strong>Hyperbolic</strong>.</li>
+                        <li>If $y = 0$, $\Delta = 0 \implies$ <strong>Parabolic</strong>.</li>
+                    </ul>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 23:</p>
+                <p class="question-text">Classify the PDE $y u_{xx} + x u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q23')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q23">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=y, B=0, C=x$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(y)(x) = -4xy$.</p>
+                     <ul>
+                        <li>If $xy < 0$ (Quadrants II, IV), $\Delta > 0 \implies$ <strong>Hyperbolic</strong>.</li>
+                        <li>If $xy = 0$ (On the axes), $\Delta = 0 \implies$ <strong>Parabolic</strong>.</li>
+                        <li>If $xy > 0$ (Quadrants I, III), $\Delta < 0 \implies$ <strong>Elliptic</strong>.</li>
+                    </ul>
+               </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 24:</p>
+                <p class="question-text">Classify the PDE $u_{xx} - 2\sin(x) u_{xy} + \sin^2(x) u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q24')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q24">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=-2\sin(x), C=\sin^2(x)$.</p>
+                    <p>$\Delta = B^2 - 4AC = (-2\sin x)^2 - 4(1)(\sin^2 x) = 4\sin^2 x - 4\sin^2 x = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong> for all $x$.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 25:</p>
+                <p class="question-text">Classify the PDE $e^x u_{xx} + 2e^{(x+y)/2} u_{xy} + e^y u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q25')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q25">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=e^x, B=2e^{(x+y)/2}, C=e^y$.</p>
+                    <p>$\Delta = B^2 - 4AC = (2e^{(x+y)/2})^2 - 4(e^x)(e^y) = 4e^{x+y} - 4e^{x+y} = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong> everywhere.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 26:</p>
+                <p class="question-text">Classify the PDE $u_{rr} + \frac{1}{r} u_r + \frac{1}{r^2} u_{\theta\theta} = 0$ (Laplace in Polar Coordinates).</p>
+                <button onclick="toggleSolution('sol-d1-q26')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q26">
+                     <p><strong>Solution:</strong></p>
+                     <p>Let $x=r, y=\theta$. The principal part is $u_{rr} + \frac{1}{r^2} u_{\theta\theta}$.</p>
+                    <p>$A=1, B=0, C=1/r^2$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(1)(1/r^2) = -4/r^2$.</p>
+                    <p>Assuming $r \neq 0$, $\Delta < 0$. The PDE is <strong>Elliptic</strong> (away from the origin).</p>
+               </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 27:</p>
+                <p class="question-text">Classify the Tricomi equation $y u_{xx} + u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q27')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q27">
+                     <p><strong>Solution:</strong></p>
+                    <p>$A=y, B=0, C=1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(y)(1) = -4y$.</p>
+                    <ul>
+                        <li>If $y > 0$, $\Delta < 0 \implies$ <strong>Elliptic</strong>.</li>
+                        <li>If $y = 0$, $\Delta = 0 \implies$ <strong>Parabolic</strong>.</li>
+                        <li>If $y < 0$, $\Delta > 0 \implies$ <strong>Hyperbolic</strong>.</li>
+                    </ul>
+               </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 28:</p>
+                <p class="question-text">Classify the PDE $u_{xx} + (x^2-1)u_{yy} = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q28')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q28">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=1, B=0, C=x^2-1$.</p>
+                    <p>$\Delta = B^2 - 4AC = 0^2 - 4(1)(x^2-1) = 4(1-x^2)$.</p>
+                     <ul>
+                        <li>If $|x| < 1$, $1-x^2 > 0$, $\Delta > 0 \implies$ <strong>Hyperbolic</strong>.</li>
+                        <li>If $|x| = 1$, $1-x^2 = 0$, $\Delta = 0 \implies$ <strong>Parabolic</strong>.</li>
+                        <li>If $|x| > 1$, $1-x^2 < 0$, $\Delta < 0 \implies$ <strong>Elliptic</strong>.</li>
+                    </ul>
+               </div>
+            </article>
+
+             <article class="question-block">
+                <p class="question-number">Question 29:</p>
+                <p class="question-text">Classify the PDE $2u_{xx} - 4u_{xy} + 2u_{yy} + 3u = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q29')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q29">
+                    <p><strong>Solution:</strong></p>
+                    <p>$A=2, B=-4, C=2$.</p>
+                    <p>$\Delta = B^2 - 4AC = (-4)^2 - 4(2)(2) = 16 - 16 = 0$.</p>
+                    <p>The PDE is <strong>Parabolic</strong>.</p>
+                </div>
+            </article>
+
+            <article class="question-block">
+                <p class="question-number">Question 30:</p>
+                <p class="question-text">Classify the PDE $u_{xy} - u = 0$.</p>
+                <button onclick="toggleSolution('sol-d1-q30')">Show/Hide Solution</button>
+                <div class="solution" id="sol-d1-q30">
+                     <p><strong>Solution:</strong></p>
+                    <p>Here $A=0, B=1, C=0$.</p>
+                    <p>$\Delta = B^2 - 4AC = 1^2 - 4(0)(0) = 1$.</p>
+                    <p>Since $\Delta > 0$, the PDE is <strong>Hyperbolic</strong>.</p>
+               </div>
+            </article>
+
+
+        </section>
+    </div> <!-- end container -->
+
+    <!-- 3. Embedded JavaScript for Interactivity -->
+    <script>
+        function toggleSolution(id) {
+            const solutionDiv = document.getElementById(id);
+            if (solutionDiv) { // Check if element exists
+                if (solutionDiv.style.display === "none" || solutionDiv.style.display === "") {
+                    solutionDiv.style.display = "block";
+                } else {
+                    solutionDiv.style.display = "none";
+                }
+            } else {
+                console.error("Element with ID '" + id + "' not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>
