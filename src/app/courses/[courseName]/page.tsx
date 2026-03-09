@@ -71,8 +71,9 @@ export default async function CoursePage({ params }: CoursePageProps) {
     }
   }
 
+  const basePath = process.env.NODE_ENV === 'production' ? '/biotechfood-static' : '';
   const filePaths = contentFiles.map(file =>
-    `/courses/${directoryName}/${encodeURIComponent(file)}`
+    `${basePath}/courses/${directoryName}/${encodeURIComponent(file)}`
   );
 
   const titleParts = directoryName.match(/^(\d+)-(.*)/);
