@@ -41,17 +41,17 @@ export default function HeroSection() {
             loop
             muted
             playsInline // Important for mobile playback
-            className="absolute top-0 left-0 w-full h-full object-cover z-0"
+            className="absolute top-0 left-0 w-full h-full object-cover z-0 object-[65%_center] md:object-center md:contrast-[1.6] md:saturate-[1.4]"
           >
             Your browser does not support the video tag.
           </video>
         )}
         {/* Removed fallback image for server-side rendering */}
 
-        {/* Overlay - Very subtle to let the ASCII animation shine through */}
-        <div className="absolute top-0 left-0 w-full h-full bg-white/20 dark:bg-black/20 z-10"></div>
-        {/* Secondary overlay specifically for the right side (dark side) of the video, perfectly aligned with the video's natural split so no gradient blur is needed. Hidden on mobile where aspect ratio is different. */}
-        <div className="hidden md:block absolute top-0 right-0 w-[41.5%] h-full bg-black/70 z-10 pointer-events-none"></div>
+        {/* Overlay - multiply blend deepens blacks without washing out colors in both themes */}
+        <div className="absolute top-0 left-0 w-full h-full bg-black/25 mix-blend-multiply z-10"></div>
+        {/* Secondary overlay for the right side — multiply blend makes the dark side blacker while keeping bright elements vibrant. Hidden on mobile. */}
+        <div className="hidden md:block absolute top-0 right-0 w-[41.5%] h-full bg-black/30 mix-blend-multiply z-10 pointer-events-none"></div>
       </div>
 
       {/* Text content centered on top */}
