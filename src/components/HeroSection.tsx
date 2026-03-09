@@ -22,7 +22,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative flex items-center justify-center w-full h-screen min-h-[500px] md:min-h-[600px] overflow-hidden text-white">
+    <section className="relative flex items-center justify-center w-full h-screen min-h-[500px] md:min-h-[600px] overflow-hidden text-slate-900 dark:text-white">
       {/* Background Video Container */}
       <div className="absolute top-0 left-0 w-full h-full">
         {/* Only render video on the client to avoid hydration mismatch, and because theme is client-side */}
@@ -46,16 +46,30 @@ export default function HeroSection() {
         )}
         {/* Removed fallback image for server-side rendering */}
 
-        {/* Overlay */}
-        <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-10"></div>
+        {/* Overlay - Very subtle to let the ASCII animation shine through */}
+        <div className="absolute top-0 left-0 w-full h-full bg-white/20 dark:bg-black/20 z-10"></div>
       </div>
 
       {/* Text content centered on top */}
       <div className="relative z-20 container text-center space-y-6 px-4">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+        <h1
+          className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-wide"
+          style={{
+            color: 'white',
+            WebkitTextStroke: '1px black',
+            textShadow: '0px 2px 4px rgba(0,0,0,0.5)' // Added shadow for extra depth
+          }}
+        >
           Technion B.Sc. Course Companion: Biotechnology & Food Engineering
         </h1>
-        <p className="text-xl text-gray-200">
+        <p
+          className="text-xl md:text-2xl font-medium max-w-4xl mx-auto"
+          style={{
+            color: 'white',
+            WebkitTextStroke: '0.5px black',
+            textShadow: '0px 1px 3px rgba(0,0,0,0.5)'
+          }}
+        >
           Your dedicated resource hub for the Biotechnology and Food Engineering program at the Technion. Find course materials, summaries, and helpful tools tailored to your degree. Explore the course structure below.
         </p>
         <div className="space-y-4 md:space-y-0 md:space-x-4">
