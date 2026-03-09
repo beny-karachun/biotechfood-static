@@ -17,14 +17,15 @@ interface CourseInfo {
   name: string;
   number: number | string;
   slug: string | null;
-  exists: boolean; // This will be updated dynamically
+  exists: boolean;
+  hasContent: boolean; // Has actual HTML/PDF files (not just .gitkeep)
   semester: number;
   isInternalLink?: boolean;
-  icon?: keyof typeof Icons; // Optional icon name
+  icon?: keyof typeof Icons;
 }
 
 // Define the base course data (exists and slug will be determined server-side)
-const baseCourseData: Omit<CourseInfo, 'exists' | 'slug' | 'isInternalLink'>[] = [
+const baseCourseData: Omit<CourseInfo, 'exists' | 'hasContent' | 'slug' | 'isInternalLink'>[] = [
   // Semesters 1-7 data... (as provided before)
   // Semester 1
   { name: `חדוא 1מ`, number: 104018, semester: 1 },
@@ -96,38 +97,34 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
     const expectedFolderName = `${courseNumberStr}-${sanitizedName}`;
 
     let exists = false;
+    let hasContent = false;
     let slug: string | null = null;
     let isInternalLink = false;
 
-
-    // --- Default File System Check Logic ---
-    // Check only if the course name isn't a placeholder like ??
+    // Skip placeholders
     if (course.name !== "בחירת קורסי מגמות" && course.number !== "??") {
       const courseDirPath = path.join(publicCoursesDir, expectedFolderName);
       try {
         const files = await fs.promises.readdir(courseDirPath);
-        if (files.some(file => file.toLowerCase().endsWith('.html'))) {
-          exists = true;
-        }
+        // Folder exists — always make it clickable
+        exists = true;
+        slug = `/courses/${expectedFolderName}`;
+        isInternalLink = true;
+        // Check if there are actual content files (not just .gitkeep)
+        hasContent = files.some(file =>
+          file.toLowerCase().endsWith('.html') || file.toLowerCase().endsWith('.pdf')
+        );
       } catch (error: any) {
         if (error.code !== 'ENOENT') {
           console.error(`Error checking directory ${expectedFolderName} for course ${courseNumberStr}:`, error);
         }
-        exists = false;
       }
     }
-
-    // Set slug and link type if the course exists (has HTML files)
-    if (exists) {
-      slug = `/courses/${expectedFolderName}`;
-      isInternalLink = true;
-    }
-    // --- End Default Logic ---
-
 
     return {
       ...course,
       exists,
+      hasContent,
       slug,
       isInternalLink,
     };
@@ -135,6 +132,7 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
 
   return courseData;
 }
+
 
 
 // Renamed component export - Now an async Server Component
@@ -189,25 +187,29 @@ export default async function CourseDiagram() {
                       className="h-full"
                       style={{ gridRow: index + 1 }}
                     >
-                      {/* Render logic based on the dynamically updated 'exists' and 'slug' */}
+                      {/* Render logic: clickable with content, clickable without content, or disabled placeholder */}
                       {course.exists && course.slug ? (
                         <Link href={course.slug} className="block w-full group h-full flex flex-col">
                           <Button
                             variant="default"
-                            className="w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center flex-grow text-white"
+                            className={`w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center flex-grow text-white ${!course.hasContent ? 'opacity-70' : ''}`}
                             style={{ backgroundColor: '#FF8C00' }}
                           >
-                            {IconComponent && <IconComponent className="h-4 w-4 mb-1" />} {/* Display icon if exists */}
+                            {IconComponent && <IconComponent className="h-4 w-4 mb-1" />}
                             <span className="font-semibold text-sm mb-1">{course.number}</span>
                             <span className="leading-tight">{course.name}</span>
                           </Button>
-                          <Badge
-                            variant="secondary"
-                            className="text-xs px-1.5 py-0.5 self-center flex-shrink-0"
-                            style={{ backgroundColor: '#1E90FF', color: '#FFFFFF' }}
-                          >
-                            {course.isInternalLink ? (parseInt(semester) === 8 ? 'כלי עזר' : 'קיים קורס') : 'קישור חיצוני'}
-                          </Badge>
+                          {course.hasContent ? (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0.5 self-center flex-shrink-0"
+                              style={{ backgroundColor: '#1E90FF', color: '#FFFFFF' }}
+                            >
+                              {parseInt(semester) === 8 ? 'כלי עזר' : 'קיים קורס'}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-dashed text-muted-foreground text-xs px-1.5 py-0.5 self-center flex-shrink-0">עדיין לא קיים</Badge>
+                          )}
                         </Link>
                       ) : (
                         <div className="w-full group h-full flex flex-col">
@@ -217,7 +219,7 @@ export default async function CourseDiagram() {
                             className="w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center border-dashed disabled:opacity-60 flex-grow text-white"
                             style={{ backgroundColor: '#FF8C00' }}
                           >
-                            {IconComponent && <IconComponent className="h-4 w-4 mb-1 opacity-50" />} {/* Display disabled icon */}
+                            {IconComponent && <IconComponent className="h-4 w-4 mb-1 opacity-50" />}
                             <span className="font-semibold text-sm mb-1">{course.number}</span>
                             <span className="leading-tight">{course.name}</span>
                           </Button>
