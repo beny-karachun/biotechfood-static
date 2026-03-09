@@ -55,7 +55,7 @@ export default function HeroSection() {
       {/* Text content centered on top */}
       <div className="relative z-20 container text-center px-4">
         <h1
-          className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight"
           style={{
             color: 'white',
             WebkitTextStroke: '1px rgba(0,0,0,0.4)',
@@ -65,7 +65,7 @@ export default function HeroSection() {
           Biotechnology & <br className="hidden md:block" /> Food Engineering
         </h1>
         <p
-          className="text-xl md:text-2xl font-medium max-w-2xl mx-auto mt-6 mb-10"
+          className="text-lg sm:text-xl md:text-2xl font-medium max-w-2xl mx-auto mt-4 mb-8 sm:mt-6 sm:mb-10"
           style={{
             color: 'white',
             WebkitTextStroke: '0.5px rgba(0,0,0,0.4)',

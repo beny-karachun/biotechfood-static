@@ -199,92 +199,94 @@ export default function AcademicCalculatorPage() {
                     </div>
 
                     {/* Table */}
-                    <div className="rounded-md border">
-                        <Table>
-                            <TableCaption>Click column headers to sort the table.</TableCaption>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead onClick={() => requestSort('name')} className="cursor-pointer hover:text-primary transition-colors">Course Name <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                    <TableHead onClick={() => requestSort('courseId')} className="cursor-pointer hover:text-primary transition-colors">ID <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                    <TableHead onClick={() => requestSort('semester')} className="cursor-pointer hover:text-primary transition-colors">Sem <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                    <TableHead onClick={() => requestSort('credits')} className="cursor-pointer hover:text-primary transition-colors">Credits <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                    <TableHead onClick={() => requestSort('grade')} className="cursor-pointer hover:text-primary transition-colors">Grade <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                    <TableHead onClick={() => requestSort('improvementPotential')} className="cursor-pointer hover:text-primary transition-colors flex items-center">
-                                        Imp. Potential <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" />
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Info className="h-4 w-4 ml-1 text-muted-foreground hover:text-primary cursor-help" />
-                                                </TooltipTrigger>
-                                                <TooltipContent className="max-w-xs">
-                                                    <p>This value represents how much your total average would increase if you improved this course's grade to 100.</p>
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sortedCourses.map((course) => (
-                                    <TableRow key={course.id}>
-                                        <TableCell>
-                                            <Input
-                                                value={course.name}
-                                                onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
-                                                className="h-8 w-full min-w-[120px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={course.courseId}
-                                                onChange={(e) => updateCourse(course.id, 'courseId', e.target.value)}
-                                                className="h-8 w-full min-w-[80px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                value={course.semester}
-                                                onChange={(e) => updateCourse(course.id, 'semester', e.target.value)}
-                                                className="h-8 w-full min-w-[60px]"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                type="number"
-                                                step="0.5"
-                                                value={course.credits}
-                                                onChange={(e) => updateCourse(course.id, 'credits', e.target.value)}
-                                                className="h-8 w-20"
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Input
-                                                type="number"
-                                                value={course.grade === 0 ? '' : course.grade}
-                                                onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
-                                                className="h-8 w-20"
-                                            />
-                                        </TableCell>
-                                        <TableCell className={course.grade > 0 && course.grade < 100 ? "text-green-600 font-medium align-middle" : "text-muted-foreground align-middle"}>
-                                            {course.grade > 0 && course.grade < 100 ? `+${course.improvementPotential.toFixed(2)}` : '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="icon" onClick={() => removeCourse(course.id)} className="h-8 w-8 text-destructive hover:text-destructive/90">
-                                                <Icons.trash className="h-4 w-4" />
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {sortedCourses.length === 0 && (
+                    <div className="rounded-md border overflow-x-auto overflow-y-hidden shadow-sm">
+                        <div className="min-w-[800px]">
+                            <Table>
+                                <TableCaption>Click column headers to sort the table.</TableCaption>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                            No courses added yet. Start by entering course details above.
-                                        </TableCell>
+                                        <TableHead onClick={() => requestSort('name')} className="cursor-pointer hover:text-primary transition-colors">Course Name <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                        <TableHead onClick={() => requestSort('courseId')} className="cursor-pointer hover:text-primary transition-colors">ID <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                        <TableHead onClick={() => requestSort('semester')} className="cursor-pointer hover:text-primary transition-colors">Sem <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                        <TableHead onClick={() => requestSort('credits')} className="cursor-pointer hover:text-primary transition-colors">Credits <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                        <TableHead onClick={() => requestSort('grade')} className="cursor-pointer hover:text-primary transition-colors">Grade <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                        <TableHead onClick={() => requestSort('improvementPotential')} className="cursor-pointer hover:text-primary transition-colors flex items-center">
+                                            Imp. Potential <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" />
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Info className="h-4 w-4 ml-1 text-muted-foreground hover:text-primary cursor-help" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-xs">
+                                                        <p>This value represents how much your total average would increase if you improved this course's grade to 100.</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </TableHead>
+                                        <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {sortedCourses.map((course) => (
+                                        <TableRow key={course.id}>
+                                            <TableCell>
+                                                <Input
+                                                    value={course.name}
+                                                    onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
+                                                    className="h-8 w-full min-w-[120px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    value={course.courseId}
+                                                    onChange={(e) => updateCourse(course.id, 'courseId', e.target.value)}
+                                                    className="h-8 w-full min-w-[80px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    value={course.semester}
+                                                    onChange={(e) => updateCourse(course.id, 'semester', e.target.value)}
+                                                    className="h-8 w-full min-w-[60px]"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    step="0.5"
+                                                    value={course.credits}
+                                                    onChange={(e) => updateCourse(course.id, 'credits', e.target.value)}
+                                                    className="h-8 w-20"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input
+                                                    type="number"
+                                                    value={course.grade === 0 ? '' : course.grade}
+                                                    onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
+                                                    className="h-8 w-20"
+                                                />
+                                            </TableCell>
+                                            <TableCell className={course.grade > 0 && course.grade < 100 ? "text-green-600 font-medium align-middle" : "text-muted-foreground align-middle"}>
+                                                {course.grade > 0 && course.grade < 100 ? `+${course.improvementPotential.toFixed(2)}` : '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="icon" onClick={() => removeCourse(course.id)} className="h-8 w-8 text-destructive hover:text-destructive/90">
+                                                    <Icons.trash className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {sortedCourses.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                No courses added yet. Start by entering course details above.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
