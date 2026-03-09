@@ -31,16 +31,15 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       const body = iframe.contentWindow?.document.body;
       const html = iframe.contentWindow?.document.documentElement;
       if (body && html) {
-        // Read scrollHeight directly — never collapse to 0 to avoid page jump
         const contentHeight = Math.max(
           body.scrollHeight, body.offsetHeight,
           html.scrollHeight, html.offsetHeight
         );
-        const newHeight = contentHeight + 20;
-        // Only update if the height actually changed
         const currentHeight = parseInt(iframe.style.height) || 0;
-        if (Math.abs(newHeight - currentHeight) > 2) {
-          iframe.style.height = `${newHeight}px`;
+        // Only GROW the iframe (content expanded), never shrink from minor fluctuations.
+        // Only shrink if content got significantly shorter (>50px) — e.g. section collapsed.
+        if (contentHeight > currentHeight || (currentHeight - contentHeight) > 50) {
+          iframe.style.height = `${contentHeight}px`;
         }
       }
     } catch {
