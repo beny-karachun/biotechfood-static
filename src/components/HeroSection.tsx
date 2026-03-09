@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 export default function HeroSection() {
   const [isClient, setIsClient] = useState(false);
   const { resolvedTheme } = useTheme();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setIsClient(true);
@@ -58,7 +60,7 @@ export default function HeroSection() {
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight"
           style={{
             color: 'white',
-            WebkitTextStroke: '1px rgba(0,0,0,0.4)',
+            ...(isMobile ? {} : { WebkitTextStroke: '1px rgba(0,0,0,0.4)' }),
             textShadow: '0px 4px 24px rgba(0,0,0,0.5)'
           }}
         >
@@ -68,7 +70,7 @@ export default function HeroSection() {
           className="text-lg sm:text-xl md:text-2xl font-medium max-w-2xl mx-auto mt-4 mb-8 sm:mt-6 sm:mb-10"
           style={{
             color: 'white',
-            WebkitTextStroke: '0.5px rgba(0,0,0,0.4)',
+            ...(isMobile ? {} : { WebkitTextStroke: '0.5px rgba(0,0,0,0.4)' }),
             textShadow: '0px 2px 12px rgba(0,0,0,0.5)'
           }}
         >
