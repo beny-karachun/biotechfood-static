@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from 'next-themes';
 
 export default function HeroSection() {
   const [isClient, setIsClient] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setIsClient(true);
@@ -23,11 +25,16 @@ export default function HeroSection() {
     <section className="relative flex items-center justify-center w-full h-screen min-h-[500px] md:min-h-[600px] overflow-hidden text-white">
       {/* Background Video Container */}
       <div className="absolute top-0 left-0 w-full h-full">
-        {/* Only render video on the client */}
+        {/* Only render video on the client to avoid hydration mismatch, and because theme is client-side */}
         {isClient && (
           <video
-            src="/promo_video.mp4" // Path relative to the public folder
-            // Removed poster="/Technion_logo.svg"
+            // Re-render video element when src changes using relative paths
+            key={resolvedTheme === 'light' ? 'light-video' : 'dark-video'}
+            src={
+              resolvedTheme === 'light'
+                ? "/lightmode-ASCII-background-1080p-60fps.mp4"
+                : "/darkmode-ASCII-background-1080p-60fps.mp4"
+            }
             autoPlay
             loop
             muted
