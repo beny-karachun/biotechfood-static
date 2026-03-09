@@ -48,8 +48,8 @@ export default function HeroSection() {
 
         {/* Overlay - Very subtle to let the ASCII animation shine through */}
         <div className="absolute top-0 left-0 w-full h-full bg-white/20 dark:bg-black/20 z-10"></div>
-        {/* Secondary overlay specifically for the right side (dark side) of the video to improve text contrast against the glowing elements, using a gradient so there's no harsh split line */}
-        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-black/80 via-black/30 to-transparent z-10 pointer-events-none"></div>
+        {/* Secondary overlay specifically for the right side (dark side) of the video. Gradient starts from right, fades to transparent at 40% of the screen width (from right) */}
+        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-l from-black/80 via-black/40 via-[20%] to-transparent to-[40%] z-10 pointer-events-none"></div>
       </div>
 
       {/* Text content centered on top */}
