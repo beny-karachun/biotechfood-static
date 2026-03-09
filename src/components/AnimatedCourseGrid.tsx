@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from '@/components/icons';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 // Minimal interface needed for rendering
 interface CourseInfo {
@@ -19,6 +20,8 @@ interface CourseInfo {
 }
 
 export default function AnimatedCourseGrid({ courseData }: { courseData: CourseInfo[] }) {
+    const isMobile = useIsMobile(); // < 768px
+
     // Helper to group courses by semester
     const coursesBySemester = courseData.reduce((acc, course) => {
         const semester = course.semester;
@@ -59,7 +62,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="text-3xl md:text-4xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-primary to-orange-400 drop-shadow-sm"
+                className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 bg-clip-text text-transparent bg-gradient-to-r from-primary to-orange-400 drop-shadow-sm"
             >
                 לחצו על הקורסים הקיימים כדי להיכנס לעמוד הקורס
             </motion.h1>
@@ -86,11 +89,12 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                             </h2>
 
                             <div
-                                className="w-full relative z-10 flex flex-col md:grid gap-4"
-                                style={{
-                                    // Only apply grid row template on md+ screens
-                                    ...(window.innerWidth >= 768 ? { gridTemplateRows: `repeat(${maxCourses}, ${courseRowHeight})` } : {})
-                                }}
+                                className={`w-full relative z-10 flex flex-col ${!isMobile ? 'md:grid' : ''} gap-4`}
+                                style={
+                                    !isMobile
+                                        ? { gridTemplateRows: `repeat(${maxCourses}, ${courseRowHeight})` }
+                                        : undefined
+                                }
                             >
                                 {courses.map((course, index) => {
                                     const IconComponent = course.icon ? Icons[course.icon] : null;
@@ -98,11 +102,15 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                     return (
                                         <motion.div
                                             key={`${course.name}-${course.number}`}
-                                            className="w-full md:h-full md:absolute md:top-0"
-                                            style={window.innerWidth >= 768 ? {
-                                                top: `calc(${index} * (${courseRowHeight} + 1rem))`,
-                                                height: courseRowHeight
-                                            } : {}}
+                                            className={`w-full ${!isMobile ? 'md:h-full md:absolute md:top-0' : ''}`}
+                                            style={
+                                                !isMobile
+                                                    ? {
+                                                        top: `calc(${index} * (${courseRowHeight} + 1rem))`,
+                                                        height: courseRowHeight
+                                                    }
+                                                    : undefined
+                                            }
                                             whileHover={course.exists ? { scale: 1.05, zIndex: 10 } : {}}
                                             whileTap={course.exists ? { scale: 0.95 } : {}}
                                         >
@@ -121,7 +129,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                         <Badge
                                                             variant="secondary"
                                                             className="text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/card:-translate-y-1"
-                                                            style={{ backgroundColor: '#3b82f6', color: '#FFFFFF' }} // Nice modern blue
+                                                            style={{ backgroundColor: '#3b82f6', color: '#FFFFFF' }}
                                                         >
                                                             {parseInt(semester) === 8 ? 'כלי עזר' : 'קיים קורס'}
                                                         </Badge>
@@ -154,7 +162,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 1 }}
-                className="text-center text-muted-foreground mt-12 text-sm bg-muted/30 py-2 rounded-full max-w-lg mx-auto"
+                className="text-center text-muted-foreground mt-8 md:mt-12 text-sm bg-muted/30 py-2 rounded-full max-w-lg mx-auto px-4"
             >
                 הערה: זוהי הצגה סמסטריאלית של הקורסים. קשרי קדם אינם מוצגים ויזואלית.
             </motion.p>

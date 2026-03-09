@@ -8,6 +8,7 @@ import { Icons } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronsUpDown, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from '@/hooks/use-is-mobile';
 
 interface Course {
     id: string;
@@ -24,6 +25,7 @@ const STORAGE_KEY = 'technionprep_courses';
 export default function AcademicCalculatorPage() {
     const [courses, setCourses] = useState<Course[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const isMobile = useIsMobile();
 
     // Input states
     const [newName, setNewName] = useState('');
@@ -151,30 +153,30 @@ export default function AcademicCalculatorPage() {
     }
 
     return (
-        <div className="container mx-auto py-10 max-w-5xl">
+        <div className="container mx-auto py-6 sm:py-10 px-4 max-w-5xl">
             <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-start">
+                <CardHeader className="px-4 sm:px-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                         <div>
-                            <CardTitle>Academic Calculator</CardTitle>
-                            <CardDescription>Calculate your GPA and see how improving specific grades affects your average.</CardDescription>
+                            <CardTitle className="text-xl sm:text-2xl">Academic Calculator</CardTitle>
+                            <CardDescription className="text-sm">Calculate your GPA and see how improving specific grades affects your average.</CardDescription>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
                             {saveMessage && (
                                 <span className={`text-sm font-medium animate-in fade-in slide-in-from-right-2 ${saveMessage.includes('Error') ? 'text-destructive' : 'text-green-600'}`}>
                                     {saveMessage}
                                 </span>
                             )}
-                            <Button onClick={handleSave} disabled={isSaving}>
+                            <Button onClick={handleSave} disabled={isSaving} size={isMobile ? "sm" : "default"}>
                                 {isSaving ? <><Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : <><Icons.save className="mr-2 h-4 w-4" /> Save</>}
                             </Button>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                     {/* Input Form */}
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-                        <div className="md:col-span-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 mb-6">
+                        <div className="col-span-2 sm:col-span-3 md:col-span-2">
                             <Input placeholder="Course Name *" value={newName} onChange={(e) => setNewName(e.target.value)} />
                         </div>
                         <div>
@@ -189,105 +191,175 @@ export default function AcademicCalculatorPage() {
                         <div>
                             <Input type="number" placeholder="Grade (opt)" value={newGrade} onChange={(e) => setNewGrade(e.target.value)} />
                         </div>
-                        <Button onClick={addCourse} className="md:col-span-6 mt-2">Add Course</Button>
+                        <Button onClick={addCourse} className="col-span-2 sm:col-span-3 md:col-span-6 mt-1">Add Course</Button>
                     </div>
 
                     {/* Stats Summary */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center bg-muted/50 p-4 rounded-lg mb-6 border">
-                        <div className="text-lg font-medium">Total Credits: <span className="font-bold">{totalCredits}</span></div>
-                        <div className="text-xl font-bold text-primary">Average: {average.toFixed(2)}</div>
+                    <div className="flex flex-col sm:flex-row justify-between items-center bg-muted/50 p-4 rounded-lg mb-6 border gap-2">
+                        <div className="text-base sm:text-lg font-medium">Total Credits: <span className="font-bold">{totalCredits}</span></div>
+                        <div className="text-lg sm:text-xl font-bold text-primary">Average: {average.toFixed(2)}</div>
                     </div>
 
-                    {/* Table */}
-                    <div className="rounded-md border overflow-x-auto overflow-y-hidden shadow-sm">
-                        <div className="min-w-[800px]">
-                            <Table>
-                                <TableCaption>Click column headers to sort the table.</TableCaption>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead onClick={() => requestSort('name')} className="cursor-pointer hover:text-primary transition-colors">Course Name <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                        <TableHead onClick={() => requestSort('courseId')} className="cursor-pointer hover:text-primary transition-colors">ID <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                        <TableHead onClick={() => requestSort('semester')} className="cursor-pointer hover:text-primary transition-colors">Sem <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                        <TableHead onClick={() => requestSort('credits')} className="cursor-pointer hover:text-primary transition-colors">Credits <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                        <TableHead onClick={() => requestSort('grade')} className="cursor-pointer hover:text-primary transition-colors">Grade <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
-                                        <TableHead onClick={() => requestSort('improvementPotential')} className="cursor-pointer hover:text-primary transition-colors flex items-center">
-                                            Imp. Potential <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" />
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Info className="h-4 w-4 ml-1 text-muted-foreground hover:text-primary cursor-help" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent className="max-w-xs">
-                                                        <p>This value represents how much your total average would increase if you improved this course's grade to 100.</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </TableHead>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {sortedCourses.map((course) => (
-                                        <TableRow key={course.id}>
-                                            <TableCell>
+                    {/* Mobile Card Layout */}
+                    {isMobile ? (
+                        <div className="space-y-3">
+                            {sortedCourses.length === 0 ? (
+                                <div className="text-center text-muted-foreground py-8 border rounded-lg">
+                                    No courses added yet. Start by entering course details above.
+                                </div>
+                            ) : (
+                                sortedCourses.map((course) => (
+                                    <div key={course.id} className="border rounded-lg p-4 bg-card space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1 min-w-0">
                                                 <Input
                                                     value={course.name}
                                                     onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
-                                                    className="h-8 w-full min-w-[120px]"
+                                                    className="h-8 text-sm font-medium border-none p-0 focus-visible:ring-0 bg-transparent"
                                                 />
-                                            </TableCell>
-                                            <TableCell>
+                                            </div>
+                                            <Button variant="ghost" size="icon" onClick={() => removeCourse(course.id)} className="h-8 w-8 text-destructive hover:text-destructive/90 shrink-0 ml-2">
+                                                <Icons.trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[11px] text-muted-foreground uppercase tracking-wider">ID</label>
                                                 <Input
                                                     value={course.courseId}
                                                     onChange={(e) => updateCourse(course.id, 'courseId', e.target.value)}
-                                                    className="h-8 w-full min-w-[80px]"
+                                                    className="h-8 text-sm mt-1"
                                                 />
-                                            </TableCell>
-                                            <TableCell>
+                                            </div>
+                                            <div>
+                                                <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Semester</label>
                                                 <Input
                                                     value={course.semester}
                                                     onChange={(e) => updateCourse(course.id, 'semester', e.target.value)}
-                                                    className="h-8 w-full min-w-[60px]"
+                                                    className="h-8 text-sm mt-1"
                                                 />
-                                            </TableCell>
-                                            <TableCell>
+                                            </div>
+                                            <div>
+                                                <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Credits</label>
                                                 <Input
                                                     type="number"
                                                     step="0.5"
                                                     value={course.credits}
                                                     onChange={(e) => updateCourse(course.id, 'credits', e.target.value)}
-                                                    className="h-8 w-20"
+                                                    className="h-8 text-sm mt-1"
                                                 />
-                                            </TableCell>
-                                            <TableCell>
+                                            </div>
+                                            <div>
+                                                <label className="text-[11px] text-muted-foreground uppercase tracking-wider">Grade</label>
                                                 <Input
                                                     type="number"
                                                     value={course.grade === 0 ? '' : course.grade}
                                                     onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
-                                                    className="h-8 w-20"
+                                                    className="h-8 text-sm mt-1"
                                                 />
-                                            </TableCell>
-                                            <TableCell className={course.grade > 0 && course.grade < 100 ? "text-green-600 font-medium align-middle" : "text-muted-foreground align-middle"}>
-                                                {course.grade > 0 && course.grade < 100 ? `+${course.improvementPotential.toFixed(2)}` : '-'}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button variant="ghost" size="icon" onClick={() => removeCourse(course.id)} className="h-8 w-8 text-destructive hover:text-destructive/90">
-                                                    <Icons.trash className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {sortedCourses.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                                No courses added yet. Start by entering course details above.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                                            </div>
+                                        </div>
+                                        {course.grade > 0 && course.grade < 100 && (
+                                            <div className="text-sm text-green-600 font-medium pt-1 border-t border-border/50">
+                                                Improvement Potential: +{course.improvementPotential.toFixed(2)}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
                         </div>
-                    </div>
+                    ) : (
+                        /* Desktop Table Layout */
+                        <div className="rounded-md border overflow-x-auto overflow-y-hidden shadow-sm">
+                            <div className="min-w-[800px]">
+                                <Table>
+                                    <TableCaption>Click column headers to sort the table.</TableCaption>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead onClick={() => requestSort('name')} className="cursor-pointer hover:text-primary transition-colors">Course Name <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                            <TableHead onClick={() => requestSort('courseId')} className="cursor-pointer hover:text-primary transition-colors">ID <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                            <TableHead onClick={() => requestSort('semester')} className="cursor-pointer hover:text-primary transition-colors">Sem <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                            <TableHead onClick={() => requestSort('credits')} className="cursor-pointer hover:text-primary transition-colors">Credits <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                            <TableHead onClick={() => requestSort('grade')} className="cursor-pointer hover:text-primary transition-colors">Grade <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" /></TableHead>
+                                            <TableHead onClick={() => requestSort('improvementPotential')} className="cursor-pointer hover:text-primary transition-colors flex items-center">
+                                                Imp. Potential <ChevronsUpDown className="ml-2 h-4 w-4 inline opacity-50" />
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="h-4 w-4 ml-1 text-muted-foreground hover:text-primary cursor-help" />
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-xs">
+                                                            <p>This value represents how much your total average would increase if you improved this course's grade to 100.</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {sortedCourses.map((course) => (
+                                            <TableRow key={course.id}>
+                                                <TableCell>
+                                                    <Input
+                                                        value={course.name}
+                                                        onChange={(e) => updateCourse(course.id, 'name', e.target.value)}
+                                                        className="h-8 w-full min-w-[120px]"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        value={course.courseId}
+                                                        onChange={(e) => updateCourse(course.id, 'courseId', e.target.value)}
+                                                        className="h-8 w-full min-w-[80px]"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        value={course.semester}
+                                                        onChange={(e) => updateCourse(course.id, 'semester', e.target.value)}
+                                                        className="h-8 w-full min-w-[60px]"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.5"
+                                                        value={course.credits}
+                                                        onChange={(e) => updateCourse(course.id, 'credits', e.target.value)}
+                                                        className="h-8 w-20"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Input
+                                                        type="number"
+                                                        value={course.grade === 0 ? '' : course.grade}
+                                                        onChange={(e) => updateCourse(course.id, 'grade', e.target.value)}
+                                                        className="h-8 w-20"
+                                                    />
+                                                </TableCell>
+                                                <TableCell className={course.grade > 0 && course.grade < 100 ? "text-green-600 font-medium align-middle" : "text-muted-foreground align-middle"}>
+                                                    {course.grade > 0 && course.grade < 100 ? `+${course.improvementPotential.toFixed(2)}` : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="ghost" size="icon" onClick={() => removeCourse(course.id)} className="h-8 w-8 text-destructive hover:text-destructive/90">
+                                                        <Icons.trash className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {sortedCourses.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                    No courses added yet. Start by entering course details above.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

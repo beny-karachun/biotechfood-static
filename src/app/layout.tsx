@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 // Removed Geist import
 // import {Geist} from 'next/font/google';
 import './globals.css';
@@ -11,6 +11,12 @@ import { Footer } from '@/components/layout/Footer';
 //   variable: '--font-geist-sans',
 //   subsets: ['latin'],
 // });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: 'TechnionPrep | Learn Something New',

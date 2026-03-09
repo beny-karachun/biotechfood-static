@@ -60,7 +60,7 @@ export function Header() {
             onClick={toggleExpand}
             aria-label={isEffectivelyExpanded ? 'Collapse menu' : 'Expand menu'}
             className={cn(
-              "p-2 h-auto shrink-0 rounded-full hover:bg-white/20 dark:hover:bg-black/20",
+              "p-2 h-auto shrink-0 rounded-full hover:bg-white/20 dark:hover:bg-black/20 min-w-[44px] min-h-[44px] flex items-center justify-center",
               !isEffectivelyExpanded && "w-full"
             )}
           >
@@ -87,7 +87,7 @@ export function Header() {
                 href="/"
                 aria-label="Home"
                 tabIndex={isEffectivelyExpanded ? 0 : -1}
-                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
+                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
               >
                 <Icons.home className="h-4 w-4" />
               </Link>
@@ -99,7 +99,7 @@ export function Header() {
                 href="/calculator"
                 aria-label="Academic Calculator"
                 tabIndex={isEffectivelyExpanded ? 0 : -1}
-                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
+                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
               >
                 <Icons.calculator className="h-4 w-4" />
               </Link>
@@ -112,7 +112,7 @@ export function Header() {
                 size="icon"
                 onClick={handleWhatsAppClick}
                 aria-label="Contact via WhatsApp"
-                className={cn("p-2 rounded-full h-auto hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
+                className={cn("p-2 rounded-full h-auto min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
                 tabIndex={isEffectivelyExpanded ? 0 : -1}
               >
                 <Icons.whatsapp className="h-4 w-4" />
@@ -126,7 +126,7 @@ export function Header() {
                 size="icon"
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 aria-label="Toggle theme"
-                className={cn("p-2 rounded-full h-auto relative hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
+                className={cn("p-2 rounded-full h-auto relative min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
                 tabIndex={isEffectivelyExpanded ? 0 : -1}
               >
                 <Icons.light className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

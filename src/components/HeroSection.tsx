@@ -48,8 +48,8 @@ export default function HeroSection() {
 
         {/* Overlay - Very subtle to let the ASCII animation shine through */}
         <div className="absolute top-0 left-0 w-full h-full bg-white/20 dark:bg-black/20 z-10"></div>
-        {/* Secondary overlay specifically for the right side (dark side) of the video, perfectly aligned with the video's natural split so no gradient blur is needed. */}
-        <div className="absolute top-0 right-0 w-[41.5%] h-full bg-black/70 z-10 pointer-events-none"></div>
+        {/* Secondary overlay specifically for the right side (dark side) of the video, perfectly aligned with the video's natural split so no gradient blur is needed. Hidden on mobile where aspect ratio is different. */}
+        <div className="hidden md:block absolute top-0 right-0 w-[41.5%] h-full bg-black/70 z-10 pointer-events-none"></div>
       </div>
 
       {/* Text content centered on top */}
