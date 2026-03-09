@@ -135,107 +135,12 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
 
 
 
+// Import the new Client Component for animations
+import AnimatedCourseGrid from './AnimatedCourseGrid';
+
 // Renamed component export - Now an async Server Component
 export default async function CourseDiagram() {
   const courseData = await getProcessedCourseData(); // Get data processed on the server
 
-  // Helper to group courses by semester
-  const coursesBySemester = courseData.reduce((acc, course) => {
-    const semester = course.semester;
-    if (!acc[semester]) {
-      acc[semester] = [];
-    }
-    acc[semester].push(course);
-    return acc;
-  }, {} as Record<number, CourseInfo[]>);
-
-  // Calculate the maximum number of courses in any semester
-  const maxCourses = Object.values(coursesBySemester).reduce(
-    (max, courses) => Math.max(max, courses.length),
-    0
-  );
-
-  // Define the fixed height for each course row/box
-  const courseRowHeight = "112px"; // h-28
-
-  return (
-    <div className="container mx-auto py-8 px-4" dir="rtl">
-      <h1 className="text-3xl font-bold text-center mb-10">לחצו על הקורסים הקיימים כדי להיכנס לעמוד הקורס</h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-start">
-        {Object.entries(coursesBySemester)
-          .sort(([semA], [semB]) => parseInt(semA) - parseInt(semB))
-          .map(([semester, courses]) => (
-            <div key={semester} className="flex flex-col items-center p-2 border rounded-lg bg-card/50 dark:bg-card/30 w-full space-y-4">
-              <h2 className="text-xl font-semibold mb-0 border-b pb-1 w-full text-center flex-shrink-0">
-                {parseInt(semester) === 8 ? 'כלי עזר' : `סמסטר ${semester}`}
-              </h2>
-
-              <div
-                className="grid w-full gap-4"
-                style={{
-                  gridTemplateRows: `repeat(${maxCourses}, ${courseRowHeight})` // Corrected template literal
-                }}
-              >
-                {courses.map((course, index) => {
-                  // Conditionally render icon if available
-                  const IconComponent = course.icon ? Icons[course.icon] : null;
-
-                  return (
-                    <div
-                      key={`${course.name}-${course.number}`}
-                      className="h-full"
-                      style={{ gridRow: index + 1 }}
-                    >
-                      {/* Render logic: clickable with content, clickable without content, or disabled placeholder */}
-                      {course.exists && course.slug ? (
-                        <Link href={course.slug} className="block w-full group h-full flex flex-col">
-                          <Button
-                            variant="default"
-                            className={`w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center flex-grow text-white ${!course.hasContent ? 'opacity-70' : ''}`}
-                            style={{ backgroundColor: '#FF8C00' }}
-                          >
-                            {IconComponent && <IconComponent className="h-4 w-4 mb-1" />}
-                            <span className="font-semibold text-sm mb-1">{course.number}</span>
-                            <span className="leading-tight">{course.name}</span>
-                          </Button>
-                          {course.hasContent ? (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs px-1.5 py-0.5 self-center flex-shrink-0"
-                              style={{ backgroundColor: '#1E90FF', color: '#FFFFFF' }}
-                            >
-                              {parseInt(semester) === 8 ? 'כלי עזר' : 'קיים קורס'}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="border-dashed text-muted-foreground text-xs px-1.5 py-0.5 self-center flex-shrink-0">עדיין לא קיים</Badge>
-                          )}
-                        </Link>
-                      ) : (
-                        <div className="w-full group h-full flex flex-col">
-                          <Button
-                            variant="outline"
-                            disabled
-                            className="w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center border-dashed disabled:opacity-60 flex-grow text-white"
-                            style={{ backgroundColor: '#FF8C00' }}
-                          >
-                            {IconComponent && <IconComponent className="h-4 w-4 mb-1 opacity-50" />}
-                            <span className="font-semibold text-sm mb-1">{course.number}</span>
-                            <span className="leading-tight">{course.name}</span>
-                          </Button>
-                          <Badge variant="outline" className="border-dashed text-muted-foreground group-hover:bg-muted/50 text-xs px-1.5 py-0.5 self-center flex-shrink-0">עדיין לא קיים</Badge>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-      </div>
-      <p className="text-center text-muted-foreground mt-10 text-sm">
-        הערה: זוהי הצגה סמסטריאלית של הקורסים. קשרי קדם אינם מוצגים ויזואלית.
-      </p>
-    </div>
-  );
+  return <AnimatedCourseGrid courseData={courseData} />;
 }
