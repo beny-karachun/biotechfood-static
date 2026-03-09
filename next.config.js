@@ -7,10 +7,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  transpilePackages: ['next-themes'],
 };
 
 module.exports = nextConfig;
