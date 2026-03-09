@@ -104,11 +104,11 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                 <Link href={course.slug} className="block w-full group/card h-full flex flex-col relative">
                                                     <Button
                                                         variant="default"
-                                                        className={`w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center flex-grow text-white shadow-sm transition-all duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
+                                                        className={`w-full h-full py-2 px-1 mb-1 whitespace-normal flex flex-col items-center justify-start text-center flex-grow text-white shadow-sm transition-all duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
                                                     >
-                                                        {IconComponent && <IconComponent className="h-4 w-4 mb-1" />}
-                                                        <span className="font-bold text-sm mb-1 tracking-tight">{course.number}</span>
-                                                        <span className="leading-tight font-medium drop-shadow-sm">{course.name}</span>
+                                                        {IconComponent && <IconComponent className="h-4 w-4 mb-0.5" />}
+                                                        <span className="font-bold text-[11px] sm:text-xs mb-0.5 tracking-tight shrink-0">{course.number}</span>
+                                                        <span className="leading-tight font-medium drop-shadow-sm text-[11px] sm:text-xs line-clamp-2 overflow-hidden px-0.5">{course.name}</span>
                                                     </Button>
 
                                                     {course.hasContent ? (
@@ -128,11 +128,11 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                     <Button
                                                         variant="outline"
                                                         disabled
-                                                        className="w-full h-auto py-2 px-2 mb-1 whitespace-normal text-xs sm:text-sm flex flex-col items-center justify-center text-center border-dashed border-2 disabled:opacity-100 flex-grow text-muted-foreground bg-muted/20"
+                                                        className="w-full h-full py-2 px-1 mb-1 whitespace-normal flex flex-col items-center justify-start text-center border-dashed border-2 disabled:opacity-100 flex-grow text-muted-foreground bg-muted/20"
                                                     >
-                                                        {IconComponent && <IconComponent className="h-4 w-4 mb-1 opacity-50" />}
-                                                        <span className="font-semibold text-sm mb-1">{course.number}</span>
-                                                        <span className="leading-tight">{course.name}</span>
+                                                        {IconComponent && <IconComponent className="h-4 w-4 mb-0.5 opacity-50" />}
+                                                        <span className="font-semibold text-[11px] sm:text-xs mb-0.5 shrink-0">{course.number}</span>
+                                                        <span className="leading-tight text-[11px] sm:text-xs line-clamp-2 overflow-hidden px-0.5">{course.name}</span>
                                                     </Button>
                                                     <Badge variant="outline" className="border-dashed text-muted-foreground text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0">עדיין לא קיים</Badge>
                                                 </div>
