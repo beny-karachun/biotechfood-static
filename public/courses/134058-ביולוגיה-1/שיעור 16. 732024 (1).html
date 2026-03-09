@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: שעתוק, עיבוד RNA והקוד הגנטי</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הדוגמה המרכזית של הביולוגיה המולקולרית מתארת את זרימת המידע הגנטי מ-DNA לחלבון דרך מולקולת מתווך מסוג RNA. תהליך זה כולל שני שלבים עיקריים: <strong>שעתוק</strong> (Transcription) ו<strong>תרגום</strong> (Translation). ביצורים אאוקריוטים קיים שלב נוסף וקריטי של <strong>עיבוד RNA</strong> לפני התרגום.</p>
+                
+                <h3>שעתוק (Transcription)</h3>
+                <p>שעתוק הוא יצירת עותק RNA המשלים למקטע DNA. התהליך מבוצע על ידי האנזים <strong>RNA Polymerase</strong> ומתרחש בשלושה שלבים: התחלה (Initiation), התארכות (Elongation) וסיום (Termination). האנזים נקשר לאזור ה-Promoter, מפריד את גדילי ה-DNA, ובונה את שרשרת ה-RNA בכיוון ($5^\prime \rightarrow 3^\prime$) על גבי גדיל התבנית (Template strand) שנקרא בכיוון ($3^\prime \rightarrow 5^\prime$). הגדיל השני של ה-DNA, שלא משועתק, נקרא הגדיל המקודד (Coding strand), ורצפו זהה לרצף ה-RNA (למעט החלפת תימין באורציל).</p>
+
+                <h3>עיבוד RNA באאוקריוטים</h3>
+                <p>ה-RNA הראשוני שנוצר (Pre-mRNA) אינו מוכן לתרגום ועובר שלושה תהליכי עיבוד מרכזיים בגרעין התא:</p>
+                <ul>
+                    <li><strong>הוספת כיפה (5' Cap):</strong> מולקולת GTP שעברה מתילציה מתווספת לקצה ($5^\prime$) לשם הגנה, יציבות וסיוע בקישור לריבוזום.</li>
+                    <li><strong>הוספת זנב פולי-A:</strong> שרשרת של 100-300 אדנינים מתווספת לקצה ($3^\prime$) לשם הגנה וסיוע בייצוא מהגרעין.</li>
+                    <li><strong>שחבור (Splicing):</strong> הסרת אזורים לא מקודדים (אינטרונים) וחיבור האזורים המקודדים (אקסונים). התהליך מבוצע על ידי קומפלקס חלבון-RNA הנקרא ספלייסוזום (Spliceosome).</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: שחבור חליפי (Alternative Splicing)</strong>
+                    הפרדיגמה הישנה של גן אחד שווה חלבון אחד אינה מדויקת באאוקריוטים. באמצעות שחבור חליפי, ניתן לייצר ממולקולת Pre-mRNA אחת מספר מולקולות mRNA בוגרות שונות על ידי דילוג על אקסונים מסוימים. כך, גן בודד יכול לקודד למגוון רחב של חלבונים שונים בהתאם לרקמה או לשלב ההתפתחותי.
+                </div>
+
+                <h3>הקוד הגנטי ותרגום</h3>
+                <p>המידע ב-mRNA מתורגם לחומצות אמינו באמצעות הקוד הגנטי. הקוד בנוי משלישיות בסיסים הנקראות <strong>קודונים</strong>. מתוך 64 קודונים אפשריים, 61 מקודדים ל-20 חומצות אמינו (מה שמעיד על יתירות - Redundancy), ו-3 הם קודוני עצירה (Stop codons). הקודון AUG משמש כקודון התחלה ומקודד למתיונין.</p>
+                <p>מולקולות ה-<strong>tRNA</strong> משמשות כמתאמים (Adapters). בקצה אחד שלהן יש אנטיקודון המשלים לקודון ב-mRNA, ובקצה ה- ($3^\prime$) שלהן מחוברת חומצת האמינו המתאימה. חיבור חומצת האמינו ל-tRNA מבוצע על ידי אנזימים ספציפיים (Aminoacyl-tRNA synthetases) תוך השקעת אנרגיה מ-ATP.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: תופעת ה-Wobble</strong>
+                    למרות שיש 61 קודונים המקודדים לחומצות אמינו, התא אינו זקוק ל-61 סוגים שונים של tRNA. בזכות גמישות מרחבית (Wobble) בבסיס השלישי של הקודון (הקצה ה- $3^\prime$ של הקודון, המקביל לקצה ה- $5^\prime$ של האנטיקודון), אנטיקודון אחד יכול לזהות מספר קודונים שונים המקודדים לאותה חומצת אמינו. דבר זה מייעל את מערכת התרגום מבלי לפגוע בדיוק הקוד הגנטי.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Transcription (שעתוק)", definition: "תהליך יצירת עותק RNA המשלים למקטע DNA, המבוצע על ידי האנזים RNA פולימראז." },
+            { term: "Translation (תרגום)", definition: "תהליך סינתזת פוליפפטיד (חלבון) על בסיס המידע המקודד במולקולת ה-mRNA." },
+            { term: "Promoter (קדם)", definition: "רצף DNA ספציפי שאליו נקשר ה-RNA פולימראז כדי להתחיל את תהליך השעתוק." },
+            { term: "Coding Strand (גדיל מקודד)", definition: "גדיל ה-DNA שאינו משמש כתבנית. רצף הבסיסים שלו זהה לרצף ה-RNA שנוצר (למעט החלפת T ב-U)." },
+            { term: "Template Strand (גדיל תבנית)", definition: "גדיל ה-DNA עליו נבנה ה-RNA. ה-RNA שנוצר משלים ומהופך בכיווניותו לגדיל זה." },
+            { term: "Exons (אקסונים)", definition: "אזורים בגן המקודדים למידע שיופיע ב-mRNA הבוגר ויתורגם לחלבון." },
+            { term: "Introns (אינטרונים)", definition: "אזורים לא מקודדים בגן שמשועתקים ל-Pre-mRNA אך מוסרים בתהליך השחבור לפני התרגום." },
+            { term: "Spliceosome (ספלייסוזום)", definition: "קומפלקס גדול של חלבונים ו-RNA (snRNPs) האחראי על חיתוך האינטרונים וחיבור האקסונים." },
+            { term: "Alternative Splicing (שחבור חליפי)", definition: "תהליך המאפשר יצירת מספר סוגי mRNA שונים מגן בודד, על ידי צירופים שונים של אקסונים." },
+            { term: "Codon (קודון)", definition: "שלישיית נוקלאוטידים ב-mRNA המקודדת לחומצת אמינו ספציפית או מהווה אות עצירה." },
+            { term: "Anticodon (אנטיקודון)", definition: "שלישיית בסיסים ב-tRNA המשלימה לקודון ספציפי ב-mRNA." },
+            { term: "Aminoacyl-tRNA synthetase", definition: "אנזים ספציפי המחבר חומצת אמינו למולקולת ה-tRNA המתאימה לה, תוך שימוש באנרגיית ATP." },
+            { term: "Wobble Base Pairing", definition: "תופעה בה הבסיס השלישי בקודון פחות ספציפי בקישור לאנטיקודון, מה שמאפשר ל-tRNA אחד לזהות מספר קודונים." },
+            { term: "5' Cap (כיפת 5')", definition: "מולקולת GTP שעברה מתילציה ומתווספת לקצה ה-5 של ה-Pre-mRNA באאוקריוטים להגנה ויציבות." },
+            { term: "Poly-A Tail (זנב פולי-A)", definition: "רצף של 100-300 נוקלאוטידים מסוג אדנין המתווסף לקצה ה-3 של ה-Pre-mRNA באאוקריוטים." }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהי ההגדרה המודרנית והמדויקת ביותר לגן על פי החומר הנלמד?",
+                options: [
+                    "מקטע DNA המקודד אך ורק לשרשרת פוליפפטידית אחת.",
+                    "מקטע DNA המקודד תמיד לחלבון בעל מבנה רביעוני.",
+                    "מקטע DNA שיכול לקודד לפוליפפטיד, למספר פוליפפטידים שונים (דרך שחבור חליפי), או למולקולות RNA שאינן מקודדות לחלבון.",
+                    "מקטע RNA המהווה תבנית ליצירת חלבונים בריבוזום."
+                ],
+                correctIndex: 2,
+                explanation: "הידע המודרני מראה שגנים אינם מקודדים רק לפוליפפטיד יחיד. גן יכול לקודד למספר פוליפפטידים עקב מודיפיקציות כמו שחבור חליפי, וישנם גנים רבים המקודדים ל-RNA שאינו מתורגם לחלבון כלל (כמו rRNA ו-tRNA)."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין שעתוק (Transcription) לשכפול DNA?",
+                options: [
+                    "בשעתוק כיוון הסינתזה הוא מ-3 ל-5, בעוד בשכפול הוא מ-5 ל-3.",
+                    "בשעתוק נעשה שימוש ב-dNTPs בעוד בשכפול נעשה שימוש ב-NTPs.",
+                    "בשעתוק אין צורך בפריימר (תחל) ואין מנגנון הגהה (Proofreading), בניגוד לשכפול DNA.",
+                    "בשעתוק משתמשים באנזים DNA פולימראז המייצר RNA."
+                ],
+                correctIndex: 2,
+                explanation: "האנזים RNA פולימראז מסוגל להתחיל סינתזת שרשרת חדשה ללא צורך בפריימר, ובניגוד ל-DNA פולימראז, אין לו מנגנון הגהה משמעותי. שני התהליכים מסנתזים בכיוון 5 ל-3."
+            },
+            {
+                question: "אם רצף גדיל התבנית (Template strand) של ה-DNA הוא ($3^\\prime - TACGAT - 5^\\prime$), מה יהיה רצף ה-mRNA שיווצר?",
+                options: [
+                    "($3^\\prime - AUGCUA - 5^\\prime$)",
+                    "($5^\\prime - AUGCUA - 3^\\prime$)",
+                    "($5^\\prime - ATGCTA - 3^\\prime$)",
+                    "($3^\\prime - UACGAU - 5^\\prime$)"
+                ],
+                correctIndex: 1,
+                explanation: "ה-mRNA נבנה בכיוון 5 ל-3 והוא משלים לגדיל התבנית. לכן מול T יבוא A, מול A יבוא U, מול C יבוא G ומול G יבוא C. התוצאה היא 5 ל-3: AUGCUA."
+            },
+            {
+                question: "מהו תפקידו העיקרי של אזור הפרומוטור (Promoter) בתהליך השעתוק?",
+                options: [
+                    "הוא מקודד לקודון ההתחלה AUG ומאותת לריבוזום היכן להתחיל את התרגום.",
+                    "הוא אזור ב-mRNA שאליו נקשר הספלייסוזום כדי לחתוך אינטרונים.",
+                    "הוא רצף DNA שאליו נקשר ה-RNA פולימראז ומורה לו היכן להתחיל, באיזה כיוון, ואיזה גדיל לשעתק.",
+                    "הוא רצף בקצה ה-3 של הגן המאותת ל-RNA פולימראז להפסיק את השעתוק."
+                ],
+                correctIndex: 2,
+                explanation: "הפרומוטור הוא רצף בקרה ב-DNA המהווה את אתר הקישור הראשוני של RNA פולימראז, והוא מגדיר את נקודת ההתחלה, כיוון השעתוק וזהות גדיל התבנית."
+            },
+            {
+                question: "בתא אאוקריוטי, תרופה המעכבת את פעילותם של פקטורי שעתוק כלליים (General transcription factors) תגרום ל:",
+                options: [
+                    "פגיעה ביכולת של הריבוזום להיקשר ל-mRNA.",
+                    "חוסר יכולת של RNA פולימראז להיקשר לתבנית ה-DNA ולהתחיל שעתוק.",
+                    "עצירת תהליך השחבור של ה-Pre-mRNA.",
+                    "פגיעה בתהליך השעתוק בתאים פרוקריוטים בלבד."
+                ],
+                correctIndex: 1,
+                explanation: "באאוקריוטים, בניגוד לפרוקריוטים, RNA פולימראז אינו יכול להיקשר ישירות לפרומוטור בכוחות עצמו. הוא דורש קו-פקטורים, שהם פקטורי השעתוק הכלליים, כדי להיקשר ולהתחיל בשעתוק."
+            },
+            {
+                question: "באופרון הלקטוז (lac operon) בחיידק E. coli, מה חייב לקרות כדי שיתרחש שעתוק בקצב גבוה של הגנים לפירוק לקטוז?",
+                options: [
+                    "גלוקוז חייב להיות נוכח כדי שהאקטיבטור ייקשר, ולקטוז חייב להיות חסר.",
+                    "גלוקוז חייב להיות חסר (כדי שהאקטיבטור ייקשר), ולקטוז חייב להיות נוכח (כדי שהרפרסור לא ייקשר).",
+                    "גלוקוז ולקטוז שניהם חייבים להיות חסרים בסביבה.",
+                    "ה-RNA פולימראז חייב לעבור שחבור חליפי."
+                ],
+                correctIndex: 1,
+                explanation: "הבקרה באופרון הלקטוז היא כפולה: היעדר גלוקוז מאפשר קישור של חלבון משפעל (אקטיבטור), ונוכחות לקטוז מונעת את קישורו של חלבון מדכא (רפרסור). רק שילוב של השניים מאפשר שעתוק יעיל."
+            },
+            {
+                question: "איזה מהשינויים הבאים אינו נחשב לחלק מעיבוד ה-RNA (RNA processing) באאוקריוטים?",
+                options: [
+                    "הוספת כיפת מתיל-GTP לקצה ה-5.",
+                    "חיתוך אינטרונים וחיבור אקסונים.",
+                    "הוספת זנב פולי-A לקצה ה-3.",
+                    "קישור של יחידת הריבוזום הקטנה לקודון ההתחלה."
+                ],
+                correctIndex: 3,
+                explanation: "קישור הריבוזום לקודון ההתחלה הוא השלב הראשון של תהליך התרגום (Translation), ולא חלק מתהליך עיבוד ה-RNA המתרחש בגרעין התא."
+            },
+            {
+                question: "גן אאוקריוטי מסוים עבר מוטציה שגרמה למחיקת אזור הפרומוטור שלו. מה תהיה התוצאה הסבירה ביותר?",
+                options: [
+                    "הגן ישועתק, אך ה-mRNA לא יעבור שחבור מתאים.",
+                    "הגן לא ישועתק כלל, ולא ייווצר Pre-mRNA.",
+                    "הגן ישועתק ל-mRNA, אך הריבוזום לא יצליח לתרגם אותו.",
+                    "הגן ישועתק בכיוון ההפוך מ-3 ל-5."
+                ],
+                correctIndex: 1,
+                explanation: "ללא פרומוטור, ה-RNA פולימראז ופקטורי השעתוק אינם יכולים לזהות את תחילת הגן ולהיקשר אליו, ולכן תהליך השעתוק כלל לא יתחיל."
+            },
+            {
+                question: "בניסוי הכלאה (Hybridization) בין DNA של גן אאוקריוטי לבין ה-mRNA הבוגר שלו, נצפו לולאות של DNA שלא עברו הכלאה עם ה-mRNA. מה מייצגות לולאות אלו?",
+                options: [
+                    "אקסונים שלא באו לידי ביטוי עקב שחבור חליפי.",
+                    "אינטרונים, אשר קיימים ב-DNA אך הוצאו מה-mRNA הבוגר בתהליך השחבור.",
+                    "זנב הפולי-A שקיים ב-DNA אך לא ב-mRNA.",
+                    "אזורי פרומוטור שמשועתקים רק באופן חלקי."
+                ],
+                correctIndex: 1,
+                explanation: "האינטרונים הם רצפים לא מקודדים הנמצאים ב-DNA. מכיוון שהם נחתכים ומוסרים בתהליך השחבור, הם אינם קיימים ב-mRNA הבוגר. לכן, בהכלאה בין השניים, אזורי האינטרונים ב-DNA יוצרים לולאות כי אין להם רצף משלים ב-mRNA."
+            },
+            {
+                question: "מה תפקידן של מולקולות snRNP בתהליך השחבור?",
+                options: [
+                    "הן מוסיפות את זנב הפולי-A לקצה ה-3 של ה-mRNA.",
+                    "הן קושרות את חומצות האמינו ומביאות אותן לריבוזום.",
+                    "הן מזהות רצפי קונצנזוס באתרי החיתוך של האינטרונים ומהוות חלק מהספלייסוזום.",
+                    "הן מבצעות הגהה (Proofreading) במהלך יצירת ה-RNA."
+                ],
+                correctIndex: 2,
+                explanation: "מולקולות ה-snRNP הן קומפלקסים של RNA וחלבון המזהים את גבולות האינטרון (אתרי השחבור 5 ו-3), חוברים יחד ליצירת הספלייסוזום, ומבצעים את חיתוך האינטרון."
+            },
+            {
+                question: "כיצד ייתכן שגן בודד המקודד לחלבון שריר (Titin) מכיל 363 אקסונים, אך יכול לייצר מספר גרסאות שונות של החלבון ברקמות שונות?",
+                options: [
+                    "הגן משועתק על ידי סוגים שונים של RNA פולימראז בכל רקמה.",
+                    "מוטציות מכוונות ב-DNA משנות את רצף הגן בכל רקמה.",
+                    "מנגנון השחבור החליפי (Alternative Splicing) מאפשר לחבר הרכבים שונים של אקסונים ב-mRNA הבוגר.",
+                    "הריבוזום מדלג על קודונים מסוימים במהלך התרגום ברקמות שונות."
+                ],
+                correctIndex: 2,
+                explanation: "שחבור חליפי מאפשר לתא לבחור אילו אקסונים לכלול ב-mRNA הבוגר ואילו להשמיט. כך, מ-Pre-mRNA אחד ניתן לייצר מספר מולקולות mRNA שונות, שכל אחת תתורגם לחלבון בעל תכונות מעט שונות."
+            },
+            {
+                question: "מה משמעות המונח 'יתירות' (Redundancy) בהקשר של הקוד הגנטי?",
+                options: [
+                    "ישנן יותר חומצות אמינו מאשר קודונים אפשריים.",
+                    "אותה חומצת אמינו יכולה להיות מקודדת על ידי יותר מקודון אחד.",
+                    "קודון אחד יכול לקודד למספר חומצות אמינו שונות.",
+                    "הקוד הגנטי מכיל בסיסים מיותרים שאינם מתורגמים לעולם."
+                ],
+                correctIndex: 1,
+                explanation: "מכיוון שיש 64 קודונים אך רק 20 חומצות אמינו, רוב חומצות האמינו מקודדות על ידי מספר קודונים שונים (לרוב נבדלים בבסיס השלישי). זוהי יתירות הקוד."
+            },
+            {
+                question: "מה יהיה הרצף באנטיקודון של מולקולת ה-tRNA הנושאת את חומצת האמינו מתיונין (המתאימה לקודון ההתחלה)?",
+                options: [
+                    "($5^\\prime - AUG - 3^\\prime$)",
+                    "($3^\\prime - UAC - 5^\\prime$)",
+                    "($5^\\prime - UAC - 3^\\prime$)",
+                    "($3^\\prime - AUG - 5^\\prime$)"
+                ],
+                correctIndex: 1,
+                explanation: "קודון ההתחלה ב-mRNA הוא ($5^\\prime - AUG - 3^\\prime$). האנטיקודון ב-tRNA חייב להיות משלים והפוך בכיווניותו, לכן הוא יהיה ($3^\\prime - UAC - 5^\\prime$) (אשר יכול להיכתב גם כ- $5^\\prime - CAU - 3^\\prime$)."
+            },
+            {
+                question: "מולקולת tRNA הוטענה בחומצת אמינו שגויה על ידי האנזים Aminoacyl-tRNA synthetase. מה תהיה התוצאה הסבירה ביותר במהלך התרגום?",
+                options: [
+                    "הריבוזום יזהה את הטעות ויתקן אותה בעזרת מנגנון הגהה.",
+                    "חומצת האמינו השגויה תשולב בחלבון במיקום המתאים לאנטיקודון של אותו tRNA.",
+                    "ה-tRNA לא יצליח להיקשר ל-mRNA עקב חוסר התאמה מרחבית.",
+                    "תהליך התרגום ייעצר מיד וה-mRNA יפורק."
+                ],
+                correctIndex: 1,
+                explanation: "הריבוזום וה-mRNA אינם 'בודקים' איזו חומצת אמינו מחוברת ל-tRNA; ההתאמה מבוססת אך ורק על זיהוי קודון-אנטיקודון. לכן, אם ה-tRNA טעון בחומצה שגויה, היא תשולב בחלבון."
+            },
+            {
+                question: "איזו מהמולקולות הבאות אינה תוצר ישיר של שעתוק גנים?",
+                options: [
+                    "mRNA",
+                    "tRNA",
+                    "rRNA",
+                    "Aminoacyl-tRNA synthetase"
+                ],
+                correctIndex: 3,
+                explanation: "שלושת הראשונים הם סוגים של RNA המיוצרים ישירות בתהליך השעתוק מתוך תבנית DNA. לעומת זאת, Aminoacyl-tRNA synthetase הוא אנזים (חלבון), ולכן הוא תוצר של תרגום, לא תוצר ישיר של שעתוק."
+            },
+            {
+                question: "על פי כללי ה-Wobble, ספציפיות הזיהוי בין הקודון לאנטיקודון פחות קשיחה בעמדה מסוימת. באילו עמדות מדובר?",
+                options: [
+                    "בקצה ה-5 של הקודון ובקצה ה-3 של האנטיקודון.",
+                    "בקצה ה-3 של הקודון ובקצה ה-5 של האנטיקודון.",
+                    "בעמדה האמצעית של הקודון והאנטיקודון.",
+                    "בקצה ה-3 של הקודון ובקצה ה-3 של האנטיקודון."
+                ],
+                correctIndex: 1,
+                explanation: "תופעת ה-Wobble מתרחשת בבסיס השלישי של הקודון ב-mRNA (שהוא קצה ה-3 שלו), אשר מזדווג עם הבסיס הראשון של האנטיקודון ב-tRNA (שהוא קצה ה-5 שלו)."
+            },
+             {
+                question: "אם רצף הגדיל המקודד (Coding strand) ב-DNA הוא ($5^\\prime - CCG - 3^\\prime$), איזו חומצת אמינו תתורגם ממנו? (היעזר בידע על המרת גדיל מקודד ל-mRNA)",
+                options: [
+                    "גליצין (Glycine - GGC)",
+                    "פרולין (Proline - CCG)",
+                    "ארגינין (Arginine - CGC)",
+                    "אלנין (Alanine - GCC)"
+                ],
+                correctIndex: 1,
+                explanation: "רצף ה-mRNA זהה לרצף הגדיל המקודד (רק עם U במקום T). לכן ה-mRNA יהיה גם הוא ($5^\\prime - CCG - 3^\\prime$). לפי טבלת הקודונים, CCG מקודד לפרולין."
+            },
+            {
+                question: "מהו התפקיד של ATP בתהליך טעינת מולקולת ה-tRNA (Charging)?",
+                options: [
+                    "הוא משמש כמקור אנרגיה לתנועת הריבוזום על ה-mRNA.",
+                    "הוא מספק את האנרגיה ליצירת קשר עתיר אנרגיה בין חומצת האמינו לקצה ה-3 של ה-tRNA.",
+                    "הוא נדרש ליצירת הספלייסוזום במהלך עיבוד ה-RNA.",
+                    "הוא משמש כבסיס חנקני המתווסף לזנב הפולי-A."
+                ],
+                correctIndex: 1,
+                explanation: "האנזים אמינואציל-tRNA סינתטאז משתמש באנרגיה מפירוק ATP כדי לחבר את חומצת האמינו לקצה ה-3 של ה-tRNA. קשר עתיר אנרגיה זה יספק בהמשך את האנרגיה ליצירת הקשר הפפטידי בריבוזום."
+            },
+            {
+                question: "איזה מהמאפיינים הבאים נכון לגבי הקוד הגנטי?",
+                options: [
+                    "הוא שונה לחלוטין בין חיידקים לבני אדם.",
+                    "הוא חופף (Overlapping), כלומר בסיס אחד יכול להיות חלק משני קודונים שונים.",
+                    "הוא חד-משמעי (Unambiguous), כלומר כל קודון מקודד לחומצת אמינו אחת בלבד (או לעצירה).",
+                    "הוא מכיל רווחים בין קודון לקודון."
+                ],
+                correctIndex: 2,
+                explanation: "הקוד הגנטי הוא אוניברסלי (כמעט זהה בכל היצורים), אינו חופף, נקרא ברצף ללא רווחים, והוא חד-משמעי - קודון מסוים לעולם לא יקודד לשתי חומצות אמינו שונות."
+            },
+            {
+                question: "היכן ממוקמת חומצת האמינו על גבי מולקולת ה-tRNA?",
+                options: [
+                    "היא קשורה לאנטיקודון.",
+                    "היא מחוברת לקצה ה-5 של ה-tRNA.",
+                    "היא מחוברת לקצה ה-3 של ה-tRNA (באזור רצף ה-CCA).",
+                    "היא נמצאת בתוך הלולאה המרכזית של המבנה התלת-ממדי."
+                ],
+                correctIndex: 2,
+                explanation: "כל מולקולות ה-tRNA נושאות את חומצת האמינו הספציפית שלהן בקצה ה-3, אשר מסתיים תמיד ברצף הנוקלאוטידים CCA."
+            },
+            {
+                question: "מה תהיה ההשפעה של מניעת הוספת כיפת 5 (5' Cap) ל-Pre-mRNA באאוקריוטים?",
+                options: [
+                    "ה-mRNA יתורגם מהר יותר עקב היעדר עיכוב סטרי.",
+                    "ה-mRNA יהיה חשוף לפירוק מהיר על ידי אנזימים בתא, והריבוזום יתקשה להיקשר אליו.",
+                    "ה-mRNA לא יוכל לעבור שחבור חליפי.",
+                    "ה-tRNA לא יוכל לזהות את קודון ההתחלה."
+                ],
+                correctIndex: 1,
+                explanation: "כיפת ה-5 חיונית להגנה על ה-mRNA מפני פירוק על ידי אקסונוקלאזות, והיא מהווה אתר זיהוי קריטי עבור הריבוזום כדי להתחיל את תהליך התרגום."
+            },
+            {
+                question: "נמצאה מוטציה בגן המקודד לאנזים שמסנתז את זנב הפולי-A, כך שהזנב אינו מתווסף. מה יקרה ל-mRNA הבוגר?",
+                options: [
+                    "הוא ייתקע בתוך הגרעין ויהיה פחות יציב בציטופלזמה.",
+                    "הוא יתורגם לחלבון ללא חומצת האמינו אדנין.",
+                    "מנגנון השחבור יחתוך בטעות את קצה ה-3 של ה-mRNA.",
+                    "שעתוק ה-DNA ייעצר באמצע התהליך."
+                ],
+                correctIndex: 0,
+                explanation: "זנב הפולי-A הכרחי לסיוע בייצוא ה-mRNA מגרעין התא לציטופלזמה, וכן להגנה עליו מפני פירוק מהיר. ללא הזנב, ה-mRNA לא יתפקד כראוי ויפורק במהירות."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר נכונה את השוני בין פרוקריוטים לאאוקריוטים בתהליך השעתוק?",
+                options: [
+                    "בפרוקריוטים השעתוק מתרחש בגרעין, ובאאוקריוטים בציטופלזמה.",
+                    "לפרוקריוטים יש סוג אחד של RNA פולימראז, בעוד לאאוקריוטים יש מספר סוגים.",
+                    "בפרוקריוטים ה-RNA פולימראז דורש פקטורי שעתוק כלליים כדי להיקשר ל-DNA.",
+                    "באאוקריוטים אין אזור פרומוטור ב-DNA."
+                ],
+                correctIndex: 1,
+                explanation: "חיידקים (פרוקריוטים) משתמשים באנזים RNA פולימראז יחיד המבצע את כל סוגי השעתוק ונקשר ישירות ל-DNA. באאוקריוטים יש מספר סוגים (כמו RNA Pol II ל-mRNA) והם דורשים פקטורי שעתוק."
+            },
+            {
+                question: "מהי המשמעות של המונח 'Antisense strand'?",
+                options: [
+                    "זהו מונח נרדף לגדיל המקודד (Coding strand).",
+                    "זהו גדיל ה-RNA שנוצר לאחר השחבור.",
+                    "זהו מונח נרדף לגדיל התבנית (Template strand) ממנו משועתק ה-RNA.",
+                    "זהו גדיל ה-DNA שלא משתתף כלל בשעתוק."
+                ],
+                correctIndex: 2,
+                explanation: "גדיל התבנית נקרא גם Antisense מכיוון שרצפו הפוך ומשלים לרצף ה-RNA (שהוא בעל מובן - Sense). הגדיל המקודד נקרא Sense strand."
+            },
+            {
+                question: "אם קודון מסוים ב-mRNA הוא ($5^\\prime - UGG - 3^\\prime$) (המקודד לטריפטופן), מהו הרצף המדויק בגדיל התבנית (Template) של ה-DNA שממנו הוא שועתק?",
+                options: [
+                    "($5^\\prime - ACC - 3^\\prime$)",
+                    "($3^\\prime - ACC - 5^\\prime$)",
+                    "($3^\\prime - TCC - 5^\\prime$)",
+                    "($5^\\prime - TGG - 3^\\prime$)"
+                ],
+                correctIndex: 1,
+                explanation: "ה-mRNA משלים והפוך בכיווניותו לגדיל התבנית ב-DNA. לכן, מול U יהיה A, מול G יהיה C. הכיוון ההפוך ל-5 ל-3 הוא 3 ל-5. התוצאה: ($3^\\prime - ACC - 5^\\prime$)."
+            },
+            {
+                question: "חלבון מסוים מורכב משלוש תת-יחידות פוליפפטידיות שונות. בהנחה שאין שחבור חליפי, כמה גנים שונים נדרשים כדי לקודד לחלבון זה?",
+                options: [
+                    "גן אחד המקודד לכל השלוש יחד.",
+                    "שלושה גנים שונים, אחד עבור כל תת-יחידה פוליפפטידית.",
+                    "אי אפשר לדעת, זה תלוי במספר האינטרונים.",
+                    "גן אחד המקודד ל-tRNA המרכיב את החלבון."
+                ],
+                correctIndex: 1,
+                explanation: "כאשר חלבון בעל מבנה רביעוני מורכב ממספר פוליפפטידים שונים (תת-יחידות שונות), כל פוליפפטיד מקודד על ידי גן נפרד משלו (כאשר אין שחבור חליפי)."
+            },
+            {
+                question: "מה תפקידו של קודון העצירה (Stop codon) בתהליך התרגום?",
+                options: [
+                    "הוא מקודד לחומצת האמינו האחרונה בחלבון.",
+                    "הוא גורם ל-RNA פולימראז להתנתק מה-DNA.",
+                    "הוא מסמן לריבוזום לסיים את סינתזת החלבון ולשחרר את הפוליפפטיד.",
+                    "הוא נקשר ל-tRNA מיוחד שאין לו חומצת אמינו."
+                ],
+                correctIndex: 2,
+                explanation: "קודוני העצירה (UAA, UAG, UGA) אינם מקודדים לחומצת אמינו ואינם נקשרים ל-tRNA. במקום זאת, הם נקשרים לפקטורי שחרור (Release factors) הגורמים לריבוזום לשחרר את החלבון המוכן."
+            },
+            {
+                question: "מדוע הופעת האינטרונים מאפשרת יתרון אבולוציוני לתאים אאוקריוטים?",
+                options: [
+                    "הם מספקים אנרגיה חלופית ל-ATP בתהליך התרגום.",
+                    "קיומם מאפשר את תהליך השחבור החליפי, המגדיל את מגוון החלבונים שניתן לייצר ממספר מוגבל של גנים.",
+                    "הם מונעים מוטציות באזור הפרומוטור.",
+                    "הם מתורגמים לחלבונים קטנים המגנים על ה-mRNA."
+                ],
+                correctIndex: 1,
+                explanation: "האינטרונים מאפשרים לחלק את הגן למקטעים (אקסונים). באמצעות שחבור חליפי, ניתן לחבר את האקסונים בצירופים שונים, וכך לייצר מגוון רחב של חלבונים מגן יחיד."
+            },
+            {
+                question: "באיזה שלב של השעתוק ה-RNA פולימראז מנתק את קשרי המימן בין גדילי ה-DNA וקורא את תבנית ה-DNA כדי להוסיף נוקלאוטידים?",
+                options: [
+                    "התחלה (Initiation)",
+                    "התארכות (Elongation)",
+                    "סיום (Termination)",
+                    "שחבור (Splicing)"
+                ],
+                correctIndex: 1,
+                explanation: "בשלב ההתארכות (Elongation), האנזים נע לאורך ה-DNA, פותח את הסליל הכפול, ומוסיף נוקלאוטידי RNA משלימים לקצה ה-3 של שרשרת ה-RNA ההולכת וגדלה."
+            },
+            {
+                question: "מהו ההבדל המבני העיקרי בין הנוקלאוטידים המשמשים לבניית RNA לאלו המשמשים לבניית DNA?",
+                options: [
+                    "ב-RNA הסוכר הוא דאוקסיריבוז ויש בו תימין במקום אורציל.",
+                    "ב-RNA הסוכר הוא ריבוז (בעל קבוצת OH בפחמן 2) ויש בו אורציל במקום תימין.",
+                    "ב-RNA אין קבוצת זרחה (פוספט).",
+                    "ב-DNA יש אורציל רק בגדיל התבנית."
+                ],
+                correctIndex: 1,
+                explanation: "RNA מכיל סוכר ריבוז, שלו יש אטום חמצן (בקבוצת OH) בעמדה 2 של טבעת הסוכר (בניגוד ל-DNA שחסר חמצן זה), והוא משתמש בבסיס אורציל (U) במקום תימין (T)."
+            },
+            {
+                question: "תרופה חדשה פוגעת ספציפית ביכולת של מולקולות RNA חד-גדיליות להתקפל למבנים תלת-ממדיים מורכבים. איזו מולקולה תפגע באופן הישיר והקשה ביותר?",
+                options: [
+                    "DNA פולימראז",
+                    "tRNA",
+                    "גדיל התבנית של ה-DNA",
+                    "זנב הפולי-A"
+                ],
+                correctIndex: 1,
+                explanation: "מולקולת ה-tRNA תלויה לחלוטין בקיפול מרחבי מורכב (מבנה דמוי עלה תלתן שהופך למבנה תלת-ממדי דמוי L) הנוצר על ידי זיווג בסיסים פנימי. ללא קיפול זה, היא לא תוכל לתפקד כמתאם בתרגום."
+            },
+            {
+                question: "מהי המשמעות של העובדה שהקוד הגנטי הוא 'אוניברסלי'?",
+                options: [
+                    "כל הגנים בכל היצורים מכילים בדיוק את אותו רצף DNA.",
+                    "אותם קודונים ב-mRNA יתורגמו לאותן חומצות אמינו כמעט בכל היצורים החיים בכדור הארץ.",
+                    "כל חומצות האמינו יכולות להיווצר מכל קודון שהוא.",
+                    "RNA פולימראז יכול לשעתק כל חומר גנטי, אפילו חלבונים."
+                ],
+                correctIndex: 1,
+                explanation: "אוניברסליות הקוד הגנטי פירושה ששפת התרגום זהה בקרב כלל היצורים החיים (מחיידקים ועד בני אדם). הקודון AUG יקודד למתיונין בכל תא חי."
+            },
+            {
+                question: "כיצד הריבוזום 'יודע' איזו חומצת אמינו להוסיף לשרשרת הפוליפפטידית?",
+                options: [
+                    "הוא מזהה ישירות את חומצת האמינו ומוודא שהיא מתאימה ל-mRNA.",
+                    "הוא מסתמך על זיווג בסיסים משלים בין הקודון ב-mRNA לאנטיקודון ב-tRNA הנושא את חומצת האמינו.",
+                    "הוא מקבל אותות כימיים מה-DNA שבגרעין.",
+                    "הוא בוחר חומצות אמינו באופן אקראי ומתקן טעויות מאוחר יותר."
+                ],
+                correctIndex: 1,
+                explanation: "הריבוזום משמש כפלטפורמה המאפשרת זיווג בסיסים בין הקודון לאנטיקודון. הספציפיות נובעת מההתאמה בין רצפי ה-RNA הללו, ולא מזיהוי ישיר של חומצת האמינו."
+            },
+            {
+                question: "אם נתון קודון ב-mRNA שהוא ($5^\\prime - CUA - 3^\\prime$), מהן האפשרויות לאנטיקודון ב-tRNA, בהתחשב בחוקי ה-Wobble (כאשר אינוזין I יכול להיקשר ל-A, C, או U)?",
+                options: [
+                    "רק ($3^\\prime - GAU - 5^\\prime$)",
+                    "($3^\\prime - GAU - 5^\\prime$) או ($3^\\prime - GAI - 5^\\prime$)",
+                    "($5^\\prime - GAU - 3^\\prime$) בלבד",
+                    "כל אנטיקודון המכיל G בעמדה הראשונה."
+                ],
+                correctIndex: 1,
+                explanation: "הקודון הוא ($5^\\prime - CUA - 3^\\prime$). האנטיקודון המדויק יהיה ($3^\\prime - GAU - 5^\\prime$). לפי חוקי ה-Wobble, הבסיס בקצה ה-5 של האנטיקודון (שמול ה-A בקודון) יכול להיות אינוזין (I), שכן I נקשר ל-A. לכן גם ($3^\\prime - GAI - 5^\\prime$) אפשרי."
+            },
+            {
+                question: "מהו תפקידו של קודון ה-START (לרוב AUG)?",
+                options: [
+                    "הוא מורה ל-RNA פולימראז להתחיל את השעתוק.",
+                    "הוא מסמן לריבוזום את נקודת ההתחלה של התרגום ומקודד לחומצת האמינו מתיונין.",
+                    "הוא מוסיף את כיפת ה-5 ל-mRNA.",
+                    "הוא מונע קשירה של רפרסורים ל-DNA."
+                ],
+                correctIndex: 1,
+                explanation: "קודון ההתחלה AUG נמצא על ה-mRNA ומהווה את האות עבור הריבוזום להתחיל את סינתזת החלבון. הוא גם מקודד לחומצת האמינו הראשונה בחלבון, שהיא מתיונין."
+            },
+            {
+                question: "מה יקרה אם אנזים ספלייסוזום יחתוך בטעות בסיס אחד מוקדם מדי (לתוך האקסון) בעת הסרת אינטרון?",
+                options: [
+                    "שום דבר, חומצות האמינו יישארו זהות עקב יתירות הקוד הגנטי.",
+                    "מסגרת הקריאה (Reading frame) של הריבוזום תוסט, מה שיוביל ליצירת חלבון שגוי לחלוטין או לקודון עצירה מוקדם.",
+                    "ה-tRNA יבצע מודיפיקציה ב-mRNA כדי לתקן את הטעות.",
+                    "ה-RNA פולימראז יחזור אחורה ויתקן את השגיאה."
+                ],
+                correctIndex: 1,
+                explanation: "מכיוון שהקוד הגנטי נקרא בשלישיות (קודונים) רציפות, מחיקה או הוספה של נוקלאוטיד בודד (שאינו כפולה של 3) תגרום להסטת מסגרת הקריאה, וכתוצאה מכך כל הקודונים מהנקודה הזו והלאה ישתנו."
+            },
+            {
+                question: "באיזה מנגנון משתמש התא כדי לוודא שחומצת האמינו הנכונה תחובר ל-tRNA הנכון?",
+                options: [
+                    "פעילות של פקטורי שעתוק כלליים.",
+                    "ספציפיות גבוהה של האנזימים מקבוצת Aminoacyl-tRNA synthetases המזהים גם את חומצת האמינו וגם את ה-tRNA.",
+                    "זיווג בסיסים בין חומצת האמינו לאנטיקודון.",
+                    "הגהה (Proofreading) על ידי הריבוזום במהלך התרגום."
+                ],
+                correctIndex: 1,
+                explanation: "הספציפיות בתהליך הטעינה (Charging) מובטחת על ידי משפחת אנזימי ה-Synthetase. לכל חומצת אמינו יש אנזים ספציפי המזהה אותה ואת ה-tRNA המתאים לה (לרוב על בסיס האנטיקודון ואזורים נוספים ב-tRNA)."
+            },
+            {
+                question: "רצף של DNA מכיל 30% אדנין (A). מה יהיה אחוז האורציל (U) במולקולת ה-mRNA שתשועתק מגן זה (בהנחה שכל ה-DNA משועתק)?",
+                options: [
+                    "30%",
+                    "20%",
+                    "0%",
+                    "אי אפשר לדעת בוודאות מבלי לדעת איזה גדיל הוא גדיל התבנית."
+                ],
+                correctIndex: 3,
+                explanation: "אחוז ה-A בכלל ה-DNA הדו-גדילי הוא 30%, מה שאומר ש-T הוא 30%, ו-G ו-C הם 20% כל אחד. עם זאת, שעתוק מתבצע רק מגדיל אחד (גדיל התבנית). ייתכן שבגדיל התבנית יש הרבה A (ולכן הרבה U ב-mRNA) או מעט A. לכן אי אפשר לדעת."
+            },
+            {
+                question: "מדוע תרופות אנטיביוטיות מסוימות יכולות לפגוע בתרגום בחיידקים מבלי לפגוע בתרגום בתאי האדם שלוקח אותן?",
+                options: [
+                    "הקוד הגנטי של חיידקים שונה לחלוטין מזה של בני אדם.",
+                    "המבנה של הריבוזום הפרוקריוטי שונה ממבנה הריבוזום האאוקריוטי, והתרופה פועלת רק על המבנה החיידקי.",
+                    "לחיידקים אין RNA פולימראז.",
+                    "בחיידקים התרגום מתבצע בתוך הגרעין."
+                ],
+                correctIndex: 1,
+                explanation: "למרות שהקוד הגנטי זהה, המכונות המולקולריות (הריבוזומים) נבדלות במבנן בין פרוקריוטים לאאוקריוטים. אנטיביוטיקות רבות מנצלות הבדל מבני זה כדי לעכב ספציפית את הריבוזום החיידקי."
+            },
+            {
+                question: "מולקולת RNA נחתכת בטעות כך שקצה ה-5 שלה נפגע ומוסר. מה תהיה ההשפעה המיידית באאוקריוטים?",
+                options: [
+                    "תהליך השחבור יואץ.",
+                    "כיפת ה-5 (Cap) תאבד, ה-mRNA יהפוך ללא יציב ולא יוכל להיקשר לריבוזום.",
+                    "זנב הפולי-A יאבד.",
+                    "תהליך התרגום יתחיל מהקצה ה-3 במקום."
+                ],
+                correctIndex: 1,
+                explanation: "קצה ה-5 מכיל את הכיפה (5' Cap) שהיא חיונית להגנה מפירוק ולזיהוי על ידי הריבוזום לשם תחילת התרגום. פגיעה בה תמנע את התרגום ותוביל לפירוק ה-mRNA."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "כל הגנים ב-DNA מקודדים ליצירת שרשראות פוליפפטידיות (חלבונים).",
+                answer: false,
+                explanation: "לא נכון. למרות שגנים רבים מקודדים לחלבונים, ישנם גנים המקודדים למולקולות RNA תפקודיות שאינן מתורגמות לחלבון, כגון rRNA, tRNA ו-RNA רגולטורי."
+            },
+            {
+                question: "תהליך השעתוק (Transcription) משתמש ב-DNA כתבנית ליצירת RNA.",
+                answer: true,
+                explanation: "נכון. השעתוק הוא תהליך יצירת עותק RNA המשלים לגדיל תבנית של DNA."
+            },
+            {
+                question: "בניגוד ל-DNA פולימראז, ה-RNA פולימראז אינו זקוק לפריימר (תחל) כדי להתחיל לסנתז שרשרת חדשה.",
+                answer: true,
+                explanation: "נכון. RNA פולימראז מסוגל לחבר את שני הנוקלאוטידים הראשונים בעצמו ולהתחיל שרשרת מחדש, בניגוד ל-DNA פולימראז שחייב קצה 3 חופשי קיים."
+            },
+            {
+                question: "הסוכר במולקולת ה-RNA חסר אטום חמצן בפחמן מספר 2, ולכן נקרא דאוקסיריבוז.",
+                answer: false,
+                explanation: "לא נכון. הסוכר ב-RNA הוא ריבוז, המכיל קבוצת OH (עם חמצן) בפחמן 2. ה-DNA הוא זה שמכיל דאוקסיריבוז (ללא החמצן בעמדה זו)."
+            },
+            {
+                question: "גדיל ה-DNA המקודד (Coding strand) זהה ברצפו ל-mRNA שנוצר, מלבד העובדה שב-mRNA יש אורציל (U) במקום תימין (T).",
+                answer: true,
+                explanation: "נכון. ה-RNA מסונתז כמשלים לגדיל התבנית (Template), ולכן רצפו זהה לגדיל השני - הגדיל המקודד (Sense)."
+            },
+            {
+                question: "תהליך השעתוק מתבצע תמיד בכיוון מקצה ה-3 לקצה ה-5 של מולקולת ה-RNA המסונתזת.",
+                answer: false,
+                explanation: "לא נכון. כל סינתזת חומצות גרעין, כולל שעתוק, מתבצעת בכיוון 5 ל-3 של הגדיל החדש (ה-RNA פולימראז קורא את התבנית מ-3 ל-5)."
+            },
+            {
+                question: "ל-RNA פולימראז יש מנגנון הגהה (Proofreading) יעיל מאוד, בדומה ל-DNA פולימראז.",
+                answer: false,
+                explanation: "לא נכון. ל-RNA פולימראז אין מנגנון הגהה משמעותי, ולכן שיעור השגיאות בשעתוק גבוה יותר מאשר בשכפול DNA."
+            },
+            {
+                question: "בחיידקים (פרוקריוטים), אנזים יחיד של RNA פולימראז אחראי על שעתוק כל סוגי ה-RNA.",
+                answer: true,
+                explanation: "נכון. בניגוד לאאוקריוטים שיש להם מספר סוגים של RNA פולימראז, לפרוקריוטים יש אנזים אחד המשמש לכל משימות השעתוק."
+            },
+            {
+                question: "האופרון של הלקטוז יופעל וישועתק ברמה גבוהה רק כאשר גלוקוז חסר בסביבה ולקטוז נוכח.",
+                answer: true,
+                explanation: "נכון. העדר גלוקוז מאפשר לאקטיבטור להיקשר, ונוכחות לקטוז מסירה את הרפרסור. רק שילוב זה מאפשר שעתוק."
+            },
+            {
+                question: "האינטרונים הם האזורים המקודדים בגן שמתורגמים בסופו של דבר לחומצות אמינו.",
+                answer: false,
+                explanation: "לא נכון. האינטרונים הם אזורים לא-מקודדים שמוסרים מה-Pre-mRNA בתהליך השחבור. האקסונים הם אלו שמתורגמים."
+            },
+            {
+                question: "הספלייסוזום (Spliceosome) משתמש באנרגיית ATP כדי לחתוך אינטרונים ולחבר אקסונים יחד.",
+                answer: true,
+                explanation: "נכון. הספלייסוזום הוא קומפלקס דינמי שדורש אנרגיה מ-ATP כדי לסדר מחדש את מרכיביו ולבצע את הריאקציות הכימיות של השחבור."
+            },
+            {
+                question: "שחבור חליפי (Alternative splicing) מאפשר לתא לייצר חלבונים שונים מאותו גן בדיוק.",
+                answer: true,
+                explanation: "נכון. על ידי השמטה או הכללה של אקסונים מסוימים, ה-mRNA הבוגר משתנה, מה שמוביל ליצירת רצפים חלבוניים שונים."
+            },
+            {
+                question: "קודון (Codon) מורכב תמיד מ-4 בסיסים חנקניים.",
+                answer: false,
+                explanation: "לא נכון. הקוד הגנטי מבוסס על שלישיות. כל קודון מורכב בדיוק מ-3 בסיסים חנקניים."
+            },
+            {
+                question: "מכיוון שיש 64 קודונים, קיימות 64 חומצות אמינו שונות בטבע.",
+                answer: false,
+                explanation: "לא נכון. ישנן רק 20 חומצות אמינו סטנדרטיות. 61 קודונים מקודדים להן (יתירות), ו-3 הנותרים הם קודוני עצירה."
+            },
+            {
+                question: "הקוד הגנטי הוא אוניברסלי, כלומר קודון מסוים יקודד לאותה חומצת אמינו כמעט בכל היצורים החיים.",
+                answer: true,
+                explanation: "נכון. מאפיין זה של הקוד הגנטי מצביע על מוצא אבולוציוני משותף ומאפשר טכנולוגיות כמו הנדסה גנטית (למשל, ייצור אינסולין אנושי בחיידקים)."
+            },
+            {
+                question: "מולקולת ה-tRNA נקשרת ל-mRNA באמצעות אזור הנקרא קודון.",
+                answer: false,
+                explanation: "לא נכון. ה-tRNA מכיל את ה'אנטיקודון' (Anticodon), אשר משלים ונקשר ל'קודון' שנמצא על ה-mRNA."
+            },
+            {
+                question: "כל מולקולות ה-tRNA נושאות את חומצת האמינו שלהן בקצה ה-5 שלהן.",
+                answer: false,
+                explanation: "לא נכון. חומצת האמינו מחוברת תמיד לקצה ה-3 של מולקולת ה-tRNA."
+            },
+            {
+                question: "האנזים Aminoacyl-tRNA synthetase אחראי על חיבור חומצת אמינו למולקולת ה-tRNA המתאימה.",
+                answer: true,
+                explanation: "נכון. קבוצת אנזימים זו מבטיחה את הדיוק של התרגום על ידי התאמה מדויקת בין חומצת אמינו ל-tRNA שלה, תוך שימוש ב-ATP."
+            },
+            {
+                question: "תופעת ה-Wobble מחייבת שיהיו בדיוק 61 סוגים שונים של tRNA בתא כדי לזהות את כל 61 הקודונים המקודדים.",
+                answer: false,
+                explanation: "לא נכון. תופעת ה-Wobble מאפשרת לאנטיקודון אחד לזהות מספר קודונים (עקב גמישות בבסיס השלישי), ולכן תאים יכולים לתפקד עם פחות מ-61 סוגי tRNA."
+            },
+            {
+                question: "קודון ההתחלה הסטנדרטי הוא AUG ומקודד לחומצת האמינו מתיונין.",
+                answer: true,
+                explanation: "נכון. AUG מסמן לריבוזום היכן להתחיל את מסגרת הקריאה, והוא תמיד מקודד למתיונין."
+            },
+            {
+                question: "כיפת ה-5 (5' Cap) מורכבת מרצף ארוך של אדנינים (A).",
+                answer: false,
+                explanation: "לא נכון. זנב הפולי-A (בקצה ה-3) הוא זה שמורכב מאדנינים. כיפת ה-5 מורכבת ממולקולת GTP שעברה מתילציה."
+            },
+            {
+                question: "באאוקריוטים, ה-mRNA מוכן לתרגום מיד עם סיום תהליך השעתוק.",
+                answer: false,
+                explanation: "לא נכון. באאוקריוטים ה-RNA הראשוני (Pre-mRNA) חייב לעבור עיבוד (הוספת כיפה, זנב פולי-A ושחבור) לפני שיוכל לצאת לציטופלזמה ולעבור תרגום."
+            },
+            {
+                question: "גנים פרוקריוטיים מכילים אינטרונים רבים המוצאים בתהליך השחבור.",
+                answer: false,
+                explanation: "לא נכון. גנים פרוקריוטיים (בחיידקים) כמעט ואינם מכילים אינטרונים, ותהליך השחבור נדיר מאוד בהם לעומת אאוקריוטים."
+            },
+            {
+                question: "בתהליך השעתוק, רק גדיל אחד של ה-DNA משמש כתבנית עבור גן ספציפי.",
+                answer: true,
+                explanation: "נכון. עבור גן נתון, רק הגדיל הנקרא 'גדיל התבנית' (Template strand) משועתק ל-RNA."
+            },
+            {
+                question: "קודון עצירה (Stop codon) מזוהה על ידי מולקולת tRNA מיוחדת שאינה נושאת חומצת אמינו.",
+                answer: false,
+                explanation: "לא נכון. קודוני עצירה אינם מזוהים על ידי שום tRNA, אלא על ידי חלבונים הנקראים פקטורי שחרור (Release factors)."
+            },
+            {
+                question: "הקוד הגנטי הוא חד-משמעי (Unambiguous), כלומר לא ייתכן שקודון אחד יקודד לשתי חומצות אמינו שונות.",
+                answer: true,
+                explanation: "נכון. למרות שיש יתירות (מספר קודונים לאותה חומצה), אין חוסר ודאות: קודון ספציפי תמיד יתורגם לאותה חומצת אמינו בדיוק."
+            },
+            {
+                question: "מולקולות RNA חד-גדיליות אינן יכולות ליצור קשרי מימן פנימיים ולקבל מבנה תלת-ממדי.",
+                answer: false,
+                explanation: "לא נכון. מולקולות RNA יכולות להתקפל וליצור קשרי מימן פנימיים (זיווג בסיסים), מה שמאפשר להן ליצור מבנים תלת-ממדיים מורכבים וחשובים, כמו במקרה של tRNA ו-rRNA."
+            },
+            {
+                question: "באאוקריוטים, RNA פולימראז זקוק לקו-פקטורים (פקטורי שעתוק) כדי להיקשר ל-DNA ולהתחיל שעתוק.",
+                answer: true,
+                explanation: "נכון. בניגוד לפרוקריוטים, RNA פולימראז אאוקריוטי אינו יכול לזהות את הפרומוטור בעצמו ודורש עזרה של פקטורי שעתוק כלליים."
+            },
+            {
+                question: "חומצת האמינו מחוברת ל-tRNA בקשר עתיר אנרגיה המשמש בהמשך ליצירת הקשר הפפטידי.",
+                answer: true,
+                explanation: "נכון. האנרגיה שהושקעה מ-ATP בתהליך הטעינה נאגרת בקשר בין ה-tRNA לחומצת האמינו, והיא זו שמניעה את סינתזת החלבון בריבוזום."
+            },
+            {
+                question: "על פי כללי ה-Wobble, הבסיס אינוזין (I) באנטיקודון יכול ליצור קשרי מימן עם A, C או U בקודון.",
+                answer: true,
+                explanation: "נכון. אינוזין הוא בסיס שונה המופיע לעיתים בעמדת ה-Wobble של ה-tRNA, והוא מסוגל להזדווג עם שלושה בסיסים שונים, מה שמגביר את גמישות התרגום."
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

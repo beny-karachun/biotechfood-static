@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1 - הרצאה 15: שעתוק, PCR ועיבוד RNA</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הרצאה זו עוסקת בתהליכי המפתח המאפשרים את ביטוי המידע הגנטי, החל משיטות מעבדה להכפלת DNA ועד למנגנוני השעתוק ועיבוד ה-RNA בתא. הדוגמה המרכזית (Central Dogma) של הביולוגיה המולקולרית מתארת את זרימת המידע מ-DNA ל-RNA וממנו לחלבונים. עם זאת, קיימים יוצאי דופן כגון רטרו-וירוסים (כמו HIV) המבצעים שעתוק לאחור מ-RNA ל-DNA באמצעות האנזים Reverse Transcriptase.</p>
+                
+                <h3>שימושים מעבדתיים: PCR וריצוף סנגר</h3>
+                <p>טכניקת ה-PCR מאפשרת הגברה מעריכית של מקטעי DNA באמצעות מחזורי טמפרטורה הכוללים דנטורציה ($95^\circ C$), קישור פריימרים ($50-65^\circ C$) והארכה ($72^\circ C$). התהליך מתאפשר הודות לאנזים Taq פולימראז העמיד לחום. במקביל, ריצוף סנגר משתמש בנוקלאוטידים פגומים (ddNTPs) חסרי קבוצת הידרוקסיל בעמדה 3, הגורמים לעצירת שרשרת הסינתזה ומאפשרים את קריאת הרצף באמצעות סימון פלואורסצנטי.</p>
+
+                <h3>תהליך השעתוק (Transcription)</h3>
+                <p>שעתוק הוא תהליך יצירת מולקולת RNA משלימה על בסיס גדיל תבנית של DNA, המבוצע על ידי האנזים RNA פולימראז. בניגוד לשכפול DNA, תהליך זה אינו דורש פריימר, משתמש ב-NTPs (עם אורציל במקום תימין וריבוז במקום דאוקסיריבוז), ואינו כולל מנגנון הגהה (Proofreading). השעתוק מתבצע בכיוון מקצה 5 לקצה 3, תוך קריאת גדיל התבנית מקצה 3 לקצה 5. הרצף שנוצר זהה לגדיל המקודד (Sense strand).</p>
+                
+                <h3>הבדלים בין פרוקריוטים לאאוקריוטים ועיבוד RNA</h3>
+                <p>בפרוקריוטים קיים RNA פולימראז יחיד הנעזר בפקטור סיגמא לזיהוי הפרומוטור. באאוקריוטים המערכת מורכבת בהרבה: נדרשים פקטורי שעתוק כלליים (כמו TFIID הנקשר לקופסת TATA), התערבות במבנה הכרומטין הדחוס, ובקרה מרחוק באמצעות מעצמים (Enhancers). בנוסף, ה-RNA הראשוני (Pre-mRNA) באאוקריוטים חייב לעבור עיבוד נרחב לפני התרגום: הוספת כיפת 5, זנב פולי-A בקצה 3, ושחבור (Splicing) המסיר את האינטרונים ומחבר את האקסונים המקודדים.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: גמישות ובקרת ביטוי גנים</strong>
+                    על אף שה-DNA מכיל את הצופן הבסיסי, תהליכי השעתוק והעיבוד מאפשרים בקרה וגמישות עצומה. ההשערה הישנה של גן אחד המקודד לאנזים אחד התבררה כפשטנית מדי; שחבור חלופי מאפשר יצירת מספר חלבונים שונים מאותו גן, וגנים רבים מקודדים ל-RNA תפקודי (כמו tRNA ו-rRNA) שאינו מתורגם כלל לחלבון. בנוסף, בקרת שעתוק באאוקריוטים יכולה להתרחש ממרחקים עצומים על גבי הכרומוזום, מה שמוכיח שהגנום הוא מערכת תלת-מימדית דינמית.
+                </div>
+                <div class="insight-box">
+                    <strong>תובנת מפתח: רתימת מנגנונים טבעיים לטכנולוגיה</strong>
+                    טכנולוגיות פורצות דרך כמו PCR וריצוף סנגר מבוססות על הבנה וניצול של מנגנונים ביולוגיים טבעיים. השימוש באנזים פולימראז מחיידקי מעיינות חמים עקב עמידותו לדנטורציה, או השימוש בנוקלאוטידים פגומים במכוון לעצירת סינתזה, מדגימים כיצד התבוננות בטבע מאפשרת הנדסה וביולוגיה מולקולרית מתקדמת.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: `תרמוציקלר ו-PCR`, definition: `שיטה מעבדתית להגברה מעריכית של מקטעי DNA ספציפיים באמצעות מחזורי חום ואנזים עמיד לחום.` },
+            { term: `Taq Polymerase`, definition: `אנזים פולימראז המופק מחיידקי מעיינות חמים, עמיד לטמפרטורות גבוהות ומשמש בתגובת PCR.` },
+            { term: `ddNTPs`, definition: `נוקלאוטידים חסרי קבוצת הידרוקסיל בעמדה 3, המשמשים לעצירת סינתזת ה-DNA בריצוף סנגר.` },
+            { term: `הדוגמה המרכזית (Central Dogma)`, definition: `עקרון המתאר את כיוון זרימת המידע הגנטי במערכות ביולוגיות: מ-DNA ל-RNA ומשם לחלבונים.` },
+            { term: `שעתוק לאחור (Reverse Transcription)`, definition: `תהליך ייחודי לרטרו-וירוסים שבו מסונתז DNA על בסיס תבנית של RNA.` },
+            { term: `שעתוק (Transcription)`, definition: `תהליך סינתזת מולקולת RNA משלימה על בסיס תבנית של מקטע DNA, המבוצע על ידי RNA פולימראז.` },
+            { term: `גדיל תבנית (Template Strand)`, definition: `גדיל ה-DNA שהאנזים קורא (מקצה 3 לקצה 5) כדי לסנתז את מולקולת ה-RNA המשלימה.` },
+            { term: `גדיל מקודד (Coding Strand)`, definition: `גדיל ה-DNA שאינו משועתק, אך רצף הבסיסים שלו זהה לזה של ה-RNA הנוצר (למעט החלפת T ב-U).` },
+            { term: `פקטור סיגמא (Sigma Factor)`, definition: `תת-יחידה של ה-RNA פולימראז בפרוקריוטים האחראית על זיהוי הפרומוטור ותחילת השעתוק.` },
+            { term: `קופסת TATA`, definition: `רצף הכרה נפוץ באזור הפרומוטור של גנים אאוקריוטיים, אליו נקשרים פקטורי שעתוק.` },
+            { term: `אופרון הלקטוז`, definition: `מערכת בקרת גנים בחיידקים המופעלת רק בהיעדר גלוקוז ובנוכחות לקטוז.` },
+            { term: `אינטרונים (Introns)`, definition: `רצפים לא-מקודדים ב-Pre-mRNA האאוקריוטי, המוסרים לפני התרגום לחלבון.` },
+            { term: `אקסונים (Exons)`, definition: `הרצפים המקודדים ב-mRNA האאוקריוטי שנותרים לאחר השחבור ומתורגמים לפוליפפטיד.` },
+            { term: `שחבור (Splicing)`, definition: `תהליך עיבוד של RNA אאוקריוטי שבו מוסרים האינטרונים והאקסונים מחוברים יחד.` },
+            { term: `כיפת 5 (Cap)`, definition: `מודיפיקציה המתווספת לקצה ה-5 של mRNA אאוקריוטי, המגנה עליו ומסייעת בקישור לריבוזום.` }
+        ];
+
+        const mcqData = [
+            {
+                question: `באיזה כיוון מתבצעת סינתזת ה-RNA על ידי האנזים RNA פולימראז?`,
+                options: [
+                    `מקצה 5 לקצה 3`,
+                    `מקצה 3 לקצה 5`,
+                    `בשני הכיוונים בו זמנית`,
+                    `הכיוון תלוי בסוג התא (פרוקריוטי או אאוקריוטי)`
+                ],
+                correctIndex: 0,
+                explanation: `סינתזת חומצות גרעין, כולל RNA, מתבצעת תמיד בכיוון מקצה 5 לקצה 3, על ידי הוספת נוקלאוטידים לקצה ה-3 החופשי.`
+            },
+            {
+                question: `חוקר מבצע תגובת PCR אך מגלה כי לא נוצרו תוצרים כלל. בבדיקה חוזרת, הוא מגלה שהטמפרטורה בשלב השני של המחזור נותרה על 95 מעלות צלזיוס במקום לרדת לאזור ה-60 מעלות. מהי הסיבה הישירה לכישלון התגובה?`,
+                options: [
+                    `האנזים עבר דנטורציה ואיבד את פעילותו לחלוטין.`,
+                    `התחלים (פריימרים) לא הצליחו להיקשר לרצף המטרה ב-DNA.`,
+                    `הנוקלאוטידים בתמיסה התפרקו בחום.`,
+                    `גדילי ה-DNA חזרו להתחבר זה לזה ומנעו גישה לאנזים.`
+                ],
+                correctIndex: 1,
+                explanation: `שלב ה-Annealing (קישור התחלים) דורש הורדת טמפרטורה לאזור ה-50-65 מעלות צלזיוס. ב-95 מעלות, התחלים הקצרים לא יכולים ליצור קשרי מימן יציבים עם התבנית.`
+            },
+            {
+                question: `בתהליך ריצוף בשיטת סנגר, מה תהיה התוצאה אם נוסיף למבחנה רק נוקלאוטידים מסוג ddNTP ללא dNTP רגילים כלל?`,
+                options: [
+                    `הריצוף יתבצע באופן תקין אך מהיר יותר.`,
+                    `לא תתבצע סינתזה כלל מעבר לנוקלאוטיד הראשון שיתווסף.`,
+                    `השרשרת תסונתז במלואה אך לא תהיה פלואורסצנטית.`,
+                    `האנזים יבצע שגיאות רבות ברצף עקב מבנה הסוכר.`
+                ],
+                correctIndex: 1,
+                explanation: `נוקלאוטידים מסוג ddNTP חסרים קבוצת הידרוקסיל (OH) בעמדה 3, ולכן מיד עם הוספת הראשון שבהם, השרשרת תיעצר ולא ניתן יהיה להוסיף נוקלאוטידים נוספים.`
+            },
+            {
+                question: `מדוע נגיף ה-HIV מהווה יוצא מן הכלל לדוגמה המרכזית (Central Dogma) של הביולוגיה המולקולרית?`,
+                options: [
+                    `מכיוון שהוא מתרגם חלבונים ללא שימוש בריבוזומים.`,
+                    `מכיוון שהוא משכפל את ה-DNA שלו מחוץ לגרעין התא.`,
+                    `מכיוון שהוא יוצר עותק DNA על בסיס תבנית RNA.`,
+                    `מכיוון שהגנום שלו מורכב מחלבונים במקום חומצות גרעין.`
+                ],
+                correctIndex: 2,
+                explanation: `הדוגמה המרכזית מתארת מעבר מידע מ-DNA ל-RNA. רטרו-וירוסים כמו HIV מבצעים שעתוק לאחור (Reverse Transcription) מ-RNA ל-DNA.`
+            },
+            {
+                question: `איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין גדיל התבנית לגדיל המקודד בתהליך השעתוק?`,
+                options: [
+                    `גדיל התבנית זהה ברצפו ל-RNA הנוצר, בעוד הגדיל המקודד משלים לו.`,
+                    `הגדיל המקודד זהה ברצפו ל-RNA הנוצר למעט החלפת תימין באורציל, בעוד גדיל התבנית משלים לו.`,
+                    `האנזים קורא את הגדיל המקודד מקצה 5 לקצה 3 ומסנתז על פיו את ה-RNA.`,
+                    `גדיל התבנית מכיל רק אקסונים והגדיל המקודד מכיל אינטרונים.`
+                ],
+                correctIndex: 1,
+                explanation: `גדיל התבנית (Antisense) משמש כתבנית ליצירת ה-RNA המשלים לו. לכן, ה-RNA שנוצר יהיה זהה ברצפו לגדיל המקביל, הוא הגדיל המקודד (Sense), פרט להחלפת תימין (T) באורציל (U).`
+            },
+            {
+                question: `מהו התפקיד המרכזי של פקטור סיגמא בחיידקי אי קולי?`,
+                options: [
+                    `לנתק את ה-RNA פולימראז בסיום תהליך השעתוק.`,
+                    `לזהות את אזורי הפרומוטור ולהכווין אליהם את ה-RNA פולימראז.`,
+                    `לפתוח את סליל ה-DNA הכפול בדומה לאנזים הליקאז.`,
+                    `להוסיף את כיפת ה-G לקצה ה-5 של מולקולת ה-RNA.`
+                ],
+                correctIndex: 1,
+                explanation: `פקטור סיגמא הוא תת-יחידה של חלבון ההולואנזים בפרוקריוטים, ותפקידו לזהות רצפים ספציפיים בפרומוטור (כמו אזורי מינוס 10 ומינוס 35) כדי לאפשר תחילת שעתוק מדויקת.`
+            },
+            {
+                question: `כיצד חלבון TBP (חלק מפקטור השעתוק TFIID) מאפשר את תחילת השעתוק באאוקריוטים?`,
+                options: [
+                    `הוא מסנתז את התחול (Primer) הנדרש לפעילות הפולימראז.`,
+                    `הוא מפרק את הנוקלאוזומים ומסלק את ההיסטונים מה-DNA.`,
+                    `הוא נקשר לקופסת TATA, מכופף את ה-DNA ופותח את התעלה המשנית.`,
+                    `הוא מזרז את יצירת הקשר הפוספודיאסטרי הראשון במולקולת ה-RNA.`
+                ],
+                correctIndex: 2,
+                explanation: `חלבון TBP נקשר לקופסת ה-TATA בפרומוטור האאוקריוטי, גורם לכיפוף משמעותי של ה-DNA ופותח את התעלה המשנית (Minor groove), מה שמאפשר גיוס פקטורים נוספים ופולימראז.`
+            },
+            {
+                question: `באיזה תנאי יתבצע ביטוי מקסימלי של אופרון הלקטוז בחיידק?`,
+                options: [
+                    `כאשר יש ריכוז גבוה של גלוקוז וריכוז גבוה של לקטוז.`,
+                    `כאשר אין גלוקוז כלל ויש נוכחות של לקטוז.`,
+                    `כאשר אין גלוקוז ואין לקטוז בסביבה.`,
+                    `כאשר יש ריכוז גבוה של גלוקוז ואין לקטוז כלל.`
+                ],
+                correctIndex: 1,
+                explanation: `אופרון הלקטוז מושרה רק כאשר התנאים מתאימים: היעדר גלוקוז מאפשר קישור של אקטיבטור, ונוכחות לקטוז מונעת את קישור הרפרסור (החלבון המדכא).`
+            },
+            {
+                question: `מה יקרה ל-mRNA אאוקריוטי שלא עבר תהליך של הוספת זנב פולי-A?`,
+                options: [
+                    `הוא יתורגם לחלבון שגוי בשל הסטת מסגרת הקריאה.`,
+                    `הוא לא יוכל לצאת מהגרעין ויהיה רגיש יותר לפירוק בציטופלזמה.`,
+                    `האקסונים שלו לא יעברו שחבור והאינטרונים יישארו.`,
+                    `הוא יהפוך ל-tRNA במקום ל-mRNA מתורגם.`
+                ],
+                correctIndex: 1,
+                explanation: `הוספת זנב פולי-A לקצה ה-3 מסייעת בהגנה על ה-mRNA מפני אנזימים מפרקים (Exonucleases), מגבירה את יציבותו, ומסייעת בייצוא שלו מהגרעין לציטופלזמה.`
+            },
+            {
+                question: `מהי המשמעות של הימצאות רצפי מעצמים (Enhancers) במרחק של אלפי בסיסים מהפרומוטור באאוקריוטים?`,
+                options: [
+                    `האנזים פולימראז חייב לסנתז אלפי בסיסים מיותרים עד להגעתו לגן המטרה.`,
+                    `ה-DNA מתקפל במרחב כך שחלבוני הבקרה שנקשרו למעצם באים במגע ישיר עם קומפלקס השעתוק.`,
+                    `רצפים אלו מקודדים ל-RNA מיוחד שנודד לאורך הכרומוזום עד לפרומוטור.`,
+                    `המרחק נועד למנוע אפשרות של בקרת שעתוק יעילה באזורים צפופים בגנום.`
+                ],
+                correctIndex: 1,
+                explanation: `בזכות גמישות ה-DNA והמבנה התלת-מימדי של הכרומטין, ה-DNA יכול להתקפל בצורת לולאה, כך שחלבוני בקרה הקשורים למעצם מרוחק יכולים ליצור אינטראקציה פיזית עם הפרומוטור.`
+            },
+            {
+                question: `אם נבצע מוטציה שמשנה את הרצף של קופסת ה-TATA בפרומוטור אאוקריוטי, מה תהיה התוצאה הסבירה ביותר?`,
+                options: [
+                    `השעתוק יתחיל מנקודה אקראית במורד הגן באופן לא מבוקר.`,
+                    `פקטורי השעתוק הכלליים לא יוכלו להיקשר ביעילות, ורמת השעתוק תרד משמעותית.`,
+                    `ה-RNA שייווצר יכיל אינטרונים שלא הוסרו בתהליך השחבור.`,
+                    `הריבוזום לא יזהה את ה-mRNA שנוצר בציטופלזמה.`
+                ],
+                correctIndex: 1,
+                explanation: `קופסת ה-TATA היא אתר הקישור הראשוני עבור TFIID (באמצעות TBP). פגיעה ברצף זה תמנע את הרכבת קומפלקס האיתחול (Preinitiation complex) ותפגע קשות ביכולת השעתוק.`
+            },
+            {
+                question: `בהנחה שגדיל התבנית הוא בעל הרצף מקצה 3 לקצה 5: TACGAT, מה יהיה רצף ה-RNA שייווצר מקצה 5 לקצה 3?`,
+                options: [
+                    `AUGCUA`,
+                    `UACGAU`,
+                    `ATGCTA`,
+                    `TACGAT`
+                ],
+                correctIndex: 0,
+                explanation: `ה-RNA מסונתז כמשלים אנטי-מקביל לגדיל התבנית. T הופך ל-A, A הופך ל-U (ב-RNA אין T), C הופך ל-G, ו-G הופך ל-C. לכן TACGAT יהפוך ל-AUGCUA.`
+            },
+            {
+                question: `איזה מהרכיבים הבאים אינו נדרש למערכת PCR מבודדת במבחנה?`,
+                options: [
+                    `פולימראז עמיד לחום (Taq)`,
+                    `פריימרים (תחלים) של DNA`,
+                    `נוקלאוטידים מסוג dNTPs`,
+                    `אנזים הליקאז לפרימת הסליל`
+                ],
+                correctIndex: 3,
+                explanation: `ב-PCR, פתיחת הסליל הכפול של ה-DNA מתבצעת על ידי חימום לטמפרטורה גבוהה (שלב הדנטורציה), ולכן אין צורך באנזים הליקאז כפי שקורה בתא חי.`
+            },
+            {
+                question: `מהו ההסבר המדויק לכך שההשערה ההיסטורית "גן אחד - אנזים אחד" נחשבת כיום לפשטנית מדי?`,
+                options: [
+                    `גנים יכולים לקודד ל-RNA שאינו מתורגם לחלבון, וגנים יכולים לקודד למספר חלבונים דרך שחבור חלופי.`,
+                    `כל גן מקודד למספר בלתי מוגבל של אנזימים שונים לחלוטין בהתאם לתנאי הסביבה.`,
+                    `אנזימים מיוצרים ישירות מ-DNA ללא תיווך של מולקולת RNA.`,
+                    `חלבונים נוצרים רק מאינטרונים, בעוד אקסונים מקודדים לאנזימים בלבד.`
+                ],
+                correctIndex: 0,
+                explanation: `התגלית שגנים יכולים לעבור שחבור חלופי ליצירת מספר פוליפפטידים, ושקיימים גנים המקודדים ל-rRNA או tRNA שאינם אנזימים, הפריכה את ההשערה המקורית.`
+            },
+            {
+                question: `במה נבדל מבנה ה-RNA ממבנה ה-DNA המאפשר לו לבצע תפקידים מגוונים ודינמיים יותר בתא?`,
+                options: [
+                    `ה-RNA מכיל את הסוכר דאוקסיריבוז המקנה לו יציבות מבנית יוצאת דופן.`,
+                    `ה-RNA הוא לרוב חד-גדילי ויכול להתקפל למבנים תלת-מימדיים מורכבים על ידי זיווג בסיסים פנימי.`,
+                    `ה-RNA מכיל תימין במקום אורציל, מה שמאפשר לו להיקשר לחלבונים שונים.`,
+                    `ה-RNA מסונתז תמיד כסליל כפול ונוקשה היוצר מבנה תמיכה לתא.`
+                ],
+                correctIndex: 1,
+                explanation: `היותו של ה-RNA לרוב חד-גדילי מאפשרת לו להתקפל על עצמו (כמו ב-tRNA ו-rRNA) וליצור מבנים מרחביים המקנים לו יכולות תפקודיות ואף קטליטיות.`
+            },
+            {
+                question: `מהו ההבדל הקריטי בין האנזים RNA פולימראז המשמש לשעתוק לבין DNA פולימראז המשמש לשכפול?`,
+                options: [
+                    `ה-RNA פולימראז דורש פריימר (תחל) מוקדם כדי להתחיל את הסינתזה.`,
+                    `ה-RNA פולימראז חסר יכולת הגהה (Proofreading) משמעותית ואינו מתקן שגיאות.`,
+                    `ה-RNA פולימראז מסנתז את הגדיל החדש בכיוון ההפוך, מקצה 3 לקצה 5.`,
+                    `ה-RNA פולימראז משתמש בנוקלאוטידים מסוג dNTPs במקום NTPs.`
+                ],
+                correctIndex: 1,
+                explanation: `בניגוד ל-DNA פולימראז, ה-RNA פולימראז אינו מבצע הגהה. שגיאות ב-RNA נסבלות יותר משום ש-RNA הוא מולקולה זמנית שמתפרקת, בעוד שגיאה ב-DNA היא מוטציה קבועה.`
+            },
+            {
+                question: `במהלך שלב ההתארכות (Elongation) בשעתוק, מה מתרחש בתוך "בועת השעתוק"?`,
+                options: [
+                    `ה-DNA נשאר פתוח לחלוטין לאורך כל הגן עד לסיום תהליך השעתוק.`,
+                    `ה-RNA פולימראז פורם את ה-DNA מקדימה, וגדילי ה-DNA נסגרים מחדש מאחוריו, תוך יצירת הכלאה קצרה של RNA-DNA.`,
+                    `שני גדילי ה-DNA משמשים בו-זמנית כתבנית לסינתזת שתי מולקולות RNA שונות.`,
+                    `ה-RNA המסונתז נשאר קשור ל-DNA לכל אורך הגן עד לשלב העיבוד בגרעין.`
+                ],
+                correctIndex: 1,
+                explanation: `הפולימראז יוצר בועה מקומית שבה רק כ-8 בסיסים של ה-RNA החדש קשורים לגדיל התבנית. ה-DNA נפתח מקדימה ונסגר מיד מאחור, וה-RNA משתחרר מהתבנית בהדרגה.`
+            },
+            {
+                question: `מדוע באאוקריוטים יש צורך באנזימים משני כרומטין (Chromatin-modifying enzymes) לשם תחילת שעתוק?`,
+                options: [
+                    `מכיוון שה-DNA האאוקריוטי עטוף סביב היסטונים במבנה דחוס המונע גישה של ה-RNA פולימראז לפרומוטור.`,
+                    `מכיוון שהם מוסיפים את כיפת ה-G לקצה ה-5 של ה-RNA החדש שנוצר.`,
+                    `מכיוון שהכרומטין הוא למעשה האנזים המבצע את השעתוק בפועל בגרעין התא.`,
+                    `מכיוון שהם אחראים על זיהוי אזור הסיום של הגן וחיתוך ה-RNA.`
+                ],
+                correctIndex: 0,
+                explanation: `הכרומטין הדחוס מונע מפקטורי השעתוק להתקשר ל-DNA. אנזימים משני כרומטין פותחים את המבנה הדחוס (למשל על ידי אצטילציה של היסטונים) ומאפשרים גישה לאזור הפרומוטור.`
+            },
+            {
+                question: `מהו תפקידם של האינטרונים בתהליך ביטוי הגנים באאוקריוטים?`,
+                options: [
+                    `הם האזורים המקודדים לחומצות אמינו ומרכיבים את החלבון הסופי.`,
+                    `הם אזורים לא מקודדים המועתקים ל-Pre-mRNA אך מוסרים בתהליך השחבור לפני התרגום.`,
+                    `הם משמשים כפריימרים טבעיים לתחילת תהליך השעתוק בגרעין.`,
+                    `הם אחראים על הוספת זנב הפולי-A לקצה ה-3 של ה-mRNA.`
+                ],
+                correctIndex: 1,
+                explanation: `אינטרונים (Intragenic regions) הם מקטעים לא מקודדים המקוטעים בתוך הגן. הם משועתקים ל-RNA הראשוני, אך חייבים להיות מוסרים בתהליך השחבור כדי שייווצר mRNA רציף המקודד לחלבון.`
+            },
+            {
+                question: `איזה מהתהליכים הבאים מאפשר לגן בודד (כמו גן ההמוגלובין) להשתתף ביצירת חלבון בעל מבנה רבעוני מורכב?`,
+                options: [
+                    `כל גן מקודד לכל תת-היחידות של החלבון בו-זמנית ברצף אחד ארוך.`,
+                    `מבנה רבעוני נוצר על ידי איחוד של פוליפפטידים שונים, שכל אחד מהם מקודד על ידי גן נפרד.`,
+                    `הגן משנה את הרצף שלו בכל פעם שהוא משועתק כדי לייצר יחידות שונות.`,
+                    `חלבוני עזר בציטופלזמה מחברים אינטרונים שונים ליצירת המבנה הרבעוני.`
+                ],
+                correctIndex: 1,
+                explanation: `חלבונים בעלי מבנה רבעוני (כמו המוגלובין) מורכבים ממספר תת-יחידות פוליפפטידיות. כל תת-יחידה יכולה להיות מקודדת על ידי גן נפרד לחלוטין.`
+            },
+            {
+                question: `מה מאפיין את מולקולת ה-tRNA בהקשר של ביטוי גנים?`,
+                options: [
+                    `היא מתורגמת ישירות לפוליפפטיד בתוך הריבוזום.`,
+                    `היא תוצר של גן שאינו מקודד לחלבון, ותפקידה לשאת חומצות אמינו לריבוזום.`,
+                    `היא משמשת כתבנית לשעתוק לאחור בוירוסים התוקפים תאים אנושיים.`,
+                    `היא האנזים המבצע את תהליך השחבור של ה-mRNA בגרעין התא.`
+                ],
+                correctIndex: 1,
+                explanation: `גנים המקודדים ל-tRNA לא מתורגמים לחלבון. ה-RNA עצמו הוא התוצר הסופי והתפקודי, המשמש כמתאם בין הקודון ב-mRNA לחומצת האמינו המתאימה.`
+            },
+            {
+                question: `מהי הפונקציה של הוספת הכיפה (Cap) לקצה ה-5 של ה-mRNA באאוקריוטים?`,
+                options: [
+                    `היא מסמנת את ה-mRNA לפירוק מהיר בציטופלזמה כדי למנוע עודף חלבון.`,
+                    `היא מגנה על ה-RNA מפירוק, מסייעת בייצוא מהגרעין ומאפשרת קישור לריבוזום.`,
+                    `היא מכילה את קודון ההתחלה הנדרש לריבוזום כדי להתחיל את התרגום.`,
+                    `היא מחליפה את האינטרונים שהוסרו מהרצף ושומרת על אורך ה-RNA.`
+                ],
+                correctIndex: 1,
+                explanation: `כיפת ה-5 (נוקלאוטיד GTP שעבר מתילציה) היא קריטית להגנה מפני פירוק על ידי נוקלאזות, והיא האות הראשוני המאפשר לריבוזום לזהות את ה-mRNA להתחלת התרגום.`
+            },
+            {
+                question: `בתהליך השעתוק בחיידקים, מה מסמן את סיום התהליך (Termination)?`,
+                options: [
+                    `ה-RNA פולימראז נתקל בקודון סיום (Stop codon) ברצף ה-DNA.`,
+                    `ה-RNA פולימראז מגיע לרצף סיום ספציפי ב-DNA הגורם לשחרור ה-RNA ולניתוק האנזים.`,
+                    `הריבוזום מסיים לתרגם את ה-mRNA ומושך אותו מתוך הפולימראז.`,
+                    `פקטור סיגמא נקשר מחדש לאנזים ועוצר את פעילותו באופן אקטיבי.`
+                ],
+                correctIndex: 1,
+                explanation: `סיום השעתוק מתרחש כאשר האנזים מזהה רצף טרמינציה ייעודי ב-DNA, הגורם לשחרור ה-RNA המסונתז ולניתוק הפולימראז. קודון סיום קשור לתרגום, לא לשעתוק.`
+            },
+            {
+                question: `במהלך תגובת PCR, מהי מטרת שלב החימום לטמפרטורה של 95 מעלות צלזיוס?`,
+                options: [
+                    `להפעיל את האנזים פולימראז כדי שיתחיל לסנתז.`,
+                    `לאפשר לפריימרים להיקשר באופן ספציפי לתבנית.`,
+                    `להפריד את שני גדילי ה-DNA תבנית על ידי שבירת קשרי המימן ביניהם.`,
+                    `לסנתז את הגדיל החדש במהירות מקסימלית ללא שגיאות.`
+                ],
+                correctIndex: 2,
+                explanation: `החימום ל-95 מעלות גורם לדנטורציה של ה-DNA - שבירת קשרי המימן בין הבסיסים והפרדת הסליל הכפול לשני גדילים בודדים שישמשו כתבניות.`
+            },
+            {
+                question: `כיצד מזוהים התוצרים השונים במכונת ריצוף סנגר אוטומטית?`,
+                options: [
+                    `על ידי מדידת המשקל המדויק של כל מקטע בעזרת ספקטרומטר מסות.`,
+                    `על ידי שימוש בנוקלאוטידים עוצרי-שרשרת המסומנים בצבעים פלואורסצנטיים שונים, הנקראים על ידי לייזר.`,
+                    `על ידי צפייה ישירה ברצף הבסיסים מבעד למיקרוסקופ אלקטרונים עוצמתי.`,
+                    `על ידי הוספת אנזימים המייצרים הבזק אור שונה בעת חיבור כל נוקלאוטיד.`
+                ],
+                correctIndex: 1,
+                explanation: `בריצוף מודרני, כל אחד מארבעת סוגי ה-ddNTPs מסומן בצבע פלואורסצנטי ייחודי. הלייזר מעורר את הצבע, והגלאי קורא את האות בהתאם לאורך המקטע.`
+            },
+            {
+                question: `מהו מאפיין ייחודי של ריצוף סנגר בהשוואה ל-PCR רגיל?`,
+                options: [
+                    `ריצוף סנגר משתמש בשני פריימרים כדי להגביר את הגן משני הכיוונים במקביל.`,
+                    `ריצוף סנגר משתמש בתערובת של dNTPs רגילים ו-ddNTPs שעוצרים את הסינתזה.`,
+                    `ריצוף סנגר אינו דורש כלל שימוש באנזים פולימראז.`,
+                    `ריצוף סנגר מבוצע בטמפרטורת החדר ללא מחזורי חום משתנים.`
+                ],
+                correctIndex: 1,
+                explanation: `הייחוד של סנגר הוא השימוש ב-ddNTPs החסרים קבוצת OH, מה שגורם לעצירת השרשרת באורכים שונים, בניגוד ל-PCR שמטרתו לייצר עותקים שלמים בלבד.`
+            },
+            {
+                question: `אם חוקר מגלה רצף TATAAT באזור המינוס 10 של פרומוטור, באיזה אורגניזם סביר להניח שהוא צופה?`,
+                options: [
+                    `בתא אדם (אאוקריוט).`,
+                    `בחיידק אי קולי (פרוקריוט).`,
+                    `בוירוס HIV.`,
+                    `בשמר (אאוקריוט חד-תאי).`
+                ],
+                correctIndex: 1,
+                explanation: `הרצף TATAAT באזור ה-10 (יחד עם TTGACA באזור ה-35) הוא רצף הכרה (קונצנזוס) אופייני לפרומוטורים בפרוקריוטים כמו E. coli, המזוהה על ידי פקטור סיגמא.`
+            },
+            {
+                question: `מדוע גלוקוז מועדף על פני לקטוז כמקור אנרגיה בחיידקי אי קולי?`,
+                options: [
+                    `כי פירוק לקטוז דורש השקעת אנרגיה בשעתוק ותרגום של אנזימים ייעודיים, בעוד גלוקוז מנוצל ישירות.`,
+                    `כי לקטוז רעיל לחיידק בריכוזים גבוהים וגורם למוות תאי.`,
+                    `כי אופרון הלקטוז אינו פעיל כלל בסביבה טבעית, אלא רק בתנאי מעבדה.`,
+                    `כי לקטוז חוסם פיזית את הריבוזומים של החיידק ומונע תרגום חלבונים.`
+                ],
+                correctIndex: 0,
+                explanation: `גלוקוז הוא סוכר פשוט הזמין לשימוש מיידי. הפעלת אופרון הלקטוז דורשת יצירת אנזימים חדשים, תהליך הדורש משאבים, ולכן החיידק יעדיף גלוקוז כל עוד הוא קיים.`
+            },
+            {
+                question: `מה מהבאים מתאר נכונה את השלבים של שעתוק RNA לפי הסדר?`,
+                options: [
+                    `איתחול, התארכות, שחבור.`,
+                    `איתחול, התארכות, סיום.`,
+                    `דנטורציה, קישור פריימרים, הארכה.`,
+                    `פתיחת הסליל, הגהה, ניתוק.`
+                ],
+                correctIndex: 1,
+                explanation: `תהליך השעתוק מורכב משלושה שלבים מרכזיים: Initiation (איתחול - קישור לפרומוטור), Elongation (התארכות - סינתזת ה-RNA), ו-Termination (סיום - ניתוק הפולימראז).`
+            },
+            {
+                question: `באילו מהתהליכים הבאים מעורבים נוקלאוטידים מסוג NTPs (להבדיל מ-dNTPs)?`,
+                options: [
+                    `שכפול מולקולת DNA.`,
+                    `הגברת DNA בשיטת PCR.`,
+                    `שעתוק RNA על ידי פולימראז.`,
+                    `ריצוף סנגר באמצעות לייזר.`
+                ],
+                correctIndex: 2,
+                explanation: `NTPs (ריבונוקלאוטידים) מכילים סוכר ריבוז ומשמשים כאבני הבניין לסינתזת RNA (שעתוק). dNTPs משמשים לסינתזת DNA (שכפול, PCR, ריצוף).`
+            },
+            {
+                question: `מהי מולקולת ה-Pre-mRNA?`,
+                options: [
+                    `מולקולת RNA קטנה המשמשת כפריימר לתחילת שכפול ה-DNA.`,
+                    `ה-RNA הראשוני הנוצר באאוקריוטים לפני שעבר תהליכי עיבוד כמו שחבור.`,
+                    `מולקולת RNA שמוכנה לתרגום מיידי בציטופלזמה.`,
+                    `חלבון מיוחד המסייע בתחילת תהליך השעתוק בגרעין.`
+                ],
+                correctIndex: 1,
+                explanation: `באאוקריוטים, התוצר הראשוני של השעתוק נקרא Pre-mRNA (קדם-mRNA). הוא מכיל עדיין אינטרונים וחסר כיפה וזנב, ולכן חייב לעבור עיבוד לפני שיהפוך ל-mRNA בוגר.`
+            },
+            {
+                question: `מהו ההבדל המבני בין סוכר ריבוז לסוכר דאוקסיריבוז?`,
+                options: [
+                    `לריבוז יש קבוצת מתיל נוספת בפחמן מספר 3.`,
+                    `לריבוז יש אטום חמצן הקשור לפחמן מספר 2, שחסר בדאוקסיריבוז.`,
+                    `ריבוז הוא סוכר בעל 6 פחמנים ודאוקסיריבוז בעל 5.`,
+                    `דאוקסיריבוז מכיל קבוצת פוספט כפולה החיונית ליציבות ה-DNA.`
+                ],
+                correctIndex: 1,
+                explanation: `השם "דאוקסי" (חסר חמצן) מעיד על כך שבדאוקסיריבוז (ב-DNA) חסר אטום החמצן בעמדה 2 של טבעת הסוכר, לעומת ריבוז (ב-RNA) שבו יש קבוצת OH בעמדה זו.`
+            },
+            {
+                question: `מה יקרה אם פריימר אחד בלבד יוסף לתגובת PCR במקום שניים?`,
+                options: [
+                    `התגובה לא תתרחש כלל ולא ייווצרו תוצרים.`,
+                    `ההגברה תהיה ליניארית במקום מעריכית, שכן רק גדיל אחד ישוכפל בכל מחזור.`,
+                    `התגובה תתבצע מהר יותר כי תהיה פחות תחרות על האנזים.`,
+                    `האנזים הפולימראז ישלים את הפריימר החסר בעצמו מתוך הנוקלאוטידים החופשיים.`
+                ],
+                correctIndex: 1,
+                explanation: `PCR דורש שני פריימרים כדי לתחום את האזור המוגבר משני צדדיו וליצור הגברה מעריכית ($2^n$). שימוש בפריימר אחד יוביל להעתקה של גדיל אחד בלבד, בקצב ליניארי.`
+            },
+            {
+                question: `מה מאפשר לאנזים ה-RNA פולימראז לקרוא את גדיל ה-DNA מבלי להזדקק לאנזים הליקאז נפרד?`,
+                options: [
+                    `הוא פועל רק על אזורי DNA שהם כבר חד-גדיליים.`,
+                    `יש לו פעילות פנימית של פרימת סליל ה-DNA ויצירת בועת שעתוק.`,
+                    `הוא משתמש בפריימרים מיוחדים שפותחים את הסליל הכפול.`,
+                    `ה-DNA בגרעין תמיד פתוח ואינו מסולסל באזורי הגנים.`
+                ],
+                correctIndex: 1,
+                explanation: `ה-RNA פולימראז הוא קומפלקס רב-עוצמה המכיל בתוכו את היכולת לפרום את סליל ה-DNA הכפול באופן מקומי (יצירת בועת שעתוק), ולכן אינו זקוק להליקאז נפרד.`
+            },
+            {
+                question: `בהשוואה בין פרוקריוטים לאאוקריוטים, איזה מהמשפטים הבאים נכון לגבי RNA פולימראז?`,
+                options: [
+                    `באאוקריוטים יש רק סוג אחד של RNA פולימראז המבצע את כל המשימות.`,
+                    `בפרוקריוטים האנזים יכול להיקשר לתבנית ה-DNA בעזרת פקטור סיגמא בלבד, בעוד באאוקריוטים נדרשים פקטורי שעתוק רבים.`,
+                    `האנזים הפרוקריוטי דורש פריימר ואילו האאוקריוטי מסוגל להתחיל ללא פריימר.`,
+                    `רק האנזים האאוקריוטי מסוגל לבצע תהליך של הגהה (Proofreading).`
+                ],
+                correctIndex: 1,
+                explanation: `בפרוקריוטים, הוספת פקטור סיגמא יוצרת הולואנזים שיכול להתחיל שעתוק ישירות. באאוקריוטים נדרש קומפלקס איתחול מסורבל הכולל פקטורי שעתוק כלליים (כמו TFIID) לזיהוי הפרומוטור.`
+            },
+            {
+                question: `מהו מנגנון הפעולה של חלבון רפרסור (Repressor) בבקרת שעתוק?`,
+                options: [
+                    `הוא מפרק את ה-RNA מיד לאחר היווצרותו בגרעין.`,
+                    `הוא נקשר לאזור הפרומוטור או בסמוך אליו ומונע פיזית את הקישור או ההתקדמות של RNA פולימראז.`,
+                    `הוא משנה את קודון ההתחלה בגן לקודון סיום, ובכך עוצר את התרגום.`,
+                    `הוא מסלק את פקטורי השעתוק הכלליים מהגרעין אל הציטופלזמה.`
+                ],
+                correctIndex: 1,
+                explanation: `רפרסור הוא חלבון בקרה שלילית. קישורו ל-DNA מפריע פיזית ל-RNA פולימראז לגשת לפרומוטור או להתחיל בשעתוק, כפי שקורה באופרון הלקטוז בהיעדר לקטוז.`
+            },
+            {
+                question: `כיצד ניתן להסביר את העובדה שמספר רב של עותקי RNA מסונתזים בו זמנית מאותו גן?`,
+                options: [
+                    `מולקולת פולימראז אחת מסנתזת מספר גדילי RNA במקביל.`,
+                    `מיד לאחר שהפולימראז הראשון מתקדם מעט, פולימראז נוסף יכול להיקשר לפרומוטור ולהתחיל שעתוק, וכך הלאה.`,
+                    `ה-DNA משוכפל למספר עותקים לפני השלב של השעתוק.`,
+                    `ה-RNA נוצר כסליל כפול ענק שמתפצל למספר רב של גדילים בודדים בסיום התהליך.`
+                ],
+                correctIndex: 1,
+                explanation: `שעתוק יכול להתרחש בתבנית של "רכבת". ברגע שהפולימראז הראשון מפנה את אזור הפרומוטור, פולימראז חדש יכול להיקשר, מה שיוצר מבנה דמוי "עץ" של מולקולות RNA מתארכות.`
+            },
+            {
+                question: `מה תפקידו של קודון הסיום (Stop codon) בגן?`,
+                options: [
+                    `לעצור את תהליך השעתוק ולנתק את ה-RNA פולימראז.`,
+                    `לעצור את תהליך התרגום של ה-mRNA לחלבון בריבוזום.`,
+                    `למנוע קישור של פקטור סיגמא לפרומוטור.`,
+                    `להפעיל את תהליך השחבור וחיתוך האינטרונים.`
+                ],
+                correctIndex: 1,
+                explanation: `קודון סיום הוא מושג השייך לתהליך התרגום. הוא מסמן לריבוזום להפסיק את הוספת חומצות האמינו. סיום השעתוק מבוקר על ידי רצפי טרמינציה אחרים ב-DNA.`
+            },
+            {
+                question: `איזו מהמולקולות הבאות מהווה את התוצר הסופי והתפקודי של ביטוי גנים על פי רוב?`,
+                options: [
+                    `מולקולת DNA חדשה.`,
+                    `פוליפפטיד (חלבון) או RNA תפקודי (כמו tRNA).`,
+                    `פחמימה מורכבת כמו תאית.`,
+                    `חומצת שומן המשמשת לבניית הממברנה.`
+                ],
+                correctIndex: 1,
+                explanation: `ביטוי גנים משמעו הפיכת המידע ב-DNA לתוצר פעיל. לרוב זהו חלבון (שמתורגם מ-mRNA), אך בחלק מהגנים התוצר הסופי הוא RNA בעל תפקיד עצמאי (כמו tRNA או rRNA).`
+            },
+            {
+                question: `מהו הרכב הנוקלאוטידים מסוג ddNTPs ההופך אותם לשימושיים כל כך בריצוף סנגר?`,
+                options: [
+                    `חסר להם אטום פחמן בטבעת הסוכר, מה שגורם לעיוות ב-DNA.`,
+                    `חסרה להם קבוצת הידרוקסיל בעמדה 3 של הסוכר, מה שמונע יצירת קשר פוספודיאסטרי עם הנוקלאוטיד הבא.`,
+                    `הם מכילים בסיס חנקני כפול החוסם פיזית את האנזים פולימראז.`,
+                    `הם חסרי קבוצת פוספט לחלוטין ולכן אינם טעונים חשמלית.`
+                ],
+                correctIndex: 1,
+                explanation: `סינתזת חומצות גרעין דורשת קבוצת 3-OH חופשית כדי להתחבר לפוספט של הנוקלאוטיד הבא. בהיעדרה ב-ddNTPs, השרשרת נעצרת בנקודה זו, מה שמאפשר לזהות את הבסיס האחרון שהוסף.`
+            }
+        ];
+
+        const tfData = [
+            { question: `בשיטת PCR, הגברת ה-DNA מתבצעת באופן ליניארי.`, answer: false, explanation: `הגברת ה-DNA ב-PCR היא מעריכית ($2^n$), כיוון שבכל מחזור שני הגדילים החדשים משמשים כתבנית למחזור הבא.` },
+            { question: `אנזים Taq פולימראז בודד מחיידק החי במעיינות חמים, ולכן הוא עמיד לטמפרטורות גבוהות.`, answer: true, explanation: `האנזים שורד את שלב הדנטורציה ($95^\circ C$) במחזורי ה-PCR מבלי לעבור הרס, מה שמאפשר אוטומציה של התהליך.` },
+            { question: `ריצוף בשיטת סנגר דורש שימוש בשני פריימרים שונים לאותה מבחנה.`, answer: false, explanation: `בניגוד ל-PCR, ריצוף סנגר דורש רק פריימר אחד, כיוון שמטרתו לקרוא רצף של גדיל תבנית אחד בלבד.` },
+            { question: `נוקלאוטידים מסוג ddNTP מכילים קבוצת OH בעמדה 3 של סוכר הריבוז.`, answer: false, explanation: `הייחוד של ddNTPs הוא בדיוק בכך שחסרה להם קבוצת ה-OH בעמדה 3, מה שגורם לעצירת סינתזת השרשרת.` },
+            { question: `על פי הדוגמה המרכזית (Central Dogma), מידע גנטי יכול לעבור מחלבון בחזרה ל-RNA.`, answer: false, explanation: `הדוגמה המרכזית גורסת שמידע זורם מ-DNA ל-RNA ולחלבונים. המידע אינו יכול לחזור מחלבון ל-RNA או ל-DNA.` },
+            { question: `רטרו-וירוסים כמו HIV משתמשים באנזים Reverse Transcriptase כדי לסנתז DNA מתבנית RNA.`, answer: true, explanation: `זהו יוצא דופן לדוגמה המרכזית, המאפשר לנגיף לשלב את הגנום שלו (אחרי שהומר ל-DNA) לתוך הגנום של התא המאכסן.` },
+            { question: `תהליך השעתוק דורש תחל (Primer) כדי להתחיל בסינתזת ה-RNA.`, answer: false, explanation: `בניגוד לשכפול DNA, האנזים RNA פולימראז מסוגל להתחיל סינתזת שרשרת RNA ישירות ללא צורך בפריימר.` },
+            { question: `סינתזת ה-RNA מתבצעת תמיד בכיוון מקצה 5 לקצה 3.`, answer: true, explanation: `האנזים מוסיף נוקלאוטידים לקצה ה-3 החופשי של שרשרת ה-RNA ההולכת ומתארכת.` },
+            { question: `גדיל התבנית של ה-DNA (Template) נקרא גם הגדיל המקודד (Sense strand).`, answer: false, explanation: `גדיל התבנית הוא אנטי-מקביל (Antisense). הגדיל המקודד (Sense) הוא הגדיל השני שאינו משועתק, אך רצפו זהה ל-RNA הנוצר.` },
+            { question: `במולקולת RNA, הבסיס אורציל (U) מחליף את הבסיס תימין (T) ונקשר לאדנין (A).`, answer: true, explanation: `אורציל חסר את קבוצת המתיל שיש לתימין, אך מבחינת זיווג בסיסים הוא ממלא תפקיד זהה ונקשר לאדנין.` },
+            { question: `מולקולות RNA הן לרוב חד-גדיליות ויכולות להתקפל למבנים תלת-מימדיים מורכבים.`, answer: true, explanation: `הקיפול מתאפשר בזכות זיווג בסיסים פנימי בתוך אותה שרשרת, מה שמאפשר ל-RNA ליצור מבנים תפקודיים קומפלקסיים.` },
+            { question: `האנזים RNA פולימראז ניחן ביכולת הגהה (Proofreading) ברמה הזהה לזו של DNA פולימראז.`, answer: false, explanation: `RNA פולימראז חסר יכולת הגהה משמעותית, ולכן קצב השגיאות בשעתוק גבוה יותר מאשר בשכפול.` },
+            { question: `בפרוקריוטים קיים רק סוג אחד של RNA פולימראז המבצע את כל תהליכי השעתוק.`, answer: true, explanation: `לעומת זאת, באאוקריוטים ישנם מספר סוגים (כמו פולימראז II האחראי על שעתוק mRNA).` },
+            { question: `פקטור סיגמא מזהה את אזור הפרומוטור באאוקריוטים ונקשר לקופסת ה-TATA.`, answer: false, explanation: `פקטור סיגמא פועל בפרוקריוטים (כמו חיידקי אי קולי). באאוקריוטים פועלים פקטורי שעתוק כלליים כמו TFIID.` },
+            { question: `קופסת TATA היא רצף הכרה נפוץ בפרומוטורים של פרוקריוטים.`, answer: false, explanation: `קופסת TATA אופיינית לפרומוטורים אאוקריוטיים. בפרוקריוטים נפוצים אזורי הקונצנזוס מינוס 10 ומינוס 35.` },
+            { question: `חלבוני בקרה יכולים להשפיע על שעתוק גם אם הם נקשרים למעצמים (Enhancers) המרוחקים אלפי בסיסים מהגן.`, answer: true, explanation: `הדבר מתאפשר הודות לקיפול ה-DNA במרחב, המקרב את המעצם אל אזור הפרומוטור.` },
+            { question: `אופרון הלקטוז בחיידקי אי קולי יתבטא ברמה גבוהה כאשר יש שפע של גלוקוז ולקטוז גם יחד.`, answer: false, explanation: `האופרון יתבטא ברמה גבוהה רק כאשר יש לקטוז ואין גלוקוז. גלוקוז מהווה מקור אנרגיה מועדף המדכא את הפעלת האופרון.` },
+            { question: `רוב מולקולות ה-mRNA באאוקריוטים מוכנות לתרגום מיד עם סיום השעתוק וללא צורך בעיבוד נוסף.`, answer: false, explanation: `באאוקריוטים ה-RNA הראשוני (Pre-mRNA) חייב לעבור עיבוד מקיף הכולל הוספת כיפה, זנב פולי-A ושחבור לפני התרגום.` },
+            { question: `הוספת זנב פולי-A לקצה ה-3 של ה-mRNA מסייעת בהגנה עליו מפני פירוק.`, answer: true, explanation: `בנוסף להגנה, הזנב מסייע בייצוא ה-mRNA מהגרעין ובהגברת יעילות התרגום שלו.` },
+            { question: `אינטרונים הם האזורים המקודדים לחלבון ונשמרים ב-mRNA הבוגר לאחר תהליך השחבור.`, answer: false, explanation: `אינטרונים הם הרצפים הלא-מקודדים המוסרים בתהליך השחבור. האקסונים הם אלו שנשמרים ומקודדים לחלבון.` },
+            { question: `שחבור חלופי (Alternative splicing) מאפשר לגן אחד לקודד למספר פוליפפטידים שונים.`, answer: true, explanation: `על ידי שילובים שונים של אקסונים הנשמרים ב-mRNA הסופי, ניתן ליצור חלבונים שונים (איזופורמים) מאותו רצף גנטי.` },
+            { question: `תהליך השעתוק מצריך שימוש באנזים הליקאז נפרד כדי לפתוח את גדילי ה-DNA.`, answer: false, explanation: `ה-RNA פולימראז מסוגל בעצמו לפרום את סליל ה-DNA וליצור את בועת השעתוק ללא עזרת הליקאז נפרד.` },
+            { question: `אבני הבניין של תהליך השעתוק הם NTPs, בניגוד ל-dNTPs המשמשים בשכפול DNA.`, answer: true, explanation: `NTPs (ריבונוקלאוטידים) מכילים סוכר ריבוז, המתאים לסינתזת RNA, בעוד dNTPs מכילים דאוקסיריבוז.` },
+            { question: `תחילת השעתוק באאוקריוטים דורשת לעיתים קרובות שינוי במבנה הכרומטין כדי לאפשר גישה ל-DNA.`, answer: true, explanation: `ה-DNA האאוקריוטי עטוף סביב היסטונים. אנזימים משני כרומטין פותחים את המבנה הדחוס כדי לאפשר לפולימראז לגשת לפרומוטור.` },
+            { question: `חלבון TBP מכופף את ה-DNA ופותח את התעלה המשנית שלו כחלק מיצירת קומפלקס האיתחול באאוקריוטים.`, answer: true, explanation: `חלבון זה (חלק מ-TFIID) נקשר לקופסת ה-TATA, מעוות את מבנה ה-DNA ובכך מסייע בגיוס שאר פקטורי השעתוק.` },
+            { question: `כל הגנים בטבע מקודדים לחלבונים.`, answer: false, explanation: `קיימים גנים רבים המקודדים למולקולות RNA תפקודיות שאינן מתורגמות לחלבון, כגון tRNA, rRNA ו-RNA בקרה.` },
+            { question: `בבועת השעתוק, נוצרת הכלאה זמנית בין ה-RNA המסונתז לגדיל ה-DNA המשמש כתבנית.`, answer: true, explanation: `אזור קצר של כ-8 בסיסים יוצר הכלאת RNA-DNA בתוך הבועה, לפני שה-RNA משתחרר וה-DNA נסגר מחדש מאחור.` },
+            { question: `קודון התחלה (Start codon) מהווה את האות עבור ה-RNA פולימראז להתחיל את תהליך השעתוק.`, answer: false, explanation: `ה-RNA פולימראז מתחיל לשעתק באזור הנקרא Transcription Start Site על סמך הפרומוטור. קודון התחלה שייך לתהליך התרגום בריבוזום.` },
+            { question: `רפרסור (Repressor) הוא חלבון המעודד ומגביר את קצב השעתוק של גן.`, answer: false, explanation: `רפרסור (מדכא) מבצע בקרה שלילית - הוא נקשר ל-DNA ומונע את השעתוק. אקטיבטור (משפעל) הוא זה המגביר את השעתוק.` },
+            { question: `גן ההמוגלובין (בטא-גלובין) מכיל גם אקסונים וגם אינטרונים.`, answer: true, explanation: `זהו גן אאוקריוטי טיפוסי. ה-Pre-mRNA שלו כולל כשלושה אקסונים ושני אינטרונים שמוסרים לפני התרגום.` }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

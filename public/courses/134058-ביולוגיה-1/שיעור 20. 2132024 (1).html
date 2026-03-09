@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: מעגל התא וחלוקת התא</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>חלוקת התא היא תהליך ביולוגי קריטי המורכב מארבעה שלבים עיקריים: קבלת אות רבייה, שכפול ה-DNA, הפרדת עותקי ה-DNA, וציטוקינזה (חלוקת הציטופלזמה). בתאים איוקריוטיים, התהליך מורכב יותר מאשר בפרוקריוטים, שכן הוא מבוקר על ידי צרכי האורגניזם השלם, מערב כרומוזומים מרובים בתוך גרעין, ודורש מנגנונים ייעודיים כמו מיטוזה.</p>
+                
+                <h3>מעגל התא (The Cell Cycle)</h3>
+                <p>מעגל התא מחולק לשני שלבים עיקריים: <strong>אינטרפזה</strong> (Interphase) בה התא מבלה את רוב זמנו, ושלב ה-<strong>M</strong> (מיטוזה וציטוקינזה). האינטרפזה כוללת את שלבי G1 (גדילה), S (שכפול ה-DNA והצנטרוסום), ו-G2 (הכנה למיטוזה). תאים שאינם מתחלקים נמצאים במצב מנוחה הקרוי G0.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: כרומוזומים מול כרומטידות</strong>
+                    מספר הכרומוזומים אינו משתנה בעקבות שכפול ה-DNA בשלב S. לפני השכפול, כל כרומוזום מורכב ממולקולת DNA אחת (כרומטידה אחת). לאחר השכפול, כל כרומוזום עדיין נחשב לכרומוזום אחד, אך כעת הוא מורכב משתי "כרומטידות אחיות" זהות המוחזקות יחד בצנטרומר על ידי חלבון הקוהזין. רק באנפזה, כשהן נפרדות, כל כרומטידה הופכת לכרומוזום עצמאי.
+                </div>
+
+                <h3>בקרת מעגל התא</h3>
+                <p>מעבר בין שלבי מעגל התא מבוקר בקפידה על ידי קומפלקסים של חלבונים: <strong>Cdk</strong> (קינאזות תלויות ציקלין) ו-<strong>Cyclin</strong>. הקינאז (Cdk) נמצא בתא באופן קבוע אך אינו פעיל ללא הציקלין, אשר מיוצר ומתפרק באופן מחזורי. זרחון חלבוני מטרה על ידי הקומפלקס משנה את המבנה המרחבי שלהם ודוחף את התא לשלב הבא. קיימות שלוש נקודות בקרה (Checkpoints) מרכזיות: G1/S, G2/M, ונקודת בקרת הכישור במיטוזה.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: מנגנון נקודת ההגבלה (Restriction Point) ב-G1/S</strong>
+                    נקודה זו היא הקריטית ביותר. חלבון RB (רטינובלסטומה) מעכב את מעגל התא כשהוא אינו מזורחן. כאשר התא מקבל אות חלוקה, Cdk מזרחן את RB, מה שמשחרר את העיכוב ומאפשר כניסה לשלב S. במקרה של נזק ל-DNA, מופעל חלבון p53 המעודד ייצור של p21. חלבון p21 נקשר לקומפלקס ה-Cdk ומעכב אותו, כך ש-RB נשאר לא מזורחן והתא עוצר כדי לתקן את הנזק. פגיעה במנגנון זה אופיינית לתאים סרטניים.
+                </div>
+
+                <h3>שלבי המיטוזה (PPMAT)</h3>
+                <ul>
+                    <li><strong>פרופזה:</strong> ה-DNA נדחס לכרומוזומים בעזרת חלבוני קונדנסין (condensin), הגרעינון נעלם, והצנטרוזומים נעים לקטבים לבניית הכישור.</li>
+                    <li><strong>פרומטפזה:</strong> מעטפת הגרעין מתפרקת, וסיבי מיקרוטובול (קינטוכור) מתחברים לכרומוזומים.</li>
+                    <li><strong>מטפזה:</strong> הכרומוזומים מסתדרים במישור המשווה. כאן פועלת נקודת בקרת הכישור.</li>
+                    <li><strong>אנפזה:</strong> אנזים הספרז (separase) מפרק את הקוהזין. כרומטידות אחיות נפרדות ונעות לקטבים בעזרת מנועים מולקולריים (דינאין וקינסין) והתקצרות המיקרוטובול.</li>
+                    <li><strong>טלופזה:</strong> הכישור מתפרק, הכרומוזומים נפתחים חזרה לכרומטין, ומעטפת הגרעין נבנית מחדש.</li>
+                </ul>
+
+                <h3>ציטוקינזה (Cytokinesis)</h3>
+                <p>חלוקת הציטופלזמה שונה מהותית בין בעלי חיים לצמחים. בבעלי חיים, נוצרת טבעת כיווץ מסיבי אקטין ומיוזין המפרידה את התא. בצמחים, בעלי דופן תא קשיח, שלפוחיות מהגולג'י מתאחות במרכז התא ויוצרות מחיצה (Cell plate) שהופכת לקרום ולדופן החדשים.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Cdk (Cyclin-dependent kinase)", definition: "אנזים קינאז הנמצא בתא באופן קבוע, המזרחן חלבוני מטרה כדי לקדם את מעגל התא, אך פעיל רק כאשר הוא קשור לציקלין." },
+            { term: "Cyclin (ציקלין)", definition: "חלבון המיוצר ונהרס באופן מחזורי במהלך מעגל התא, ותפקידו להיקשר ל-Cdk ולחשוף את האתר הפעיל שלו." },
+            { term: "RB (Retinoblastoma)", definition: "חלבון מדכא גידולים המעכב את מחזור התא בנקודת הבקרה G1/S. כאשר הוא מזורחן על ידי Cdk, הוא משחרר את העיכוב." },
+            { term: "p53", definition: "חלבון מדכא גידולים המופעל בעקבות נזק ל-DNA. הוא מעודד סינתזה של p21 כדי לעצור את מעגל התא לאפשר תיקון." },
+            { term: "p21", definition: "חלבון הנקשר לקומפלקס G1-S Cdk ומעכב את פעילותו, ובכך מונע את זרחון ה-RB ועוצר את התא ב-G1." },
+            { term: "Cohesin (קוהזין)", definition: "חלבון המחזיק יחד את שתי הכרומטידות האחיות באזור הצנטרומר מרגע השכפול ועד לאנפזה." },
+            { term: "Condensin (קונדנסין)", definition: "משפחת חלבונים הפועלת בפרופזה ועוטפת את ה-DNA כדי לדחוס אותו למבנה של כרומוזום הנראה לעין." },
+            { term: "Separase (ספרז)", definition: "אנזים הפועל בסוף המטפזה ומפרק את הקוהזין, מה שמאפשר לכרומטידות האחיות להיפרד באנפזה." },
+            { term: "Kinetochore (קינטוכור)", definition: "מבנה חלבוני המתפתח באזור הצנטרומר על גבי כל כרומטידה, אליו נקשרים סיבי המיקרוטובול של הכישור." },
+            { term: "Centrosome (צנטרוסום)", definition: "מרכז ארגון המיקרוטובול (MTOC) בתא. משוכפל בשלב S ונע לקטבים בפרופזה כדי ליצור את הכישור." },
+            { term: "G0 Phase", definition: "שלב מנוחה בו התא אינו מתחלק ומבצע את תפקידו הממוין. רוב התאים הבוגרים בגוף האדם נמצאים בשלב זה." },
+            { term: "Restriction Point (R point)", definition: "נקודת ההחלטה הקריטית ביותר במעגל התא (G1/S), בה התא מתחייב לשכפול ה-DNA ולחלוקה." },
+            { term: "Anchorage dependence", definition: "תכונה של תאים תקינים לפיה הם חייבים להיות מעוגנים למצע (substrate) כדי להתחלק." },
+            { term: "Density-dependent inhibition", definition: "תופעה בה תאים צפופים מפסיקים להתחלק עקב חוסר בפקטורי גדילה זמינים לכל תא." },
+            { term: "Prometaphase (פרומטפזה)", definition: "השלב במיטוזה בו מעטפת הגרעין מתפרקת וסיבי הכישור מתחברים לקינטוכורים שעל הכרומוזומים." }
+        ];
+
+        const mcqData = [
+            {
+                question: "תא אדם סומטי תקין נמצא בשלב G2 של מעגל התא. מהי ההצהרה הנכונה לגבי כמות החומר התורשתי בתא זה בהשוואה לאותו תא כשהיה בשלב G1?",
+                options: [
+                    "מספר הכרומוזומים הוכפל, ומספר הכרומטידות נשאר זהה.",
+                    "מספר הכרומוזומים נשאר זהה, אך מספר הכרומטידות הוכפל.",
+                    "גם מספר הכרומוזומים וגם מספר הכרומטידות הוכפלו.",
+                    "אין שינוי במספר הכרומוזומים או הכרומטידות, רק דחיסות ה-DNA השתנתה."
+                ],
+                correctIndex: 1,
+                explanation: "בשלב S, ה-DNA משוכפל. כל כרומוזום המורכב מכרומטידה אחת ב-G1 מורכב כעת משתי כרומטידות אחיות ב-G2. עם זאת, שתי הכרומטידות נחשבות יחד ככרומוזום אחד כל עוד הן מחוברות בצנטרומר."
+            },
+            {
+                question: "בניסוי של Rao ו-Johnson, תא בשלב S אוחה (fused) עם תא בשלב G1. התוצאה הייתה שגרעין תא ה-G1 החל לשכפל את ה-DNA שלו מוקדם מהצפוי. מה ניתן להסיק מתוצאה זו על בקרת מעגל התא?",
+                options: [
+                    "תאים בשלב G1 מכילים מעכב אקטיבי המונע כניסה לשלב S עד שהוא מתפרק.",
+                    "המעבר מ-G1 ל-S נשלט על ידי מולקולות אות ציטופלזמיות הנמצאות בתאים בשלב S.",
+                    "שכפול ה-DNA מתרחש באופן ספונטני כאשר שני גרעינים נמצאים באותה ציטופלזמה.",
+                    "ה-DNA בתא ה-S מתפקד כאנזים המשכפל את ה-DNA של תא ה-G1."
+                ],
+                correctIndex: 1,
+                explanation: "העובדה שגרעין ה-G1 הושפע מהציטופלזמה המשותפת עם תא ה-S מעידה שקיימים חומרים (כמו קומפלקס ציקלין-Cdk) בציטופלזמה של תא ה-S שמהווים אות חיובי המעורר את שכפול ה-DNA."
+            },
+            {
+                question: "איזו מהמוטציות הבאות צפויה להוביל לחלוקת תאים בלתי מבוקרת (סרטן) בסבירות הגבוהה ביותר?",
+                options: [
+                    "מוטציה שמונעת יצירת חלבון p21.",
+                    "מוטציה הגורמת לחלבון RB להיות עמיד בפני זרחון על ידי Cdk.",
+                    "מוטציה הפוגעת ביכולת של הציקלין להיקשר ל-Cdk.",
+                    "מוטציה המונעת פירוק של קוהזין על ידי ספרז."
+                ],
+                correctIndex: 0,
+                explanation: "חלבון p21 מעכב את Cdk במקרה של נזק ל-DNA. ללא p21, התא לא יעצור בנקודת הבקרה G1/S למרות נזק ב-DNA וימשיך להתחלק. מוטציה שמונעת זרחון של RB או פוגעת בקישור ציקלין ל-Cdk תעצור את מעגל התא, ולא תגרום לסרטן."
+            },
+            {
+                question: "חוקר מבחין בתא שבו הכרומוזומים מסודרים במישור המשווה, אך הם אינם נפרדים ונשארים מחוברים זה לזה זמן רב מהרגיל. איזו תקלה מולקולרית היא הסבירה ביותר?",
+                options: [
+                    "חלבון הקונדנסין אינו מתפקד כראוי.",
+                    "אנזים הספרז (Separase) אינו מופעל או מעוכב.",
+                    "קיים פגם ביצירת חלבון הקוהזין בשלב ה-S.",
+                    "אין יצירה של סיבי מיקרוטובול מסוג Polar."
+                ],
+                correctIndex: 1,
+                explanation: "הפרדת הכרומטידות באנפזה דורשת את פירוק חלבוני הקוהזין המחזיקים אותן יחד. פעולה זו מתבצעת על ידי האנזים ספרז. אם הוא אינו פועל, התא ייתקע בסוף המטפזה."
+            },
+            {
+                question: "מהו ההבדל המרכזי בין מנגנון הציטוקינזה בתא צמח לבין מנגנון הציטוקינזה בתא בעל חיים?",
+                options: [
+                    "בתא צמח הציטוקינזה מתרחשת לפני המיטוזה, ואילו בבעלי חיים היא מתרחשת אחריה.",
+                    "בתא בעל חיים מעורבים סיבי אקטין ומיוזין היוצרים טבעת כיווץ, ואילו בצמח שלפוחיות גולג'י מתאחות ליצירת מחיצה.",
+                    "בתא צמח הציטוקינזה מחלקת את ה-DNA באופן שווה, בעוד בבעלי חיים החלוקה היא רק של הציטופלזמה.",
+                    "בתא בעל חיים הציטוקינזה דורשת פירוק של דופן התא, מה שלא נדרש בתא צמחי."
+                ],
+                correctIndex: 1,
+                explanation: "בגלל שלתאי צמח יש דופן קשיח, הם אינם יכולים להתכווץ פנימה. במקום זאת, הם בונים מחיצה חדשה (Cell plate) ממרכז התא החוצה באמצעות שלפוחיות מהגולג'י. תאי בעלי חיים חסרי דופן ומשתמשים בטבעת כיווץ חלבונית."
+            },
+            {
+                question: "אם תא נחשף לקרינה הגורמת לנזק חמור ב-DNA בשלב G1, מהו רצף האירועים הצפוי ביותר במערכת הבקרה התאית התקינה?",
+                options: [
+                    "הפעלת p53 -> יצירת p21 -> עיכוב Cdk -> חלבון RB נשאר לא מזורחן -> עצירת התא ב-G1.",
+                    "הפעלת p53 -> פירוק p21 -> שפעול Cdk -> זרחון RB -> מעבר מהיר לשלב S לתיקון ה-DNA.",
+                    "שפעול ישיר של RB -> עיכוב p53 -> יצירת ציקלין -> עצירת התא ב-G1.",
+                    "עיכוב p21 -> זרחון p53 -> שפעול Cdk -> עצירת התא בנקודת הבקרה G2/M."
+                ],
+                correctIndex: 0,
+                explanation: "נזק ל-DNA מפעיל את p53 (מדכא גידולים), שפועל כפקטור שעתוק לייצור p21. חלבון p21 מעכב את קומפלקס ה-Cdk-Cyclin, מה שמונע ממנו לזרחן את RB. כאשר RB לא מזורחן, הוא ממשיך לעכב את המעבר לשלב S."
+            },
+            {
+                question: "מה תפקידו העיקרי של הקינטוכור (Kinetochore) במהלך חלוקת התא?",
+                options: [
+                    "לשמש כמרכז ארגון המיקרוטובול (MTOC) בקטבי התא.",
+                    "להוות את אתר הקישור על גבי הכרומטידה שאליו מתחברים סיבי הכישור.",
+                    "לדחוס את מולקולת ה-DNA למבנה כרומוזומלי צפוף לפני פרופזה.",
+                    "לחבר בין שתי הכרומטידות האחיות לכל אורך זרועותיהן עד לאנפזה."
+                ],
+                correctIndex: 1,
+                explanation: "הקינטוכור הוא מבנה חלבוני המתפתח באזור הצנטרומר של כל כרומטידה, והוא משמש כנקודת העיגון לסיבי המיקרוטובול של הכישור (Kinetochore microtubules), המושכים את הכרומוזומים לקטבים."
+            },
+            {
+                question: "מולקולת תרופה חדשה מונעת לחלוטין את הפירוק של חלבוני הציקלין בתא. מה תהיה ההשפעה הסבירה ביותר על מעגל התא?",
+                options: [
+                    "התא לא יוכל להיכנס לשלב S ויישאר ב-G1 לנצח.",
+                    "מעגל התא ייעצר מכיוון שקומפלקס Cdk ייוותר פעיל ברציפות, מה שימנע את התנודתיות הנדרשת למעבר בין השלבים השונים.",
+                    "התרופה לא תשפיע כלל, שכן Cdk הוא האנזים הפעיל והוא נמצא בתא באופן קבוע.",
+                    "התא יעבור את המיטוזה במהירות כפולה וללא נקודות בקרה."
+                ],
+                correctIndex: 1,
+                explanation: "מעגל התא מסתמך על נוכחות מחזורית (ייצור ופירוק) של ציקלינים שונים. אם ציקלין לא מתפרק, ה-Cdk יישאר פעיל כל הזמן, והתא לא יוכל לאתפס את המערכת כדי להתקדם לשלב הבא (למשל, יציאה ממיטוזה דורשת פירוק של ציקלין מסוים)."
+            },
+            {
+                question: "במהלך איזה שלב של מעגל התא הצנטרוסום (Centrosome) עובר שכפול?",
+                options: [
+                    "G1",
+                    "S phase",
+                    "G2",
+                    "Prophase"
+                ],
+                correctIndex: 1,
+                explanation: "הצנטרוסום (המכיל שני צנטריולים בבעלי חיים) משוכפל במהלך שלב S, במקביל לשכפול ה-DNA, כדי להכין שני מרכזי ארגון לכישור המיטוטי."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר בצורה הטובה ביותר את ההבדל בין חלבון Cdk לחלבון Cyclin?",
+                options: [
+                    "Cdk מיוצר רק לפני המיטוזה, בעוד שציקלין נמצא בתא באופן קבוע.",
+                    "Cdk הוא האנזים המזרחן ונמצא בתא באופן קבוע, בעוד שציקלין הוא חלבון בקרה המיוצר ונהרס באופן מחזורי.",
+                    "Cdk מזרחן את ה-DNA ישירות, בעוד ציקלין מזרחן את קרום התא.",
+                    "ציקלין מעכב את מעגל התא, בעוד Cdk מזרז אותו."
+                ],
+                correctIndex: 1,
+                explanation: "רמות הקינאז (Cdk) נשארות קבועות לאורך מעגל התא, אך הוא אינו פעיל מעצמו. הפעילות שלו תלויה לחלוטין בחלבון הציקלין, שריכוזו עולה ויורד במחזוריות."
+            },
+            {
+                question: "תא שריר הלב בוגר באדם אינו מתחלק עוד. באיזה שלב של מעגל התא סביר להניח שהוא נמצא?",
+                options: [
+                    "G1",
+                    "S",
+                    "G2",
+                    "G0"
+                ],
+                correctIndex: 3,
+                explanation: "תאים ממוינים שאינם מתחלקים (כמו תאי שריר לב או תאי עצב) יוצאים ממעגל התא הפעיל ונכנסים לשלב מנוחה הנקרא G0."
+            },
+            {
+                question: "מהו התנאי המרכזי שחייב להתקיים כדי שהתא יעבור את נקודת בקרת הכישור (Spindle Checkpoint) במטפזה?",
+                options: [
+                    "כל ה-DNA חייב להיות משוכפל ללא שגיאות.",
+                    "רמות ה-p53 בתא חייבות לרדת לאפס.",
+                    "כל הכרומוזומים חייבים להיות מחוברים לסיבי הכישור משני הקטבים.",
+                    "מעטפת הגרעין חייבת להיבנות מחדש באופן שלם."
+                ],
+                correctIndex: 2,
+                explanation: "בקרת הכישור מוודאת שכל הקינטוכורים מחוברים היטב לסיבי המיקרוטובול. רק כאשר יש מתח פיזי המעיד על חיבור תקין משני הצדדים, מופעל קומפלקס APC המאפשר את תחילת האנפזה."
+            },
+            {
+                question: "איזה מהבאים אינו נחשב לחלבון מדכא גידולים (Tumor Suppressor)?",
+                options: [
+                    "p53",
+                    "p21",
+                    "RB",
+                    "Cyclin D"
+                ],
+                correctIndex: 3,
+                explanation: "חלבוני p53, p21 ו-RB פועלים לבלימת מעגל התא כאשר יש נזק או אין אות מתאים, ולכן הם מדכאי גידולים. לעומת זאת, ציקלין D מקדם את מעגל התא (הוא אונקוגן פוטנציאלי כאשר הוא מבוטא ביתר)."
+            },
+            {
+                question: "כיצד פקטורי גדילה (Growth Factors), כגון PDGF, משפיעים בדרך כלל על תאים בשלב G0?",
+                options: [
+                    "הם חודרים לגרעין ומפרקים את ה-DNA כדי למנוע חלוקה.",
+                    "הם נקשרים לרצפטורים על פני קרום התא ומפעילים מפל העברת אותות (Cascade) שגורם לתא לחזור לשלב G1 ולהתחלק.",
+                    "הם מזרחנים ישירות את חלבון RB ללא צורך בקומפלקס Cdk-Cyclin.",
+                    "הם גורמים לתא לעבור אפופטוזיס (מוות תאי מתוכנת) כדי לפנות מקום לתאים חדשים."
+                ],
+                correctIndex: 1,
+                explanation: "פקטורי גדילה הם אותות חיצוניים (ליגנדים) הנקשרים לקולטנים על הממברנה ומעבירים אות פנימה המעודד את התא לצאת ממצב מנוחה (G0) ולהיכנס למעגל החלוקה."
+            },
+            {
+                question: "תופעת ה- 'Anchorage dependence' (תלות בעיגון) משמעותה ש:",
+                options: [
+                    "כרומוזומים חייבים להיות מעוגנים לקטבי התא כדי להיפרד.",
+                    "תאים חייבים להיות מחוברים למצע פיזי כלשהו כדי להתחלק.",
+                    "חלבון ה-Cdk חייב להיות מעוגן לממברנת התא כדי להיות פעיל.",
+                    "שלפוחיות הגולג'י חייבות להיות מעוגנות למיקרוטובול בצמחים."
+                ],
+                correctIndex: 1,
+                explanation: "בתאים תקינים, תלות בעיגון פירושה שהתא יתחלק רק אם הוא קשור למשטח או לרקמה (דרך רצפטורים החשים מגע). תאים סרטניים מאבדים לעתים קרובות תכונה זו ויכולים להתחלק גם כשהם צפים חופשי."
+            },
+            {
+                question: "מה מתרחש בשלב הפרומטפזה (Prometaphase) של המיטוזה?",
+                options: [
+                    "הכרומוזומים מתחילים להידחס והגרעינון נעלם.",
+                    "מעטפת הגרעין מתפרקת וסיבי הכישור מתחברים לקינטוכורים.",
+                    "הכרומטידות האחיות נפרדות ונעות לקטבים.",
+                    "התא מתחלק פיזית לשני תאי בת נפרדים."
+                ],
+                correctIndex: 1,
+                explanation: "פרומטפזה מאופיינת בפירוק מעטפת הגרעין, מה שמאפשר למיקרוטובול מהכישור לחדור פנימה ולהתחבר לקינטוכורים שעל הכרומוזומים."
+            },
+            {
+                question: "איזה סוג של סיבי מיקרוטובול אחראי על דחיפת קטבי התא זה מזה במהלך האנפזה?",
+                options: [
+                    "Kinetochore microtubules",
+                    "Aster microtubules",
+                    "Polar microtubules",
+                    "Actin filaments"
+                ],
+                correctIndex: 2,
+                explanation: "Polar microtubules (מיקרוטובולים קוטביים) אינם נקשרים לכרומוזומים, אלא חופפים זה לזה במרכז התא. מנועים מולקולריים דוחפים אותם אחד כנגד השני, מה שמרחיק את הקטבים ומאריך את התא."
+            },
+            {
+                question: "מהי התוצאה הסופית של המיטוזה (שלב ה-M) בתא איוקריוטי דיפלואידי?",
+                options: [
+                    "ארבעה תאים הפלואידים בעלי מטען גנטי שונה.",
+                    "שני תאים דיפלואידים הזהים גנטית לתא האם.",
+                    "שני תאים הפלואידים הזהים גנטית לתא האם.",
+                    "תא אחד ענק (Syncytium) עם שני גרעינים."
+                ],
+                correctIndex: 1,
+                explanation: "מיטוזה היא חלוקת תא סומטית שבה תא אם מחלק את ה-DNA המשוכפל שלו במדויק לשני גרעינים, ויוצר שני תאי בת הזהים גנטית לתא המקורי ובעלי אותו מספר כרומוזומים."
+            },
+            {
+                question: "אילו מנועים מולקולריים מעורבים באופן פעיל בתנועת הכרומוזומים לעבר הקטבים במהלך האנפזה?",
+                options: [
+                    "אקטין ומיוזין",
+                    "דינאין (dynein) וקינסין (kinesin)",
+                    "Cdk וציקלין",
+                    "הליקאז ופולימראז"
+                ],
+                correctIndex: 1,
+                explanation: "במהלך האנפזה, הכרומוזומים נעים על גבי המיקרוטובול בעזרת מנועים מולקולריים כמו דינאין וקינסין, המשתמשים ב-ATP, במקביל להתקצרות הסיבים עצמם."
+            },
+            {
+                question: "מהו ההבדל התפקודי בין חלבון קוהזין לחלבון קונדנסין?",
+                options: [
+                    "קוהזין דוחס את ה-DNA בפרופזה, בעוד קונדנסין מחזיק כרומטידות אחיות יחד.",
+                    "קוהזין מחזיק כרומטידות אחיות יחד, בעוד קונדנסין אחראי לדחיסת הכרומוזומים למבנה קומפקטי.",
+                    "שניהם מבצעים את אותה פעולה בדיוק אך בשלבים שונים של מעגל התא.",
+                    "קוהזין מפרק את מעטפת הגרעין, וקונדנסין בונה אותה מחדש."
+                ],
+                correctIndex: 1,
+                explanation: "קוהזין (Cohesin) 'מדביק' את הכרומטידות האחיות זו לזו מרגע השכפול. קונדנסין (Condensin) פועל בפרופזה כדי לארוז ולדחוס את ה-DNA הארוך לכדי כרומוזומים נפרדים וצפופים."
+            },
+            {
+                question: "תופעת 'Density-dependent inhibition' (עיכוב תלוי צפיפות) מוסברת ברמה המולקולרית בכך ש:",
+                options: [
+                    "תאים צפופים מפרישים רעלנים ההורגים תאים שכנים.",
+                    "כאשר התאים מרובים, כל תא קושר רק מעט פקטורי גדילה, מה שלא מספיק כדי לעבור את נקודת ההגבלה (R point).",
+                    "הצפיפות גורמת לעלייה בטמפרטורה המקומית, מה שדנטורליזם לציקלינים.",
+                    "כוחות דחייה חשמליים בין ממברנות מונעים חלוקה."
+                ],
+                correctIndex: 1,
+                explanation: "עיכוב תלוי צפיפות נובע מהתחרות על פקטורי גדילה בסביבה. כשיש הרבה תאים, הכמות שכל תא מקבל יורדת מתחת לסף הנדרש להפעלת מפל האותות המעודד חלוקה."
+            },
+            {
+                question: "אם חוקר יוסיף לתא מעכב המונע את פעילותו של חלבון המיוזין (Myosin), איזה שלב ייפגע באופן הישיר ביותר?",
+                options: [
+                    "שכפול ה-DNA בשלב S.",
+                    "הפרדת הכרומוזומים באנפזה.",
+                    "פירוק מעטפת הגרעין בפרומטפזה.",
+                    "הציטוקינזה בתא בעל חיים."
+                ],
+                correctIndex: 3,
+                explanation: "מיוזין, יחד עם אקטין, מרכיב את טבעת הכיווץ האחראית על חיתוך הציטופלזמה והפרדת התא לשניים במהלך הציטוקינזה בתאי בעלי חיים."
+            },
+            {
+                question: "מהו המאפיין של ה-DNA באינטרפזה (Interphase) לעומת שלב המיטוזה?",
+                options: [
+                    "באינטרפזה ה-DNA ארוז בצורת כרומוזומים דחוסים מאוד.",
+                    "באינטרפזה ה-DNA נמצא במבנה לא דחוס הקרוי כרומטין (Chromatin).",
+                    "באינטרפזה ה-DNA נמצא מחוץ לגרעין התא.",
+                    "באינטרפזה ה-DNA מורכב מ-RNA במקום מנוקלאוטידים רגילים."
+                ],
+                correctIndex: 1,
+                explanation: "במהלך האינטרפזה התא צריך לקרוא את ה-DNA (לשעתק גנים) ולשכפל אותו, ולכן ה-DNA חייב להיות פתוח ונגיש במבנה של כרומטין, ולא דחוס ככרומוזום מיטוטי."
+            },
+            {
+                question: "מדוע יש צורך בנקודת הבקרה G2/M?",
+                options: [
+                    "כדי לוודא שהתא גדול מספיק כדי להתחיל את שכפול ה-DNA.",
+                    "כדי לוודא ששכפול ה-DNA הסתיים במלואו וללא שגיאות לפני כניסה למיטוזה.",
+                    "כדי לוודא שכל הכרומוזומים מחוברים לכישור.",
+                    "כדי למנוע מתאים זרים להיכנס לרקמה."
+                ],
+                correctIndex: 1,
+                explanation: "נקודת הבקרה G2/M היא השער לפני המיטוזה. היא מוודאת שתהליך השכפול (שהתרחש ב-S) הושלם כראוי ושאין נזקי DNA, כדי לא להעביר מוטציות לתאי הבת."
+            },
+            {
+                question: "הורמון האריתרופויטין (Erythropoietin) המיוצר בכליות משמש בגוף כ:",
+                options: [
+                    "מעכב מחזור תא לתאי דם לבנים.",
+                    "פקטור גדילה המעודד חלוקה של תאי מח עצם וייצור תאי דם אדומים.",
+                    "אנזים המפרק ציקלינים בכבד.",
+                    "חלבון מדכא גידולים המונע סרטן דם."
+                ],
+                correctIndex: 1,
+                explanation: "אריתרופויטין (EPO) הוא דוגמה ספציפית לפקטור גדילה חיצוני המאותת לתאי גזע במח העצם לצאת מ-G0 ולהתחלק כדי לייצר עוד כדוריות דם אדומות."
+            },
+            {
+                question: "באיזה שלב של חלוקת התא הגרעינון (Nucleolus) נעלם?",
+                options: [
+                    "Prophase",
+                    "Metaphase",
+                    "Anaphase",
+                    "Telophase"
+                ],
+                correctIndex: 0,
+                explanation: "בפרופזה, יחד עם דחיסת ה-DNA ותחילת בניית הכישור, הגרעינון (אזור בגרעין שבו מיוצרות תת-יחידות הריבוזום) מתפוגג ונעלם מעיני המיקרוסקופ."
+            },
+            {
+                question: "איזו אמירה לגבי חלוקת אורגנלות (כמו מיטוכונדריה) במהלך הציטוקינזה היא המדויקת ביותר?",
+                options: [
+                    "הן מתחלקות בצורה מדויקת ושווה לחלוטין כמו ה-DNA.",
+                    "כל האורגנלות נהרסות ונבנות מחדש בתאי הבת.",
+                    "הן מחולקות באופן אקראי למדי בין שני תאי הבת, ואינן זקוקות לחלוקה מדויקת.",
+                    "רק תא בת אחד מקבל את האורגנלות, והשני מייצר אותן מאפס."
+                ],
+                correctIndex: 2,
+                explanation: "בניגוד ל-DNA שחייב להיות מחולק בצורה מושלמת (אחרת התא ימות או יהפוך לסרטני), אורגנלות כמו מיטוכונדריה וריבוזומים מתחלקות באופן גס בין הציטופלזמות. כל עוד תא הבת קיבל כמות מינימלית, הוא יכול לשכפל אותן בהמשך."
+            },
+            {
+                question: "מה קורה בטלופזה (Telophase)?",
+                options: [
+                    "הכרומטידות נפרדות ונעות לקטבים.",
+                    "מעטפת הגרעין נבנית מחדש סביב כל סט של כרומוזומים, והכישור מתפרק.",
+                    "התא מכפיל את הצנטרוסומים שלו.",
+                    "הכרומוזומים מסתדרים במישור המשווה."
+                ],
+                correctIndex: 1,
+                explanation: "טלופזה היא השלב ההפוך לפרופזה/פרומטפזה: הכישור סיים את תפקידו ומתפרק, הכרומוזומים נפתחים חזרה לכרומטין, ומעטפת הגרעין נסגרת מחדש סביב הגרעינים החדשים."
+            },
+            {
+                question: "מהי המשמעות המעשית של מוטציה בגן TP53 ביותר מחצי ממקרי הסרטן באדם?",
+                options: [
+                    "התאים מאבדים את היכולת לחבר את הכרומוזומים לכישור.",
+                    "התאים אינם יכולים לייצר Cdk ולכן מתחלקים ללא הפסקה.",
+                    "התאים מאבדים את 'בלם החירום' שלהם במקרה של נזק ל-DNA, וממשיכים להתחלק עם מוטציות.",
+                    "התאים הופכים תלויים לחלוטין בפקטורי גדילה חיצוניים."
+                ],
+                correctIndex: 2,
+                explanation: "חלבון p53 (המקודד על ידי הגן TP53) עוצר את מעגל התא כשמתגלה נזק ב-DNA. ללא p53 תקין, אין מי שיעודד ייצור p21 שיעכב את Cdk, והתא יתחלק למרות הנזק, מה שיוביל להצטברות מהירה של מוטציות נוספות המאפיינות סרטן."
+            },
+            {
+                question: "מהו תפקידו של קומפלקס APC (Anaphase-Promoting Complex)?",
+                options: [
+                    "לזרחן את חלבון ה-RB בנקודת R.",
+                    "להפעיל את אנזים הספרז בסוף המטפזה כדי לאפשר את תחילת האנפזה.",
+                    "לדחוס את הכרומטין לכרומוזומים בפרופזה.",
+                    "לייצר שלפוחיות גולג'י בציטוקינזה של תאי צמח."
+                ],
+                correctIndex: 1,
+                explanation: "ה-APC מופעל לאחר שכל הכרומוזומים מחוברים כראוי לכישור (סיום מוצלח של Spindle checkpoint). הוא מסמן חלבונים לעיכול, ובעקיפין גורם להפעלת הספרז (Separase) שחותך את הקוהזין."
+            },
+            {
+                question: "מדוע תאים איוקריוטיים רב-תאיים מתחלקים לעיתים רחוקות יחסית לתאים פרוקריוטיים?",
+                options: [
+                    "כי ל-DNA שלהם אין מנגנון שכפול.",
+                    "כי אות הרבייה (Reproductive signal) באורגניזם רב-תאי קשור לצרכי האורגניזם השלם ולא רק לסביבת התא הבודד.",
+                    "כי אין להם פקטורי גדילה בסביבה החיצונית.",
+                    "כי מיטוזה דורשת כמות אנרגיה אינסופית."
+                ],
+                correctIndex: 1,
+                explanation: "בפרוקריוטים (חיידקים), סביבה עשירה במזון היא לרוב אות מספיק לחלוקה. באיוקריוטים רב-תאיים, רוב התאים ממוינים ומתחלקים רק כאשר יש צורך מערכתי (כמו ריפוי פצע או גדילה), המתווך על ידי אותות מורכבים (כמו הורמונים ופקטורי גדילה)."
+            },
+            {
+                question: "חלבון קינאז (Kinase) מתאפיין בכך ש:",
+                options: [
+                    "הוא חותך שרשראות פוליפפטידיות.",
+                    "הוא מעביר קבוצת זרחה (פוספט) מ-ATP לסובסטרט אחר.",
+                    "הוא מחבר שתי מולקולות DNA יחד.",
+                    "הוא מפרק מולקולות סוכר להפקת אנרגיה."
+                ],
+                correctIndex: 1,
+                explanation: "קינאזות הם אנזימים המזרזים העברת קבוצת זרחה (זרחון/Phosphorylation). הזרחון משנה את המטען החשמלי ואת המבנה המרחבי של חלבון המטרה, ובכך מפעיל או מכבה אותו."
+            },
+            {
+                question: "כיצד תאי סרטן עוקפים לעיתים קרובות את הצורך בפקטורי גדילה חיצוניים?",
+                options: [
+                    "הם מפסיקים לחלוטין לייצר רצפטורים על הממברנה.",
+                    "הם עשויים לייצר בעצמם את פקטורי הגדילה שלהם או לפעול כאילו האות קיים גם בלעדיו.",
+                    "הם משתמשים באנרגיית אור דרך כלורופלסטים במקום פקטורי גדילה.",
+                    "הם נכנסים לשלב G0 באופן קבוע."
+                ],
+                correctIndex: 1,
+                explanation: "בניגוד לתאים רגילים הממתינים לאות חיצוני, תאי סרטן רוכשים מוטציות המאפשרות להם 'לרמות' את המערכת: הם יכולים להפריש פקטורי גדילה לעצמם, או שהרצפטורים/מערכת העברת האותות שלהם תקועים במצב 'מופעל' תמידית."
+            },
+            {
+                question: "מה קורה לחלבון הציקלין (Cyclin) לאחר שהקומפלקס שלו עם Cdk סיים את תפקידו בשלב מסוים של מעגל התא?",
+                options: [
+                    "הוא הופך ל-Cdk בעצמו.",
+                    "הוא מופרש אל מחוץ לתא.",
+                    "הוא עובר פירוק (Breakdown) כדי לאפשר למעגל להתקדם לשלב הבא.",
+                    "הוא נכנס לתוך הגרעין ונשאר שם כחומר תשמורת."
+                ],
+                correctIndex: 2,
+                explanation: "כדי שמעגל התא יהיה חד-כיווני ולא יחזור אחורה, הציקלינים הספציפיים לכל שלב מפורקים באלימות לאחר שסיימו את תפקידם, מה שמכבה את פעילות ה-Cdk לאותו שלב."
+            },
+            {
+                question: "אם נתבונן בתא אנושי מיד לאחר סיום המיטוזה ולפני שלב ה-S, כמה כרומטידות אחיות נצפה לראות בכל כרומוזום?",
+                options: [
+                    "0",
+                    "1",
+                    "2",
+                    "4"
+                ],
+                correctIndex: 1,
+                explanation: "לאחר המיטוזה (חלוקת הכרומטידות) ולפני שכפול ה-DNA (שלב S), כל כרומוזום מורכב ממולקולת DNA אחת בלבד, כלומר כרומטידה אחת לכל כרומוזום."
+            },
+            {
+                question: "פקטור הגדילה PDGF (Platelet-derived growth factor) מופרש על ידי:",
+                options: [
+                    "הכליות, כדי לעודד ייצור דם.",
+                    "תאי דם לבנים, כדי לעודד חלוקת תאי חיסון.",
+                    "טסיות דם (Platelets), ומעודד תאי עור להתחלק לריפוי פצעים.",
+                    "תאי עצב, כדי למנוע חלוקת תאי שריר."
+                ],
+                correctIndex: 2,
+                explanation: "PDGF מופרש מטסיות הדם באזור של פציעה וקרישת דם. הוא מאותת לתאי העור (פיברובלסטים) באזור לצאת מ-G0 ולהתחלק כדי לרפא את הפצע."
+            },
+            {
+                question: "מה קובע את מישור החלוקה של הכרומוזומים והתא במהלך המיטוזה?",
+                options: [
+                    "כיוון זרימת הציטופלזמה.",
+                    "האוריינטציה והמיקום שאליהם נעים הצנטרוזומים (קטבי הכישור).",
+                    "מיקום המיטוכונדריות בתא.",
+                    "עובי מעטפת הגרעין."
+                ],
+                correctIndex: 1,
+                explanation: "בפרופזה, שני הצנטרוזומים נעים לקצוות מנוגדים של התא. הציר שנוצר ביניהם קובע את 'מישור המשווה' שעליו יסתדרו הכרומוזומים, ובסופו של דבר את המישור שבו התא יחצה לשניים."
+            },
+            {
+                question: "בצמחים חסר מבנה תאי מסוים שקיים בבעלי חיים וקשור לחלוקת התא. מהו המבנה וכיצד הצמח מתגבר על חסרונו?",
+                options: [
+                    "לצמחים אין Cdk, והם משתמשים באנזימי עיכול במקום.",
+                    "לצמחים אין גרעין תא, ולכן ה-DNA צף חופשי.",
+                    "לצמחים אין צנטריולים (Centrioles) בתוך הצנטרוסום, אך המיקרוטובולים נוצרים ממרכזי ארגון שונים בקטבים.",
+                    "לצמחים אין ציטופלזמה, ולכן הם לא מבצעים ציטוקינזה."
+                ],
+                correctIndex: 2,
+                explanation: "לצמחים אין צנטריולים ברורים (מבני צינורות בתוך הצנטרוסום), אך עדיין יש להם אזורים המתפקדים כ-MTOC (מרכזי ארגון מיקרוטובול) שמסוגלים לארגן את הכישור המיטוטי."
+            },
+            {
+                question: "מהו תפקידו המדויק של חלבון RB בתא במצב מנוחה (ללא אותות חלוקה)?",
+                options: [
+                    "הוא מזרחן את ה-DNA כדי לשמור עליו דחוס.",
+                    "הוא נקשר לפקטורי שעתוק (כמו E2F) ומעכב אותם, ובכך חוסם את ביטוי הגנים הנדרשים לשלב S.",
+                    "הוא מפרק את הציקלינים ברגע שהם נוצרים.",
+                    "הוא מושך את הכרומוזומים לקטבים."
+                ],
+                correctIndex: 1,
+                explanation: "RB (רטינובלסטומה) במצבו הלא-מזורחן נקשר לפקטורי שעתוק קריטיים ומונע מהם להפעיל את הגנים הדרושים לשכפול ה-DNA. זרחון ה-RB על ידי Cdk משנה את המבנה שלו וגורם לו לשחרר את פקטורי השעתוק."
+            },
+            {
+                question: "אם כרומוזום אחד לא הצליח להתחבר לסיבי הכישור במהלך הפרומטפזה, מה צפויה להיות התגובה של התא?",
+                options: [
+                    "התא ימשיך כרגיל וייווצר תא בת אחד עם חוסר בכרומוזום.",
+                    "התא יפעיל מיד את אנזים הספרז כדי לחתוך את הכרומוזום החסר.",
+                    "נקודת בקרת הכישור תמנע את הפעלת קומפלקס ה-APC, והתא ייעצר במטפזה ולא יכנס לאנפזה.",
+                    "התא יחזור לשלב G1 ויתחיל את כל מעגל התא מחדש."
+                ],
+                correctIndex: 2,
+                explanation: "זהו בדיוק תפקידה של נקודת הבקרה של הכישור (Spindle checkpoint). כל עוד יש אפילו קינטוכור אחד שאינו מחובר היטב למיקרוטובול, נשלח אות מעכב שמונע את הפעלת ה-APC ואת המעבר לאנפזה."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "בשלב G1 של מעגל התא, כל כרומוזום מורכב משתי כרומטידות אחיות.",
+                answer: false,
+                explanation: "בשלב G1 ה-DNA טרם שוכפל. כל כרומוזום מורכב ממולקולת DNA אחת (כרומטידה אחת). רק לאחר שלב S הכרומוזום מכיל שתי כרומטידות."
+            },
+            {
+                question: "רמת הריכוז של אנזים ה-Cdk בתא עולה ויורדת באופן משמעותי במהלך מעגל התא.",
+                answer: false,
+                explanation: "אנזים ה-Cdk נמצא בתא ברמה קבועה פחות או יותר. מה שעולה ויורד באופן מחזורי הם חלבוני הציקלין (Cyclin) המפעילים אותו."
+            },
+            {
+                question: "חלבון p21 פועל כמעכב של קומפלקס ה-Cdk-Cyclin.",
+                answer: true,
+                explanation: "נכון. במקרה של נזק ל-DNA, חלבון p53 מעודד ייצור של p21, אשר נקשר לקומפלקס ה-Cdk ומעכב אותו מלקדם את מעגל התא."
+            },
+            {
+                question: "תהליך הציטוקינזה בתאי צמחים מסתמך על טבעת כיווץ של סיבי אקטין ומיוזין.",
+                answer: false,
+                explanation: "טבעת כיווץ קיימת בתאי בעלי חיים. בתאי צמחים נוצרת מחיצה (Cell plate) מאיחוי של שלפוחיות שמקורן במנגנון הגולג'י, בשל נוכחות דופן התא."
+            },
+            {
+                question: "אנזים הספרז (Separase) מפרק את חלבון הקוהזין באזור הצנטרומר.",
+                answer: true,
+                explanation: "נכון. פעולה זו, המתרחשת במעבר בין המטפזה לאנפזה, מאפשרת את הפרדת הכרומטידות האחיות."
+            },
+            {
+                question: "רוב התאים בגוף האדם הבוגר נמצאים בשלב חלוקה פעיל (שלב M) בכל רגע נתון.",
+                answer: false,
+                explanation: "רוב תאי האדם הבוגר (כמו תאי עצב, שריר ורוב איברי הפנים) נמצאים בשלב מנוחה (G0) ואינם מתחלקים באופן שוטף."
+            },
+            {
+                question: "חלבון הרטינובלסטומה (RB) מאפשר לתא להיכנס לשלב S כאשר הוא אינו מזורחן (Unphosphorylated).",
+                answer: false,
+                explanation: "בדיוק ההיפך. RB לא-מזורחן חוסם את מעגל התא. רק כאשר קומפלקס ה-Cdk מזרחן את ה-RB, הוא משחרר את העיכוב והתא עובר לשלב S."
+            },
+            {
+                question: "מיקרוטובולים מסוג Polar מתחברים ישירות לקינטוכור של הכרומוזומים.",
+                answer: false,
+                explanation: "רק Kinetochore microtubules מתחברים לקינטוכור. Polar microtubules חופפים זה לזה במרכז התא ודוחפים את הקטבים אחד מהשני."
+            },
+            {
+                question: "הגרעינון (Nucleolus) נעלם במהלך שלב הפרופזה של המיטוזה.",
+                answer: true,
+                explanation: "נכון. כחלק מההכנה לחלוקת החומר התורשתי ודחיסתו, הגרעינון מתפוגג ונבנה מחדש רק בטלופזה."
+            },
+            {
+                question: "מוטציה בגן TP53, המקודד לחלבון p53, נמצאת ביותר ממחצית ממקרי הסרטן באדם.",
+                answer: true,
+                explanation: "נכון. p53 הוא 'שומר הגנום' המרכזי. פגיעה בו מונעת מהתא לעצור את החלוקה במקרה של נזק ל-DNA, מה שמוביל להצטברות מוטציות וסרטן."
+            },
+            {
+                question: "הצנטרוסום עובר שכפול במהלך שלב ה-G2.",
+                answer: false,
+                explanation: "הצנטרוסום משוכפל במהלך שלב ה-S, במקביל לשכפול ה-DNA."
+            },
+            {
+                question: "תאים סרטניים מאופיינים באובדן התכונה של 'עיכוב תלוי צפיפות' (Density-dependent inhibition).",
+                answer: true,
+                explanation: "נכון. תאים תקינים מפסיקים להתחלק כשצפוף להם, בעוד שתאים סרטניים ממשיכים להתחלק ויוצרים גושים (גידולים)."
+            },
+            {
+                question: "חלבון קונדנסין (Condensin) אחראי להחזקת הכרומטידות האחיות יחד לאחר השכפול.",
+                answer: false,
+                explanation: "חלבון הקוהזין (Cohesin) מחזיק את הכרומטידות יחד. קונדנסין אחראי על דחיסת ה-DNA לכרומוזומים בפרופזה."
+            },
+            {
+                question: "בטלופזה, מעטפת הגרעין נבנית מחדש סביב כל קבוצת כרומוזומים.",
+                answer: true,
+                explanation: "נכון. טלופזה היא השלב הסופי של המיטוזה שבו התא חוזר למצב של 'אינטרפזה' מבחינת מבנה הגרעין והכרומטין."
+            },
+            {
+                question: "אינטרפזה היא השלב הקצר ביותר במעגל התא.",
+                answer: false,
+                explanation: "אינטרפזה (הכוללת את G1, S, G2) היא השלב הארוך ביותר במעגל התא, ובו התא מבלה את רוב חייו."
+            },
+            {
+                question: "נקודת הבקרה G2/M בודקת האם כל ה-DNA שוכפל כראוי.",
+                answer: true,
+                explanation: "נכון. נקודה זו מוודאת שהתא מוכן להיכנס למיטוזה וכי לא נותרו שגיאות או אזורים לא משוכפלים ב-DNA מתום שלב S."
+            },
+            {
+                question: "מנועים מולקולריים כמו דינאין וקינסין אינם דורשים אנרגיה (ATP) לפעולתם במהלך האנפזה.",
+                answer: false,
+                explanation: "מנועים מולקולריים אלו דורשים הידרוליזה של ATP כדי לנוע לאורך המיקרוטובול ולמשוך את הכרומוזומים לקטבים."
+            },
+            {
+                question: "אינטרלוקינים (Interleukins) הם סוג של פקטורי גדילה המעודדים חלוקה של תאי דם לבנים.",
+                answer: true,
+                explanation: "נכון. הם מופרשים על ידי תאי מערכת החיסון כדי לעודד חלוקה והתרבות של תאי חיסון אחרים בזמן זיהום."
+            },
+            {
+                question: "במהלך שלב ה-S, מספר הכרומוזומים בתא מוכפל.",
+                answer: false,
+                explanation: "בשלב S כמות ה-DNA מוכפלת (מספר הכרומטידות מוכפל), אך מספר הכרומוזומים נשאר זהה מכיוון שהכרומטידות האחיות מחוברות יחד ונחשבות לכרומוזום אחד."
+            },
+            {
+                question: "נקודת ההגבלה (Restriction point / R point) ממוקמת בסוף שלב ה-G2.",
+                answer: false,
+                explanation: "נקודת ההגבלה (R point) היא נקודת הבקרה המרכזית ב-G1/S. מעבר שלה מהווה התחייבות של התא לשכפול ולחלוקה."
+            },
+            {
+                question: "תאים אנימליים חסרים מבנה של צנטריולים.",
+                answer: false,
+                explanation: "להפך. בתאים אנימליים יש צנטריולים בתוך הצנטרוסום. תאי צמחים הם אלו שחסרים צנטריולים (אך עדיין יוצרים כישור)."
+            },
+            {
+                question: "פקטורי גדילה הם בדרך כלל חלבונים המשמשים כאותות חיצוניים המעודדים חלוקת תאים.",
+                answer: true,
+                explanation: "נכון. הם משוחררים על ידי תאים בגוף ונקשרים לקולטנים על תאי המטרה כדי להוציא אותם מ-G0 ל-G1."
+            },
+            {
+                question: "אנפזה מתחילה רק לאחר שכל הכרומוזומים מסודרים במישור המשווה ומחוברים לכישור.",
+                answer: true,
+                explanation: "נכון. זה מובטח על ידי נקודת בקרת הכישור (Spindle checkpoint) שמעכבת את מעבר המטפזה-אנפזה עד שכל החיבורים תקינים."
+            },
+            {
+                question: "במהלך הפרומטפזה, מעטפת הגרעין מתחילה להיווצר מחדש.",
+                answer: false,
+                explanation: "בפרומטפזה מעטפת הגרעין מתפרקת כדי לאפשר לסיבי הכישור לגשת לכרומוזומים. היא נבנית מחדש רק בטלופזה."
+            },
+            {
+                question: "חלוקת המיטוכונדריה לשני תאי הבת במהלך הציטוקינזה היא תהליך מדויק ושווה לחלוטין.",
+                answer: false,
+                explanation: "בניגוד ל-DNA המחולק בדיוק רב, חלוקת האורגנלות בציטוקינזה היא מקורבת ואקראית יותר. התא הבת רק צריך לקבל כמות מספקת כדי להתקיים ולייצר עוד."
+            },
+            {
+                question: "קומפלקס APC (Anaphase-Promoting Complex) מעוכב כל עוד יש כרומוזום שלא מחובר לכישור.",
+                answer: true,
+                explanation: "נכון. זהו המנגנון של בקרת הכישור. קינטוכור לא מחובר משדר אות שחוסם את ה-APC, ומונע את הפעלת הספרז."
+            },
+            {
+                question: "תאים סרטניים עשויים לייצר פקטורי גדילה בעצמם כדי לעודד את חלוקתם.",
+                answer: true,
+                explanation: "נכון. זהו אחד המנגנונים המאפשרים לתאים סרטניים להתחלק ללא בקרה חיצונית של הגוף."
+            },
+            {
+                question: "הכרומטין הוא מבנה דחוס מאוד של DNA המאפיין את שלב המיטוזה.",
+                answer: false,
+                explanation: "כרומטין הוא המבנה הפתוח והלא-דחוס של ה-DNA המאפיין את האינטרפזה. במיטוזה הוא נדחס לכרומוזומים."
+            },
+            {
+                question: "הקינטוכור הוא האזור ב-DNA עצמו שבו שתי הכרומטידות מתחברות.",
+                answer: false,
+                explanation: "האזור ב-DNA נקרא צנטרומר. הקינטוכור הוא מבנה חלבוני הנבנה על גבי הצנטרומר ומשמש כנקודת אחיזה לסיבי המיקרוטובול."
+            },
+            {
+                question: "פעולת קינאז תמיד מפעילה את חלבון המטרה.",
+                answer: false,
+                explanation: "זרחון על ידי קינאז יכול להפעיל או לעכב את חלבון המטרה, תלוי בחלבון הספציפי ובאתר הזרחון, על ידי שינוי הקונפורמציה שלו."
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

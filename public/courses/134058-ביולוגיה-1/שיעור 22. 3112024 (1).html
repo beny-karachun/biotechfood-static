@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: מיוזה והתפתחות עוברית</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>פרק זה עוסק בשני תהליכים ביולוגיים קריטיים: חלוקת הפחתה (מיוזה) המייצרת תאי רבייה, ותהליכי ההתפתחות העוברית ההופכים תא בודד לאורגניזם רב-תאי מורכב.</p>
+                
+                <h3>חלק א: מיוזה (Meiosis)</h3>
+                <p>מיוזה היא חלוקת תא המביאה ליצירת ארבעה תאים הפלואידים (המכילים מחצית מכמות הכרומוזומים) מתא אם דיפלואידי אחד. התאים הנוצרים אינם זהים גנטית לתא האם או זה לזה. התהליך כולל שתי חלוקות עוקבות, אך רק הכפלה אחת של ה-DNA (בשלב ה-S של האינטרפאזה).</p>
+                <ul>
+                    <li><strong>מיוזה I:</strong> חלוקת ההפחתה העיקרית. כרומוזומים הומולוגיים מצומדים (סינפסיס) ויוצרים טטרדות. בשלב הפרופזה I מתרחש שחלוף (Crossing over) באזורי הכיאסמטה, המגביר את השונות הגנטית. באנפזה I, הכרומוזומים ההומולוגיים נפרדים באופן אקראי (Independent assortment).</li>
+                    <li><strong>מיוזה II:</strong> דומה למיטוזה, אך מתרחשת ללא הכפלת DNA מקדימה. כרומטידות אחיות (שכעת אינן זהות עקב השחלוף) נפרדות לקצוות התא.</li>
+                    <li><strong>שגיאות במיוזה:</strong> חוסר הפרדה תקינה (Nondisjunction) באנפזה I או II מוביל לאנאפלוידיות (חוסר או עודף של כרומוזומים), כגון טריזומיה 21 (תסמונת דאון) או מונוזומיה. בעיה בחלבון הקוהזין היא גורם נפוץ לכך.</li>
+                </ul>
+
+                <h3>חלק ב: התפתחות (Development)</h3>
+                <p>התפתחות היא התהליך בו אורגניזם רב-תאי עובר סדרת שינויים מתא מופרה (זיגוטה) לאורגניזם בוגר. התהליך מוכוון על ידי ארבעה מנגנונים מרכזיים: גדילה (Growth), קביעת גורל (Determination), התמיינות (Differentiation) ומורפוגנזה (Morphogenesis).</p>
+                <ul>
+                    <li><strong>פוטנציאל תאי (Potency):</strong> תאים מאבדים בהדרגה את יכולתם להתמיין לכל סוג תא. מסטטוס טוטיפוטנטי (יכולת ליצור אורגניזם שלם) למולטיפוטנטי ויוניפוטנטי.</li>
+                    <li><strong>מנגנוני קביעת גורל:</strong> התאים באורגניזם זהים גנטית; ההבדל ביניהם נובע מביטוי גנים שונה. הדבר מושג באמצעות חלוקה לא שווה של גורמים בציטופלזמה (Cytoplasmic segregation) או תקשורת בין תאית (Induction) באמצעות מורפוגנים.</li>
+                    <li><strong>מורפוגנים:</strong> מולקולות איתות המשפיעות על תאים כתלות בריכוזן (מודל דגל צרפת). לדוגמה, התפתחות הפות בתולעת C. elegans מוכוונת על ידי מורפוגן LIN-3 המופרש מתא עוגן.</li>
+                    <li><strong>אפופטוזיס:</strong> מוות תאי מתוכנת הוא חלק קריטי ופעיל בהתפתחות התקינה, למשל בעיצוב אצבעות הידיים באדם או בסילוק תאים מיותרים בתולעת נמטודה.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: שונות גנטית אינה מקרית בלבד</strong>
+                    בעוד שמוטציות הן אקראיות, המיוזה היא מנגנון מתוכנן היטב לייצור שונות גנטית אדירה דרך שחלוף פיזי (Crossing over) והיערכות בלתי תלויה. באדם, רק מעצם ההיערכות האקראית, ישנם ($2^{23}$) שילובים אפשריים לייצור תא רבייה, עוד לפני שלוקחים בחשבון את השחלוף עצמו.
+                </div>
+                <div class="insight-box">
+                    <strong>תובנת מפתח: גורל התא נקבע על ידי סביבתו, לא רק על ידי הגנום שלו</strong>
+                    כל התאים באורגניזם (למעט תאי רבייה) מכילים עותק זהה של ה-DNA. ההחלטה אם תא יהפוך לתא שריר או לתא עור אינה נובעת משינוי גנטי, אלא מסביבה כימית חיצונית (מורפוגנים) המפעילה או מכבה קבוצות ספציפיות של גנים (ביטוי גנים דיפרנציאלי).
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: `מיוזה (Meiosis)`, definition: `חלוקת תא המפחיתה את מספר הכרומוזומים לחצי, ומייצרת ארבעה תאים הפלואידים שאינם זהים גנטית.` },
+            { term: `סינפסיס (Synapsis)`, definition: `תהליך ההצמדות של כרומוזומים הומולוגיים זה לזה לאורך כל אורכם, המתרחש בפרופזה I של המיוזה.` },
+            { term: `טטרדה (Tetrad)`, definition: `מבנה הנוצר במיוזה I המורכב מזוג כרומוזומים הומולוגיים צמודים, הכוללים יחד ארבע כרומטידות.` },
+            { term: `כיאסמטה (Chiasmata)`, definition: `נקודות המגע הפיזיות בין כרומטידות לא-אחיות של כרומוזומים הומולוגיים, בהן מתרחש השחלוף.` },
+            { term: `שחלוף גנטי (Crossing Over)`, definition: `החלפת מקטעי DNA בין כרומטידות לא-אחיות במהלך הפרופזה I, התורמת להגברת השונות הגנטית.` },
+            { term: `Nondisjunction`, definition: `שגיאה במיוזה בה כרומוזומים הומולוגיים או כרומטידות אחיות כושלים בהיפרדות תקינה, מה שמוביל לאנאפלוידיות.` },
+            { term: `אנאפלוידיות (Aneuploidy)`, definition: `מצב בו לתא יש מספר לא תקין של כרומוזומים, כגון חוסר (מונוזומיה) או עודף (טריזומיה).` },
+            { term: `קוהזין (Cohesin)`, definition: `חלבון המצמיד כרומטידות אחיות יחד. פגם בו הוא גורם נפוץ לשגיאות בהפרדת כרומוזומים במיוזה.` },
+            { term: `התפתחות (Development)`, definition: `תהליך בו אורגניזם רב-תאי עובר סדרת שינויים מתקדמים המאפיינים את מחזור חייו, החל משלב הזיגוטה.` },
+            { term: `התמיינות (Differentiation)`, definition: `התהליך בו תאים בעלי גורל מוגדר רוכשים תכונות ספציפיות והופכים לסוגי תאים שונים (למשל תא שריר או עצב).` },
+            { term: `קביעת גורל (Determination)`, definition: `השלב ההתפתחותי המגדיר מראש את עתידו של התא, עוד לפני שהשינויים המורפולוגיים נראים לעין.` },
+            { term: `תא טוטיפוטנטי (Totipotent)`, definition: `תא בעל פוטנציאל להתמיין לכל סוגי התאים בגוף, כולל יצירת אורגניזם שלם (כמו תאים בעובר מוקדם).` },
+            { term: `מורפוגן (Morphogen)`, definition: `מולקולת איתות כימית המספקת מידע מיקומי לתאים ומשפיעה על התמיינותם כתלות בריכוזה בסביבה.` },
+            { term: `הפרדה ציטופלזמית (Cytoplasmic Segregation)`, definition: `מנגנון התפתחותי בו חומרים בציטופלזמה מחולקים באופן לא שווה בין תאי הבת במהלך חלוקת התא.` },
+            { term: `השראה (Induction)`, definition: `תקשורת בין-תאית בה פקטורים המיוצרים על ידי תא אחד גורמים לתאים סמוכים לשנות את מסלול ההתמיינות שלהם.` },
+            { term: `אפופטוזיס (Apoptosis)`, definition: `מוות תאי מתוכנת. תהליך פיזיולוגי חיוני לסילוק תאים מיותרים במהלך ההתפתחות (כמו עיצוב האצבעות).` },
+            { term: `MyoD`, definition: `פקטור שעתוק קריטי המפעיל את תהליך ההתמיינות של תאי אב לתאי שריר על ידי עצירת מחזור התא.` }
+        ];
+
+        const mcqData = [
+            {
+                question: `איזה מהתהליכים הבאים מבדיל באופן המובהק ביותר בין מיוזה I למיטוזה?`,
+                options: [
+                    `הכפלת ה-DNA מתרחשת לפני החלוקה.`,
+                    `הכרומטידות האחיות נפרדות ונעות לקטבים מנוגדים.`,
+                    `כרומוזומים הומולוגיים נצמדים זה לזה לכל אורכם.`,
+                    `מעטפת הגרעין מתפרקת בשלב הפרומטאפזה.`
+                ],
+                correctIndex: 2,
+                explanation: `במיוזה I מתרחש תהליך הסינפסיס בו כרומוזומים הומולוגיים נצמדים ויוצרים טטרדות. תהליך זה אינו קיים במיטוזה, שם כל כרומוזום מתנהל באופן עצמאי.`
+            },
+            {
+                question: `בהנחה שלתא דיפלואידי של אורגניזם מסוים יש 8 כרומוזומים (2n=8), כמה שילובים אפשריים של כרומוזומים יכולים להיווצר בגמטות כתוצאה מהיערכות בלתי תלויה בלבד (ללא שחלוף)?`,
+                options: [
+                    `8`,
+                    `16`,
+                    `64`,
+                    `256`
+                ],
+                correctIndex: 1,
+                explanation: `מספר השילובים האפשריים מחושב לפי הנוסחה ($2^n$), כאשר n הוא המספר ההפלואידי. אם 2n=8, אזי n=4. לכן, ($2^4 = 16$).`
+            },
+            {
+                question: `מהי התוצאה הישירה של פגם בתפקוד חלבון הקוהזין במהלך מיוזה I?`,
+                options: [
+                    `ה-DNA לא יעבור הכפלה לפני תחילת המיוזה.`,
+                    `לא יתרחש שחלוף גנטי (Crossing over) בין הכרומוזומים.`,
+                    `הכרומוזומים ההומולוגיים לא ייפרדו כראוי באנפזה I.`,
+                    `התא ידלג על מיוזה I ויעבור ישירות למיוזה II.`
+                ],
+                correctIndex: 2,
+                explanation: `חלבון הקוהזין מצמיד כרומטידות ואחראי להחזקת המבנה יחד. פגם בו מוביל לשגיאות בהפרדה (Nondisjunction) וכתוצאה מכך לאנאפלוידיות, שכן הכרומוזומים לא יישארו מאורגנים כראוי לקראת ההפרדה.`
+            },
+            {
+                question: `חוקר צופה בתא תחת מיקרוסקופ ומבחין ב-23 מבנים נפרדים המסתדרים במישור המשווה של התא. כל מבנה מורכב מארבע כרומטידות. באיזה שלב נמצא התא?`,
+                options: [
+                    `מטפזה של המיטוזה`,
+                    `מטפזה I של המיוזה`,
+                    `מטפזה II של המיוזה`,
+                    `פרופזה II של המיוזה`
+                ],
+                correctIndex: 1,
+                explanation: `מבנים של ארבע כרומטידות הם טטרדות (זוג כרומוזומים הומולוגיים צמודים). היערכות טטרדות במישור המשווה אופיינית אך ורק למטפזה I של המיוזה.`
+            },
+            {
+                question: `מדוע הכרומטידות האחיות המופרדות באנפזה II של המיוזה אינן בהכרח זהות גנטית זו לזו, בניגוד לאלו המופרדות באנפזה של המיטוזה?`,
+                options: [
+                    `משום שהן עוברות מוטציות מכוונות בשלב האינטרפאזה הקצר שלפני מיוזה II.`,
+                    `משום שחלקן עברו חילופי מקטעים עם כרומטידות לא-אחיות במהלך הפרופזה I.`,
+                    `משום שה-DNA מוכפל רק פעם אחת עבור שתי חלוקות תא.`,
+                    `משום שההיערכות הבלתי תלויה במטפזה II משנה את הרצף הגנטי שלהן.`
+                ],
+                correctIndex: 1,
+                explanation: `במהלך הפרופזה I מתרחש שחלוף (Crossing over) באזורי הכיאסמטה בין כרומטידות לא-אחיות. כתוצאה מכך, נוצרות כרומטידות רקומביננטיות, ולכן הכרומטידות האחיות של אותו כרומוזום כבר אינן זהות לחלוטין כשמגיעים למיוזה II.`
+            },
+            {
+                question: `אדם סובל מתסמונת קליינפלטר (XXY). באיזה שלב של יצירת תאי הרבייה אצל הוריו יכלה להתרחש התקלה שהובילה לכך?`,
+                options: [
+                    `רק במהלך מיוזה I אצל האם.`,
+                    `רק במהלך מיוזה II אצל האב.`,
+                    `בחוסר הפרדה תקינה (Nondisjunction) באנפזה I או II אצל אחד ההורים.`,
+                    `בתהליך השחלוף (Crossing over) במהלך הפרופזה I אצל האב.`
+                ],
+                correctIndex: 2,
+                explanation: `תסמונת קליינפלטר היא סוג של אנאפלוידיות הנובעת מ-Nondisjunction. חוסר הפרדה זה יכול להתרחש במיוזה I (אי הפרדת הומולוגים) או במיוזה II (אי הפרדת כרומטידות אחיות) בייצור הזרע או הביצית.`
+            },
+            {
+                question: `איזה מהמשפטים הבאים מתאר נכונה את ההבדל בתזמון המיוזה בין זכרים לנקבות בבני אדם?`,
+                options: [
+                    `בזכרים המיוזה מתחילה לפני הלידה, בעוד שבנקבות היא מתחילה רק בגיל ההתבגרות.`,
+                    `בנקבות שלב הפרופזה I מתחיל לפני הלידה ונעצר למשך שנים, בעוד שבזכרים התהליך רציף ונמשך כחודש.`,
+                    `בזכרים המיוזה כוללת רק חלוקה אחת, בעוד שבנקבות היא כוללת שתי חלוקות.`,
+                    `בנקבות המיוזה מסתיימת לחלוטין לפני הלידה, והביציות ממתינות כשהן הפלואידיות לחלוטין.`
+                ],
+                correctIndex: 1,
+                explanation: `אצל נקבות, פרופזה I מתחילה בשלב העוברי ונעצרת עד להופעת מחזורי הווסת (עשרות שנים מאוחר יותר). אצל גברים, התהליך מתחיל בגיל ההתבגרות וכל מחזור מיוזה נמשך ברצף כחודש.`
+            },
+            {
+                question: `מהי ההגדרה המדויקת של תאים פלוריפוטנטיים (Pluripotent)?`,
+                options: [
+                    `תאים היכולים להתמיין לכל סוג תא בגוף וגם ליצור עובר שלם חדש.`,
+                    `תאים היכולים להתמיין לסוג תא אחד בלבד.`,
+                    `תאים היכולים להתמיין לסוגים רבים של תאים, אך אינם יכולים ליצור עובר חדש.`,
+                    `תאים שאיבדו את הגרעין שלהם ואינם יכולים להתחלק יותר.`
+                ],
+                correctIndex: 2,
+                explanation: `תאים פלוריפוטנטיים יכולים ליצור מגוון רחב של רקמות בגוף, אך חסרים את היכולת להתארגן לאורגניזם שלם (תכונה השמורה לתאים טוטיפוטנטיים בלבד).`
+            },
+            {
+                question: `בניסוי מפרידים תא עובר של קיפוד ים לשני חצאים: חיתוך אופקי וחיתוך אנכי. החיתוך האנכי מניב שני חצאים שמתפתחים לעוברים תקינים וקטנים. החיתוך האופקי מניב עוברים פגומים. מה ניתן להסיק מכך?`,
+                options: [
+                    `קביעת גורל התאים בעובר תלויה אך ורק באותות מתאים שכנים (Induction).`,
+                    `ה-DNA בחצי העליון של העובר שונה מה-DNA בחצי התחתון.`,
+                    `קיימת חלוקה א-סימטרית של רכיבים ציטופלזמיים לאורך הציר האנכי, הקובעת את גורל התאים.`,
+                    `התאים בעובר איבדו את תכונת הפלוריפוטנטיות שלהם מיד לאחר ההפריה.`
+                ],
+                correctIndex: 2,
+                explanation: `הניסוי מדגים הפרדה ציטופלזמית (Cytoplasmic segregation). חומרים חיוניים להתפתחות מפוזרים באופן לא שווה (קוטביות) בין הקוטב האנימלי לוגטלי. חיתוך אופקי מפריד ביניהם ופוגע בהתפתחות, בעוד חיתוך אנכי מכיל משניהם.`
+            },
+            {
+                question: `על פי מודל הדגל הצרפתי (French flag model), כיצד מורפוגן יחיד יכול לגרום ליצירת מספר סוגי רקמות שונים?`,
+                options: [
+                    `המורפוגן משנה את הרצף הגנטי של התאים אליהם הוא מגיע.`,
+                    `המורפוגן פועל על רצפטורים שונים בכל תא, בהתאם למוטציות אקראיות.`,
+                    `תאי המטרה מגיבים באופן שונה בהתאם לספי (Thresholds) ריכוז שונים של המורפוגן.`,
+                    `המורפוגן גורם לאפופטוזיס של תאים שאינם מתאימים, ומשאיר רק את התאים הממוינים נכון.`
+                ],
+                correctIndex: 2,
+                explanation: `מודל הדגל הצרפתי מסביר כיצד מפל ריכוזים של מורפוגן יחיד יוצר דפוסים. ריכוז גבוה מפעיל מסלול א, ריכוז בינוני מפעיל מסלול ב, וריכוז נמוך מפעיל מסלול ג, ממש כמו פסי הצבע בדגל.`
+            },
+            {
+                question: `בהתפתחות הפות של תולעת C. elegans, תא העוגן (Anchor cell) מפריש את החלבון LIN-3. מה יקרה לתא המקבל את הריכוז הגבוה ביותר של LIN-3?`,
+                options: [
+                    `הוא יעבור אפופטוזיס כדי לפנות מקום לתאי הפות.`,
+                    `הוא יהפוך לתא אפידרמיס רגיל.`,
+                    `הוא יתמיין לתא משרה ראשוני (Primary precursor) ויפעיל ביטוי של משרה שניוני.`,
+                    `הוא יהפוך לתא עוגן חדש שייצר עוד LIN-3.`
+                ],
+                correctIndex: 2,
+                explanation: `התא הקרוב ביותר לתא העוגן נחשף לריכוז הגבוה ביותר של המורפוגן LIN-3, מה שגורם לו להתמיין למבנה המרכזי של הפות ולהפריש בעצמו אות שניוני לתאים השכנים לו.`
+            },
+            {
+                question: `כיצד פקטור השעתוק MyoD מוביל להתמיינות של תאים לתאי שריר?`,
+                options: [
+                    `הוא מפרק את הגרעין של התא ומאפשר לו להתמזג עם תאים אחרים.`,
+                    `הוא מפעיל שעתוק של חלבון p21, שמעכב את Cdk וגורם לעצירת מחזור התא בשלב G1.`,
+                    `הוא פועל כמורפוגן המופרש מחוץ לתא ומושך אליו תאי אב אחרים.`,
+                    `הוא גורם להכפלה מואצת של ה-DNA כדי לספק את הדרישות האנרגטיות של השריר.`
+                ],
+                correctIndex: 1,
+                explanation: `התמיינות דורשת לרוב הפסקת חלוקה. MyoD מפעיל את הגן ל-p21, שהוא מעכב חלבוני קינאז (Cdk). עיכוב זה עוצר את התא בשלב G1 של מחזור התא, מה שמאפשר לו להפנות משאבים להתמיינות במקום לחלוקה.`
+            },
+            {
+                question: `באיזה שלב של המיוזה מתרחש פירוק מעטפת הגרעין?`,
+                options: [
+                    `פרופזה מוקדמת I (Early prophase I)`,
+                    `פרומטאפזה I (Late prophase I - prometaphase)`,
+                    `מטפזה I (Metaphase I)`,
+                    `טלופזה I (Telophase I)`
+                ],
+                correctIndex: 1,
+                explanation: `מעטפת הגרעין מתחילה להתפרק בשלבי הפרופזה המאוחרת, המכונה גם פרומטאפזה, על מנת לאפשר לסיבי הכישור להיקשר לקינטוכורים של הכרומוזומים.`
+            },
+            {
+                question: `מהו ההבדל העקרוני בין מנגנון ההשראה (Induction) למנגנון ההפרדה הציטופלזמית (Cytoplasmic segregation)?`,
+                options: [
+                    `השראה מתרחשת רק בצמחים, בעוד הפרדה ציטופלזמית מתרחשת רק בבעלי חיים.`,
+                    `השראה מסתמכת על תקשורת והעברת אותות בין תאים שונים, בעוד הפרדה ציטופלזמית היא תהליך פנימי בתוך תא המתחלק.`,
+                    `השראה משנה את ה-DNA של התא המקבל, בעוד הפרדה ציטופלזמית משנה רק את ה-RNA.`,
+                    `הפרדה ציטופלזמית מבוססת על מורפוגנים, בעוד השראה מבוססת על כוח הכבידה.`
+                ],
+                correctIndex: 1,
+                explanation: `הפרדה ציטופלזמית נובעת מחלוקה לא שווה של רכיבים בתוך תא האם בעת החלוקה לתאי הבת. השראה (Induction), לעומת זאת, דורשת תקשורת בין תאים נפרדים באמצעות מולקולות איתות (כמו מורפוגנים).`
+            },
+            {
+                question: `אצל עובר אנושי, האצבעות נוצרות מתהליך שבו רקמה מחברת מתה. איזה מונח ביולוגי מתאר תהליך זה?`,
+                options: [
+                    `טרנסלוקציה (Translocation)`,
+                    `מורפוגנזה (Morphogenesis)`,
+                    `אפופטוזיס (Apoptosis)`,
+                    `סינפסיס (Synapsis)`
+                ],
+                correctIndex: 2,
+                explanation: `אפופטוזיס הוא מוות תאי מתוכנת. במהלך ההתפתחות העוברית, תאים המרכיבים את הרקמה בין האצבעות עוברים אפופטוזיס, מה שמאפשר את הפרדת האצבעות זו מזו.`
+            },
+            {
+                question: `אם תא דיפלואידי מכיל 46 כרומוזומים (כמו באדם), כמה כרומטידות בסך הכל יימצאו בתא זה בשלב הפרופזה I של המיוזה?`,
+                options: [
+                    `23`,
+                    `46`,
+                    `92`,
+                    `184`
+                ],
+                correctIndex: 2,
+                explanation: `בשלב ה-S של האינטרפאזה שקודמת למיוזה I, כל כרומוזום מוכפל ומורכב משתי כרומטידות אחיות. לכן, 46 כרומוזומים כפול 2 כרומטידות שווה ל-92 כרומטידות בסך הכל (או 23 טטרדות).`
+            },
+            {
+                question: `בתהליך ההתמיינות, נאמר כי תאים שונים בגוף נבדלים זה מזה עקב ביטוי גנים דיפרנציאלי. מה משמעות הדבר?`,
+                options: [
+                    `לכל סוג תא יש רצף DNA שונה לחלוטין.`,
+                    `התאים מכילים את אותו גנום, אך משעתקים ומתרגמים קבוצות שונות של גנים.`,
+                    `תאים שונים מכילים מספר שונה של כרומוזומים עקב מיוזה.`,
+                    `ביטוי הגנים משתנה רק כאשר התא עובר מוטציה סביבתית.`
+                ],
+                correctIndex: 1,
+                explanation: `למעט תאי הרבייה, כל התאים הסומטיים באורגניזם זהים גנטית (מכילים את אותו DNA). ההבדל במבנה ובתפקוד (תא עצב לעומת תא שריר) נובע מכך שכל תא מפעיל (מבטא) גנים שונים מתוך אותו מאגר זהה.`
+            },
+            {
+                question: `מהי טרנסלוקציה (Translocation) בהקשר של שגיאות מיוזה?`,
+                options: [
+                    `כישלון של כרומוזומים הומולוגיים להיפרד באנפזה I.`,
+                    `העברת ה-DNA מגרעין התא לציטופלזמה.`,
+                    `ניתוק של פיסת DNA מכרומוזום אחד והצטרפותה לכרומוזום אחר.`,
+                    `מעבר של כרומוזום שלם מתא האם לתא הבת ללא הכפלה.`
+                ],
+                correctIndex: 2,
+                explanation: `טרנסלוקציה היא שגיאה מבנית שבה מקטע מכרומוזום נשבר ומתחבר לכרומוזום שאינו הומולוגי לו. תופעה זו יכולה להוביל למחלות גנטיות, ולעיתים גורמת לתסמונת דאון אם היא מערבת את כרומוזום 21.`
+            },
+            {
+                question: `מה משותף למיוזה II ולמיטוזה?`,
+                options: [
+                    `בשניהם מתרחש שחלוף גנטי (Crossing over).`,
+                    `בשניהם מתרחשת הכפלת DNA ממש לפני תחילת החלוקה.`,
+                    `בשניהם הכרומטידות האחיות נפרדות ונעות לקטבים המנוגדים של התא.`,
+                    `בשניהם התוצאה הסופית היא תאים דיפלואידיים.`
+                ],
+                correctIndex: 2,
+                explanation: `מיוזה II תוארה במפורש כדומה למיטוזה בכך שהכרומטידות של כל כרומוזום נפרדות לתאים נפרדים. ההבדל העיקרי הוא שמיוזה II פועלת על תאים הפלואידיים ואין הכפלת DNA לפניה.`
+            },
+            {
+                question: `בהתפתחות עוברית, מה מגדיר את שלב ה"קביעה" (Determination) לעומת שלב ה"התמיינות" (Differentiation)?`,
+                options: [
+                    `הקביעה היא שינוי מורפולוגי נראה לעין, וההתמיינות היא שינוי גנטי חבוי.`,
+                    `הקביעה מגדירה את הגורל העתידי של התא לפני שהוא משתנה פיזית, בעוד ההתמיינות היא תהליך השינוי בפועל.`,
+                    `הקביעה מתרחשת רק באורגניזמים בוגרים, וההתמיינות מתרחשת רק בעוברים.`,
+                    `אין הבדל, מדובר בשני מונחים נרדפים לאותו תהליך בדיוק.`
+                ],
+                correctIndex: 1,
+                explanation: `Determination (קביעה) היא המחויבות של התא למסלול התפתחותי מסוים, אשר לרוב אינה ניכרת במראה התא. Differentiation (התמיינות) היא השלב העוקב בו התא מיישם את ההחלטה ומייצר את החלבונים והמבנים הייחודיים לתפקידו.`
+            },
+            {
+                question: `איזו מהתופעות הבאות היא דוגמה לאנאפלוידיות?`,
+                options: [
+                    `תא זרע המכיל 23 כרומוזומים.`,
+                    `אדם בעל תסמונת טרנר, המכיל כרומוזום מין X אחד בלבד (מונוזומיה).`,
+                    `תא שריר שעבר עצירה במחזור התא בשלב G1.`,
+                    `תא עוברי שהפך לתא פלוריפוטנטי.`
+                ],
+                correctIndex: 1,
+                explanation: `אנאפלוידיות היא מצב של חוסר או עודף של כרומוזומים בודדים (לא סטים שלמים). תסמונת טרנר, בה חסר כרומוזום מין (מונוזומיה 23), היא דוגמה קלאסית לכך.`
+            },
+            {
+                question: `בניסוי השתלת רקמות בעוברי צפרדע מוקדמים, רקמה שנועדה להיות עור הושתלה באזור שאמור להתפתח למוח. הרקמה המושתלת התפתחה לרקמת מוח. מה מסקנת הניסוי?`,
+                options: [
+                    `גורל התאים נקבע באופן בלתי הפיך מיד לאחר ההפריה.`,
+                    `תאי העובר המוקדם הם יוניפוטנטיים.`,
+                    `גורל התאים בעובר המוקדם טרם נקבע סופית, והוא תלוי בסביבה החדשה אליה הועברו.`,
+                    `הרקמה המושתלת עברה מוטציה גנטית עקב תהליך ההשתלה.`
+                ],
+                correctIndex: 2,
+                explanation: `הניסוי מוכיח שבעובר המוקדם התאים עדיין אינם "קבועים" (Determined). הם מושפעים מהסביבה (Induction) ומשנים את ייעודם המקורי בהתאם לאותות שקיבלו בסביבתם החדשה.`
+            },
+            {
+                question: `מה יקרה אם תא עוגן (Anchor cell) יוסר מעובר של תולעת C. elegans בשלב מוקדם של ההתפתחות?`,
+                options: [
+                    `התולעת תפתח שתי מערכות פות במקום אחת.`,
+                    `מורפוגן ה-LIN-3 לא יופרש, וכל ששת תאי המטרה יתמיינו לתאי אפידרמיס רגילים.`,
+                    `תאי המטרה יעברו מיד אפופטוזיס.`,
+                    `תא אחר ייקח על עצמו מיד את תפקיד תא העוגן עקב הפרדה ציטופלזמית.`
+                ],
+                correctIndex: 1,
+                explanation: `תא העוגן מפריש את המורפוגן LIN-3 שהוא המשרה הראשוני (Primary inducer). ללא אות זה, התאים אינם מקבלים הוראה להתמיין לתאי פות (Vulva), ועל פי מודל ברירת המחדל, הם יתפתחו לאפידרמיס.`
+            },
+            {
+                question: `איזה תהליך אינו נכלל בארבעת התהליכים המרכזיים של ההתפתחות (Developmental processes)?`,
+                options: [
+                    `גדילה (Growth)`,
+                    `מורפוגנזה (Morphogenesis)`,
+                    `מיוזה (Meiosis)`,
+                    `התמיינות (Differentiation)`
+                ],
+                correctIndex: 2,
+                explanation: `ארבעת התהליכים המרכזיים של ההתפתחות הם: גדילה, קביעת גורל (Determination), התמיינות ומורפוגנזה. מיוזה היא תהליך יצירת תאי רבייה, הקודם להפריה ולהתפתחות העוברית עצמה.`
+            },
+            {
+                question: `באיזה שלב של המיוזה מתרחשת ההיפרדות האקראית של הכרומוזומים ההומולוגיים (Independent assortment)?`,
+                options: [
+                    `פרופזה I`,
+                    `אנפזה I`,
+                    `מטפזה II`,
+                    `אנפזה II`
+                ],
+                correctIndex: 1,
+                explanation: `ההיערכות הבלתי תלויה מתרחשת כאשר זוגות הכרומוזומים ההומולוגיים מסתדרים במישור המשווה במטפזה I, וההיפרדות האקראית שלהם לקטבים מתבצעת באנפזה I.`
+            },
+            {
+                question: `מהי התוצאה של השחלוף (Crossing over) מבחינה גנטית?`,
+                options: [
+                    `הכפלת כמות ה-DNA בתא.`,
+                    `יצירת כרומטידות רקומביננטיות המכילות שילוב חדש של אללים ממקור אבהי ואימהי.`,
+                    `מניעת שגיאות של Nondisjunction.`,
+                    `הפיכת תא סומטי לתא רבייה.`
+                ],
+                correctIndex: 1,
+                explanation: `השחלוף, המתרחש באזורי הכיאסמטה, מאפשר חילופי מקטעים בין כרומוזומים הומולוגיים. התוצאה היא כרומטידות המכילות שילוב גנטי חדש (רקומבינציה) שלא היה קיים באף אחד מההורים.`
+            },
+            {
+                question: `איזו תסמונת נובעת מטריזומיה של כרומוזום 18?`,
+                options: [
+                    `תסמונת דאון (Down's Syndrome)`,
+                    `תסמונת טרנר (Turner's Syndrome)`,
+                    `תסמונת קליינפלטר (Kleinfelter's Syndrome)`,
+                    `תסמונת אדוארדס (Edward's Syndrome)`
+                ],
+                correctIndex: 3,
+                explanation: `על פי רשימת השגיאות במיוזה המוצגות בטקסט, תסמונת אדוארדס (Edward's Syndrome) נגרמת כתוצאה מטריזומיה של כרומוזום 18.`
+            },
+            {
+                question: `מדוע מסלולי האפופטוזיס בנמטודה (תולעת) ובאדם נחשבים קשורים אבולוציונית?`,
+                options: [
+                    `משום ששני האורגניזמים מכילים בדיוק 959 תאים סומטיים.`,
+                    `משום שהגנים המבקרים תהליכים אלו בשני המינים הם בעלי רצף ותפקוד דומים.`,
+                    `משום שאפופטוזיס מתרחש רק באצבעות הידיים של שני המינים.`,
+                    `משום שמורפוגן LIN-3 מפעיל את התהליך בשניהם.`
+                ],
+                correctIndex: 1,
+                explanation: `הטקסט מציין במפורש כי מסלולי האפופטוזיס בנמטודה ובאדם נשלטים על ידי גנים בעלי רצף ותפקוד דומים (Similar sequence and function), מה שמעיד על שימור אבולוציוני של המנגנון.`
+            },
+            {
+                question: `מה תהיה ההשפעה של חסימת הקולטנים (Receptors) למורפוגן בתאי עובר מתפתחים?`,
+                options: [
+                    `התאים יתחלקו מהר יותר כדי לפצות על חוסר האות.`,
+                    `מנגנון ההשראה (Induction) ייפגע, והתאים לא יתמיינו כראוי בהתאם למיקומם.`,
+                    `התאים יעברו אוטומטית למצב של טוטיפוטנטיות.`,
+                    `המורפוגן יחדור ישירות לגרעין התא וישנה את ה-DNA.`
+                ],
+                correctIndex: 1,
+                explanation: `מורפוגנים משפיעים על תאי מטרה באמצעות קישור לרצפטורים (כפי שמופיע בגרף מודל המורפוגן). חסימת הרצפטורים תמנע מהתא לחוש את ריכוז המורפוגן, ובכך תשתבש קביעת הגורל המבוססת על מיקום.`
+            },
+            {
+                question: `באיזה שלב מחזור התא נעצר תא אב של שריר (Myoblast) כאשר פקטור השעתוק MyoD פעיל?`,
+                options: [
+                    `שלב S`,
+                    `שלב G1`,
+                    `שלב G2`,
+                    `שלב M (מיטוזה)`
+                ],
+                correctIndex: 1,
+                explanation: `פעילות MyoD מובילה לייצור p21, המעכב את Cdk ובכך עוצר את מחזור התא בשלב G1. עצירה זו חיונית כדי שהתא יוכל להפנות משאבים להתמיינות לתא שריר בוגר.`
+            },
+            {
+                question: `השווי בין כרומוזום X לכרומוזום Y באדם. איזה תפקיד ממלא כרומוזום Y בהקשר של מיוזה והתפתחות?`,
+                options: [
+                    `הוא מכיל את הגנים לכל תהליכי המיוזה בשני המינים.`,
+                    `הוא קובע את מין העובר (זכר), ונוכחותו מנתבת את התפתחות המערכת הרפרודוקטיבית.`,
+                    `הוא עובר שחלוף נרחב עם כרומוזום X ליצירת שונות גנטית עצומה.`,
+                    `הוא הכרומוזום היחיד שאינו עובר הכפלה בשלב ה-S.`
+                ],
+                correctIndex: 1,
+                explanation: `הכרומוזומים X ו-Y הם כרומוזומי המין. נוכחות של כרומוזום Y קובעת את התפתחות העובר לזכר (Boy or girl? Depends on the Y chromosome).`
+            },
+            {
+                question: `מהו המאפיין העיקרי של תאים מולטיפוטנטיים (Multipotent)?`,
+                options: [
+                    `הם חסרי יכולת חלוקה לחלוטין.`,
+                    `הם יכולים להתמיין למספר סוגי תאים, ונמצאים לרוב ברקמות של בוגר (Adult cells).`,
+                    `הם יכולים להתמיין לכל סוג תא אפשרי באורגניזם.`,
+                    `הם נמצאים רק בעוברים בשלבי ההתפתחות הראשונים (זיגוטה).`
+                ],
+                correctIndex: 1,
+                explanation: `תאים מולטיפוטנטיים מוגבלים יותר מפלירופוטנטיים; הם יכולים להתמיין למספר סוגי תאים קרובים (למשל תאי גזע של הדם), והם אופייניים לתאים מסוימים באורגניזם בוגר.`
+            },
+            {
+                question: `כיצד מוגדרת המורפוגנזה (Morphogenesis)?`,
+                options: [
+                    `תהליך יצירת המורפוגנים על ידי תא העוגן.`,
+                    `התהליך שבו תאים ממוינים מתעצבים פיזית ליצירת איברים ומבנים מורכבים.`,
+                    `העלייה בנפח התא עקב קליטת מים.`,
+                    `החלוקה המהירה של הזיגוטה ל-8 תאים.`
+                ],
+                correctIndex: 1,
+                explanation: `מורפוגנזה היא עיצוב הצורה (קביעת צורה). זהו התהליך שבו תאים שכבר עברו התמיינות מתארגנים במרחב ליצירת רקמות, איברים ומבנים פיזיים באורגניזם.`
+            },
+            {
+                question: `אם מתרחשת תקלה ואין יצירה של כיאסמטות (Chiasmata) במהלך פרופזה I, מה צפוי לקרות?`,
+                options: [
+                    `הכרומוזומים ההומולוגיים לא יוכלו לעבור שחלוף גנטי (Crossing over).`,
+                    `מעטפת הגרעין לא תתפרק.`,
+                    `התא יעבור מיד לאפופטוזיס.`,
+                    `הכרומטידות האחיות ייפרדו מיד, והמיוזה תהפוך למיטוזה.`
+                ],
+                correctIndex: 0,
+                explanation: `כיאסמטה הם אתרי המגע הפיזיים בין הכרומטידות הלא-אחיות בתוך הטטרדה. ללא אתרי מגע אלו, לא יכול להתרחש חילוף החומר הגנטי המהווה את השחלוף.`
+            },
+            {
+                question: `איזה מהמשפטים הבאים מתאר נכונה את מספר הכרומוזומים באזור המשווה באנפזה II לעומת מיטוזה רגילה (באותו אורגניזם)?`,
+                options: [
+                    `המספר כפול במיוזה II.`,
+                    `המספר זהה בשניהם.`,
+                    `מספר הכרומוזומים באזור המשווה במיוזה II הוא חצי מזה שבמיטוזה.`,
+                    `במיוזה II אין כלל כרומוזומים באזור המשווה.`
+                ],
+                correctIndex: 2,
+                explanation: `מכיוון שמיוזה I היא חלוקת הפחתה, התאים הנכנסים למיוזה II הם הפלואידיים (n). לכן, במטפזה/אנפזה II, מספר הכרומוזומים המאורגנים בכישור הוא מחצית ממספרם בתא סומטי העובר מיטוזה (2n).`
+            },
+            {
+                question: `מה תפקידו של הזרע (Sperm) מעבר לתרומת המחצית הגנטית בתהליך ההתפתחות?`,
+                options: [
+                    `הוא מספק את כל הציטופלזמה לעובר המתפתח.`,
+                    `כניסתו לביצית עשויה לקבוע קוטביות ראשונית או להפעיל תהליכי התפתחות (כמו בדוגמת ההפרדה הציטופלזמית).`,
+                    `הוא מפריש את המורפוגן LIN-3 ליצירת עובר.`,
+                    `הוא מתמיין מיד לתאי מערכת העצבים של העובר.`
+                ],
+                correctIndex: 1,
+                explanation: `בעוד שהביצית מספקת את עיקר הציטופלזמה, נקודת חדירת הזרע לביצית משמשת לעיתים קרובות כאות לקביעת צירי העובר (קוטביות) והתחלת תהליכי חלוקה והפרדה ציטופלזמית.`
+            },
+            {
+                question: `בבחינת תא אנושי, נמצא כי הוא מכיל 23 כרומוזומים, שכל אחד מהם מורכב מכרומטידה אחת בלבד. מהו תא זה בסבירות הגבוהה ביותר?`,
+                options: [
+                    `תא אם של הזרע לפני תחילת מיוזה.`,
+                    `תא בטלופזה I של המיוזה.`,
+                    `גמטה (תא זרע או ביצית) לאחר סיום מיוזה II.`,
+                    `תא סומטי בשלב G1.`
+                ],
+                correctIndex: 2,
+                explanation: `בסיום מיוזה II, נוצרים ארבעה תאים הפלואידיים (n=23 באדם), בהם הכרומטידות האחיות נפרדו, כך שכל כרומוזום מורכב מכרומטידה בודדת. אלו הן הגמטות הבשלות.`
+            },
+            {
+                question: `מהו ההבדל בין טריזומיה למונוזומיה?`,
+                options: [
+                    `טריזומיה היא שגיאה במיוזה I ומונוזומיה היא שגיאה במיוזה II.`,
+                    `טריזומיה מציינת הימצאות שלושה עותקים של כרומוזום מסוים, בעוד מונוזומיה מציינת הימצאות עותק אחד בלבד של כרומוזום מסוים.`,
+                    `טריזומיה מתרחשת רק בכרומוזומי מין, ומונוזומיה רק בכרומוזומים אוטוזומליים.`,
+                    `טריזומיה היא תהליך תקין של הכפלת DNA, ומונוזומיה היא מחלה.`
+                ],
+                correctIndex: 1,
+                explanation: `שתיהן צורות של אנאפלוידיות. טריזומיה (Tri=3) משמעותה 3 כרומוזומים במקום הזוג התקין (כמו בתסמונת דאון - 3 עותקים של כרומוזום 21). מונוזומיה (Mono=1) משמעותה עותק יחיד בלבד.`
+            },
+            {
+                question: `לפי המודל הדו-שלבי של התפתחות הפות ב-C. elegans, מה תפקידו של המשרה השניוני (Secondary inducer)?`,
+                options: [
+                    `הוא מופרש מתא העוגן כדי להרוג תאים מיותרים.`,
+                    `הוא מופעל על ידי תא המשרה הראשוני, וגורם לתאים השכנים להתמיין לתאי פות שניוניים במקום לאפידרמיס.`,
+                    `הוא חוסם את פעולת ה-LIN-3 כדי למנוע התמיינות יתר.`,
+                    `הוא משנה את ה-DNA של התאים בסביבה.`
+                ],
+                correctIndex: 1,
+                explanation: `התא שמקבל ריכוז גבוה של LIN-3 הופך לתא משרה ראשוני (Primary). הוא עצמו מפעיל גן המייצר משרה שניוני, אשר פועל על התאים הסמוכים לו (שקיבלו ריכוז בינוני של LIN-3) וגורם להם להתמיין למבנים שניוניים של הפות.`
+            },
+            {
+                question: `מדוע אפופטוזיס מכונה "מוות תאי מתוכנת"?`,
+                options: [
+                    `מפני שהוא נגרם תמיד על ידי זיהום חיידקי מתוכנן.`,
+                    `מפני שהוא תהליך מבוקר גנטית, המופעל במסלולים ביוכימיים ספציפיים כחלק מהתפתחות תקינה.`,
+                    `מפני שהוא מתרחש בדיוק באותה שעה בכל יום במהלך ההיריון.`,
+                    `מפני שרק מדענים יכולים לתכנת אותו במעבדה.`
+                ],
+                correctIndex: 1,
+                explanation: `אפופטוזיס אינו מוות נמקי (נקרוזיס) אקראי מנזק, אלא תהליך מסודר המקודד בגנים של התא. התא "מתאבד" באופן מסודר ללא גרימת דלקת, כחלק קריטי מעיצוב הרקמות (למשל, סילוק 131 תאים בדיוק בנמטודה).`
+            }
+        ];
+
+        const tfData = [
+            {
+                question: `בתהליך המיוזה מתרחשות שתי חלוקות תא, ולכן ה-DNA מוכפל פעמיים - פעם לפני כל חלוקה.`,
+                answer: false,
+                explanation: `ה-DNA מוכפל אך ורק פעם אחת, בשלב ה-S של האינטרפאזה שלפני מיוזה I. אין הכפלת DNA בין מיוזה I למיוזה II.`
+            },
+            {
+                question: `הכרומטידות האחיות נפרדות זו מזו במהלך אנפזה I של המיוזה.`,
+                answer: false,
+                explanation: `באנפזה I נפרדים הכרומוזומים ההומולוגיים. הכרומטידות האחיות נשארות מחוברות באזור הצנטרומר ונפרדות רק באנפזה II.`
+            },
+            {
+                question: `תהליך השחלוף (Crossing over) יכול להתרחש רק בין כרומטידות לא-אחיות של כרומוזומים הומולוגיים.`,
+                answer: true,
+                explanation: `שחלוף בין כרומטידות אחיות לא ייצור שונות גנטית מכיוון שהן זהות. השחלוף מתרחש בין כרומטידות לא-אחיות באזורי הכיאסמטה שבטטרדה.`
+            },
+            {
+                question: `מונוזומיה באדם (חוסר של כרומוזום) בדרך כלל אינה מאפשרת שרידות של העובר, למעט מקרים ספציפיים כמו תסמונת טרנר.`,
+                answer: true,
+                explanation: `חוסר של כרומוזום אוטוזומלי שלם הוא לרוב פטאלי. תסמונת טרנר, שהיא מונוזומיה של כרומוזום המין X, היא יוצאת דופן בכך שהיא מאפשרת שרידות.`
+            },
+            {
+                question: `אצל נשים, תהליך המיוזה של הביציות מסתיים לחלוטין לפני הלידה.`,
+                answer: false,
+                explanation: `אצל נשים, המיוזה מתחילה לפני הלידה אך נעצרת בשלב הפרופזה I. התהליך מתחדש ומסתיים עשרות שנים מאוחר יותר, עם ביוץ הביצית.`
+            },
+            {
+                question: `תסמונת דאון נגרמת תמיד מחוסר הפרדה (Nondisjunction) המייצר טריזומיה 21, ואינה יכולה להיגרם מטרנסלוקציה.`,
+                answer: false,
+                explanation: `הטקסט מציין במפורש שגם תופעת הטרנסלוקציה (הידבקות מקטע מכרומוזום 21 לכרומוזום אחר) יכולה להתבטא כתסמונת דאון.`
+            },
+            {
+                question: `תאים טוטיפוטנטיים קיימים בעיקר בשלבים המוקדמים ביותר של התפתחות העובר.`,
+                answer: true,
+                explanation: `טוטיפוטנטיות היא היכולת להתמיין לכל סוגי התאים וליצור עובר שלם, יכולת הקיימת בזיגוטה ובתאים הראשונים מיד לאחר ההפריה, ואובדת בהמשך ההתפתחות.`
+            },
+            {
+                question: `גורל התא (Cell fate) בעובר המוקדם קבוע מראש ואינו מושפע מהסביבה התאית שלו.`,
+                answer: false,
+                explanation: `ניסויי השתלה (כמו בניסוי עוברי הצפרדע) מוכיחים שגורל התא אינו קבוע מראש בשלבים המוקדמים, אלא תלוי בסביבה (Induction).`
+            },
+            {
+                question: `ההבדלים בין תא עצב לתא שריר באותו אדם נובעים מכך שיש להם רצפי DNA שונים לחלוטין.`,
+                answer: false,
+                explanation: `התאים באורגניזם זהים גנטית. ההבדל ביניהם נובע מביטוי גנים דיפרנציאלי (הפעלת גנים שונים באותו גנום).`
+            },
+            {
+                question: `מורפוגן הוא חומר כימי שהשפעתו על תאי המטרה תלויה בריכוזו.`,
+                answer: true,
+                explanation: `זהו עקרון מפתח של מורפוגנים (כפי שמודגם במודל הדגל הצרפתי) - ריכוזים שונים של אותו חומר משרים מסלולי התמיינות שונים.`
+            },
+            {
+                question: `בהתפתחות הפות של C. elegans, תא העוגן הופך בעצמו לתא הפות המרכזי.`,
+                answer: false,
+                explanation: `תא העוגן מפריש את המורפוגן LIN-3 ומשמש כמרכז איתות, אך הוא אינו הופך לפות בעצמו. התאים המושפעים ממנו מתמיינים לתאי הפות.`
+            },
+            {
+                question: `אפופטוזיס הוא תהליך שלילי המעיד על פגם בהתפתחות העוברית.`,
+                answer: false,
+                explanation: `אפופטוזיס (מוות תאי מתוכנת) הוא תהליך חיוני ותקין בהחלט בהתפתחות, המשמש לעיצוב איברים (כמו הפרדת אצבעות) וסילוק תאים מיותרים.`
+            },
+            {
+                question: `פקטור השעתוק MyoD מעודד התמיינות לתאי שריר על ידי האצת קצב חלוקת התא.`,
+                answer: false,
+                explanation: `MyoD פועל בדיוק הפוך: הוא גורם לעצירת מחזור התא (על ידי הפעלת p21 המעכב את Cdk), מכיוון שהתמיינות דורשת הפסקת חלוקה.`
+            },
+            {
+                question: `חלוקה לא שווה של הציטופלזמה (Cytoplasmic segregation) יכולה לקבוע קוטביות וגורל תאים כבר בתא המופרה (הזיגוטה).`,
+                answer: true,
+                explanation: `הקוטביות (למשל חלוקה לקוטב אנימלי ווגטלי בקיפודי ים) יכולה להתפתח מוקדם מאוד עקב פיזור א-סימטרי של חלבונים ו-RNA בציטופלזמה.`
+            },
+            {
+                question: `במיוזה I, תהליך הסינפסיס מאפשר לכרומוזומים הומולוגיים להתקרב מספיק כדי ליצור טטרדות ולבצע שחלוף.`,
+                answer: true,
+                explanation: `סינפסיס הוא הצימוד הפיזי ההדוק בין ההומולוגים, המהווה תנאי מקדים הכרחי להיווצרות כיאסמטות ושחלוף גנטי.`
+            },
+             {
+                question: `תא סומטי של אדם מכיל 23 זוגות של כרומוזומים הומולוגיים.`,
+                answer: true,
+                explanation: `תאי הגוף (סומטיים) הם דיפלואידיים ומכילים 46 כרומוזומים המאורגנים ב-23 זוגות הומולוגיים (אחד מהאב ואחד מהאם).`
+            },
+            {
+                question: `בסיום מיוזה I, נוצרים שני תאים דיפלואידיים זהים.`,
+                answer: false,
+                explanation: `בסיום מיוזה I נוצרים שני תאים הפלואידיים (n כרומוזומים, אם כי כל אחד עדיין מורכב משתי כרומטידות). התאים אינם זהים עקב השחלוף וההיפרדות האקראית.`
+            },
+            {
+                question: `כרומוזום Y קטן משמעותית מכרומוזום X.`,
+                answer: true,
+                explanation: `כפי שמוצג בתמונת המיקרוסקופ האלקטרוני, כרומוזום Y קטן בהרבה ומכיל פחות גנים מכרומוזום X.`
+            },
+            {
+                question: `במיוזה, מספר הכרומוזומים המסתדרים באזור המשווה במטפזה II שווה למספר הכרומוזומים במטפזה של מיטוזה רגילה.`,
+                answer: false,
+                explanation: `במטפזה II יש רק מחצית ממספר הכרומוזומים בהשוואה למיטוזה, מכיוון שחלוקת ההפחתה כבר התרחשה במיוזה I.`
+            },
+            {
+                question: `תסמונת אדוארדס נגרמת כתוצאה ממונוזומיה של כרומוזום 18.`,
+                answer: false,
+                explanation: `תסמונת אדוארדס נגרמת מטריזומיה (שלושה עותקים) של כרומוזום 18, ולא ממונוזומיה.`
+            },
+            {
+                question: `החלבון LIN-3 פועל כמורפוגן המפעיל את ההתמיינות בנמטודה C. elegans.`,
+                answer: true,
+                explanation: `LIN-3 הוא מורפוגן המופרש מתא העוגן ויוצר מפל ריכוזים המשרה את ההתמיינות של תאי הפות.`
+            },
+            {
+                question: `תאים יוניפוטנטיים (Unipotent) הם בעלי הפוטנציאל ההתפתחותי הרחב ביותר.`,
+                answer: false,
+                explanation: `תאים יוניפוטנטיים הם בעלי הפוטנציאל הצר ביותר - הם יכולים לייצר רק סוג אחד של תא (כמו תאי גזע של העור המייצרים רק תאי עור). הפוטנציאל הרחב ביותר שייך לתאים טוטיפוטנטיים.`
+            },
+            {
+                question: `במהלך ההתפתחות, פוטנציאל ההתמיינות של התא הולך ומצטמצם ככל שהזמן עובר.`,
+                answer: true,
+                explanation: `תהליך ההתפתחות מאופיין בהגבלה פרוגרסיבית של גורל התא (מטוטיפוטנטי, לפלוריפוטנטי, למולטיפוטנטי, ליוניפוטנטי).`
+            },
+            {
+                question: `מודל הדגל הצרפתי מראה כיצד מספר מורפוגנים שונים נדרשים כדי ליצור דפוס בודד של התמיינות.`,
+                answer: false,
+                explanation: `המודל מדגים כיצד מורפוגן אחד בלבד, באמצעות מפל ריכוזים וספי רגישות שונים, יכול ליצור מספר דפוסים שונים של התמיינות.`
+            },
+            {
+                question: `בתולעת C. elegans, מספר התאים הסומטיים הנותרים בבוגר הוא קבוע ועומד בדיוק על 959 תאים.`,
+                answer: true,
+                explanation: `התולעת מייצרת בדיוק 1090 תאים סומטיים, מתוכם בדיוק 131 עוברים אפופטוזיס מתוכנן, ומותירים בדיוק 959 תאים. זוהי דוגמה מושלמת להתפתחות דטרמיניסטית ומבוקרת.`
+            },
+            {
+                question: `אנאפלוידיות יכולה להיגרם רק כתוצאה ממוטציה כימית ב-DNA ולא מבעיה מכנית בחלוקה.`,
+                answer: false,
+                explanation: `אנאפלוידיות נגרמת לרוב מבעיה מכנית של חוסר הפרדה (Nondisjunction) בכישור החלוקה או מבעיה בחלבון הקוהזין המחזיק את הכרומוזומים.`
+            },
+            {
+                question: `הפרדה ציטופלזמית מובילה לכך שתאי הבת יכילו רצפי DNA שונים זה מזה.`,
+                answer: false,
+                explanation: `הפרדה ציטופלזמית מחלקת גורמי שעתוק ו-RNA באופן לא שווה בציטופלזמה, אך ה-DNA בגרעיני תאי הבת נשאר זהה לחלוטין.`
+            },
+            {
+                question: `בגברים, תהליך ייצור תא זרע בודד (כל שלבי המיוזה) נמשך כחודש.`,
+                answer: true,
+                explanation: `כפי שצוין, אצל גברים הפרופזה נמשכת כשבוע, ותהליך המיוזה כולו נמשך כחודש.`
+            },
+            {
+                question: `חלבון ה-p21 מעודד את התא לעבור משלב G1 לשלב S כדי להתחיל בחלוקה.`,
+                answer: false,
+                explanation: `חלבון p21 הוא מעכב של Cdk. תפקידו לעצור את מחזור התא בשלב G1 כדי לאפשר לתא להתמיין (כמו בהפיכה לתא שריר).`
+            },
+            {
+                question: `מספר השילובים האפשריים ליצירת גמטות באדם, כתוצאה מהיערכות בלתי תלויה בלבד, עולה על 8 מיליון.`,
+                answer: true,
+                explanation: `הנוסחה היא ($2^n$). באדם n=23, ו-($2^{23}$) שווה ליותר מ-8.3 מיליון שילובים אפשריים.`
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: מעבר חומרים בממברנה, אנרגיה ומטבוליזם</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>קרום התא (הממברנה) מהווה מחסום סלקטיבי המווסת את מעבר החומרים פנימה והחוצה. תנועת החומרים נחלקת לשני סוגים עיקריים: <strong>הובלה פסיבית</strong>, שאינה דורשת השקעת אנרגיה ומתרחשת במורד מפל הריכוזים, ו<strong>הובלה פעילה</strong>, הדורשת השקעת אנרגיה (בדרך כלל בצורת ATP) כדי להעביר חומרים בניגוד למפל הריכוזים.</p>
+                
+                <h3>סוגי הובלה בממברנה</h3>
+                <ul>
+                    <li><strong>דיפוזיה פשוטה:</strong> מעבר חומרים הידרופוביים ישירות דרך השכבה הכפולה של הליפידים.</li>
+                    <li><strong>דיפוזיה מתווכת:</strong> מעבר של חומרים פולריים וטעונים בעזרת חלבוני ממברנה ייעודיים (תעלות או נשאים).</li>
+                    <li><strong>הובלה פעילה ראשונית:</strong> שימוש ישיר באנרגיה מפירוק ATP להעברת חומרים (לדוגמה, משאבת נתרן/אשלגן המוציאה 3 יוני נתרן ומכניסה 2 יוני אשלגן).</li>
+                    <li><strong>הובלה פעילה משנית:</strong> שימוש במפל ריכוזים שנוצר על ידי הובלה פעילה ראשונית כדי להניע חומר אחר בניגוד למפל הריכוזים שלו (לדוגמה, סימפורטר של נתרן וגלוקוז).</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: צימוד תהליכים בהובלה פעילה משנית</strong>
+                    הובלה פעילה משנית אינה מפרקת ATP באופן ישיר, אך היא תלויה בו לחלוטין. ללא משאבות המונעות על ידי ATP שמייצרות את מפל הריכוזים הראשוני (כמו מפל הנתרן), ההובלה הפעילה המשנית לא תוכל להתרחש. זהו מנגנון של אגירת אנרגיה פוטנציאלית במפל ריכוזים וניצולה להעברת חומרים אחרים.
+                </div>
+
+                <h3>מעבר חלקיקים גדולים (Bulk Transport)</h3>
+                <p>מולקולות גדולות שאינן יכולות לעבור דרך נשאים מועברות באמצעות שלפוחיות:</p>
+                <ul>
+                    <li><strong>אנדוציטוזה:</strong> הכנסת חומרים לתא. כוללת פגוציטוזה (בליעת חלקיקים מוצקים), פינוציטוזה (שתיית נוזלים), ואנדוציטוזה מתווכת קולטנים (המסתייעת בחלבון קלתרין ליצירת השלפוחית).</li>
+                    <li><strong>אקסוציטוזה:</strong> הוצאת חומרים מהתא על ידי איחוי שלפוחית הפרשה עם קרום התא.</li>
+                </ul>
+
+                <h3>תרמודינמיקה, אנרגיה ואנזימים</h3>
+                <p>מערכות ביולוגיות מצייתות לחוקי התרמודינמיקה. תגובות כימיות נחלקות ל<strong>אקסרגוניות</strong> (משחררות אנרגיה חופשית, המצב בו $\Delta G < 0$) ול<strong>אנדרגוניות</strong> (דורשות השקעת אנרגיה חופשית, המצב בו $\Delta G > 0$). המשוואה המגדירה את השינוי באנרגיה החופשית היא ($\Delta G = \Delta H - T\Delta S$).</p>
+                
+                <p>כדי שתגובה תתרחש, יש להתגבר על מחסום <strong>אנרגיית השפעול</strong> (Activation Energy, $E_a$). אנזימים הם זרזים ביולוגיים המאיצים תגובות על ידי הורדת אנרגיית השפעול הנדרשת.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: גבולות ההשפעה של אנזימים</strong>
+                    אנזימים מורידים את אנרגיית השפעול ומשנים את קצב התגובה, אך הם בשום אופן <strong>לא משנים את האנרגיה החופשית הסופית</strong> ($\Delta G$) או את מצב שיווי המשקל של התגובה. תגובה שלא יכולה להתרחש ספונטנית ללא אנזים, לא תתרחש ספונטנית גם בנוכחותו.
+                </div>
+
+                <h3>מטבוליזם ו-ATP כפולטת אנרגיה</h3>
+                <p>מטבוליזם הוא סך כל התגובות הכימיות באורגניזם, המחולק ל<strong>קטבוליזם</strong> (פירוק מולקולות ושחרור אנרגיה) ו<strong>אנבוליזם</strong> (בניית מולקולות מורכבות תוך השקעת אנרגיה). מולקולת ה-ATP (אדנוזין טריפוספט) משמשת כ"מטבע האנרגיה" של התא, ומקשרת בין תהליכים קטבוליים לאנבוליים באמצעות מעגל ה-ATP-ADP.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "דיפוזיה פסיבית", definition: "מעבר חומרים במורד מפל הריכוזים ללא צורך בהשקעת אנרגיה כימית." },
+            { term: "דיפוזיה מתווכת", definition: "מעבר של חומרים פולריים או טעונים דרך הממברנה בעזרת חלבוני תעלה או נשאים." },
+            { term: "הובלה פעילה ראשונית", definition: "העברת חומרים בניגוד למפל הריכוזים תוך שימוש ישיר באנרגיה מפירוק ATP, לרוב על ידי משאבות." },
+            { term: "הובלה פעילה משנית", definition: "ניצול מפל ריכוזים של מולקולה אחת כדי להעביר מולקולה אחרת בניגוד למפל הריכוזים שלה." },
+            { term: "משאבת נתרן/אשלגן", definition: "חלבון ממברנלי המוציא 3 יוני נתרן ומכניס 2 יוני אשלגן בניגוד למפל הריכוזים, תוך פירוק ATP." },
+            { term: "אנדוציטוזה", definition: "תהליך בו קרום התא עוטף חומרים מהסביבה החיצונית ומכניס אותם פנימה בתוך שלפוחית." },
+            { term: "אקסוציטוזה", definition: "תהליך בו שלפוחית תוך-תאית מתאחה עם קרום התא ומשחררת את תוכנה אל מחוץ לתא." },
+            { term: "קלתרין (Clathrin)", definition: "חלבון המצפה שלפוחיות בצד הציטופלזמי במהלך אנדוציטוזה מתווכת קולטנים." },
+            { term: "ריאקציה אקסרגונית", definition: "תגובה כימית שבה משתחררת אנרגיה חופשית, והשינוי באנרגיה החופשית שלילי." },
+            { term: "ריאקציה אנדרגונית", definition: "תגובה כימית הדורשת השקעת אנרגיה חופשית כדי להתרחש, והשינוי באנרגיה החופשית חיובי." },
+            { term: "אנרגיית שפעול (Ea)", definition: "כמות האנרגיה ההתחלתית הנדרשת כדי להתחיל תגובה כימית." },
+            { term: "אנזים", definition: "זרז ביולוגי (לרוב חלבון) המאיץ תגובות כימיות על ידי הורדת אנרגיית השפעול." },
+            { term: "ATP", definition: "אדנוזין טריפוספט, מולקולה עתירת אנרגיה המשמשת כמטבע האנרגיה העיקרי בתא." },
+            { term: "אנבוליזם", definition: "מסלולים מטבוליים הבונים מולקולות מורכבות ממולקולות פשוטות, תוך השקעת אנרגיה." },
+            { term: "קטבוליזם", definition: "מסלולים מטבוליים המפרקים מולקולות מורכבות למולקולות פשוטות, תוך שחרור אנרגיה." },
+            { term: "סימפורטר", definition: "חלבון נשא המעביר שני חומרים שונים באותו הכיוון דרך הממברנה." },
+            { term: "אנטיפורטר", definition: "חלבון נשא המעביר שני חומרים שונים בכיוונים מנוגדים דרך הממברנה." },
+            { term: "התמרת אותות (Signal Transduction)", definition: "העברת מידע לתוך התא בעקבות קשירת ליגנד לקולטן חיצוני, ללא הכנסת הליגנד עצמו." }
+        ];
+
+        const mcqData = [
+            { 
+                question: "איזה מבין התהליכים הבאים יפסק ראשון אם התא יפסיק לחלוטין לייצר ATP?", 
+                options: [
+                    "דיפוזיה פשוטה של חמצן", 
+                    "הובלה פעילה משנית של גלוקוז", 
+                    "הובלה פעילה ראשונית של יוני נתרן", 
+                    "דיפוזיה מתווכת של יוני אשלגן"
+                ], 
+                correctIndex: 2, 
+                explanation: "הובלה פעילה ראשונית תלויה באופן ישיר בהידרוליזה של ATP ולכן תפסק באופן מיידי. הובלה פעילה משנית תפסק רק לאחר שמפל הריכוזים (שנוצר קודם לכן על ידי ה-ATP) יתפוגג." 
+            },
+            { 
+                question: "מה תהיה ההשפעה הישירה של פגיעה בחלבון הקלתרין על תפקוד התא?", 
+                options: [
+                    "התא לא יוכל לייצר ATP במיטוכונדריה", 
+                    "יפגע תהליך האנדוציטוזה מתווכת הקולטנים", 
+                    "משאבת הנתרן/אשלגן תפסיק לפעול", 
+                    "דיפוזיה של מולקולות הידרופוביות תעצר"
+                ], 
+                correctIndex: 1, 
+                explanation: "קלתרין הוא חלבון המצפה את השקעים בממברנה ויוצר את השלפוחיות בתהליך של אנדוציטוזה מתווכת קולטנים." 
+            },
+            { 
+                question: "תגובה כימית מסוימת מוגדרת כאקסרגונית. מה ניתן להסיק לגבי תגובה זו?", 
+                options: [
+                    "היא מתרחשת תמיד באופן ספונטני ומהיר ללא צורך באנרגיית שפעול", 
+                    "האנרגיה החופשית של התוצרים נמוכה מזו של המגיבים", 
+                    "היא מחייבת צימוד לפירוק של ATP כדי להתרחש", 
+                    "היא משמשת לבניית מולקולות מורכבות ממולקולות פשוטות"
+                ], 
+                correctIndex: 1, 
+                explanation: "בתגובה אקסרגונית משתחררת אנרגיה, ולכן האנרגיה החופשית של התוצרים קטנה מזו של המגיבים. היא עדיין דורשת אנרגיית שפעול ואינה בהכרח מהירה ללא אנזים." 
+            },
+            { 
+                question: "כיצד משפיע אנזים על השינוי באנרגיה החופשית של תגובה כימית?", 
+                options: [
+                    "הוא הופך את השינוי לחיובי יותר כדי לאפשר תגובה", 
+                    "הוא מגדיל את ההפרש בין המגיבים לתוצרים", 
+                    "הוא הופך תגובה אנדרגונית לאקסרגונית", 
+                    "הוא אינו משפיע כלל על השינוי באנרגיה החופשית"
+                ], 
+                correctIndex: 3, 
+                explanation: "אנזימים מורידים רק את אנרגיית השפעול הנדרשת להתחלת התגובה, אך אינם משנים את רמות האנרגיה החופשית ההתחלתית והסופית של המגיבים והתוצרים." 
+            },
+            { 
+                question: "משאבת הנתרן/אשלגן פועלת ללא הרף בתאים. מהי התוצאה של פעילותה?", 
+                options: [
+                    "הכנסת 3 יוני אשלגן והוצאת 2 יוני נתרן, תוך השוואת ריכוזים", 
+                    "יצירת מפל ריכוזים המשמש בסיס להובלה פעילה משנית", 
+                    "ייצור מולקולות ATP מ-ADP וזרחן חופשי", 
+                    "העברת יונים במורד מפל הריכוזים האלקטרוכימי שלהם"
+                ], 
+                correctIndex: 1, 
+                explanation: "המשאבה מוציאה 3 יוני נתרן ומכניסה 2 יוני אשלגן בניגוד למפל הריכוזים תוך פירוק ATP. מפל הנתרן שנוצר משמש לעיתים קרובות להניע הובלה פעילה משנית." 
+            },
+            { 
+                question: "חוקר מוסיף לתמיסה מעכב תחרותי שנקשר לאנזים מסוים. איזו מהתופעות הבאות צפויה להתרחש?", 
+                options: [
+                    "קצב התגובה ירד, אך אנרגיית השפעול של התגובה המזורזת תישאר זהה", 
+                    "התגובה תהפוך מאקסרגונית לאנדרגונית", 
+                    "אנרגיית השפעול של התגובה תעלה לרמה של תגובה לא מזורזת", 
+                    "מצב שיווי המשקל של התגובה יוסט לכיוון התוצרים"
+                ], 
+                correctIndex: 0, 
+                explanation: "המעכב מונע מהסובסטרט להיקשר, ולכן פחות מולקולות אנזים פעילות בכל רגע נתון, מה שמוריד את הקצב. עם זאת, האנזימים שכן מצליחים לקשור סובסטרט עדיין מורידים את אנרגיית השפעול באותה מידה." 
+            },
+            { 
+                question: "מהו ההבדל המרכזי בין סימפורטר לאנטיפורטר?", 
+                options: [
+                    "סימפורטר מפרק ATP בעוד שאנטיפורטר מנצל מפל ריכוזים", 
+                    "סימפורטר מעביר חומרים באותו כיוון ואנטיפורטר בכיוונים מנוגדים", 
+                    "סימפורטר מעורב בדיפוזיה מתווכת ואנטיפורטר בהובלה פעילה", 
+                    "סימפורטר מעביר יונים בלבד ואנטיפורטר מעביר מולקולות גדולות"
+                ], 
+                correctIndex: 1, 
+                explanation: "שניהם סוגים של חלבוני העברה (לרוב בהובלה פעילה משנית). ההבדל הוא כיוון תנועת החומרים: סימפורטר מעביר שני חומרים יחד לאותו כיוון, ואנטיפורטר מעביר אותם בכיוונים מנוגדים." 
+            },
+            { 
+                question: "איזה מבין המשפטים הבאים מתאר נכונה את תפקיד מולקולת ה-ATP בתא?", 
+                options: [
+                    "היא משמשת כמאגר אנרגיה לטווח ארוך, בדומה לשומנים", 
+                    "היא מזרזת תגובות כימיות על ידי הורדת אנרגיית השפעול", 
+                    "היא מצמדת תהליכים משחררי אנרגיה לתהליכים דורשי אנרגיה", 
+                    "היא מאפשרת מעבר של מולקולות הידרופוביות דרך הממברנה"
+                ], 
+                correctIndex: 2, 
+                explanation: "ATP משמשת כ'מטבע אנרגיה' המתווך בין תהליכים קטבוליים (שמייצרים ATP) לתהליכים אנבוליים (שצורכים ATP)." 
+            },
+            { 
+                question: "בתהליך של התמרת אותות (Signal Transduction), מה קורה לליגנד המקורי?", 
+                options: [
+                    "הוא נכנס לתא ונקשר ישירות ל-DNA", 
+                    "הוא מתפרק בממברנה והופך לאנרגיה קינטית", 
+                    "הוא נשאר מחוץ לתא וגורם לשינוי מבני בקולטן", 
+                    "הוא מועבר לתא באמצעות אנדוציטוזה מתווכת קולטנים"
+                ], 
+                correctIndex: 2, 
+                explanation: "בהתמרת אותות, הליגנד נקשר לקולטן בצד החיצוני של הממברנה וגורם לשינוי קונפורמציה בצד התוך-תאית, מה שמתחיל שרשרת תגובות, ללא צורך בכניסת הליגנד עצמו." 
+            },
+            { 
+                question: "מדוע דיפוזיה פשוטה אינה יעילה עבור יונים כגון נתרן או אשלגן?", 
+                options: [
+                    "כי הם גדולים מדי מכדי לעבור בין הפוספוליפידים", 
+                    "כי המטען החשמלי שלהם נדחה על ידי הליבה ההידרופובית של הממברנה", 
+                    "כי הם זקוקים לאנרגיית ATP כדי לנוע במורד מפל הריכוזים", 
+                    "כי הם נקשרים בקשר קוולנטי לראשים הפולריים של הממברנה"
+                ], 
+                correctIndex: 1, 
+                explanation: "הממברנה בנויה משכבה כפולה של פוספוליפידים בעלת ליבה הידרופובית. חומרים טעונים (יונים) או פולריים מאוד אינם יכולים לחצות ליבה זו ללא עזרת חלבוני מעבר." 
+            },
+            { 
+                question: "מה יקרה לתא אם ריכוז הגלוקוז מחוץ לתא גבוה מריכוז הגלוקוז בתוכו, בהנחה שיש נשאי גלוקוז פתוחים?", 
+                options: [
+                    "גלוקוז ייכנס לתא בדיפוזיה מתווכת ללא השקעת אנרגיה", 
+                    "גלוקוז ייכנס לתא באמצעות הובלה פעילה ראשונית", 
+                    "התא ישתמש באקסוציטוזה כדי להוציא גלוקוז החוצה", 
+                    "גלוקוז יצא מהתא בניגוד למפל הריכוזים"
+                ], 
+                correctIndex: 0, 
+                explanation: "כאשר חומר נע במורד מפל הריכוזים שלו באמצעות נשא או תעלה, מדובר בדיפוזיה מתווכת (פסיבית), שאינה דורשת אנרגיה." 
+            },
+            { 
+                question: "באיזה מהמקרים הבאים מעורבת אנרגיה קינטית?", 
+                options: [
+                    "מפל ריכוזים של יוני סידן מחוץ לתא", 
+                    "קשרים כימיים במולקולת גלוקוז", 
+                    "תנועה של יוני נתרן דרך תעלה פתוחה אל תוך התא", 
+                    "אגירת שומנים ברקמת אדיפוס"
+                ], 
+                correctIndex: 2, 
+                explanation: "אנרגיה קינטית היא אנרגיה של תנועה. מפל ריכוזים וקשרים כימיים הם דוגמאות לאנרגיה פוטנציאלית (אגורה). תנועת היונים בפועל היא אנרגיה קינטית." 
+            },
+            { 
+                question: "מהי המשמעות של השקעת אנרגיית שפעול בתגובה אקסרגונית?", 
+                options: [
+                    "היא דרושה כדי להפוך את המגיבים לתוצרים בעלי אנרגיה גבוהה יותר", 
+                    "היא נדרשת כדי לערער את הקשרים הכימיים של המגיבים ולהביאם למצב מעבר", 
+                    "היא מונעת מהתגובה להתרחש באופן ספונטני לחלוטין", 
+                    "היא מסופקת תמיד על ידי הידרוליזה של מולקולת ATP"
+                ], 
+                correctIndex: 1, 
+                explanation: "גם בתגובות המשחררות אנרגיה, יש צורך באנרגיה התחלתית (אנרגיית שפעול) כדי לשבור את הקשרים הקיימים במגיבים ולהביא אותם למצב מעבר (Transition state) לא יציב." 
+            },
+            { 
+                question: "אילו מהמולקולות הבאות מהוות את אבני הבניין של מולקולת ATP?", 
+                options: [
+                    "אדנין, דיאוקסיריבוז ושלוש קבוצות זרחה", 
+                    "חומצת אמינו, ריבוז ושתי קבוצות זרחה", 
+                    "אדנין, ריבוז ושלוש קבוצות זרחה", 
+                    "גואנין, ריבוז וקבוצת זרחה אחת"
+                ], 
+                correctIndex: 2, 
+                explanation: "ATP בנויה מהבסיס החנקני אדנין, סוכר ריבוז, ושלוש קבוצות פוספט (זרחה)." 
+            },
+            { 
+                question: "מה מאפיין תהליך קטבולי במערכת ביולוגית?", 
+                options: [
+                    "הוא צורך אנרגיה כדי לבנות מולקולות מורכבות", 
+                    "הוא מוגדר כתגובה אנדרגונית", 
+                    "הוא מפרק מולקולות מורכבות ומשחרר אנרגיה", 
+                    "הוא אינו דורש אנזימים כדי להתרחש"
+                ], 
+                correctIndex: 2, 
+                explanation: "קטבוליזם הוא תהליך פירוק בו מולקולות גדולות מפורקות לקטנות יותר, תוך שחרור אנרגיה (תגובה אקסרגונית)." 
+            },
+            { 
+                question: "בהובלת גלוקוז במעי, נעשה שימוש במפל הריכוזים של יוני נתרן. איזה סוג של חלבון מבצע פעולה זו?", 
+                options: [
+                    "משאבת ATP", 
+                    "תעלת יונים פסיבית", 
+                    "סימפורטר", 
+                    "אנטיפורטר"
+                ], 
+                correctIndex: 2, 
+                explanation: "הגלוקוז והנתרן נכנסים לתא המעי יחד, באותו כיוון. הנתרן במורד מפל הריכוזים והגלוקוז בניגוד לו. מכיוון ששניהם נעים לאותו כיוון, זהו סימפורטר (הובלה פעילה משנית)." 
+            },
+            { 
+                question: "מה ההבדל העיקרי בין פינוציטוזה לפגוציטוזה?", 
+                options: [
+                    "פינוציטוזה היא הכנסת נוזלים ופגוציטוזה היא הכנסת חלקיקים מוצקים", 
+                    "פינוציטוזה דורשת קלתרין ופגוציטוזה לא", 
+                    "פינוציטוזה מוציאה חומרים מהתא ופגוציטוזה מכניסה", 
+                    "פינוציטוזה מתרחשת רק בתאי עצב ופגוציטוזה בכל התאים"
+                ], 
+                correctIndex: 0, 
+                explanation: "פגוציטוזה (בליעה תאית) מתייחסת להכנסת חלקיקים גדולים ומוצקים, בעוד שפינוציטוזה (שתייה תאית) מתייחסת להכנסת נוזלים חוץ-תאיים והמומסים שבהם." 
+            },
+            { 
+                question: "מערכת סגורה מוגדרת ככזו שאינה מחליפה חומר או אנרגיה עם הסביבה. לפי החוק השני של התרמודינמיקה, מה יקרה במערכת כזו לאורך זמן?", 
+                options: [
+                    "האנרגיה החופשית תגדל והאנטרופיה תרד", 
+                    "האנרגיה החופשית תרד והאנטרופיה תגדל", 
+                    "האנרגיה הכוללת תרד בהדרגה לאפס", 
+                    "האנטרופיה תישאר קבועה לחלוטין"
+                ], 
+                correctIndex: 1, 
+                explanation: "החוק השני של התרמודינמיקה קובע שבמערכת סגורה, האנטרופיה (אי-הסדר) תמיד גדלה עם הזמן, וכתוצאה מכך כמות האנרגיה החופשית הזמינה לביצוע עבודה יורדת." 
+            },
+            { 
+                question: "איזה מן הבאים מהווה דוגמה להפיכת אנרגיה מאור לאנרגיה כימית בממברנה?", 
+                options: [
+                    "פעילות משאבת הנתרן/אשלגן", 
+                    "הכנסת חומרים באנדוציטוזה", 
+                    "שימוש בפיגמנט עתיר אנרגיה לייצור ATP מ-ADP", 
+                    "העברת אותות על ידי קולטן ממברנלי"
+                ], 
+                correctIndex: 2, 
+                explanation: "חלבוני ממברנה מסוימים (כמו במערכות פוטוסינתטיות) מכילים פיגמנטים הקולטים פוטונים של אור ומתמירים אותם לאנרגיה כימית (כמו ייצור ATP)." 
+            },
+            { 
+                question: "תרופה מסוימת חוסמת את פעילותן של תעלות יונים ספציפיות בממברנה. איזה סוג של מעבר חומרים יפגע כתוצאה מכך?", 
+                options: [
+                    "דיפוזיה פשוטה", 
+                    "הובלה פעילה משנית", 
+                    "אקסוציטוזה", 
+                    "דיפוזיה מתווכת"
+                ], 
+                correctIndex: 3, 
+                explanation: "תעלות יונים מאפשרות מעבר של יונים במורד מפל הריכוזים ללא השקעת אנרגיה, תהליך המוכר כדיפוזיה מתווכת (Facilitated diffusion)." 
+            },
+            { 
+                question: "אם תא בעל ריכוז פנימי גבוה של יוני כלור נמצא בסביבה בה ריכוז הכלור נמוך, והוא ממשיך להכניס יוני כלור פנימה, באיזה מנגנון הוא משתמש?", 
+                options: [
+                    "דיפוזיה פשוטה", 
+                    "דיפוזיה מתווכת", 
+                    "הובלה פעילה", 
+                    "אנדוציטוזה"
+                ], 
+                correctIndex: 2, 
+                explanation: "הכנסת חומר בניגוד למפל הריכוזים שלו (מריכוז נמוך בחוץ לריכוז גבוה בפנים) מחייבת השקעת אנרגיה, כלומר הובלה פעילה." 
+            },
+            { 
+                question: "מהו התפקיד של קבוצת הפוספט השלישית במולקולת ה-ATP?", 
+                options: [
+                    "היא מייצבת את מבנה ה-DNA בגרעין", 
+                    "היא משוחררת במהלך הידרוליזה ומספקת אנרגיה לתהליכים תאיים", 
+                    "היא סופגת פוטונים של אור בתהליך הפוטוסינתזה", 
+                    "היא קושרת יוני נתרן כדי להוציאם מהתא"
+                ], 
+                correctIndex: 1, 
+                explanation: "פירוק הקשר של קבוצת הפוספט השלישית (הידרוליזה של ATP ל-ADP ופוספט אנאורגני) משחרר כמות גדולה של אנרגיה חופשית המשמשת את התא." 
+            },
+            { 
+                question: "חוקר מבחין כי חלבון נשא מעביר מולקולת חומצת אמינו לתוך התא, רק כאשר במקביל הוא מוציא יון מימן מחוץ לתא. כיצד יסווג חלבון זה?", 
+                options: [
+                    "יוניפורטר", 
+                    "סימפורטר", 
+                    "אנטיפורטר", 
+                    "תעלת יונים"
+                ], 
+                correctIndex: 2, 
+                explanation: "מכיוון ששני החומרים מועברים בכיוונים מנוגדים (אחד פנימה ואחד החוצה) על ידי אותו נשא, זהו אנטיפורטר." 
+            },
+            { 
+                question: "מדוע מולקולות שומן (טריגליצרידים) נאגרות כמקור אנרגיה פוטנציאלית?", 
+                options: [
+                    "מכיוון שהן נעות במהירות בזרם הדם ויוצרות אנרגיה קינטית", 
+                    "בשל הקשרים הכימיים הרבים שבהן, שניתן לפרקם בתהליכים קטבוליים", 
+                    "כי הן משמשות כאנזימים המזרזים תגובות אקסרגוניות", 
+                    "משום שהן מעלות את האנטרופיה של התא באופן ישיר"
+                ], 
+                correctIndex: 1, 
+                explanation: "אנרגיה כימית היא צורה של אנרגיה פוטנציאלית האגורה בקשרים שבין האטומים. פירוק השומנים (קטבוליזם) משחרר אנרגיה זו." 
+            },
+            { 
+                question: "מה קורה לאנזים לאחר שסיים לזרז תגובה כימית?", 
+                options: [
+                    "הוא מתפרק לחומצות אמינו בודדות", 
+                    "הוא הופך לחלק מהתוצר הסופי", 
+                    "הוא חוזר למבנה המקורי שלו ומוכן לזרז תגובה נוספת", 
+                    "הוא דורש מולקולת ATP כדי לחזור למצבו הפעיל"
+                ], 
+                correctIndex: 2, 
+                explanation: "אנזימים אינם מתכלים או משתנים באופן בלתי הפיך במהלך התגובה. לאחר שחרור התוצרים, הם זמינים לקשור סובסטרט חדש." 
+            },
+            { 
+                question: "איזה מן המשפטים הבאים נכון לגבי תהליך האקסוציטוזה?", 
+                options: [
+                    "הוא תהליך פסיבי שאינו דורש אנרגיה", 
+                    "הוא משמש להכנסת חלקיקי מזון גדולים לתא", 
+                    "במהלכו קרום השלפוחית הופך לחלק מקרום התא", 
+                    "הוא תלוי באופן בלעדי בחלבון הקלתרין"
+                ], 
+                correctIndex: 2, 
+                explanation: "באקסוציטוזה, שלפוחית המכילה חומרים מתאחה עם קרום הפלזמה ומשחררת את תוכנה החוצה. כתוצאה מהאיחוי, קרום השלפוחית משתלב והופך לחלק מקרום התא." 
+            },
+            { 
+                question: "כיצד משפיעה עלייה בטמפרטורה (עד גבול מסוים) על קצב תגובה אנזימטית?", 
+                options: [
+                    "היא מעלה את אנרגיית השפעול הנדרשת ולכן מאטה את התגובה", 
+                    "היא מגבירה את האנרגיה הקינטית של המולקולות, מה שמגדיל את הסיכוי למפגש בין אנזים לסובסטרט", 
+                    "היא משנה את התגובה מאנדרגונית לאקסרגונית", 
+                    "היא מקטינה את האנטרופיה במערכת"
+                ], 
+                correctIndex: 1, 
+                explanation: "חום מספק אנרגיה קינטית, מה שגורם למולקולות לנוע מהר יותר ולהתנגש בתדירות גבוהה יותר, ובכך להעלות את קצב התגובה (עד לנקודה שבה החום הורס את מבנה האנזים)." 
+            },
+            { 
+                question: "איזו סוג של מולקולה תעבור את הממברנה בדיפוזיה פשוטה בקלות הרבה ביותר?", 
+                options: [
+                    "יון חיובי קטן", 
+                    "מולקולת סוכר גדולה ופולרית", 
+                    "מולקולה קטנה והידרופובית", 
+                    "חלבון גדול וטעון"
+                ], 
+                correctIndex: 2, 
+                explanation: "הממברנה הפוספוליפידית חדירה בקלות למולקולות קטנות והידרופוביות (לא פולריות, כמו חמצן או פחמן דו-חמצני) ללא צורך בחלבוני תיווך." 
+            },
+            { 
+                question: "מהו התפקיד של זרחון (Phosphorylation) בפעילות משאבת הנתרן/אשלגן?", 
+                options: [
+                    "לפרק את יוני הנתרן לפני הוצאתם", 
+                    "לגרום לשינוי קונפורמציה (מבני) במשאבה המאפשר את העברת היונים", 
+                    "למנוע כניסה של מולקולות מים לתא", 
+                    "ליצור מפל ריכוזים של יוני סידן"
+                ], 
+                correctIndex: 1, 
+                explanation: "העברת קבוצת הפוספט מ-ATP למשאבה (זרחון) גורמת לשינוי במבנה המרחבי שלה, מה שדוחף את יוני הנתרן החוצה." 
+            },
+            { 
+                question: "במסלול מטבולי, תוצר של תגובה אחת משמש לעיתים קרובות כ:", 
+                options: [
+                    "מעכב בלתי הפיך של התגובה הבאה", 
+                    "מקור אור לתגובות פוטוסינתטיות", 
+                    "סובסטרט (מגיב) של התגובה הבאה בשרשרת", 
+                    "תחליף למולקולת ה-DNA"
+                ], 
+                correctIndex: 2, 
+                explanation: "מסלולים מטבוליים בנויים כשרשרת של תגובות, בהן התוצר של אנזים אחד הופך למגיב (סובסטרט) של האנזים הבא בתור." 
+            },
+            { 
+                question: "אם תגובה מסוימת דורשת הוספה של אנרגיה חופשית מסביבתה, ניתן לקבוע בוודאות ש:", 
+                options: [
+                    "היא תגובה אקסרגונית", 
+                    "היא תגובה אנדרגונית", 
+                    "היא אינה דורשת אנרגיית שפעול", 
+                    "היא מזורזת על ידי אנזים"
+                ], 
+                correctIndex: 1, 
+                explanation: "תגובה שצורכת אנרגיה חופשית (כלומר, האנרגיה החופשית של התוצרים גבוהה משל המגיבים) מוגדרת כתגובה אנדרגונית." 
+            },
+            { 
+                question: "גליקופרוטאינים וגליקוליפידים נמצאים לרוב על פני הממברנה. מהו המאפיין המבני שלהם?", 
+                options: [
+                    "הם מורכבים מחומצות גרעין הקשורות לחלבונים או שומנים", 
+                    "הם חלבונים או ליפידים שאליהם קשורה שרשרת סוכרית (אוליגוסכריד) בקשר קוולנטי", 
+                    "הם תעלות יונים המעבירות סוכרים בלבד", 
+                    "הם מולקולות ATP שעברו התאמה לממברנה"
+                ], 
+                correctIndex: 1, 
+                explanation: "גליקופרוטאינים וגליקוליפידים הם חלבונים וליפידים (בהתאמה) בעלי תוספת של שרשראות סוכר, המשמשים לרוב לזיהוי ותקשורת תאית." 
+            },
+            { 
+                question: "מהו המניע (Driving force) לדיפוזיה מתווכת?", 
+                options: [
+                    "הידרוליזה של ATP", 
+                    "הפרש האנרגיה בין מגיבים לתוצרים", 
+                    "מפל הריכוזים (או מפל אלקטרוכימי) של החומר המועבר", 
+                    "פעילות של חלבון קלתרין"
+                ], 
+                correctIndex: 2, 
+                explanation: "למרות שדיפוזיה מתווכת משתמשת בחלבון נשא או תעלה, היא עדיין תהליך פסיבי המונע אך ורק על ידי מפל הריכוזים של החומר." 
+            },
+            { 
+                question: "מה מבדיל בין יוניפורטר למשאבה פעילה ראשונית?", 
+                options: [
+                    "יוניפורטר מעביר חומרים בניגוד למפל הריכוזים, ומשאבה במורד המפל", 
+                    "יוניפורטר מעביר חומר אחד במורד מפל הריכוזים ללא ATP, בעוד משאבה מנצלת ATP להעברה נגד המפל", 
+                    "יוניפורטר דורש צימוד למפל נתרן, ומשאבה לא", 
+                    "אין הבדל, שניהם מונחים נרדפים לאותו מנגנון"
+                ], 
+                correctIndex: 1, 
+                explanation: "יוניפורטר (Uniporter) מבצע דיפוזיה מתווכת של חומר אחד במורד מפל הריכוזים (פסיבי). משאבה משתמשת באנרגיה (ATP) כדי לדחוף חומרים בניגוד למפל הריכוזים." 
+            },
+            { 
+                question: "החוק הראשון של התרמודינמיקה קובע כי:", 
+                options: [
+                    "אנרגיה אינה נוצרת יש מאין ואינה נעלמת, אלא רק משנה צורה", 
+                    "בכל מעבר אנרגיה, כמות האנטרופיה ביקום עולה", 
+                    "תגובות כימיות תמיד ישאפו למצב של מינימום אנרגיה חופשית", 
+                    "אנזימים יכולים לייצר אנרגיה כדי להתניע תגובות אנדרגוניות"
+                ], 
+                correctIndex: 0, 
+                explanation: "החוק הראשון הוא חוק שימור האנרגיה: סך האנרגיה במערכת מבודדת נשאר קבוע, והיא רק מומרת מצורה אחת לאחרת." 
+            },
+            { 
+                question: "כיצד הממברנה מייעלת תגובות כימיות בתא?", 
+                options: [
+                    "היא משמשת כאנזים אוניברסלי לכל התגובות", 
+                    "היא מספקת אנרגיית חום המעלה את קצב התגובה", 
+                    "היא יכולה לארגן אנזימים שונים קרוב זה לזה, כך שתוצר של תגובה אחת יעבור מיד לאנזים הבא", 
+                    "היא מונעת כניסה של מים המפריעים לתגובות הכימיות"
+                ], 
+                correctIndex: 2, 
+                explanation: "אחד מתפקידי חלבוני הממברנה הוא לארגן תגובות בצורה מרחבית. כאשר אנזימים נמצאים בסמיכות על הממברנה, התוצר של האחד מגיע במהירות לשני ללא צורך בדיפוזיה ארוכה בציטופלזמה." 
+            },
+            { 
+                question: "איזה מבין הגורמים הבאים לא ישפיע על פתיחה או סגירה של תעלות יונים?", 
+                options: [
+                    "שינוי במתח החשמלי של הממברנה", 
+                    "קשירה של ליגנד ספציפי", 
+                    "גירוי מכני חיצוני", 
+                    "שינוי בשיפוע האנטרופיה של היקום"
+                ], 
+                correctIndex: 3, 
+                explanation: "תעלות יונים יכולות להיות מבוקרות על ידי מתח (Voltage-gated), ליגנד (Ligand-gated), גירוי מכני, pH ועוד. האנטרופיה של היקום אינה גורם בקרה ישיר לפתיחת תעלות ברמת התא." 
+            },
+            { 
+                question: "מהו התפקיד של קולטנים (Receptors) באנדוציטוזה מתווכת קולטנים?", 
+                options: [
+                    "לפרק את המולקולות הגדולות לפני כניסתן לתא", 
+                    "לספק את ה-ATP הדרוש ליצירת השלפוחית", 
+                    "להבטיח סלקטיביות גבוהה על ידי קשירה ייעודית של חומרים מסוימים מהסביבה", 
+                    "לדחוף את השלפוחית אל עבר אברון הגולג'י"
+                ], 
+                correctIndex: 2, 
+                explanation: "הקולטנים קושרים ליגנדים ספציפיים (כמו כולסטרול או חלבונים מסוימים), מה שמאפשר לתא לקלוט חומרים ספציפיים בריכוז גבוה, גם אם ריכוזם הכללי בסביבה נמוך." 
+            },
+            { 
+                question: "אילו תהליכים נכללים תחת ההגדרה של 'מטבוליזם'?", 
+                options: [
+                    "רק תהליכים המייצרים אנרגיה בתא", 
+                    "רק תהליכים המפרקים מולקולות רעילות", 
+                    "סך כל התגובות הכימיות המתרחשות באורגניזם, כולל אנבוליזם וקטבוליזם", 
+                    "תהליכי מעבר חומרים דרך הממברנה בלבד"
+                ], 
+                correctIndex: 2, 
+                explanation: "מטבוליזם (חילוף חומרים) הוא מונח גג הכולל את כל התגובות הכימיות בגוף, הן תהליכי בנייה (אנבוליים) והן תהליכי פירוק (קטבוליים)." 
+            },
+            { 
+                question: "אם משוואת האנרגיה החופשית היא $\\Delta G = \\Delta H - T\\Delta S$, מה מייצג המונח $\\Delta S$?", 
+                options: [
+                    "השינוי באנתלפיה (אנרגיית החום של המערכת)", 
+                    "השינוי באנטרופיה (מידת אי-הסדר במערכת)", 
+                    "הטמפרטורה המוחלטת בקלווין", 
+                    "אנרגיית השפעול של התגובה"
+                ], 
+                correctIndex: 1, 
+                explanation: "במשוואה זו, $\\Delta S$ מייצג את השינוי באנטרופיה, שהוא מדד לאי-הסדר או האקראיות של המערכת." 
+            }
+        ];
+
+        const tfData = [
+            { question: "הובלה פסיבית של חומרים דרך הממברנה דורשת תמיד השקעת מולקולות ATP.", answer: false, explanation: "הובלה פסיבית (דיפוזיה פשוטה או מתווכת) מתרחשת במורד מפל הריכוזים ואינה דורשת השקעת אנרגיה כימית (ATP)." },
+            { question: "אנזימים משנים את מצב שיווי המשקל הסופי של התגובה הכימית שאותה הם מזרזים.", answer: false, explanation: "אנזימים מורידים את אנרגיית השפעול ומאיצים את ההגעה לשיווי משקל, אך אינם משנים את מצב שיווי המשקל עצמו או את ה-$\\Delta G$." },
+            { question: "בתהליך של הובלה פעילה משנית, החלבון המעביר אינו מפרק ATP בעצמו.", answer: true, explanation: "הובלה פעילה משנית מנצלת מפל ריכוזים שנוצר על ידי משאבה אחרת (שכן פירקה ATP). החלבון המשני עצמו אינו מפרק ATP ישירות." },
+            { question: "אנדוציטוזה מאפשרת הכנסת מקרומולקולות גדולות שאינן יכולות לעבור דרך נשאים רגילים.", answer: true, explanation: "מולקולות גדולות חודרות לתא באמצעות עטיפתן בקרום התא ויצירת שלפוחית פנימית (אנדוציטוזה)." },
+            { question: "תגובה קטבולית היא תגובה בה מולקולות מורכבות נבנות ממולקולות פשוטות יותר.", answer: false, explanation: "זהו תיאור של תגובה אנבולית. תגובה קטבולית היא תהליך של פירוק מולקולות מורכבות ושחרור אנרגיה." },
+            { question: "החוק השני של התרמודינמיקה קובע כי בכל מעבר אנרגיה, חלק מהאנרגיה הופך לבלתי זמין לביצוע עבודה (האנטרופיה עולה).", answer: true, explanation: "בכל התמרה אנרגטית במערכת סגורה, האנטרופיה גדלה וכמות האנרגיה החופשית הזמינה יורדת." },
+            { question: "משאבת נתרן/אשלגן מכניסה 3 יוני נתרן לתא ומוציאה 2 יוני אשלגן.", answer: false, explanation: "המשאבה פועלת הפוך: היא מוציאה 3 יוני נתרן אל מחוץ לתא ומכניסה 2 יוני אשלגן פנימה." },
+            { question: "תגובה אקסרגונית היא תגובה שבה $\\Delta G$ הוא שלילי והיא משחררת אנרגיה.", answer: true, explanation: "כאשר האנרגיה החופשית של התוצרים נמוכה מזו של המגיבים, ה-$\\Delta G$ שלילי והתגובה מוגדרת אקסרגונית." },
+            { question: "קלתרין (Clathrin) הוא חלבון המצפה שלפוחיות המיועדות לאקסוציטוזה בלבד.", answer: false, explanation: "קלתרין מעורב בעיקר ביצירת שלפוחיות בתהליך של הכנסת חומרים לתא (אנדוציטוזה מתווכת קולטנים)." },
+            { question: "דיפוזיה פשוטה דרך הממברנה יעילה במיוחד עבור מולקולות פולריות גדולות.", answer: false, explanation: "דיפוזיה פשוטה יעילה עבור מולקולות קטנות והידרופוביות. מולקולות פולריות גדולות זקוקות לחלבוני מעבר." },
+            { question: "אנרגיה פוטנציאלית בתא יכולה להיות אגורה בצורה של מפל ריכוזים משני עברי הממברנה.", answer: true, explanation: "מפל ריכוזים הוא סוג של אנרגיה פוטנציאלית שניתן לנצלה לביצוע עבודה (כמו בהובלה פעילה משנית)." },
+            { question: "סימפורטר הוא חלבון המעביר שני חומרים שונים דרך הממברנה באותו הכיוון.", answer: true, explanation: "זהו ההבדל בינו לבין אנטיפורטר, המעביר חומרים בכיוונים מנוגדים." },
+            { question: "פירוק של מולקולת ATP ל-ADP ופוספט היא תגובה אנדרגונית.", answer: false, explanation: "הידרוליזה של ATP משחררת כמות גדולה של אנרגיה, ולכן היא תגובה אקסרגונית." },
+            { question: "מולקולות איתות (ליגנדים) חייבות להיכנס לתוך התא כדי להפעיל שרשרת תגובות כימיות.", answer: false, explanation: "בהתמרת אותות (Signal transduction), הליגנד נקשר לקולטן חיצוני שמשנה את צורתו ומעביר את האות פנימה, ללא כניסת הליגנד עצמו." },
+            { question: "תעלות יונים יכולות להיפתח ולהיסגר בתגובה לשינויי מתח או קשירת ליגנדים.", answer: true, explanation: "תעלות יונים אינן תמיד פתוחות; הן מבוקרות על ידי גורמים שונים כמו מתח חשמלי, ליגנדים, גירוי מכני ועוד." },
+            { question: "תגובה אקסרגונית מתרחשת תמיד באופן מיידי וללא צורך באנרגיית שפעול.", answer: false, explanation: "גם תגובות אקסרגוניות זקוקות לדחיפה התחלתית הנקראת אנרגיית שפעול (Ea) כדי להתחיל." },
+            { question: "אקסוציטוזה היא תהליך המשמש להפרשת חומרים, כגון הורמונים או נוירוטרנסמיטורים, אל מחוץ לתא.", answer: true, explanation: "שלפוחיות הפרשה מתאחות עם הממברנה ומשחררות את תוכנן החוצה בתהליך האקסוציטוזה." },
+            { question: "מולקולת ה-ATP בנויה מריבוז, גואנין ושלוש קבוצות פוספט.", answer: false, explanation: "ATP בנויה מריבוז, אדנין (ולא גואנין) ושלוש קבוצות פוספט." },
+            { question: "הובלת גלוקוז מתא המעי לתוך זרם הדם יכולה להיעשות בעזרת מפל הריכוזים של יוני נתרן.", answer: true, explanation: "זהו מנגנון קלאסי של הובלה פעילה משנית (סימפורטר נתרן/גלוקוז)." },
+            { question: "פעילות של אנזים מעלה את האנרגיה החופשית של תוצרי התגובה.", answer: false, explanation: "אנזים אינו משנה את האנרגיה החופשית של התוצרים או המגיבים, אלא רק מנמיך את מחסום אנרגיית השפעול." },
+            { question: "בפגוציטוזה, התא בולע חלקיקים נוזליים בלבד.", answer: false, explanation: "פגוציטוזה משמשת לבליעת חלקיקים מוצקים וגדולים (כמו חיידקים). בליעת נוזלים נקראת פינוציטוזה." },
+            { question: "גליקופרוטאינים הם חלבוני ממברנה שאליהם קשורה שרשרת פחמימות (סוכרים).", answer: true, explanation: "הקידומת 'גליקו' מעידה על נוכחות של שרשרת סוכרית המחוברת לחלבון." },
+            { question: "החוק הראשון של התרמודינמיקה קובע שלא ניתן ליצור אנרגיה חדשה יש מאין.", answer: true, explanation: "החוק קובע שסך כל האנרגיה נשמר, והיא רק משנה צורה (למשל, מאנרגיית אור לאנרגיה כימית)." },
+            { question: "תנועה של יונים דרך תעלה פתוחה היא דוגמה לאנרגיה פוטנציאלית.", answer: false, explanation: "התנועה עצמה היא אנרגיה קינטית. מפל הריכוזים שגרם לתנועה הוא האנרגיה הפוטנציאלית." },
+            { question: "האנזים מזרז תגובה על ידי היקשרות לסובסטרט והורדת האנרגיה הנדרשת להגעה למצב המעבר.", answer: true, explanation: "האנזים מייצב את מצב המעבר ובכך מקטין את אנרגיית השפעול (Ea) הנדרשת." },
+            { question: "כל חלבוני ההובלה בממברנה פועלים כמשאבות הדורשות ATP.", answer: false, explanation: "ישנם חלבוני הובלה (כמו תעלות ונשאים של יוניפורטר) הפועלים בדיפוזיה מתווכת ללא השקעת ATP." },
+            { question: "זרחון (Phosphorylation) של משאבת הנתרן/אשלגן גורם לה לשנות את צורתה המרחבית.", answer: true, explanation: "הוספת קבוצת הפוספט מה-ATP משנה את הקונפורמציה של המשאבה, מה שמאפשר את תנועת היונים." },
+            { question: "סך כל התגובות האנבוליות והקטבוליות באורגניזם מרכיבות את המטבוליזם שלו.", answer: true, explanation: "מטבוליזם הוא המונח הכולל לכלל תהליכי בניית ופירוק החומרים בתא." },
+            { question: "הובלה פעילה יכולה להתרחש גם ללא חלבון ממברנלי, ישירות דרך שכבת הליפידים.", answer: false, explanation: "הובלה פעילה מתבצעת בניגוד למפל הריכוזים ולכן מחייבת מנגנון חלבוני ייעודי (משאבה או נשא) שיבצע את העבודה." },
+            { question: "כאשר תא בונה חלבון מחומצות אמינו, מדובר בתהליך אנדרגוני הדורש השקעת אנרגיה.", answer: true, explanation: "בניית מולקולות מורכבות (אנבוליזם) דורשת השקעת אנרגיה, ולכן התגובה היא אנדרגונית." }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

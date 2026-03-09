@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: מבנה ה-DNA והחומר התורשתי</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הבנת הבסיס המולקולרי של התורשה התפתחה דרך סדרת ניסויים היסטוריים פריצת דרך. החל מגילוי ה-nuclein על ידי פרידריך מישר ב-1871, דרך גילוי עקרון ההתמרה (Transforming principle) בניסויי גריפית על חיידקי פנאומוקוק (זני S ו-R), ועד להוכחה החד-משמעית של אוורד ואייברי, ולאחר מכן הרשי וצייס (1952), שהראו כי ה-DNA, ולא החלבון, הוא החומר הנושא את המידע הגנטי.</p>
+                
+                <h3>מבנה חומצות הגרעין</h3>
+                <p>חומצות גרעין (DNA ו-RNA) הן פולימרים המורכבים ממונומרים הנקראים נוקליאוטידים. כל נוקליאוטיד בנוי משלושה רכיבים: קבוצת זרחן (פוספט), סוכר פנטוז (דאוקסיריבוז ב-DNA, ריבוז ב-RNA), ובסיס חנקני. הבסיסים מתחלקים לפירימידינים (בעלי טבעת אחת: ציטוזין, תימין, אורציל) ופורינים (בעלי שתי טבעות: אדנין, גואנין). יצירת הפולימר מתבצעת באמצעות תגובת דחיסה (Condensation) היוצרת קשר פוספודיאסטרי בין הפחמן בעמדה 5 של סוכר אחד לפחמן בעמדה 3 של הסוכר הקודם, מה שמקנה לגדיל כיווניות ברורה ($5' \rightarrow 3'$).</p>
+
+                <h3>הסליל הכפול של ה-DNA</h3>
+                <p>בשנת 1953, בהתבסס על חוקי צרגף (כמות הפורינים שווה לכמות הפירימידינים, $A=T$ ו-$G=C$) ותמונות עקיפת קרני רנטגן (Photo 51) שהפיקה רוזלינד פרנקלין, פענחו ווטסון וקריק את מבנה ה-DNA. ה-DNA הוא סליל דו-גדילי (Double helix) ימני ואנטי-מקביל. עמוד השדרה הסוכרי-זרחני נמצא בחלק החיצוני (הידרופילי), בעוד הבסיסים פונים פנימה. המבנה מיוצב על ידי קשרי מימן בין הבסיסים המשלימים ועל ידי אינטראקציות הידרופוביות (Van der Waals) בין הבסיסים הנערמים זה על זה (Stacking).</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: ניסוי הרשי וצייס (הפרדה איזוטופית)</strong>
+                    הגאונות בניסוי זה נבעה מניצול ההבדלים הכימיים הבסיסיים בין חלבונים לחומצות גרעין. על ידי סימון זרחן ($^{32}P$) המצוי ב-DNA אך לא בחלבונים, וסימון גופרית ($^{35}S$) המצויה בחומצות אמינו מסוימות (ציסטאין ומתיונין) אך לא ב-DNA, הם הצליחו לעקוב פיזית אחר החומר החודר לחיידק ומועבר לדור הבא של הנגיפים.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: ייצוב מבני מול נגישות תפקודית</strong>
+                    מבנה ה-DNA מציג פשרה אבולוציונית מושלמת: מצד אחד, קשרי המימן ואינטראקציות ה-Stacking ההידרופוביות במרכז הסליל שומרים על יציבות המידע הגנטי. מצד שני, קיומם של התלם הגדול והתלם הקטן (Major and Minor grooves) מאפשר לחלבונים לגשת אל הבסיסים ולזהות רצפים ספציפיים מבלי לפרום את הסליל, תכונה קריטית לבקרת ביטוי גנים.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: `Nucleotide (נוקליאוטיד)`, definition: `המונומר של חומצות הגרעין. מורכב מקבוצת זרחן, סוכר פנטוז ובסיס חנקני.` },
+            { term: `Nucleoside (נוקליאוזיד)`, definition: `מולקולה המורכבת מסוכר פנטוז ובסיס חנקני בלבד, ללא קבוצת הזרחן.` },
+            { term: `Purines (פורינים)`, definition: `בסיסים חנקניים בעלי מבנה של שתי טבעות. כוללים את אדנין (A) וגואנין (G).` },
+            { term: `Pyrimidines (פירימידינים)`, definition: `בסיסים חנקניים בעלי מבנה של טבעת אחת. כוללים את ציטוזין (C), תימין (T) ואורציל (U).` },
+            { term: `Phosphodiester bond`, definition: `הקשר הקוולנטי הנוצר מתגובת דחיסה בין הפוספט שעל פחמן 5 של נוקליאוטיד אחד לקבוצת ההידרוקסיל שעל פחמן 3 של הנוקליאוטיד הקודם.` },
+            { term: `Chargaff's Rules`, definition: `הכלל הקובע כי ב-DNA, כמות האדנין שווה לתימין, וכמות הגואנין שווה לציטוזין, ולכן סך הפורינים שווה לסך הפירימידינים.` },
+            { term: `Base Stacking`, definition: `אינטראקציות הידרופוביות (כוחות ואן דר ואלס) בין טבעות הבסיסים הסמוכים לאורך ציר הסליל הכפול, התורמות משמעותית ליציבותו.` },
+            { term: `Major and Minor Grooves`, definition: `מרווחים בסליל הכפול של ה-DNA המאפשרים גישה לבסיסים החנקניים. חלבונים מזהים רצפים ספציפיים דרך תלמים אלו.` },
+            { term: `S Strain (Griffith)`, definition: `זן של חיידקי פנאומוקוק בעל קפסולה פוליסכרידית המקנה לו עמידות בפני מערכת החיסון, ולכן הוא אלים (Virulent).` },
+            { term: `R Strain (Griffith)`, definition: `זן של חיידקי פנאומוקוק חסר קפסולה מגינה, בעל מופע מחוספס ואינו גורם למחלה (Not virulent).` },
+            { term: `Deoxyribose`, definition: `סוכר פנטוז המצוי ב-DNA, חסר אטום חמצן בעמדה של פחמן מספר 2 לעומת סוכר הריבוז.` },
+            { term: `Antiparallel`, definition: `תכונה של הסליל הכפול בו שני גדילי ה-DNA רצים בכיוונים מנוגדים: אחד מ-5 ל-3 והשני מ-3 ל-5.` },
+            { term: `Genome (גנום)`, definition: `הסט השלם של כל ה-DNA באורגניזם, הכולל את האזורים המקודדים לחלבון ואת האזורים הלא מקודדים.` },
+            { term: `Non-coding genes`, definition: `גנים שאינם מתורגמים לחלבון, אלא משועתקים למולקולות RNA בעלות תפקיד תפקודי, כגון tRNA ו-rRNA.` },
+            { term: `X-ray crystallography`, definition: `שיטה פיזיקלית שבאמצעותה הפיקה רוזלינד פרנקלין את תמונה 51, אשר רמזה על המבנה הסלילי של ה-DNA.` }
+        ];
+
+        const mcqData = [
+            { 
+                question: `בניסוי של גריפית, אילו מהשילובים הבאים של הזרקה לעכברים יוביל למציאת חיידקי S חיים בדמו של העכבר לאחר מותו?`, 
+                options: [
+                    `הזרקת חיידקי R חיים בלבד.`,
+                    `הזרקת חיידקי S מומתים בחום בלבד.`,
+                    `הזרקת תערובת של חיידקי R חיים וחיידקי S מומתים בחום.`,
+                    `הזרקת תערובת של חיידקי R מומתים בחום וחיידקי S מומתים בחום.`
+                ], 
+                correctIndex: 2, 
+                explanation: `העיקרון של גריפית הראה שחומר מתמיר (Transforming principle) מחיידקי S מתים יכול לעבור לחיידקי R חיים ולהפוך אותם לחיידקי S אלימים וחיים.` 
+            },
+            { 
+                question: `בניסוי ההמשך של אוורד ואייברי, מטרת השימוש באנזים DNase הייתה להדגים ש:`, 
+                options: [
+                    `ה-DNA חיוני לתהליך ההתמרה הגנטית.`,
+                    `ה-DNA מספיק בפני עצמו כדי לגרום להתמרה גנטית.`,
+                    `חלבונים אינם יכולים לעבור את ממברנת התא.`,
+                    `ה-DNA מורכב מנוקליאוטידים הקשורים בקשר פוספודיאסטרי.`
+                ], 
+                correctIndex: 0, 
+                explanation: `אייברי ביצע ניסוי אלימינציה. הריסת ה-DNA בעזרת DNase עצרה את ההתמרה, מה שהוכיח שה-DNA הוא הכרחי (Necessary) לתהליך. ניסוי נפרד הראה שהוא מספיק (Sufficient).` 
+            },
+            { 
+                question: `מדוע בניסוי של הרשי וצייס נבחר האיזוטופ הרדיואקטיבי של גופרית לסימון חלבונים?`, 
+                options: [
+                    `משום שגופרית יוצרת קשרי גשרים דיסולפידיים המחזיקים את ה-DNA.`,
+                    `משום שגופרית קיימת בחומצות אמינו מסוימות אך אינה קיימת כלל במבנה ה-DNA.`,
+                    `משום שגופרית מחליפה את הזרחן בקבוצת הפוספט של החלבון.`,
+                    `משום שהגופרית חיונית ליצירת הקפסולה הפוליסכרידית של הבקטריופאג.`
+                ], 
+                correctIndex: 1, 
+                explanation: `חומצות האמינו ציסטאין ומתיונין מכילות גופרית, בעוד ש-DNA אינו מכיל גופרית כלל. זה איפשר להבדיל באופן מוחלט בין החלבון ל-DNA של הנגיף.` 
+            },
+            { 
+                question: `אם נסנתז במעבדה גדיל חומצת גרעין ונשתמש במונומרים חסרי אטום חמצן בפחמן מספר 2 ובפחמן מספר 3 של טבעת הסוכר. מה תהיה התוצאה הסבירה ביותר?`, 
+                options: [
+                    `הגדיל שיווצר יהיה RNA במקום DNA.`,
+                    `הפולימריזציה תיעצר לאחר הוספת המונומר הראשון, ולא יווצר פולימר ארוך.`,
+                    `יווצר גדיל DNA יציב יותר עקב היעדר הפרעות סטריות של אטומי החמצן.`,
+                    `הבסיסים החנקניים לא יוכלו ליצור קשרי מימן עם הגדיל המשלים.`
+                ], 
+                correctIndex: 1, 
+                explanation: `היעדר חמצן בפחמן 2 יוצר דאוקסיריבוז (DNA). אך היעדר קבוצת הידרוקסיל (OH) בפחמן 3 ימנע יצירת קשר פוספודיאסטרי עם הנוקליאוטיד הבא, מה שיעצור את התארכות השרשרת.` 
+            },
+            { 
+                question: `אילו מהבאים מתאר נכונה את ההבדל בין נוקליאוזיד לנוקליאוטיד?`, 
+                options: [
+                    `נוקליאוזיד מכיל תמיד סוכר ריבוז, בעוד נוקליאוטיד מכיל דאוקסיריבוז.`,
+                    `נוקליאוטיד כולל קבוצת זרחן אחת או יותר הקשורה לסוכר, בעוד נוקליאוזיד חסר קבוצת זרחן.`,
+                    `נוקליאוזיד מורכב מבסיס פוריני בלבד, בעוד נוקליאוטיד מורכב מבסיס פירימידיני בלבד.`,
+                    `נוקליאוטיד הוא מונומר המצוי ב-DNA, ונוקליאוזיד מצוי רק ב-RNA.`
+                ], 
+                correctIndex: 1, 
+                explanation: `נוקליאוזיד מורכב מבסיס חנקני וסוכר פנטוז בלבד. הוספת קבוצת זרחן (פוספט) הופכת אותו לנוקליאוטיד.` 
+            },
+            { 
+                question: `על פי חוקי צרגף, אם בדגימת DNA של אורגניזם מסוים נמצא ש-15 אחוז מכלל הבסיסים הם אדנין (A), מה יהיה אחוז הציטוזין (C) בדגימה?`, 
+                options: [
+                    `15 אחוז`,
+                    `30 אחוז`,
+                    `35 אחוז`,
+                    `85 אחוז`
+                ], 
+                correctIndex: 2, 
+                explanation: `אם A=15%, אז גם T=15%. יחד הם מהווים 30%. נותרו 70% עבור G ו-C. מכיוון ש-G=C, נחלק 70 ב-2 ונקבל ש-C=35%.` 
+            },
+            { 
+                question: `מהי המשמעות המבנית של העובדה שב-DNA תמיד פורין נקשר לפירימידין?`, 
+                options: [
+                    `זה מאפשר לקבוצות הזרחן לפנות כלפי פנים הסליל.`,
+                    `זה מבטיח שהמרחק בין שני עמודי השדרה הסוכריים-זרחניים יישאר קבוע ואחיד לאורך כל הסליל.`,
+                    `זה מונע היווצרות של קשרי מימן בין גדילים אנטי-מקבילים.`,
+                    `זה מאפשר ל-DNA להפוך ל-RNA בתהליך השעתוק בקלות רבה יותר.`
+                ], 
+                correctIndex: 1, 
+                explanation: `פורין מורכב משתי טבעות ופירימידין מטבעת אחת. זיווג של פורין עם פירימידין שומר על רוחב קבוע של 3 טבעות לרוחב הסליל, מה שמקנה ל-DNA קוטר אחיד של 2 ננומטר.` 
+            },
+            { 
+                question: `איזה מהכוחות הבאים תורם באופן המרכזי ביותר לייצוב המבנה המרחבי של הסליל הכפול לאורך צירו המרכזי (מלמעלה למטה)?`, 
+                options: [
+                    `קשרי המימן בין הבסיסים הקומפלמנטריים.`,
+                    `קשרים פוספודיאסטריים בין נוקליאוטידים סמוכים באותו גדיל.`,
+                    `אינטראקציות הידרופוביות (Van der Waals) בין הבסיסים הנערמים זה על זה.`,
+                    `דחייה חשמלית בין קבוצות הפוספט השליליות בעמוד השדרה.`
+                ], 
+                correctIndex: 2, 
+                explanation: `בעוד שקשרי מימן מחברים בין הגדילים, מה שמייצב את הסליל לאורך הציר (Stacking) הן אינטראקציות הידרופוביות וכוחות ואן דר ואלס בין הטבעות השטוחות של הבסיסים הנערמים.` 
+            },
+            { 
+                question: `חוקר מנסה להוסיף נוקליאוטיד חדש לשרשרת DNA קיימת. לאיזה חלק מולקולרי בשרשרת הקיימת יקשר הנוקליאוטיד החדש?`, 
+                options: [
+                    `לקבוצת הזרחן המחוברת לפחמן 5 בקצה השרשרת.`,
+                    `לקבוצת ההידרוקסיל המחוברת לפחמן 3 בקצה השרשרת.`,
+                    `לבסיס החנקני החשוף בקצה השרשרת.`,
+                    `לאטום החמצן המהווה חלק מטבעת הפנטוז.`
+                ], 
+                correctIndex: 1, 
+                explanation: `התארכות חומצות גרעין היא כיוונית. נוקליאוטיד חדש (שמגיע עם פוספט בעמדה 5) יותקף על ידי קבוצת ה-OH החופשית שעל פחמן 3 בקצה השרשרת הקיימת.` 
+            },
+            { 
+                question: `איזה מהמשפטים הבאים מסביר בצורה הטובה ביותר מדוע חלבונים רגולטוריים יכולים לזהות רצפי DNA ספציפיים מבלי להפריד את שני הגדילים?`, 
+                options: [
+                    `משום שהבסיסים החנקניים בולטים החוצה מעמוד השדרה הסוכרי-זרחני.`,
+                    `משום שפני השטח של זוגות הבסיסים (A-T לעומת C-G) שונים כימית וחשופים דרך התלמים של הסליל הכפול.`,
+                    `משום שחלבונים אלו מזהים את רצף קבוצות הזרחן הייחודי לכל גן.`,
+                    `משום שה-DNA נטען חיובית באזורים המקודדים לגנים.`
+                ], 
+                correctIndex: 1, 
+                explanation: `התלם הגדול (Major groove) והתלם הקטן (Minor groove) חושפים את הקצוות של זוגות הבסיסים, שלכל אחד מהם חותמת כימית שונה, מה שמאפשר זיהוי ספציפי על ידי חלבונים.` 
+            },
+            { 
+                question: `מהי התרומה העיקרית של רוזלינד פרנקלין לפענוח מבנה ה-DNA?`, 
+                options: [
+                    `גילוי הכלל שכמות הפורינים שווה לכמות הפירימידינים.`,
+                    `ההוכחה החד-משמעית שה-DNA הוא החומר התורשתי ולא החלבון.`,
+                    `הפקת תמונות עקיפת קרני רנטגן שהעידו על מבנה סלילי בעל רדיוס קבוע עם פוספטים מבחוץ.`,
+                    `בניית המודל הפיזי הראשון של הסליל הכפול המראה זיווג בסיסים.`
+                ], 
+                correctIndex: 2, 
+                explanation: `רוזלינד פרנקלין (ותלמידה גוסלין) הפיקו את תמונה 51 באמצעות קריסטלוגרפיה של קרני רנטגן, והסיקו שמדובר בסליל צפוף עם קבוצות הזרחן בצדו החיצוני.` 
+            },
+            { 
+                question: `איזה מבין הבאים אינו הבדל מבני או כימי בין DNA ל-RNA?`, 
+                options: [
+                    `נוכחות קבוצת הידרוקסיל על פחמן מספר 2 של טבעת הפנטוז.`,
+                    `שימוש בבסיס אורציל במקום תימין.`,
+                    `היכולת ליצור קשרים פוספודיאסטריים בין נוקליאוטידים.`,
+                    `הנטייה להישאר כגדיל כפול יציב לאורך זמן בתא.`
+                ], 
+                correctIndex: 2, 
+                explanation: `הן DNA והן RNA משתמשים בקשרים פוספודיאסטריים כדי לחבר את הנוקליאוטידים שלהם לשרשרת הפולימרית. שאר האפשרויות הם הבדלים ספציפיים ביניהם.` 
+            },
+            { 
+                question: `מהי המשמעות המעשית של העובדה שגדילי ה-DNA הם אנטי-מקבילים?`, 
+                options: [
+                    `שני הגדילים מסתחררים לכיוונים מנוגדים, אחד ימני ואחד שמאלי.`,
+                    `קצה 5 של גדיל אחד נמצא מול קצה 3 של הגדיל המשלים לו.`,
+                    `גדיל אחד עשוי מפורינים בלבד והשני מפירימידינים בלבד.`,
+                    `גדיל אחד מקודד לחלבון והגדיל השני לעולם אינו מקודד לכלום.`
+                ], 
+                correctIndex: 1, 
+                explanation: `אנטי-מקביליות (Antiparallel) משמעותה שהגדילים רצים בכיוונים הפוכים, כך שקצה 5 של האחד מקביל לקצה 3 של השני ולהפך.` 
+            },
+            { 
+                question: `אם נשווה את היציבות התרמית של שתי מולקולות DNA באותו אורך, מה סביר שנגלה?`, 
+                options: [
+                    `המולקולה בעלת אחוז גבוה יותר של זוגות A-T תדרוש טמפרטורה גבוהה יותר לפרימה.`,
+                    `המולקולה בעלת אחוז גבוה יותר של זוגות C-G תדרוש טמפרטורה גבוהה יותר לפרימה.`,
+                    `לשתיהן תהיה בדיוק אותה יציבות תרמית ללא קשר לרצף הבסיסים.`,
+                    `המולקולה עם יותר קצוות 5' חופשיים תהיה פחות יציבה.`
+                ], 
+                correctIndex: 1, 
+                explanation: `זוג הבסיסים C-G מוחזק על ידי שלושה קשרי מימן, בעוד זוג A-T מוחזק על ידי שניים בלבד. לכן, ריבוי C-G מגדיל את היציבות התרמית של הסליל הכפול.` 
+            },
+            { 
+                question: `על פי הנתונים המוצגים במצגת, איזה אחוז מהגנום האנושי מקודד בפועל לסינתזת חלבונים?`, 
+                options: [
+                    `כ-2 אחוזים.`,
+                    `כ-20 אחוזים.`,
+                    `כ-50 אחוזים.`,
+                    `כ-98 אחוזים.`
+                ], 
+                correctIndex: 0, 
+                explanation: `הגנום מורכב ברובו מ-DNA שאינו מקודד לחלבון. רק כ-2% מהגנום האנושי מהווה גנים המקודדים לחלבונים.` 
+            },
+            { 
+                question: `מהו התפקיד של מולקולות כמו tRNA ו-rRNA בהקשר של הגנום?`, 
+                options: [
+                    `הן משמשות כאנזימים המפרקים DNA פגום.`,
+                    `הן דוגמאות לתוצרים של גנים שאינם מקודדים לחלבון (non-coding genes).`,
+                    `הן מתפקדות כחלבונים רגולטוריים הנקשרים לתלם הגדול של ה-DNA.`,
+                    `הן מהוות את עמוד השדרה החלופי בנגיפי RNA.`
+                ], 
+                correctIndex: 1, 
+                explanation: `לא כל גן מתורגם לחלבון. גנים לא-מקודדים משועתקים למולקולות RNA תפקודיות כמו tRNA (רנ"א מוביל) ו-rRNA (רנ"א ריבוזומלי).` 
+            },
+            { 
+                question: `בניסוי מבוסס על שיטתו של גריפית, חוקר מזריק לעכבר חיידקי R חיים יחד עם תמצית מחיידקי S שעברה טיפול באנזים Protease. מה תהיה התוצאה?`, 
+                options: [
+                    `העכבר יישאר בריא, מכיוון שהאנזים פירק את החומר המתמיר.`,
+                    `העכבר ימות, וחיידקי S חיים ימצאו בדמו.`,
+                    `העכבר ימות, אך רק חיידקי R ימצאו בדמו.`,
+                    `העכבר יישאר בריא, אך חיידקי S יתפתחו בכבד שלו.`
+                ], 
+                correctIndex: 1, 
+                explanation: `פרוטאז הורס חלבונים. מכיוון שהחומר המתמיר הוא DNA ולא חלבון, הטיפול בפרוטאז לא יעצור את תהליך ההתמרה, החיידקים יהפכו לאלימים (S) והעכבר ימות.` 
+            },
+            { 
+                question: `איזו מהמולקולות הבאות היא Nucleoside monophosphate?`, 
+                options: [
+                    `אדנין הקשור לסוכר דאוקסיריבוז בלבד.`,
+                    `אדנוסין (Adenosine) הקשור לשלוש קבוצות זרחן.`,
+                    `אדנילאט (Adenylate).`,
+                    `פורין חופשי בציטופלזמה.`
+                ], 
+                correctIndex: 2, 
+                explanation: `אדנילאט (Adenylate או AMP) הוא נוקליאוטיד המכיל בסיס (אדנין), סוכר (ריבוז) וקבוצת זרחן אחת (מונופוספט). אדנוסין ללא זרחן הוא נוקליאוזיד.` 
+            },
+            { 
+                question: `מדוע המודל של לינוס פאולינג עבור חלבונים (אלפא-הליקס ומשטחי בטא) היה רלוונטי לגילוי מבנה ה-DNA?`, 
+                options: [
+                    `הוא הוכיח ש-DNA עשוי מחומצות אמינו.`,
+                    `הוא הראה ששימוש בקריסטלוגרפיה של קרני רנטגן יכול לחשוף מוטיבים מבניים חוזרים במקרומולקולות.`,
+                    `הוא מצא את היחס המתמטי המדויק בין כמות הפורינים לפירימידינים.`,
+                    `הוא הוכיח שקשרי מימן אינם יכולים להתקיים בסביבה מימית.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הצלחתו של פאולינג בתיאור מבנים שניוניים של חלבונים באמצעות עקיפת קרני רנטגן נתנה השראה והדגימה את כוחה של השיטה לפענוח מבנים ביולוגיים מורכבים כמו ה-DNA.` 
+            },
+            { 
+                question: `באיזה שלב של יצירת חומצת גרעין משתחררת מולקולת מים?`, 
+                options: [
+                    `במהלך יצירת קשרי המימן בין הבסיסים המשלימים.`,
+                    `במהלך הוספת נוקליאוטיד חדש לשרשרת מתארכת (תגובת דחיסה).`,
+                    `בעת פרימת הסליל הכפול על ידי אנזימים.`,
+                    `כאשר ה-DNA עובר התמרה לחלבון.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הקשר הפוספודיאסטרי נוצר בתגובת דחיסה (Condensation), תהליך כימי שבו שני מולקולות מתחברות תוך פליטת מולקולת מים.` 
+            },
+            { 
+                question: `המונח 'מוטציה' מוגדר בהקשר של ה-DNA כ:`, 
+                options: [
+                    `שינוי במבנה התלת-ממדי של הסליל הכפול ממצב ימני לשמאלי.`,
+                    `פירוק מלא של עמוד השדרה הסוכרי-זרחני.`,
+                    `שינוי ברצף הלינארי של זוגות הבסיסים.`,
+                    `החלפת סוכר הריבוז בדאוקסיריבוז.`
+                ], 
+                correctIndex: 2, 
+                explanation: `האינפורמציה הגנטית מקודדת ברצף הבסיסים. מוטציה היא כל שינוי ברצף הלינארי הזה, אשר עשוי להשפיע על התוצר החלבוני או הבקרתי.` 
+            },
+            { 
+                question: `על פי הממדים הפיזיקליים של ה-DNA, כמה זוגות בסיסים יש בסיבוב שלם אחד (Turn) של הסליל הכפול?`, 
+                options: [
+                    `2 זוגות בסיסים.`,
+                    `3.4 זוגות בסיסים.`,
+                    `10 זוגות בסיסים.`,
+                    `20 זוגות בסיסים.`
+                ], 
+                correctIndex: 2, 
+                explanation: `סיבוב שלם של ה-DNA אורך 3.4 ננומטר. מכיוון שהמרחק בין כל זוג בסיסים הוא 0.34 ננומטר, ישנם 10 זוגות בסיסים בכל סיבוב שלם.` 
+            },
+            { 
+                question: `מה היה קורה אילו ב-DNA, הבסיס אדנין (A) היה מסוגל ליצור קשרי מימן יציבים עם גואנין (G)?`, 
+                options: [
+                    `הסליל היה שומר על קוטר אחיד של 2 ננומטר אך הרצף הגנטי היה משתנה.`,
+                    `קוטר הסליל הכפול לא היה אחיד, והיה מתרחב באזורים אלו.`,
+                    `ה-DNA היה הופך למולקולה הידרופובית לחלוטין.`,
+                    `עמוד השדרה היה מתנתק מכיוון ששני פורינים לא יכולים להיקשר לסוכר.`
+                ], 
+                correctIndex: 1, 
+                explanation: `אדנין וגואנין הם שניהם פורינים (בעלי שתי טבעות). זיווג שלהם יחד ייצור מבנה רחב של 4 טבעות, מה שיעוות את קוטר הסליל האחיד (שבנוי תמיד מ-3 טבעות: פורין+פירימידין).` 
+            },
+            { 
+                question: `איזה מהמשפטים הבאים לגבי אורכו של ה-DNA באדם הוא נכון?`, 
+                options: [
+                    `כל ה-DNA בגוף האדם יחד מגיע לאורך של כשני מטרים.`,
+                    `בכל תא בודד ישנם כ-3 מיליארד זוגות בסיסים, המגיעים לאורך של כ-2 מטרים.`,
+                    `ה-DNA ארוז בצורה כה דחוסה עד שאורכו הכולל בתא הוא 2 ננומטר בלבד.`,
+                    `אורכו של ה-DNA משתנה באופן קיצוני בין תאי עור לתאי שריר.`
+                ], 
+                correctIndex: 1, 
+                explanation: `עותק אחד של הגנום האנושי מכיל 3 מיליארד זוגות בסיסים. בתא דיפלואידי רגיל, האורך הכולל של מולקולות ה-DNA מגיע לכ-2 מטרים.` 
+            },
+            { 
+                question: `בניסוי של אוורד ואייברי, מה הייתה המסקנה הישירה מהעובדה שבידוד ה-DNA בלבד (ללא חלבונים או RNA) גרם להתמרה של חיידקי R ל-S?`, 
+                options: [
+                    `שה-DNA נחוץ (Necessary) אך לא מספיק.`,
+                    `שה-DNA מספיק בפני עצמו (Sufficient) כדי לגרום להתמרה גנטית.`,
+                    `שחיידקי R יכולים לסנתז DNA באופן עצמאי.`,
+                    `שחלבונים מעכבים את פעולת ה-DNA.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הניסוי החיובי של אייברי (הוספת DNA מבודד נקי) הוכיח שה-DNA לבדו מספיק כדי להעביר את התכונה הגנטית, ללא צורך במרכיבים תאיים אחרים מחיידק ה-S.` 
+            },
+            { 
+                question: `מהי הסיבה המולקולרית לכך שגדיל פולימר של חומצת גרעין טעון שלילית?`, 
+                options: [
+                    `הבסיסים החנקניים מכילים אטומי חנקן שמושכים אלקטרונים.`,
+                    `טבעת הפנטוז משחררת יוני מימן בסביבה מימית.`,
+                    `קבוצות הזרחן (פוספט) בעמוד השדרה נושאות מטען שלילי ב-pH פיזיולוגי.`,
+                    `הקשרים ההידרופוביים בין הבסיסים דוחים מולקולות מים ויוצרים שדה שלילי.`
+                ], 
+                correctIndex: 2, 
+                explanation: `קבוצת הזרחן (Phosphate group) הנמצאת בעמוד השדרה של חומצת הגרעין מאבדת פרוטונים בסביבה פיזיולוגית ונושאת מטען שלילי, מה שמקנה למולקולה כולה מטען שלילי חזק.` 
+            },
+            { 
+                question: `חוקר מצא נגיף לא מוכר. לאחר אנליזה, התברר שהרכב הבסיסים בו הוא: 20% אדנין, 30% ציטוזין, 15% גואנין, ו-35% אורציל. מה ניתן להסיק לגבי החומר התורשתי של הנגיף?`, 
+                options: [
+                    `זהו DNA דו-גדילי.`,
+                    `זהו RNA דו-גדילי.`,
+                    `זהו RNA חד-גדילי.`,
+                    `זהו DNA חד-גדילי.`
+                ], 
+                correctIndex: 2, 
+                explanation: `נוכחות אורציל (U) מעידה שזהו RNA. מכיוון שהיחסים בין A ל-U ובין C ל-G אינם שווים (20 לא שווה ל-35, 30 לא שווה ל-15), חוקי צרגף לא מתקיימים, ולכן לא מדובר בסליל כפול אלא בחד-גדיל.` 
+            },
+            { 
+                question: `מהו התפקיד של קבוצת ההידרוקסיל (OH) בעמדה 3' של סוכר הפנטוז במהלך סינתזת DNA?`, 
+                options: [
+                    `היא תוקפת את קבוצת הזרחן של הנוקליאוטיד הנכנס כדי ליצור את הקשר הפוספודיאסטרי.`,
+                    `היא יוצרת קשרי מימן עם הבסיס המשלים בגדיל הנגדי.`,
+                    `היא מייצבת את אינטראקציות ה-Stacking בין הטבעות.`,
+                    `היא מונעת כניסה של נוקליאוטידים של RNA לתוך גדיל ה-DNA.`
+                ], 
+                correctIndex: 0, 
+                explanation: `קבוצת ההידרוקסיל החופשית בקצה 3' היא נוקלאופיל שתוקף את הפוספט של הנוקליאוטיד הבא המגיע (שהוא טריפוספט), ובכך מאפשרת את התארכות השרשרת.` 
+            },
+            { 
+                question: `איזה מהמשפטים הבאים מתאר בצורה הנכונה ביותר את "חוקי צרגף" (Chargaff's rules)?`, 
+                options: [
+                    `היחס בין כמות האדנין לתימין שווה ליחס שבין גואנין לציטוזין, והוא תמיד 1:1 בכל המינים.`,
+                    `כמות האדנין ועוד התימין שווה תמיד לכמות הגואנין ועוד הציטוזין.`,
+                    `בכל האורגניזמים, ה-DNA מורכב מ-25% מכל אחד מארבעת הבסיסים.`,
+                    `היחס בין A+T ל-G+C קבוע בכל המינים בטבע.`
+                ], 
+                correctIndex: 0, 
+                explanation: `צרגף גילה ש-A=T ו-G=C (יחס של 1:1), ולכן סך הפורינים שווה לסך הפירימידינים. עם זאת, היחס (A+T)/(G+C) שונה מאורגניזם לאורגניזם.` 
+            },
+            { 
+                question: `באיור של מבנה הנוקליאוטיד, לאיזה פחמן של טבעת הפנטוז מחובר הבסיס החנקני?`, 
+                options: [
+                    `פחמן 1'`,
+                    `פחמן 2'`,
+                    `פחמן 3'`,
+                    `פחמן 5'`
+                ], 
+                correctIndex: 0, 
+                explanation: `הבסיס החנקני קשור תמיד לפחמן מספר 1' של סוכר הפנטוז. הזרחן קשור לפחמן 5', וקבוצת ההידרוקסיל לפחמן 3'.` 
+            },
+            { 
+                question: `איזו מבין המולקולות הבאות מהווה את אבן הבניין (המונומר) הנכנסת בפועל לשרשרת ה-DNA במהלך בנייתה, רגע לפני תגובת הדחיסה?`, 
+                options: [
+                    `Nucleoside monophosphate`,
+                    `Nucleoside diphosphate`,
+                    `Nucleoside triphosphate`,
+                    `Purine base`
+                ], 
+                correctIndex: 2, 
+                explanation: `הנוקליאוטידים מגיעים לאתר הסינתזה כנוקליאוזיד טרי-פוספט (כגון ATP, dATP). פירוק שני הפוספטים הנוספים (פירופוספט) מספק את האנרגיה ליצירת הקשר.` 
+            },
+            { 
+                question: `אם נרצה לעצב מולקולה שתתרופף בטמפרטורה נמוכה יחסית, איזה רצף בסיסים כדאי לנו לשלב בה באחוזים גבוהים?`, 
+                options: [
+                    `רצפים עשירים ב-G ו-C.`,
+                    `רצפים עשירים ב-A ו-T.`,
+                    `רצפים המכילים רק פורינים.`,
+                    `רצפים המכילים רק פירימידינים.`
+                ], 
+                correctIndex: 1, 
+                explanation: `זוגות A-T מחוברים על ידי 2 קשרי מימן בלבד, לעומת 3 קשרי מימן בזוגות G-C. לכן, אזורים עשירים ב-A-T קלים יותר לפרימה (דורשים פחות אנרגיה/חום).` 
+            },
+            { 
+                question: `מהי המשמעות המדויקת של המונח "Deoxy" בשם Deoxyribonucleic acid?`, 
+                options: [
+                    `שהמולקולה חסרת אטום חמצן בקבוצת הזרחן שלה.`,
+                    `שהמולקולה אינה זקוקה לחמצן כדי לתפקד בתא.`,
+                    `שבסוכר הפנטוז שלה חסר אטום חמצן בעמדה 2' בהשוואה לריבוז.`,
+                    `שהבסיסים החנקניים שלה נטולי חמצן לחלוטין.`
+                ], 
+                correctIndex: 2, 
+                explanation: `המילה Deoxy מתייחסת להיעדר אטום חמצן בקבוצת ההידרוקסיל של פחמן 2' בטבעת הסוכר (יש שם רק אטום מימן), מה שמבדיל אותה מ-RNA.` 
+            },
+            { 
+                question: `מיהו המדען הראשון שבודד חומר עשיר בזרחן מגרעיני תאי דם לבנים וקרא לו "נוקלאין"?`, 
+                options: [
+                    `פרדריק גריפית`,
+                    `אוסוולד אייברי`,
+                    `פרידריך מישר`,
+                    `גיימס ווטסון`
+                ], 
+                correctIndex: 2, 
+                explanation: `פרידריך מישר היה הראשון שבודד את החומר ב-1871, הרבה לפני שהבינו את תפקידו הגנטי.` 
+            },
+            { 
+                question: `בניסוי הרשי וצייס, לאחר השלב של ההדבקה וההפרדה בצנטריפוגה, היכן נמצא האיזוטופ הרדיואקטיבי P32?`, 
+                options: [
+                    `בנוזל העליון (Supernatant) המכיל את מעטפות הנגיפים הריקות.`,
+                    `בתוך משקע התאים החיידקיים שבתחתית המבחנה.`,
+                    `הוא התנדף לאוויר כגז.`,
+                    `בפרוטאזות שנוספו לתמיסה.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הזרחן P32 סימן את ה-DNA. מכיוון שה-DNA הוזרק לתוך החיידקים, לאחר הצנטריפוגה הוא נמצא בתוך משקע התאים החיידקיים, ומאוחר יותר בנגיפים החדשים שנוצרו.` 
+            },
+            { 
+                question: `אילו בסיסים נחשבים לפורינים?`, 
+                options: [
+                    `אדנין וגואנין.`,
+                    `ציטוזין ותימין.`,
+                    `אדנין ותימין.`,
+                    `גואנין וציטוזין.`
+                ], 
+                correctIndex: 0, 
+                explanation: `אדנין (A) וגואנין (G) הם פורינים, המאופיינים במבנה של שתי טבעות מחוברות.` 
+            },
+            { 
+                question: `מה מהבאים אינו נכון לגבי ה-DNA לפי מודל ווטסון וקריק?`, 
+                options: [
+                    `הוא מורכב משני גדילים אנטי-מקבילים.`,
+                    `עמוד השדרה הסוכרי-זרחני ממוקם במרכז הסליל.`,
+                    `זיווג הבסיסים הוא תמיד פורין עם פירימידין.`,
+                    `הסליל מסתובב בכיוון ימין (Right-handed).`
+                ], 
+                correctIndex: 1, 
+                explanation: `עמוד השדרה הסוכרי-זרחני הוא הידרופילי ולכן פונה החוצה כלפי הסביבה המימית, בעוד שהבסיסים ההידרופוביים פונים פנימה למרכז הסליל.` 
+            },
+            { 
+                question: `מדוע חלבונים אינם יכולים להוות את "החומר המתמיר" בניסויי אוורד ואייברי?`, 
+                options: [
+                    `כי חלבונים עשויים מ-20 חומצות אמינו, וזה מורכב מדי.`,
+                    `כי הוספת אנזים המפרק חלבונים (Protease) לא עצרה את תהליך ההתמרה הגנטית.`,
+                    `כי חלבונים מתפרקים בטמפרטורת החדר.`,
+                    `כי רק ל-DNA יש קפסולה פוליסכרידית.`
+                ], 
+                correctIndex: 1, 
+                explanation: `בניסוי האלימינציה, כאשר הרסו את החלבונים באמצעות פרוטאז, התכונה עדיין עברה לחיידקי ה-R. זה הוכיח שהחלבון אינו נושא המידע הגנטי.` 
+            },
+            { 
+                question: `איזה סוג קשר כימי מחבר בין בסיס חנקני לסוכר הפנטוז בנוקליאוטיד?`, 
+                options: [
+                    `קשר פוספודיאסטרי.`,
+                    `קשר מימן.`,
+                    `קשר קוולנטי.`,
+                    `כוחות ואן דר ואלס.`
+                ], 
+                correctIndex: 2, 
+                explanation: `הבסיס מחובר לסוכר בקשר קוולנטי (ספציפית קשר N-גליקוזידי, למרות שהשם לא הוזכר במפורש, הוא קשר קוולנטי כחלק מהמונומר).` 
+            },
+            { 
+                question: `אם תא אנושי מכיל כ-2 מטרים של DNA, כיצד הוא נדחס לתוך גרעין התא המיקרוסקופי?`, 
+                options: [
+                    `ה-DNA נחתך למקטעים קצרים מאוד שאינם מחוברים.`,
+                    `קבוצות הזרחן מוסרות כדי להקטין את הנפח.`,
+                    `הוא ארוז במבנים דחוסים וקומפקטיים (כרומוזומים) באמצעות חלבונים.`,
+                    `ה-DNA בתא חי נמצא במצב גזי ולכן תופס פחות נפח.`
+                ], 
+                correctIndex: 2, 
+                explanation: `ה-DNA נדחס בצורה מאורגנת מאוד באמצעות חלבונים (היסטונים, שיידונו בהמשך הקורס) ליצירת כרומטין וכרומוזומים, מה שמאפשר להכניס 2 מטרים לגרעין קטנטן.` 
+            }
+        ];
+
+        const tfData = [
+            { question: `נוקליאוטידים מתווספים לשרשרת חומצת גרעין קיימת רק לקצה ה-5' שלה.`, answer: false, explanation: `נוקליאוטידים מתווספים אך ורק לקצה ה-3' של הפולימר, היכן שנמצאת קבוצת ההידרוקסיל החופשית.` },
+            { question: `בניסוי של גריפית, חיידקי R חיים הפכו לחיידקי S בעקבות מגע עם חיידקי S מומתים.`, answer: true, explanation: `זהו בדיוק עקרון ההתמרה (Transformation) שגריפית גילה.` },
+            { question: `חומצת הגרעין RNA מכילה את הבסיס תימין (T) במקום אורציל (U).`, answer: false, explanation: `ההיפך הוא הנכון. RNA מכיל אורציל (U) במקום תימין (T).` },
+            { question: `כל הגנים בגנום האנושי מקודדים ליצירת חלבונים.`, answer: false, explanation: `רק כ-2% מהגנום האנושי מקודד לחלבונים. חלק מהגנים מקודדים ל-RNA תפקודי (כמו tRNA ו-rRNA) וישנם אזורים בקרתיים רבים.` },
+            { question: `לפי חוקי צרגף, היחס בין כמות האדנין והתימין (A+T) לכמות הגואנין והציטוזין (G+C) זהה בכל היצורים החיים.`, answer: false, explanation: `היחס (A+T)/(G+C) משתנה מאוד בין מינים שונים של אורגניזמים.` },
+            { question: `קוטר הסליל הכפול של ה-DNA הוא אחיד ועומד על 2 ננומטר.`, answer: true, explanation: `הקוטר האחיד נשמר בזכות הזיווג הקבוע של פורין (שתי טבעות) עם פירימידין (טבעת אחת).` },
+            { question: `קשרי מימן הם הכוח היחיד המייצב את מבנה הסליל הכפול של ה-DNA.`, answer: false, explanation: `בנוסף לקשרי המימן בין הבסיסים, כוחות ואן דר ואלס (אינטראקציות Stacking הידרופוביות) בין הבסיסים הנערמים תורמים רבות ליציבות הסליל.` },
+            { question: `ב-DNA, עמוד השדרה מורכב מסוכר וזרחן הקשורים בקשרים קוולנטיים.`, answer: true, explanation: `הקשרים המחברים את רכיבי עמוד השדרה הם קשרים פוספודיאסטריים, שהם סוג של קשר קוולנטי חזק.` },
+            { question: `החוקרים שפענחו את מבנה ה-DNA בשנת 1953 היו גיימס ווטסון ופרנסיס קריק.`, answer: true, explanation: `הם בנו את המודל המפורסם בהתבסס על נתונים של פרנקלין וצרגף.` },
+            { question: `נוקליאוזיד מורכב מזרחן, סוכר ובסיס חנקני.`, answer: false, explanation: `נוקליאוזיד מורכב מסוכר ובסיס חנקני בלבד. כשהוא כולל זרחן הוא נקרא נוקליאוטיד.` },
+            { question: `ניסוי הרשי וצייס הוכיח שהחלבון הוא החומר התורשתי בבקטריופאג'ים.`, answer: false, explanation: `הניסוי הוכיח בדיוק את ההיפך: ה-DNA הוא החומר התורשתי, שכן הזרחן הרדיואקטיבי (שסימן DNA) נמצא בתוך החיידקים המודבקים.` },
+            { question: `מולקולת ה-DNA מקודדת מידע גנטי באמצעות רצף לינארי של זוגות בסיסים.`, answer: true, explanation: `האינפורמציה אגורה בסדר הספציפי של הבסיסים שלאורך הגדיל.` },
+            { question: `אדנין וגואנין הם פירימידינים.`, answer: false, explanation: `אדנין וגואנין הם פורינים, בעלי מבנה של שתי טבעות.` },
+            { question: `זוג הבסיסים G-C יוצר שלושה קשרי מימן, מה שהופך אותו ליציב יותר מזוג A-T.`, answer: true, explanation: `זוג A-T יוצר רק שני קשרי מימן, ולכן פחות יציב תרמית מזוג G-C.` },
+            { question: `הגדילים בסליל כפול של DNA רצים באותו כיוון (מקבילים).`, answer: false, explanation: `הגדילים הם אנטי-מקבילים (Antiparallel), כלומר רצים בכיוונים מנוגדים.` },
+            { question: `תמונת עקיפת קרני הרנטגן (Photo 51) של רוזלינד פרנקלין הראתה שקבוצות הזרחן נמצאות בחלק הפנימי של הסליל.`, answer: false, explanation: `התמונה והאנליזה שלה הראו שקבוצות הזרחן נמצאות בחלק החיצוני של הסליל.` },
+            { question: `מוטציה ב-DNA היא כל שינוי ברצף הלינארי של הבסיסים.`, answer: true, explanation: `זהו ההסבר הבסיסי למוטציה, אשר יכולה להשפיע על תפקוד התא.` },
+            { question: `סוכר הריבוז ב-RNA מכיל אטום חמצן בעמדה 2', בניגוד לדאוקסיריבוז ב-DNA.`, answer: true, explanation: `ההידרוקסיל (-OH) בעמדה 2' קיים בריבוז וחסר בדאוקסיריבוז.` },
+            { question: `מרחק של סיבוב שלם אחד (Turn) בסליל ה-DNA כולל 10 זוגות בסיסים.`, answer: true, explanation: `המרחק לסיבוב הוא 3.4 ננומטר, והמרחק בין בסיסים הוא 0.34 ננומטר, ולכן יש 10 זוגות בסיסים בסיבוב.` },
+            { question: `התלם הגדול (Major groove) והתלם הקטן (Minor groove) מונעים מחלבונים לזהות רצפי DNA ספציפיים.`, answer: false, explanation: `להיפך, התלמים הם אלו שמאפשרים לחלבונים גישה לפני השטח הכימיים של הבסיסים וכך לזהות רצפים מבלי לפרום את הסליל.` },
+            { question: `אוסוולד אייברי השתמש באנזים RNase כדי להוכיח ש-RNA אינו החומר המתמיר.`, answer: true, explanation: `אייברי השתמש ב-RNase, Protease ו-DNase בניסויי האלימינציה שלו. רק DNase עצר את ההתמרה.` },
+            { question: `גופרית רדיואקטיבית (S35) שימשה בניסוי הרשי וצייס לסימון חומצות הגרעין של הנגיף.`, answer: false, explanation: `הגופרית שימשה לסימון החלבונים (הקפסולה), שכן היא אינה קיימת ב-DNA.` },
+            { question: `המונח Uridylate (UMP) מתייחס לנוקליאוטיד של RNA.`, answer: true, explanation: `UMP מכיל אורציל, סוכר ריבוז וקבוצת זרחן, ולכן הוא נוקליאוטיד של RNA.` },
+            { question: `בתהליך שכפול ה-DNA, זיווג הבסיסים מבטיח העתקה מדויקת של המידע.`, answer: true, explanation: `הקומפלמנטריות (A מול T, C מול G) היא המנגנון המאפשר שכפול מדויק של החומר הגנטי.` },
+            { question: `לינוס פאולינג גילה את מבנה ה-DNA לפני ווטסון וקריק.`, answer: false, explanation: `פאולינג גילה מוטיבים מבניים בחלבונים (אלפא הליקס), אך ווטסון וקריק היו אלו שפענחו את ה-DNA.` },
+            { question: `אינטראקציות הידרופוביות הן הסיבה המרכזית לתופעת ה-Stacking של הבסיסים בסליל.`, answer: true, explanation: `הטבעות של הבסיסים הן הידרופוביות ונוטות להיערם זו על זו כדי להימנע ממגע עם המים שסביב המולקולה.` },
+            { question: `לכל תא בגוף האדם יש בדיוק מילימטר אחד של DNA.`, answer: false, explanation: `בכל תא בגוף האדם ישנם כ-2 מטרים של DNA.` },
+            { question: `הקשר בין שני נוקליאוטידים באותו גדיל נוצר בתגובת הידרוליזה שמפרקת מולקולת מים.`, answer: false, explanation: `הקשר נוצר בתגובת דחיסה (Condensation) שבה משתחררת (נוצרת) מולקולת מים, ולא מתפרקת.` },
+            { question: `כל הנוקליאוטידים המשמשים לבניית חומצות גרעין מכילים קבוצת פוספט אחת בלבד כשהם בתוך הפולימר.`, answer: true, explanation: `בתוך שרשרת הפולימר (לאחר הסינתזה), כל נוקליאוטיד הוא מונופוספט (Nucleoside monophosphate).` },
+            { question: `ה-DNA הוא מולקולה ימנית (Right-handed helix).`, answer: true, explanation: `כיוון הסיבוב של הסליל הכפול במודל המקובל (B-DNA) הוא ימני.` }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

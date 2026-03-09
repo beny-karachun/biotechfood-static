@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>קביעת גורל התא, תאי גזע ושיבוט</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>התפתחות עוברית ותאית באורגניזמים רב-תאיים מבוססת על עיקרון מרכזי: כל התאים באורגניזם זהים גנטית. ההבדל בין תא עור לתא עצב אינו נובע משינוי ב-DNA עצמו, אלא מ<strong>ביטוי גנים דיפרנציאלי</strong>. שינויים בביטוי הגנים, המושפעים גם מהסביבה החוץ-תאית, קובעים את "גורל התא" (Cell Fate). ככל שההתפתחות מתקדמת, פוטנציאל ההתמיינות של התא (Cell Potency) הולך ומצטמצם – ממצב טוטיפוטנטי (יכולת ליצור אורגניזם שלם כולל שליה) למצב פלוריפוטנטי (יכולת ליצור כל תא בעובר), מולטיפוטנטי (מספר סוגי תאים ברקמה ספציפית), ועד ליוניפוטנטי (סוג תא אחד בלבד).</p>
+
+                <p>קביעת גורל התא מתרחשת באמצעות שני מנגנונים עיקריים: <strong>הפרדה ציטופלזמתית</strong> (חלוקה לא שווה של פקטורים בציטופלזמה במהלך חלוקת התא) ו<strong>השראה (Induction)</strong> (תקשורת בין-תאית שבה תא אחד מפריש פקטורים הגורמים להתמיינות בתא סמוך). דוגמה מובהקת להתמיינות היא יצירת תאי שריר: ביטוי של פקטור השעתוק $MyoD$ מפעיל את הגן $p21$, אשר נקשר ומעכב את החלבון $Cdk$. כתוצאה מכך, מחזור התא נעצר בשלב $G1$, מה שמאפשר לתא להפסיק להתחלק ולהתמיין לתא שריר בוגר.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: עצירת מחזור התא כתנאי להתמיינות</strong>
+                    התמיינות סופית של תא דורשת לרוב יציאה ממחזור החלוקה. המנגנון של $MyoD$ ו-$p21$ מדגים כיצד פקטורי שעתוק לא רק מפעילים גנים ספציפיים לרקמה, אלא במקביל משתקים באופן פעיל את מנגנוני חלוקת התא (כמו $Cdk$), כדי לקבע את זהות התא החדשה.
+                </div>
+
+                <p><strong>תאי גזע (Stem Cells)</strong> הם תאים ייחודיים בעלי שתי תכונות מרכזיות: יכולת חידוש עצמי (Self-renewal) לשמירה על מאגר תאי הגזע, ויכולת התמיינות לתאים מתמחים. תאי גזע עובריים (ESCs) נלקחים מהמסה התאית הפנימית של הבלסטוציסט והם פלוריפוטנטיים. לעומתם, תאי גזע רקמתיים (בוגרים) נמצאים ברקמות ספציפיות (כמו מוח, מח עצם, עור) והם מולטיפוטנטיים – הם יכולים לייצר רק את סוגי התאים של הרקמה בה הם נמצאים. המדרג התאי כולל תא גזע (מתחלק לאט), תאי אב מחויבים (Progenitors - מתחלקים מהר אך ללא חידוש עצמי), ותאים מתמחים סופיים (מבצעים עבודה ולא מתחלקים).</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: הפיכות ההתמיינות (שיבוט סומאטי)</strong>
+                    הדוגמה של הכבשה דולי הוכיחה פרדיגמה מהפכנית: התמיינות תאית אינה תהליך חד-כיווני ובלתי הפיך. על ידי העברת גרעין מתא בוגר וממוין (שנעצר ב-$G1$) לתוך ביצית חסרת גרעין, הסביבה של הביצית מסוגלת "לאתחל" את ה-DNA ולהחזיר אותו למצב טוטיפוטנטי.
+                </div>
+
+                <p>הבנת תאי הגזע והשיבוט פותחת דלת ל<strong>שיבוט טיפולי</strong> ברפואה. בשיטה זו, נלקח תא מהחולה, הגרעין שלו מוחדר לביצית תורמת חסרת גרעין, ונוצר עובר שממנו מופקים תאי גזע עובריים. תאים אלו ממוינים במעבדה לרקמה הרצויה (למשל שריר לב או תאי עצב) ומושתלים בחזרה בחולה. היתרון העצום של גישה זו הוא שהתאים המושתלים זהים גנטית לחולה, מה שמונע את דחיית השתל על ידי מערכת החיסון.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: טוטיפוטנטיות בצמחים לעומת בעלי חיים</strong>
+                    בעוד שביונקים תאים בוגרים מאבדים את הטוטיפוטנטיות שלהם (ונדרשת התערבות מורכבת כמו העברת גרעין כדי לשחזרה), בצמחים, תאים ממוינים בוגרים רבים שומרים על טוטיפוטנטיות טבעית. ניתן לקחת תא בודד משורש של צמח בוגר ולגדל ממנו צמח שלם ופורה.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: `ביטוי גנים דיפרנציאלי`, definition: `המנגנון שבו תאים בעלי מטען גנטי זהה מתפקדים באופן שונה על ידי הפעלה או השתקה של גנים שונים.` },
+            { term: `Totipotent (טוטיפוטנטי)`, definition: `תא בעל פוטנציאל להתמיין לכל סוגי התאים באורגניזם, כולל תאי השליה (למשל, זיגוטה ותאים בעובר מוקדם).` },
+            { term: `Pluripotent (פלוריפוטנטי)`, definition: `תא בעל יכולת להתמיין לסוגים רבים של תאים, אך אינו יכול ליצור עובר שלם או שליה (למשל, תאי גזע מהבלסטוציסט).` },
+            { term: `Multipotent (מולטיפוטנטי)`, definition: `תא בעל פוטנציאל להתמיין למספר סוגי תאים מוגבל, לרוב בתוך רקמה ספציפית (למשל, תאי גזע בדם).` },
+            { term: `הפרדה ציטופלזמתית`, definition: `חלוקה לא שווה של פקטורים בציטופלזמה במהלך חלוקת תא, הגורמת לתאי הבת לקבל גורל שונה.` },
+            { term: `השראה (Induction)`, definition: `תקשורת בין-תאית שבה תא אחד מפריש פקטורים המשפיעים וגורמים להתמיינות של תא סמוך.` },
+            { term: `MyoD`, definition: `פקטור שעתוק מרכזי המעורב בהתמיינות תאים לתאי שריר על ידי הפעלת גנים ספציפיים, כגון $p21$.` },
+            { term: `p21`, definition: `חלבון המעכב את פעילות $Cdk$, גורם לעצירת מחזור התא בשלב $G1$ ומאפשר לתא להתמיין.` },
+            { term: `חידוש עצמי (Self-renewal)`, definition: `היכולת של תאי גזע להתחלק וליצור עותק זהה של עצמם, על מנת לשמר את מאגר תאי הגזע ברקמה.` },
+            { term: `Committed Progenitors`, definition: `תאי אב מחויבים. מתחלקים במהירות רבה, בעלי פוטנציאל מולטיפוטנטי, אך חסרי יכולת לחידוש עצמי.` },
+            { term: `Blastocyst`, definition: `שלב בהתפתחות העוברית המוקדמת המכיל מסה תאית פנימית (Inner cell mass) ממנה מופקים תאי גזע עובריים פלוריפוטנטיים.` },
+            { term: `HSCs`, definition: `תאי גזע המטופויטיים (של הדם). נמצאים במח העצם ומייצרים את כל סוגי תאי הדם (אדומים, לבנים, טסיות).` },
+            { term: `שיבוט סומאטי (SCNT)`, definition: `טכנולוגיה של העברת גרעין מתא בוגר (סומאטי) לביצית חסרת גרעין, המאפשרת יצירת אורגניזם משובט (כמו הכבשה דולי).` },
+            { term: `שיבוט טיפולי`, definition: `שימוש בטכנולוגיית העברת גרעין כדי ליצור תאי גזע עובריים הזהים גנטית לחולה, למטרות השתלה ללא דחייה חיסונית.` },
+            { term: `Meristems (מריסטמות)`, definition: `רקמות בצמחים המכילות תאים לא ממוינים המהווים מקור לתאים ממוינים לאורך חיי הצמח.` },
+            { term: `Unipotent (יוניפוטנטי)`, definition: `תא בעל יכולת להתמיין לסוג תא אחד בלבד (אופייני לתאים רבים באורגניזם בוגר).` }
+        ];
+
+        const mcqData = [
+            {
+                question: `איזה מהמשפטים הבאים מתאר בצורה המדויקת ביותר את הסיבה לכך שתא עצב ותא שריר באותו אורגניזם מתפקדים באופן שונה?`,
+                options: [
+                    `הם מכילים רצפי דנא שונים לחלוטין שנוצרו במהלך ההתפתחות העוברית.`,
+                    `הם מבטאים גנים שונים מתוך אותו מטען גנטי זהה הקיים בשניהם.`,
+                    `תאי שריר מאבדים את הגרעין שלהם במהלך ההתמיינות ולכן מתפקדים אחרת.`,
+                    `סביבת התא משנה את המבנה הכימי של הדנא באופן בלתי הפיך בכל רקמה.`
+                ],
+                correctIndex: 1,
+                explanation: `כל התאים באורגניזם רב-תאי הם זהים גנטית. השוני בתפקוד ובמבנה נובע מביטוי גנים דיפרנציאלי, כלומר, אילו גנים מופעלים או מושתקים בכל סוג תא.`
+            },
+            {
+                question: `מה יקרה לפוטנציאל ההתמיינות של תא ככל שההתפתחות העוברית מתקדמת?`,
+                options: [
+                    `הוא יישאר קבוע וטוטיפוטנטי עד לבגרות.`,
+                    `הוא יתרחב ויאפשר התמיינות לסוגים רבים יותר של תאים.`,
+                    `הוא יוגבל בהדרגה, מטוטיפוטנטי לפלוריפוטנטי ועד ליוניפוטנטי.`,
+                    `הוא יהפוך למולטיפוטנטי מיד לאחר ההפריה ויישאר כך.`
+                ],
+                correctIndex: 2,
+                explanation: `במהלך ההתפתחות, גורל התא הופך למוגבל יותר ויותר (progressively more restricted). התא מאבד מהפוטנציאל הרחב שלו ככל שהוא מתמחה.`
+            },
+            {
+                question: `תא מסוים מסוגל להתמיין לכל סוגי התאים בגוף העובר, אך אינו מסוגל ליצור שליה. כיצד יוגדר תא זה?`,
+                options: [
+                    `טוטיפוטנטי (Totipotent)`,
+                    `פלוריפוטנטי (Pluripotent)`,
+                    `מולטיפוטנטי (Multipotent)`,
+                    `יוניפוטנטי (Unipotent)`
+                ],
+                correctIndex: 1,
+                explanation: `תאים פלוריפוטנטיים (כמו אלו שבמסה התאית הפנימית של הבלסטוציסט) יכולים ליצור את כל תאי העובר, אך בשונה מתאים טוטיפוטנטיים, הם אינם יכולים ליצור רקמות חוץ-עובריות כמו השליה.`
+            },
+            {
+                question: `במהלך חלוקת תא מוקדמת בעובר, חלבון מסוים מצטבר רק בקוטב אחד של התא האם. לאחר החלוקה, רק תא בת אחד מקבל את החלבון ומתמיין בהתאם. איזה מנגנון מתואר כאן?`,
+                options: [
+                    `השראה (Induction)`,
+                    `הפרדה ציטופלזמתית (Cytoplasmic segregation)`,
+                    `שיבוט סומאטי (SCNT)`,
+                    `חידוש עצמי (Self-renewal)`
+                ],
+                correctIndex: 1,
+                explanation: `הפרדה ציטופלזמתית מתרחשת כאשר פקטורים בתוך התא מחולקים באופן לא שווה במהלך הציטוקינזה, מה שמוביל לגורל שונה של תאי הבת.`
+            },
+            {
+                question: `תא א' מפריש מולקולת איתות הנקשרת לרצפטור על פני תא ב', וגורמת לתא ב' להפעיל פקטורי שעתוק ולהתמיין. איזה תהליך מתואר כאן?`,
+                options: [
+                    `הפרדה ציטופלזמתית`,
+                    `השראה (Induction)`,
+                    `מוטציה גנטית`,
+                    `חלוקה א-סימטרית`
+                ],
+                correctIndex: 1,
+                explanation: `השראה (Induction) היא תקשורת בין-תאית שבה פקטור המופרש מתא אחד גורם לתא אחר לשנות את גורלו ולהתמיין.`
+            },
+            {
+                question: `חוקר יצר מוטציה בתאים מיועדיי-שריר כך שהגן המקודד ל-$p21$ אינו מתבטא, למרות ש-$MyoD$ פעיל. מה צפויה להיות התוצאה?`,
+                options: [
+                    `התאים יתמיינו לשריר מהר יותר מהרגיל.`,
+                    `התאים יעצרו בשלב $G1$ אך לא יתמיינו.`,
+                    `התאים ימשיכו להתחלק ולא יצליחו להתמיין לתאי שריר בוגרים.`,
+                    `התאים יהפכו לתאים טוטיפוטנטיים.`
+                ],
+                correctIndex: 2,
+                explanation: `התמיינות לשריר דורשת את עצירת מחזור התא. $MyoD$ מפעיל את $p21$, אשר מעכב את $Cdk$ ועוצר את התא ב-$G1$. ללא $p21$, ה-$Cdk$ יישאר פעיל, התא ימשיך להתחלק, וההתמיינות לא תושלם.`
+            },
+            {
+                question: `מהו תפקידו הישיר של החלבון $p21$ בתהליך התמיינות תאי השריר?`,
+                options: [
+                    `להיקשר לקינאז $Cdk$ ולעכב אותו, ובכך לעצור את מחזור התא.`,
+                    `להפעיל את שעתוק הגן $MyoD$.`,
+                    `לפרק את הגרעין של תא השריר.`,
+                    `לשמש כרצפטור בהשראה (Induction) בין תאים סמוכים.`
+                ],
+                correctIndex: 0,
+                explanation: `$p21$ הוא מעכב של $Cdk$. על ידי קשירה אליו, הוא חוסם את התקדמות מחזור התא בשלב $G1$, מה שמאפשר לתא להתמיין במקום להמשיך להתחלק.`
+            },
+            {
+                question: `מה מייחד תאי צמחים בוגרים ממוינים לעומת תאי בעלי חיים בוגרים ממוינים, על פי רוב?`,
+                options: [
+                    `תאי צמחים אינם מכילים את כל המידע הגנטי.`,
+                    `תאי צמחים בוגרים שומרים על טוטיפוטנטיות וניתן לגדל מהם צמח שלם.`,
+                    `תאי צמחים מתמיינים רק באמצעות השראה ולא באמצעות הפרדה ציטופלזמתית.`,
+                    `תאי צמחים אינם מסוגלים לעבור חלוקת תא לאחר ההתמיינות.`
+                ],
+                correctIndex: 1,
+                explanation: `בצמחים, תאים ממוינים בוגרים הם לרוב טוטיפוטנטיים. ניתן לקחת תא בוגר משורש של גזר, למשל, ולגדל ממנו צמח גזר שלם חדש (שיבוט).`
+            },
+            {
+                question: `איזו מבין התכונות הבאות מגדירה באופן הטוב ביותר תא גזע (Stem Cell)?`,
+                options: [
+                    `יכולת התמיינות לכל תא בגוף וחוסר יכולת להתחלק.`,
+                    `יכולת חידוש עצמי (Self-renewal) ויכולת התמיינות לתאים מתמחים.`,
+                    `קצב חלוקה מהיר מאוד ללא יכולת התמיינות.`,
+                    `הימצאות אך ורק בשלבי העוברות המוקדמים.`
+                ],
+                correctIndex: 1,
+                explanation: `ההגדרה הקלאסית של תא גזע כוללת שתי תכונות חובה: היכולת לייצר עותקים זהים של עצמו (חידוש עצמי) כדי לשמר את המאגר, והיכולת להתמיין לתאים מתמחים (Differentiation).`
+            },
+            {
+                question: `מאיזה חלק של העובר מופקים תאי גזע עובריים (ESCs) המשמשים למחקר ולתרביות תאים?`,
+                options: [
+                    `מהשכבה החיצונית של הבלסטוציסט (התאים הטוטיפוטנטיים).`,
+                    `מהמסה התאית הפנימית (Inner cell mass) של הבלסטוציסט.`,
+                    `מתא זיגוטה מיד לאחר ההפריה.`,
+                    `מרקמות ממוינות של עובר בשלבי התפתחות מאוחרים.`
+                ],
+                correctIndex: 1,
+                explanation: `תאי גזע עובריים (ESCs) מופקים מהמסה התאית הפנימית של הבלסטוציסט. תאים אלו הם פלוריפוטנטיים.`
+            },
+            {
+                question: `מהו אחד האתגרים המרכזיים בשימוש בתאי גזע עובריים (ESCs) ברפואה?`,
+                options: [
+                    `הם מאבדים את ה-DNA שלהם לאחר מספר חלוקות.`,
+                    `הם יכולים להתמיין רק לסוג אחד של רקמה.`,
+                    `קשה לגלות את התנאים הסביבתיים המדויקים הנדרשים כדי לכוון את התמיינותם לרקמה ספציפית.`,
+                    `הם אינם מסוגלים להתחלק בתנאי מעבדה.`
+                ],
+                correctIndex: 2,
+                explanation: `מכיוון שתאי ESC הם פלוריפוטנטיים, האתגר הוא למצוא את ה"מתכון" המדויק (תנאי הגידול והפקטורים) שיגרום להם להתמיין אך ורק לרקמה הרצויה (למשל, תאי כבד ולא תאי עור).`
+            },
+            {
+                question: `תאי גזע רקמתיים (Adult stem cells) נחשבים בדרך כלל ל:`,
+                options: [
+                    `טוטיפוטנטיים`,
+                    `פלוריפוטנטיים`,
+                    `מולטיפוטנטיים`,
+                    `חסרי פוטנציאל התמיינות`
+                ],
+                correctIndex: 2,
+                explanation: `תאי גזע בוגרים/רקמתיים יכולים ליצור רק את סוגי התאים המרכיבים את הרקמה שבה הם נמצאים (למשל, תאי גזע בדם יוצרים רק תאי דם), ולכן הם מולטיפוטנטיים.`
+            },
+            {
+                question: `במדרג התאים ברקמה מתחדשת, מה מאפיין את "תאי האב המחויבים" (Committed progenitors / Transient amplifying cells)?`,
+                options: [
+                    `הם מתחלקים לעיתים רחוקות מאוד ושומרים על פוטנציאל פלוריפוטנטי.`,
+                    `הם אינם מתחלקים כלל ומבצעים את הפעילות הספציפית של הרקמה.`,
+                    `הם מתחלקים במהירות רבה, הם מולטיפוטנטיים, אך חסרי יכולת לחידוש עצמי משמעותי.`,
+                    `הם תאים טוטיפוטנטיים המסוגלים ליצור רקמות חדשות לחלוטין.`
+                ],
+                correctIndex: 2,
+                explanation: `תאי Progenitors נמצאים שלב אחד אחרי תאי הגזע. תפקידם להגביר את כמות התאים (Amplifying) על ידי חלוקה מהירה, אך הם אינם מחדשים את עצמם לאורך זמן (No self-renewal) ובסופו של דבר מתמיינים סופית.`
+            },
+            {
+                question: `תאי גזע המטופויטיים (HSCs) המצויים במח העצם מסוגלים להתמיין ל:`,
+                options: [
+                    `תאי שריר, תאי עצב ותאי עור.`,
+                    `כל סוגי התאים בגוף האדם.`,
+                    `אך ורק לסוגים שונים של תאי דם (כגון תאים אדומים, לבנים וטסיות).`,
+                    `לתאי דם אדומים בלבד.`
+                ],
+                correctIndex: 2,
+                explanation: `HSCs הם תאי גזע מולטיפוטנטיים של רקמת הדם. הם מייצרים אך ורק את המגוון של תאי מערכת הדם והחיסון.`
+            },
+            {
+                question: `האם קיימים תאי גזע במוח של אדם בוגר?`,
+                options: [
+                    `לא, מוח בוגר מכיל אך ורק תאים מתמחים שאינם מתחלקים.`,
+                    `כן, קיימים תאי גזע עצביים באזורים מסוימים (כמו ההיפוקמפוס) היכולים להתמיין לנוירונים ותאי תמך (אסטרוציטים ואוליגודנדרוציטים).`,
+                    `כן, אך הם יכולים להתמיין רק לסוג אחד של נוירון (יוניפוטנטיים).`,
+                    `לא, תאי הגזע במוח נעלמים לחלוטין מיד לאחר הלידה.`
+                ],
+                correctIndex: 1,
+                explanation: `בניגוד לאמונה הישנה, קיימים תאי גזע במוח הבוגר (למשל בהיפוקמפוס) והם מולטיפוטנטיים - מסוגלים ליצור נוירונים, אסטרוציטים ואוליגודנדרוציטים.`
+            },
+            {
+                question: `בטיפולי פוריות (IVF), ניתן לבודד תא אחד מעובר בן 8 תאים לצורך בדיקה גנטית, והעובר הנותר ממשיך להתפתח באופן תקין. מה עובדה זו מוכיחה לגבי התאים בעובר בן 8 תאים?`,
+                options: [
+                    `שהם איבדו את היכולת להתחלק.`,
+                    `שהם פלוריפוטנטיים ולא יכולים לייצר שליה.`,
+                    `שהם טוטיפוטנטיים, וכל תא עדיין שומר על הפוטנציאל לייצר אורגניזם שלם.`,
+                    `שהם מולטיפוטנטיים ומיועדים ליצור רקמה ספציפית.`
+                ],
+                correctIndex: 2,
+                explanation: `בשלב של 8 תאים, כל תא עדיין שומר על טוטיפוטנטיות. הוצאת תא אחד לא פוגעת בהתפתחות התקינה של שאר התאים, שכן הם עדיין גמישים לחלוטין ויכולים לפצות על החסר.`
+            },
+            {
+                question: `איזה תהליך הודגם לראשונה באופן מובהק בניסוי השיבוט של הכבשה דולי?`,
+                options: [
+                    `שתאי גזע עובריים יכולים לרפא מחלות ניווניות.`,
+                    `שהתמיינות תאית ביונקים היא תהליך הפיך בתנאים מסוימים.`,
+                    `שניתן למזג שני תאי זרע ליצירת עובר תקין.`,
+                    `שמוטציות גנטיות נוצרות במהלך התמיינות תאית.`
+                ],
+                correctIndex: 1,
+                explanation: `דולי נוצרה מגרעין של תא עטין בוגר וממוין. הניסוי הוכיח שהגרעין הממוין עדיין מכיל את כל המידע ושניתן "לתכנת אותו מחדש" למצב טוטיפוטנטי (התמיינות הפיכה).`
+            },
+            {
+                question: `בניסוי השיבוט של הכבשה דולי (Nuclear transfer), מה היה מצבו של הגרעין שנלקח מהתא הסומאטי התורם לפני האיחוי עם הביצית?`,
+                options: [
+                    `הוא היה בשלב של חלוקה פעילה (מיטוזה).`,
+                    `הוא עבר מוטציה מכוונת כדי להרוס את הגנים הממוינים.`,
+                    `הוא הורעב במשך שבוע כדי לעצור את מחזור התא בשלב $G1$.`,
+                    `הוא נלקח מתא גזע עוברי פלוריפוטנטי.`
+                ],
+                correctIndex: 2,
+                explanation: `כדי שהשיבוט יצליח, הגרעין של התא הסומאטי חייב להיות במצב מנוחה/עצירה (שלב $G1$). הדבר מושג לרוב על ידי הרעבת התאים בתרבית לפני העברת הגרעין.`
+            },
+            {
+                question: `בשיבוט של בעל חיים באמצעות העברת גרעין (SCNT), האורגניזם המשובט יהיה זהה גנטית ל:`,
+                options: [
+                    `הנקבה שתרמה את הביצית חסרת הגרעין.`,
+                    `הפונדקאית שנשאה את העובר ברחמה.`,
+                    `הפרט שתרם את הגרעין מהתא הסומאטי הבוגר.`,
+                    `שילוב של תורמת הביצית ותורם הגרעין.`
+                ],
+                correctIndex: 2,
+                explanation: `מכיוון שהגרעין (המכיל את ה-DNA) נלקח מהתא הסומאטי, המשובט יהיה עותק גנטי של תורם הגרעין.`
+            },
+            {
+                question: `מהו היתרון המרכזי של "שיבוט טיפולי" (Therapeutic cloning) המשלב העברת גרעין והפקת תאי גזע?`,
+                options: [
+                    `הוא מאפשר יצירת בני אדם משובטים למטרות רבייה.`,
+                    `הוא מייצר תאים ממוינים שאינם דורשים חמצן.`,
+                    `הוא מאפשר יצירת רקמות להשתלה שהן זהות גנטית לחולה, ובכך נמנעת דחייה על ידי מערכת החיסון.`,
+                    `הוא מונע את הצורך בשימוש בביציות מתורמות.`
+                ],
+                correctIndex: 2,
+                explanation: `בשיבוט טיפולי, לוקחים תא מהחולה עצמו. תאי הגזע שנוצרים נושאים את ה-DNA של החולה, ולכן רקמות שיתפתחו מהם לא יותקפו על ידי מערכת החיסון שלו (אין דחיית שתל).`
+            },
+            {
+                question: `חוקר מגדל תאי גזע עובריים בתרבית ומוסיף להם ויטמין A. כתוצאה מכך, התאים מתמיינים לנוירונים. מה מדגים ניסוי זה?`,
+                options: [
+                    `שויטמין A גורם למוטציות ב-DNA של תאי גזע.`,
+                    `שגורמים כימיים סביבתיים יכולים להשפיע על מסלול ההתמיינות של תאי גזע.`,
+                    `שתאי גזע עובריים הם יוניפוטנטיים מטבעם.`,
+                    `שהתמיינות לנוירונים דורשת הפרדה ציטופלזמתית.`
+                ],
+                correctIndex: 1,
+                explanation: `ההתמיינות של תאים פלוריפוטנטיים תלויה בסביבה. חשיפה לגורמים כימיים ספציפיים (כמו ויטמין A) מפעילה מסלולי ביטוי גנים ספציפיים שמובילים להתמיינות לרקמה מסוימת.`
+            },
+            {
+                question: `כיצד מוגדרת המונח "מריסטמה" (Meristem) בצמחים בהקשר של התפתחות תאית?`,
+                options: [
+                    `רקמה מתה המספקת תמיכה מבנית לצמח.`,
+                    `אזור בצמח המכיל תאים ממוינים לחלוטין שאינם מתחלקים.`,
+                    `רקמה המכילה תאים לא ממוינים המהווים מקור מתמיד לתאים חדשים לאורך חיי הצמח.`,
+                    `האיבר בצמח האחראי על ייצור זרעים בלבד.`
+                ],
+                correctIndex: 2,
+                explanation: `מריסטמות הן המקבילה הצמחית לאזורים המכילים תאי גזע. הם מכילים תאים לא ממוינים שממשיכים להתחלק ולהתמיין לרקמות שונות לאורך כל חיי הצמח.`
+            },
+            {
+                question: `איזו מההיררכיות הבאות מתארת נכון את מסלול ההתמיינות ברקמה מתחדשת (כמו עור או דם)?`,
+                options: [
+                    `תא מתמחה -> תא אב (Progenitor) -> תא גזע.`,
+                    `תא גזע -> תא אב מחויב (Committed progenitor) -> תא מתמחה.`,
+                    `תא אב מחויב -> תא גזע -> תא מתמחה.`,
+                    `תא גזע -> תא פלוריפוטנטי -> זיגוטה.`
+                ],
+                correctIndex: 1,
+                explanation: `ההיררכיה התקינה מתחילה מתא גזע (מולטיפוטנטי, מתחלק לאט), שעובר התמיינות ראשונית לתא אב מחויב (מתחלק מהר, מגביר כמות), שלבסוף מתמיין לתא מתמחה (מבצע את העבודה ולא מתחלק).`
+            },
+            {
+                question: `מהי המגבלה העיקרית של תאי גזע רקמתיים (Adult stem cells) בהשוואה לתאי גזע עובריים (ESCs)?`,
+                options: [
+                    `הם אינם מסוגלים לחידוש עצמי כלל.`,
+                    `הם מולטיפוטנטיים ומוגבלים ליצירת סוגי תאים של הרקמה ממנה נלקחו בלבד.`,
+                    `הם גורמים לדחייה חיסונית חמורה יותר בעת השתלה עצמית.`,
+                    `הם מתחלקים מהר מדי ויוצרים גידולים באופן מיידי.`
+                ],
+                correctIndex: 1,
+                explanation: `בעוד ש-ESCs הם פלוריפוטנטיים ויכולים להפוך לכל רקמה בגוף, תאי גזע בוגרים הם מולטיפוטנטיים ויכולים ליצור רק את התאים של הרקמה הספציפית שלהם (למשל, תאי גזע של הדם לא יכולים ליצור תאי עור).`
+            },
+            {
+                question: `מהו התפקיד של "הסביבה החוץ-תאית" בקביעת גורל התא?`,
+                options: [
+                    `היא משנה את רצף חומצות האמינו ב-DNA.`,
+                    `היא אינה משפיעה כלל על תאים ממוינים.`,
+                    `היא מספקת אותות (כמו פקטורי גדילה) המשפיעים על ביטוי הגנים בתא ומכוונים את התמיינותו.`,
+                    `היא קובעת איזה תא יהפוך לזיגוטה.`
+                ],
+                correctIndex: 2,
+                explanation: `גורל התא מושפע מאוד מהסביבה החוץ-תאית (Extracellular environment). אותות כימיים ופיזיקליים מהסביבה נקלטים על ידי התא ומשנים את פרופיל השעתוק שלו (ביטוי הגנים).`
+            },
+            {
+                question: `אם תא מולטיפוטנטי עובר חלוקה אחת סימטרית המייצרת שני תאי אב מחויבים (Progenitors), מה תהיה ההשלכה על הרקמה לאורך זמן אם מגמה זו תימשך?`,
+                options: [
+                    `הרקמה תגדל ללא הגבלה.`,
+                    `מאגר תאי הגזע ידלדל ויעלם, מכיוון שלא התבצע "חידוש עצמי".`,
+                    `התאים יהפכו לטוטיפוטנטיים.`,
+                    `לא תהיה שום השפעה על תפקוד הרקמה.`
+                ],
+                correctIndex: 1,
+                explanation: `כדי לשמר את הרקמה, תא גזע חייב לבצע "חידוש עצמי" (לפחות אחד מתאי הבת נשאר תא גזע). אם תא הגזע מתחלק רק לתאי Progenitor שמתמיינים סופית, מאגר תאי הגזע יתרוקן.`
+            },
+            {
+                question: `איזה מהבאים אינו נחשב למנגנון של "ביטוי גנים דיפרנציאלי"?`,
+                options: [
+                    `הבדלים בפרופיל השעתוק (Transcription profile).`,
+                    `מודיפיקציות לאחר שעתוק (Post-transcriptional modifications).`,
+                    `מחיקה של כרומוזומים שלמים במהלך חלוקת התא.`,
+                    `מודיפיקציות לאחר תרגום (Post-translational modifications).`
+                ],
+                correctIndex: 2,
+                explanation: `העיקרון הבסיסי הוא שהתאים זהים גנטית (ה-DNA לא נמחק או משתנה מהותית ברמת הכרומוזומים). ההבדלים נובעים משעתוק, תרגום, ומודיפיקציות של החלבונים, ולא מאיבוד חומר גנטי.`
+            },
+            {
+                question: `בניסוי, חוקר מונע באופן מלאכותי את תהליך ההפרדה הציטופלזמתית בזיגוטה שמתחלקת. מה עשויה להיות התוצאה הסבירה ביותר לאחר החלוקה הראשונה?`,
+                options: [
+                    `שני תאי הבת יכילו רצפי DNA שונים לחלוטין.`,
+                    `שני תאי הבת יקבלו כמות שווה של פקטורי ציטופלזמה ועשויים להתפתח לאותו גורל תאי בדיוק.`,
+                    `התא יעבור מיד התמיינות לתא שריר.`,
+                    `תא אחד ימות והשני יהפוך לפלוריפוטנטי.`
+                ],
+                correctIndex: 1,
+                explanation: `הפרדה ציטופלזמתית (חלוקה לא שווה של פקטורים) היא זו שיוצרת א-סימטריה וגורלות שונים. מניעתה תוביל לחלוקה שווה ולכן שני התאים יהיו זהים גם בפוטנציאל ובהרכב הציטופלזמתי שלהם.`
+            },
+            {
+                question: `איזה סוג של תאי גזע מעורב ביצירת מקרופאגים (Macrophage) ותאי T (T cell)?`,
+                options: [
+                    `תאי גזע עצביים (Neural SCs).`,
+                    `תאי גזע מזנכימליים (Mesenchymal SCs).`,
+                    `תאי גזע המטופויטיים (Hematopoietic SCs).`,
+                    `תאי גזע של העור (Skin SCs).`
+                ],
+                correctIndex: 2,
+                explanation: `מקרופאגים ותאי T הם חלק ממערכת הדם והחיסון, וכל תאי מערכת הדם נוצרים מתאי גזע המטופויטיים (HSCs) הנמצאים במח העצם.`
+            },
+            {
+                question: `מהי המטרה של שימוש בתאים "עצורים" בשלב $G1$ בתהליך השיבוט של דולי?`,
+                options: [
+                    `כדי להרוס את ה-DNA של התא התורם.`,
+                    `כדי לסנכרן את מצב הגרעין התורם עם מצבה של הביצית אליה הוא מוחדר, ולאפשר תכנות מחדש.`,
+                    `כדי לגרום לתא התורם להתמיין לתא עצב.`,
+                    `כדי למנוע מהביצית לדחות את הגרעין מבחינה חיסונית.`
+                ],
+                correctIndex: 1,
+                explanation: `עצירת התא הסומאטי ב-$G1$ (מצב מנוחה) גורמת לכרומטין להיות במצב שמאפשר לפקטורים בציטופלזמה של הביצית לגשת אליו ול"תכנת" אותו מחדש למצב עוברי, לפני שהתא מתחיל לשכפל את ה-DNA שלו.`
+            },
+            {
+                question: `איזו מההצהרות הבאות לגבי "תאים מתמחים" (Specialized cells) ברקמה מתחדשת היא נכונה?`,
+                options: [
+                    `הם מתחלקים ללא הרף כדי להחליף תאים מתים.`,
+                    `הם שומרים על פוטנציאל מולטיפוטנטי למקרה של פציעה.`,
+                    `הם מבצעים את עבודת הרקמה ולרוב אינם מתחלקים עוד.`,
+                    `הם מהווים את המקור הראשוני לכל התאים ברקמה.`
+                ],
+                correctIndex: 2,
+                explanation: `תאים מתמחים סופיים (כמו תא שריר בוגר או כדורית דם אדומה) מבצעים את הפונקציה הייעודית של הרקמה, ולרוב יוצאים ממחזור התא ואינם מתחלקים יותר.`
+            },
+            {
+                question: `בשיבוט טיפולי, לאחר החדרת הגרעין של תא החולה לביצית מרוקנת מגרעין, מהו השלב הבא בתהליך?`,
+                options: [
+                    `השתלת הביצית ישירות לאיבר הפגוע של החולה.`,
+                    `גירוי הביצית להתחלק ליצירת בלסטוציסט, ממנו יופקו תאי גזע עובריים.`,
+                    `הקפאת הביצית לשימוש עתידי ללא חלוקה.`,
+                    `הוספת תאי זרע לביצית כדי להפרות אותה.`
+                ],
+                correctIndex: 1,
+                explanation: `לאחר איחוי הגרעין, הביצית מגורה (חשמלית או כימית) להתחיל להתחלק כאילו הופרתה. היא מתפתחת לעובר מוקדם (בלסטוציסט), וממנו מפיקים את תאי הגזע הרצויים לטיפול.`
+            },
+            {
+                question: `מהו ההבדל העיקרי בין המסה התאית הפנימית (Inner cell mass) לבין השכבה החיצונית של הבלסטוציסט?`,
+                options: [
+                    `המסה הפנימית היא טוטיפוטנטית והשכבה החיצונית היא יוניפוטנטית.`,
+                    `המסה הפנימית תיצור את העובר עצמו (פלוריפוטנטית), והשכבה החיצונית מעורבת ביצירת השליה (טוטיפוטנטית כמערכת שלמה).`,
+                    `המסה הפנימית מכילה רק תאי דם, והשכבה החיצונית רק תאי עור.`,
+                    `אין הבדל, שתיהן מכילות תאים זהים לחלוטין בתפקודם.`
+                ],
+                correctIndex: 1,
+                explanation: `תאי המסה הפנימית הם פלוריפוטנטיים וייצרו את כל רקמות העובר. השכבה החיצונית אחראית ליצירת חלקים חוץ-עובריים כמו השליה (ביחד הם מהווים מערכת טוטיפוטנטית, אך המסה הפנימית לבדה אינה יכולה ליצור שליה).`
+            },
+            {
+                question: `החלבון Cdk חיוני להתקדמות מחזור התא. מה תהיה ההשפעה של חומר כימי המונע מ-$p21$ להיקשר ל-$Cdk$ בתאים צעירים המיועדים להיות שריר?`,
+                options: [
+                    `התאים יתמיינו מוקדם מהרגיל.`,
+                    `התאים לא יוכלו לעצור בשלב $G1$ וההתמיינות לשריר תעוכב או תימנע.`,
+                    `התאים ימותו מיד עקב חוסר ב-$p21$.`,
+                    `ה-$Cdk$ יתפרק באופן ספונטני.`
+                ],
+                correctIndex: 1,
+                explanation: `התמיינות דורשת עצירה של מחזור התא. $p21$ אחראי לעצירה זו על ידי עיכוב $Cdk$. אם $p21$ לא יכול להיקשר ל-$Cdk$, מחזור התא יימשך, והתא לא יוכל לצאת מהמחזור כדי להתמיין.`
+            },
+            {
+                question: `מדוע תאי עור ותאי מעי דורשים מאגר פעיל של תאי גזע רקמתיים לאורך כל חיי האדם?`,
+                options: [
+                    `מכיוון שהם תאים פלוריפוטנטיים שחייבים להתמיין למוח.`,
+                    `מכיוון שאלו רקמות החשופות לשחיקה מתמדת ודורשות החלפה תכופה של תאים מתים או פגומים.`,
+                    `מכיוון שתאי הגזע בהן צריכים לייצר תאי דם.`,
+                    `מכיוון שה-DNA בתאים אלו נהרס לחלוטין כל 24 שעות.`
+                ],
+                correctIndex: 1,
+                explanation: `רקמות כמו עור, רירית המעי ודם מאופיינות בתחלופה מהירה מאוד של תאים עקב בלאי טבעי או שחיקה. תאי הגזע הרקמתיים חיוניים כדי לספק אספקה מתמדת של תאים חדשים.`
+            },
+            {
+                question: `אם תא גזע עובר מוטציה שגורמת לו לאבד את היכולת ל"חידוש עצמי" (Self-renewal), אך הוא עדיין יכול להתחלק ולהתמיין, לאיזה סוג תא הוא הפך למעשה?`,
+                options: [
+                    `תא פלוריפוטנטי.`,
+                    `תא מתמחה (Specialized cell).`,
+                    `תא אב מחויב (Committed progenitor).`,
+                    `תא טוטיפוטנטי.`
+                ],
+                correctIndex: 2,
+                explanation: `תאי אב מחויבים (Progenitors) מסוגלים להתחלק (ואף במהירות) ולהתמיין, אך חסרים את היכולת לחידוש עצמי ארוך טווח המאפיינת תאי גזע אמיתיים.`
+            },
+            {
+                question: `איזה מהמשפטים הבאים מסכם בצורה הטובה ביותר את המושג "שיבוט" (Cloning) ברמת התא הבודד?`,
+                options: [
+                    `יצירת תאים בעלי מטען גנטי שונה לחלוטין מתא המקור.`,
+                    `יצירת תאים או אורגניזם שהם זהים גנטית לחלוטין לתא המקור.`,
+                    `התמיינות של תא גזע למספר רב של סוגי רקמות.`,
+                    `מיזוג של שני תאים ממוינים ליצירת תא אחד גדול.`
+                ],
+                correctIndex: 1,
+                explanation: `שיבוט משמעותו העתקה גנטית מדויקת. תא משובט או אורגניזם משובט מכיל DNA זהה לחלוטין לתא או לאורגניזם שממנו נלקח החומר הגנטי.`
+            },
+            {
+                question: `באילו מבעלי החיים הבאים לא בוצע בהצלחה שיבוט באמצעות SCNT עד כה (על פי המידע הידוע מהתחום המוצג)?`,
+                options: [
+                    `עכברים`,
+                    `כבשים`,
+                    `דינוזאורים`,
+                    `פרות וסוסים`
+                ],
+                correctIndex: 2,
+                explanation: `שיבוט מצריך חומר גנטי שלם ופעיל וביצית תואמת. מאז הכבשה דולי, שובטו יונקים רבים כמו עכברים, פרות, סוסים ועיזים, אך לא דינוזאורים שנכחדו וה-DNA שלהם אינו שלם.`
+            },
+            {
+                question: `מהו התהליך ההפוך ל"התמיינות" (Differentiation) אשר מודגם בטכנולוגיית השיבוט?`,
+                options: [
+                    `Dedifferentiation (חזרה למצב לא ממוין)`,
+                    `Induction (השראה)`,
+                    `Apoptosis (מוות תאי מתוכנת)`,
+                    `Cytokinesis (חלוקת הציטופלזמה)`
+                ],
+                correctIndex: 0,
+                explanation: `בשיבוט, גרעין של תא בוגר וממוין עובר תהליך של תכנות מחדש (Reprogramming) או Dedifferentiation, שבו הוא חוזר למצב עוברי טוטיפוטנטי.`
+            },
+            {
+                question: `באיזה שלב של מחזור התא חייב להימצא גרעין התא התורם בניסוי שיבוט קלאסי כדי שהתהליך יצליח?`,
+                options: [
+                    `שלב $S$ (שכפול ה-DNA)`,
+                    `שלב $M$ (מיטוזה)`,
+                    `שלב $G2$`,
+                    `שלב $G1$ (או $G0$, עצירת חלוקה)`
+                ],
+                correctIndex: 3,
+                explanation: `כדי לאפשר לציטופלזמה של הביצית לאתחל את התוכנית הגנטית לפני שה-DNA משתכפל, הגרעין התורם חייב להיות מסונכרן בשלב שלפני השכפול, כלומר ב-$G1$ (לרוב מושג על ידי הרעבה המכניסה את התא ל-$G0$).`
+            }
+        ];
+
+        const tfData = [
+            {
+                question: `כל התאים באורגניזם רב-תאי בוגר מכילים את אותה אינפורמציה גנטית (DNA), למעט חריגים בודדים.`,
+                answer: true,
+                explanation: `נכון. ההבדלים בין התאים נובעים מביטוי גנים דיפרנציאלי ולא מהבדלים ברצף ה-DNA עצמו.`
+            },
+            {
+                question: `במהלך ההתפתחות העוברית, תאים הופכים מיוניפוטנטיים לטוטיפוטנטיים.`,
+                answer: false,
+                explanation: `לא נכון. התהליך הוא הפוך: התאים מתחילים כטוטיפוטנטיים (פוטנציאל מלא) ועם הזמן גורלם הופך למוגבל יותר, עד שהם הופכים ליוניפוטנטיים.`
+            },
+            {
+                question: `תאים פלוריפוטנטיים מסוגלים ליצור אורגניזם שלם, כולל השליה.`,
+                answer: false,
+                explanation: `לא נכון. רק תאים טוטיפוטנטיים יכולים ליצור שליה ואורגניזם שלם. תאים פלוריפוטנטיים יכולים ליצור את כל רקמות העובר עצמו, אך לא את השליה.`
+            },
+            {
+                question: `הפרדה ציטופלזמתית (Cytoplasmic segregation) מסתמכת על חלוקה שווה וסימטרית של מרכיבי התא.`,
+                answer: false,
+                explanation: `לא נכון. המנגנון מבוסס בדיוק על חלוקה לא שווה (א-סימטרית) של פקטורים בציטופלזמה, כך שתא בת אחד מקבל פקטורים שהשני לא מקבל.`
+            },
+            {
+                question: `תהליך ההשראה (Induction) מחייב תקשורת בין תאים שונים.`,
+                answer: true,
+                explanation: `נכון. השראה מתרחשת כאשר תא או קבוצת תאים מפרישים פקטורים המשפיעים על התמיינותם של תאים סמוכים.`
+            },
+            {
+                question: `הפעלת פקטור השעתוק $MyoD$ גורמת לעידוד מחזור התא ולחלוקה מהירה של תאי שריר.`,
+                answer: false,
+                explanation: `לא נכון. $MyoD$ מפעיל את $p21$, אשר עוצר את מחזור התא (על ידי עיכוב $Cdk$), כדי שהתא יוכל להפסיק להתחלק ולהתמיין.`
+            },
+            {
+                question: `חלבון $p21$ פועל כמעכב של קינאז תלוי ציקלין ($Cdk$).`,
+                answer: true,
+                explanation: `נכון. הקשירה של $p21$ ל-$Cdk$ מעכבת אותו ומונעת מהתא לעבור משלב $G1$ לשלב ה-$S$.`
+            },
+            {
+                question: `רוב תאי הצמחים הממוינים הבוגרים מאבדים את הטוטיפוטנטיות שלהם לנצח.`,
+                answer: false,
+                explanation: `לא נכון. בניגוד לבעלי חיים, תאי צמחים בוגרים רבים שומרים על טוטיפוטנטיות וניתן לגדל מהם צמח שלם בתנאים מתאימים.`
+            },
+            {
+                question: `תאי גזע עובריים (ESCs) נלקחים מבלסטוציסט המכיל בין 50 ל-100 תאים.`,
+                answer: true,
+                explanation: `נכון. בלסטוציסט הוא עובר בשלב מוקדם מאוד המכיל מספר קטן של תאים, ומתוכו נלקחת המסה התאית הפנימית.`
+            },
+            {
+                question: `תאי גזע רקמתיים (Adult stem cells) נמצאים אך ורק במח העצם.`,
+                answer: false,
+                explanation: `לא נכון. תאי גזע רקמתיים קיימים ברקמות רבות בגוף, כגון מוח, עור, מעיים, שרירים ועוד.`
+            },
+            {
+                question: `תאי אב מחויבים (Committed progenitors) אינם מסוגלים לבצע חידוש עצמי (Self-renewal).`,
+                answer: true,
+                explanation: `נכון. בניגוד לתאי גזע, תאי Progenitors מתחלקים מהר כדי להגדיל את מספר התאים, אך הם מיועדים להתמיין סופית ואינם משמרים מאגר עצמי.`
+            },
+            {
+                question: `תאי גזע מתחלקים לעיתים קרובות ובמהירות גבוהה מאוד.`,
+                answer: false,
+                explanation: `לא נכון. תאי גזע בדרך כלל מתחלקים לעיתים רחוקות (divide rarely) כדי לשמור על המאגר ולמנוע הצטברות מוטציות. התאים שמתחלקים מהר הם תאי האב (Progenitors).`
+            },
+            {
+                question: `מערכת העצבים המרכזית באדם בוגר חסרה לחלוטין תאי גזע המסוגלים ליצור נוירונים חדשים.`,
+                answer: false,
+                explanation: `לא נכון. קיימים תאי גזע עצביים במוח הבוגר (למשל באזור ההיפוקמפוס) המסוגלים לייצר נוירונים ותאי גליה.`
+            },
+            {
+                question: `בטיפולי פוריות, ניתן להוציא תא בודד מעובר בן 8 תאים מבלי לפגוע בהמשך התפתחותו התקינה של העובר.`,
+                answer: true,
+                explanation: `נכון. בשלב זה התאים הם עדיין טוטיפוטנטיים, והעובר הנותר מסוגל לפצות על החסר ולהתפתח כרגיל.`
+            },
+            {
+                question: `תאי גזע מולטיפוטנטיים יכולים להתמיין לסוגים רבים של תאים, אך רק בתוך משפחה או רקמה מסוימת.`,
+                answer: true,
+                explanation: `נכון. זוהי ההגדרה של מולטיפוטנטיות (למשל תא גזע בדם יכול לייצר את כל סוגי תאי הדם, אך לא תאי עור).`
+            },
+            {
+                question: `הוספת ויטמין A לתרבית של תאי גזע עובריים יכולה לגרום להם להתמיין לנוירונים.`,
+                answer: true,
+                explanation: `נכון. ויטמין A משמש כגורם כימי סביבתי המשפיע על ביטוי הגנים ומכוון את התא להתמיין לתא עצב.`
+            },
+            {
+                question: `בצמחים, אזורים הנקראים מריסטמות (Meristems) מכילים תאים ממוינים לחלוטין.`,
+                answer: false,
+                explanation: `לא נכון. מריסטמות הן רקמות המכילות תאים לא ממוינים המהווים מקור לתאים חדשים עבור הצמח.`
+            },
+            {
+                question: `אחת הבעיות המרכזיות בהשתלת תאי גזע מתורם זר היא דחייה חיסונית על ידי מערכת החיסון של החולה.`,
+                answer: true,
+                explanation: `נכון. מערכת החיסון מזהה תאים זרים כאיום ותוקפת אותם, ולכן יש צורך בהתאמה חיסונית או בשיבוט טיפולי.`
+            },
+            {
+                question: `בתהליך השיבוט של הכבשה דולי, השתמשו בגרעין של תא עוברי טוטיפוטנטי.`,
+                answer: false,
+                explanation: `לא נכון. פריצת הדרך בשיבוט של דולי הייתה השימוש בגרעין של תא סומאטי בוגר וממוין (תא עטין).`
+            },
+            {
+                question: `כדי ששיבוט יצליח, יש לוודא שהתא התורם נמצא בשלב חלוקה פעיל ($M$ phase).`,
+                answer: false,
+                explanation: `לא נכון. התא התורם חייב להיות מוכנס למצב מנוחה (עצירה בשלב $G1$ או $G0$), לרוב על ידי הרעבה, כדי לאפשר תכנות מחדש של הגרעין.`
+            },
+            {
+                question: `ההצלחה של שיבוט הכבשה דולי הוכיחה שהתמיינות תאית היא תהליך בלתי הפיך לחלוטין.`,
+                answer: false,
+                explanation: `לא נכון. היא הוכיחה בדיוק את ההיפך - שהתמיינות היא תהליך הפיך בתנאים המתאימים (הציטופלזמה של הביצית החזירה את הגרעין הממוין למצב טוטיפוטנטי).`
+            },
+            {
+                question: `בשיבוט טיפולי (Therapeutic cloning), המטרה הסופית היא יצירת אורגניזם שלם (תינוק) הזהה גנטית לתורם.`,
+                answer: false,
+                explanation: `לא נכון. המטרה בשיבוט טיפולי היא לאפשר לעובר להתפתח רק עד שלב הבלסטוציסט, כדי להפיק ממנו תאי גזע עובריים לריפוי רקמות של החולה, ולא לשם רבייה.`
+            },
+            {
+                question: `בשיבוט טיפולי, תאי הגזע המופקים מהעובר מכילים את המטען הגנטי של החולה עצמו.`,
+                answer: true,
+                explanation: `נכון. מכיוון שהגרעין נלקח מתא סומאטי של החולה, העובר שנוצר (ותאי הגזע שבו) זהים גנטית לחולה, מה שמונע דחייה חיסונית.`
+            },
+            {
+                question: `תאי גזע המטופויטיים (HSCs) מסוגלים לייצר תאי דם אדומים, אך אינם מסוגלים לייצר תאי מערכת החיסון כמו תאי T.`,
+                answer: false,
+                explanation: `לא נכון. HSCs הם המקור לכל תאי הדם, כולל תאי דם אדומים, טסיות ותאי מערכת החיסון (תאי T, תאי B, מקרופאגים ועוד).`
+            },
+            {
+                question: `נוירונים בוגרים נחשבים לתאים מתמחים (Specialized cells) שלרוב אינם עוברים חלוקת תא נוספת.`,
+                answer: true,
+                explanation: `נכון. נוירונים בוגרים הם תאים מתמחים שעזבו את מחזור התא ואינם מתחלקים (עצורים ב-$G0$).`
+            },
+            {
+                question: `התמיינות תאים ביונקים נשלטת אך ורק על ידי ה-DNA הפנימי, ללא כל השפעה מהסביבה החוץ-תאית.`,
+                answer: false,
+                explanation: `לא נכון. גורל התא מושפע מאוד מהסביבה החוץ-תאית (Extracellular environment), המספקת אותות כימיים המפעילים או משתיקים גנים.`
+            },
+            {
+                question: `תאי אב מחויבים (Progenitors) יכולים להתחלק פעמים רבות, אך בסופו של דבר הם וכל צאצאיהם יתמיינו לתאים מתמחים.`,
+                answer: true,
+                explanation: `נכון. מכיוון שאין להם יכולת אמיתית לחידוש עצמי, הם מהווים פתרון זמני להגדלת כמות התאים לפני ההתמיינות הסופית.`
+            },
+            {
+                question: `המונח "Clone" (שיבוט) מתייחס לאוכלוסיית תאים או אורגניזם בעלי מטען גנטי זהה לתא המקור.`,
+                answer: true,
+                explanation: `נכון. שיבוט משמעותו יצירת העתק גנטי מדויק.`
+            },
+            {
+                question: `בניסוי השיבוט, הביצית שאליה מוחדר הגרעין חייבת להכיל את הגרעין המקורי שלה כדי לספק מחצית מהכרומוזומים.`,
+                answer: false,
+                explanation: `לא נכון. הביצית חייבת להיות מרוקנת מגרעין (Enucleated) לפני החדרת הגרעין הסומאטי, מכיוון שהגרעין הסומאטי כבר מכיל סט כרומוזומים כפול (דיפלואידי) שלם.`
+            },
+            {
+                question: `תאי גזע עובריים קלים יותר לגידול והתמיינות ספציפית במעבדה מאשר תאי גזע בוגרים.`,
+                answer: false,
+                explanation: `לא נכון. אמנם קל לגדל אותם, אך אחד האתגרים הגדולים הוא לגלות את התנאים המדויקים שיגרמו להם להתמיין לרקמה ספציפית אחת מבלי ליצור תערובת של רקמות שונות.`
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

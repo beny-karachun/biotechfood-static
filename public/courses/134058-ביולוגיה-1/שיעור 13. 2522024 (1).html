@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ביולוגיה 1: מבנה ה-DNA ושכפול החומר הגנטי</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>חומצות גרעין הן פולימרים המורכבים ממונומרים הנקראים נוקלאוטידים. כל נוקלאוטיד מכיל קבוצת זרחן, סוכר (פנטוז) ובסיס חנקני. קיימים שני סוגים עיקריים של חומצות גרעין: DNA המכיל סוכר דאוקסיריבוז (ללא חמצן בפחמן מספר 2), ו-RNA המכיל סוכר ריבוז.</p>
+                
+                <h3>מבנה ה-DNA</h3>
+                <p>ה-DNA בנוי כשני גדילים היוצרים סליל כפול (Double Helix) הנכרך ימינה. הגדילים הם אנטי-מקבילים, כלומר מכוונים בכיוונים הפוכים (מקצה $5'$ לקצה $3'$). עמוד השדרה של המולקולה בנוי מקשרי סוכר-זרחן קוולנטיים (קשרים פוספודיאסטריים), בעוד שהבסיסים החנקניים פונים כלפי פנים ויוצרים קשרי מימן קומפלמנטריים: אדנין (A) נקשר לתימין (T), וציטוזין (C) נקשר לגואנין (G). יציבות המבנה נשמרת גם הודות לאינטראקציות הידרופוביות (כוחות ואן דר ואלס) בין הבסיסים הנערמים זה על זה.</p>
+                
+                <h3>אריזת ה-DNA וגנטיקה</h3>
+                <p>כדי להתאים לגרעין התא, ה-DNA נארז במבנים דחוסים הנקראים כרומטין, כאשר ה-DNA מלופף סביב חלבוני היסטון ליצירת נוקלאוזומים. בני אדם מחזיקים ב-23 זוגות כרומוזומים. למרות שהגנום האנושי עצום, רק כאחוז עד שניים ממנו אכן מקודד לחלבונים. פנוטיפ (תכונות האורגניזם) מושפע מהגנוטיפ (הרכב האללים) וכן מגורמי סביבה ואפיגנטיקה.</p>
+                
+                <h3>שכפול ה-DNA</h3>
+                <p>שכפול ה-DNA פועל במודל סמי-קונסרבטיבי (שמרני למחצה), כפי שהוכח בניסוי מסלסון-שטאל. התהליך מתחיל בנקודת מוצא (ori) ומתקדם בשני כיוונים ליצירת מזלגות שכפול. אנזימים רבים משתתפים בתהליך:</p>
+                <ul>
+                    <li><strong>Helicase:</strong> פורם את הסליל הכפול תוך שימוש ב-ATP.</li>
+                    <li><strong>Primase:</strong> מסנתז תחל (Primer) קצר מ-RNA.</li>
+                    <li><strong>DNA Polymerase:</strong> מאריך את הגדיל החדש על ידי הוספת נוקלאוטידים לקצה ה-$3'$ בלבד.</li>
+                    <li><strong>Ligase:</strong> מאחה את מקטעי אוקזקי בגדיל המאחר.</li>
+                    <li><strong>Topoisomerase:</strong> משחרר לחצים פיזיקליים הנוצרים מליפוף היתר של הסליל לפני מזלג השכפול.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: אסימטריה כפויה בשכפול</strong>
+                    העובדה שאנזים ה-DNA פולימראז מסוגל להוסיף נוקלאוטידים אך ורק לקצה ה-$3'$ של הגדיל הצומח, בשילוב עם העובדה שגדילי ה-DNA הם אנטי-מקבילים, יוצרת הכרח מכני למנגנון אסימטרי: גדיל אחד (המוביל) מסונתז ברצף, בעוד הגדיל השני (המאחר) חייב להסתנז במקטעים קצרים (מקטעי אוקזקי) כנגד כיוון פתיחת מזלג השכפול.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: מורכבות אינה נמדדת במספר הגנים</strong>
+                    כ-99 אחוזים מהגנום האנושי אינם מקודדים לחלבונים. עובדה זו שוברת את הפרדיגמה הישנה לפיה אורגניזם מורכב יותר מחזיק בהכרח ביותר גנים מקודדים. רוב ה-DNA הלא מקודד אחראי על בקרת התבטאות, מבנה הכרומוזום ורצפים רגולטוריים, שהם המפתח האמיתי למורכבות ביולוגית.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: `Nucleotide (נוקלאוטיד)`, definition: `אבן הבניין של חומצות הגרעין, מורכב מקבוצת זרחן, סוכר פנטוז ובסיס חנקני.` },
+            { term: `Phosphodiester bond`, definition: `הקשר הקוולנטי המחבר בין נוקלאוטידים סמוכים באותה שרשרת, בין קבוצת הזרחן לסוכר.` },
+            { term: `Purines (פורינים)`, definition: `בסיסים חנקניים בעלי מבנה של שתי טבעות. כוללים את אדנין (A) וגואנין (G).` },
+            { term: `Pyrimidines (פירימידינים)`, definition: `בסיסים חנקניים בעלי טבעת אחת. כוללים ציטוזין (C), תימין (T) ואורציל (U).` },
+            { term: `Chromatin (כרומטין)`, definition: `קומפלקס של DNA וחלבונים (בעיקר היסטונים) המאפשר את אריזת ה-DNA בגרעין התא האיוקריוטי.` },
+            { term: `Nucleosome (נוקלאוזום)`, definition: `יחידת האריזה הבסיסית של הכרומטין, מורכבת מ-DNA המלופף סביב ליבה של 8 חלבוני היסטון.` },
+            { term: `Karyotype (קריוטיפ)`, definition: `המראה הכללי של הסט השלם של הכרומוזומים באורגניזם, כולל גודלם, מספרם וצורתם.` },
+            { term: `Allele (אלל)`, definition: `גרסה חלופית של רצף DNA (גן) במיקום ספציפי על הכרומוזום.` },
+            { term: `Genotype (גנוטיפ)`, definition: `ההרכב הגנטי של אורגניזם, כלומר אוסף האללים הספציפיים שהוא נושא.` },
+            { term: `Phenotype (פנוטיפ)`, definition: `הביטוי הפיזי או התכונות הנצפות של האורגניזם, הנובעים מהגנוטיפ ומהשפעות סביבתיות.` },
+            { term: `Central Dogma`, definition: `העיקרון המתאר את זרימת המידע הגנטי במערכת ביולוגית: מ-DNA ל-RNA ומשם לחלבונים.` },
+            { term: `Semiconservative replication`, definition: `מודל השכפול שבו כל מולקולת DNA חדשה מורכבת מגדיל אחד מקורי (תבנית) וגדיל אחד שסונתז מחדש.` },
+            { term: `Helicase`, definition: `אנזים המשתמש באנרגיית ATP כדי להפריד ולפרום את שני גדילי ה-DNA לקראת השכפול.` },
+            { term: `Primase`, definition: `אנזים המסנתז מקטע RNA קצר (תחל) המשמש כנקודת התחלה לפעולת ה-DNA פולימראז.` },
+            { term: `Okazaki fragments`, definition: `מקטעי DNA קצרים המסונתזים על הגדיל המאחר (Lagging strand) במהלך שכפול ה-DNA.` },
+            { term: `DNA Ligase`, definition: `אנזים המזרז יצירת קשר פוספודיאסטרי בין מקטעי אוקזקי, ובכך מאחה אותם לגדיל רציף.` },
+            { term: `Topoisomerase`, definition: `אנזים המונע ליפוף יתר (Supercoiling) של ה-DNA לפני מזלג השכפול על ידי חיתוך ואיחוי מחדש של עמוד השדרה.` },
+            { term: `Sliding clamp`, definition: `חלבון טבעתי המקבע את ה-DNA פולימראז לגדיל התבנית, ובכך מגדיל משמעותית את קצב ויעילות השכפול.` }
+        ];
+
+        const mcqData = [
+            { 
+                question: `חוקר בודק דגימה של חומצת גרעין ומגלה כי הסוכר המרכיב את הנוקלאוטידים חסר אטום חמצן בפחמן מספר $2'$. איזו מסקנה נגזרת בהכרח ממידע זה לגבי הבסיסים החנקניים בדגימה?`, 
+                options: [
+                    `הדגימה תכיל את הבסיס אורציל (U) במקום תימין (T).`, 
+                    `הדגימה תכיל את הבסיס תימין (T) ולא תכיל אורציל (U).`, 
+                    `הדגימה מורכבת מנוקלאוטידים בעלי טבעת פורינית בלבד.`, 
+                    `הדגימה מורכבת מגדיל יחיד ולכן לא יתקיימו בה קשרי מימן.`
+                ], 
+                correctIndex: 1, 
+                explanation: `היעדר אטום חמצן בפחמן $2'$ מצביע על כך שהסוכר הוא דאוקסיריבוז, כלומר מדובר ב-DNA. ב-DNA הבסיס הפירימידיני הוא תימין (T) ולא אורציל (U), אשר קיים רק ב-RNA.` 
+            },
+            { 
+                question: `איזה מהכוחות הבאים אחראי העיקרי למניעת כניסת מים אל בין הבסיסים החנקניים ולייצוב המבנה המרחבי של הסליל הכפול לאורכו?`, 
+                options: [
+                    `קשרים פוספודיאסטריים בין קבוצות הזרחן.`, 
+                    `קשרי מימן בין זוגות הבסיסים הקומפלמנטריים.`, 
+                    `אינטראקציות הידרופוביות וכוחות ואן דר ואלס בין הבסיסים הנערמים (Stacking).`, 
+                    `קשרים יוניים בין היסטונים לשלד הסוכר-זרחן.`
+                ], 
+                correctIndex: 2, 
+                explanation: `בעוד שקשרי מימן מחברים בין שני הגדילים, מה שמייצב את ערימת הבסיסים (Stacking) לאורך ציר הסליל ומונע חדירת מים הם כוחות ואן דר ואלס ואינטראקציות הידרופוביות בין טבעות הבסיסים.` 
+            },
+            { 
+                question: `מוטציה המונעת יצירת קשרים קוולנטיים במהלך תגובת דחיסה (Condensation) בגרעין התא, תפגע באופן הישיר ביותר באיזה מהמבנים הבאים?`, 
+                options: [
+                    `קשרי המימן בין אדנין לתימין.`, 
+                    `עמוד השדרה סוכר-זרחן של ה-DNA.`, 
+                    `הקישור בין ה-DNA לחלבוני ההיסטון.`, 
+                    `כוחות הואן דר ואלס בין הבסיסים החנקניים.`
+                ], 
+                correctIndex: 1, 
+                explanation: `עמוד השדרה של ה-DNA מורכב מקשרים פוספודיאסטריים, שהם קשרים קוולנטיים הנוצרים בתגובת דחיסה (שחרור מולקולת מים) בין קבוצת הזרחן לפחמן ה-$3'$ של הסוכר.` 
+            },
+            { 
+                question: `אם סליל DNA בודד מכיל $30$ אחוז אדנין (A), מה יהיה אחוז הגואנין (G) באותה מולקולת DNA דו-גדילית?`, 
+                options: [
+                    `$20$ אחוז`, 
+                    `$30$ אחוז`, 
+                    `$40$ אחוז`, 
+                    `$70$ אחוז`
+                ], 
+                correctIndex: 0, 
+                explanation: `לפי חוקי זיווג הבסיסים, אחוז ה-A שווה לאחוז ה-T (כלומר יחד הם $60$ אחוז). ה-$40$ אחוז הנותרים מתחלקים שווה בשווה בין ציטוזין (C) לגואנין (G), ולכן גואנין יהווה $20$ אחוז.` 
+            },
+            { 
+                question: `מהי הסיבה המכנית לכך שאנזים ה-DNA פולימראז זקוק לתחל (Primer) כדי להתחיל בפעולתו?`, 
+                options: [
+                    `הוא זקוק לאנרגיה המשתחררת מפירוק התחל כדי להתקדם.`, 
+                    `הוא אינו מסוגל להיקשר ל-DNA חד-גדילי ללא נוכחות חלבון עזר.`, 
+                    `הוא מסוגל להוסיף נוקלאוטידים רק לקצה $3'$ בעל קבוצת הידרוקסיל (OH) חופשית קיימת.`, 
+                    `התחל מונע מהסליל הכפול מלהיסגר בחזרה לאחר פעולת ההליקאז.`
+                ], 
+                correctIndex: 2, 
+                explanation: `DNA פולימראז יכול רק להאריך שרשרת קיימת על ידי הוספת נוקלאוטיד לקצה $3'$ חופשי של סוכר. הוא אינו מסוגל לחבר שני נוקלאוטידים חופשיים מאפס, ולכן הפרימאז מספק לו את קצה ה-$3'$ ההתחלתי.` 
+            },
+            { 
+                question: `באיזה מהמצבים הבאים צפוי הכרומטין להיות במצב הדחוס ביותר (כרומוזום מטאפזי)?`, 
+                options: [
+                    `כאשר התא נמצא בשלב פעיל של שעתוק גנים ליצירת חלבונים.`, 
+                    `במהלך חלוקת התא, כאשר יש צורך להפריד את החומר הגנטי לשני תאי בת.`, 
+                    `מיד לאחר סיום שכפול ה-DNA, כאשר מזלגות השכפול עדיין פעילים.`, 
+                    `כאשר התא נמצא במצב מנוחה ואינו מתחלק או מתרבה.`
+                ], 
+                correctIndex: 1, 
+                explanation: `במהלך חלוקת התא (מטאפזה), הכרומטין נדחס למבנה מקסימלי (כרומוזומים בעובי $700$ ננומטר) כדי לאפשר חלוקה מדויקת ובטוחה של החומר הגנטי ללא שבירת המולקולות הארוכות.` 
+            },
+            { 
+                question: `חוקר מצא אורגניזם חדש שלו גנום הגדול פי $10$ מזה של האדם. האם ניתן להסיק מכך שהאורגניזם מורכב יותר מהאדם מבחינה ביולוגית?`, 
+                options: [
+                    `כן, גודל הגנום נמצא ביחס ישר למורכבות האורגניזם ולמספר הגנים שלו.`, 
+                    `לא, מכיוון שרוב הגנום באיוקריוטים אינו מקודד לחלבונים, וגודלו אינו מעיד בהכרח על מורכבות.`, 
+                    `כן, ככל שהגנום גדול יותר כך ישנם יותר כרומוזומים, מה שמעיד על התפתחות אבולוציונית מתקדמת.`, 
+                    `לא, מכיוון שאורגניזמים בעלי גנום גדול יותר הם לרוב חד-תאיים פרימיטיביים.`
+                ], 
+                correctIndex: 1, 
+                explanation: `אין קשר ישיר בין גודל הגנום או מספר הגנים למורכבות האורגניזם. באדם, למשל, כ-$99$ אחוז מהגנום אינו מקודד לחלבונים, ואורגניזמים פשוטים כמו סוגים מסוימים של צמחים או אמבות יכולים להיות בעלי גנום גדול בהרבה משל האדם.` 
+            },
+            { 
+                question: `כיצד מוסברת העובדה ששני אנשים יכולים להיות בעלי סוג דם A, אך גנוטיפ שונה?`, 
+                options: [
+                    `תכונת סוג הדם אינה מושפעת מה-DNA אלא מגורמים סביבתיים בלבד.`, 
+                    `אחד מהם עשוי להיות הומוזיגוט לאלל A, והשני הטרוזיגוט הנושא אלל A ואלל נסגני (i).`, 
+                    `הגנוטיפ של שניהם חייב להיות זהה, ההבדל נובע ממוטציה נקודתית בתאי הדם האדומים.`, 
+                    `סוג דם A נוצר רק ממצב הטרוזיגוטי, ולכן לא ייתכן גנוטיפ שונה לאותו פנוטיפ.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הפנוטיפ הוא סוג דם A, אך הגנוטיפ יכול להיות הומוזיגוטי (שני אללי A) או הטרוזיגוטי (אלל A ואלל O, המסומן כ-i, שהוא רצסיבי).` 
+            },
+            { 
+                question: `בניסוי מסלסון-שטאל, החוקרים גידלו חיידקים בסביבה עם חנקן כבד ($N^{15}$) ולאחר מכן העבירו אותם לסביבה עם חנקן קל ($N^{14}$). אילו המודל השמרני (Conservative) היה נכון, מה היו התוצאות לאחר מחזור שכפול אחד?`, 
+                options: [
+                    `פס אחד בלבד של DNA בצפיפות בינונית (הכלאה של כבד וקל).`, 
+                    `שני פסים: פס אחד של DNA כבד לחלוטין ופס אחד של DNA קל לחלוטין.`, 
+                    `פס אחד בלבד של DNA קל לחלוטין.`, 
+                    `פס אחד של DNA כבד לחלוטין ופס אחד בצפיפות בינונית.`
+                ], 
+                correctIndex: 1, 
+                explanation: `לפי המודל השמרני, מולקולת האם נשארת בשלמותה (כבדה לחלוטין), ומולקולה חדשה לחלוטין מסונתזת מאפס (קלה לחלוטין). לכן היו מתקבלים שני פסים נפרדים מיד לאחר מחזור אחד.` 
+            },
+            { 
+                question: `מהי התוצאה הסבירה ביותר של פגיעה תפקודית באנזים הליגאז (DNA Ligase) במהלך שכפול ה-DNA?`, 
+                options: [
+                    `הסליל הכפול לא יוכל להיפתח, והשכפול לא יתחיל.`, 
+                    `הגדיל המוביל (Leading strand) לא יסונתז כלל.`, 
+                    `הגדיל המאחר (Lagging strand) יישאר מחולק למקטעים קצרים שאינם מחוברים זה לזה.`, 
+                    `ה-DNA פולימראז ייפול מהגדיל עקב היעדר המצמד המחליק (Sliding clamp).`
+                ], 
+                correctIndex: 2, 
+                explanation: `הליגאז אחראי על יצירת הקשר הפוספודיאסטרי האחרון שמאחה את מקטעי אוקזקי על הגדיל המאחר לאחר שהתחל הוסר והוחלף ב-DNA. בלעדיו, הגדיל המאחר יישאר מחורר (Nicks).` 
+            },
+            { 
+                question: `באיזה מנגנון מונעים חלבוני ה-SSB (Single-strand binding proteins) את חיבורם מחדש של שני גדילי ה-DNA לאחר פעולת ההליקאז?`, 
+                options: [
+                    `על ידי פירוק קשרי המימן שנותרו בין הבסיסים באמצעות הידרוליזה של ATP.`, 
+                    `על ידי היקשרות פיזית לגדילים הבודדים והסתרת הבסיסים, מניעת יצירת קשרי מימן קומפלמנטריים.`, 
+                    `על ידי חיתוך זמני של עמוד השדרה הפוספודיאסטרי ושחרור המתח המבני.`, 
+                    `על ידי הוספת קבוצות מתיל לבסיסים החנקניים באזור מזלג השכפול.`
+                ], 
+                correctIndex: 1, 
+                explanation: `חלבוני SSB נצמדים ל-DNA החד-גדילי באזור מזלג השכפול ויוצרים מחסום סטרי (מרחבי) המונע מהבסיסים הקומפלמנטריים למצוא זה את זה וליצור קשרי מימן מחדש לפני שהפולימראז מספיק לסנתז את הגדיל החדש.` 
+            },
+            { 
+                question: `מהו ההבדל המרכזי בפעילותם של טופואיזומראז מסוג I לעומת מסוג II?`, 
+                options: [
+                    `סוג I חותך גדיל DNA אחד כדי לשחרר מתח, בעוד סוג II חותך את שני הגדילים של הסליל הכפול.`, 
+                    `סוג I פועל רק על הגדיל המוביל, בעוד סוג II פועל רק על הגדיל המאחר.`, 
+                    `סוג I מסיר את תחל ה-RNA, בעוד סוג II מוסיף את נוקלאוטידי ה-DNA החסרים.`, 
+                    `סוג I פועל ב-DNA איוקריוטי בלבד, וסוג II פועל ב-DNA פרוקריוטי בלבד.`
+                ], 
+                correctIndex: 0, 
+                explanation: `טופואיזומראז מסוג I חותך רק את אחד מעמודי השדרה סוכר-זרחן כדי לאפשר סיבוב ושחרור מתח, בעוד שסוג II מבצע חיתוך כפול (בשני הגדילים) כדי להעביר סליל כפול אחד דרך משנהו.` 
+            },
+            { 
+                question: `מדוע סינתזת ה-DNA על הגדיל המאחר (Lagging strand) מתבצעת במקטעים (מקטעי אוקזקי) ולא ברצף אחד?`, 
+                options: [
+                    `מפני שה-DNA פולימראז על הגדיל המאחר חסר את המצמד המחליק (Sliding clamp) ולכן מתנתק תדיר.`, 
+                    `מפני שהגדיל המאחר בנוי מ-RNA ולא מ-DNA, מה שמחייב סינתזה מקוטעת.`, 
+                    `מפני שכיוון התנועה של מזלג השכפול הפוך לכיוון הסינתזה של הפולימראז ($5'$ ל-$3'$) על גדיל זה.`, 
+                    `מפני שההליקאז פותח את הסליל הכפול בפעימות קצרות, ורק לאחר כל פעימה מתאפשרת סינתזה.`
+                ], 
+                correctIndex: 2, 
+                explanation: `DNA פולימראז יכול לסנתז רק בכיוון $5'$ ל-$3'$. מכיוון שהגדילים אנטי-מקבילים, על הגדיל המאחר כיוון הסינתזה הנדרש הוא הרחק ממזלג השכפול הנפתח. לכן, ככל שהמזלג נפתח יותר, נחשף אזור חדש הדורש התחלה מחדש של סינתזה אחורה.` 
+            },
+            { 
+                question: `איזה מהאנזימים הבאים מבצע פעולה של פילמור (הוספת מונומרים לשרשרת) מבלי להזדקק לקצה $3'$ חופשי קיים?`, 
+                options: [
+                    `DNA פולימראז III`, 
+                    `DNA פולימראז I`, 
+                    `Primase (פרימאז)`, 
+                    `DNA Ligase (ליגאז)`
+                ], 
+                correctIndex: 2, 
+                explanation: `פרימאז הוא סוג של RNA פולימראז. בניגוד ל-DNA פולימראז, הוא מסוגל לחבר שני נוקלאוטידים ראשונים מאפס וליצור שרשרת חדשה (את התחל), המספקת את קצה ה-$3'$ הדרוש ל-DNA פולימראז.` 
+            },
+            { 
+                question: `מה תהיה ההשפעה של חוסר במצמד מחליק (Sliding clamp) על תהליך השכפול?`, 
+                options: [
+                    `השכפול יעצור לחלוטין מכיוון שה-DNA פולימראז לא יוכל לזהות את תחל ה-RNA.`, 
+                    `תהליך השכפול יתרחש, אך יעילותו ומהירותו ירדו דרסטית עקב ניתוקים תכופים של הפולימראז.`, 
+                    `הגדיל המוביל יסונתז כרגיל, אך הגדיל המאחר לא יסונתז כלל.`, 
+                    `ה-DNA יסבול מליפוף יתר עד לשבירתו המוחלטת.`
+                ], 
+                correctIndex: 1, 
+                explanation: `המצמד המחליק אינו חיוני לעצם הפעילות הקטליטית של הפולימראז, אלא לזיקה (Processivity) שלו ל-DNA. בלעדיו, הפולימראז מוסיף מספר קטן של בסיסים (כ-$50-100$) ונופל, בניגוד לעשרות אלפים כשהוא מחובר למצמד.` 
+            },
+            { 
+                question: `בהנחה שמולקולת DNA אנושית מכילה כ-$3$ מיליארד זוגות בסיסים, וכל סיבוב של הסליל הכפול מכיל $10$ זוגות בסיסים, כמה סיבובים יש במולקולה זו?`, 
+                options: [
+                    `$300$ מיליון סיבובים.`, 
+                    `$3$ מיליארד סיבובים.`, 
+                    `$30$ מיליארד סיבובים.`, 
+                    `$30$ מיליון סיבובים.`
+                ], 
+                correctIndex: 0, 
+                explanation: `אם יש $3,000,000,000$ זוגות בסיסים, וכל סיבוב מכיל $10$ בסיסים, מחלקים ב-$10$ ומקבלים $300,000,000$ (שלוש מאות מיליון) סיבובים.` 
+            },
+            { 
+                question: `אילו מהמשפטים הבאים מתאר בצורה הטובה ביותר את ההבדל הכימי בין הקצוות של גדיל DNA?`, 
+                options: [
+                    `קצה $5'$ מכיל בסיס חנקני חופשי, בעוד קצה $3'$ מכיל סוכר חופשי.`, 
+                    `קצה $5'$ מכיל קבוצת הזרחן, בעוד קצה $3'$ מכיל קבוצת הידרוקסיל (OH) חופשית.`, 
+                    `קצה $5'$ תמיד מתחיל בפורין, בעוד קצה $3'$ תמיד מסתיים בפירימידין.`, 
+                    `קצה $5'$ עשיר באדנין ותימין, בעוד קצה $3'$ עשיר בציטוזין וגואנין.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הכיווניות של ה-DNA נקבעת על פי מספור הפחמנים בסוכר. קצה $5'$ מסתיים בפחמן מספר $5'$ שאליו קשורה קבוצת זרחן (Phosphate), וקצה $3'$ מסתיים בפחמן מספר $3'$ שלו קבוצת הידרוקסיל (OH) חופשית.` 
+            },
+            { 
+                question: `כיצד מולקולות חלבון (כגון פקטורי שעתוק) מסוגלות לזהות רצף בסיסים ספציפי ב-DNA מבלי לפרום את הסליל הכפול?`, 
+                options: [
+                    `הן מזהות את הרצף על ידי קריאת המטען החשמלי של קבוצות הזרחן בעמוד השדרה.`, 
+                    `משטחי זוגות הבסיסים (A-T ו-C-G) שונים כימית וחשופים חלקית בתעלה הגדולה והקטנה (Grooves) של הסליל.`, 
+                    `החלבונים ממיסים זמנית את עמוד השדרה הסוכרי כדי לגשת לבסיסים.`, 
+                    `זיהוי הרצף מתאפשר רק כאשר ה-DNA נמצא במצב של כרומטין דחוס (נוקלאוזומים).`
+                ], 
+                correctIndex: 1, 
+                explanation: `המבנה התלת-ממדי של הסליל הכפול יוצר תעלה גדולה (Major groove) ותעלה קטנה (Minor groove). דרך תעלות אלו, הקצוות של זוגות הבסיסים חשופים כימית ומאפשרים לחלבונים לזהות דפוסים ספציפיים ללא פרימת הסליל.` 
+            },
+            { 
+                question: `איזו מהתופעות הבאות היא תוצאה ישירה של כך שגדילי ה-DNA הם אנטי-מקבילים?`, 
+                options: [
+                    `הצורך באנזים טופואיזומראז לשחרור לחצים.`, 
+                    `העובדה שפירימידין תמיד נקשר לפורין.`, 
+                    `היווצרות של גדיל מוביל וגדיל מאחר במהלך השכפול.`, 
+                    `אריזת ה-DNA סביב היסטונים ליצירת נוקלאוזומים.`
+                ], 
+                correctIndex: 2, 
+                explanation: `מכיוון שהגדילים הפוכים בכיוונם, והפולימראז יכול לנוע רק בכיוון אחד ($5'$ ל-$3'$), מזלג השכפול הנפתח מאפשר סינתזה רציפה רק על גדיל אחד (המוביל). על הגדיל השני (המאחר), הסינתזה חייבת להיעשות נגד כיוון הפתיחה, ולכן היא מקוטעת.` 
+            },
+            { 
+                question: `בתא פרוקריוטי, תפקידו העיקרי של DNA פולימראז I הוא:`, 
+                options: [
+                    `לסנתז את הרוב המוחלט של הגדיל החדש.`, 
+                    `לפרום את הסליל הכפול בתחילת השכפול.`, 
+                    `לפרק את פריימר ה-RNA ולהשלים את החסר בנוקלאוטידים של DNA.`, 
+                    `לאחות את הקשרים הפוספודיאסטריים בין מקטעי אוקזקי.`
+                ], 
+                correctIndex: 2, 
+                explanation: `בעוד ש-DNA פולימראז III אחראי על עיקר פילמור ה-DNA, DNA פולימראז I פועל לאחר מכן כדי להסיר את תחלי ה-RNA (פעילות אקסונוקלאז) ולהחליפם ב-DNA.` 
+            },
+            { 
+                question: `מה היה קורה אילו אנזים הפרימאז היה מסנתז תחל מ-DNA במקום מ-RNA?`, 
+                options: [
+                    `השכפול היה נעצר, שכן DNA פולימראז אינו מזהה תחל של DNA.`, 
+                    `פעולתו של DNA פולימראז I (החלפת התחל) לא הייתה נדרשת, שכן התחל כבר היה עשוי מ-DNA.`, 
+                    `מקטעי אוקזקי היו מתחברים זה לזה באופן ספונטני ללא צורך בליגאז.`, 
+                    `הסליל הכפול היה הופך לבלתי יציב עקב היעדר קבוצת הידרוקסיל חופשית.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הפרימאז יוצר תחל RNA מכיוון שזהו האנזים היחיד שיכול להתחיל שרשרת מאפס. אם תיאורטית התחל היה עשוי מ-DNA, לא היה צורך להסירו ולהחליפו מאוחר יותר, שכן הוא כבר היה חלק אינטגרלי מהרצף הרצוי.` 
+            },
+            { 
+                question: `איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין פורינים לפירימידינים?`, 
+                options: [
+                    `פורינים נמצאים רק ב-DNA, ואילו פירימידינים נמצאים רק ב-RNA.`, 
+                    `לפורינים יש מבנה של טבעת יחידה, ולפירימידינים יש מבנה של שתי טבעות מחוברות.`, 
+                    `פורינים תמיד יוצרים שלושה קשרי מימן, ופירימידינים יוצרים שני קשרי מימן.`, 
+                    `לפורינים יש מבנה של שתי טבעות מחוברות, ולפירימידינים יש מבנה של טבעת יחידה.`
+                ], 
+                correctIndex: 3, 
+                explanation: `הפורינים (אדנין וגואנין) הם המולקולות הגדולות יותר בעלות שתי טבעות, בעוד הפירימידינים (ציטוזין, תימין ואורציל) הם בעלי טבעת אחת. זיווג של פורין עם פירימידין שומר על קוטר אחיד של ה-DNA.` 
+            },
+            { 
+                question: `אורגניזם דיפלואידי נושא שני אללים שונים לגן מסוים. מהו המונח המתאר מצב זה?`, 
+                options: [
+                    `הומוזיגוט (Homozygous).`, 
+                    `הטרוזיגוט (Heterozygous).`, 
+                    `מונוזיגוט (Monozygous).`, 
+                    `פולימורפי (Polymorphic).`
+                ], 
+                correctIndex: 1, 
+                explanation: `הטרוזיגוט הוא מצב שבו שני האללים באותו לוקוס (מיקום גנטי) על גבי הכרומוזומים ההומולוגיים הם שונים זה מזה.` 
+            },
+            { 
+                question: `מדוע שילוב של פורין עם פורין בתוך סליל ה-DNA יפגע ביציבות המבנה?`, 
+                options: [
+                    `מכיוון שפורינים אינם מסוגלים ליצור קשרי מימן זה עם זה.`, 
+                    `מכיוון שהפורינים דוחים זה את זה חשמלית עקב המטען השלילי של קבוצת הזרחן.`, 
+                    `מכיוון שפורינים הם בעלי שתי טבעות, שילוב של שניים יחרוג מהקוטר האחיד של $2$ ננומטר של הסליל.`, 
+                    `מכיוון שפורינים מכילים סוכר ריבוז שאינו מתאים למבנה ה-DNA.`
+                ], 
+                correctIndex: 2, 
+                explanation: `הקוטר האחיד של ה-DNA ($2$ ננומטר) נשמר הודות לזיווג קבוע של פורין (גדול, 2 טבעות) עם פירימידין (קטן, טבעת 1). זיווג פורין-פורין יהיה רחב מדי ויעוות את הסליל.` 
+            },
+            { 
+                question: `באיזה שלב בחיי התא מתרחש תהליך שכפול ה-DNA?`, 
+                options: [
+                    `באופן רציף לאורך כל חיי התא כדי לתקן נזקים.`, 
+                    `מיד לאחר סיום חלוקת התא, בתאי הבת החדשים.`, 
+                    `רק כאשר התא מתכונן לחלוקה (כהכנה למיטוזה או מיוזה).`, 
+                    `במהלך יצירת חלבונים (שעתוק ותרגום).`
+                ], 
+                correctIndex: 2, 
+                explanation: `שכפול ה-DNA נועד להבטיח שכל תא בת יקבל עותק זהה ושלם של המידע הגנטי. לכן, התהליך מתרחש אך ורק כהכנה לקראת חלוקת התא.` 
+            },
+            { 
+                question: `בניסוי מסלסון-שטאל, אילו התוצאה לאחר מחזור שכפול אחד הייתה פס אחד עליון (קל) ופס אחד תחתון (כבד), איזה מודל שכפול היה נשלל בוודאות?`, 
+                options: [
+                    `המודל השמרני (Conservative).`, 
+                    `המודל הסמי-קונסרבטיבי (Semiconservative).`, 
+                    `המודל הדיספרסיבי (Dispersive).`, 
+                    `המודלים הסמי-קונסרבטיבי והדיספרסיבי גם יחד.`
+                ], 
+                correctIndex: 3, 
+                explanation: `תוצאה של שני פסים נפרדים (אחד קל ואחד כבד) לאחר מחזור אחד תואמת למודל השמרני בלבד. המודלים הסמי-קונסרבטיבי והדיספרסיבי מנבאים שניהם פס יחיד בצפיפות בינונית לאחר מחזור אחד.` 
+            },
+            { 
+                question: `מהי המשמעות הביולוגית של המושג "אזור לא מקודד" (Non-coding DNA) בגנום האנושי?`, 
+                options: [
+                    `אזורים אלו הם "DNA זבל" חסר כל תפקיד ביולוגי שנותר מהאבולוציה.`, 
+                    `אזורים אלו אינם מכילים את רצף ההוראות ליצירת חלבונים, אך כוללים מרכיבים חיוניים כמו רצפי בקרה וגנים ל-RNA.`, 
+                    `אזורים אלו מורכבים מחומצות אמינו במקום נוקלאוטידים ולכן אינם יכולים לקודד.`, 
+                    `אזורים אלו אינם משוכפלים במהלך חלוקת התא וחלקם אובד בכל דור.`
+                ], 
+                correctIndex: 1, 
+                explanation: `DNA לא מקודד אינו מכיל הוראות לבניית שרשראות פוליפפטידיות (חלבונים), אך יש לו תפקידים קריטיים כגון בקרת התבטאות גנים (פרומוטורים, מעצמים), ייצור tRNA ו-rRNA, ואלמנטים מבניים של הכרומוזום.` 
+            },
+            { 
+                question: `אילו מולקולות מעורבות בתגובת הדחיסה היוצרת את הקשר הפוספודיאסטרי?`, 
+                options: [
+                    `קבוצת הזרחן של הנוקלאוטיד החדש וקבוצת ההידרוקסיל בפחמן $3'$ של השרשרת הקיימת.`, 
+                    `קבוצת הזרחן של השרשרת הקיימת וקבוצת ההידרוקסיל בפחמן $5'$ של הנוקלאוטיד החדש.`, 
+                    `הבסיס החנקני של הנוקלאוטיד החדש והסוכר של השרשרת הקיימת.`, 
+                    `שתי קבוצות הידרוקסיל, אחת מכל נוקלאוטיד.`
+                ], 
+                correctIndex: 0, 
+                explanation: `הקשר נוצר כאשר קבוצת הזרחן (הקשורה לפחמן $5'$ של הנוקלאוטיד הנכנס) מגיבה עם קבוצת ההידרוקסיל (OH) החופשית הנמצאת על פחמן $3'$ של הנוקלאוטיד האחרון בשרשרת הקיימת.` 
+            },
+            { 
+                question: `מה יקרה למזלג השכפול אם חלבוני ה-Helicase יפסיקו לפעול בפתאומיות?`, 
+                options: [
+                    `השכפול ימשך, אך הפולימראז יצטרך לפרום את הסליל בעצמו בקצב איטי יותר.`, 
+                    `התקדמות מזלג השכפול תעצור באופן מיידי מכיוון שה-DNA יישאר כסליל כפול סגור.`, 
+                    `רק הגדיל המוביל יעצור, בעוד הגדיל המאחר ימשיך להסתנז לאחור.`, 
+                    `טופואיזומראז ייקח על עצמו את תפקיד פרימת קשרי המימן.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הליקאז הוא האנזים היחיד במערכת שתפקידו לשבור את קשרי המימן ולפרום את הסליל הכפול לפני מזלג השכפול. בלעדיו, הפולימראז אינו יכול לגשת לגדילי התבנית והתהליך נעצר לחלוטין.` 
+            },
+            { 
+                question: `מהו היתרון הפיזיקלי בכך שמולקולת ה-DNA נארזת סביב נוקלאוזומים?`, 
+                options: [
+                    `האריזה מאפשרת הגנה על ה-DNA מפני אנזימי שעתוק.`, 
+                    `האריזה מאפשרת לדחוס מולקולה באורך של כשני מטרים לתוך גרעין שקוטרו מיקרומטרים בודדים.`, 
+                    `האריזה מונעת את שכפול ה-DNA בזמנים שאינם מתאימים לחלוקת התא.`, 
+                    `האריזה הופכת את ה-DNA ממבנה דו-גדילי למבנה חד-גדילי יציב.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הסיבה המרכזית לאריזת ה-DNA (כרומטין) היא דחיסה מרחבית. ללא דחיסה זו, ה-DNA הארוך לא היה יכול להיכנס מבחינה פיזית לתוך גרעין התא.` 
+            },
+            { 
+                question: `מה מאפיין את נקודת התחלת השכפול (Origin of replication - ori) בכרומוזומים איוקריוטיים לעומת פרוקריוטיים?`, 
+                options: [
+                    `באיוקריוטים יש נקודת ori אחת בלבד לכל כרומוזום, בעוד בפרוקריוטים יש רבות.`, 
+                    `באיוקריוטים יש מספר רב של נקודות ori לאורך הכרומוזום, בעוד בפרוקריוטים לרוב יש רק אחת.`, 
+                    `נקודת ה-ori באיוקריוטים מורכבת מ-RNA, בעוד בפרוקריוטים היא מורכבת מ-DNA.`, 
+                    `באיוקריוטים השכפול מתחיל תמיד מקצה הכרומוזום, ולכן אין צורך בנקודת ori.`
+                ], 
+                correctIndex: 1, 
+                explanation: `בשל גודלם העצום של הכרומוזומים האיוקריוטיים (בניגוד לכרומוזום המעגלי הקטן של חיידקים), שכפול מנקודה אחת ייקח זמן רב מדי. לכן, ישנן נקודות התחלה רבות לאורך כל כרומוזום הפועלות במקביל.` 
+            },
+            { 
+                question: `המונח "הדוגמה המרכזית" (The Central Dogma) בביולוגיה מולקולרית מתייחס ל:`, 
+                options: [
+                    `העובדה שכל היצורים החיים מורכבים מתאים.`, 
+                    `כיוון זרימת המידע הגנטי מ-DNA ל-RNA ומ-RNA לחלבון.`, 
+                    `העיקרון שכל התכונות הפנוטיפיות נקבעות אך ורק על ידי הגנוטיפ.`, 
+                    `המודל השמרני למחצה של שכפול ה-DNA.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הדוגמה המרכזית, שהוגדרה על ידי פרנסיס קריק, מתארת את המסלול החד-סטרי לרוב של ביטוי המידע הגנטי: ה-DNA משועתק ל-RNA, אשר מתורגם לחלבון.` 
+            },
+            { 
+                question: `מה יקרה אם תתרחש מוטציה באנזים פרימאז (Primase) שתמנע ממנו להיקשר ל-DNA?`, 
+                options: [
+                    `הגדיל המוביל יסונתז כרגיל, אך הגדיל המאחר לא יסונתז.`, 
+                    `השכפול לא יתחיל כלל, באף אחד מהגדילים.`, 
+                    `ה-DNA פולימראז יסנתז את ה-DNA לאט יותר, תוך עשיית טעויות מרובות.`, 
+                    `ה-DNA פולימראז יסנתז תחל מ-DNA במקום מ-RNA.`
+                ], 
+                correctIndex: 1, 
+                explanation: `ללא פרימאז, לא יווצר תחל (Primer). מכיוון ש-DNA פולימראז חייב קצה $3'$ חופשי כדי להתחיל להוסיף נוקלאוטידים, הוא לא יוכל להתחיל את עבודתו על אף אחד מהגדילים (לא המוביל ולא המאחר).` 
+            },
+            { 
+                question: `מדוע נדרש אנזים הטופואיזומראז לחתוך את עמוד השדרה של ה-DNA במהלך השכפול?`, 
+                options: [
+                    `כדי לאפשר להליקאז לחדור בין הגדילים ולהפריד את קשרי המימן.`, 
+                    `כדי לספק קצה $3'$ חופשי לפולימראז במקום פרימאז.`, 
+                    `כדי לשחרר את הלחץ המכני (Supercoiling) שנוצר מהפתיחה המאולצת של הסליל על ידי ההליקאז.`, 
+                    `כדי לפרק את קבוצות ההיסטונים המפריעות להתקדמות מזלג השכפול.`
+                ], 
+                correctIndex: 2, 
+                explanation: `כאשר ההליקאז מפריד את הגדילים, הוא דוחף את הפיתולים של הסליל קדימה, מה שיוצר מתח וליפוף יתר (Overwinding) לפני המזלג. טופואיזומראז חותך את ה-DNA, מאפשר לו להסתובב ולהשתחרר מהמתח, ואז מאחה אותו חזרה.` 
+            },
+            { 
+                question: `אם רצף הבסיסים בגדיל התבנית הוא $5'-ATCGGC-3'$, מה יהיה הרצף של הגדיל החדש שיסונתז מולו?`, 
+                options: [
+                    `$5'-TAGCCG-3'$`, 
+                    `$5'-GCCGAT-3'$`, 
+                    `$3'-TAGCCG-5'$`, 
+                    `$3'-ATCGGC-5'$`
+                ], 
+                correctIndex: 2, 
+                explanation: `הגדיל החדש מסונתז בצורה קומפלמנטרית ואנטי-מקבילה. לכן מול ה-$5'$ יהיה קצה $3'$, מול A יהיה T, מול T יהיה A, מול C יהיה G, ומול G יהיה C. התוצאה היא $3'-TAGCCG-5'$.` 
+            },
+            { 
+                question: `מהי המשמעות של היות ה-DNA מולקולה כיוונית (Directional)?`, 
+                options: [
+                    `שהיא תמיד מסתובבת לכיוון ימין (Right-handed helix).`, 
+                    `שניתן להוסיף לה נוקלאוטידים חדשים רק לקצה ספציפי אחד (קצה $3'$).`, 
+                    `שהמידע הגנטי נקרא תמיד מהכרומוזום הגדול ביותר לקטן ביותר.`, 
+                    `שמזלג השכפול מתקדם תמיד בכיוון אחד בלבד לאורך הכרומוזום.`
+                ], 
+                correctIndex: 1, 
+                explanation: `הכיווניות מתבטאת בכך שיש הבדל כימי בין שני קצוות השרשרת ($5'$ פוספט לעומת $3'$ הידרוקסיל), ואנזימים (כמו פולימראז) יכולים לפעול ולבנות את השרשרת רק בכיוון אחד (הוספה לקצה ה-$3'$).` 
+            },
+            { 
+                question: `אורגניזם הפלואידי (Haploid) מתאפיין בכך ש:`, 
+                options: [
+                    `יש לו מספר כפול של כרומוזומים ביחס לאורגניזם נורמלי.`, 
+                    `יש לו עותק אחד בלבד מכל כרומוזום.`, 
+                    `הוא אינו מכיל כרומוזומי מין.`, 
+                    `הוא מתרבה אך ורק ברבייה מינית.`
+                ], 
+                correctIndex: 1, 
+                explanation: `תא הפלואידי (כמו תא זרע או ביצית באדם) מכיל סט אחד בלבד של כרומוזומים, בניגוד לתא דיפלואידי (כמו רוב תאי הגוף) המכיל שני סטים (אחד מכל הורה).` 
+            },
+            { 
+                question: `אם נשווה את פנוטיפ סוג הדם AB לפנוטיפ סוג הדם O, מה נוכל להסיק על הגנוטיפ של האנשים הנושאים אותם?`, 
+                options: [
+                    `שניהם הומוזיגוטים, אך לאללים שונים.`, 
+                    `בעל סוג הדם AB הוא בהכרח הטרוזיגוט, ובעל סוג הדם O הוא בהכרח הומוזיגוט.`, 
+                    `בעל סוג הדם O עשוי להיות הטרוזיגוט, בעוד בעל ה-AB הומוזיגוט.`, 
+                    `לא ניתן להסיק דבר על הגנוטיפ רק מהפנוטיפ במקרה זה.`
+                ], 
+                correctIndex: 1, 
+                explanation: `סוג דם AB מחייב גנוטיפ הטרוזיגוטי המכיל אלל A ואלל B. סוג דם O נובע מהיעדר אנטיגנים, מצב המתרחש רק כאשר האדם הומוזיגוט לאלל הרצסיבי i (כלומר הגנוטיפ שלו הוא ii).` 
+            },
+            { 
+                question: `באיזה אופן כוחות ואן דר ואלס תורמים למבנה ה-DNA?`, 
+                options: [
+                    `הם מחברים את קבוצות הזרחן לסוכר.`, 
+                    `הם מאפשרים את קשרי המימן בין A ל-T.`, 
+                    `הם פועלים בין טבעות הבסיסים הנערמות (Stacking) ומייצבים את הסליל.`, 
+                    `הם קושרים את ה-DNA לחלבוני ה-SSB במהלך השכפול.`
+                ], 
+                correctIndex: 2, 
+                explanation: `טבעות הבסיסים החנקניים הן שטוחות והידרופוביות. כשהן נערמות זו על גבי זו במרכז הסליל, נוצרות ביניהן אינטראקציות הידרופוביות וכוחות ואן דר ואלס הדוחים מים ומייצבים את המבנה.` 
+            },
+            { 
+                question: `מהי המשמעות של המונח קריוטיפ (Karyotype)?`, 
+                options: [
+                    `רצף הבסיסים המדויק של גן בודד.`, 
+                    `המראה הכללי של סט הכרומוזומים השלם, הכולל מספר, גודל וצורה.`, 
+                    `האחוז היחסי של פורינים לעומת פירימידינים בתא.`, 
+                    `התהליך שבו ה-DNA נדחס לכרומטין לפני חלוקת התא.`
+                ], 
+                correctIndex: 1, 
+                explanation: `קריוטיפ הוא תמונה או מפה של הכרומוזומים של אורגניזם, המסודרים לפי גודל וצורה, ומשמש לזיהוי מספר הכרומוזומים התקין ומומים כרומוזומליים גדולים.` 
+            }
+        ];
+
+        const tfData = [
+            { question: `נוקלאוטיד של RNA לעולם לא יכיל את הבסיס החנקני תימין (T).`, answer: true, explanation: `נכון. ב-RNA, הבסיס הפירימידיני המחליף את התימין הוא אורציל (U).` },
+            { question: `קשרי המימן המייצבים את הסליל הכפול חזקים יותר מהקשרים הפוספודיאסטריים שבעמוד השדרה.`, answer: false, explanation: `לא נכון. קשרים פוספודיאסטריים הם קשרים קוולנטיים חזקים מאוד, בעוד קשרי מימן הם קשרים חלשים המאפשרים את פרימת הסליל לשם שכפול ושעתוק.` },
+            { question: `המרווח בין שני זוגות בסיסים עוקבים ב-DNA הוא $0.34$ ננומטר.`, answer: true, explanation: `נכון. זהו המרחק הקבוע בין "שלבי" הסולם של ה-DNA, כאשר סיבוב שלם של הסליל ($10$ בסיסים) אורך $3.4$ ננומטר.` },
+            { question: `הגנוטיפ של אורגניזם קובע באופן בלעדי ומוחלט את הפנוטיפ שלו, ללא השפעות חיצוניות.`, answer: false, explanation: `לא נכון. הפנוטיפ מושפע לרוב מאינטראקציות מורכבות בין הגנוטיפ לגורמי סביבה ואפיגנטיקה.` },
+            { question: `הקוטר של סליל ה-DNA הוא אחיד ועומד על $2$ ננומטר, הודות לזיווג קבוע של פורין עם פירימידין.`, answer: true, explanation: `נכון. זיווג של בסיס בעל שתי טבעות (פורין) עם בסיס בעל טבעת אחת (פירימידין) שומר על מרחק קבוע בין עמודי השדרה.` },
+            { question: `כרומטין הוא מבנה המורכב מ-DNA בלבד, ללא חלבונים.`, answer: false, explanation: `לא נכון. כרומטין הוא קומפלקס של DNA וחלבונים, כאשר החלבונים העיקריים בו הם ההיסטונים סביבם מלופף ה-DNA.` },
+            { question: `בניסוי מסלסון-שטאל, השימוש באיזוטופים שונים של חנקן איפשר להבחין בין גדילי ה-DNA המקוריים לגדילים שסונתזו מחדש.`, answer: true, explanation: `נכון. החנקן הכבד ($N^{15}$) שולב ב-DNA המקורי, והחנקן הקל ($N^{14}$) ב-DNA החדש, מה שאיפשר הפרדה לפי צפיפות בצנטריפוגה.` },
+            { question: `DNA פולימראז מסוגל להוסיף נוקלאוטידים לשני הקצוות של גדיל ה-DNA ($3'$ ו-$5'$).`, answer: false, explanation: `לא נכון. DNA פולימראז יכול להוסיף נוקלאוטידים אך ורק לקצה ה-$3'$ החופשי.` },
+            { question: `הגדיל המאחר (Lagging strand) מסונתז ברציפות ובמהירות רבה יותר מהגדיל המוביל.`, answer: false, explanation: `לא נכון. הגדיל המאחר מסונתז נגד כיוון תנועת מזלג השכפול, ולכן הוא מסונתז במקטעים קצרים (מקטעי אוקזקי) ודורש פעולות איחוי, מה שהופך את התהליך למורכב יותר.` },
+            { question: `ליגאז (DNA Ligase) הוא האנזים האחראי על יצירת קשרי המימן בין הבסיסים הקומפלמנטריים.`, answer: false, explanation: `לא נכון. קשרי המימן נוצרים באופן ספונטני עקב התאמה כימית. הליגאז אחראי על יצירת הקשר הפוספודיאסטרי בעמוד השדרה לאיחוי מקטעי אוקזקי.` },
+            { question: `טופואיזומראז מונע שבירה של ה-DNA על ידי שחרור הלחץ המכני הנוצר מפתיחת הסליל.`, answer: true, explanation: `נכון. הוא עושה זאת על ידי חיתוך זמני של עמוד השדרה, מתן אפשרות לסליל להסתובב ולהשתחרר, ואיחוי מחדש.` },
+            { question: `אורגניזם דיפלואידי מקבל עותק אחד של כל כרומוזום מכל הורה.`, answer: true, explanation: `נכון. הדיפלואידיות אומרת שיש שני עותקים מכל כרומוזום, אחד ממקור אבהי ואחד ממקור אימהי.` },
+            { question: `כל גן ב-DNA בהכרח מכיל הוראות לייצור חלבון.`, answer: false, explanation: `לא נכון. ישנם גנים המקודדים ל-RNA בלבד (כמו tRNA ו-rRNA) ואינם מתורגמים לעולם לחלבון.` },
+            { question: `התחל (Primer) המשמש בשכפול ה-DNA נשאר כחלק קבוע מהכרומוזום גם לאחר סיום השכפול.`, answer: false, explanation: `לא נכון. התחל, העשוי מ-RNA, מוסר בהמשך התהליך (על ידי DNA פולימראז I בפרוקריוטים) ומוחלף בנוקלאוטידים של DNA.` },
+            { question: `באדם, אורך ה-DNA הכולל בתא בודד מגיע לכ-2 מטרים.`, answer: true, explanation: `נכון. זה מדגיש את החשיבות העצומה של מנגנוני אריזת ה-DNA (הנוקלאוזומים והכרומטין).` },
+            { question: `מוטציה ברצף ה-DNA משפיעה בהכרח על המבנה התלת-ממדי של הסליל הכפול.`, answer: false, explanation: `לא נכון. כל עוד פורין מוחלף בפורין ופירימידין בפירימידין (או זיווג תקין כלשהו), המבנה התלת-ממדי הבסיסי של הסליל הכפול נשמר, גם אם המידע הגנטי השתנה.` },
+            { question: `המצמד המחליק (Sliding clamp) תורם לעלייה דרסטית במספר הנוקלאוטידים המוספים לפני שהפולימראז מתנתק.`, answer: true, explanation: `נכון. הוא מגדיל את הזיקה (Processivity) מ-100 בסיסים לכ-50,000 בסיסים לכל אירוע קישור.` },
+            { question: `חלבוני SSB דורשים השקעת אנרגיה (ATP) כדי למנוע את סגירת הסליל.`, answer: false, explanation: `לא נכון. הליקאז הוא זה שדורש ATP כדי לפרום את הסליל. חלבוני SSB פשוט נקשרים פיזית ומונעים את הסגירה באמצעות חסימה מרחבית.` },
+            { question: `בכרומוזומים איוקריוטיים, השכפול מתחיל תמיד בקצה אחד ומתקדם ברצף עד לקצה השני.`, answer: false, explanation: `לא נכון. בכרומוזומים איוקריוטיים יש מספר רב של נקודות התחלה (Origins of replication) הפועלות במקביל כדי לזרז את התהליך.` },
+            { question: `נוקלאוזום מורכב מ-DNA המלופף סביב ליבה של חלבוני היסטון.`, answer: true, explanation: `נכון. הליבה מורכבת מ-8 חלבוני היסטון (אוקטמר) ומהווה את יחידת האריזה הבסיסית של הכרומטין.` },
+            { question: `קשרים קוולנטיים מחברים בין שני הגדילים של מולקולת ה-DNA לאורכה.`, answer: false, explanation: `לא נכון. הקשרים בין שני הגדילים (בין הבסיסים) הם קשרי מימן חלשים. הקשרים הקוולנטיים נמצאים רק לאורך עמוד השדרה של כל גדיל בנפרד.` },
+            { question: `לפי הדוגמה המרכזית, מידע גנטי יכול לעבור מחלבון בחזרה ל-DNA.`, answer: false, explanation: `לא נכון. הדוגמה המרכזית קובעת שזרימת המידע היא חד-סטרית: מ-DNA ל-RNA ולחלבון. חלבון אינו יכול לקודד בחזרה ל-DNA.` },
+            { question: `סוג דם O הוא דוגמה לפנוטיפ הנובע ממצב הומוזיגוטי רצסיבי.`, answer: true, explanation: `נכון. סוג דם O מופיע רק כאשר האדם נושא שני אללים רצסיביים (ii) שאינם מקודדים לאנטיגנים A או B.` },
+            { question: `תגובת הדחיסה (Condensation) המחברת נוקלאוטידים פולטת מולקולת מים כתוצר לוואי.`, answer: true, explanation: `נכון. יצירת הקשר הפוספודיאסטרי מלווה בשחרור מולקולת מים, ולכן היא נקראת תגובת דחיסה.` },
+            { question: `הגנום של צמח האורז (Oryza sativa) מכיל יותר גנים מהגנום האנושי.`, answer: true, explanation: `נכון. למרות שהאדם נחשב מורכב יותר, לאורז יש כ-38,000 גנים לעומת כ-21,000 באדם, מה שמוכיח שמספר הגנים אינו המדד היחיד למורכבות.` },
+            { question: `סינתזת מקטעי אוקזקי דורשת שימוש בפרימאז עבור כל מקטע ומקטע בנפרד.`, answer: true, explanation: `נכון. מכיוון שהסינתזה מקוטעת, כל מקטע חדש על הגדיל המאחר חייב להתחיל עם תחל RNA חדש שמספק הפרימאז.` },
+            { question: `DNA פולימראז III הוא האנזים העיקרי המבצע את פילמור ה-DNA בתאים פרוקריוטיים.`, answer: true, explanation: `נכון. בעוד שישנם מספר סוגי פולימראז, סוג III הוא זה שאחראי על סינתזת רוב הגדיל החדש.` },
+            { question: `התעלות הגדולות והקטנות (Major and Minor grooves) ב-DNA נוצרות עקב אריזתו סביב ההיסטונים.`, answer: false, explanation: `לא נכון. התעלות הן תכונה מבנית אינהרנטית של הסליל הכפול עצמו, ללא קשר לחלבוני האריזה.` },
+            { question: `האיזוטופ חנקן 15 ($N^{15}$) הוא רדיואקטיבי ומסוכן לתא.`, answer: false, explanation: `לא נכון. בניסוי מסלסון-שטאל נעשה שימוש באיזוטופים יציבים של חנקן (כבדים וקלים), ולא באיזוטופים רדיואקטיביים.` },
+            { question: `מזלג השכפול נפתח תמיד לכיוון אחד בלבד מנקודת ההתחלה (ori).`, answer: false, explanation: `לא נכון. השכפול הוא דו-כיווני. מכל נקודת התחלה (ori) נפתחים שני מזלגות שכפול הנעים בכיוונים מנוגדים ויוצרים בועת שכפול.` }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

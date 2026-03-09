@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מטבוליזם של גלוקוז ונשימה תאית</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הפקת אנרגיה מגלוקוז מתבצעת באמצעות תהליכים קטבוליים מבוקרים, הכוללים תגובות חמצון-חיזור (Redox). מטרת התהליך היא להמיר את האנרגיה האגורה בקשרים הכימיים של הגלוקוז למולקולות זמינות אנרגטית, בעיקר ATP.</p>
+                
+                <h3>תגובות חמצון-חיזור (Redox)</h3>
+                <p>תגובות אלו מבוססות על מעבר אלקטרונים. <strong>חמצון</strong> הוא אובדן אלקטרונים, ו<strong>חיזור</strong> הוא קבלת אלקטרונים. מעבר זה מלווה פעמים רבות בהעברת אטומי מימן ($H = H^+ + e^-$). החומר שמוסר אלקטרונים (ומתחמצן) נקרא <strong>חומר מחזר</strong>, והחומר שמקבל אלקטרונים (ומתחזר) נקרא <strong>חומר מחמצן</strong>. בתהליך הנשימה התאית, גלוקוז הוא החומר המחזר, וחמצן ($O_2$) הוא החומר המחמצן הסופי.</p>
+
+                <h3>שלבי המטבוליזם האווירני (Cellular Respiration)</h3>
+                <ul>
+                    <li><strong>גליקוליזה (Glycolysis):</strong> מתרחשת בציטוזול. פירוק מולקולת גלוקוז (6 פחמנים) לשתי מולקולות פירובט (3 פחמנים). התהליך מייצר נטו 2 מולקולות ATP ו-2 מולקולות NADH.</li>
+                    <li><strong>חמצון פירובט (Pyruvate Oxidation):</strong> מתרחש במטריקס של המיטוכונדריה. כל פירובט מחומצן לאצטיל קו-אנזים A (Acetyl CoA), תוך שחרור $CO_2$ ויצירת NADH.</li>
+                    <li><strong>מעגל החומצה הציטרית (Citric Acid Cycle / Krebs):</strong> מתרחש במטריקס. מסלול מעגלי בו קבוצת האצטיל מתפרקת לחלוטין. לכל מולקולת גלוקוז המעגל פועל פעמיים ומפיק: 4 $CO_2$, 6 NADH, 2 $FADH_2$, ו-2 מולקולות GTP (המומרות ל-ATP).</li>
+                    <li><strong>זרחון חמצוני (Oxidative Phosphorylation):</strong> מתרחש על הממברנה הפנימית של המיטוכונדריה. מורכב משרשרת מעבר האלקטרונים (ETC) וכימיוזמוזה. אלקטרונים מ-NADH ו-$FADH_2$ עוברים דרך קומפלקסים חלבוניים, תהליך שמשחרר אנרגיה המשמשת לשאיבת פרוטונים החוצה מהמטריקס. מפל הפרוטונים שנוצר מנוצל ליצירת ATP.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: אנרגיה ואלקטרושליליות</strong>
+                    ככל שאטום פחמן במולקולה מחומצן יותר (קשור לאטומים אלקטרושליליים כמו חמצן), כך הוא אוגר פחות אנרגיה חופשית. גלוקוז מכיל פחמנים מחוזרים רבים ולכן עשיר באנרגיה, בעוד שפחמן דו-חמצני ($CO_2$) הוא המצב המחומצן ביותר ובעל האנרגיה החופשית הנמוכה ביותר. שחרור האנרגיה נובע ממעבר אלקטרונים ממצב של פוטנציאל גבוה למצב של פוטנציאל נמוך יותר.
+                </div>
+                
+                <div class="insight-box">
+                    <strong>תובנת מפתח: מיקום התהליכים (איקריוטים מול פרוקריוטים)</strong>
+                    בעוד שבתאים איקריוטים התהליכים המתקדמים מופרדים למיטוכונדריה, בתאים פרוקריוטים (חסרי אברונים) מעגל קרבס מתרחש בציטופלזמה, ושרשרת מעבר האלקטרונים ממוקמת על גבי ממברנת התא (Plasma membrane) עצמה.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "חמצון (Oxidation)", definition: "תהליך כימי שבו חומר מאבד אלקטרון אחד או יותר." },
+            { term: "חיזור (Reduction)", definition: "תהליך כימי שבו אטום, יון או מולקולה מקבלים אלקטרון אחד או יותר." },
+            { term: "חומר מחזר (Reducing Agent)", definition: "החומר שמוסר אלקטרונים בתגובת חמצון-חיזור (ובעצמו עובר חמצון)." },
+            { term: "חומר מחמצן (Oxidizing Agent)", definition: "החומר שמקבל אלקטרונים בתגובת חמצון-חיזור (ובעצמו עובר חיזור)." },
+            { term: "אלקטרושליליות", definition: "כוח המשיכה שגרעין האטום מפעיל על אלקטרונים משותפים בקשר קוולנטי." },
+            { term: "גליקוליזה", definition: "המסלול המטבולי הראשון בפירוק גלוקוז, מתרחש בציטוזול, ומפרק גלוקוז ל-2 מולקולות פירובט." },
+            { term: "קינאז (Kinase)", definition: "אנזים המזרז העברה של קבוצת זרחה מ-ATP לסובסטרט אחר." },
+            { term: "NAD", definition: "קואנזים המשמש כנשא אלקטרונים מרכזי בתגובות חמצון-חיזור תאיות." },
+            { term: "חמצון פירובט", definition: "תהליך המקשר בין הגליקוליזה למעגל החומצה הציטרית, בו פירובט הופך לאצטיל קו-אנזים A." },
+            { term: "מעגל קרבס (Citric Acid Cycle)", definition: "מסלול מטבולי במטריקס המיטוכונדריאלי המשלים את חמצון הגלוקוז תוך שחרור פדח וטעינת נשאי אלקטרונים." },
+            { term: "זרחון חמצוני", definition: "השלב הסופי בנשימה התאית, המייצר את רוב ה-ATP באמצעות שרשרת מעבר האלקטרונים וכימיוזמוזה." },
+            { term: "כימיוזמוזה (Chemiosmosis)", definition: "צימוד דיפוזיית פרוטונים בחזרה למטריקס עם סינתזת מולקולות ATP." },
+            { term: "יוביקוינון (Q)", definition: "מולקולה שומנית הנעה בתוך השכבה הכפולה של הממברנה ומשמשת כנשא אלקטרונים בשרשרת." },
+            { term: "ציטוכרום C", definition: "חלבון הקשור בצורה רופפת לממברנה הפנימית ומשמש כנשא אלקטרונים בין קומפלקסים בשרשרת." },
+            { term: "ATP", definition: "מטבע האנרגיה העיקרי של התא, אליו מועברת האנרגיה המשתחררת מחמצון הגלוקוז." }
+        ];
+
+        const mcqData = [
+            {
+                question: "בתגובת חמצון-חיזור תאית טיפוסית, מעבר של אלקטרונים מלווה לעיתים קרובות במעבר של איזה חלקיק נוסף?",
+                options: [
+                    "אטומי חמצן",
+                    "אטומי מימן",
+                    "מולקולות מים",
+                    "קבוצות זרחה"
+                ],
+                correctIndex: 1,
+                explanation: "העברת אלקטרונים קשורה לעיתים קרובות להעברת אטומי מימן, אשר מורכבים מפרוטון ואלקטרון ($H = H^+ + e^-$)."
+            },
+            {
+                question: "איזו מהמולקולות הבאות אוגרת את כמות האנרגיה החופשית הגבוהה ביותר, בהתבסס על מצב החמצון של פחמן?",
+                options: [
+                    "חומצה פורמית ($HCOOH$)",
+                    "פורמלדהיד ($CH_2O$)",
+                    "מתאן ($CH_4$)",
+                    "פחמן דו-חמצני ($CO_2$)"
+                ],
+                correctIndex: 2,
+                explanation: "ככל שאטום הפחמן מחוזר יותר (קשור ליותר אטומי מימן שאלקטרושליליותם נמוכה), הוא אוגר יותר אנרגיה חופשית. מתאן הוא המצב המחוזר ביותר מבין האפשרויות."
+            },
+            {
+                question: "במשוואה הכוללת של חמצון גלוקוז, איזה תפקיד ממלאת מולקולת החמצן ($O_2$)?",
+                options: [
+                    "היא משמשת כחומר המחזר שמוסר אלקטרונים לגלוקוז.",
+                    "היא משמשת כחומר המחמצן שמקבל אלקטרונים בסוף התהליך.",
+                    "היא מספקת את אטומי הפחמן ליצירת פחמן דו-חמצני.",
+                    "היא מתפרקת כדי לייצר אנרגיה באופן ישיר לסינתזת ATP."
+                ],
+                correctIndex: 1,
+                explanation: "במטבוליזם של גלוקוז, גלוקוז הוא החומר המחזר (תורם האלקטרונים), והחמצן הוא החומר המחמצן (קולט האלקטרונים הסופי)."
+            },
+            {
+                question: "מהו ההבדל האנרגטי העיקרי בין המולקולה $NAD^+$ למולקולה NADH?",
+                options: [
+                    "$NAD^+$ מכילה יותר אנרגיה חופשית מכיוון שהיא מחומצנת.",
+                    "NADH מכילה יותר אנרגיה חופשית מכיוון שהיא מחוזרת ונושאת אלקטרונים.",
+                    "שתיהן מכילות אותה כמות אנרגיה, אך פועלות באברונים שונים.",
+                    "NADH משחררת אנרגיה רק כאשר היא הופכת ל-ATP ישירות בציטוזול."
+                ],
+                correctIndex: 1,
+                explanation: "NADH היא הצורה המחוזרת של הקואנזים, והיא נושאת אלקטרונים בעלי פוטנציאל אנרגטי גבוה שישמשו בהמשך בשרשרת מעבר האלקטרונים."
+            },
+            {
+                question: "היכן מתרחש מעגל החומצה הציטרית בתאים פרוקריוטים?",
+                options: [
+                    "במטריקס של המיטוכונדריה",
+                    "על הממברנה הפנימית של המיטוכונדריה",
+                    "בציטופלזמה",
+                    "על ממברנת התא (Plasma membrane)"
+                ],
+                correctIndex: 2,
+                explanation: "לתאים פרוקריוטים אין חלוקה לאברונים כמו מיטוכונדריה, ולכן מעגל החומצה הציטרית (קרבס) מתרחש אצלם בציטופלזמה."
+            },
+            {
+                question: "בתהליך הגליקוליזה, מהו תפקידו של אנזים מסוג קינאז (Kinase)?",
+                options: [
+                    "לפרק את מולקולת הגלוקוז לשתי מולקולות תלת-פחמניות.",
+                    "לזרז תגובות חמצון-חיזור תוך יצירת NADH.",
+                    "לזרז העברה של קבוצת זרחה מ-ATP לסובסטרט אחר.",
+                    "לשחרר מולקולת מים ליצירת קשר כפול."
+                ],
+                correctIndex: 2,
+                explanation: "אנזים ממשפחת הקינאזות אחראי על הוספת או הסרת קבוצות זרחה (פוספט), בדרך כלל תוך שימוש במולקולת ATP כספק הזרחה."
+            },
+            {
+                question: "מהי התפוקה נטו של מולקולות ATP מפירוק של מולקולת גלוקוז אחת בתהליך הגליקוליזה בלבד?",
+                options: [
+                    "2 מולקולות ATP",
+                    "4 מולקולות ATP",
+                    "32 מולקולות ATP",
+                    "0 מולקולות ATP"
+                ],
+                correctIndex: 0,
+                explanation: "בשלב השקעת האנרגיה נצרכות 2 מולקולות ATP, ובשלב קצירת האנרגיה מיוצרות 4. לכן, הרווח נטו הוא 2 מולקולות ATP."
+            },
+            {
+                question: "בשלב 6 של הגליקוליזה מתרחשת תגובת חמצון-חיזור. מי משמש כחומר המחמצן בתגובה זו?",
+                options: [
+                    "גלוקוז",
+                    "פירובט",
+                    "$NAD^+$",
+                    "NADH"
+                ],
+                correctIndex: 2,
+                explanation: "בשלב זה, $NAD^+$ מחמצן את תוצר הביניים ומקבל אלקטרונים (מתחזר) כדי להפוך ל-NADH, ובכך אוגר אנרגיה."
+            },
+            {
+                question: "מהו התוצר הסופי של תהליך חמצון הפירובט, אשר נכנס ישירות למעגל החומצה הציטרית?",
+                options: [
+                    "חומצה ציטרית (Citrate)",
+                    "אצטיל קו-אנזים A (Acetyl CoA)",
+                    "אוקסלואצטט (Oxaloacetate)",
+                    "פחמן דו-חמצני ($CO_2$)"
+                ],
+                correctIndex: 1,
+                explanation: "חמצון פירובט מקשר בין הגליקוליזה למעגל קרבס על ידי המרת הפירובט התלת-פחמני לאצטיל קו-אנזים A הדו-פחמני."
+            },
+            {
+                question: "כמה פעמים פועל מעגל החומצה הציטרית עבור כל מולקולת גלוקוז אחת שהחלה את תהליך הנשימה התאית?",
+                options: [
+                    "פעם אחת",
+                    "פעמיים",
+                    "ארבע פעמים",
+                    "שש פעמים"
+                ],
+                correctIndex: 1,
+                explanation: "מולקולת גלוקוז אחת (6 פחמנים) מתפרקת לשתי מולקולות פירובט (3 פחמנים כל אחת), ולכן מניבה שתי מולקולות אצטיל קו-אנזים A. כל אחת מהן מפעילה את המעגל פעם אחת."
+            },
+            {
+                question: "איזה מהבאים אינו נחשב לחומר מוצא (Input) הנכנס למעגל החומצה הציטרית?",
+                options: [
+                    "קבוצת אצטיל מ-Acetyl-CoA",
+                    "$NAD^+$",
+                    "מים ($H_2O$)",
+                    "פחמן דו-חמצני ($CO_2$)"
+                ],
+                correctIndex: 3,
+                explanation: "פחמן דו-חמצני הוא תוצר (Output) של מעגל החומצה הציטרית, המייצג את הפחמנים המחומצנים לחלוטין, ולא חומר מוצא."
+            },
+            {
+                question: "מולקולה אחת של גלוקוז עברה את התהליכים עד לסיום מעגל החומצה הציטרית (כולל). כמה מולקולות $FADH_2$ נוצרו בסך הכל עד שלב זה?",
+                options: [
+                    "0",
+                    "1",
+                    "2",
+                    "6"
+                ],
+                correctIndex: 2,
+                explanation: "מולקולות $FADH_2$ מיוצרות אך ורק במעגל קרבס. כל סיבוב של המעגל מייצר 1 $FADH_2$. מכיוון שיש שני סיבובים לכל גלוקוז, נוצרות בסך הכל 2 מולקולות."
+            },
+            {
+                question: "מהו תפקידה העיקרי של שרשרת מעבר האלקטרונים (Electron Transport Chain)?",
+                options: [
+                    "לסנתז ATP באופן ישיר מ-ADP וזרחה חופשית.",
+                    "לשאוב פרוטונים אל מחוץ למטריקס כדי ליצור מפל ריכוזים.",
+                    "לייצר מולקולות NADH ו-$FADH_2$ מחמצון של גלוקוז.",
+                    "לפרק פירובט לפחמן דו-חמצני ולמים."
+                ],
+                correctIndex: 1,
+                explanation: "השרשרת משתמשת באנרגיה המשתחררת ממעבר האלקטרונים כדי להעביר באופן פעיל פרוטונים אל מחוץ למטריקס, מה שיוצר את הכוח המניע (Proton-motive force) לסינתזת ATP מאוחר יותר."
+            },
+            {
+                question: "איזה ממרכיבי שרשרת מעבר האלקטרונים מאופיין בהיותו מולקולה שומנית (ליפיד) הנעה בחופשיות בתוך השכבה הכפולה של הממברנה?",
+                options: [
+                    "קומפלקס I",
+                    "ציטוכרום C",
+                    "יוביקוינון (Q)",
+                    "קומפלקס IV"
+                ],
+                correctIndex: 2,
+                explanation: "יוביקוינון, או קואנזים Q, אינו חלבון אלא מולקולה ליפידית הידרופובית המסוגלת לנוע בתוך הליבה השומנית של הממברנה הפנימית."
+            },
+            {
+                question: "מה יקרה לתהליך הנשימה התאית אם התא ימצא בסביבה חסרת חמצן לחלוטין (תנאים אנאירוביים)?",
+                options: [
+                    "מעגל קרבס ושרשרת מעבר האלקטרונים ימשיכו לפעול בעזרת חומר מחמצן חלופי מהציטוזול.",
+                    "שרשרת מעבר האלקטרונים תיעצר, מה שיגרום לעצירת מעגל קרבס עקב מחסור ב-$NAD^+$ מחומצן.",
+                    "הגליקוליזה תעבור להתבצע בתוך המיטוכונדריה כדי להגן על התא.",
+                    "התא יפיק יותר ATP מכל מולקולת גלוקוז כדי לפצות על חוסר החמצן."
+                ],
+                correctIndex: 1,
+                explanation: "החמצן הוא קולט האלקטרונים הסופי. בלעדיו השרשרת נתקעת, נשאי האלקטרונים נשארים מחוזרים (כ-NADH), ואין אספקה של $NAD^+$ הדרוש להמשך פעילות מעגל קרבס."
+            },
+            {
+                question: "מהי המשמעות של המונח כימיוזמוזה (Chemiosmosis) בהקשר של זרחון חמצוני?",
+                options: [
+                    "פירוק כימי של מים לאטומי חמצן ומימן.",
+                    "מעבר של אלקטרונים דרך קומפלקסים חלבוניים ליצירת חום.",
+                    "צימוד בין דיפוזיה של פרוטונים בחזרה למטריקס לבין סינתזת ATP.",
+                    "העברה פעילה של גלוקוז דרך ממברנת התא נגד מפל הריכוזים."
+                ],
+                correctIndex: 2,
+                explanation: "כימיוזמוזה היא התהליך שבו האנרגיה הפוטנציאלית האגורה במפל הפרוטונים מנוצלת כאשר הם זורמים חזרה למטריקס (דרך האנזים ATP סינתאז) כדי לייצר ATP."
+            },
+            {
+                question: "היכן ממקומת שרשרת מעבר האלקטרונים בתאים פרוקריוטים?",
+                options: [
+                    "בממברנה הפנימית של המיטוכונדריה",
+                    "בציטופלזמה",
+                    "על ממברנת התא (Plasma membrane)",
+                    "מחוץ לתא לחלוטין"
+                ],
+                correctIndex: 2,
+                explanation: "מכיוון שאין להם מיטוכונדריה, החלבונים המרכיבים את שרשרת מעבר האלקטרונים משובצים בממברנת התא עצמה."
+            },
+            {
+                question: "כאשר קומפלקס חלבוני בשרשרת מעבר האלקטרונים מעביר אלקטרון לקומפלקס הבא, איזה תהליך מתרחש בו עצמו?",
+                options: [
+                    "הוא עובר חיזור.",
+                    "הוא עובר חמצון.",
+                    "הוא מתפרק לחומצות אמינו.",
+                    "הוא קולט מולקולת פחמן דו-חמצני."
+                ],
+                correctIndex: 1,
+                explanation: "מסירת אלקטרון פירושה איבוד אלקטרון, ולכן הקומפלקס המוסר עובר תהליך של חמצון (בעוד הקומפלקס המקבל עובר חיזור)."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מתאר נכונה את מאזן הפחמנים בפירוק מולקולת גלוקוז אחת עד סיום מעגל קרבס?",
+                options: [
+                    "6 פחמנים בגלוקוז הופכים ל-2 מולקולות פירובט, שפולטות יחד 6 פחמנים כ-$CO_2$ בחמצון הפירובט.",
+                    "2 פחמנים נפלטים כ-$CO_2$ בחמצון פירובט, ו-4 פחמנים נפלטים כ-$CO_2$ במעגל קרבס.",
+                    "כל 6 הפחמנים של הגלוקוז נפלטים במהלך הגליקוליזה בציטוזול.",
+                    "הפחמנים משולבים לתוך מולקולות ה-ATP ואינם נפלטים כגז."
+                ],
+                correctIndex: 1,
+                explanation: "מתוך 6 הפחמנים המקוריים, 2 משתחררים כ-$CO_2$ בשלב מעבר הפירובט לאצטיל קו-אנזים A (אחד מכל פירובט), וה-4 הנותרים משתחררים במעגל קרבס (שניים בכל סיבוב)."
+            },
+            {
+                question: "אם נשווה בין תהליך תסיסה (Fermentation) לנשימה תאית אווירנית, מהו ההבדל העיקרי מבחינת תוצרים?",
+                options: [
+                    "תסיסה גורמת לחמצון מלא של הגלוקוז ופליטת מים.",
+                    "נשימה אווירנית מייצרת תרכובות אורגניות כתוצר פסולת.",
+                    "תסיסה מייצרת כמות קטנה בהרבה של אנרגיה (2 ATP) וחמצון חלקי של גלוקוז.",
+                    "נשימה אווירנית אינה דורשת את שלב הגליקוליזה."
+                ],
+                correctIndex: 2,
+                explanation: "תסיסה היא תהליך אנאירובי שבו הגלוקוז מתחמצן באופן חלקי בלבד, ומפיק רק את 2 מולקולות ה-ATP מהגליקוליזה, בעוד נשימה אווירנית מפיקה כ-32 ATP."
+            },
+            {
+                question: "האנרגיה המשתחררת מתגובת החמצון של NADH ל-$NAD^+$ היא כ-52.4 קילוקלוריות למול. מה ניתן להסיק מכך לגבי מולקולת ה-NADH?",
+                options: [
+                    "היא מכילה פחות אנרגיה ממולקולת ATP בודדת.",
+                    "היא ריקה מאנרגיה וצריכה להיטען במיטוכונדריה.",
+                    "היא מהווה מארז אנרגיה גדול משמעותית ממולקולת ATP ויכולה לממן יצירת מספר מולקולות ATP.",
+                    "היא אינה יכולה לשמש בתהליכים ביולוגיים ללא נוכחות של חמצן בציטוזול."
+                ],
+                correctIndex: 2,
+                explanation: "מכיוון שפירוק ATP משחרר רק כ-7.3 קילוקלוריות למול, האנרגיה המשתחררת מחמצון NADH (52.4 קק״ל) גדולה בהרבה, ומספיקה ליצירת מספר מולקולות ATP דרך שרשרת מעבר האלקטרונים."
+            },
+            {
+                question: "מדוע העברת האלקטרונים בשרשרת מעבר האלקטרונים נעשית בסדרה של שלבים דרך קומפלקסים שונים, ולא בתגובה אחת ישירה לחמצן?",
+                options: [
+                    "כדי לאפשר לתא להפיק אור במקום חום.",
+                    "כדי למנוע שחרור אנרגיה פתאומי כחום, ולאפשר שחרור מבוקר לטובת שאיבת פרוטונים יעילה.",
+                    "מכיוון שהחמצן אינו אלקטרושלילי מספיק כדי למשוך את האלקטרונים ישירות מ-NADH.",
+                    "כדי לאפשר לציטוכרום C להפוך ל-ATP באופן עצמאי."
+                ],
+                correctIndex: 1,
+                explanation: "שחרור האנרגיה בשלבים קטנים מאפשר צימוד יעיל של האנרגיה לעבודה תאית (שאיבת פרוטונים ליצירת מפל), ומונע פליטת כל האנרגיה בבת אחת כחום בלתי ניתן לניצול."
+            },
+            {
+                question: "איזה מהתהליכים הבאים אינו מתרחש כלל בתוך המיטוכונדריה בתא איקריוטי?",
+                options: [
+                    "חמצון פירובט",
+                    "מעגל קרבס",
+                    "גליקוליזה",
+                    "כימיוזמוזה"
+                ],
+                correctIndex: 2,
+                explanation: "הגליקוליזה היא השלב היחיד מבין אלו שמתרחש באופן בלעדי בציטוזול (הנוזל התוך-תאי) מחוץ למיטוכונדריה."
+            },
+            {
+                question: "באיזה שלב של המטבוליזם נוצרות מולקולות המים ($H_2O$) כתוצר לוואי?",
+                options: [
+                    "בגליקוליזה, כאשר גלוקוז נחתך לשניים.",
+                    "במעגל קרבס, כאשר אצטיל קו-אנזים A מתפרק.",
+                    "בסוף שרשרת מעבר האלקטרונים, כאשר החמצן קולט אלקטרונים ופרוטונים.",
+                    "בחמצון פירובט, כאשר משתחרר פחמן דו-חמצני."
+                ],
+                correctIndex: 2,
+                explanation: "החמצן המולקולרי ($O_2$) הוא קולט האלקטרונים הסופי. כאשר הוא מקבל את האלקטרונים בסוף השרשרת, הוא קושר גם פרוטונים מהסביבה ויוצר מים."
+            },
+            {
+                question: "איזו מולקולה פועלת כנקודת החיבור (הצומת) בין הגליקוליזה למעגל החומצה הציטרית?",
+                options: [
+                    "G3P (גליצרלדהיד 3-פוספט)",
+                    "אצטיל קו-אנזים A",
+                    "NADH",
+                    "אוקסלואצטט"
+                ],
+                correctIndex: 1,
+                explanation: "פירובט מהגליקוליזה מומר לאצטיל קו-אנזים A. מולקולה זו היא זו שנכנסת בפועל לתוך מעגל קרבס על ידי התחברות לאוקסלואצטט."
+            },
+            {
+                question: "מה מניע באופן ישיר את סיבוב החלק הרוטורי של האנזים ATP סינתאז כדי לייצר ATP?",
+                options: [
+                    "מעבר של אלקטרונים דרך החלבון.",
+                    "דיפוזיה של מולקולות מים מהמטריקס החוצה.",
+                    "הזרימה של פרוטונים ($H^+$) במורד מפל הריכוזים שלהם חזרה למטריקס.",
+                    "הידרוליזה של מולקולות GTP שנוצרו במעגל קרבס."
+                ],
+                correctIndex: 2,
+                explanation: "מפל הריכוזים של הפרוטונים שנוצר על ידי שרשרת מעבר האלקטרונים מספק את הכוח המניע (Proton-motive force). זרימתם חזרה דרך ה-ATP סינתאז מפעילה אותו מכנית."
+            },
+            {
+                question: "כמה מולקולות NADH נוצרות בסך הכל מחמצון מלא של מולקולת גלוקוז אחת, מתחילת הגליקוליזה ועד סוף מעגל קרבס?",
+                options: [
+                    "2",
+                    "6",
+                    "8",
+                    "10"
+                ],
+                correctIndex: 3,
+                explanation: "הפירוט הוא: 2 מהגליקוליזה, 2 מחמצון פירובט, ו-6 ממעגל קרבס (3 בכל סיבוב, כפול שני סיבובים). סך הכל 10 מולקולות NADH."
+            },
+            {
+                question: "האם מולקולת $FADH_2$ תורמת אלקטרונים לאותו קומפלקס חלבוני כמו מולקולת NADH?",
+                options: [
+                    "כן, שתיהן תורמות לקומפלקס I.",
+                    "לא, $FADH_2$ תורמת אלקטרונים לקומפלקס II, בעוד NADH תורמת לקומפלקס I.",
+                    "כן, שתיהן תורמות ישירות לציטוכרום C.",
+                    "לא, $FADH_2$ מעבירה אלקטרונים ישירות לחמצן ללא מעבר בקומפלקסים."
+                ],
+                correctIndex: 1,
+                explanation: "$FADH_2$ מכילה מעט פחות אנרגיה מ-NADH ולכן עוקפת את קומפלקס I ומוסרת את האלקטרונים שלה לקומפלקס II, מה שמוביל לשאיבת פחות פרוטונים בסך הכל."
+            },
+            {
+                question: "מהו התפקיד של המולקולה אוקסלואצטט (Oxaloacetate) במעגל קרבס?",
+                options: [
+                    "היא משמשת כאנזים המפרק את האצטיל קו-אנזים A.",
+                    "היא המולקולה הארבע-פחמנית שמתחברת לאצטיל קו-אנזים A כדי ליצור ציטראט ולהתחיל את המעגל מחדש.",
+                    "היא תוצר הפסולת הסופי שמופרש מהמיטוכונדריה.",
+                    "היא נשאית אלקטרונים המחליפה את ה-NAD במקרה של חוסר בחמצן."
+                ],
+                correctIndex: 1,
+                explanation: "אוקסלואצטט היא המולקולה הממתינה בסוף המעגל. היא מתחברת לקבוצת האצטיל (2 פחמנים) ליצירת מולקולה בעלת 6 פחמנים (ציטראט), וכך סוגרת את המעגל."
+            },
+            {
+                question: "איזו תופעה מתארת את הקשר 'OIL RIG' בהקשר של כימיה תאית?",
+                options: [
+                    "חמצון הוא אובדן אלקטרונים, חיזור הוא קבלת אלקטרונים.",
+                    "חמצן מעורב תמיד, חיזור אינו דורש חמצן.",
+                    "חומר אורגני מאבד זרחה, חומר אי-אורגני מקבל זרחה.",
+                    "חמצון מתרחש רק במיטוכונדריה, חיזור בציטוזול."
+                ],
+                correctIndex: 0,
+                explanation: "ראשי התיבות באנגלית מסייעים לזכור: Oxidation Is Losing (electrons), Reduction Is Gaining (electrons)."
+            },
+            {
+                question: "מהו המניע העיקרי לזרימת האלקטרונים לאורך שרשרת מעבר האלקטרונים, מקומפלקס I ועד לחמצן?",
+                options: [
+                    "הדחייה החשמלית בין הפרוטונים במטריקס.",
+                    "העלייה ההדרגתית באלקטרושליליות של מרכיבי השרשרת, כאשר החמצן הוא האלקטרושלילי ביותר.",
+                    "כוח המשיכה של ה-ATP סינתאז שמושך את האלקטרונים אליו.",
+                    "הירידה בטמפרטורה לאורך הממברנה הפנימית."
+                ],
+                correctIndex: 1,
+                explanation: "אלקטרונים זורמים באופן ספונטני מחומרים בעלי אלקטרושליליות נמוכה (כמו NADH) לחומרים בעלי אלקטרושליליות גבוהה יותר, כאשר החמצן בסוף השרשרת מפעיל את כוח המשיכה החזק ביותר."
+            },
+            {
+                question: "מהי המשמעות של השלב המכונה 'שלב השקעת האנרגיה' (Energy-investing reactions) בתחילת הגליקוליזה?",
+                options: [
+                    "התא משקיע חום כדי לזרז את התגובה הכימית.",
+                    "התא משתמש ב-2 מולקולות ATP כדי לזרחן את הגלוקוז ולערער את יציבותו, מה שמאפשר את פירוקו.",
+                    "התא מקריב מולקולות NADH כדי להפוך אותן ל-$NAD^+$.",
+                    "התא שואב פרוטונים נגד מפל הריכוזים כדי להכניס את הגלוקוז."
+                ],
+                correctIndex: 1,
+                explanation: "כדי להתחיל את תהליך פירוק הגלוקוז, התא חייב תחילה להשקיע אנרגיה בצורת 2 מולקולות ATP אשר מוסרות קבוצות זרחה לגלוקוז, מה שמקל על ביקועו בהמשך."
+            },
+            {
+                question: "האם תהליך הגליקוליזה דורש נוכחות של חמצן מולקולרי ($O_2$) כדי להתרחש?",
+                options: [
+                    "כן, החמצן נדרש כקולט אלקטרונים ליצירת הפירובט.",
+                    "כן, ללא חמצן האנזימים בציטוזול עוברים דנטורציה.",
+                    "לא, הגליקוליזה היא תהליך אנאירובי היכול להתרחש בין אם יש חמצן ובין אם אין.",
+                    "לא, הגליקוליזה משתמשת בפחמן דו-חמצני במקום חמצן."
+                ],
+                correctIndex: 2,
+                explanation: "הגליקוליזה היא תהליך קדום מבחינה אבולוציונית ואינה דורשת חמצן כלל. היא השלב המשותף גם לנשימה אווירנית וגם לתסיסה אנאירובית."
+            },
+            {
+                question: "כיצד מוגדר חומר כ'מחוזר' יותר בהקשר של מטבוליזם של פחמימות?",
+                options: [
+                    "יש לו יותר קשרים לאטומי חמצן ופחות קשרים לאטומי מימן.",
+                    "יש לו יותר קשרים לאטומי מימן ופחות קשרים לאטומי חמצן.",
+                    "המטען החשמלי הכללי שלו חיובי מאוד.",
+                    "הוא איבד את כל האלקטרונים החופשיים שלו."
+                ],
+                correctIndex: 1,
+                explanation: "מכיוון שמימן פחות אלקטרושלילי מפחמן, קשר פחמן-מימן משמעותו שהפחמן 'מחזיק' באלקטרונים קרוב אליו. לכן, מולקולה עשירה במימנים (וענייה בחמצן) נחשבת מחוזרת ועשירה באנרגיה."
+            },
+            {
+                question: "איזה מהמשפטים הבאים מסכם בצורה הטובה ביותר את הקשר בין שרשרת מעבר האלקטרונים ל-ATP סינתאז?",
+                options: [
+                    "שרשרת מעבר האלקטרונים מייצרת ATP, וה-ATP סינתאז מפרק אותו לאנרגיה.",
+                    "שרשרת מעבר האלקטרונים יוצרת מפל פרוטונים, וה-ATP סינתאז מנצל את המפל הזה לייצור ATP.",
+                    "ה-ATP סינתאז מעביר אלקטרונים לשרשרת מעבר האלקטרונים כדי לשאוב פרוטונים.",
+                    "אין קשר ביניהם; הם פועלים באברונים שונים לחלוטין."
+                ],
+                correctIndex: 1,
+                explanation: "זהו תהליך הכימיוזמוזה: השרשרת בונה את הכוח המניע (מפל הפרוטונים), והאנזים ATP סינתאז מנצל את הכוח הזה כשהפרוטונים חוזרים דרכו."
+            },
+            {
+                question: "מהו התוצר של פירוק הפחמן המחומצן לחלוטין בתום נשימה תאית של גלוקוז?",
+                options: [
+                    "מים ($H_2O$)",
+                    "חומצת חלב (Lactate)",
+                    "פחמן דו-חמצני ($CO_2$)",
+                    "אצטיל קו-אנזים A"
+                ],
+                correctIndex: 2,
+                explanation: "במהלך חמצון הפירובט ומעגל קרבס, אטומי הפחמן של הגלוקוז מתחמצנים לחלוטין ומשתחררים כגז פחמן דו-חמצני, שהוא בעל האנרגיה החופשית הנמוכה ביותר."
+            },
+            {
+                question: "אם רעלן מסוים יחורר את הממברנה הפנימית של המיטוכונדריה כך שפרוטונים יוכלו לדלוף בחופשיות חזרה למטריקס מבלי לעבור דרך ATP סינתאז, מה תהיה התוצאה הסבירה ביותר?",
+                options: [
+                    "ייצור ה-ATP ייפסק או יואט משמעותית, אך צריכת החמצן עשויה להמשך ואף לגבור.",
+                    "שרשרת מעבר האלקטרונים תפסיק לפעול מיד.",
+                    "התא יפיק יותר ATP כיוון שהפרוטונים נעים מהר יותר.",
+                    "הגליקוליזה תעבור למיטוכונדריה כדי לפצות על אובדן האנרגיה."
+                ],
+                correctIndex: 0,
+                explanation: "המפל החשמלי-כימי יהרס (Uncoupling). שרשרת מעבר האלקטרונים תמשיך לעבוד ולצרוך חמצן כדי לנסות לבנות את המפל, אך מכיוון שהפרוטונים עוקפים את ה-ATP סינתאז, האנרגיה תשתחרר כחום ולא תיווצר ATP."
+            },
+            {
+                question: "איזה סוג של עבודה תאית מתבצע על ידי קומפלקסים I, III ו-IV בשרשרת מעבר האלקטרונים?",
+                options: [
+                    "הידרוליזה של ATP",
+                    "סינתזה של פחמימות",
+                    "העברה פעילה (Active transport) של פרוטונים נגד מפל הריכוזים",
+                    "דיפוזיה מוקלת של חמצן אל תוך התא"
+                ],
+                correctIndex: 2,
+                explanation: "קומפלקסים אלו משתמשים באנרגיה המשתחררת ממעבר האלקטרונים כדי לבצע עבודה של שאיבת פרוטונים מהמטריקס לחלל הבין-ממברנלי, תהליך הדורש אנרגיה (העברה פעילה)."
+            },
+            {
+                question: "בתא איקריוטי, כיצד מגיע פירובט שנוצר בגליקוליזה אל המקום שבו מתרחש מעגל קרבס?",
+                options: [
+                    "הוא נשאר בציטוזול, שם מתרחש גם מעגל קרבס.",
+                    "הוא משונע באופן פעיל לתוך המטריקס של המיטוכונדריה.",
+                    "הוא הופך ל-ATP וחוצה את הממברנה בדיפוזיה.",
+                    "הוא נישא על ידי ציטוכרום C אל הממברנה הפנימית."
+                ],
+                correctIndex: 1,
+                explanation: "הגליקוליזה מתרחשת בציטוזול. הפירובט שנוצר חייב להיכנס לתוך המיטוכונדריה (למטריקס) כדי לעבור חמצון לאצטיל קו-אנזים A ולהיכנס למעגל קרבס."
+            },
+            {
+                question: "מדוע העברת קבוצת זרחה (פוספט) למולקולה, כפי שנעשה על ידי קינאז, היא משמעותית מבחינה אנרגטית?",
+                options: [
+                    "כי קבוצת הזרחה הופכת את המולקולה לקטנה יותר וקלה לתנועה.",
+                    "כי העברת הזרחה מ-ATP משחררת אנרגיה ומשנה לעיתים קרובות את המבנה והריאקטיביות של המולקולה המקבלת.",
+                    "כי זרחה מונעת מהמולקולה להתחמצן בשרשרת מעבר האלקטרונים.",
+                    "כי הזרחה סופחת אליה אלקטרונים והופכת לחומר מחמצן חזק."
+                ],
+                correctIndex: 1,
+                explanation: "זרחון של סובסטרט (על ידי קינאז) מוסיף לו קבוצה בעלת מטען שלילי ורמת אנרגיה גבוהה, מה שפעמים רבות מערער את יציבות הסובסטרט ומאפשר לו לעבור תגובות כימיות שקודם לא היו אפשריות."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "חמצון פירובט הוא שלב המתרחש בציטוזול לפני הכניסה למיטוכונדריה.",
+                answer: false,
+                explanation: "חמצון פירובט מתרחש בתוך המטריקס של המיטוכונדריה, לאחר שהפירובט נכנס אליה מהציטוזול."
+            },
+            {
+                question: "בתגובת חמצון-חיזור, החומר המחזר הוא זה שמאבד אלקטרונים.",
+                answer: true,
+                explanation: "נכון. החומר המחזר גורם לחומר אחר להתחזר על ידי כך שהוא מוסר לו אלקטרונים, ולכן הוא עצמו עובר תהליך של חמצון (איבוד אלקטרונים)."
+            },
+            {
+                question: "חמצן ($O_2$) הוא קולט האלקטרונים הסופי בשרשרת מעבר האלקטרונים בנשימה אווירנית.",
+                answer: true,
+                explanation: "נכון. בגלל האלקטרושליליות הגבוהה שלו, החמצן יושב בסוף השרשרת, קולט את האלקטרונים (יחד עם פרוטונים) ויוצר מולקולות מים."
+            },
+            {
+                question: "גליקוליזה מפיקה יותר מולקולות ATP ממעגל קרבס ושרשרת מעבר האלקטרונים יחד.",
+                answer: false,
+                explanation: "גליקוליזה מפיקה רווח נטו של 2 ATP בלבד, בעוד שאר השלבים (בעיקר הזרחון החמצוני) מפיקים כ-30 מולקולות ATP נוספות."
+            },
+            {
+                question: "בתאים פרוקריוטים, שרשרת מעבר האלקטרונים ממוקמת על גבי ממברנת התא (Plasma membrane).",
+                answer: true,
+                explanation: "נכון. מכיוון שלפרוקריוטים אין חלוקה לאברונים פנימיים כמו מיטוכונדריה, הממברנה שעוטפת את התא משמשת כמצע לחלבוני השרשרת."
+            },
+            {
+                question: "פחמן דו-חמצני ($CO_2$) הוא הצורה המחוזרת ביותר של פחמן, ולכן הוא אוגר אנרגיה רבה.",
+                answer: false,
+                explanation: "ההפך הוא הנכון. $CO_2$ הוא הצורה המחומצנת ביותר של פחמן, ולכן הוא מכיל את כמות האנרגיה החופשית הנמוכה ביותר."
+            },
+            {
+                question: "מעגל החומצה הציטרית נקרא גם מעגל קרבס (Krebs cycle).",
+                answer: true,
+                explanation: "נכון. המעגל נקרא על שם הנס קרבס שגילה אותו, וכן נקרא מעגל TCA (Tricarboxylic acid cycle)."
+            },
+            {
+                question: "בשלב השקעת האנרגיה של הגליקוליזה, התא מייצר 4 מולקולות ATP.",
+                answer: false,
+                explanation: "בשלב השקעת האנרגיה התא צורך (משתמש ב-) 2 מולקולות ATP. ייצור ה-ATP מתרחש בשלב קצירת האנרגיה (Energy-harvesting)."
+            },
+            {
+                question: "מולקולת $NAD^+$ היא הצורה המחומצנת של הקואנזים.",
+                answer: true,
+                explanation: "נכון. כאשר $NAD^+$ קולט אלקטרונים (ופרוטון), הוא עובר חיזור והופך ל-NADH."
+            },
+            {
+                question: "ציטוכרום C הוא חלבון טרנס-ממברנלי החוצה את הממברנה הפנימית של המיטוכונדריה מצד לצד.",
+                answer: false,
+                explanation: "ציטוכרום C קשור בצורה רופפת (Loosely attached) לממברנה ואינו חלבון טרנס-ממברנלי מלא כמו קומפלקסים I, III ו-IV."
+            },
+            {
+                question: "תהליך הכימיוזמוזה דורש השקעה ישירה של מולקולות ATP כדי לשאוב פרוטונים.",
+                answer: false,
+                explanation: "הכימיוזמוזה מתארת את השלב שבו פרוטונים זורמים במורד המפל שלהם כדי *לייצר* ATP. שאיבת הפרוטונים שקדמה לכך מונעה על ידי אנרגיה ממעבר אלקטרונים, לא מ-ATP."
+            },
+            {
+                question: "מולקולת גלוקוז אחת מניבה שתי מולקולות פירובט בסוף הגליקוליזה.",
+                answer: true,
+                explanation: "נכון. גלוקוז הוא סוכר בעל 6 פחמנים, והוא מתבקע לשתי מולקולות פירובט, שכל אחת מהן מכילה 3 פחמנים."
+            },
+            {
+                question: "האנזים קינאז מעורב בהסרת קבוצות זרחה מ-ATP והעברתן למולקולות אחרות.",
+                answer: true,
+                explanation: "נכון. קינאזות הם אנזימים המקטלזים העברת קבוצת פוספט (זרחון), בדרך כלל תוך שימוש ב-ATP כתורם הפוספט."
+            },
+            {
+                question: "רק תאים איקריוטים מסוגלים לבצע גליקוליזה.",
+                answer: false,
+                explanation: "גליקוליזה היא תהליך אוניברסלי שמתרחש בציטוזול גם של תאים איקריוטים וגם של תאים פרוקריוטים."
+            },
+            {
+                question: "מעגל קרבס מייצר ישירות מולקולות $FADH_2$.",
+                answer: true,
+                explanation: "נכון. בכל סיבוב של מעגל קרבס מיוצרת מולקולה אחת של $FADH_2$ (וסך הכל 2 מולקולות לכל גלוקוז)."
+            },
+            {
+                question: "אלקטרושליליות של חמצן נמוכה מזו של פחמן.",
+                answer: false,
+                explanation: "חמצן הוא אחד היסודות האלקטרושליליים ביותר בטבע, והאלקטרושליליות שלו גבוהה משמעותית מזו של פחמן ומימן."
+            },
+            {
+                question: "יוביקוינון (Q) הוא קומפלקס חלבוני גדול הממוקם במטריקס.",
+                answer: false,
+                explanation: "יוביקוינון הוא מולקולה ליפידית (שומנית) קטנה הנעה בחופשיות בתוך השכבה הכפולה של הממברנה הפנימית."
+            },
+            {
+                question: "כל מולקולת NADH שמתחמצנת בשרשרת מעבר האלקטרונים משחררת כ-52.4 קילוקלוריות למול.",
+                answer: true,
+                explanation: "נכון. זוהי תגובה אקסרגונית מאוד המספקת אנרגיה רבה לפעולת משאבות הפרוטונים בשרשרת."
+            },
+            {
+                question: "בתהליך התסיסה (Fermentation), פירובט מחומצן לחלוטין לפחמן דו-חמצני ומים.",
+                answer: false,
+                explanation: "בתסיסה יש חמצון חלקי בלבד. התוצרים הם תרכובות אורגניות (כמו חומצת חלב או אתנול) ופדח, אך לא מים (שנוצרים רק בשרשרת מעבר האלקטרונים עם חמצן)."
+            },
+            {
+                question: "חמצון וחיזור תמיד מתרחשים יחד בתגובות כימיות.",
+                answer: true,
+                explanation: "נכון. לא ניתן לאבד אלקטרונים (חמצון) מבלי שחומר אחר יקלוט אותם (חיזור)."
+            },
+            {
+                question: "חומרים שהפחמן בהם קשור ליותר אטומי מימן נחשבים לעשירים יותר באנרגיה חופשית.",
+                answer: true,
+                explanation: "נכון. קשרי פחמן-מימן מאפיינים מצב מחוזר, שבו האלקטרונים נמצאים ברמת אנרגיה גבוהה יותר מאשר כשהם קשורים לחמצן אלקטרושלילי."
+            },
+            {
+                question: "הפיכת פירובט לאצטיל קו-אנזים A מלווה בפליטה של פחמן דו-חמצני.",
+                answer: true,
+                explanation: "נכון. פירובט הוא מולקולה תלת-פחמנית, ואצטיל הוא דו-פחמני. הפחמן החסר משתחרר כ-$CO_2$."
+            },
+            {
+                question: "בתאים איקריוטים, כל אנזימי מעגל קרבס נמצאים בציטוזול.",
+                answer: false,
+                explanation: "בתאים איקריוטים, אנזימי מעגל קרבס נמצאים במטריקס (החלל הפנימי) של המיטוכונדריה."
+            },
+            {
+                question: "פרוטונים נשאבים מהמטריקס אל החלל הבין-ממברנלי בניגוד למפל הריכוזים שלהם.",
+                answer: true,
+                explanation: "נכון. זהו תהליך של העברה פעילה (Active transport) הדורש אנרגיה, המסופקת על ידי זרימת האלקטרונים בשרשרת."
+            },
+            {
+                question: "בסוף מעגל החומצה הציטרית, המולקולה אוקסלואצטט מתפרקת ונעלמת.",
+                answer: false,
+                explanation: "אוקסלואצטט היא מולקולה הממוחזרת במעגל. היא מתחברת לאצטיל-CoA בתחילת המעגל ונוצרת מחדש בסופו כדי לקלוט קבוצת אצטיל חדשה."
+            },
+            {
+                question: "ATP מכיל יותר אנרגיה חופשית למול בהשוואה ל-NADH.",
+                answer: false,
+                explanation: "NADH מכיל הרבה יותר אנרגיה (כ-52.4 קק״ל למול בעת חמצון) בהשוואה לפירוק הזרחה ב-ATP (כ-7.3 קק״ל למול)."
+            },
+            {
+                question: "גליקוליזה מורכבת מ-10 תגובות כימיות המזורזות על ידי אנזימים שונים.",
+                answer: true,
+                explanation: "נכון. המסלול מורכב מ-10 שלבים עוקבים, כאשר כל שלב מזורז על ידי אנזים ספציפי."
+            },
+            {
+                question: "קומפלקס II בשרשרת מעבר האלקטרונים אינו חלבון טרנס-ממברנלי.",
+                answer: true,
+                explanation: "נכון. מתוך 4 הקומפלקסים, קומפלקס II הוא היחיד שאינו חוצה את הממברנה במלואה ואינו שואב פרוטונים. הוא מקבל אלקטרונים מ-$FADH_2$."
+            },
+            {
+                question: "ללא נוכחות חמצן, מעגל קרבס ימשיך לפעול כרגיל בתא איקריוטי.",
+                answer: false,
+                explanation: "למרות שחמצן לא משתתף ישירות במעגל קרבס, ללא חמצן שרשרת האלקטרונים נעצרת, לא נוצר $NAD^+$ מחומצן, והמעגל נתקע מחוסר נשאים פנויים."
+            },
+            {
+                question: "הכוח המניע של הפרוטונים (Proton-motive force) נוצר רק בגלל הבדלי הריכוזים הכימיים, ללא קשר למטען חשמלי.",
+                answer: false,
+                explanation: "הכוח נובע ממפל אלקטרוכימי: גם הבדל בריכוז הפרוטונים (pH) וגם הבדל במטען החשמלי (הפרוטונים טעונים חיובית) משני צידי הממברנה."
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>

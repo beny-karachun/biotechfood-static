@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Glassmorphism Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Glassmorphism Containers --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+            animation: pulse 4s infinite;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+        
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+        
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+        
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+            50% { box-shadow: 0 0 15px 0 rgba(168, 85, 247, 0.2); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מעגל התא האיוקריוטי, מיטוזה ומיוזה</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>מעגל התא האיוקריוטי מתאר את רצף האירועים המוביל לחלוקת תא אחד לשני תאים. הוא מחולק לשני שלבים עיקריים: <strong>אינטרפזה</strong> (Interphase), שבה התא מבלה את רוב זמנו וכוללת את שלבי הגידול ושכפול ה-DNA, ושלב ה-<strong>M</strong> (Mitotic phase), הכולל את חלוקת הגרעין (מיטוזה) וחלוקת הציטופלזמה (ציטוקינזה).</p>
+                
+                <h3>שלבי האינטרפזה (Interphase)</h3>
+                <ul>
+                    <li><strong>G1:</strong> שלב הגדילה הראשון. תאים שאינם מתחלקים נעצרים בשלב זה ועוברים למצב הנקרא <strong>G0</strong> (תאים ממוינים ובוגרים).</li>
+                    <li><strong>S (Synthesis):</strong> שלב שכפול ה-DNA. הכרומטידות האחיות מוחזקות יחד באמצעות חלבון <strong>קוהזין</strong> (Cohesin) באזור הצנטרומר. בשלב זה משוכפל גם הצנטרוסום.</li>
+                    <li><strong>G2:</strong> שלב הגדילה השני, הכנה לקראת המיטוזה.</li>
+                </ul>
+
+                <h3>מיטוזה (Mitosis) - חלוקה משמרת</h3>
+                <p>המיטוזה מובילה ליצירת שני תאי בת הזהים גנטית לתא האם, עם אותו מספר כרומוזומים. התהליך מורכב מחמישה שלבים (PPMAT):</p>
+                <ul>
+                    <li><strong>פרופזה (Prophase):</strong> ה-DNA נדחס לכרומוזומים נראים לעין בעזרת חלבוני <strong>קונדנסין</strong> (Condensin). הגרעינון נעלם, והצנטרוזומים נעים לקטבים ליצירת הכישור.</li>
+                    <li><strong>פרומטפזה (Prometaphase):</strong> מעטפת הגרעין מתפרקת. מיקרוטובולים מתחברים לקינטוכור (Kinetochore) שעל הכרומטידות.</li>
+                    <li><strong>מטפזה (Metaphase):</strong> הכרומוזומים מסתדרים במישור המשווה. קיימת נקודת בקרה (Spindle assembly checkpoint) המוודאת שכל הכרומוזומים מחוברים לכישור לפני המעבר לשלב הבא.</li>
+                    <li><strong>אנפזה (Anaphase):</strong> אנזים בשם <strong>ספראז</strong> (Separase) מפרק את הקוהזין. הכרומטידות האחיות נפרדות ונעות לקטבים מנוגדים בעזרת מנועים מולקולריים (דינאין וקינסין) והתקצרות המיקרוטובולים.</li>
+                    <li><strong>טלופזה (Telophase):</strong> הכישור מתפרק, הכרומוזומים נפתחים חזרה לכרומטין, ומעטפת הגרעין והגרעינון נוצרים מחדש.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: מנגנוני פירוק והפרדה</strong>
+                    הפרדת הכרומטידות באנפזה אינה מתרחשת מעצמה. היא תלויה בפירוק אקטיבי של חלבון הקוהזין (המחזיק את הכרומטידות) על ידי האנזים ספראז. ספראז עצמו מבוקר בקפידה ומופעל רק כאשר כל הכרומוזומים מסודרים כראוי במטפזה (בקרת APC).
+                </div>
+
+                <h3>ציטוקינזה (Cytokinesis)</h3>
+                <p>חלוקת הציטופלזמה. בבעלי חיים, היא מתבצעת על ידי כיווץ טבעת של סיבי אקטין ומיוזין. בצמחים, בשל דופן התא הקשיחה, בועיות (Vesicles) ממנגנון הגולג'י מתאחות במרכז התא ויוצרות מחיצה (Cell plate) שהופכת לקרום ודופן חדשים.</p>
+
+                <h3>רבייה ומיוזה (Meiosis) - חלוקת הפחתה</h3>
+                <p>רבייה אל-מינית מבוססת על מיטוזה ויוצרת שבטים (Clones) הזהים גנטית. רבייה מינית מערבת <strong>מיוזה</strong>, חלוקה המפחיתה את מספר הכרומוזומים לחצי (מדיפלואיד להפלואיד, $n$), ויוצרת תאי מין (גמטות) שונים גנטית.</p>
+                <ul>
+                    <li><strong>מיוזה I:</strong> מפרידה בין כרומוזומים הומולוגיים (הכרומטידות האחיות נשארות מחוברות). בשלב זה נוצרת שונות גנטית עצומה דרך חלוקה בלתי תלויה (Independent assortment - קיימות $2^n$ קומבינציות) ודרך תהליך <strong>שחלוף</strong> (Crossing over) היוצר כרומטידות רקומביננטיות.</li>
+                    <li><strong>מיוזה II:</strong> מפרידה בין כרומטידות אחיות (בדומה למיטוזה), ויוצרת ארבעה תאים הפלואידים.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: מקור השונות הגנטית באבולוציה</strong>
+                    השונות הגנטית ברבייה מינית אינה נובעת ממוטציות אקראיות, אלא ממנגנונים מובנים במיוזה I: סידור אקראי של כרומוזומים הומולוגיים על מישור המשווה (היוצר למעלה מ-8 מיליון צירופים באדם) וחילוף פיזי של מקטעי DNA (Crossing over) היוצר כרומוזומים חדשים לחלוטין שלא היו קיימים בהורים.
+                </div>
+
+                <h3>מעגלי חיים (Life Cycles)</h3>
+                <ul>
+                    <li><strong>מעגל דיפלואידי (Diplontic):</strong> אופייני ליונקים. השלב ההפלואידי היחיד הוא הגמטות. היצור הבוגר הוא דיפלואידי.</li>
+                    <li><strong>מעגל הפלואידי (Haplontic):</strong> אופייני לפטריות ופרוטיסטים. הזיגוטה היא התא הדיפלואידי היחיד ומיד עוברת מיוזה. היצור הבוגר הוא הפלואידי.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const flashcardData = [
+            { term: "Interphase (אינטרפזה)", definition: "השלב במעגל התא בו התא מבלה את רוב זמנו, כולל את שלבי הגדילה (G1, G2) ושכפול ה-DNA (S)." },
+            { term: "G0 Phase", definition: "מצב של עצירה במעגל התא. אופייני לתאים בוגרים וממוינים שאינם מתחלקים עוד." },
+            { term: "Chromatin (כרומטין)", definition: "מבנה לא דחוס של DNA וחלבונים המצוי בגרעין במהלך האינטרפזה." },
+            { term: "Cohesin (קוהזין)", definition: "חלבון המחזיק את הכרומטידות האחיות יחד באזור הצנטרומר לאחר שכפול ה-DNA." },
+            { term: "Condensin (קונדנסין)", definition: "חלבון הפועל בשלב הפרופזה וגורם לדחיסת ה-DNA למבנה של כרומוזומים הנראים לעין." },
+            { term: "Kinetochore (קינטוכור)", definition: "מבנה חלבוני על גבי הצנטרומר שאליו מתחברים סיבי המיקרוטובול (הכישור) במהלך המיטוזה." },
+            { term: "Separase (ספראז)", definition: "אנזים המפרק את חלבון הקוהזין בסוף המטפזה, מה שמאפשר לכרומטידות האחיות להיפרד באנפזה." },
+            { term: "Spindle Assembly Checkpoint", definition: "נקודת בקרה בסוף המטפזה המוודאת שכל הכרומוזומים מחוברים כראוי לכישור לפני תחילת האנפזה." },
+            { term: "Cytokinesis (ציטוקינזה)", definition: "תהליך חלוקת הציטופלזמה המתרחש בסיום מיטוזה או מיוזה ליצירת תאים נפרדים." },
+            { term: "Meiosis (מיוזה)", definition: "חלוקת הפחתה היוצרת ארבעה תאי בת הפלואידים (גמטות) השונים גנטית זה מזה ומתא האם." },
+            { term: "Zygote (זיגוטה)", definition: "התא הדיפלואידי הראשון שנוצר כתוצאה מהפריה (איחוד של שתי גמטות הפלואידיות)." },
+            { term: "Diplontic Life Cycle", definition: "מעגל חיים (כמו ביונקים) שבו היצור הבוגר הוא דיפלואידי, והשלב ההפלואידי היחיד הוא הגמטות." },
+            { term: "Haplontic Life Cycle", definition: "מעגל חיים (כמו בפטריות) שבו היצור הבוגר הוא הפלואיד, והתא הדיפלואידי היחיד הוא הזיגוטה." },
+            { term: "Crossing Over (שחלוף)", definition: "תהליך המתרחש במיוזה I שבו מוחלף מידע גנטי בין כרומוזומים הומולוגיים, המגדיל את השונות הגנטית." },
+            { term: "Independent Assortment", definition: "היערכות אקראית של כרומוזומים הומולוגיים במטפזה I של המיוזה, היוצרת מספר עצום של קומבינציות גנטיות אפשריות בגמטות." }
+        ];
+
+        const mcqData = [
+            { question: "תא נחשף לחומר כימי המעכב באופן ספציפי את פעילות האנזים ספראז (Separase). באיזה שלב של המיטוזה התא צפוי להיעצר?", options: ["פרופזה", "פרומטפזה", "מטפזה", "טלופזה"], correctIndex: 2, explanation: "האנזים ספראז אחראי על פירוק הקוהזין המחזיק את הכרומטידות האחיות. ללא פירוק זה, התא לא יוכל לעבור מאנפזה למטפזה ויישאר תקוע במטפזה (או במעבר ביניהן)." },
+            { question: "מה ההבדל העיקרי בתהליך הציטוקינזה בין תאי בעלי חיים לתאי צמח?", options: ["בתאי צמח מתכווצת טבעת אקטין, ואילו בבעלי חיים נוצרת פלטת תא", "בבעלי חיים מעורבים מיקרוטובולים, ובצמחים מיקרופילמנטים", "בבעלי חיים נוצרת טבעת כיווץ של אקטין ומיוזין, ואילו בצמחים בועיות מהגולג'י מתאחות ליצירת מחיצה", "אין הבדל, בשניהם מנגנון הגולג'י מפריש חומרים המפרידים את התאים"], correctIndex: 2, explanation: "תאי בעלי חיים מתחלקים על ידי כיווץ מכני של טבעת אקטין ומיוזין. תאי צמח, בעלי דופן קשיחה, בונים מחיצה חדשה במרכז התא באמצעות בועיות שמקורן במנגנון הגולג'י." },
+            { question: "פגם גנטי גורם לחלבון קונדנסין (Condensin) להיות לא פעיל. מה תהיה ההשפעה הישירה ביותר על חלוקת התא?", options: ["הכרומטידות האחיות יפרדו מוקדם מדי", "ה-DNA לא יידחס לכרומוזומים נראים לעין בפרופזה", "מעטפת הגרעין לא תתפרק בפרומטפזה", "הכישור לא יצליח להתחבר לצנטרומרים"], correctIndex: 1, explanation: "תפקיד הקונדנסין הוא לארוז ולדחוס את הכרומטין למבנה הקומפקטי של כרומוזומים במהלך הפרופזה. ללא פעילותו, ה-DNA יישאר במצב פתוח." },
+            { question: "במעגל חיים הפלואידי (Haplontic life cycle), איזה מהתאים הבאים הוא היחיד המכיל שני סטים של כרומוזומים ($2n$)?", options: ["היצור הבוגר", "הנבגים (Spores)", "הגמטות", "הזיגוטה"], correctIndex: 3, explanation: "במעגל חיים הפלואידי (כמו בפטריות רבות), הזיגוטה היא התא הדיפלואידי היחיד. מיד לאחר היווצרותה היא עוברת מיוזה ליצירת נבגים הפלואידים שמהם יתפתח יצור בוגר הפלואיד." },
+            { question: "מהי התוצאה הישירה של מיוזה I?", options: ["הפרדה של כרומטידות אחיות ליצירת שני תאים דיפלואידים", "הפרדה של כרומוזומים הומולוגיים ליצירת שני תאים הפלואידים", "הפרדה של כרומטידות אחיות ליצירת ארבעה תאים הפלואידים", "שכפול של ה-DNA לקראת מיוזה II"], correctIndex: 1, explanation: "במיוזה I, הכרומוזומים ההומולוגיים נפרדים, מה שמפחית את מספר הכרומוזומים לחצי (התאים הופכים להפלואידים). הכרומטידות האחיות נשארות מחוברות עד למיוזה II." },
+            { question: "ליצור מסוים יש $2n=6$ כרומוזומים. כמה קומבינציות גנטיות אפשריות יכולות להיווצר בגמטות שלו כתוצאה מהיערכות אקראית (Independent assortment) בלבד?", options: ["6", "8", "16", "36"], correctIndex: 1, explanation: "הנוסחה למספר הקומבינציות היא $2^n$ כאשר $n$ הוא מספר הכרומוזומים ההפלואידי. אם $2n=6$, אז $n=3$. לכן, $2^3 = 8$ קומבינציות אפשריות." },
+            { question: "איזה מהמשפטים הבאים מתאר נכונה את שלב ה-G0?", options: ["זהו השלב בו מתרחש שכפול ה-DNA לקראת חלוקה", "תאים בשלב זה הם תאים מתים שעוברים אפופטוזה", "זהו מצב של עצירה במעגל התא, האופייני לתאים בוגרים וממוינים שאינם מתחלקים", "זהו השלב המקשר בין מיוזה I למיוזה II"], correctIndex: 2, explanation: "שלב G0 הוא מצב של מנוחה מחלוקה. רוב התאים הבוגרים בגוף האדם נמצאים בשלב זה, והם מתפקדים באופן מלא אך אינם מתכוננים לחלוקה נוספת." },
+            { question: "באיזה שלב של המיטוזה מתפרקת מעטפת הגרעין?", options: ["פרופזה", "פרומטפזה", "מטפזה", "טלופזה"], correctIndex: 1, explanation: "פירוק מעטפת הגרעין הוא המאפיין המרכזי של הפרומטפזה, והוא הכרחי כדי לאפשר לסיבי הכישור (המיקרוטובולים) להגיע ולהתחבר לקינטוכורים שעל הכרומוזומים." },
+            { question: "מהו התפקיד העיקרי של חלבון הקוהזין (Cohesin)?", options: ["לדחוס את סליל ה-DNA למבנה כרומוזומלי", "לחבר בין קינטוכור אחד למשנהו", "להחזיק כרומטידות אחיות יחד מרגע השכפול ועד לאנפזה", "למשוך את הכרומוזומים לקטבי התא"], correctIndex: 2, explanation: "הקוהזין מתפקד כמעין טבעת המחזיקה את הכרומטידות האחיות צמודות זו לזו לאחר שכפול ה-DNA (בשלב ה-S) ועד שהן צריכות להיפרד באנפזה." },
+            { question: "איזה מהתהליכים הבאים אינו תורם לשונות הגנטית של הצאצאים ברבייה מינית?", options: ["שחלוף (Crossing over)", "היערכות אקראית של כרומוזומים הומולוגיים", "הפריה אקראית של גמטות", "חלוקת הציטופלזמה (Cytokinesis)"], correctIndex: 3, explanation: "ציטוקינזה היא תהליך מכני של חלוקת תא אחד לשניים ואינה משנה או מערבבת את החומר הגנטי. שלושת התהליכים האחרים הם המקורות המרכזיים לשונות גנטית." },
+            { question: "תא סומטי (תא גוף) של כלב מכיל 78 כרומוזומים ($2n=78$). כמה כרומוזומים יהיו בתא זרע של כלב?", options: ["78", "39", "156", "19"], correctIndex: 1, explanation: "תאי מין (גמטות) הם הפלואידים ($n$), כלומר מכילים מחצית ממספר הכרומוזומים של תא סומטי. מחצית מ-78 היא 39." },
+            { question: "במהלך תנועת הכרומוזומים לקטבים בשלב האנפזה, איזה מנגנון מספק את האנרגיה לתנועה?", options: ["התארכות ספונטנית של סיבי אקטין", "שימוש ב-ATP על ידי מנועים מולקולריים כמו דינאין וקינסין", "כוחות דחייה אלקטרוסטטיים בין הכרומטידות", "פירוק מולקולות מים בקטבי התא"], correctIndex: 1, explanation: "תנועת הכרומוזומים על גבי מיקרוטובולים מתאפשרת בזכות חלבוני מנוע (דינאין וקינסין) המנצלים אנרגיה מפירוק ATP." },
+            { question: "אם נתבונן בתא הנמצא בשלב הטלופזה, מה נצפה לראות?", options: ["כרומוזומים מסודרים בקו המשווה של התא", "מעטפת גרעין מתחילה להיווצר מחדש סביב שתי קבוצות של כרומוזומים", "מעטפת הגרעין מתפרקת לחלוטין", "הכרומוזומים בשיא הדחיסות שלהם"], correctIndex: 1, explanation: "בטלופזה (השלב האחרון של חלוקת הגרעין), הכרומוזומים הגיעו לקטבים, מעטפת הגרעין נבנית מחדש סביב כל קבוצה, והכרומוזומים מתחילים להיפתח חזרה לכרומטין." },
+            { question: "מהי המשמעות של מושג ה-Polar microtubules בכישור החלוקה?", options: ["אלו מיקרוטובולים המתחברים ישירות ל-DNA עצמו", "אלו מיקרוטובולים המחברים בין שני מרכזי הכישור (הקטבים) ולא לכרומוזומים", "אלו מיקרוטובולים הקיימים רק בתאי צמח", "אלו מיקרוטובולים שתפקידם לפרק את מעטפת הגרעין"], correctIndex: 1, explanation: "מיקרוטובולים פולאריים אינם מתחברים לקינטוכור. הם יוצאים משני הקטבים, חופפים זה לזה במרכז התא, ועוזרים לדחוף את הקטבים זה מזה במהלך האנפזה." },
+            { question: "איזה מהמשפטים הבאים מתאר הבדל מהותי בין מיטוזה למיוזה?", options: ["במיטוזה יש שכפול DNA אחד, ובמיוזה יש שני שכפולי DNA", "במיטוזה נוצרים ארבעה תאים, ובמיוזה נוצרים שני תאים", "במיטוזה הכרומוזומים ההומולוגיים לא נפרדים זה מזה, בניגוד למיוזה I", "מיטוזה מתרחשת רק בתאי מין, ומיוזה מתרחשת בתאי גוף"], correctIndex: 2, explanation: "במיטוזה, כל כרומוזום מתנהג באופן עצמאי והכרומטידות האחיות נפרדות. אין הפרדה של הומולוגים. במיוזה I, המטרה המרכזית היא הפרדת הכרומוזומים ההומולוגיים זה מזה." },
+            { question: "באיזה שלב מחזור התא משוכפל הצנטרוסום (Centrosome)?", options: ["G1 phase", "S phase", "G2 phase", "M phase"], correctIndex: 1, explanation: "בשלב ה-S (Synthesis) של האינטרפזה, מתרחש במקביל גם שכפול ה-DNA וגם שכפול של הצנטרוסום, כדי שיהיו שני מרכזי ארגון מיקרוטובולים לקראת החלוקה." },
+            { question: "מה ההגדרה המדויקת של כרומוזומים בנים/בנות (Daughter chromosomes)?", options: ["כרומוזומים הומולוגיים שעברו שחלוף", "כרומטידות אחיות שזה עתה נפרדו בשלב האנפזה", "כרומוזומים שנמצאים בתא הזיגוטה לאחר ההפריה", "הכרומוזומים כפי שהם נראים בשלב ה-G1"], correctIndex: 1, explanation: "מרגע שהקוהזין מתפרק באנפזה והכרומטידות האחיות נפרדות זו מזו ומתחילות לנוע לקטבים, כל אחת מהן נחשבת לכרומוזום עצמאי ונקראת כרומוזום בת/בן." },
+            { question: "נקודת הבקרה Spindle assembly checkpoint מופעלת על ידי קומפלקס הנקרא APC. מה תפקידו המרכזי של ה-APC בהקשר זה?", options: ["לשכפל את ה-DNA אם התגלה נזק", "לעכב את פירוק מעטפת הגרעין", "להפעיל מנגנון שיוביל בסופו של דבר לפירוק הקוהזין", "לייצר מיקרוטובולים חדשים"], correctIndex: 2, explanation: "קומפלקס ה-APC (Anaphase-Promoting Complex) מפעיל שרשרת תגובות המובילה לשפעול האנזים ספראז, אשר בתורו מפרק את הקוהזין ומאפשר את תחילת האנפזה." },
+            { question: "חוקר בוחן תאים תחת מיקרוסקופ ורואה שמעטפת הגרעין שלמה, וה-DNA נראה כרשת עדינה ולא ככרומוזומים ברורים. באיזה שלב סביר להניח שהתא נמצא?", options: ["אינטרפזה", "פרופזה", "מטפזה", "אנפזה"], correctIndex: 0, explanation: "באינטרפזה, ה-DNA נמצא במצב של כרומטין (לא דחוס) ומעטפת הגרעין שלמה לחלוטין. דחיסת ה-DNA מתחילה רק בפרופזה." },
+            { question: "מהי מטרתה של רבייה אל-מינית בטבע?", options: ["הגדלת השונות הגנטית באוכלוסייה", "יצירת צאצאים (שבטים) הזהים גנטית לתא האם", "הכנת האורגניזם לשינויים סביבתיים קיצוניים", "הפחתת מספר הכרומוזומים לחצי"], correctIndex: 1, explanation: "רבייה אל-מינית מבוססת על מיטוזה, ותוצאתה היא יצירת צאצאים (Clones) שהם העתק גנטי מדויק של יצור האם (בהנחה שלא התרחשו מוטציות)." },
+            { question: "כיצד צמחים מתמודדים עם היעדר צנטריולים (Centrioles) בחלוקת התא?", options: ["הם אינם מבצעים מיטוזה כלל אלא רק מיוזה", "מיקרוטובולים נוצרים ממרכזי ארגון שונים בתא שאינם צנטריולים", "הכרומוזומים נעים לקטבים בעזרת זרמי ציטופלזמה בלבד", "מעטפת הגרעין אינה מתפרקת, והחלוקה מתבצעת בתוכה"], correctIndex: 1, explanation: "אף על פי שלצמחים אין צנטריולים (המרכיבים את הצנטרוסום בבעלי חיים), יש להם מרכזי ארגון מיקרוטובולים (MTOC) אחרים הממלאים תפקיד זהה ביצירת הכישור." },
+            { question: "איזו מבין התופעות הבאות אינה מתרחשת במהלך הפרופזה (Prophase) של המיטוזה?", options: ["הגרעינון (Nucleolus) נעלם", "הכרומטין נדחס לכרומוזומים", "הצנטרוזומים נעים לקצוות מנוגדים", "הכרומוזומים ההומולוגיים מבצעים שחלוף (Crossing over)"], correctIndex: 3, explanation: "שחלוף (Crossing over) הוא תהליך ייחודי המתרחש אך ורק בפרופזה I של ה*מיוזה*, ולא במיטוזה." },
+            { question: "תא אנושי המכיל 46 כרומוזומים סיים את שלב ה-S. מהו מספר הכרומוזומים ומספר הכרומטידות בתא כעת?", options: ["46 כרומוזומים ו-46 כרומטידות", "92 כרומוזומים ו-92 כרומטידות", "46 כרומוזומים ו-92 כרומטידות", "23 כרומוזומים ו-46 כרומטידות"], correctIndex: 2, explanation: "לאחר שכפול ה-DNA (שלב S), מספר הכרומוזומים נשאר זהה (46), אך כל כרומוזום מורכב כעת משתי כרומטידות אחיות, ולכן יש סך הכל 92 כרומטידות." },
+            { question: "מהי המשמעות האבולוציונית העיקרית של רבייה מינית?", options: ["היא מאפשרת התרבות מהירה יותר מרבייה אל-מינית", "היא דורשת פחות השקעת אנרגיה מצד האורגניזם", "היא יוצרת ערבוב של אינפורמציה גנטית המאפשר אדפטציה לסביבה משתנה", "היא מבטיחה שכל הצאצאים יהיו חסינים למחלות"], correctIndex: 2, explanation: "היתרון הגדול של רבייה מינית הוא יצירת שונות גנטית עצומה באוכלוסייה, מה שמספק חומר גלם לאבולוציה ולהסתגלות לתנאים משתנים." },
+            { question: "במעגל חיים דיפלואידי (Diplontic life cycle), איזה תהליך מייצר את הגמטות?", options: ["מיטוזה", "מיוזה", "הפריה", "ציטוקינזה"], correctIndex: 1, explanation: "במעגל חיים דיפלואידי (כמו שלנו), היצור הבוגר הוא דיפלואידי, ולכן כדי לייצר גמטות הפלואידיות יש צורך בחלוקת הפחתה - מיוזה." },
+            { question: "מהו התהליך ההפוך למיוזה מבחינת השפעתו על מספר הכרומוזומים בתא?", options: ["מיטוזה", "ציטוקינזה", "הפריה (Fertilization)", "שחלוף (Crossing over)"], correctIndex: 2, explanation: "מיוזה מפחיתה את כמות הכרומוזומים לחצי (מ-$2n$ ל-$n$). הפריה עושה את הפעולה ההפוכה: היא מאחדת שני תאים הפלואידים ($n$) חזרה לתא דיפלואידי אחד ($2n$)." },
+            { question: "איזה סוג של מיקרוטובולים אחראי ישירות על חיבור הכרומוזום לכישור החלוקה?", options: ["Aster microtubules", "Polar microtubules", "Kinetochore microtubules", "Actin microtubules"], correctIndex: 2, explanation: "מיקרוטובולים של הקינטוכור (Kinetochore microtubules) הם אלו שנקשרים פיזית למבנה הקינטוכור שעל הצנטרומר של הכרומוזומים." },
+            { question: "אם תא מכיל כמות גבוהה של ציקלין (Cyclin) מסוג M-phase, מה סביר להניח שיתרחש?", options: ["התא ייכנס לשלב G0", "התא יעבור אפופטוזה", "קומפלקס APC יופעל והתא יוכל להתקדם לאנפזה", "שכפול ה-DNA ייעצר"], correctIndex: 2, explanation: "M-phase cyclin-CDK הוא הקומפלקס שמבקר את המעבר לאנפזה על ידי הפעלת ה-APC (Anaphase-Promoting Complex)." },
+            { question: "באיזה שלב של המיוזה מתרחשת ההפרדה של הכרומטידות האחיות?", options: ["מיוזה I", "מיוזה II", "פרופזה I", "מטפזה I"], correctIndex: 1, explanation: "מיוזה II דומה מאוד למיטוזה רגילה, ובה מתרחשת ההפרדה של הכרומטידות האחיות זו מזו (לאחר שבמיוזה I נפרדו הכרומוזומים ההומולוגיים)." },
+            { question: "היכן ממוקם הקינטוכור (Kinetochore)?", options: ["על קרום התא", "במרכז הצנטרוסום", "באזור הצנטרומר של כל כרומטידה", "בתוך הגרעינון"], correctIndex: 2, explanation: "הקינטוכור הוא מבנה חלבוני שמתפתח במהלך הפרופזה והפרומטפזה באזור הצנטרומר של כל כרומטידה, ומשמש כנקודת העיגון למיקרוטובולים." },
+            { question: "מה ההבדל העיקרי בין כרומוזומים הומולוגיים לכרומטידות אחיות?", options: ["אין הבדל, אלו שמות נרדפים", "הומולוגים מכילים גנים שונים לחלוטין, כרומטידות אחיות מכילות אותם גנים", "כרומטידות אחיות הן תוצר של שכפול DNA וזהות לחלוטין, הומולוגים הם זוג כרומוזומים (מאב ומאם) המכילים אותם גנים אך לא בהכרח אותם אללים", "הומולוגים מחוברים בצנטרומר, כרומטידות אחיות לא"], correctIndex: 2, explanation: "כרומטידות אחיות הן העתק מדויק זו של זו שנוצר בשכפול. כרומוזומים הומולוגיים הם זוג כרומוזומים (אחד מהאם ואחד מהאב) המקודדים לאותן תכונות, אך יכולים להכיל גרסאות שונות (אללים) של אותם גנים." },
+            { question: "כיצד משפיע תהליך השחלוף (Crossing over) על התוצאה הסופית של המיוזה?", options: ["הוא מגדיל את מספר הכרומוזומים בתאי הבת", "הוא יוצר כרומטידות רקומביננטיות בעלות צירופי גנים חדשים שלא היו קיימים בהורים", "הוא מונע את הפרדת הכרומוזומים ההומולוגיים", "הוא מאפשר מעבר ממיוזה I ישירות לציטוקינזה ללא מיוזה II"], correctIndex: 1, explanation: "השחלוף מערבב פיזית מקטעי DNA בין כרומוזומים הומולוגיים, כך שהכרומטידות שייכנסו לגמטות יהיו ייחודיות ושונות מהכרומוזומים המקוריים של ההורה." },
+            { question: "איזה מהאירועים הבאים מתרחש בטלופזה (Telophase)?", options: ["הכרומוזומים נדחסים למקסימום", "הכישור (Spindle) מתפרק", "מעטפת הגרעין מתפרקת", "הכרומטידות נפרדות לראשונה"], correctIndex: 1, explanation: "בטלופזה התא חוזר למצב הדומה לאינטרפזה: הכישור סיים את תפקידו ומתפרק, הכרומוזומים נפתחים, ומעטפת הגרעין נבנית מחדש." },
+            { question: "מהי התוצאה של רבייה אל-מינית ביצור רב-תאי (כמו צמח)?", options: ["יצירת צאצא בעל חצי ממספר הכרומוזומים של צמח האם", "יצירת צאצא בעל גנטיקה ייחודית ושונה", "יצירת צאצא הזהה גנטית (שבט) לצמח האם", "יצירת גמטות המסוגלות להפרות צמחים אחרים"], correctIndex: 2, explanation: "רבייה אל-מינית בצמחים (כגון ייחורים או שלוחות) מבוססת על מיטוזה, ולכן הצאצא החדש הוא בעל מטען גנטי זהה לחלוטין לצמח המקור." },
+            { question: "מדוע תאים בוגרים רבים בגוף האדם אינם ממשיכים להתחלק?", options: ["כי ה-DNA שלהם נהרס לחלוטין", "כי הם איבדו את הצנטרומרים שלהם", "כי הם נכנסו למצב התמיינות הנקרא G0 ממנו רובם לא חוזרים לחלוקה", "כי אין להם מספיק אנרגיה לייצר קוהזין"], correctIndex: 2, explanation: "תאים ממוינים (כמו תאי עצב או שריר) יוצאים ממעגל החלוקה הפעיל ונכנסים למצב מנוחה קבוע הנקרא G0, שבו הם מבצעים את תפקידם אך לא מתחלקים." },
+            { question: "מה קורה לגרעינון (Nucleolus) במהלך הפרופזה?", options: ["הוא משתכפל", "הוא נעלם", "הוא הופך לקינטוכור", "הוא מתאחה עם הצנטרוסום"], correctIndex: 1, explanation: "במהלך הפרופזה, כחלק מפירוק המבנים הגרעיניים לקראת החלוקה, הגרעינון (האזור בגרעין שבו מיוצרים ריבוזומים) מתפזר ונעלם מעיני המיקרוסקופ." },
+            { question: "אם תאאם (Parent cell) בעל 10 כרומוזומים עובר מיטוזה, מה תהיה התוצאה?", options: ["שני תאים המכילים 5 כרומוזומים כל אחד", "ארבעה תאים המכילים 5 כרומוזומים כל אחד", "שני תאים המכילים 10 כרומוזומים כל אחד", "תא אחד המכיל 20 כרומוזומים"], correctIndex: 2, explanation: "מיטוזה היא חלוקה משמרת. תא האם משכפל את ה-DNA שלו ומחלק אותו שווה בשווה לשני תאי בת, כך שכל תא מקבל בדיוק את אותו מספר כרומוזומים (10)." },
+            { question: "באיזה שלב הכרומוזומים מגיעים למישור המשווה (Equatorial plate) של התא?", options: ["פרופזה", "פרומטפזה", "מטפזה", "טלופזה"], correctIndex: 2, explanation: "המאפיין המרכזי של שלב המטפזה (Metaphase) הוא סידור כל הכרומוזומים לאורך מישור המשווה של התא (Metaphase plate)." },
+            { question: "אילו חלבונים מנועיים (Motor proteins) מעורבים בתנועת הכרומוזומים לאורך המיקרוטובולים?", options: ["אקטין ומיוזין", "קוהזין וקונדנסין", "דינאין וקינסין", "ספראז וציקלין"], correctIndex: 2, explanation: "דינאין (Dynein) וקינסין (Kinesin) הם המנועים המולקולריים המשתמשים ב-ATP כדי 'ללכת' על גבי סיבי המיקרוטובול ולמשוך את הכרומוזומים לקטבים באנפזה." },
+            { question: "מהי המשמעות של המונח 'הפלואיד' (Haploid, $n$)?", options: ["תא המכיל שני סטים של כרומוזומים, אחד מכל הורה", "תא המכיל סט אחד בלבד של כרומוזומים", "תא שעבר מיטוזה בלבד", "תא שאינו מכיל DNA כלל"], correctIndex: 1, explanation: "הפלואיד ($n$) מתייחס לתא המכיל עותק אחד בלבד מכל כרומוזום, בניגוד לדיפלואיד ($2n$) המכיל זוגות הומולוגיים." }
+        ];
+
+        const tfData = [
+            { question: "בשלב ה-G1 מתבצע שכפול ה-DNA לקראת חלוקת התא.", answer: false, explanation: "שכפול ה-DNA מתבצע בשלב ה-S (Synthesis), בעוד G1 הוא שלב גדילה והכנה." },
+            { question: "כל התאים הבוגרים בגוף האדם מתחלקים באופן רציף לאורך כל החיים.", answer: false, explanation: "רוב התאים הבוגרים והממוינים בגוף נמצאים במצב G0 ואינם מתחלקים עוד (למשל תאי עצב מסוימים)." },
+            { question: "במיטוזה, תא אם דיפלואידי יוצר שני תאי בת דיפלואידים.", answer: true, explanation: "מיטוזה היא חלוקה משמרת, ולכן תאי הבת מכילים בדיוק את אותו מספר כרומוזומים כמו תא האם." },
+            { question: "תפקידו של חלבון הקונדנסין (Condensin) הוא להחזיק את הכרומטידות האחיות יחד.", answer: false, explanation: "החלבון שמחזיק את הכרומטידות האחיות יחד הוא הקוהזין (Cohesin). קונדנסין אחראי על דחיסת ה-DNA." },
+            { question: "האנזים ספראז (Separase) מפרק את הקוהזין ומאפשר את תחילת האנפזה.", answer: true, explanation: "זהו המנגנון המולקולרי המדויק המאפשר לכרומטידות האחיות להיפרד ולנוע לקטבים." },
+            { question: "ציטוקינזה בתאי צמח מתבצעת על ידי כיווץ של טבעת חלבוני אקטין ומיוזין.", answer: false, explanation: "בצמחים נוצרת פלטת תא (Cell plate) מבועיות של הגולג'י. טבעת הכיווץ אופיינית לתאי בעלי חיים." },
+            { question: "מיוזה מתרחשת אך ורק בתאים המייצרים גמטות (תאי מין).", answer: true, explanation: "מטרת המיוזה היא יצירת תאי מין הפלואידים לרבייה מינית, והיא אינה מתרחשת בתאי גוף (סומטיים) רגילים." },
+            { question: "במיוזה I נפרדות הכרומטידות האחיות זו מזו.", answer: false, explanation: "במיוזה I נפרדים הכרומוזומים ההומולוגיים. הכרומטידות האחיות נפרדות רק במיוזה II." },
+            { question: "שחלוף (Crossing over) מתרחש בין כרומטידות אחיות של אותו כרומוזום.", answer: false, explanation: "שחלוף מתרחש בין כרומטידות של כרומוזומים הומולוגיים (אחד מהאב ואחד מהאם), ולא בין כרומטידות אחיות שהן ממילא זהות." },
+            { question: "במעגל חיים דיפלואידי (Diplontic), הגמטות נוצרות באמצעות מיטוזה.", answer: false, explanation: "במעגל חיים דיפלואידי היצור הבוגר הוא דיפלואיד, ולכן כדי לייצר גמטות הפלואידיות עליו לבצע מיוזה." },
+            { question: "מעטפת הגרעין מתפרקת במהלך שלב הפרומטפזה (Prometaphase).", answer: true, explanation: "פירוק המעטפת הכרחי כדי לאפשר למיקרוטובולים של הכישור להגיע אל הכרומוזומים." },
+            { question: "שכפול הצנטרוסום (Centrosome) מתרחש במהלך שלב ה-M (מיטוזה).", answer: false, explanation: "הצנטרוסום משוכפל כבר בשלב ה-S של האינטרפזה, במקביל לשכפול ה-DNA." },
+            { question: "הגרעינון (Nucleolus) נעלם בשלב הפרופזה ונוצר מחדש בשלב הטלופזה.", answer: true, explanation: "זהו חלק מתהליך הארגון מחדש של הגרעין לקראת ובסיום החלוקה." },
+            { question: "רבייה אל-מינית יוצרת צאצאים בעלי שונות גנטית רחבה.", answer: false, explanation: "רבייה אל-מינית מבוססת על מיטוזה ויוצרת שבטים (Clones) הזהים גנטית לתא האם." },
+            { question: "הקינטוכור הוא מבנה של מיקרוטובולים הנמצא מחוץ לגרעין התא.", answer: false, explanation: "הקינטוכור הוא מבנה חלבוני הנמצא על גבי הצנטרומר של הכרומוזום עצמו, ואליו מתחברים המיקרוטובולים." },
+            { question: "הזיגוטה היא תא הפלואידי ($n$) הנוצר מאיחוד של שתי גמטות דיפלואידיות.", answer: false, explanation: "ההפך הוא הנכון: הזיגוטה היא תא דיפלואידי ($2n$) הנוצר מאיחוד של שתי גמטות הפלואידיות ($n$)." },
+            { question: "קיימת נקודת בקרה (Checkpoint) בסוף המטפזה המוודאת חיבור תקין של הכרומוזומים לכישור.", answer: true, explanation: "זוהי בקרה קריטית המונעת חלוקה לא שוויונית של כרומוזומים לתאי הבת." },
+            { question: "תנועת הכרומוזומים באנפזה דורשת השקעת אנרגיה בצורת ATP.", answer: true, explanation: "החלבונים המנועיים (דינאין וקינסין) המניעים את הכרומוזומים על גבי המיקרוטובולים מנצלים ATP לשם כך." },
+            { question: "במעגל חיים הפלואידי (Haplontic), היצור הבוגר נוצר מנבגים שעברו מיטוזה.", answer: true, explanation: "הזיגוטה עוברת מיוזה ליצירת נבגים הפלואידים, ואלו מתחלקים במיטוזה ליצירת היצור הבוגר ההפלואיד." },
+            { question: "מספר הכרומוזומים מעיד באופן ישיר על גודלו של האורגניזם (יצור גדול = יותר כרומוזומים).", answer: false, explanation: "אין קשר בין גודל האורגניזם למספר הכרומוזומים שלו. למשל, לכלב יש 78 כרומוזומים ולאדם 46." },
+            { question: "בסיום מיוזה נוצרים ארבעה תאים הזהים לחלוטין זה לזה.", answer: false, explanation: "בסיום מיוזה נוצרים ארבעה תאים השונים גנטית זה מזה בשל תהליכי השחלוף וההיערכות האקראית." },
+            { question: "מיקרוטובולים פולאריים (Polar microtubules) מתחברים ישירות לכרומוזומים.", answer: false, explanation: "מיקרוטובולים פולאריים מחברים בין שני קטבי הכישור ולא מתחברים לכרומוזומים." },
+            { question: "כרומוזומים הומולוגיים מכילים בדיוק את אותם גנים באותם מיקומים.", answer: true, explanation: "הם אכן מכילים את אותם גנים באותם מיקומים (לוקוסים), אף על פי שהם עשויים להכיל אללים (גרסאות) שונים של אותם גנים." },
+            { question: "המצב הטבעי של ה-DNA באינטרפזה הוא כרומוזומים דחוסים היטב.", answer: false, explanation: "באינטרפזה ה-DNA נמצא במצב רפוי ולא דחוס הנקרא כרומטין, כדי לאפשר שעתוק ושכפול." },
+            { question: "במטפזה, כל הצנטרומרים מסודרים על מישור המשווה של התא.", answer: true, explanation: "הסידור המדויק על מישור המשווה (Equatorial plate) הוא המאפיין המגדיר של שלב המטפזה." },
+            { question: "התקצרות המיקרוטובולים תורמת למשיכת הכרומטידות לקטבים באנפזה.", answer: true, explanation: "במקביל לפעולת חלבוני המנוע, סיבי המיקרוטובול עצמם מתקצרים (עוברים דה-פולימריזציה) בקצוות שלהם." },
+            { question: "לצמחים אין צנטריולים, ולכן אין להם כישור חלוקה כלל.", answer: false, explanation: "אמנם אין להם צנטריולים, אך יש להם מרכזי ארגון מיקרוטובולים (MTOC) אלטרנטיביים היוצרים כישור חלוקה תקין." },
+            { question: "הפרדה שגויה של כרומוזומים במיוזה עלולה להוביל לגמטות עם מספר לא תקין של כרומוזומים.", answer: true, explanation: "תקלה בנקודות הבקרה או בפירוק הקוהזין עלולה לגרום לאי-הפרדה (Nondisjunction)." },
+            { question: "ביצור שה-2n שלו הוא 4, יכולות להיווצר 16 קומבינציות גנטיות שונות רק מהיערכות אקראית במיוזה.", answer: false, explanation: "אם $2n=4$, אז $n=2$. לפי הנוסחה $2^n$, מספר הקומבינציות הוא $2^2 = 4$ בלבד." },
+            { question: "קומפלקס ה-APC מעוכב כל עוד יש כרומוזום אחד שאינו מחובר לכישור משני צדדיו.", answer: true, explanation: "זהו הבסיס המולקולרי של נקודת הבקרה במטפזה (Spindle assembly checkpoint), המונעת אנפזה מוקדמת." }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+        
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = ''; 
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+        
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+        
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+        
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+        
+        initialize();
+    });
+    </script>
+</body>
+</html>
