@@ -6,9 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Ensure the app works correctly when deployed to a GitHub Pages subpath
-  basePath: process.env.NODE_ENV === 'production' ? '/biotechfood-static' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/biotechfood-static/' : '',
+  // No basePath/assetPrefix needed — site is served at root via custom domain (bfe.technionprep.com)
   typescript: {
     ignoreBuildErrors: true,
   },
