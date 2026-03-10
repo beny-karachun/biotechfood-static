@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
 
     <meta charset="UTF-8">
@@ -7,12 +8,14 @@
     <title>Interactive Study Tool</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         /* --- Root Variables: Glassmorphism Dark Theme --- */
         :root {
             --primary-bg: #0a0a0f;
-            --secondary-bg: rgba(255,255,255,0.03);
+            --secondary-bg: rgba(255, 255, 255, 0.03);
             --accent-color: #6C63FF;
             --accent-secondary: #A855F7;
             --accent-gradient: linear-gradient(135deg, #6C63FF, #A855F7);
@@ -20,30 +23,95 @@
             --text-muted: #94a3b8;
             --correct-color: #22c55e;
             --incorrect-color: #ef4444;
-            --card-bg: rgba(255,255,255,0.04);
-            --eureka-bg: rgba(168,85,247,0.08);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --eureka-bg: rgba(168, 85, 247, 0.08);
             --eureka-border: #A855F7;
-            --glass-bg: rgba(255,255,255,0.03);
-            --glass-border: rgba(255,255,255,0.06);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.06);
             --glass-blur: blur(12px);
             --radius: 16px;
             --radius-sm: 10px;
         }
 
-        @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
-        @keyframes cardIn { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
-        @keyframes shimmer { 0%{ background-position:-200% 0; } 100%{ background-position:200% 0; } }
-        @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.6; } }
-        @keyframes glowPulse { 0%,100%{ box-shadow:0 0 20px rgba(108,99,255,.15); } 50%{ box-shadow:0 0 30px rgba(168,85,247,.25); } }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
 
-        *{ box-sizing:border-box; }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .6;
+            }
+        }
+
+        @keyframes glowPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(108, 99, 255, .15);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(168, 85, 247, .25);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--primary-bg);
             background-image:
-                radial-gradient(ellipse 80% 50% at 20% 60%, rgba(108,99,255,.08), transparent),
-                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(168,85,247,.06), transparent);
+                radial-gradient(ellipse 80% 50% at 20% 60%, rgba(108, 99, 255, .08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 30%, rgba(168, 85, 247, .06), transparent);
             color: var(--text-color);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.7;
@@ -61,7 +129,7 @@
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            box-shadow: 0 8px 32px rgba(0,0,0,.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
             animation: fadeIn .6s ease-out;
         }
 
@@ -99,18 +167,45 @@
             border-radius: var(--radius);
             animation: cardIn .5s ease-out both;
         }
-        .section:nth-child(2){ animation-delay:.1s; }
-        .section:nth-child(3){ animation-delay:.2s; }
-        .section:nth-child(4){ animation-delay:.3s; }
-        .section:nth-child(5){ animation-delay:.4s; }
 
-        .theory-text { font-size:1.05em; line-height:1.85; color:var(--text-muted); }
-        .theory-text ul { padding-right:20px; }
-        .theory-text li { margin-bottom:8px; }
+        .section:nth-child(2) {
+            animation-delay: .1s;
+        }
+
+        .section:nth-child(3) {
+            animation-delay: .2s;
+        }
+
+        .section:nth-child(4) {
+            animation-delay: .3s;
+        }
+
+        .section:nth-child(5) {
+            animation-delay: .4s;
+        }
+
+        .theory-text {
+            font-size: 1.05em;
+            line-height: 1.85;
+            color: var(--text-muted);
+        }
+
+        .theory-text ul {
+            padding-right: 20px;
+        }
+
+        .theory-text li {
+            margin-bottom: 8px;
+        }
+
         .theory-text h3 {
-            color:#fff; margin-top:28px; margin-bottom:12px;
-            border-bottom:none; text-align:right;
-            font-weight:600; font-size:1.1em;
+            color: #fff;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            border-bottom: none;
+            text-align: right;
+            font-weight: 600;
+            font-size: 1.1em;
         }
 
         .eureka-box {
@@ -121,9 +216,9 @@
             border-radius: var(--radius-sm);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
-            border-top: 1px solid rgba(168,85,247,.12);
-            border-bottom: 1px solid rgba(168,85,247,.12);
-            border-left: 1px solid rgba(168,85,247,.12);
+            border-top: 1px solid rgba(168, 85, 247, .12);
+            border-bottom: 1px solid rgba(168, 85, 247, .12);
+            border-left: 1px solid rgba(168, 85, 247, .12);
             animation: slideIn .4s ease-out both;
         }
 
@@ -165,10 +260,11 @@
             transition: opacity .3s ease-in-out, transform .3s ease, box-shadow .3s ease;
             animation: glowPulse 4s ease-in-out infinite;
         }
+
         #flashcard-content:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 30px rgba(108,99,255,.2);
-            border-color: rgba(108,99,255,.2);
+            box-shadow: 0 0 30px rgba(108, 99, 255, .2);
+            border-color: rgba(108, 99, 255, .2);
         }
 
         .flashcard-front-style {
@@ -177,9 +273,15 @@
             font-family: 'JetBrains Mono', monospace;
             color: var(--accent-color);
         }
-        .flashcard-back-style { font-size:1.05em; line-height:1.7; color:var(--text-muted); }
 
-        .question-container-single, .question-container-all {
+        .flashcard-back-style {
+            font-size: 1.05em;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .question-container-single,
+        .question-container-all {
             margin-bottom: 16px;
             padding: 18px;
             background: var(--glass-bg);
@@ -188,16 +290,22 @@
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
         }
-        .question-text { font-weight:600; margin-bottom:16px; font-size:1.05em; }
 
-        .options button, .tf-options button {
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 16px;
+            font-size: 1.05em;
+        }
+
+        .options button,
+        .tf-options button {
             display: block;
             width: 100%;
             padding: 12px 16px;
             margin: 8px 0;
-            background: rgba(108,99,255,.12);
+            background: rgba(108, 99, 255, .12);
             color: var(--text-color);
-            border: 1px solid rgba(108,99,255,.2);
+            border: 1px solid rgba(108, 99, 255, .2);
             border-radius: var(--radius-sm);
             cursor: pointer;
             text-align: right;
@@ -205,15 +313,30 @@
             font-size: .95em;
             transition: all .25s ease;
         }
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background: rgba(108,99,255,.25);
+
+        .options button:hover:not(:disabled),
+        .tf-options button:hover:not(:disabled) {
+            background: rgba(108, 99, 255, .25);
             border-color: var(--accent-color);
             transform: translateX(-4px);
-            box-shadow: 0 0 16px rgba(108,99,255,.15);
+            box-shadow: 0 0 16px rgba(108, 99, 255, .15);
         }
-        .options button:disabled, .tf-options button:disabled { cursor:not-allowed; opacity:.7; }
-        .options button.correct, .tf-options button.correct { opacity:1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity:1; }
+
+        .options button:disabled,
+        .tf-options button:disabled {
+            cursor: not-allowed;
+            opacity: .7;
+        }
+
+        .options button.correct,
+        .tf-options button.correct {
+            opacity: 1;
+        }
+
+        .options button.incorrect,
+        .tf-options button.incorrect {
+            opacity: 1;
+        }
 
         .feedback {
             margin-top: 12px;
@@ -222,14 +345,16 @@
             font-weight: 600;
             animation: fadeIn .3s ease-out;
         }
+
         .feedback.correct {
-            background: rgba(34,197,94,.15);
-            border: 1px solid rgba(34,197,94,.3);
+            background: rgba(34, 197, 94, .15);
+            border: 1px solid rgba(34, 197, 94, .3);
             color: #4ade80;
         }
+
         .feedback.incorrect {
-            background: rgba(239,68,68,.15);
-            border: 1px solid rgba(239,68,68,.3);
+            background: rgba(239, 68, 68, .15);
+            border: 1px solid rgba(239, 68, 68, .3);
             color: #f87171;
         }
 
@@ -238,7 +363,7 @@
             font-style: italic;
             font-size: .9em;
             padding: 12px 16px;
-            background: rgba(255,255,255,.02);
+            background: rgba(255, 255, 255, .02);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-sm);
             color: var(--text-muted);
@@ -253,7 +378,8 @@
             margin-bottom: 12px;
         }
 
-        .nav-button, .view-all-button {
+        .nav-button,
+        .view-all-button {
             background: var(--accent-gradient);
             color: #fff;
             border: none;
@@ -264,17 +390,37 @@
             font-weight: 500;
             font-size: .9em;
             transition: all .25s ease;
-            box-shadow: 0 2px 12px rgba(108,99,255,.2);
+            box-shadow: 0 2px 12px rgba(108, 99, 255, .2);
         }
-        .nav-button:hover:not(:disabled), .view-all-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(108,99,255,.35);
-        }
-        .nav-button:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
 
-        .counter { font-size:.85em; color:var(--text-muted); font-family:'JetBrains Mono', monospace; }
-        .view-all-container { text-align:center; margin-top:16px; margin-bottom:16px; }
-        .hidden { display:none; }
+        .nav-button:hover:not(:disabled),
+        .view-all-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(108, 99, 255, .35);
+        }
+
+        .nav-button:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .counter {
+            font-size: .85em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 16px;
+            margin-bottom: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
 
         #mcq-all-questions .question-container-all,
         #tf-all-questions .question-container-all {
@@ -282,55 +428,90 @@
             animation: fadeIn .3s ease-out both;
         }
 
-        ::-webkit-scrollbar { width:6px; }
-        ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(108,99,255,.3); border-radius:3px; }
-        ::-webkit-scrollbar-thumb:hover { background:rgba(108,99,255,.5); }
-        ::selection { background:rgba(108,99,255,.3); color:#fff; }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
 
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(108, 99, 255, .3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(108, 99, 255, .5);
+        }
+
+        ::selection {
+            background: rgba(108, 99, 255, .3);
+            color: #fff;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>ארגון הכרומטין ובקרת ביטוי גנים</h1>
 
         <div class="section">
-            <h2>תקציר תיאוריה ונקודות "אאוריקה"</h2>
+            <h2>תקציר תיאוריה ונקודות "תובנה מרכזית"</h2>
             <div id="theory-content" class="theory-text">
                 <h3>מבוא לארגון הכרומטין</h3>
-                <p>הכרומטין הוא מבנה מורכב של DNA וחלבונים (בעיקר היסטונים) המארגן את החומר התורשתי בגרעין התא. מצב הכרומטין קובע האם רצפי בקרה (cis-regulatory sequences) יהיו נגישים לקישור של פקטורים פועלים (trans-acting factors) או יישארו דחוסים ובלתי נגישים. בכך, הכרומטין מהווה מנגנון מרכזי בבקרת פוטנציאל ביטוי הגנים.</p>
-                
+                <p>הכרומטין הוא מבנה מורכב של DNA וחלבונים (בעיקר היסטונים) המארגן את החומר התורשתי בגרעין התא. מצב
+                    הכרומטין קובע האם רצפי בקרה (cis-regulatory sequences) יהיו נגישים לקישור של פקטורים פועלים
+                    (trans-acting factors) או יישארו דחוסים ובלתי נגישים. בכך, הכרומטין מהווה מנגנון מרכזי בבקרת
+                    פוטנציאל ביטוי הגנים.</p>
+
                 <h3>מבנה הנוקלאוזום ומודיפיקציות היסטונים</h3>
-                <p>יחידת הבסיס של הכרומטין היא הנוקלאוזום, המורכב מאוקטמר של היסטונים (שני עותקים של H2A, H2B, H3, H4) שסביבו מלופף ה-DNA. לכל היסטון יש זנב N-טרמינלי הבולט החוצה וחשוף למודיפיקציות קוולנטיות (Post-translational modifications) כגון מתילציה, אצטילציה וזרחון. מודיפיקציות אלו משמשות כמידע בקרה המגייס חלבונים ספציפיים או משנה את נגישות הכרומטין.</p>
+                <p>יחידת הבסיס של הכרומטין היא הנוקלאוזום, המורכב מאוקטמר של היסטונים (שני עותקים של H2A, H2B, H3, H4)
+                    שסביבו מלופף ה-DNA. לכל היסטון יש זנב N-טרמינלי הבולט החוצה וחשוף למודיפיקציות קוולנטיות
+                    (Post-translational modifications) כגון מתילציה, אצטילציה וזרחון. מודיפיקציות אלו משמשות כמידע בקרה
+                    המגייס חלבונים ספציפיים או משנה את נגישות הכרומטין.</p>
                 <ul>
-                    <li><strong>אצטילציה:</strong> הוספת קבוצת אצטיל לשיירי ליזין על ידי אנזימי HAT מנטרלת את המטען החיובי של הליזין, מחלישה את הזיקה ל-DNA ולנוקלאוזומים סמוכים, וגורמת לפתיחת הכרומטין. אנזימי HDAC מבצעים את הפעולה ההפוכה.</li>
-                    <li><strong>מתילציה:</strong> יכולה להוביל להשתקה או להפעלה, תלוי בשייר הספציפי. למשל, טרי-מתילציה על H3K9 קשורה להשתקה ויצירת הטרוכרומטין (מגייסת את חלבון HP1), בעוד שטרי-מתילציה על H3K4 מסמנת פרומוטור פעיל.</li>
+                    <li><strong>אצטילציה:</strong> הוספת קבוצת אצטיל לשיירי ליזין על ידי אנזימי HAT מנטרלת את המטען
+                        החיובי של הליזין, מחלישה את הזיקה ל-DNA ולנוקלאוזומים סמוכים, וגורמת לפתיחת הכרומטין. אנזימי
+                        HDAC מבצעים את הפעולה ההפוכה.</li>
+                    <li><strong>מתילציה:</strong> יכולה להוביל להשתקה או להפעלה, תלוי בשייר הספציפי. למשל, טרי-מתילציה
+                        על H3K9 קשורה להשתקה ויצירת הטרוכרומטין (מגייסת את חלבון HP1), בעוד שטרי-מתילציה על H3K4 מסמנת
+                        פרומוטור פעיל.</li>
                 </ul>
 
                 <h3>כותבים, קוראים ומוחקים (Writers, Readers, Erasers)</h3>
                 <p>מערכת הבקרה האפיגנטית פועלת באמצעות חלבונים ייעודיים:</p>
                 <ul>
                     <li><strong>Writers:</strong> אנזימים המוסיפים מודיפיקציות (למשל HATs, HMTs).</li>
-                    <li><strong>Readers:</strong> חלבונים המזהים ונקשרים למודיפיקציות ספציפיות. דומיין Bromodomain מזהה אצטילציה, ודומיין Chromodomain מזהה מתילציה.</li>
+                    <li><strong>Readers:</strong> חלבונים המזהים ונקשרים למודיפיקציות ספציפיות. דומיין Bromodomain מזהה
+                        אצטילציה, ודומיין Chromodomain מזהה מתילציה.</li>
                     <li><strong>Erasers:</strong> אנזימים המסירים מודיפיקציות (למשל HDACs, דה-מתילאזות).</li>
                 </ul>
 
                 <h3>קומפלקסים משחלפי כרומטין (Chromatin Remodelers)</h3>
-                <p>קומפלקסים תלויי-ATP, כגון SWI/SNF (המוכר גם כ-BAF ביונקים), משתמשים באנרגיה כדי להחליק או להעביר נוקלאוזומים. SWI/SNF מכיל תת-יחידות בעלות Bromodomain ה"קוראות" אצטילציה ומאפשרות פתיחה פיזית של הכרומטין. מוטציות בקומפלקס זה שכיחות מאוד בסרטן (20-25% מהמקרים).</p>
+                <p>קומפלקסים תלויי-ATP, כגון SWI/SNF (המוכר גם כ-BAF ביונקים), משתמשים באנרגיה כדי להחליק או להעביר
+                    נוקלאוזומים. SWI/SNF מכיל תת-יחידות בעלות Bromodomain ה"קוראות" אצטילציה ומאפשרות פתיחה פיזית של
+                    הכרומטין. מוטציות בקומפלקס זה שכיחות מאוד בסרטן (20-25% מהמקרים).</p>
 
                 <div class="eureka-box">
-                    <strong>אאוריקה! פרדוקס הסרטן האפיגנטי</strong>
-                    <p>בתאים סרטניים מתרחשת תופעה כפולה ומנוגדת לכאורה: מצד אחד, ישנה פתיחה (התרפפות) גלובלית של הכרומטין ברחבי הגנום. מצד שני, מתרחשת דחיסה מקומית קיצונית (הטרוכרומטין) באזורי הפרומוטור של גנים מדכאי סרטן (כמו p16, VHL, E-cad), מה שמוביל להשתקתם ומאפשר לגידול לשגשג.</p>
+                    <strong>תובנה מרכזית! פרדוקס הסרטן האפיגנטי</strong>
+                    <p>בתאים סרטניים מתרחשת תופעה כפולה ומנוגדת לכאורה: מצד אחד, ישנה פתיחה (התרפפות) גלובלית של
+                        הכרומטין ברחבי הגנום. מצד שני, מתרחשת דחיסה מקומית קיצונית (הטרוכרומטין) באזורי הפרומוטור של
+                        גנים מדכאי סרטן (כמו p16, VHL, E-cad), מה שמוביל להשתקתם ומאפשר לגידול לשגשג.</p>
                 </div>
 
                 <div class="eureka-box">
-                    <strong>אאוריקה! השתקה אקטיבית על גבי כרומטין פתוח</strong>
-                    <p>השתקת גנים אינה מחייבת בהכרח דחיסה של הכרומטין למצב סגור. מנגנון חלופי ויעיל לא פחות הוא שמירה על כרומטין פתוח, תוך קישור אקטיבי של חלבון רפרסור (Repressor). הרפרסור חוסם פיזית את קישור ה-RNA פולימראז או מונע אינטראקציה מרחבית בין אנהנסר לפרומוטור, למרות שהאזור נגיש.</p>
+                    <strong>תובנה מרכזית! השתקה אקטיבית על גבי כרומטין פתוח</strong>
+                    <p>השתקת גנים אינה מחייבת בהכרח דחיסה של הכרומטין למצב סגור. מנגנון חלופי ויעיל לא פחות הוא שמירה על
+                        כרומטין פתוח, תוך קישור אקטיבי של חלבון רפרסור (Repressor). הרפרסור חוסם פיזית את קישור ה-RNA
+                        פולימראז או מונע אינטראקציה מרחבית בין אנהנסר לפרומוטור, למרות שהאזור נגיש.</p>
                 </div>
 
                 <div class="eureka-box">
-                    <strong>אאוריקה! אפקט הדומינו של הכרומטין</strong>
-                    <p>שינויים אפיגנטיים יכולים להתפשט לאורך הכרומוזום כמעין "גל". חלבון Reader הנקשר למודיפיקציה קיימת יכול לגייס חלבון Writer, שיוסיף את אותה מודיפיקציה לנוקלאוזום השכן. תהליך מחזורי זה מאפשר יצירת אזורי הטרוכרומטין נרחבים מנקודת התחלה בודדת.</p>
+                    <strong>תובנה מרכזית! אפקט הדומינו של הכרומטין</strong>
+                    <p>שינויים אפיגנטיים יכולים להתפשט לאורך הכרומוזום כמעין "גל". חלבון Reader הנקשר למודיפיקציה קיימת
+                        יכול לגייס חלבון Writer, שיוסיף את אותה מודיפיקציה לנוקלאוזום השכן. תהליך מחזורי זה מאפשר יצירת
+                        אזורי הטרוכרומטין נרחבים מנקודת התחלה בודדת.</p>
                 </div>
             </div>
         </div>
@@ -361,17 +542,17 @@
                     <span class="counter" id="mcq-counter"></span>
                     <button class="nav-button" id="next-mcq">הבא</button>
                 </div>
-                 <div class="view-all-container">
-                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
-                 </div>
+                <div class="view-all-container">
+                    <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                </div>
+            </div>
         </div>
 
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
-             <div id="tf-single-view">
+            <div id="tf-single-view">
                 <div class="question-container-single" id="tf-container">
                     <div class="question-text" id="tf-question"></div>
                     <div class="tf-options" id="tf-options">
@@ -386,237 +567,237 @@
                     <span class="counter" id="tf-counter"></span>
                     <button class="nav-button" id="next-tf">הבא</button>
                 </div>
-                 <div class="view-all-container">
-                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
-                 </div>
+                <div class="view-all-container">
+                    <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                </div>
             </div>
-             <div id="tf-all-questions" class="hidden">
-                 </div>
+            <div id="tf-all-questions" class="hidden">
+            </div>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        const flashcardData = [
-            { term: "נוקלאוזום (Nucleosome)", definition: "יחידת המבנה הבסיסית של הכרומטין, המורכבת מ-DNA המלופף סביב אוקטמר של חלבוני היסטון." },
-            { term: "HAT (Histone Acetyltransferase)", definition: "אנזים הוספת קבוצות אצטיל לזנבות ההיסטונים, פעולה המנטרלת מטען חיובי ומובילה לפתיחת הכרומטין." },
-            { term: "HDAC (Histone Deacetylase)", definition: "אנזים המסיר קבוצות אצטיל מהיסטונים, תורם לדחיסת הכרומטין ולהשתקת גנים." },
-            { term: "Bromodomain", definition: "דומיין חלבוני המשמש כקורא (Reader) המזהה ונקשר ספציפית לשיירי ליזין שעברו אצטילציה." },
-            { term: "Chromodomain", definition: "דומיין חלבוני המשמש כקורא (Reader) המזהה ונקשר ספציפית לשיירי חומצות אמינו שעברו מתילציה." },
-            { term: "SWI/SNF (BAF complex)", definition: "קומפלקס משחלף כרומטין תלוי-ATP, המכיל חלבונים עם Bromodomain, וגורם להחלקת או העברת נוקלאוזומים לפתיחת כרומטין." },
-            { term: "H3K4me3", definition: "מודיפיקציה של טרי-מתילציה על ליזין 4 בהיסטון H3, המשמשת כסמן (Mark) מובהק לפרומוטור פעיל." },
-            { term: "H3K27me3", definition: "מודיפיקציה של טרי-מתילציה על ליזין 27 בהיסטון H3, המשמשת כסמן לפרומוטור לא פעיל (השתקה)." },
-            { term: "H3K27Ac", definition: "אצטילציה על ליזין 27 בהיסטון H3, מהווה סמן מובהק לאנהנסר (Enhancer) פעיל." },
-            { term: "H3K9me3", definition: "טרי-מתילציה על ליזין 9 בהיסטון H3, המגייסת את החלבון HP1 ומובילה ליצירת הטרוכרומטין והשתקה." },
-            { term: "Writers", definition: "חלבונים (כגון HATs ו-HMTs) המוסיפים מודיפיקציות קוולנטיות לזנבות ההיסטונים." },
-            { term: "Erasers", definition: "חלבונים (כגון HDACs ודה-מתילאזות) המסירים מודיפיקציות קוולנטיות מזנבות ההיסטונים." },
-            { term: "CTCF", definition: "חלבון קושר DNA הפועל כ-Insulator, התוחם אזורי כרומטין ומונע השפעה של אנהנסרים על פרומוטורים לא נכונים." },
-            { term: "פקטור שעתוק חלוצי (Pioneer TF)", definition: "פקטור שעתוק המסוגל להיקשר לרצף המטרה שלו גם כאשר הכרומטין דחוס, ובכך לאתחל את פתיחתו." },
-            { term: "מעכבי HDAC", definition: "תרופות המונעות דה-אצטילציה, גורמות להצטברות אצטילציה ולפתיחת כרומטין, ומשמשות כסוכנים ציטוסטטיים נגד תאים סרטניים." }
-        ];
+        document.addEventListener('DOMContentLoaded', function () {
 
-        const mcqData = [
-            { question: "חוקר פיתח מולקולה החוסמת באופן ספציפי את פעילותם של חלבוני Bromodomain. איזו מהתופעות הבאות צפויה להתרחש בעקבות הטיפול?", options: ["עלייה בקצב הדה-אצטילציה של היסטונים", "ירידה ביכולת של קומפלקס SWI/SNF לשנות את מבנה הכרומטין סביב גנים פעילים", "הפיכה ישירה של יו-כרומטין להטרוכרומטין באמצעות הוספת מתילציה", "עלייה בביטוי של גנים מדכאי סרטן (Tumor suppressors)"], correctIndex: 1, explanation: "חלבוני Bromodomain הם 'קוראים' המזהים אצטילציה. קומפלקס SWI/SNF משתמש בתת-יחידות המכילות Bromodomain כדי להיקשר לאזורים מועשרים באצטילציה ולפתוח את הכרומטין. חסימתם תמנע את פעילות הקומפלקס באזורים אלו." },
-            { question: "מהי ההשפעה הביוכימית הישירה של פעילות אנזימי HAT (Histone Acetyltransferases) על זנבות ההיסטונים?", options: ["הוספת מטען שלילי הדוחה את ה-DNA", "נטרול המטען החיובי של שיירי ליזין", "יצירת קשרי צילוב קוולנטיים בין נוקלאוזומים סמוכים", "גיוס ישיר של פולימראז II באמצעות קשרי מימן"], correctIndex: 1, explanation: "אנזימי HAT מוסיפים קבוצת אצטיל לשיירי ליזין בזנב ההיסטון. הליזין במצבו הטבעי טעון חיובית ונקשר בחוזקה ל-DNA הטעון שלילית. האצטילציה מנטרלת את המטען החיובי, מה שמחליש את הקישור ופותח את הכרומטין." },
-            { question: "בתא סרטני נצפתה השתקה של הגן p16, שהוא גן מדכא סרטן. איזו תבנית מודיפיקציות צפויה להימצא באזור הפרומוטור של גן זה בתא הסרטני לעומת תא תקין?", options: ["העשרה ב-H3K4me3 וירידה ב-H3K27me3", "העשרה ב-H3K27Ac ועליה באצטילציה כללית", "העשרה ב-H3K27me3 וירידה באצטילציה", "היעדר מוחלט של נוקלאוזומים באזור הפרומוטור"], correctIndex: 2, explanation: "הגן p16 מושתק בתאים סרטניים באמצעות סגירת הכרומטין באזור הפרומוטור (הטרוכרומטין). סגירה זו מאופיינת בסמני השתקה כמו מתילציה (למשל H3K27me3) והיעדר סמני הפעלה כמו אצטילציה." },
-            { question: "איזה מהמשפטים הבאים מתאר נכונה את מנגנון ההשתקה של גנים על גבי כרומטין *פתוח*?", options: ["הכרומטין נשאר פתוח, אך אנזימי HDAC מסירים את כל קבוצות האצטיל", "חלבון רפרסור נקשר לאזור הנגיש וחוסם פיזית את פעילות ה-RNA פולימראז או מונע אינטראקציה עם אנהנסר", "נוקלאוזומים נדחסים זה לזה באמצעות קומפלקס SWI/SNF מבלי לסגור את ה-DNA", "הכרומטין הפתוח מגייס חלבוני HP1 המונעים שעתוק"], correctIndex: 1, explanation: "השתקה אינה מחייבת דחיסה. כרומטין יכול להיות במצב 'פתוח' ונגיש, אך חלבון רפרסור שנקשר אליו ימנע באופן אקטיבי את השעתוק על ידי הפרעה פיזית למנגנון השעתוק או לאינטראקציות בקרה." },
-            { question: "החלבון HP1 ידוע כנקשר לאזורי הטרוכרומטין וגורם לדחיסתם. איזה דומיין סביר ביותר שיימצא בחלבון זה, ולאיזו מודיפיקציה הוא נקשר?", options: ["Bromodomain הקושר H3K27Ac", "Chromodomain הקושר H3K9me3", "Zinc Finger הקושר H3K4me3", "PHD finger הקושר ליזין לא ממותמר"], correctIndex: 1, explanation: "HP1 הוא חלבון ספציפי להטרוכרומטין הנקשר לטרי-מתילציה על ליזין 9 בהיסטון H3 (H3K9me3). חלבונים ה'קוראים' מתילציה עושים זאת לרוב באמצעות דומיין Chromodomain." },
-            { question: "תרופות ממשפחת מעכבי HDAC (HDAC inhibitors) משמשות בטיפול אנטי-סרטני. מהו המנגנון התאי הצפוי בעקבות מתן תרופה זו?", options: ["דחיסה גלובלית של הכרומטין ומניעת שעתוק של אונקוגנים", "הצטברות של קבוצות אצטיל על היסטונים, פתיחת כרומטין וביטוי מחדש של גנים מעכבי מחזור תא", "הסרה מוגברת של קבוצות מתיל מה-DNA", "גיוס מוגבר של קומפלקס HP1 לאזורי פרומוטור"], correctIndex: 1, explanation: "מעכבי HDAC מונעים את הסרת האצטילציה. כתוצאה מכך, יש הצטברות של אצטילציה המובילה לפתיחת כרומטין. בתאים סרטניים, זה עשוי להוביל לביטוי מחדש של גנים מדכאי סרטן שהושתקו בטעות, מה שגורם לעצירת מחזור התא או אפופטוזיס." },
-            { question: "כיצד מתאפשרת 'התפשטות' (Spreading) של מצב כרומטין (למשל דחיסה) לאורך מקטע ארוך של כרומוזום?", options: ["באמצעות דיפוזיה פסיבית של אנזימי HAT לאורך ה-DNA", "על ידי קומפלקס 'קורא-כותב' (Reader-Writer) שבו זיהוי מודיפיקציה אחת מוביל להוספתה לנוקלאוזום השכן", "באמצעות יצירת קשרים קוולנטיים בין זנבות של היסטונים מרוחקים", "על ידי תנועה רציפה של RNA פולימראז הדוחף את הנוקלאוזומים"], correctIndex: 1, explanation: "התפשטות כרומטין מתרחשת דרך לולאת משוב חיובית: חלבון Reader מזהה מודיפיקציה (למשל מתילציה) ומגייס חלבון Writer המוסיף את אותה מודיפיקציה לנוקלאוזום הסמוך, וכך התהליך מתפשט הלאה." },
-            { question: "איזה מהרצפים הבאים צפוי להיות מסומן בעושר רב במודיפיקציה H3K4me1 (מונו-מתילציה) אך ללא H3K27Ac?", options: ["פרומוטור פעיל", "אנהנסר פעיל (Active Enhancer)", "אנהנסר בהיכון (Poised Enhancer)", "אזור הטרוכרומטין קונסטיטוטיבי"], correctIndex: 2, explanation: "המודיפיקציה H3K4me1 היא סמן לאנהנסרים. כאשר האנהנסר פעיל, תתווסף גם אצטילציה (H3K27Ac). כאשר יש רק H3K4me1 ללא אצטילציה, זהו מצב של אנהנסר 'בהיכון' (Poised)." },
-            { question: "מוטציה המונעת את ההידרוליזה של ATP בקומפלקס SWI/SNF תפגע ישירות ביכולתו לבצע איזה מהתהליכים הבאים?", options: ["הוספת קבוצות אצטיל לזנבות היסטונים", "זיהוי שיירי ליזין שעברו אצטילציה באמצעות Bromodomain", "החלקה או העברה פיזית של נוקלאוזומים לאורך ה-DNA", "הסרת קבוצות מתיל מ-H3K9"], correctIndex: 2, explanation: "קומפלקס SWI/SNF הוא Remodeler תלוי-ATP. הוא זקוק לאנרגיה מפירוק ATP כדי לבצע שינויים מכניים במבנה הכרומטין, כגון החלקה (Sliding) או העברה (Transfer) של נוקלאוזומים." },
-            { question: "האם וכיצד שינוי בבסיס בודד (SNP) באזור פרומוטור יכול להשפיע באופן ישיר על רמת הפתיחה של הכרומטין באותו אזור?", options: ["לא, SNPs משפיעים רק על רצף החלבון המקודד ולא על אזורי בקרה", "כן, על ידי מניעת הקישור של אנזימי HDAC בלבד", "כן, SNP יכול ליצור או להרוס אתר קישור לפקטור שעתוק חלוצי (Pioneer TF) האמור לאתחל את פתיחת הכרומטין", "לא, פתיחת כרומטין תלויה אך ורק באותות מהסביבה החוץ תאית"], correctIndex: 2, explanation: "פקטורי שעתוק חלוציים מסוגלים להיקשר לכרומטין סגור ולגייס קומפלקסים פותחי כרומטין. אם SNP הורס את אתר הקישור הספציפי של הפקטור החלוצי ב-DNA, התהליך כולו לא יתחיל והכרומטין יישאר סגור." },
-            { question: "מהי המשמעות של הימצאות המודיפיקציה H3K4me3 במיקום גנומי מסוים?", options: ["האזור משמש כאנהנסר הנמצא במצב מנוחה", "האזור הוא פרומוטור פעיל (Active Promoter)", "האזור מקודד לחלבון מבני של הריבוזום", "האזור עובר השתקה באמצעות קומפלקס HP1"], correctIndex: 1, explanation: "טרי-מתילציה על ליזין 4 של היסטון H3 (H3K4me3) נחשבת לסמן האוניברסלי והמובהק ביותר לפרומוטורים פעילים (או כאלה שמוכנים לפעולה מיידית)." },
-            { question: "איזה מהרכיבים הבאים אינו מהווה חלק מהנוקלאוזום הבסיסי (Core particle)?", options: ["היסטון H2A", "היסטון H3", "היסטון H1", "מקטע DNA באורך של כ-147 זוגות בסיסים"], correctIndex: 2, explanation: "ליבת הנוקלאוזום מורכבת מאוקטמר הכולל שני עותקים של H2A, H2B, H3 ו-H4. היסטון H1 הוא היסטון 'מגשר' (Linker histone) הנקשר ל-DNA מחוץ לליבה ותורם לדחיסה מסדר גבוה יותר." },
-            { question: "במחקר נצפה כי גן מסוים אינו משועתק למרות שאזור הפרומוטור שלו מכיל אצטילציה רבה וחסר מתילציה מסוג H3K9me3. מה עשוי להסביר תופעה זו?", options: ["היעדר מוחלט של קומפלקס SWI/SNF בתא", "נוכחות של חלבון Repressor הנקשר לפרומוטור הנגיש ומונע את קישור הפולימראז", "מוטציה באנזים HAT המונעת את פעילותו", "הפיכת ה-DNA באזור זה ל-Z-DNA"], correctIndex: 1, explanation: "כרומטין פתוח (המעיד על נגישות) אינו מבטיח שעתוק. מנגנון השתקה נפוץ הוא קישור של רפרסור לכרומטין הפתוח, אשר חוסם פיזית את מנגנון השעתוק." },
-            { question: "חלבון ה-CTCF מתפקד בתא כ-Insulator. מה יקרה אם תתרחש מוטציה שתמנע לחלוטין את פעילותו?", options: ["כל הגנים בתא יתבטאו בו זמנית", "אנהנסרים עלולים להפעיל פרומוטורים של גנים סמוכים שאינם מטרתם המקורית", "הכרומטין יהפוך כולו להטרוכרומטין סגור ודחוס", "ייווצר נזק DNA דו-גדילי חמור"], correctIndex: 1, explanation: "תפקיד ה-Insulator הוא לתחום אזורי כרומטין ולמנוע זליגה של השפעות בקרה (כמו אנהנסרים) לאזורים שאינם קשורים. ללא CTCF, אנהנסר המיועד לגן A עלול להפעיל בטעות את גן B הסמוך." },
-            { question: "מבין המודיפיקציות הבאות, אילו משפיעות על מבנה הכרומטין *גם* באמצעות שינוי המטען החשמלי של ההיסטון ו*גם* כיצירת אתר קישור ספציפי לחלבונים אחרים?", options: ["מתילציה של ארגינין", "זרחון של סרין", "אצטילציה של ליזין", "יוביקוויטינציה של ליזין"], correctIndex: 2, explanation: "אצטילציה על ליזין מסירה את המטען החיובי (מה שמחליש ישירות את הקישור ל-DNA) ובמקביל יוצרת אתר זיהוי ספציפי לחלבונים בעלי Bromodomain. מתילציה אינה משנה את המטען של החומצה האמינית." },
-            { question: "מהי התרומה הייחודית של קומפלקסים מסוג Trithorax בהקשר של בקרת כרומטין?", options: ["הם פועלים כ-Erasers המסירים מודיפיקציות מעודדות שעתוק", "הם פועלים כ-Writers המוסיפים מודיפיקציות המקושרות לכרומטין פתוח (כגון H3K4me3)", "הם חלבוני שלד המייצבים את מבנה הנוקלאוזום", "הם אנזימים המפרקים את ה-DNA באזורי הטרוכרומטין"], correctIndex: 1, explanation: "קומפלקס Trithorax קשור לשמירה על מצב שעתוק פעיל, לרוב על ידי פעילות קטליטית של הוספת מתילציה על H3K4 (H3K4me3), הפועלת כסמן של יו-כרומטין (כרומטין פתוח)." },
-            { question: "באיזה מנגנון פועל מוטיב ה-Leucine zipper בהקשר של בקרת גנים?", options: ["זהו דומיין המאפשר לאנזימי HDAC לחתוך את ה-DNA", "זהו מוטיב מבני המאפשר דימריזציה של פקטורי שעתוק וקישורם הספציפי ל-DNA", "זהו המבנה המרחבי של זנבות ההיסטונים בתוך הנוקלאוזום", "זהו קומפלקס החלבונים האחראי על יצירת לולאות (Looping) בפרוקריוטים"], correctIndex: 1, explanation: "Leucine zipper הוא מוטיב מבני נפוץ בפקטורי שעתוק (DNA Binding Motif) המאפשר לשתי תת-יחידות חלבוניות להיקשר זו לזו (דימריזציה) וליצור מבנה דמוי מלקחיים הנאחז ב-DNA." },
-            { question: "מה ההבדל העקרוני בין מנגנון הבקרה של אופרון הלקטוז (Lac Operon) לבין מנגנוני הבקרה האפיגנטיים באאוקריוטים?", options: ["באופרון הלקטוז אין מעורבות של פקטורי שעתוק כלל", "באופרון הלקטוז הבקרה מבוססת בעיקר על נגישות ה-DNA הנובעת מדחיסת כרומטין", "אופרון הלקטוז מבוקר על ידי קישור ישיר של חלבונים לרצף ה-DNA החשוף, בעוד שבאאוקריוטים נדרשת התמודדות עם מחסום הנוקלאוזומים", "אין הבדל, שתי המערכות משתמשות באנזימי HAT כדי לפתוח את ה-DNA"], correctIndex: 2, explanation: "לפרוקריוטים (כמו חיידקי E. coli בהם נמצא אופרון הלקטוז) אין כרומטין אמיתי ונוקלאוזומים. ה-DNA חשוף יחסית, והבקרה מסתמכת על תחרות ישירה בין רפרסורים לפולימראז. באאוקריוטים, ה-DNA עטוף בנוקלאוזומים המהווים מחסום פיזי שיש להסירו או לשנותו." },
-            { question: "תא עבר מוטציה הגורמת לפעילות יתר (Hyperactivity) של חלבוני LSD (Lysine Specific Demethylase). מה תהיה התוצאה הסבירה ביותר ברמת הכרומטין?", options: ["עלייה דרסטית ברמות האצטילציה הכלליות", "הסרה מוגברת של קבוצות מתיל מהיסטונים, מה שעשוי להוביל לשינויים בנגישות הכרומטין בהתאם לשייר הספציפי", "דחיסה מוחלטת של כל הגנום למצב של הטרוכרומטין", "פירוק מוחלט של אוקטמר ההיסטונים"], correctIndex: 1, explanation: "חלבוני LSD הם Erasers המורידים קבוצות מתיל מליזין. פעילות יתר שלהם תוביל לדה-מתילציה מוגברת. ההשפעה הסופית (פתיחה או סגירה) תלויה באילו שיירים ספציפיים עוברים דה-מתילציה (למשל, הסרת מתיל מ-H3K9 תעודד פתיחה, הסרת מתיל מ-H3K4 תעודד סגירה)." },
-            { question: "מדוע מוטציות בקומפלקס SWI/SNF שכיחות כל כך (20-25%) בסוגי סרטן שונים?", options: ["מפני ש-SWI/SNF הוא האנזים היחיד המסוגל לשכפל DNA", "מפני שפגיעה ביכולת לשנות את פריסת הנוקלאוזומים משבשת את הבקרה על גנים רבים, ביניהם גנים המעורבים בבקרת חלוקת התא", "מפני שהקומפלקס אחראי על תיקון נזקי DNA באמצעות חיתוך אצטילציות", "מפני שהוא מתפקד כרצפטור ממברנלי המעודד גדילה"], correctIndex: 1, explanation: "SWI/SNF הוא קומפלקס Remodeling מרכזי. פגיעה בו גורמת לכך שהתא מאבד את היכולת לפתוח ולסגור כרומטין באזורי בקרה קריטיים, מה שמוביל לביטוי שגוי של רשתות גנים נרחבות, כולל אובדן בקרה על מחזור התא (מאפיין קלאסי של סרטן)." },
-            { question: "האם מתילציה של היסטונים תמיד גורמת להשתקת גנים?", options: ["כן, הוספת קבוצת מתיל תמיד מגדילה את הדחיסה המרחבית", "כן, מתילציה מגייסת תמיד קומפלקסים מסוג HDAC", "לא, ההשפעה תלויה במיקום חומצת האמינו הספציפית שעוברת מתילציה (למשל H3K4 לעומת H3K9)", "לא, מתילציה משפיעה רק על היציבות של מולקולת ה-RNA לאחר השעתוק"], correctIndex: 2, explanation: "בניגוד לאצטילציה שלרוב מעודדת פתיחה, מתילציה היא תלוית-הקשר (Context-dependent). מתילציה על H3K9 קשורה להשתקה, בעוד שמתילציה על H3K4 קשורה להפעלה." },
-            { question: "באיזה אופן משתלבים פקטורי השעתוק (Transcription Factors) עם השינויים במבנה הכרומטין?", options: ["הם מסוגלים לפרק את הנוקלאוזומים באופן עצמאי ללא עזרה", "הם נקשרים רק ל-DNA עירום לחלוטין שאין בו היסטונים כלל", "הם מזהים רצפי מטרה ספציפיים באזורים נגישים, ולעיתים מגייסים בעצמם קומפלקסים של Writers או Remodelers כדי לפתוח את הכרומטין עוד יותר", "הם מתפקדים כ-Erasers המסירים אצטילציה כדי לעצור את השעתוק"], correctIndex: 2, explanation: "פקטורי שעתוק מזהים רצפי DNA (Cis-elements). לרוב הם זקוקים לכרומטין 'מרשה' (Permissive) כדי להיקשר, וברגע שנקשרו, הם יכולים לגייס חלבונים משני-כרומטין (כמו HATs או SWI/SNF) כדי לייצר סביבה פתוחה ויציבה לשעתוק." },
-            { question: "מה מאפיין את המצב המכונה 'כרומטין בהיכון' (Permissive chromatin) בהשוואה לכרומטין סגור לחלוטין?", options: ["הכרומטין נטול היסטונים לחלוטין", "הכרומטין נגיש מספיק כדי לאפשר קישור ראשוני של פקטורי שעתוק, אך עדיין אינו פתוח מספיק לגיוס מלא של פולימראז II", "הכרומטין קשור באופן קבוע לחלבוני HP1", "הכרומטין מאופיין ברמות גבוהות מאוד של מתילציה על ה-DNA עצמו"], correctIndex: 1, explanation: "כרומטין 'מרשה' או 'בהיכון' הוא מצב ביניים. הוא לא דחוס לחלוטין כמו הטרוכרומטין, ומאפשר לפקטורי שעתוק מסוימים להיקשר, אך עדיין דורש פעילות נוספת (כמו Remodeling) כדי להפוך לכרומטין פתוח ופעיל שעתוקית." },
-            { question: "איזה סוג של מידע מעבירות המודיפיקציות הקוולנטיות על זנבות ההיסטונים?", options: ["מידע גנטי המקודד לחומצות אמינו", "מידע מבני הקובע את כיוון סליל ה-DNA (ימני או שמאלי)", "מידע בקרתי (Regulatory information) המשפיע על גיוס חלבונים ונגישות הכרומטין", "מידע על קצב התרגום בריבוזום"], correctIndex: 2, explanation: "המודיפיקציות מהוות מעין 'קוד אפיגנטי'. הן אינן משנות את המידע הגנטי (הרצף), אלא מספקות שכבת מידע בקרתית הקובעת מי ייקשר לאזור ומה תהיה רמת הפעילות שלו." },
-            { question: "מהי התוצאה של מוטציה המונעת את קישור קבוצת ה-Acetyl לשיירי ליזין בהיסטון H4?", options: ["הכרומטין יישאר במצב פתוח תמידי", "תיווצר זיקה חזקה יותר בין הזנב של H4 לנוקלאוזומים סמוכים ול-DNA, מה שיעודד מבנה כרומטין דחוס", "ה-DNA ישתחרר לחלוטין מהנוקלאוזום", "קומפלקס SWI/SNF יפעל ביתר שאת"], correctIndex: 1, explanation: "ללא יכולת לקבל אצטילציה, שייר הליזין יישאר במצבו הטעון חיובית. המטען החיובי מקיים אינטראקציות אלקטרוסטטיות חזקות עם ה-DNA השלילי ועם נוקלאוזומים אחרים, מה שתורם לדחיסת הכרומטין." },
-            { question: "החלבון BRD4 מכיל דומיינים מסוג Bromodomain. לחלבון זה תפקיד חשוב בגיוס קומפלקסים המעודדים שעתוק. תרופה הנקראת JQ1 חוסמת את ה-Bromodomain של BRD4. כיצד תשפיע התרופה על תא סרטני התלוי בפעילות BRD4?", options: ["היא תגרום לפירוק ה-DNA באזורים ממותלים", "היא תמנע מ-BRD4 לזהות אזורי כרומטין מועשרים באצטילציה, ובכך תדכא שעתוק של גנים המקודמים על ידו (כגון אונקוגנים)", "היא תגביר את פעילות ה-HATs בתא", "היא תהפוך את BRD4 לאנזים HDAC"], correctIndex: 1, explanation: "אם ה-Bromodomain חסום, BRD4 אינו יכול 'לקרוא' את סימוני האצטילציה. כתוצאה מכך, הוא לא יוכל להיקשר לאנהנסרים ופרומוטורים פעילים, והשעתוק של גני המטרה שלו ייעצר." },
-            { question: "מהו ההרכב החלבוני של 'ליבת' הנוקלאוזום (Core particle)?", options: ["טטרמר של H3 ו-H4 בלבד", "אוקטמר המורכב משני עותקים של H2A, H2B, H3, H4", "הקסמר המורכב משלושה עותקים של H2A ו-H2B", "קומפלקס של היסטון H1 יחד עם חלבוני Scaffold"], correctIndex: 1, explanation: "ליבת הנוקלאוזום היא אוקטמר (מבנה של שמונה יחידות): דימרים של H2A-H2B וטטרמר מרכזי של H3-H4." },
-            { question: "מהי המטרה העיקרית של קיום כרומטין במצב 'סגור' (הטרוכרומטין) בתא אאוקריוטי?", options: ["לאפשר שעתוק מהיר של כל הגנום בעת חירום", "למנוע נזקי DNA בלבד ללא קשר לשעתוק", "לשמור על יציבות גנומית ולמנוע ביטוי בלתי רצוי של גנים ורצפים חוזרניים בסוגי תאים ספציפיים", "לשמש כמאגר של חומצות אמינו לתהליך התרגום"], correctIndex: 2, explanation: "הטרוכרומטין חשוב להשתקת גנים שאינם אמורים להתבטא ברקמה מסוימת (קביעת זהות התא), וכן להשתקת רכיבים גנומיים טפיליים (כמו טרנספוזונים) כדי למנוע אי-יציבות גנומית." },
-            { question: "באיור המתאר את מבנה ההיסטונים, מהו החלק בהיסטון הבולט אל מחוץ לליבת הנוקלאוזום ומהווה את המטרה העיקרית למודיפיקציות?", options: ["ה-Histone fold domain", "הזנב ה-N-טרמינלי (N-terminal tail)", "הקצה ה-C-טרמינלי (C-terminus)", "מוטיב ה-Helix-turn-helix"], correctIndex: 1, explanation: "הזנבות ה-N-טרמינליים של ההיסטונים חסרי מבנה משני מוגדר, בולטים החוצה מליבת הנוקלאוזום, והם האתרים העיקריים שעוברים מודיפיקציות קוולנטיות." },
-            { question: "מהו התפקיד של 'Looping' (יצירת לולאות ב-DNA) בבקרת גנים?", options: ["למנוע שעתוק על ידי קשירת ה-DNA לקרום הגרעין", "לאפשר אינטראקציה מרחבית בין רצפי בקרה מרוחקים (כגון אנהנסר) לבין הפרומוטור של הגן המטרה", "לדחוס את ה-DNA למבנה של כרומוזום מטאפאזי בלבד", "לאפשר לאנזימי HDAC לחתוך את ה-DNA"], correctIndex: 1, explanation: "מנגנון ה-Looping מאפשר לאנהנסרים, שיכולים להיות מרוחקים עשרות אלפי בסיסים מהגן, להתקרב פיזית במרחב התלת-ממדי אל הפרומוטור ולגייס את קומפלקס השעתוק." },
-            { question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין Acetyl Lysine לבין Trimethyl Lysine?", options: ["אצטילציה מסירה את המטען החיובי של הליזין, בעוד שמתילציה שומרת על המטען החיובי", "אצטילציה גורמת תמיד להשתקה, ומתילציה גורמת תמיד להפעלה", "אצטילציה מתרחשת רק על היסטון H4, ומתילציה רק על H3", "אין הבדל, שתיהן מודיפיקציות המבוצעות על ידי אותו אנזים (HAT)"], correctIndex: 0, explanation: "הוספת קבוצת אצטיל קושרת את קבוצת האמין של הליזין ומבטלת את מטענה החיובי. הוספת קבוצות מתיל (אפילו שלוש) אינה מבטלת את המטען החיובי הבסיסי של הליזין ב-pH פיזיולוגי." },
-            { question: "מה יקרה אם תא יאבד את היכולת לייצר את המולקולה S-adenosyl methionine (SAM), שהיא תורם קבוצות המתיל המרכזי בתא?", options: ["רמת האצטילציה של ההיסטונים תרד לאפס", "אנזימי HMT (Histone Methyltransferases) לא יוכלו להוסיף קבוצות מתיל להיסטונים, מה שישבש את בקרת הכרומטין", "קומפלקס SWI/SNF יפסיק לצרוך ATP", "כל הכרומטין יהפוך להטרוכרומטין דחוס"], correctIndex: 1, explanation: "אנזימי Writer מסוג מתיל-טרנספראז זקוקים למולקולת קופקטור שתתרום את קבוצת המתיל. ללא SAM, לא תתאפשר מתילציה של היסטונים (או של DNA)." },
-            { question: "חוקר מבחין באזור גנומי בו יש רמות גבוהות של H3K27me3 ורמות נמוכות מאוד של H3K4me3. מהו הסטטוס הסביר של האזור?", options: ["אזור המקודד לגן פעיל מאוד (Housekeeping gene)", "אזור בקרה מסוג אנהנסר פעיל", "אזור פרומוטור של גן מושתק (Inactive promoter)", "אזור התחלת שכפול (Origin of replication)"], correctIndex: 2, explanation: "H3K27me3 הוא סמן קלאסי של השתקה (פוליקומב), בעוד היעדר H3K4me3 מעיד על חוסר פעילות בפרומוטור." },
-            { question: "היכן נמצאים לרוב אתרי הקישור לפקטורי שעתוק (Cis-regulatory sequences) ביחס למבנה הכרומטין במצב פעיל?", options: ["קבורים עמוק בתוך ליבת הנוקלאוזום", "באזורים נטולי נוקלאוזומים (Nucleosome-depleted regions) או בקצוות הכרומטין הפתוח", "רק באזורים המקודדים לאקסונים", "קשורים בקשר קוולנטי לחלבוני HP1"], correctIndex: 1, explanation: "כדי שפקטורי שעתוק יוכלו להיקשר ל-DNA, הרצף חייב להיות נגיש. לכן, באזורי פרומוטור ואנהנסר פעילים יש לעיתים קרובות אזורים נטולי נוקלאוזומים (NDR) או כרומטין פתוח ודינמי מאוד." },
-            { question: "מהי המשמעות של היות קומפלקס SWI/SNF 'שמור אבולוציונית' (Evolutionarily conserved)?", options: ["הוא קיים רק בבני אדם", "המבנה והפונקציה שלו דומים מאוד במגוון רחב של אורגניזמים (משמרים ועד יונקים), מה שמעיד על חשיבותו הביולוגית הבסיסית", "הוא אינו עובר מוטציות לעולם", "הוא מורכב מחומצות אמינו שאינן משתנות לעולם לאורך זמן"], correctIndex: 1, explanation: "שמירות אבולוציונית מעידה על כך שמנגנון מסוים הוא כה קריטי להישרדות התא, עד שכל שינוי משמעותי בו במהלך האבולוציה נברר החוצה. משחלפי כרומטין חיוניים לכל האיקריוטים." },
-            { question: "במסגרת 'אפקט הדומינו' של הכרומטין, קומפלקס 'Reader-Writer' אחראי על התפשטות ההטרוכרומטין. מהו הגורם העיקרי שבולם התפשטות זו ומונע השתקה של כל הכרומוזום?", options: ["נגמר המלאי של קבוצות המתיל בתא", "הקומפלקס נתקל ברצף Insulator או באזור כרומטין בעל מודיפיקציות מתחרות (כמו אצטילציה מרובה) שאינו מאפשר את המשך ההתפשטות", "התנגשות פיזית עם הריבוזום", "פירוק ספונטני של ה-DNA"], correctIndex: 1, explanation: "התפשטות הכרומטין (Spreading) נעצרת כאשר היא פוגשת במחסומים טבעיים - רצפי Insulator (הקושרים חלבונים כמו CTCF) או אזורים המתוחזקים באופן אקטיבי על ידי אנזימים מתחרים (למשל HATs השומרים על אזור פתוח)." },
-            { question: "איזו מהתרופות הבאות תהיה היעילה ביותר כנגד גידול סרטני המאופיין בהשתקת-יתר (Hyper-silencing) של גנים מדכאי סרטן?", options: ["מעכב אנזימי HAT (HAT inhibitor)", "מעכב אנזימי HDAC (HDAC inhibitor)", "תרופה המגבירה את פעילות ה-Chromodomain", "תרופה המעודדת יצירת H3K9me3"], correctIndex: 1, explanation: "אם הגידול משתיק גנים רצויים, נרצה לפתוח את הכרומטין מחדש. מעכבי HDAC מונעים את הסרת האצטילציה, ובכך מעודדים כרומטין פתוח וביטוי מחדש של הגנים המושתקים." },
-            { question: "מהי הסיבה המבנית לכך שמודיפיקציות רבות מתרחשות דווקא על חומצת האמינו ליזין (Lysine)?", options: ["ליזין היא חומצת האמינו הקטנה ביותר", "השייר הצדדי של ליזין מכיל קבוצת אמין ראשונית בקצהו, המהווה אתר נוקלאופילי אידיאלי לתגובות כימיות כמו אצטילציה ומתילציה", "ליזין נמצאת רק בהיסטון H1", "ליזין טעונה שלילית ולכן מושכת את האצטיל"], correctIndex: 1, explanation: "השייר הארוך של הליזין מסתיים בקבוצת אמין (NH3+) שהיא אתר תגובה מצוין לאנזימים המוסיפים קבוצות כימיות." },
-            { question: "במהלך התמיינות תאית (Differentiation), תא גזע הופך לתא עור. איזה תהליך ברמת הכרומטין הכרחי לשם כך?", options: ["פירוק כל הנוקלאוזומים ויצירת כרומטין חדש מאפס", "שינוי דינמי של סמני הכרומטין: השתקה (הטרוכרומטין) של גנים הקשורים לרקמות אחרות, ופתיחה (יו-כרומטין) של גנים ספציפיים לעור", "הכפלת כמות ה-DNA בתא פי ארבעה", "החלפת כל ההיסטונים מסוג H3 בהיסטונים מסוג H1"], correctIndex: 1, explanation: "התמיינות תלויה בבקרת ביטוי גנים. ה-DNA נשאר זהה, אך התבנית האפיגנטית (הכרומטין) משתנה כדי לאפשר ביטוי של התוכנית הגנטית הספציפית לתא העור ולהשתיק תוכניות אחרות." },
-            { question: "איזה מהבאים אינו נחשב ל-DNA Binding Motif (מוטיב הקושר DNA)?", options: ["Helix-turn-helix", "Leucine zipper", "Bromodomain", "Zinc finger"], correctIndex: 2, explanation: "Bromodomain אינו קושר DNA באופן ישיר; הוא קושר את החלבון (היסטון) שעבר אצטילציה. השאר הם מוטיבים מבניים קלאסיים של פקטורי שעתוק הנקשרים ישירות לרצף ה-DNA." }
-        ];
+            const flashcardData = [
+                { term: "נוקלאוזום (Nucleosome)", definition: "יחידת המבנה הבסיסית של הכרומטין, המורכבת מ-DNA המלופף סביב אוקטמר של חלבוני היסטון." },
+                { term: "HAT (Histone Acetyltransferase)", definition: "אנזים הוספת קבוצות אצטיל לזנבות ההיסטונים, פעולה המנטרלת מטען חיובי ומובילה לפתיחת הכרומטין." },
+                { term: "HDAC (Histone Deacetylase)", definition: "אנזים המסיר קבוצות אצטיל מהיסטונים, תורם לדחיסת הכרומטין ולהשתקת גנים." },
+                { term: "Bromodomain", definition: "דומיין חלבוני המשמש כקורא (Reader) המזהה ונקשר ספציפית לשיירי ליזין שעברו אצטילציה." },
+                { term: "Chromodomain", definition: "דומיין חלבוני המשמש כקורא (Reader) המזהה ונקשר ספציפית לשיירי חומצות אמינו שעברו מתילציה." },
+                { term: "SWI/SNF (BAF complex)", definition: "קומפלקס משחלף כרומטין תלוי-ATP, המכיל חלבונים עם Bromodomain, וגורם להחלקת או העברת נוקלאוזומים לפתיחת כרומטין." },
+                { term: "H3K4me3", definition: "מודיפיקציה של טרי-מתילציה על ליזין 4 בהיסטון H3, המשמשת כסמן (Mark) מובהק לפרומוטור פעיל." },
+                { term: "H3K27me3", definition: "מודיפיקציה של טרי-מתילציה על ליזין 27 בהיסטון H3, המשמשת כסמן לפרומוטור לא פעיל (השתקה)." },
+                { term: "H3K27Ac", definition: "אצטילציה על ליזין 27 בהיסטון H3, מהווה סמן מובהק לאנהנסר (Enhancer) פעיל." },
+                { term: "H3K9me3", definition: "טרי-מתילציה על ליזין 9 בהיסטון H3, המגייסת את החלבון HP1 ומובילה ליצירת הטרוכרומטין והשתקה." },
+                { term: "Writers", definition: "חלבונים (כגון HATs ו-HMTs) המוסיפים מודיפיקציות קוולנטיות לזנבות ההיסטונים." },
+                { term: "Erasers", definition: "חלבונים (כגון HDACs ודה-מתילאזות) המסירים מודיפיקציות קוולנטיות מזנבות ההיסטונים." },
+                { term: "CTCF", definition: "חלבון קושר DNA הפועל כ-Insulator, התוחם אזורי כרומטין ומונע השפעה של אנהנסרים על פרומוטורים לא נכונים." },
+                { term: "פקטור שעתוק חלוצי (Pioneer TF)", definition: "פקטור שעתוק המסוגל להיקשר לרצף המטרה שלו גם כאשר הכרומטין דחוס, ובכך לאתחל את פתיחתו." },
+                { term: "מעכבי HDAC", definition: "תרופות המונעות דה-אצטילציה, גורמות להצטברות אצטילציה ולפתיחת כרומטין, ומשמשות כסוכנים ציטוסטטיים נגד תאים סרטניים." }
+            ];
 
-        const tfData = [
-            { question: "הוספת קבוצת אצטיל לזנבות ההיסטונים מגדילה את המטען החיובי שלהם ומחזקת את הקישור ל-DNA.", answer: false, explanation: "אצטילציה מנטרלת את המטען החיובי של הליזין, מה שמחליש את הקישור ל-DNA הטעון שלילית ומוביל לפתיחת הכרומטין." },
-            { question: "קומפלקס SWI/SNF משתמש באנרגיה מפירוק ATP כדי לשנות את מיקום הנוקלאוזומים על גבי ה-DNA.", answer: true, explanation: "SWI/SNF הוא קומפלקס ממשפחת ה-ATP-dependent nucleosome remodeling complexes, המשתמש ב-ATP כדי להחליק או להעביר נוקלאוזומים." },
-            { question: "בתאים סרטניים, אזורי הפרומוטור של גנים מדכאי סרטן (Tumor suppressors) נמצאים לרוב במצב של יו-כרומטין (פתוח).", answer: false, explanation: "בתאים סרטניים, הפרומוטורים של גנים מדכאי סרטן (כמו p16) לרוב עוברים השתקה ונדחסים למצב של הטרוכרומטין (סגור)." },
-            { question: "חלבונים בעלי Bromodomain מתפקדים כ'קוראים' (Readers) המזהים שיירי חומצות אמינו שעברו מתילציה.", answer: false, explanation: "Bromodomain מזהה אצטילציה. חלבונים המזהים מתילציה משתמשים לרוב בדומיינים כמו Chromodomain או PHD finger." },
-            { question: "השתקת גנים יכולה להתרחש גם כאשר הכרומטין נשאר במצב פתוח.", answer: true, explanation: "כן, חלבון רפרסור יכול להיקשר לאזור כרומטין פתוח ולחסום פיזית את הקישור של פולימראז II או למנוע אינטראקציה בין אנהנסר לפרומוטור." },
-            { question: "המודיפיקציה H3K4me3 היא סמן מובהק לכך שהאזור הוא אזור הטרוכרומטין מושתק.", answer: false, explanation: "H3K4me3 הוא סמן (Mark) מובהק לפרומוטור פעיל (Active Promoter)." },
-            { question: "אנזימי HDAC (Histone Deacetylases) נחשבים ל'מוחקים' (Erasers) המעודדים דחיסת כרומטין.", answer: true, explanation: "HDACs מסירים את קבוצות האצטיל, מה שמחזיר את המטען החיובי להיסטונים וגורם לדחיסה מחדש של הכרומטין." },
-            { question: "היסטון H1 מהווה חלק בלתי נפרד מאוקטמר הליבה של הנוקלאוזום.", answer: false, explanation: "אוקטמר הליבה מורכב מ-H2A, H2B, H3 ו-H4. היסטון H1 הוא היסטון מגשר (Linker) הנמצא מחוץ לליבה." },
-            { question: "תרופות המעכבות HDAC (HDAC inhibitors) גורמות לעצירת מחזור התא או לאפופטוזיס בתאים סרטניים.", answer: true, explanation: "מעכבי HDAC מונעים דחיסת כרומטין, מה שמאפשר ביטוי מחדש של גנים מדכאי סרטן שעוצרים את התרבות התא הסרטני." },
-            { question: "התפשטות (Spreading) של שינויי כרומטין לאורך הכרומוזום מתאפשרת הודות לפעולה משולבת של קומפלקסים מסוג Reader-Writer.", answer: true, explanation: "ה-Reader מזהה את המודיפיקציה הקיימת, ומגייס Writer שמוסיף את אותה מודיפיקציה לנוקלאוזום הסמוך, וכך התהליך מתפשט הלאה." },
-            { question: "כל סוגי המתילציה על היסטונים גורמים בהכרח להשתקת שעתוק.", answer: false, explanation: "ההשפעה של מתילציה תלויה במיקום. מתילציה על H3K9 קשורה להשתקה, אך מתילציה על H3K4 קשורה להפעלה." },
-            { question: "פקטור שעתוק חלוצי (Pioneer TF) מסוגל להיקשר לרצף ה-DNA שלו גם כאשר הוא עטוף בתוך נוקלאוזום סגור.", answer: true, explanation: "זוהי התכונה המגדירה פקטור חלוצי - היכולת לזהות ולחדור כרומטין סגור כדי לאתחל את תהליך הפתיחה." },
-            { question: "המודיפיקציה H3K27Ac משמשת בעיקר כסמן לאנהנסרים במצב 'בהיכון' (Poised).", answer: false, explanation: "H3K27Ac הוא סמן לאנהנסר *פעיל*. אנהנסר בהיכון מאופיין לרוב ב-H3K4me1 ללא אצטילציה." },
-            { question: "קומפלקס ה-SWI/SNF נחשב לאחד ממשחלפי הכרומטין שעוברים הכי הרבה מוטציות בסרטן הומני.", answer: true, explanation: "מוטציות בתת-יחידות של קומפלקס ה-SWI/SNF (או BAF) נמצאות בקרב 20-25% מכלל מקרי הסרטן." },
-            { question: "החלבון HP1 נקשר ספציפית לזנבות היסטונים שעברו אצטילציה מרובה.", answer: false, explanation: "HP1 הוא חלבון הטרוכרומטין הנקשר ספציפית למודיפיקציה של טרי-מתילציה על H3K9 (H3K9me3)." },
-            { question: "שינוי בבסיס בודד (SNP) בפרומוטור אינו יכול להשפיע לעולם על מבנה הכרומטין.", answer: false, explanation: "SNP יכול להרוס אתר קישור של פקטור שעתוק (כמו פקטור חלוצי), וכתוצאה מכך למנוע את גיוס משחלפי הכרומטין, מה שישאיר את הכרומטין סגור." },
-            { question: "מוטיב ה-Leucine zipper משמש פקטורי שעתוק פרוקריוטים ואאוקריוטים כדי להיקשר ספציפית ל-DNA.", answer: true, explanation: "זהו מוטיב מבני מוכר (DNA Binding Motif) המאפשר דימריזציה וקישור ישיר לסליל ה-DNA." },
-            { question: "הזנבות ה-N-טרמינליים של ההיסטונים קבורים עמוק בתוך ליבת הנוקלאוזום ואינם נגישים לאנזימים.", answer: false, explanation: "ההפך הוא הנכון. הזנבות בולטים החוצה (Protrude) מליבת הנוקלאוזום, מה שהופך אותם למטרה אידיאלית למודיפיקציות קוולנטיות." },
-            { question: "קומפלקס Trithorax מזוהה בדרך כלל עם שמירה על מצב כרומטין פעיל (יו-כרומטין).", answer: true, explanation: "Trithorax פועל כאנטגוניסט לקומפלקס Polycomb (המשתיק), ומעורב בהוספת סמני הפעלה כמו H3K4me3." },
-            { question: "באופרון הלקטוז בפרוקריוטים, בקרת השעתוק מבוססת בעיקר על מודיפיקציות של היסטונים.", answer: false, explanation: "לפרוקריוטים אין היסטונים ונוקלאוזומים אמיתיים. בקרת אופרון הלקטוז מבוססת על קישור ישיר של רפרסורים ואקטיבטורים ל-DNA החשוף." },
-            { question: "חלבון ה-CTCF מתפקד כ-Insulator ומונע השפעה לא רצויה של אנהנסרים על פרומוטורים סמוכים.", answer: true, explanation: "CTCF יוצר גבולות מבניים בכרומטין (TADs) המבודדים אזורי בקרה זה מזה." },
-            { question: "אנזימי HAT (Histone Acetyltransferases) מתפקדים כ'כותבים' (Writers) במערכת האפיגנטית.", answer: true, explanation: "HATs מוסיפים ('כותבים') את המודיפיקציה הכימית (אצטילציה) על גבי ההיסטון." },
-            { question: "מתילציה של ליזין יכולה להתרחש בדרגות שונות: מונו, די, או טרי-מתילציה.", answer: true, explanation: "שייר ליזין יכול לקבל עד שלוש קבוצות מתיל (Monomethyl, Dimethyl, Trimethyl), ולכל דרגה יכולה להיות משמעות בקרתית שונה." },
-            { question: "תופעה נפוצה בסרטן היא התרפפות (Loosening) גלובלית של הכרומטין ברחבי הגנום, לצד השתקה מקומית של אזורי בקרה ספציפיים.", answer: true, explanation: "זהו אחד המאפיינים הפרדוקסליים של סרטן: חוסר יציבות גנומית הנובע מפתיחה גלובלית, במקביל להטרוכרומטין ספציפי בפרומוטורים של גנים מדכאי סרטן." },
-            { question: "יצירת לולאות (Looping) של ה-DNA היא מנגנון המונע לחלוטין שעתוק באאוקריוטים.", answer: false, explanation: "יצירת לולאות חיונית דווקא *לשעתוק*, כיוון שהיא מאפשרת לאנהנסרים מרוחקים לבוא במגע פיזי עם קומפלקס הפרומוטור." },
-            { question: "הוספת קבוצת אצטיל לליזין משנה את המבנה המרחבי שלו אך אינה משנה את המטען החשמלי.", answer: false, explanation: "הוספת קבוצת אצטיל מבטלת באופן ישיר את המטען החיובי של קבוצת האמין בליזין." },
-            { question: "קומפלקס ה-Reader-Writer מחייב נוכחות של מולקולת RNA כדי להתפשט לאורך הכרומוזום.", answer: false, explanation: "ההתפשטות מבוססת על אינטראקציות חלבון-חלבון וחלבון-היסטון. ה-Reader מזהה את המודיפיקציה ומעגן את ה-Writer שפועל על הנוקלאוזום השכן, ללא צורך ב-RNA מתווך." },
-            { question: "מצב של 'כרומטין מרשה' (Permissive chromatin) מאופיין בנוכחות של כל פקטורי השעתוק הדרושים ופעילות מלאה של פולימראז II.", answer: false, explanation: "כרומטין 'מרשה' הוא מצב מעבר. הוא דינמי ונגיש מספיק כדי לאפשר קישור ראשוני, אך אינו פעיל לחלוטין עד לגיוס הקומפלקסים הנוספים." },
-            { question: "מודיפיקציות על היסטונים יכולות להוות אתר זיהוי ספציפי לאנזימים משחלפי כרומטין (Remodelers).", answer: true, explanation: "לדוגמה, קומפלקס SWI/SNF מכיל Bromodomain המזהה היסטונים מואצטלים, וכך הוא יודע היכן לפעול." },
-            { question: "מנגנון הפעולה העיקרי של תרופות ציטוסטטיות המבוססות על עיכוב HDAC הוא פירוק מוחלט של ה-DNA התאי.", answer: false, explanation: "התרופות אינן מפרקות DNA. הן משנות את מאזן האצטילציה, פותחות את הכרומטין וגורמות לביטוי גנים שמביאים לעצירת התחלקות התא (Cell cycle arrest) או מוות מתוכנן (Apoptosis)." }
-        ];
+            const mcqData = [
+                { question: "חוקר פיתח מולקולה החוסמת באופן ספציפי את פעילותם של חלבוני Bromodomain. איזו מהתופעות הבאות צפויה להתרחש בעקבות הטיפול?", options: ["עלייה בקצב הדה-אצטילציה של היסטונים", "ירידה ביכולת של קומפלקס SWI/SNF לשנות את מבנה הכרומטין סביב גנים פעילים", "הפיכה ישירה של יו-כרומטין להטרוכרומטין באמצעות הוספת מתילציה", "עלייה בביטוי של גנים מדכאי סרטן (Tumor suppressors)"], correctIndex: 1, explanation: "חלבוני Bromodomain הם 'קוראים' המזהים אצטילציה. קומפלקס SWI/SNF משתמש בתת-יחידות המכילות Bromodomain כדי להיקשר לאזורים מועשרים באצטילציה ולפתוח את הכרומטין. חסימתם תמנע את פעילות הקומפלקס באזורים אלו." },
+                { question: "מהי ההשפעה הביוכימית הישירה של פעילות אנזימי HAT (Histone Acetyltransferases) על זנבות ההיסטונים?", options: ["הוספת מטען שלילי הדוחה את ה-DNA", "נטרול המטען החיובי של שיירי ליזין", "יצירת קשרי צילוב קוולנטיים בין נוקלאוזומים סמוכים", "גיוס ישיר של פולימראז II באמצעות קשרי מימן"], correctIndex: 1, explanation: "אנזימי HAT מוסיפים קבוצת אצטיל לשיירי ליזין בזנב ההיסטון. הליזין במצבו הטבעי טעון חיובית ונקשר בחוזקה ל-DNA הטעון שלילית. האצטילציה מנטרלת את המטען החיובי, מה שמחליש את הקישור ופותח את הכרומטין." },
+                { question: "בתא סרטני נצפתה השתקה של הגן p16, שהוא גן מדכא סרטן. איזו תבנית מודיפיקציות צפויה להימצא באזור הפרומוטור של גן זה בתא הסרטני לעומת תא תקין?", options: ["העשרה ב-H3K4me3 וירידה ב-H3K27me3", "העשרה ב-H3K27Ac ועליה באצטילציה כללית", "העשרה ב-H3K27me3 וירידה באצטילציה", "היעדר מוחלט של נוקלאוזומים באזור הפרומוטור"], correctIndex: 2, explanation: "הגן p16 מושתק בתאים סרטניים באמצעות סגירת הכרומטין באזור הפרומוטור (הטרוכרומטין). סגירה זו מאופיינת בסמני השתקה כמו מתילציה (למשל H3K27me3) והיעדר סמני הפעלה כמו אצטילציה." },
+                { question: "איזה מהמשפטים הבאים מתאר נכונה את מנגנון ההשתקה של גנים על גבי כרומטין *פתוח*?", options: ["הכרומטין נשאר פתוח, אך אנזימי HDAC מסירים את כל קבוצות האצטיל", "חלבון רפרסור נקשר לאזור הנגיש וחוסם פיזית את פעילות ה-RNA פולימראז או מונע אינטראקציה עם אנהנסר", "נוקלאוזומים נדחסים זה לזה באמצעות קומפלקס SWI/SNF מבלי לסגור את ה-DNA", "הכרומטין הפתוח מגייס חלבוני HP1 המונעים שעתוק"], correctIndex: 1, explanation: "השתקה אינה מחייבת דחיסה. כרומטין יכול להיות במצב 'פתוח' ונגיש, אך חלבון רפרסור שנקשר אליו ימנע באופן אקטיבי את השעתוק על ידי הפרעה פיזית למנגנון השעתוק או לאינטראקציות בקרה." },
+                { question: "החלבון HP1 ידוע כנקשר לאזורי הטרוכרומטין וגורם לדחיסתם. איזה דומיין סביר ביותר שיימצא בחלבון זה, ולאיזו מודיפיקציה הוא נקשר?", options: ["Bromodomain הקושר H3K27Ac", "Chromodomain הקושר H3K9me3", "Zinc Finger הקושר H3K4me3", "PHD finger הקושר ליזין לא ממותמר"], correctIndex: 1, explanation: "HP1 הוא חלבון ספציפי להטרוכרומטין הנקשר לטרי-מתילציה על ליזין 9 בהיסטון H3 (H3K9me3). חלבונים ה'קוראים' מתילציה עושים זאת לרוב באמצעות דומיין Chromodomain." },
+                { question: "תרופות ממשפחת מעכבי HDAC (HDAC inhibitors) משמשות בטיפול אנטי-סרטני. מהו המנגנון התאי הצפוי בעקבות מתן תרופה זו?", options: ["דחיסה גלובלית של הכרומטין ומניעת שעתוק של אונקוגנים", "הצטברות של קבוצות אצטיל על היסטונים, פתיחת כרומטין וביטוי מחדש של גנים מעכבי מחזור תא", "הסרה מוגברת של קבוצות מתיל מה-DNA", "גיוס מוגבר של קומפלקס HP1 לאזורי פרומוטור"], correctIndex: 1, explanation: "מעכבי HDAC מונעים את הסרת האצטילציה. כתוצאה מכך, יש הצטברות של אצטילציה המובילה לפתיחת כרומטין. בתאים סרטניים, זה עשוי להוביל לביטוי מחדש של גנים מדכאי סרטן שהושתקו בטעות, מה שגורם לעצירת מחזור התא או אפופטוזיס." },
+                { question: "כיצד מתאפשרת 'התפשטות' (Spreading) של מצב כרומטין (למשל דחיסה) לאורך מקטע ארוך של כרומוזום?", options: ["באמצעות דיפוזיה פסיבית של אנזימי HAT לאורך ה-DNA", "על ידי קומפלקס 'קורא-כותב' (Reader-Writer) שבו זיהוי מודיפיקציה אחת מוביל להוספתה לנוקלאוזום השכן", "באמצעות יצירת קשרים קוולנטיים בין זנבות של היסטונים מרוחקים", "על ידי תנועה רציפה של RNA פולימראז הדוחף את הנוקלאוזומים"], correctIndex: 1, explanation: "התפשטות כרומטין מתרחשת דרך לולאת משוב חיובית: חלבון Reader מזהה מודיפיקציה (למשל מתילציה) ומגייס חלבון Writer המוסיף את אותה מודיפיקציה לנוקלאוזום הסמוך, וכך התהליך מתפשט הלאה." },
+                { question: "איזה מהרצפים הבאים צפוי להיות מסומן בעושר רב במודיפיקציה H3K4me1 (מונו-מתילציה) אך ללא H3K27Ac?", options: ["פרומוטור פעיל", "אנהנסר פעיל (Active Enhancer)", "אנהנסר בהיכון (Poised Enhancer)", "אזור הטרוכרומטין קונסטיטוטיבי"], correctIndex: 2, explanation: "המודיפיקציה H3K4me1 היא סמן לאנהנסרים. כאשר האנהנסר פעיל, תתווסף גם אצטילציה (H3K27Ac). כאשר יש רק H3K4me1 ללא אצטילציה, זהו מצב של אנהנסר 'בהיכון' (Poised)." },
+                { question: "מוטציה המונעת את ההידרוליזה של ATP בקומפלקס SWI/SNF תפגע ישירות ביכולתו לבצע איזה מהתהליכים הבאים?", options: ["הוספת קבוצות אצטיל לזנבות היסטונים", "זיהוי שיירי ליזין שעברו אצטילציה באמצעות Bromodomain", "החלקה או העברה פיזית של נוקלאוזומים לאורך ה-DNA", "הסרת קבוצות מתיל מ-H3K9"], correctIndex: 2, explanation: "קומפלקס SWI/SNF הוא Remodeler תלוי-ATP. הוא זקוק לאנרגיה מפירוק ATP כדי לבצע שינויים מכניים במבנה הכרומטין, כגון החלקה (Sliding) או העברה (Transfer) של נוקלאוזומים." },
+                { question: "האם וכיצד שינוי בבסיס בודד (SNP) באזור פרומוטור יכול להשפיע באופן ישיר על רמת הפתיחה של הכרומטין באותו אזור?", options: ["לא, SNPs משפיעים רק על רצף החלבון המקודד ולא על אזורי בקרה", "כן, על ידי מניעת הקישור של אנזימי HDAC בלבד", "כן, SNP יכול ליצור או להרוס אתר קישור לפקטור שעתוק חלוצי (Pioneer TF) האמור לאתחל את פתיחת הכרומטין", "לא, פתיחת כרומטין תלויה אך ורק באותות מהסביבה החוץ תאית"], correctIndex: 2, explanation: "פקטורי שעתוק חלוציים מסוגלים להיקשר לכרומטין סגור ולגייס קומפלקסים פותחי כרומטין. אם SNP הורס את אתר הקישור הספציפי של הפקטור החלוצי ב-DNA, התהליך כולו לא יתחיל והכרומטין יישאר סגור." },
+                { question: "מהי המשמעות של הימצאות המודיפיקציה H3K4me3 במיקום גנומי מסוים?", options: ["האזור משמש כאנהנסר הנמצא במצב מנוחה", "האזור הוא פרומוטור פעיל (Active Promoter)", "האזור מקודד לחלבון מבני של הריבוזום", "האזור עובר השתקה באמצעות קומפלקס HP1"], correctIndex: 1, explanation: "טרי-מתילציה על ליזין 4 של היסטון H3 (H3K4me3) נחשבת לסמן האוניברסלי והמובהק ביותר לפרומוטורים פעילים (או כאלה שמוכנים לפעולה מיידית)." },
+                { question: "איזה מהרכיבים הבאים אינו מהווה חלק מהנוקלאוזום הבסיסי (Core particle)?", options: ["היסטון H2A", "היסטון H3", "היסטון H1", "מקטע DNA באורך של כ-147 זוגות בסיסים"], correctIndex: 2, explanation: "ליבת הנוקלאוזום מורכבת מאוקטמר הכולל שני עותקים של H2A, H2B, H3 ו-H4. היסטון H1 הוא היסטון 'מגשר' (Linker histone) הנקשר ל-DNA מחוץ לליבה ותורם לדחיסה מסדר גבוה יותר." },
+                { question: "במחקר נצפה כי גן מסוים אינו משועתק למרות שאזור הפרומוטור שלו מכיל אצטילציה רבה וחסר מתילציה מסוג H3K9me3. מה עשוי להסביר תופעה זו?", options: ["היעדר מוחלט של קומפלקס SWI/SNF בתא", "נוכחות של חלבון Repressor הנקשר לפרומוטור הנגיש ומונע את קישור הפולימראז", "מוטציה באנזים HAT המונעת את פעילותו", "הפיכת ה-DNA באזור זה ל-Z-DNA"], correctIndex: 1, explanation: "כרומטין פתוח (המעיד על נגישות) אינו מבטיח שעתוק. מנגנון השתקה נפוץ הוא קישור של רפרסור לכרומטין הפתוח, אשר חוסם פיזית את מנגנון השעתוק." },
+                { question: "חלבון ה-CTCF מתפקד בתא כ-Insulator. מה יקרה אם תתרחש מוטציה שתמנע לחלוטין את פעילותו?", options: ["כל הגנים בתא יתבטאו בו זמנית", "אנהנסרים עלולים להפעיל פרומוטורים של גנים סמוכים שאינם מטרתם המקורית", "הכרומטין יהפוך כולו להטרוכרומטין סגור ודחוס", "ייווצר נזק DNA דו-גדילי חמור"], correctIndex: 1, explanation: "תפקיד ה-Insulator הוא לתחום אזורי כרומטין ולמנוע זליגה של השפעות בקרה (כמו אנהנסרים) לאזורים שאינם קשורים. ללא CTCF, אנהנסר המיועד לגן A עלול להפעיל בטעות את גן B הסמוך." },
+                { question: "מבין המודיפיקציות הבאות, אילו משפיעות על מבנה הכרומטין *גם* באמצעות שינוי המטען החשמלי של ההיסטון ו*גם* כיצירת אתר קישור ספציפי לחלבונים אחרים?", options: ["מתילציה של ארגינין", "זרחון של סרין", "אצטילציה של ליזין", "יוביקוויטינציה של ליזין"], correctIndex: 2, explanation: "אצטילציה על ליזין מסירה את המטען החיובי (מה שמחליש ישירות את הקישור ל-DNA) ובמקביל יוצרת אתר זיהוי ספציפי לחלבונים בעלי Bromodomain. מתילציה אינה משנה את המטען של החומצה האמינית." },
+                { question: "מהי התרומה הייחודית של קומפלקסים מסוג Trithorax בהקשר של בקרת כרומטין?", options: ["הם פועלים כ-Erasers המסירים מודיפיקציות מעודדות שעתוק", "הם פועלים כ-Writers המוסיפים מודיפיקציות המקושרות לכרומטין פתוח (כגון H3K4me3)", "הם חלבוני שלד המייצבים את מבנה הנוקלאוזום", "הם אנזימים המפרקים את ה-DNA באזורי הטרוכרומטין"], correctIndex: 1, explanation: "קומפלקס Trithorax קשור לשמירה על מצב שעתוק פעיל, לרוב על ידי פעילות קטליטית של הוספת מתילציה על H3K4 (H3K4me3), הפועלת כסמן של יו-כרומטין (כרומטין פתוח)." },
+                { question: "באיזה מנגנון פועל מוטיב ה-Leucine zipper בהקשר של בקרת גנים?", options: ["זהו דומיין המאפשר לאנזימי HDAC לחתוך את ה-DNA", "זהו מוטיב מבני המאפשר דימריזציה של פקטורי שעתוק וקישורם הספציפי ל-DNA", "זהו המבנה המרחבי של זנבות ההיסטונים בתוך הנוקלאוזום", "זהו קומפלקס החלבונים האחראי על יצירת לולאות (Looping) בפרוקריוטים"], correctIndex: 1, explanation: "Leucine zipper הוא מוטיב מבני נפוץ בפקטורי שעתוק (DNA Binding Motif) המאפשר לשתי תת-יחידות חלבוניות להיקשר זו לזו (דימריזציה) וליצור מבנה דמוי מלקחיים הנאחז ב-DNA." },
+                { question: "מה ההבדל העקרוני בין מנגנון הבקרה של אופרון הלקטוז (Lac Operon) לבין מנגנוני הבקרה האפיגנטיים באאוקריוטים?", options: ["באופרון הלקטוז אין מעורבות של פקטורי שעתוק כלל", "באופרון הלקטוז הבקרה מבוססת בעיקר על נגישות ה-DNA הנובעת מדחיסת כרומטין", "אופרון הלקטוז מבוקר על ידי קישור ישיר של חלבונים לרצף ה-DNA החשוף, בעוד שבאאוקריוטים נדרשת התמודדות עם מחסום הנוקלאוזומים", "אין הבדל, שתי המערכות משתמשות באנזימי HAT כדי לפתוח את ה-DNA"], correctIndex: 2, explanation: "לפרוקריוטים (כמו חיידקי E. coli בהם נמצא אופרון הלקטוז) אין כרומטין אמיתי ונוקלאוזומים. ה-DNA חשוף יחסית, והבקרה מסתמכת על תחרות ישירה בין רפרסורים לפולימראז. באאוקריוטים, ה-DNA עטוף בנוקלאוזומים המהווים מחסום פיזי שיש להסירו או לשנותו." },
+                { question: "תא עבר מוטציה הגורמת לפעילות יתר (Hyperactivity) של חלבוני LSD (Lysine Specific Demethylase). מה תהיה התוצאה הסבירה ביותר ברמת הכרומטין?", options: ["עלייה דרסטית ברמות האצטילציה הכלליות", "הסרה מוגברת של קבוצות מתיל מהיסטונים, מה שעשוי להוביל לשינויים בנגישות הכרומטין בהתאם לשייר הספציפי", "דחיסה מוחלטת של כל הגנום למצב של הטרוכרומטין", "פירוק מוחלט של אוקטמר ההיסטונים"], correctIndex: 1, explanation: "חלבוני LSD הם Erasers המורידים קבוצות מתיל מליזין. פעילות יתר שלהם תוביל לדה-מתילציה מוגברת. ההשפעה הסופית (פתיחה או סגירה) תלויה באילו שיירים ספציפיים עוברים דה-מתילציה (למשל, הסרת מתיל מ-H3K9 תעודד פתיחה, הסרת מתיל מ-H3K4 תעודד סגירה)." },
+                { question: "מדוע מוטציות בקומפלקס SWI/SNF שכיחות כל כך (20-25%) בסוגי סרטן שונים?", options: ["מפני ש-SWI/SNF הוא האנזים היחיד המסוגל לשכפל DNA", "מפני שפגיעה ביכולת לשנות את פריסת הנוקלאוזומים משבשת את הבקרה על גנים רבים, ביניהם גנים המעורבים בבקרת חלוקת התא", "מפני שהקומפלקס אחראי על תיקון נזקי DNA באמצעות חיתוך אצטילציות", "מפני שהוא מתפקד כרצפטור ממברנלי המעודד גדילה"], correctIndex: 1, explanation: "SWI/SNF הוא קומפלקס Remodeling מרכזי. פגיעה בו גורמת לכך שהתא מאבד את היכולת לפתוח ולסגור כרומטין באזורי בקרה קריטיים, מה שמוביל לביטוי שגוי של רשתות גנים נרחבות, כולל אובדן בקרה על מחזור התא (מאפיין קלאסי של סרטן)." },
+                { question: "האם מתילציה של היסטונים תמיד גורמת להשתקת גנים?", options: ["כן, הוספת קבוצת מתיל תמיד מגדילה את הדחיסה המרחבית", "כן, מתילציה מגייסת תמיד קומפלקסים מסוג HDAC", "לא, ההשפעה תלויה במיקום חומצת האמינו הספציפית שעוברת מתילציה (למשל H3K4 לעומת H3K9)", "לא, מתילציה משפיעה רק על היציבות של מולקולת ה-RNA לאחר השעתוק"], correctIndex: 2, explanation: "בניגוד לאצטילציה שלרוב מעודדת פתיחה, מתילציה היא תלוית-הקשר (Context-dependent). מתילציה על H3K9 קשורה להשתקה, בעוד שמתילציה על H3K4 קשורה להפעלה." },
+                { question: "באיזה אופן משתלבים פקטורי השעתוק (Transcription Factors) עם השינויים במבנה הכרומטין?", options: ["הם מסוגלים לפרק את הנוקלאוזומים באופן עצמאי ללא עזרה", "הם נקשרים רק ל-DNA עירום לחלוטין שאין בו היסטונים כלל", "הם מזהים רצפי מטרה ספציפיים באזורים נגישים, ולעיתים מגייסים בעצמם קומפלקסים של Writers או Remodelers כדי לפתוח את הכרומטין עוד יותר", "הם מתפקדים כ-Erasers המסירים אצטילציה כדי לעצור את השעתוק"], correctIndex: 2, explanation: "פקטורי שעתוק מזהים רצפי DNA (Cis-elements). לרוב הם זקוקים לכרומטין 'מרשה' (Permissive) כדי להיקשר, וברגע שנקשרו, הם יכולים לגייס חלבונים משני-כרומטין (כמו HATs או SWI/SNF) כדי לייצר סביבה פתוחה ויציבה לשעתוק." },
+                { question: "מה מאפיין את המצב המכונה 'כרומטין בהיכון' (Permissive chromatin) בהשוואה לכרומטין סגור לחלוטין?", options: ["הכרומטין נטול היסטונים לחלוטין", "הכרומטין נגיש מספיק כדי לאפשר קישור ראשוני של פקטורי שעתוק, אך עדיין אינו פתוח מספיק לגיוס מלא של פולימראז II", "הכרומטין קשור באופן קבוע לחלבוני HP1", "הכרומטין מאופיין ברמות גבוהות מאוד של מתילציה על ה-DNA עצמו"], correctIndex: 1, explanation: "כרומטין 'מרשה' או 'בהיכון' הוא מצב ביניים. הוא לא דחוס לחלוטין כמו הטרוכרומטין, ומאפשר לפקטורי שעתוק מסוימים להיקשר, אך עדיין דורש פעילות נוספת (כמו Remodeling) כדי להפוך לכרומטין פתוח ופעיל שעתוקית." },
+                { question: "איזה סוג של מידע מעבירות המודיפיקציות הקוולנטיות על זנבות ההיסטונים?", options: ["מידע גנטי המקודד לחומצות אמינו", "מידע מבני הקובע את כיוון סליל ה-DNA (ימני או שמאלי)", "מידע בקרתי (Regulatory information) המשפיע על גיוס חלבונים ונגישות הכרומטין", "מידע על קצב התרגום בריבוזום"], correctIndex: 2, explanation: "המודיפיקציות מהוות מעין 'קוד אפיגנטי'. הן אינן משנות את המידע הגנטי (הרצף), אלא מספקות שכבת מידע בקרתית הקובעת מי ייקשר לאזור ומה תהיה רמת הפעילות שלו." },
+                { question: "מהי התוצאה של מוטציה המונעת את קישור קבוצת ה-Acetyl לשיירי ליזין בהיסטון H4?", options: ["הכרומטין יישאר במצב פתוח תמידי", "תיווצר זיקה חזקה יותר בין הזנב של H4 לנוקלאוזומים סמוכים ול-DNA, מה שיעודד מבנה כרומטין דחוס", "ה-DNA ישתחרר לחלוטין מהנוקלאוזום", "קומפלקס SWI/SNF יפעל ביתר שאת"], correctIndex: 1, explanation: "ללא יכולת לקבל אצטילציה, שייר הליזין יישאר במצבו הטעון חיובית. המטען החיובי מקיים אינטראקציות אלקטרוסטטיות חזקות עם ה-DNA השלילי ועם נוקלאוזומים אחרים, מה שתורם לדחיסת הכרומטין." },
+                { question: "החלבון BRD4 מכיל דומיינים מסוג Bromodomain. לחלבון זה תפקיד חשוב בגיוס קומפלקסים המעודדים שעתוק. תרופה הנקראת JQ1 חוסמת את ה-Bromodomain של BRD4. כיצד תשפיע התרופה על תא סרטני התלוי בפעילות BRD4?", options: ["היא תגרום לפירוק ה-DNA באזורים ממותלים", "היא תמנע מ-BRD4 לזהות אזורי כרומטין מועשרים באצטילציה, ובכך תדכא שעתוק של גנים המקודמים על ידו (כגון אונקוגנים)", "היא תגביר את פעילות ה-HATs בתא", "היא תהפוך את BRD4 לאנזים HDAC"], correctIndex: 1, explanation: "אם ה-Bromodomain חסום, BRD4 אינו יכול 'לקרוא' את סימוני האצטילציה. כתוצאה מכך, הוא לא יוכל להיקשר לאנהנסרים ופרומוטורים פעילים, והשעתוק של גני המטרה שלו ייעצר." },
+                { question: "מהו ההרכב החלבוני של 'ליבת' הנוקלאוזום (Core particle)?", options: ["טטרמר של H3 ו-H4 בלבד", "אוקטמר המורכב משני עותקים של H2A, H2B, H3, H4", "הקסמר המורכב משלושה עותקים של H2A ו-H2B", "קומפלקס של היסטון H1 יחד עם חלבוני Scaffold"], correctIndex: 1, explanation: "ליבת הנוקלאוזום היא אוקטמר (מבנה של שמונה יחידות): דימרים של H2A-H2B וטטרמר מרכזי של H3-H4." },
+                { question: "מהי המטרה העיקרית של קיום כרומטין במצב 'סגור' (הטרוכרומטין) בתא אאוקריוטי?", options: ["לאפשר שעתוק מהיר של כל הגנום בעת חירום", "למנוע נזקי DNA בלבד ללא קשר לשעתוק", "לשמור על יציבות גנומית ולמנוע ביטוי בלתי רצוי של גנים ורצפים חוזרניים בסוגי תאים ספציפיים", "לשמש כמאגר של חומצות אמינו לתהליך התרגום"], correctIndex: 2, explanation: "הטרוכרומטין חשוב להשתקת גנים שאינם אמורים להתבטא ברקמה מסוימת (קביעת זהות התא), וכן להשתקת רכיבים גנומיים טפיליים (כמו טרנספוזונים) כדי למנוע אי-יציבות גנומית." },
+                { question: "באיור המתאר את מבנה ההיסטונים, מהו החלק בהיסטון הבולט אל מחוץ לליבת הנוקלאוזום ומהווה את המטרה העיקרית למודיפיקציות?", options: ["ה-Histone fold domain", "הזנב ה-N-טרמינלי (N-terminal tail)", "הקצה ה-C-טרמינלי (C-terminus)", "מוטיב ה-Helix-turn-helix"], correctIndex: 1, explanation: "הזנבות ה-N-טרמינליים של ההיסטונים חסרי מבנה משני מוגדר, בולטים החוצה מליבת הנוקלאוזום, והם האתרים העיקריים שעוברים מודיפיקציות קוולנטיות." },
+                { question: "מהו התפקיד של 'Looping' (יצירת לולאות ב-DNA) בבקרת גנים?", options: ["למנוע שעתוק על ידי קשירת ה-DNA לקרום הגרעין", "לאפשר אינטראקציה מרחבית בין רצפי בקרה מרוחקים (כגון אנהנסר) לבין הפרומוטור של הגן המטרה", "לדחוס את ה-DNA למבנה של כרומוזום מטאפאזי בלבד", "לאפשר לאנזימי HDAC לחתוך את ה-DNA"], correctIndex: 1, explanation: "מנגנון ה-Looping מאפשר לאנהנסרים, שיכולים להיות מרוחקים עשרות אלפי בסיסים מהגן, להתקרב פיזית במרחב התלת-ממדי אל הפרומוטור ולגייס את קומפלקס השעתוק." },
+                { question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין Acetyl Lysine לבין Trimethyl Lysine?", options: ["אצטילציה מסירה את המטען החיובי של הליזין, בעוד שמתילציה שומרת על המטען החיובי", "אצטילציה גורמת תמיד להשתקה, ומתילציה גורמת תמיד להפעלה", "אצטילציה מתרחשת רק על היסטון H4, ומתילציה רק על H3", "אין הבדל, שתיהן מודיפיקציות המבוצעות על ידי אותו אנזים (HAT)"], correctIndex: 0, explanation: "הוספת קבוצת אצטיל קושרת את קבוצת האמין של הליזין ומבטלת את מטענה החיובי. הוספת קבוצות מתיל (אפילו שלוש) אינה מבטלת את המטען החיובי הבסיסי של הליזין ב-pH פיזיולוגי." },
+                { question: "מה יקרה אם תא יאבד את היכולת לייצר את המולקולה S-adenosyl methionine (SAM), שהיא תורם קבוצות המתיל המרכזי בתא?", options: ["רמת האצטילציה של ההיסטונים תרד לאפס", "אנזימי HMT (Histone Methyltransferases) לא יוכלו להוסיף קבוצות מתיל להיסטונים, מה שישבש את בקרת הכרומטין", "קומפלקס SWI/SNF יפסיק לצרוך ATP", "כל הכרומטין יהפוך להטרוכרומטין דחוס"], correctIndex: 1, explanation: "אנזימי Writer מסוג מתיל-טרנספראז זקוקים למולקולת קופקטור שתתרום את קבוצת המתיל. ללא SAM, לא תתאפשר מתילציה של היסטונים (או של DNA)." },
+                { question: "חוקר מבחין באזור גנומי בו יש רמות גבוהות של H3K27me3 ורמות נמוכות מאוד של H3K4me3. מהו הסטטוס הסביר של האזור?", options: ["אזור המקודד לגן פעיל מאוד (Housekeeping gene)", "אזור בקרה מסוג אנהנסר פעיל", "אזור פרומוטור של גן מושתק (Inactive promoter)", "אזור התחלת שכפול (Origin of replication)"], correctIndex: 2, explanation: "H3K27me3 הוא סמן קלאסי של השתקה (פוליקומב), בעוד היעדר H3K4me3 מעיד על חוסר פעילות בפרומוטור." },
+                { question: "היכן נמצאים לרוב אתרי הקישור לפקטורי שעתוק (Cis-regulatory sequences) ביחס למבנה הכרומטין במצב פעיל?", options: ["קבורים עמוק בתוך ליבת הנוקלאוזום", "באזורים נטולי נוקלאוזומים (Nucleosome-depleted regions) או בקצוות הכרומטין הפתוח", "רק באזורים המקודדים לאקסונים", "קשורים בקשר קוולנטי לחלבוני HP1"], correctIndex: 1, explanation: "כדי שפקטורי שעתוק יוכלו להיקשר ל-DNA, הרצף חייב להיות נגיש. לכן, באזורי פרומוטור ואנהנסר פעילים יש לעיתים קרובות אזורים נטולי נוקלאוזומים (NDR) או כרומטין פתוח ודינמי מאוד." },
+                { question: "מהי המשמעות של היות קומפלקס SWI/SNF 'שמור אבולוציונית' (Evolutionarily conserved)?", options: ["הוא קיים רק בבני אדם", "המבנה והפונקציה שלו דומים מאוד במגוון רחב של אורגניזמים (משמרים ועד יונקים), מה שמעיד על חשיבותו הביולוגית הבסיסית", "הוא אינו עובר מוטציות לעולם", "הוא מורכב מחומצות אמינו שאינן משתנות לעולם לאורך זמן"], correctIndex: 1, explanation: "שמירות אבולוציונית מעידה על כך שמנגנון מסוים הוא כה קריטי להישרדות התא, עד שכל שינוי משמעותי בו במהלך האבולוציה נברר החוצה. משחלפי כרומטין חיוניים לכל האיקריוטים." },
+                { question: "במסגרת 'אפקט הדומינו' של הכרומטין, קומפלקס 'Reader-Writer' אחראי על התפשטות ההטרוכרומטין. מהו הגורם העיקרי שבולם התפשטות זו ומונע השתקה של כל הכרומוזום?", options: ["נגמר המלאי של קבוצות המתיל בתא", "הקומפלקס נתקל ברצף Insulator או באזור כרומטין בעל מודיפיקציות מתחרות (כמו אצטילציה מרובה) שאינו מאפשר את המשך ההתפשטות", "התנגשות פיזית עם הריבוזום", "פירוק ספונטני של ה-DNA"], correctIndex: 1, explanation: "התפשטות הכרומטין (Spreading) נעצרת כאשר היא פוגשת במחסומים טבעיים - רצפי Insulator (הקושרים חלבונים כמו CTCF) או אזורים המתוחזקים באופן אקטיבי על ידי אנזימים מתחרים (למשל HATs השומרים על אזור פתוח)." },
+                { question: "איזו מהתרופות הבאות תהיה היעילה ביותר כנגד גידול סרטני המאופיין בהשתקת-יתר (Hyper-silencing) של גנים מדכאי סרטן?", options: ["מעכב אנזימי HAT (HAT inhibitor)", "מעכב אנזימי HDAC (HDAC inhibitor)", "תרופה המגבירה את פעילות ה-Chromodomain", "תרופה המעודדת יצירת H3K9me3"], correctIndex: 1, explanation: "אם הגידול משתיק גנים רצויים, נרצה לפתוח את הכרומטין מחדש. מעכבי HDAC מונעים את הסרת האצטילציה, ובכך מעודדים כרומטין פתוח וביטוי מחדש של הגנים המושתקים." },
+                { question: "מהי הסיבה המבנית לכך שמודיפיקציות רבות מתרחשות דווקא על חומצת האמינו ליזין (Lysine)?", options: ["ליזין היא חומצת האמינו הקטנה ביותר", "השייר הצדדי של ליזין מכיל קבוצת אמין ראשונית בקצהו, המהווה אתר נוקלאופילי אידיאלי לתגובות כימיות כמו אצטילציה ומתילציה", "ליזין נמצאת רק בהיסטון H1", "ליזין טעונה שלילית ולכן מושכת את האצטיל"], correctIndex: 1, explanation: "השייר הארוך של הליזין מסתיים בקבוצת אמין (NH3+) שהיא אתר תגובה מצוין לאנזימים המוסיפים קבוצות כימיות." },
+                { question: "במהלך התמיינות תאית (Differentiation), תא גזע הופך לתא עור. איזה תהליך ברמת הכרומטין הכרחי לשם כך?", options: ["פירוק כל הנוקלאוזומים ויצירת כרומטין חדש מאפס", "שינוי דינמי של סמני הכרומטין: השתקה (הטרוכרומטין) של גנים הקשורים לרקמות אחרות, ופתיחה (יו-כרומטין) של גנים ספציפיים לעור", "הכפלת כמות ה-DNA בתא פי ארבעה", "החלפת כל ההיסטונים מסוג H3 בהיסטונים מסוג H1"], correctIndex: 1, explanation: "התמיינות תלויה בבקרת ביטוי גנים. ה-DNA נשאר זהה, אך התבנית האפיגנטית (הכרומטין) משתנה כדי לאפשר ביטוי של התוכנית הגנטית הספציפית לתא העור ולהשתיק תוכניות אחרות." },
+                { question: "איזה מהבאים אינו נחשב ל-DNA Binding Motif (מוטיב הקושר DNA)?", options: ["Helix-turn-helix", "Leucine zipper", "Bromodomain", "Zinc finger"], correctIndex: 2, explanation: "Bromodomain אינו קושר DNA באופן ישיר; הוא קושר את החלבון (היסטון) שעבר אצטילציה. השאר הם מוטיבים מבניים קלאסיים של פקטורי שעתוק הנקשרים ישירות לרצף ה-DNA." }
+            ];
+
+            const tfData = [
+                { question: "הוספת קבוצת אצטיל לזנבות ההיסטונים מגדילה את המטען החיובי שלהם ומחזקת את הקישור ל-DNA.", answer: false, explanation: "אצטילציה מנטרלת את המטען החיובי של הליזין, מה שמחליש את הקישור ל-DNA הטעון שלילית ומוביל לפתיחת הכרומטין." },
+                { question: "קומפלקס SWI/SNF משתמש באנרגיה מפירוק ATP כדי לשנות את מיקום הנוקלאוזומים על גבי ה-DNA.", answer: true, explanation: "SWI/SNF הוא קומפלקס ממשפחת ה-ATP-dependent nucleosome remodeling complexes, המשתמש ב-ATP כדי להחליק או להעביר נוקלאוזומים." },
+                { question: "בתאים סרטניים, אזורי הפרומוטור של גנים מדכאי סרטן (Tumor suppressors) נמצאים לרוב במצב של יו-כרומטין (פתוח).", answer: false, explanation: "בתאים סרטניים, הפרומוטורים של גנים מדכאי סרטן (כמו p16) לרוב עוברים השתקה ונדחסים למצב של הטרוכרומטין (סגור)." },
+                { question: "חלבונים בעלי Bromodomain מתפקדים כ'קוראים' (Readers) המזהים שיירי חומצות אמינו שעברו מתילציה.", answer: false, explanation: "Bromodomain מזהה אצטילציה. חלבונים המזהים מתילציה משתמשים לרוב בדומיינים כמו Chromodomain או PHD finger." },
+                { question: "השתקת גנים יכולה להתרחש גם כאשר הכרומטין נשאר במצב פתוח.", answer: true, explanation: "כן, חלבון רפרסור יכול להיקשר לאזור כרומטין פתוח ולחסום פיזית את הקישור של פולימראז II או למנוע אינטראקציה בין אנהנסר לפרומוטור." },
+                { question: "המודיפיקציה H3K4me3 היא סמן מובהק לכך שהאזור הוא אזור הטרוכרומטין מושתק.", answer: false, explanation: "H3K4me3 הוא סמן (Mark) מובהק לפרומוטור פעיל (Active Promoter)." },
+                { question: "אנזימי HDAC (Histone Deacetylases) נחשבים ל'מוחקים' (Erasers) המעודדים דחיסת כרומטין.", answer: true, explanation: "HDACs מסירים את קבוצות האצטיל, מה שמחזיר את המטען החיובי להיסטונים וגורם לדחיסה מחדש של הכרומטין." },
+                { question: "היסטון H1 מהווה חלק בלתי נפרד מאוקטמר הליבה של הנוקלאוזום.", answer: false, explanation: "אוקטמר הליבה מורכב מ-H2A, H2B, H3 ו-H4. היסטון H1 הוא היסטון מגשר (Linker) הנמצא מחוץ לליבה." },
+                { question: "תרופות המעכבות HDAC (HDAC inhibitors) גורמות לעצירת מחזור התא או לאפופטוזיס בתאים סרטניים.", answer: true, explanation: "מעכבי HDAC מונעים דחיסת כרומטין, מה שמאפשר ביטוי מחדש של גנים מדכאי סרטן שעוצרים את התרבות התא הסרטני." },
+                { question: "התפשטות (Spreading) של שינויי כרומטין לאורך הכרומוזום מתאפשרת הודות לפעולה משולבת של קומפלקסים מסוג Reader-Writer.", answer: true, explanation: "ה-Reader מזהה את המודיפיקציה הקיימת, ומגייס Writer שמוסיף את אותה מודיפיקציה לנוקלאוזום הסמוך, וכך התהליך מתפשט הלאה." },
+                { question: "כל סוגי המתילציה על היסטונים גורמים בהכרח להשתקת שעתוק.", answer: false, explanation: "ההשפעה של מתילציה תלויה במיקום. מתילציה על H3K9 קשורה להשתקה, אך מתילציה על H3K4 קשורה להפעלה." },
+                { question: "פקטור שעתוק חלוצי (Pioneer TF) מסוגל להיקשר לרצף ה-DNA שלו גם כאשר הוא עטוף בתוך נוקלאוזום סגור.", answer: true, explanation: "זוהי התכונה המגדירה פקטור חלוצי - היכולת לזהות ולחדור כרומטין סגור כדי לאתחל את תהליך הפתיחה." },
+                { question: "המודיפיקציה H3K27Ac משמשת בעיקר כסמן לאנהנסרים במצב 'בהיכון' (Poised).", answer: false, explanation: "H3K27Ac הוא סמן לאנהנסר *פעיל*. אנהנסר בהיכון מאופיין לרוב ב-H3K4me1 ללא אצטילציה." },
+                { question: "קומפלקס ה-SWI/SNF נחשב לאחד ממשחלפי הכרומטין שעוברים הכי הרבה מוטציות בסרטן הומני.", answer: true, explanation: "מוטציות בתת-יחידות של קומפלקס ה-SWI/SNF (או BAF) נמצאות בקרב 20-25% מכלל מקרי הסרטן." },
+                { question: "החלבון HP1 נקשר ספציפית לזנבות היסטונים שעברו אצטילציה מרובה.", answer: false, explanation: "HP1 הוא חלבון הטרוכרומטין הנקשר ספציפית למודיפיקציה של טרי-מתילציה על H3K9 (H3K9me3)." },
+                { question: "שינוי בבסיס בודד (SNP) בפרומוטור אינו יכול להשפיע לעולם על מבנה הכרומטין.", answer: false, explanation: "SNP יכול להרוס אתר קישור של פקטור שעתוק (כמו פקטור חלוצי), וכתוצאה מכך למנוע את גיוס משחלפי הכרומטין, מה שישאיר את הכרומטין סגור." },
+                { question: "מוטיב ה-Leucine zipper משמש פקטורי שעתוק פרוקריוטים ואאוקריוטים כדי להיקשר ספציפית ל-DNA.", answer: true, explanation: "זהו מוטיב מבני מוכר (DNA Binding Motif) המאפשר דימריזציה וקישור ישיר לסליל ה-DNA." },
+                { question: "הזנבות ה-N-טרמינליים של ההיסטונים קבורים עמוק בתוך ליבת הנוקלאוזום ואינם נגישים לאנזימים.", answer: false, explanation: "ההפך הוא הנכון. הזנבות בולטים החוצה (Protrude) מליבת הנוקלאוזום, מה שהופך אותם למטרה אידיאלית למודיפיקציות קוולנטיות." },
+                { question: "קומפלקס Trithorax מזוהה בדרך כלל עם שמירה על מצב כרומטין פעיל (יו-כרומטין).", answer: true, explanation: "Trithorax פועל כאנטגוניסט לקומפלקס Polycomb (המשתיק), ומעורב בהוספת סמני הפעלה כמו H3K4me3." },
+                { question: "באופרון הלקטוז בפרוקריוטים, בקרת השעתוק מבוססת בעיקר על מודיפיקציות של היסטונים.", answer: false, explanation: "לפרוקריוטים אין היסטונים ונוקלאוזומים אמיתיים. בקרת אופרון הלקטוז מבוססת על קישור ישיר של רפרסורים ואקטיבטורים ל-DNA החשוף." },
+                { question: "חלבון ה-CTCF מתפקד כ-Insulator ומונע השפעה לא רצויה של אנהנסרים על פרומוטורים סמוכים.", answer: true, explanation: "CTCF יוצר גבולות מבניים בכרומטין (TADs) המבודדים אזורי בקרה זה מזה." },
+                { question: "אנזימי HAT (Histone Acetyltransferases) מתפקדים כ'כותבים' (Writers) במערכת האפיגנטית.", answer: true, explanation: "HATs מוסיפים ('כותבים') את המודיפיקציה הכימית (אצטילציה) על גבי ההיסטון." },
+                { question: "מתילציה של ליזין יכולה להתרחש בדרגות שונות: מונו, די, או טרי-מתילציה.", answer: true, explanation: "שייר ליזין יכול לקבל עד שלוש קבוצות מתיל (Monomethyl, Dimethyl, Trimethyl), ולכל דרגה יכולה להיות משמעות בקרתית שונה." },
+                { question: "תופעה נפוצה בסרטן היא התרפפות (Loosening) גלובלית של הכרומטין ברחבי הגנום, לצד השתקה מקומית של אזורי בקרה ספציפיים.", answer: true, explanation: "זהו אחד המאפיינים הפרדוקסליים של סרטן: חוסר יציבות גנומית הנובע מפתיחה גלובלית, במקביל להטרוכרומטין ספציפי בפרומוטורים של גנים מדכאי סרטן." },
+                { question: "יצירת לולאות (Looping) של ה-DNA היא מנגנון המונע לחלוטין שעתוק באאוקריוטים.", answer: false, explanation: "יצירת לולאות חיונית דווקא *לשעתוק*, כיוון שהיא מאפשרת לאנהנסרים מרוחקים לבוא במגע פיזי עם קומפלקס הפרומוטור." },
+                { question: "הוספת קבוצת אצטיל לליזין משנה את המבנה המרחבי שלו אך אינה משנה את המטען החשמלי.", answer: false, explanation: "הוספת קבוצת אצטיל מבטלת באופן ישיר את המטען החיובי של קבוצת האמין בליזין." },
+                { question: "קומפלקס ה-Reader-Writer מחייב נוכחות של מולקולת RNA כדי להתפשט לאורך הכרומוזום.", answer: false, explanation: "ההתפשטות מבוססת על אינטראקציות חלבון-חלבון וחלבון-היסטון. ה-Reader מזהה את המודיפיקציה ומעגן את ה-Writer שפועל על הנוקלאוזום השכן, ללא צורך ב-RNA מתווך." },
+                { question: "מצב של 'כרומטין מרשה' (Permissive chromatin) מאופיין בנוכחות של כל פקטורי השעתוק הדרושים ופעילות מלאה של פולימראז II.", answer: false, explanation: "כרומטין 'מרשה' הוא מצב מעבר. הוא דינמי ונגיש מספיק כדי לאפשר קישור ראשוני, אך אינו פעיל לחלוטין עד לגיוס הקומפלקסים הנוספים." },
+                { question: "מודיפיקציות על היסטונים יכולות להוות אתר זיהוי ספציפי לאנזימים משחלפי כרומטין (Remodelers).", answer: true, explanation: "לדוגמה, קומפלקס SWI/SNF מכיל Bromodomain המזהה היסטונים מואצטלים, וכך הוא יודע היכן לפעול." },
+                { question: "מנגנון הפעולה העיקרי של תרופות ציטוסטטיות המבוססות על עיכוב HDAC הוא פירוק מוחלט של ה-DNA התאי.", answer: false, explanation: "התרופות אינן מפרקות DNA. הן משנות את מאזן האצטילציה, פותחות את הכרומטין וגורמות לביטוי גנים שמביאים לעצירת התחלקות התא (Cell cycle arrest) או מוות מתוכנן (Apoptosis)." }
+            ];
 
 
-        // --- Global State Variables ---
-        let currentCardIndex = 0;
-        let isCardFront = true;
-        let isCardAnimating = false;
-        let currentMCQIndex = 0;
-        let currentTFIndex = 0;
-        let mcqAnswers = new Array(mcqData.length).fill(null);
-        let tfAnswers = new Array(tfData.length).fill(null);
+            // --- Global State Variables ---
+            let currentCardIndex = 0;
+            let isCardFront = true;
+            let isCardAnimating = false;
+            let currentMCQIndex = 0;
+            let currentTFIndex = 0;
+            let mcqAnswers = new Array(mcqData.length).fill(null);
+            let tfAnswers = new Array(tfData.length).fill(null);
 
-        // --- DOM Element References ---
-        const flashcardContent = document.getElementById('flashcard-content');
-        const cardCounter = document.getElementById('card-counter');
-        const prevCardBtn = document.getElementById('prev-card');
-        const nextCardBtn = document.getElementById('next-card');
-        const mcqQuestion = document.getElementById('mcq-question');
-        const mcqOptions = document.getElementById('mcq-options');
-        const mcqFeedback = document.getElementById('mcq-feedback');
-        const mcqExplanation = document.getElementById('mcq-explanation');
-        const mcqCounter = document.getElementById('mcq-counter');
-        const prevMCQBtn = document.getElementById('prev-mcq');
-        const nextMCQBtn = document.getElementById('next-mcq');
-        const viewAllMCQBtn = document.getElementById('view-all-mcq');
-        const mcqSingleView = document.getElementById('mcq-single-view');
-        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
-        const tfQuestion = document.getElementById('tf-question');
-        const tfOptionsContainer = document.getElementById('tf-options');
-        const tfFeedback = document.getElementById('tf-feedback');
-        const tfExplanation = document.getElementById('tf-explanation');
-        const tfCounter = document.getElementById('tf-counter');
-        const prevTFBtn = document.getElementById('prev-tf');
-        const nextTFBtn = document.getElementById('next-tf');
-        const viewAllTFBtn = document.getElementById('view-all-tf');
-        const tfSingleView = document.getElementById('tf-single-view');
-        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+            // --- DOM Element References ---
+            const flashcardContent = document.getElementById('flashcard-content');
+            const cardCounter = document.getElementById('card-counter');
+            const prevCardBtn = document.getElementById('prev-card');
+            const nextCardBtn = document.getElementById('next-card');
+            const mcqQuestion = document.getElementById('mcq-question');
+            const mcqOptions = document.getElementById('mcq-options');
+            const mcqFeedback = document.getElementById('mcq-feedback');
+            const mcqExplanation = document.getElementById('mcq-explanation');
+            const mcqCounter = document.getElementById('mcq-counter');
+            const prevMCQBtn = document.getElementById('prev-mcq');
+            const nextMCQBtn = document.getElementById('next-mcq');
+            const viewAllMCQBtn = document.getElementById('view-all-mcq');
+            const mcqSingleView = document.getElementById('mcq-single-view');
+            const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+            const tfQuestion = document.getElementById('tf-question');
+            const tfOptionsContainer = document.getElementById('tf-options');
+            const tfFeedback = document.getElementById('tf-feedback');
+            const tfExplanation = document.getElementById('tf-explanation');
+            const tfCounter = document.getElementById('tf-counter');
+            const prevTFBtn = document.getElementById('prev-tf');
+            const nextTFBtn = document.getElementById('next-tf');
+            const viewAllTFBtn = document.getElementById('view-all-tf');
+            const tfSingleView = document.getElementById('tf-single-view');
+            const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
-        function displayCard(index) {
-            if (!flashcardData || flashcardData.length === 0) return;
-            const cardData = flashcardData[index];
-            isCardFront = true;
-            flashcardContent.style.opacity = '1';
-            flashcardContent.textContent = cardData.term;
-            flashcardContent.className = 'flashcard-front-style';
-            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
-            prevCardBtn.disabled = index === 0;
-            nextCardBtn.disabled = index === flashcardData.length - 1;
-        }
-
-        function flipCard() {
-            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
-            isCardAnimating = true;
-            flashcardContent.style.opacity = '0';
-            setTimeout(() => {
-                isCardFront = !isCardFront;
-                const cardData = flashcardData[currentCardIndex];
-                if (isCardFront) {
-                    flashcardContent.textContent = cardData.term;
-                    flashcardContent.className = 'flashcard-front-style';
-                } else {
-                    flashcardContent.textContent = cardData.definition;
-                    flashcardContent.className = 'flashcard-back-style';
-                }
+            function displayCard(index) {
+                if (!flashcardData || flashcardData.length === 0) return;
+                const cardData = flashcardData[index];
+                isCardFront = true;
                 flashcardContent.style.opacity = '1';
-                isCardAnimating = false;
-            }, 300);
-        }
-
-        function displayMCQuestion(index) {
-            if (!mcqData || mcqData.length === 0) return;
-            const qData = mcqData[index];
-            mcqQuestion.textContent = qData.question;
-            mcqOptions.innerHTML = '';
-            mcqFeedback.classList.add('hidden');
-            mcqExplanation.classList.add('hidden');
-            qData.options.forEach((option, i) => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.onclick = () => handleMCQAnswer(index, i);
-                mcqOptions.appendChild(button);
-            });
-            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
-            prevMCQBtn.disabled = index === 0;
-            nextMCQBtn.disabled = index === mcqData.length - 1;
-            if (mcqAnswers[index] !== null) {
-                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+                flashcardContent.textContent = cardData.term;
+                flashcardContent.className = 'flashcard-front-style';
+                cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+                prevCardBtn.disabled = index === 0;
+                nextCardBtn.disabled = index === flashcardData.length - 1;
             }
-        }
 
-        function handleMCQAnswer(qIndex, selectedIndex) {
-            if (mcqAnswers[qIndex] !== null) return;
-            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
-            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
-            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
-        }
-        
-        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
-            const qData = mcqData[qIndex];
-            const buttons = optionsContainer.querySelectorAll('button');
-            buttons.forEach((button, i) => {
-                button.disabled = true;
-                if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
-                    button.classList.add('correct');
-                }
-                if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
-                    button.classList.add('incorrect');
-                }
-            });
-            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
-            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
-            explanationEl.classList.remove('hidden');
-        }
+            function flipCard() {
+                if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+                isCardAnimating = true;
+                flashcardContent.style.opacity = '0';
+                setTimeout(() => {
+                    isCardFront = !isCardFront;
+                    const cardData = flashcardData[currentCardIndex];
+                    if (isCardFront) {
+                        flashcardContent.textContent = cardData.term;
+                        flashcardContent.className = 'flashcard-front-style';
+                    } else {
+                        flashcardContent.textContent = cardData.definition;
+                        flashcardContent.className = 'flashcard-back-style';
+                    }
+                    flashcardContent.style.opacity = '1';
+                    isCardAnimating = false;
+                }, 300);
+            }
 
-        function displayAllMCQ() {
-            if (!mcqData || mcqData.length === 0) return;
-            mcqSingleView.classList.add('hidden');
-            mcqAllQuestionsContainer.innerHTML = ''; 
-            mcqData.forEach((qData, index) => {
-                const questionDiv = document.createElement('div');
-                questionDiv.className = 'question-container-all';
-                questionDiv.innerHTML = `
+            function displayMCQuestion(index) {
+                if (!mcqData || mcqData.length === 0) return;
+                const qData = mcqData[index];
+                mcqQuestion.textContent = qData.question;
+                mcqOptions.innerHTML = '';
+                mcqFeedback.classList.add('hidden');
+                mcqExplanation.classList.add('hidden');
+                qData.options.forEach((option, i) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.onclick = () => handleMCQAnswer(index, i);
+                    mcqOptions.appendChild(button);
+                });
+                mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+                prevMCQBtn.disabled = index === 0;
+                nextMCQBtn.disabled = index === mcqData.length - 1;
+                if (mcqAnswers[index] !== null) {
+                    highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+                }
+            }
+
+            function handleMCQAnswer(qIndex, selectedIndex) {
+                if (mcqAnswers[qIndex] !== null) return;
+                const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+                mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+            }
+
+            function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+                const qData = mcqData[qIndex];
+                const buttons = optionsContainer.querySelectorAll('button');
+                buttons.forEach((button, i) => {
+                    button.disabled = true;
+                    if (i === qData.correctIndex) {
+                        button.style.backgroundColor = 'var(--correct-color)';
+                        button.style.color = '#fff';
+                        button.classList.add('correct');
+                    }
+                    if (i === selectedIndex && i !== qData.correctIndex) {
+                        button.style.backgroundColor = 'var(--incorrect-color)';
+                        button.style.color = '#fff';
+                        button.classList.add('incorrect');
+                    }
+                });
+                feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+                feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+                explanationEl.textContent = `הסבר: ${qData.explanation}`;
+                explanationEl.classList.remove('hidden');
+            }
+
+            function displayAllMCQ() {
+                if (!mcqData || mcqData.length === 0) return;
+                mcqSingleView.classList.add('hidden');
+                mcqAllQuestionsContainer.innerHTML = '';
+                mcqData.forEach((qData, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-container-all';
+                    questionDiv.innerHTML = `
                     <div class="question-text">${index + 1}. ${qData.question}</div>
                     <div class="options">
                         ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
@@ -624,92 +805,92 @@
                     <div class="feedback hidden"></div>
                     <div class="explanation hidden"></div>
                 `;
-                mcqAllQuestionsContainer.appendChild(questionDiv);
-                 const optionButtons = questionDiv.querySelectorAll('.options button');
-                 optionButtons.forEach(button => {
-                     button.onclick = () => {
-                        const qIndex = parseInt(button.dataset.qindex);
-                        const oIndex = parseInt(button.dataset.oindex);
-                        if (mcqAnswers[qIndex] === null) {
-                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
-                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
-                        }
-                        const optionsDiv = button.closest('.options');
+                    mcqAllQuestionsContainer.appendChild(questionDiv);
+                    const optionButtons = questionDiv.querySelectorAll('.options button');
+                    optionButtons.forEach(button => {
+                        button.onclick = () => {
+                            const qIndex = parseInt(button.dataset.qindex);
+                            const oIndex = parseInt(button.dataset.oindex);
+                            if (mcqAnswers[qIndex] === null) {
+                                const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                                mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                            }
+                            const optionsDiv = button.closest('.options');
+                            const feedbackDiv = questionDiv.querySelector('.feedback');
+                            const explanationDiv = questionDiv.querySelector('.explanation');
+                            highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                        };
+                    });
+                    if (mcqAnswers[index] !== null) {
+                        const optionsDiv = questionDiv.querySelector('.options');
                         const feedbackDiv = questionDiv.querySelector('.feedback');
                         const explanationDiv = questionDiv.querySelector('.explanation');
-                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
-                     };
-                 });
-                 if (mcqAnswers[index] !== null) {
-                    const optionsDiv = questionDiv.querySelector('.options');
-                    const feedbackDiv = questionDiv.querySelector('.feedback');
-                    const explanationDiv = questionDiv.querySelector('.explanation');
-                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
-                 }
-            });
-            mcqAllQuestionsContainer.classList.remove('hidden');
-        }
-
-        function displayTFQuestion(index) {
-            if (!tfData || tfData.length === 0) return;
-            const qData = tfData[index];
-            tfQuestion.textContent = qData.question;
-            tfFeedback.classList.add('hidden');
-            tfExplanation.classList.add('hidden');
-             const buttons = tfOptionsContainer.querySelectorAll('button');
-             buttons.forEach(button => {
-                 button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
-                 button.classList.remove('correct', 'incorrect');
-                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
-             });
-            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
-            prevTFBtn.disabled = index === 0;
-            nextTFBtn.disabled = index === tfData.length - 1;
-            if (tfAnswers[index] !== null) {
-                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                    }
+                });
+                mcqAllQuestionsContainer.classList.remove('hidden');
             }
-        }
-        
-        function handleTFAnswer(qIndex, selectedAnswer) {
-            if (tfAnswers[qIndex] !== null) return;
-            const isCorrect = selectedAnswer === tfData[qIndex].answer;
-            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
-            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
-        }
-        
-        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
-             const qData = tfData[qIndex];
-             const buttons = optionsContainer.querySelectorAll('button');
-             buttons.forEach(button => {
-                 const buttonAnswer = button.dataset.answer === 'true';
-                 button.disabled = true;
-                 if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
-                     button.classList.add('correct');
-                 }
-                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
-                     button.classList.add('incorrect');
-                 }
-             });
-             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
-             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
-             explanationEl.classList.remove('hidden');
-        }
-        
-        function displayAllTF() {
-             if (!tfData || tfData.length === 0) return;
-             tfSingleView.classList.add('hidden');
-             tfAllQuestionsContainer.innerHTML = '';
-             tfData.forEach((qData, index) => {
-                 const questionDiv = document.createElement('div');
-                 questionDiv.className = 'question-container-all';
-                 questionDiv.innerHTML = `
+
+            function displayTFQuestion(index) {
+                if (!tfData || tfData.length === 0) return;
+                const qData = tfData[index];
+                tfQuestion.textContent = qData.question;
+                tfFeedback.classList.add('hidden');
+                tfExplanation.classList.add('hidden');
+                const buttons = tfOptionsContainer.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.style.backgroundColor = '';
+                    button.style.color = '';
+                    button.classList.remove('correct', 'incorrect');
+                    button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+                });
+                tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+                prevTFBtn.disabled = index === 0;
+                nextTFBtn.disabled = index === tfData.length - 1;
+                if (tfAnswers[index] !== null) {
+                    highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+                }
+            }
+
+            function handleTFAnswer(qIndex, selectedAnswer) {
+                if (tfAnswers[qIndex] !== null) return;
+                const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+            }
+
+            function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+                const qData = tfData[qIndex];
+                const buttons = optionsContainer.querySelectorAll('button');
+                buttons.forEach(button => {
+                    const buttonAnswer = button.dataset.answer === 'true';
+                    button.disabled = true;
+                    if (buttonAnswer === qData.answer) {
+                        button.style.backgroundColor = 'var(--correct-color)';
+                        button.style.color = '#fff';
+                        button.classList.add('correct');
+                    }
+                    if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                        button.style.backgroundColor = 'var(--incorrect-color)';
+                        button.style.color = '#fff';
+                        button.classList.add('incorrect');
+                    }
+                });
+                feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+                feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+                explanationEl.textContent = `הסבר: ${qData.explanation}`;
+                explanationEl.classList.remove('hidden');
+            }
+
+            function displayAllTF() {
+                if (!tfData || tfData.length === 0) return;
+                tfSingleView.classList.add('hidden');
+                tfAllQuestionsContainer.innerHTML = '';
+                tfData.forEach((qData, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-container-all';
+                    questionDiv.innerHTML = `
                      <div class="question-text">${index + 1}. ${qData.question}</div>
                      <div class="tf-options">
                          <button data-qindex="${index}" data-answer="true">נכון</button>
@@ -718,49 +899,50 @@
                      <div class="feedback hidden"></div>
                      <div class="explanation hidden"></div>
                  `;
-                 tfAllQuestionsContainer.appendChild(questionDiv);
-                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
-                 optionButtons.forEach(button => {
-                     button.onclick = () => {
-                         const qIndex = parseInt(button.dataset.qindex);
-                         const selectedAnswer = button.dataset.answer === 'true';
-                         if (tfAnswers[qIndex] === null) {
-                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
-                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
-                         }
-                         const optionsDiv = button.closest('.tf-options');
-                         const feedbackDiv = questionDiv.querySelector('.feedback');
-                         const explanationDiv = questionDiv.querySelector('.explanation');
-                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
-                     };
-                 });
-                 if (tfAnswers[index] !== null) {
-                    const optionsDiv = questionDiv.querySelector('.tf-options');
-                    const feedbackDiv = questionDiv.querySelector('.feedback');
-                    const explanationDiv = questionDiv.querySelector('.explanation');
-                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
-                 }
-             });
-             tfAllQuestionsContainer.classList.remove('hidden');
-        }
+                    tfAllQuestionsContainer.appendChild(questionDiv);
+                    const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                    optionButtons.forEach(button => {
+                        button.onclick = () => {
+                            const qIndex = parseInt(button.dataset.qindex);
+                            const selectedAnswer = button.dataset.answer === 'true';
+                            if (tfAnswers[qIndex] === null) {
+                                const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                                tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                            }
+                            const optionsDiv = button.closest('.tf-options');
+                            const feedbackDiv = questionDiv.querySelector('.feedback');
+                            const explanationDiv = questionDiv.querySelector('.explanation');
+                            highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                        };
+                    });
+                    if (tfAnswers[index] !== null) {
+                        const optionsDiv = questionDiv.querySelector('.tf-options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                    }
+                });
+                tfAllQuestionsContainer.classList.remove('hidden');
+            }
 
-        function initialize() {
-            if (flashcardData.length > 0) displayCard(currentCardIndex);
-            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
-            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
-            flashcardContent.addEventListener('click', flipCard);
-            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
-            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
-            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
-            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
-            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
-            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
-            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
-            viewAllTFBtn.addEventListener('click', displayAllTF);
-        }
-        
-        initialize();
-    });
+            function initialize() {
+                if (flashcardData.length > 0) displayCard(currentCardIndex);
+                if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+                if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+                flashcardContent.addEventListener('click', flipCard);
+                prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+                nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+                prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+                nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+                viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+                prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+                nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+                viewAllTFBtn.addEventListener('click', displayAllTF);
+            }
+
+            initialize();
+        });
     </script>
 </body>
+
 </html>
