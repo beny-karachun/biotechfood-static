@@ -64,6 +64,16 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
         html, body {
           overflow: hidden !important;
           overflow-x: hidden !important;
+          overflow-y: hidden !important;
+        }
+        *, *::before, *::after {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+        *::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
         }
       `;
       iframeDoc.head.appendChild(style);
@@ -97,6 +107,7 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       ref={iframeRef}
       src={src}
       title={title}
+      scrolling="no"
       onLoad={handleLoad}
       style={{
         width: '100%',
