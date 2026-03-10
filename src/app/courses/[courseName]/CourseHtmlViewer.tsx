@@ -51,12 +51,11 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    syncHeight();
-
     try {
       const iframeDoc = iframe.contentWindow?.document;
       const iframeBody = iframeDoc?.body;
-      if (!iframeDoc || !iframeBody) return;
+      const iframeWindow = iframe.contentWindow as any;
+      if (!iframeDoc || !iframeBody || !iframeWindow) return;
 
       // Hide scrollbar inside the iframe content
       const style = iframeDoc.createElement('style');
@@ -78,27 +77,65 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       `;
       iframeDoc.head.appendChild(style);
 
-      // ResizeObserver — fires when any element inside changes size
-      const resizeObserver = new ResizeObserver(() => {
-        syncHeight();
-      });
-      resizeObserver.observe(iframeBody);
+      // Function to set up observers (called after MathJax finishes)
+      const setupObservers = () => {
+        const resizeObserver = new ResizeObserver(() => {
+          syncHeight();
+        });
+        resizeObserver.observe(iframeBody);
 
-      // MutationObserver — fires when DOM changes (e.g. section expanded)
-      const mutationObserver = new MutationObserver(() => {
-        // Small delay to let CSS transitions/animations complete
-        requestAnimationFrame(() => syncHeight());
-      });
-      mutationObserver.observe(iframeBody, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class', 'open', 'hidden'],
-      });
+        const mutationObserver = new MutationObserver(() => {
+          requestAnimationFrame(() => syncHeight());
+        });
+        mutationObserver.observe(iframeBody, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class', 'open', 'hidden'],
+        });
+      };
 
-      // Cleanup on unmount (handled by React re-keying)
+      // Wait for MathJax to load and typeset, then set up observers
+      const waitForMathJax = (retries = 0) => {
+        if (retries > 50) {
+          // MathJax not found after 5 seconds — set up observers anyway
+          syncHeight();
+          setupObservers();
+          return;
+        }
+
+        const MathJax = iframeWindow.MathJax;
+        if (MathJax && MathJax.typesetPromise) {
+          // MathJax is ready — re-typeset to ensure math renders
+          MathJax.typesetPromise()
+            .then(() => {
+              syncHeight();
+              setupObservers();
+            })
+            .catch(() => {
+              syncHeight();
+              setupObservers();
+            });
+        } else if (MathJax && MathJax.Hub) {
+          // MathJax v2 fallback
+          MathJax.Hub.Queue(['Typeset', MathJax.Hub]);
+          MathJax.Hub.Queue(() => {
+            syncHeight();
+            setupObservers();
+          });
+        } else {
+          // MathJax not loaded yet — retry in 100ms
+          setTimeout(() => waitForMathJax(retries + 1), 100);
+        }
+      };
+
+      // Initial height sync, then wait for MathJax
+      syncHeight();
+      waitForMathJax();
+
     } catch {
       // Cross-origin — can't observe
+      syncHeight();
     }
   }, [syncHeight]);
 
