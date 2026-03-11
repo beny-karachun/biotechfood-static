@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning>
+    <html suppressHydrationWarning lang="he" dir="rtl">
       <body
         // Removed geistSans.variable
         className={`font-sans antialiased`}

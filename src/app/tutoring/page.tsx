@@ -50,6 +50,22 @@ export default function TutoringPage() {
         </p>
       </div>
 
+      {/* CTA (Moved to top) */}
+      <div className="text-center mb-12">
+        <h2 className="text-2xl font-bold mb-3">{t('tutoring_page.cta_title')}</h2>
+        <p className="text-muted-foreground mb-6">
+          {t('tutoring_page.cta_subtitle')}
+        </p>
+        <Button
+          size="lg"
+          onClick={handleWhatsApp}
+          className="px-8 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1 inline-flex items-center"
+        >
+          <Icons.whatsapp className={`h-5 w-5 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+          {t('tutoring_page.cta_button')}
+        </Button>
+      </div>
+
       {/* What You Get */}
       <div className="grid gap-6 md:grid-cols-3 mb-12">
         <Card className="text-center">
@@ -128,22 +144,6 @@ export default function TutoringPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* CTA */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-3">{t('tutoring_page.cta_title')}</h2>
-        <p className="text-muted-foreground mb-6">
-          {t('tutoring_page.cta_subtitle')}
-        </p>
-        <Button
-          size="lg"
-          onClick={handleWhatsApp}
-          className="px-8 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1"
-        >
-          <Icons.whatsapp className={`h-5 w-5 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
-          {t('tutoring_page.cta_button')}
-        </Button>
-      </div>
     </div>
   );
 }
