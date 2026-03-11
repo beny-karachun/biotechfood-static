@@ -17,13 +17,129 @@ interface CourseHtmlViewerProps {
 }
 
 /**
+ * MathJax v3 configuration snippet.
+ * Inserted into every course HTML <head> BEFORE MathJax loads,
+ * so that $...$ and $$...$$ delimiters are always recognized.
+ */
+const MATHJAX_CONFIG = `<script>
+window.MathJax = {
+  tex: {
+    inlineMath:  [['$', '$'], ['\\\\(', '\\\\)']],
+    displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+  },
+  startup: {
+    pageReady: () => {
+      return MathJax.startup.defaultPageReady().then(() => {
+        // Global MutationObserver to automatically typeset new math elements
+        if (typeof MutationObserver !== 'undefined') {
+          const observer = new MutationObserver((mutations) => {
+            let hasNewMath = false;
+            for (const mutation of mutations) {
+              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                hasNewMath = true;
+                break;
+              } else if (mutation.type === 'characterData' && mutation.target.textContent && mutation.target.textContent.includes('$')) {
+                hasNewMath = true;
+                break;
+              }
+            }
+            if (hasNewMath) {
+              try {
+                // typesetPromise() without args processes the whole document body automatically safely
+                MathJax.typesetPromise().catch(() => {});
+              } catch (e) {}
+            }
+          });
+          observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+        }
+      });
+    }
+  }
+};
+</script>`;
+
+const MATHJAX_SCRIPT =
+  '<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>';
+
+/**
+ * Pre-processes raw HTML to guarantee MathJax is present and properly configured.
+ *  – Strips any existing `window.MathJax = { … }` config blocks (we replace with ours).
+ *  – Strips the legacy polyfill.io tag (not needed for MathJax v3).
+ *  – Injects our config right after <head> so it runs before the MathJax script.
+ *  – Adds a <base> tag so relative asset paths still resolve correctly.
+ *  – Adds the MathJax v3 script tag if the file doesn't already include one.
+ */
+function injectMathJax(html: string, baseHref: string): string {
+  let out = html;
+
+  // Remove any existing MathJax config blocks (we provide our own)
+  out = out.replace(/<script[^>]*>\s*window\.MathJax\s*=[\s\S]*?<\/script>\s*/g, '');
+
+  // Remove legacy polyfill.io (not needed for MathJax v3)
+  out = out.replace(/<script[^>]*polyfill\.io[^>]*><\/script>\s*/g, '');
+
+  // Remove existing <base> tags to avoid conflicts
+  out = out.replace(/<base[^>]*>\s*/gi, '');
+
+  // Inject <base> + MathJax config right after <head…>
+  out = out.replace(
+    /<head([^>]*)>/i,
+    `<head$1>\n<base href="${baseHref}">\n${MATHJAX_CONFIG}`
+  );
+
+  // Add MathJax script if the file doesn't already load it
+  if (!/mathjax@3/i.test(out)) {
+    out = out.replace('</head>', `${MATHJAX_SCRIPT}\n</head>`);
+  }
+
+  return out;
+}
+
+/**
  * Auto-resizing iframe that never shows a scrollbar.
+ * Fetches the HTML source, injects MathJax config, then loads via Blob URL.
  * Uses ResizeObserver + MutationObserver to continuously track
  * content height changes (e.g. collapsible sections opening).
  */
 function IframeAutoHeight({ src, title }: { src: string; title: string }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
 
+  // --- Fetch, transform, and create Blob URL ---
+  useEffect(() => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+
+    const absUrl = new URL(src, window.location.href);
+    const baseHref = absUrl.href.substring(0, absUrl.href.lastIndexOf('/') + 1);
+
+    fetch(src)
+      .then((r) => r.text())
+      .then((html) => {
+        const processed = injectMathJax(html, baseHref);
+        const url = URL.createObjectURL(
+          new Blob([processed], { type: 'text/html' })
+        );
+        blobUrlRef.current = url;
+        setBlobSrc(url);
+      })
+      .catch(() => {
+        // Fallback: load original file directly
+        setBlobSrc(src);
+      });
+
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, [src]);
+
+  // --- Height syncing ---
   const syncHeight = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe) return;
@@ -76,35 +192,6 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
         }
       `;
       iframeDoc.head.appendChild(style);
-
-      // --- Global MathJax injection ---
-      // Ensure every iframe gets MathJax with $...$ and $$...$$ delimiter support,
-      // regardless of whether the HTML file itself includes MathJax.
-      if (!iframeWindow.MathJax?.tex) {
-        // Inject the MathJax configuration
-        const mathJaxConfig = iframeDoc.createElement('script');
-        mathJaxConfig.textContent = `
-          window.MathJax = {
-            tex: {
-              inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
-              displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
-            },
-            startup: {
-              typeset: true
-            }
-          };
-        `;
-        iframeDoc.head.appendChild(mathJaxConfig);
-
-        // Inject the MathJax script if not already present
-        if (!iframeDoc.getElementById('MathJax-script')) {
-          const mathJaxScript = iframeDoc.createElement('script');
-          mathJaxScript.id = 'MathJax-script';
-          mathJaxScript.async = true;
-          mathJaxScript.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-          iframeDoc.head.appendChild(mathJaxScript);
-        }
-      }
 
       // Function to set up observers (called after MathJax finishes)
       const setupObservers = () => {
@@ -168,10 +255,15 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
     }
   }, [syncHeight]);
 
+  if (!blobSrc) {
+    // Still fetching / transforming — show nothing (flickers for <100ms)
+    return null;
+  }
+
   return (
     <iframe
       ref={iframeRef}
-      src={src}
+      src={blobSrc}
       title={title}
       scrolling="no"
       onLoad={handleLoad}
