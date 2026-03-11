@@ -153,7 +153,7 @@ export default function AcademicCalculatorPage() {
     }
 
     return (
-        <div className="container mx-auto py-6 sm:py-10 px-4 max-w-5xl">
+        <div className="container mx-auto pt-24 pb-6 sm:pb-10 px-4 max-w-5xl">
             <Card>
                 <CardHeader className="px-4 sm:px-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
