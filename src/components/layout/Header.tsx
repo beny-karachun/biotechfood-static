@@ -39,7 +39,7 @@ const navItemVariants = {
     scale: 0.6,
     filter: 'blur(4px)',
     transition: {
-      delay: (3 - i) * 0.03,
+      delay: (4 - i) * 0.03,
       duration: 0.15,
       ease: 'easeIn' as const,
     },
@@ -102,6 +102,19 @@ export function Header() {
           className="inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors"
         >
           <Icons.calculator className="h-4 w-4" />
+        </Link>
+      ),
+    },
+    {
+      key: 'tutoring',
+      content: (
+        <Link
+          href="/tutoring"
+          aria-label="Tutoring"
+          tabIndex={isEffectivelyExpanded ? 0 : -1}
+          className="inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors"
+        >
+          <Icons.messageSquare className="h-4 w-4" />
         </Link>
       ),
     },

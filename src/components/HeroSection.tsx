@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 
@@ -78,13 +79,18 @@ export default function HeroSection() {
           Your Technion B.Sc. course companion. <br className="hidden md:block" />
           Access all study materials, summaries, and tools in one hub.
         </p>
-        <div className="flex justify-center">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
           {/* Link triggers the client-side scroll function */}
           <a href="#course-diagram" onClick={scrollToDiagram}>
-            <Button className="w-full md:w-auto px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
+            <Button className="w-full md:w-auto min-w-[220px] px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
               Explore Courses
             </Button>
           </a>
+          <Link href="/tutoring">
+            <Button className="w-full md:w-auto min-w-[220px] px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
+              Arrange Tutoring
+            </Button>
+          </Link>
         </div>
 
         {/* Social Links */}
