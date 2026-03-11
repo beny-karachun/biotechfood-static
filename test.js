@@ -1,0 +1,1 @@
+const fs = require("fs"); let html = fs.readFileSync("public/courses/064324-?????-????????/(8) HPLC.html", "utf8"); const regex = /<script[^>]*>\s*window\.MathJax\s*=[\s\S]*?<\/script>\s*/g; const matches = html.match(regex); console.log(matches ? matches.length : 0); let original = html; html = html.replace(regex, ""); console.log(html.includes("window.MathJax"));

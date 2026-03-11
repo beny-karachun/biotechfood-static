@@ -35,19 +35,35 @@ window.MathJax = {
           const observer = new MutationObserver((mutations) => {
             let hasNewMath = false;
             for (const mutation of mutations) {
-              if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                hasNewMath = true;
-                break;
+              if (mutation.type === 'childList') {
+                for (let i = 0; i < mutation.addedNodes.length; i++) {
+                  const node = mutation.addedNodes[i];
+                  // Ignore nodes added by MathJax itself to prevent infinite loops
+                  if (node.nodeType === 1 && (
+                      node.tagName.toLowerCase().includes('mjx') || 
+                      node.classList.contains('mjx-container') || 
+                      node.classList.contains('MathJax')
+                  )) {
+                    continue;
+                  }
+                  hasNewMath = true;
+                }
               } else if (mutation.type === 'characterData' && mutation.target.textContent && mutation.target.textContent.includes('$')) {
                 hasNewMath = true;
-                break;
               }
             }
             if (hasNewMath) {
               try {
-                // typesetPromise() without args processes the whole document body automatically safely
-                MathJax.typesetPromise().catch(() => {});
-              } catch (e) {}
+                // Temporarily disconnect to avoid picking up MathJax's own DOM additions
+                observer.disconnect();
+                MathJax.typesetPromise().then(() => {
+                  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+                }).catch(() => {
+                  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+                });
+              } catch (e) {
+                observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+              }
             }
           });
           observer.observe(document.body, { childList: true, subtree: true, characterData: true });
@@ -73,7 +89,7 @@ function injectMathJax(html: string, baseHref: string): string {
   let out = html;
 
   // Remove any existing MathJax config blocks (we provide our own)
-  out = out.replace(/<script[^>]*>\s*window\.MathJax\s*=[\s\S]*?<\/script>\s*/g, '');
+  out = out.replace(/<script[^>]*>(?:(?!<\/script>)[\s\S])*?(?:window\.)?MathJax\s*=\s*\{[\s\S]*?<\/script>\s*/gi, '');
 
   // Remove legacy polyfill.io (not needed for MathJax v3)
   out = out.replace(/<script[^>]*polyfill\.io[^>]*><\/script>\s*/g, '');
@@ -82,9 +98,10 @@ function injectMathJax(html: string, baseHref: string): string {
   out = out.replace(/<base[^>]*>\s*/gi, '');
 
   // Inject <base> + MathJax config right after <head…>
+  // using a replacer function to avoid String.replace parsing `$'` and `$$` within MATHJAX_CONFIG
   out = out.replace(
     /<head([^>]*)>/i,
-    `<head$1>\n<base href="${baseHref}">\n${MATHJAX_CONFIG}`
+    (match, p1) => `<head${p1}>\n<base href="${baseHref}">\n${MATHJAX_CONFIG}`
   );
 
   // Add MathJax script if the file doesn't already load it
