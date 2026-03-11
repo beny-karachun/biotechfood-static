@@ -77,6 +77,35 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       `;
       iframeDoc.head.appendChild(style);
 
+      // --- Global MathJax injection ---
+      // Ensure every iframe gets MathJax with $...$ and $$...$$ delimiter support,
+      // regardless of whether the HTML file itself includes MathJax.
+      if (!iframeWindow.MathJax?.tex) {
+        // Inject the MathJax configuration
+        const mathJaxConfig = iframeDoc.createElement('script');
+        mathJaxConfig.textContent = `
+          window.MathJax = {
+            tex: {
+              inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+              displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+            },
+            startup: {
+              typeset: true
+            }
+          };
+        `;
+        iframeDoc.head.appendChild(mathJaxConfig);
+
+        // Inject the MathJax script if not already present
+        if (!iframeDoc.getElementById('MathJax-script')) {
+          const mathJaxScript = iframeDoc.createElement('script');
+          mathJaxScript.id = 'MathJax-script';
+          mathJaxScript.async = true;
+          mathJaxScript.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+          iframeDoc.head.appendChild(mathJaxScript);
+        }
+      }
+
       // Function to set up observers (called after MathJax finishes)
       const setupObservers = () => {
         const resizeObserver = new ResizeObserver(() => {
