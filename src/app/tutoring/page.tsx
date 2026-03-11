@@ -4,47 +4,49 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
-
-const courses = [
-  {
-    category: 'Mathematics',
-    items: ['Calculus 1 & 2', 'Linear Algebra', 'Differential Equations', 'Probability & Statistics'],
-  },
-  {
-    category: 'Sciences',
-    items: ['Physics 1 & 2', 'General Chemistry', 'Organic Chemistry', 'Physical Chemistry', 'Analytical Chemistry'],
-  },
-  {
-    category: 'Biology & Biotechnology',
-    items: ['Biology 1 & 2', 'Biochemistry & Enzymology', 'Molecular Biotechnology', 'Microbiology'],
-  },
-  {
-    category: 'Engineering',
-    items: ['Fluid Mechanics', 'Heat Transfer', 'Mass Transfer', 'Food Engineering'],
-  },
-  {
-    category: 'Computer Science',
-    items: ['Python Programming', 'Data Structures', 'Introduction to CS'],
-  },
-];
+import { useLanguage } from '@/lib/i18n';
 
 export default function TutoringPage() {
+  const { t, dir } = useLanguage();
+
+  const courses = [
+    {
+      category: t('tutoring_page.math'),
+      items: t('tutoring_page.math_courses') as unknown as string[], // Cast required due to nested array return
+    },
+    {
+      category: t('tutoring_page.sciences'),
+      items: t('tutoring_page.sciences_courses') as unknown as string[],
+    },
+    {
+      category: t('tutoring_page.bio'),
+      items: t('tutoring_page.bio_courses') as unknown as string[],
+    },
+    {
+      category: t('tutoring_page.engineering'),
+      items: t('tutoring_page.eng_courses') as unknown as string[],
+    },
+    {
+      category: t('tutoring_page.cs'),
+      items: t('tutoring_page.cs_courses') as unknown as string[],
+    },
+  ];
+
   const handleWhatsApp = () => {
     const phoneNumber = '972546123730';
-    const message = encodeURIComponent('היי בני, אני מעוניין/ת בשיעור פרטי 📚');
+    const message = encodeURIComponent(t('tutoring_page.whatsapp_message'));
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };
 
   return (
-    <div className="container mx-auto pt-24 pb-10 px-4 max-w-4xl">
+    <div className="container mx-auto pt-24 pb-10 px-4 max-w-4xl" dir={dir}>
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
-          Private Tutoring
+          {t('tutoring_page.title')}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Struggling with a course? Get personalized 1-on-1 tutoring sessions from a fellow Technion student
-          who&apos;s been through it all.
+          {t('tutoring_page.subtitle')}
         </p>
       </div>
 
@@ -55,11 +57,11 @@ export default function TutoringPage() {
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <span className="text-2xl">🎯</span>
             </div>
-            <CardTitle className="text-lg">Focused Sessions</CardTitle>
+            <CardTitle className="text-lg">{t('tutoring_page.col1_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Tailored to your specific needs — whether it&apos;s exam prep, homework help, or deep concept review.
+              {t('tutoring_page.col1_desc')}
             </p>
           </CardContent>
         </Card>
@@ -69,11 +71,11 @@ export default function TutoringPage() {
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <span className="text-2xl">💡</span>
             </div>
-            <CardTitle className="text-lg">Real Experience</CardTitle>
+            <CardTitle className="text-lg">{t('tutoring_page.col2_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Learn from someone who took the same courses, with the same professors, at the Technion.
+              {t('tutoring_page.col2_desc')}
             </p>
           </CardContent>
         </Card>
@@ -83,11 +85,11 @@ export default function TutoringPage() {
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <span className="text-2xl">📱</span>
             </div>
-            <CardTitle className="text-lg">Flexible Format</CardTitle>
+            <CardTitle className="text-lg">{t('tutoring_page.col3_title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              In-person at the Technion or online via Zoom — whatever works best for you.
+              {t('tutoring_page.col3_desc')}
             </p>
           </CardContent>
         </Card>
@@ -96,9 +98,9 @@ export default function TutoringPage() {
       {/* Available Courses */}
       <Card className="mb-12">
         <CardHeader>
-          <CardTitle className="text-2xl">Available Courses</CardTitle>
+          <CardTitle className="text-2xl">{t('tutoring_page.courses_title')}</CardTitle>
           <CardDescription>
-            Tutoring is available for most courses in the Biotechnology & Food Engineering program.
+            {t('tutoring_page.courses_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,7 +111,7 @@ export default function TutoringPage() {
                   {group.category}
                 </h3>
                 <ul className="space-y-1">
-                  {group.items.map((item) => (
+                  {Array.isArray(group.items) && group.items.map((item: string) => (
                     <li key={item} className="text-sm text-muted-foreground flex items-center gap-2">
                       <Icons.check className="h-3 w-3 text-green-500 shrink-0" />
                       {item}
@@ -118,23 +120,28 @@ export default function TutoringPage() {
                 </ul>
               </div>
             ))}
+            <div>
+              <h3 className="font-semibold text-sm uppercase tracking-wider text-primary mb-2">
+                {t('tutoring_page.and_more')}
+              </h3>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* CTA */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-3">Ready to get started?</h2>
+        <h2 className="text-2xl font-bold mb-3">{t('tutoring_page.cta_title')}</h2>
         <p className="text-muted-foreground mb-6">
-          Send me a message on WhatsApp and we&apos;ll schedule your first session.
+          {t('tutoring_page.cta_subtitle')}
         </p>
         <Button
           size="lg"
           onClick={handleWhatsApp}
           className="px-8 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1"
         >
-          <Icons.whatsapp className="mr-2 h-5 w-5" />
-          Contact via WhatsApp
+          <Icons.whatsapp className={`h-5 w-5 ${dir === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+          {t('tutoring_page.cta_button')}
         </Button>
       </div>
     </div>
