@@ -27,6 +27,15 @@ window.MathJax = {
     inlineMath:  [['$', '$'], ['\\\\(', '\\\\)']],
     displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
   },
+  // Safe stubs: course HTML files may call MathJax.typesetPromise() on DOMContentLoaded,
+  // BEFORE the MathJax library has finished loading asynchronously.
+  // Without these stubs, window.MathJax is truthy (it's this config object),
+  // so "if (window.MathJax) MathJax.typesetPromise(...)" crashes with TypeError,
+  // halting all JavaScript execution and leaving interactive sections blank.
+  // These stubs will be overridden once the real MathJax library loads.
+  typesetPromise: function() { return Promise.resolve(); },
+  typeset: function() {},
+  typesetClear: function() {},
   startup: {
     pageReady: () => {
       return MathJax.startup.defaultPageReady().then(() => {
@@ -84,29 +93,49 @@ const MATHJAX_SCRIPT =
  *  – Injects our config right after <head> so it runs before the MathJax script.
  *  – Adds a <base> tag so relative asset paths still resolve correctly.
  *  – Adds the MathJax v3 script tag if the file doesn't already include one.
+ *
+ * IMPORTANT: All String.replace calls use replacer functions (not replacement strings)
+ * to prevent JavaScript's special $-pattern interpretation ($&, $', $$, etc.)
+ * from corrupting HTML content that contains dollar signs (e.g. MathJax formulas).
  */
 function injectMathJax(html: string, baseHref: string): string {
   let out = html;
 
-  // Remove any existing MathJax config blocks (we provide our own)
-  out = out.replace(/<script[^>]*>(?:(?!<\/script>)[\s\S])*?(?:window\.)?MathJax\s*=\s*\{[\s\S]*?<\/script>\s*/gi, '');
+  // Remove any existing MathJax config blocks (we provide our own).
+  // This regex ONLY matches <script> blocks that contain a `MathJax = {` assignment.
+  // It will NOT match script tags that merely reference MathJax (e.g. `if (window.MathJax)`).
+  // The regex uses a replacer function to avoid $-sign corruption.
+  out = out.replace(
+    /<script[^>]*>(?:(?!<\/script>)[\s\S])*?(?:window\.)?MathJax\s*=\s*\{[\s\S]*?<\/script>\s*/gi,
+    () => ''
+  );
 
   // Remove legacy polyfill.io (not needed for MathJax v3)
-  out = out.replace(/<script[^>]*polyfill\.io[^>]*><\/script>\s*/g, '');
+  out = out.replace(
+    /<script[^>]*polyfill\.io[^>]*><\/script>\s*/g,
+    () => ''
+  );
 
   // Remove existing <base> tags to avoid conflicts
-  out = out.replace(/<base[^>]*>\s*/gi, '');
+  out = out.replace(
+    /<base[^>]*>\s*/gi,
+    () => ''
+  );
 
   // Inject <base> + MathJax config right after <head…>
   // using a replacer function to avoid String.replace parsing `$'` and `$$` within MATHJAX_CONFIG
   out = out.replace(
     /<head([^>]*)>/i,
-    (match, p1) => `<head${p1}>\n<base href="${baseHref}">\n${MATHJAX_CONFIG}`
+    (_match, p1) => `<head${p1}>\n<base href="${baseHref}">\n${MATHJAX_CONFIG}`
   );
 
   // Add MathJax script if the file doesn't already load it
+  // Using a replacer function to prevent $-sign corruption
   if (!/mathjax@3/i.test(out)) {
-    out = out.replace('</head>', `${MATHJAX_SCRIPT}\n</head>`);
+    out = out.replace(
+      /<\/head>/i,
+      () => `${MATHJAX_SCRIPT}\n</head>`
+    );
   }
 
   return out;
@@ -168,11 +197,13 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
           body.scrollHeight, body.offsetHeight,
           html.scrollHeight, html.offsetHeight
         );
+        // Add a small buffer to prevent clipping edge cases
+        const targetHeight = contentHeight + 2;
         const currentHeight = parseInt(iframe.style.height) || 0;
         // Only GROW the iframe (content expanded), never shrink from minor fluctuations.
         // Only shrink if content got significantly shorter (>50px) — e.g. section collapsed.
-        if (contentHeight > currentHeight || (currentHeight - contentHeight) > 50) {
-          iframe.style.height = `${contentHeight}px`;
+        if (targetHeight > currentHeight || (currentHeight - targetHeight) > 50) {
+          iframe.style.height = `${targetHeight}px`;
         }
       }
     } catch {
@@ -190,13 +221,17 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       const iframeWindow = iframe.contentWindow as any;
       if (!iframeDoc || !iframeBody || !iframeWindow) return;
 
-      // Hide scrollbar inside the iframe content
+      // Hide scrollbar UI but keep overflow visible for correct height measurement.
+      // IMPORTANT: Do NOT set overflow:hidden on html/body — that clips content
+      // when the height sync is slightly off or hasn't caught up yet.
       const style = iframeDoc.createElement('style');
       style.textContent = `
-        html, body {
-          overflow: hidden !important;
+        html {
+          overflow-y: auto !important;
           overflow-x: hidden !important;
-          overflow-y: hidden !important;
+        }
+        body {
+          overflow: visible !important;
         }
         *, *::before, *::after {
           scrollbar-width: none !important;
@@ -226,6 +261,15 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
           attributes: true,
           attributeFilter: ['style', 'class', 'open', 'hidden'],
         });
+
+        // Periodic safety net: check height every 2s for first 20s
+        // to catch any missed dynamic content changes (e.g. lazy-loaded MathJax rendering)
+        let checks = 0;
+        const interval = setInterval(() => {
+          syncHeight();
+          checks++;
+          if (checks >= 10) clearInterval(interval);
+        }, 2000);
       };
 
       // Wait for MathJax to load and typeset, then set up observers
