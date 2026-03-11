@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Icons } from '@/components/icons';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 
@@ -83,6 +84,37 @@ export default function HeroSection() {
             <Button className="w-full md:w-auto px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
               Explore Courses
             </Button>
+          </a>
+        </div>
+
+        {/* Social Links */}
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <a
+            href="https://www.linkedin.com/in/beny-karachun-5a5188369/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+            className="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:text-white hover:scale-110 transition-all duration-200"
+          >
+            <Icons.linkedin className="h-5 w-5" />
+          </a>
+          <a
+            href="https://github.com/beny-karachun"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            className="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:text-white hover:scale-110 transition-all duration-200"
+          >
+            <Icons.github className="h-5 w-5" />
+          </a>
+          <a
+            href="https://wa.me/972546123730"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp"
+            className="inline-flex items-center justify-center rounded-full p-2 text-white/70 hover:text-white hover:scale-110 transition-all duration-200"
+          >
+            <Icons.whatsapp className="h-5 w-5" />
           </a>
         </div>
       </div>

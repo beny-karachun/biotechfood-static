@@ -5,8 +5,46 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
+
+const navItemVariants = {
+  hidden: (i: number) => ({
+    opacity: 0,
+    x: 20,
+    scale: 0.6,
+    filter: 'blur(4px)',
+    transition: {
+      delay: i * 0.04,
+      duration: 0.2,
+      ease: 'easeIn' as const,
+    },
+  }),
+  visible: (i: number) => ({
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      delay: i * 0.06,
+      type: 'spring' as const,
+      stiffness: 400,
+      damping: 22,
+      mass: 0.8,
+    },
+  }),
+  exit: (i: number) => ({
+    opacity: 0,
+    x: 15,
+    scale: 0.6,
+    filter: 'blur(4px)',
+    transition: {
+      delay: (3 - i) * 0.03,
+      duration: 0.15,
+      ease: 'easeIn' as const,
+    },
+  }),
+};
 
 export function Header() {
   const { theme, setTheme } = useTheme();
@@ -40,103 +78,127 @@ export function Header() {
     setIsForcedOpen(!isEffectivelyExpanded);
   };
 
-  const collapsedMaxWidthClass = "max-w-12";
-  const expandedMaxWidthClass = "max-w-md";
+  const navItems = [
+    {
+      key: 'home',
+      content: (
+        <Link
+          href="/"
+          aria-label="Home"
+          tabIndex={isEffectivelyExpanded ? 0 : -1}
+          className="inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors"
+        >
+          <Icons.home className="h-4 w-4" />
+        </Link>
+      ),
+    },
+    {
+      key: 'calculator',
+      content: (
+        <Link
+          href="/calculator"
+          aria-label="Academic Calculator"
+          tabIndex={isEffectivelyExpanded ? 0 : -1}
+          className="inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors"
+        >
+          <Icons.calculator className="h-4 w-4" />
+        </Link>
+      ),
+    },
+    {
+      key: 'whatsapp',
+      content: (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleWhatsAppClick}
+          aria-label="Contact via WhatsApp"
+          className="p-2 rounded-full h-auto min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+          tabIndex={isEffectivelyExpanded ? 0 : -1}
+        >
+          <Icons.whatsapp className="h-4 w-4" />
+        </Button>
+      ),
+    },
+    {
+      key: 'theme',
+      content: (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          aria-label="Toggle theme"
+          className="p-2 rounded-full h-auto relative min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
+          tabIndex={isEffectivelyExpanded ? 0 : -1}
+        >
+          <Icons.light className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Icons.dark className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      ),
+      hoverRotate: true,
+    },
+  ];
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <div
-        className={cn(
-          'flex items-center rounded-full bg-secondary/60 backdrop-blur-md border border-border/50 shadow-lg transition-all duration-500 ease-in-out overflow-hidden p-1.5',
-          isEffectivelyExpanded
-            ? `${expandedMaxWidthClass} space-x-2`
-            : `${collapsedMaxWidthClass}`
-        )}
-      >
-        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleExpand}
-            aria-label={isEffectivelyExpanded ? 'Collapse menu' : 'Expand menu'}
-            className={cn(
-              "p-2 h-auto shrink-0 rounded-full hover:bg-white/20 dark:hover:bg-black/20 min-w-[44px] min-h-[44px] flex items-center justify-center",
-              !isEffectivelyExpanded && "w-full"
-            )}
-          >
-            {isEffectivelyExpanded ? (
-              <Icons.chevronRight className="h-4 w-4" />
-            ) : (
-              <Icons.chevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-        </motion.div>
-
-        <div
-          className={cn(
-            'flex items-center gap-2 transition-all duration-500 ease-in-out origin-right',
-            isEffectivelyExpanded
-              ? 'scale-x-100 opacity-100 translate-x-0'
-              : 'scale-x-0 opacity-0 translate-x-4',
-          )}
+      <div className="fixed top-4 right-4 z-50">
+        <motion.div
+          layout
+          transition={{
+            layout: { type: 'spring', stiffness: 350, damping: 30, mass: 0.8 },
+          }}
+          className="flex items-center rounded-full bg-secondary/60 backdrop-blur-md border border-border/50 shadow-lg overflow-hidden p-1.5"
         >
-          <nav className="flex flex-shrink-0 items-center gap-2 text-sm whitespace-nowrap pl-2">
-            {/* --- Home Button --- */}
-            <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
-              <Link
-                href="/"
-                aria-label="Home"
-                tabIndex={isEffectivelyExpanded ? 0 : -1}
-                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
+          {/* --- Chevron Toggle --- */}
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="shrink-0"
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleExpand}
+              aria-label={isEffectivelyExpanded ? 'Collapse menu' : 'Expand menu'}
+              className="p-2 h-auto shrink-0 rounded-full hover:bg-white/20 dark:hover:bg-black/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            >
+              <motion.div
+                animate={{ rotate: isEffectivelyExpanded ? 0 : 180 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
-                <Icons.home className="h-4 w-4" />
-              </Link>
-            </motion.div>
+                <Icons.chevronRight className="h-4 w-4" />
+              </motion.div>
+            </Button>
+          </motion.div>
 
-            {/* --- Calculator Button --- */}
-            <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
-              <Link
-                href="/calculator"
-                aria-label="Academic Calculator"
-                tabIndex={isEffectivelyExpanded ? 0 : -1}
-                className={cn("inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors", !isEffectivelyExpanded && 'invisible')}
+          {/* --- Nav Items --- */}
+          <AnimatePresence mode="popLayout">
+            {isEffectivelyExpanded && (
+              <motion.nav
+                className="flex items-center gap-1 text-sm whitespace-nowrap pl-1 overflow-hidden"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 'auto', opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30, mass: 0.8 }}
               >
-                <Icons.calculator className="h-4 w-4" />
-              </Link>
-            </motion.div>
-
-            {/* --- WhatsApp Button --- */}
-            <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleWhatsAppClick}
-                aria-label="Contact via WhatsApp"
-                className={cn("p-2 rounded-full h-auto min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
-                tabIndex={isEffectivelyExpanded ? 0 : -1}
-              >
-                <Icons.whatsapp className="h-4 w-4" />
-              </Button>
-            </motion.div>
-
-            {/* --- Theme Toggle Button --- */}
-            <motion.div whileHover={{ scale: 1.15, rotate: 15 }} whileTap={{ scale: 0.9, rotate: -15 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                aria-label="Toggle theme"
-                className={cn("p-2 rounded-full h-auto relative min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-colors", !isEffectivelyExpanded && 'invisible')}
-                tabIndex={isEffectivelyExpanded ? 0 : -1}
-              >
-                <Icons.light className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Icons.dark className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            </motion.div>
-          </nav>
-        </div>
+                {navItems.map((item, i) => (
+                  <motion.div
+                    key={item.key}
+                    custom={i}
+                    variants={navItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    whileHover={item.hoverRotate ? { scale: 1.15, rotate: 15 } : { scale: 1.15 }}
+                    whileTap={item.hoverRotate ? { scale: 0.9, rotate: -15 } : { scale: 0.9 }}
+                  >
+                    {item.content}
+                  </motion.div>
+                ))}
+              </motion.nav>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
-    </div>
   );
 }
