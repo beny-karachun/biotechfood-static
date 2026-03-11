@@ -199,6 +199,23 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
           width: 0 !important;
           height: 0 !important;
         }
+        /* Mobile: make content fill the full iframe width */
+        @media (max-width: 768px) {
+          body {
+            padding: 8px 4px !important;
+          }
+          .container {
+            max-width: 100% !important;
+            padding: 12px 8px !important;
+            border-radius: 0 !important;
+            border-left: none !important;
+            border-right: none !important;
+          }
+          .section {
+            padding: 12px 8px !important;
+            border-radius: 8px !important;
+          }
+        }
       `;
       iframeDoc.head.appendChild(style);
 
@@ -397,7 +414,7 @@ export default function CourseHtmlViewer({ files }: CourseHtmlViewerProps) {
 
       {/* Viewer Section */}
       {selectedFile && (
-        <div className="mt-6 border rounded-lg overflow-hidden">
+        <div className="mt-6 border rounded-lg overflow-hidden sm:border sm:rounded-lg max-sm:border-0 max-sm:rounded-none max-sm:-mx-4">
           {fileType === 'html' ? (
             <IframeAutoHeight
               key={selectedFile}
