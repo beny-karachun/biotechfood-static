@@ -197,13 +197,11 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
           body.scrollHeight, body.offsetHeight,
           html.scrollHeight, html.offsetHeight
         );
-        // Add a small buffer to prevent clipping edge cases
-        const targetHeight = contentHeight + 2;
         const currentHeight = parseInt(iframe.style.height) || 0;
         // Only GROW the iframe (content expanded), never shrink from minor fluctuations.
         // Only shrink if content got significantly shorter (>50px) — e.g. section collapsed.
-        if (targetHeight > currentHeight || (currentHeight - targetHeight) > 50) {
-          iframe.style.height = `${targetHeight}px`;
+        if (contentHeight > currentHeight || (currentHeight - contentHeight) > 50) {
+          iframe.style.height = `${contentHeight}px`;
         }
       }
     } catch {
@@ -221,17 +219,15 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       const iframeWindow = iframe.contentWindow as any;
       if (!iframeDoc || !iframeBody || !iframeWindow) return;
 
-      // Hide scrollbar UI but keep overflow visible for correct height measurement.
-      // IMPORTANT: Do NOT set overflow:hidden on html/body — that clips content
-      // when the height sync is slightly off or hasn't caught up yet.
+      // Hide scrollbar and prevent iframe body from expanding beyond content.
+      // overflow:hidden is required to prevent a feedback loop where:
+      // syncHeight reads scrollHeight → sets iframe taller → body expands → repeat.
       const style = iframeDoc.createElement('style');
       style.textContent = `
-        html {
-          overflow-y: auto !important;
+        html, body {
+          overflow: hidden !important;
           overflow-x: hidden !important;
-        }
-        body {
-          overflow: visible !important;
+          overflow-y: hidden !important;
         }
         *, *::before, *::after {
           scrollbar-width: none !important;
@@ -261,15 +257,6 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
           attributes: true,
           attributeFilter: ['style', 'class', 'open', 'hidden'],
         });
-
-        // Periodic safety net: check height every 2s for first 20s
-        // to catch any missed dynamic content changes (e.g. lazy-loaded MathJax rendering)
-        let checks = 0;
-        const interval = setInterval(() => {
-          syncHeight();
-          checks++;
-          if (checks >= 10) clearInterval(interval);
-        }, 2000);
       };
 
       // Wait for MathJax to load and typeset, then set up observers
