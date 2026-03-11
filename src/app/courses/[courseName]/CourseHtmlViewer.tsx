@@ -35,51 +35,7 @@ window.MathJax = {
   // These stubs will be overridden once the real MathJax library loads.
   typesetPromise: function() { return Promise.resolve(); },
   typeset: function() {},
-  typesetClear: function() {},
-  startup: {
-    pageReady: () => {
-      return MathJax.startup.defaultPageReady().then(() => {
-        // Global MutationObserver to automatically typeset new math elements
-        if (typeof MutationObserver !== 'undefined') {
-          const observer = new MutationObserver((mutations) => {
-            let hasNewMath = false;
-            for (const mutation of mutations) {
-              if (mutation.type === 'childList') {
-                for (let i = 0; i < mutation.addedNodes.length; i++) {
-                  const node = mutation.addedNodes[i];
-                  // Ignore nodes added by MathJax itself to prevent infinite loops
-                  if (node.nodeType === 1 && (
-                      node.tagName.toLowerCase().includes('mjx') || 
-                      node.classList.contains('mjx-container') || 
-                      node.classList.contains('MathJax')
-                  )) {
-                    continue;
-                  }
-                  hasNewMath = true;
-                }
-              } else if (mutation.type === 'characterData' && mutation.target.textContent && mutation.target.textContent.includes('$')) {
-                hasNewMath = true;
-              }
-            }
-            if (hasNewMath) {
-              try {
-                // Temporarily disconnect to avoid picking up MathJax's own DOM additions
-                observer.disconnect();
-                MathJax.typesetPromise().then(() => {
-                  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-                }).catch(() => {
-                  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-                });
-              } catch (e) {
-                observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-              }
-            }
-          });
-          observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        }
-      });
-    }
-  }
+  typesetClear: function() {}
 };
 </script>`;
 
@@ -191,18 +147,16 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
     if (!iframe) return;
     try {
       const body = iframe.contentWindow?.document.body;
-      const html = iframe.contentWindow?.document.documentElement;
-      if (body && html) {
-        const contentHeight = Math.max(
-          body.scrollHeight, body.offsetHeight,
-          html.scrollHeight, html.offsetHeight
-        );
-        const currentHeight = parseInt(iframe.style.height) || 0;
-        // Only GROW the iframe (content expanded), never shrink from minor fluctuations.
-        // Only shrink if content got significantly shorter (>50px) — e.g. section collapsed.
-        if (contentHeight > currentHeight || (currentHeight - contentHeight) > 50) {
-          iframe.style.height = `${contentHeight}px`;
-        }
+      if (!body) return;
+      // IMPORTANT: Only measure body.scrollHeight.
+      // Do NOT use html.offsetHeight or html.scrollHeight — the <html> element
+      // fills the iframe viewport, so its height equals iframe.style.height,
+      // creating a circular dependency that causes infinite expansion.
+      const contentHeight = body.scrollHeight;
+      const currentHeight = parseInt(iframe.style.height) || 0;
+      // Only update if there's an actual change (>1px threshold to avoid sub-pixel loops)
+      if (Math.abs(contentHeight - currentHeight) > 1) {
+        iframe.style.height = `${contentHeight}px`;
       }
     } catch {
       iframe.style.height = '100vh';
@@ -219,15 +173,22 @@ function IframeAutoHeight({ src, title }: { src: string; title: string }) {
       const iframeWindow = iframe.contentWindow as any;
       if (!iframeDoc || !iframeBody || !iframeWindow) return;
 
-      // Hide scrollbar and prevent iframe body from expanding beyond content.
-      // overflow:hidden is required to prevent a feedback loop where:
-      // syncHeight reads scrollHeight → sets iframe taller → body expands → repeat.
+      // Critical CSS overrides to prevent infinite height expansion:
+      // 1. min-height:0 on html/body — course files use min-height:100vh which
+      //    creates a circular dependency (100vh = iframe height = measured height).
+      // 2. overflow:hidden — prevents scrollHeight from growing beyond content.
+      // 3. height:auto — ensures body sizes to content, not viewport.
       const style = iframeDoc.createElement('style');
       style.textContent = `
-        html, body {
+        html {
+          height: auto !important;
+          min-height: 0 !important;
           overflow: hidden !important;
-          overflow-x: hidden !important;
-          overflow-y: hidden !important;
+        }
+        body {
+          height: auto !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
         }
         *, *::before, *::after {
           scrollbar-width: none !important;
