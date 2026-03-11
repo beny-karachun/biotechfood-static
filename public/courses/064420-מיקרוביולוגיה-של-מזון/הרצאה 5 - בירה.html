@@ -1,206 +1,334 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>תהליך ייצור בירה - עקרונות, ביוכימיה ובקרת איכות</h1>
+        <h1>תהליך ייצור בירה</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הבירה היא משקה אלכוהולי עתיק יומין, המופק כתוצאה מתסיסה כוהלית של תמצית דגנים מונבטים (בעיקר שעורה) בתוספת כשות. היסטורית, הבירה נחשבה באירופה למשקה בטוח יותר ממים בשל זיהומי מקורות המים, ועדויות לייצורה נמצאו אפילו במערת רקפת בכרמל מלפני כ-5000 שנה.</p>
+                
+                <h3>חומרי הגלם העיקריים</h3>
+                <ul>
+                    <li><strong>שעורה (Barley):</strong> מקור העמילן המרכזי. לעיתים משלבים חיטה, תירס או שיפון.</li>
+                    <li><strong>מים:</strong> הרכב המינרלים משפיע על המוצר. לרוב נדרש ריכוך (הוצאת סידן).</li>
+                    <li><strong>כשות (Hops):</strong> תפרחת של צמח מטפס המקנה מרירות, ארומה, ופועל כחומר אנטי-בקטריאלי.</li>
+                    <li><strong>שמרים (Yeast):</strong> מיקרואורגניזמים המבצעים את התסיסה ומתרגמים סוכר לאלכוהול ופחמן דו-חמצני.</li>
+                </ul>
+
+                <h3>שלבי הייצור</h3>
+                <ol>
+                    <li><strong>הלתתה (Malting):</strong> הנבטת השעורה לייצור אנזימים עמילוליטיים, עצירת התהליך על ידי ייבוש. התוצר נקרא לתת (Malt).</li>
+                    <li><strong>כתישה (Mashing):</strong> ערבוב הלתת עם מים חמים (עד 67 מעלות). האנזימים מפרקים כ-3/4 מהחומר היבש לסוכרים פשוטים.</li>
+                    <li><strong>סינון ראשון (Lautering):</strong> השרייה במים חמים למיצוי הסוכרים (התירוש), והפרדת הקליפות המשמשות כמספוא.</li>
+                    <li><strong>בישול:</strong> הרתחת התירוש עם כשות למשך שעה-שעתיים. שלב זה מפסטר את הנוזל וממצה את המרירות והארומה.</li>
+                    <li><strong>תסיסה (Fermentation):</strong> קירור התירוש והוספת שמרים. התסיסה אורכת כשבוע, במהלכה צפיפות הנוזל יורדת. קיימים שני סוגים עיקריים: תסיסה עילית (Ale) בטמפרטורה גבוהה, ותסיסה תחתית (Lager) בטמפרטורה נמוכה.</li>
+                    <li><strong>תסיסה משנית ויישון:</strong> השמרים מורעבים ומייצרים תוצרי לוואי המעמיקים את הטעם. לאחר מכן הבירה מיושנת.</li>
+                    <li><strong>סינון, פיסטור ומילוי:</strong> הצללת הבירה, הוספת גזים (או שליטה בהם), ואריזה בבקבוקים או חביות.</li>
+                </ol>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: המניפולציה הביולוגית של ההלתתה</strong>
+                    זרע השעורה הגולמי אינו זמין לתסיסה. תהליך ההלתתה הוא למעשה הטעיה ביולוגית: היצרן מעודד את הזרע לנבוט כדי שייצר בעצמו את אנזימי העיכול (עמילאזות) הדרושים לפירוק מאגרי העמילן שלו. ברגע שהאנזימים נוצרים, התהליך מופסק באלימות על ידי חום, והיצרן רותם את האנזימים הללו בשלב הכתישה לטובת פירוק העמילן לסוכר זמין לשמרים.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: תרמודינמיקה וסוגי שמרים</strong>
+                    ההבדל בין בירות Ale ל-Lager אינו רק בטעם, אלא בפיזיקה של התסיסה. שמרי Ale פועלים בטמפרטורות גבוהות ומרחפים בנוזל, בעוד שמרי Lager פועלים בטמפרטורות נמוכות ושוקעים לתחתית. הבדל זה מכתיב לחלוטין את הנדסת המיכלים ואת פרופיל צריכת האנרגיה (קירור) של המבשלה.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -213,7 +341,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -233,11 +360,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -260,8 +385,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -269,619 +393,98 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "הגדרת בירה", definition: "משקה המופק כתוצאה מתסיסה כוהלית של תמצית דגנים מונבטים (בעיקר שעורה) בתוספת כשות." },
-            { term: "פיטוליתים", definition: "מינרלים שנוצרים בתאי צמחים ואינם נרקבים כמו החומר האורגני, משמשים כעדות ארכיאולוגית לנוכחות דגנים." },
-            { term: "Malting (הלתתה)", definition: "תהליך הנבטת הדגן (לרוב שעורה) במטרה לייצר אנזימים עמילוליטיים, המופסק על ידי ייבוש." },
-            { term: "Malt (לתת)", definition: "התוצר המתקבל מתהליך ההלתתה של השעורה לאחר ייבושה, המשמש כמקור העמילן והאנזימים." },
-            { term: "ראקציית Maillard", definition: "תגובה כימית המתרחשת בקלייה ובבישול של התירוש, והיא זו שקובעת את צבע הבירה." },
-            { term: "Mashing (כתישה)", definition: "שלב בו הלתת נכתש בתוספת מים חמים, ובו רוב החומר היבש עובר הידרוליזה אנזימטית לסוכרים פשוטים." },
-            { term: "Lautering", definition: "השריית הלתת הכתוש עם מים חמים למיצוי הסוכרים, והפרדת הקליפות מהתירוש באמצעות מסננת תחתית כפולה." },
-            { term: "Wort (תירוש)", definition: "התמצית הנוזלית המתקבלת לאחר מיצוי הסוכרים וסינון הקליפות, המיועדת להרתחה ותסיסה." },
-            { term: "Hops (כשות)", definition: "תפרחת של צמח מטפס המוספת בשלב הבישול, מקנה מרירות וארומה, ובעלת תכונות אנטי בקטריאליות." },
-            { term: "Top fermentation (Ale)", definition: "תסיסה בטמפרטורה גבוהה יחסית (20-22 מעלות) בה השמרים מרחפים בנוזל, אופיינית לשמרי סקרומיצס סרוויזיה." },
-            { term: "Bottom fermentation (Lager)", definition: "תסיסה בטמפרטורה נמוכה (5-12 מעלות) בה השמרים שוקעים לתחתית, אופיינית לשמרי סקרומיצס קרלסברגנסיס." },
-            { term: "תסיסה משנית", definition: "שלב בו השמרים נמצאים במצב הרעבה, צורכים שאריות מזון ומייצרים תוצרי לוואי המעמיקים את טעם ומרקם הבירה." },
-            { term: "רפינוז", definition: "סוג של סוכר שאינו מנוצל תמיד על ידי השמרים, ונוכחותו מעניקה טעם מתוק וסמיכות לבירה." },
-            { term: "בדיקות אורגנולפטיות", definition: "בדיקות איכות המבוצעות על ידי צוות טועמים מוסמך לזיהוי טעמי לוואי ופרמטרים המשפיעים על טעם הבירה." },
-            { term: "ריכוך מים", definition: "תהליך מקדים בו מוציאים את הסידן מהמים המיועדים לייצור הבירה, שכן איכות והרכב המים משפיעים על התוצר הסופי." }
+            { term: "הלתתה (Malting)", definition: "תהליך הנבטת השעורה שמטרתו ייצור אנזימים עמילוליטיים, המופסק על ידי ייבוש." },
+            { term: "לתת (Malt)", definition: "התוצר הסופי המתקבל מתהליך ההלתתה (הנבטה וייבוש של השעורה)." },
+            { term: "ראקציית Maillard", definition: "תגובה כימית המתרחשת בעת קליית הלתת ובישול התירוש, וקובעת את צבע הבירה הסופי." },
+            { term: "כתישה (Mashing)", definition: "שלב בו הלתת נכתש עם מים חמים (עד 67 מעלות) כדי שהאנזימים יפרקו את העמילן לסוכרים פשוטים." },
+            { term: "Lautering", definition: "שלב השריית המחית במים חמים למיצוי הסוכרים והפרדת התירוש מהקליפות." },
+            { term: "כשות (Hops)", definition: "תפרחת של צמח מטפס המוספת בשלב הבישול. מעניקה מרירות, ארומה ופעילות אנטי-בקטריאלית." },
+            { term: "תירוש", definition: "התמצית הנוזלית העשירה בסוכרים המתקבלת לאחר סינון הקליפות, רגע לפני תחילת התסיסה." },
+            { term: "תסיסה עילית (Ale)", definition: "תסיסה בטמפרטורה גבוהה (20-22 מעלות) עם שמרים המרחפים בנוזל (S. cerevisiae)." },
+            { term: "תסיסה תחתית (Lager)", definition: "תסיסה בטמפרטורה נמוכה (5-12 מעלות) עם שמרים השוקעים לתחתית (S. carlsbergensis)." },
+            { term: "רפינוז", definition: "סוג של סוכר שאינו מנוצל על ידי השמרים במהלך התסיסה, ותורם לטעם מתוק ולסמיכות הבירה." },
+            { term: "תסיסה משנית", definition: "שלב בו השמרים נמצאים במצב הרעבה, צורכים שאריות מזון ומייצרים תוצרי לוואי שמעמיקים את הטעם." },
+            { term: "ריכוך מים", definition: "תהליך מקדים של הוצאת סידן מהמים, החיוני להתאמת איכות המים לייצור הבירה." },
+            { term: "בדיקות אורגנולפטיות", definition: "בדיקות איכות המבוצעות על ידי צוות טועמים מוסמך לזיהוי טעמי לוואי ופרמטרים המשפיעים על הטעם." },
+            { term: "S. cerevisiae", definition: "זן השמרים המרכזי המשמש לתסיסה עילית (ייצור בירות מסוג Ale)." },
+            { term: "S. carlsbergensis", definition: "זן השמרים המיוחד המשמש לתסיסה תחתית (ייצור בירות מסוג Lager)." }
         ];
 
         const mcqData = [
-            {
-                question: "יצרן בירה מבחין כי התירוש שלו אינו עובר התססה כראוי למרות הוספת כמות מספקת של שמרים חיים. בבדיקת תהליך הייצור התגלה כי השעורה נכתשה והורתחה מיד לאחר הקציר. מהי הסיבה הביוכימית הסבירה ביותר לכישלון התסיסה?",
-                options: [
-                    "השעורה הגולמית מכילה רעלנים טבעיים הפוגעים בממברנת תאי השמרים",
-                    "היעדר תהליך הנבטה מנע היווצרות של אנזימים עמילוליטיים החיוניים לפירוק העמילן לסוכרים זמינים",
-                    "ההרתחה המיידית גרמה לנידוף של השמנים האתריים המהווים מקור אנרגיה לשמרים",
-                    "השמרים זקוקים לחמצן המשתחרר רק לאחר יישון ממושך של גרגירי השעורה"
-                ],
-                correctIndex: 1,
-                explanation: "שעורה בצורתה הגולמית אינה מהווה תמצית טובה לתסיסה. חובה להנביט את הדגן (תהליך ההלתתה) כדי לייצר את האנזימים העמילוליטיים המפרקים את העמילן לסוכרים פשוטים שהשמרים יכולים לצרוך."
-            },
-            {
-                question: "במהלך חפירות ארכיאולוגיות במערת רקפת בכרמל, חוקרים ביקשו להוכיח כי כלים עתיקים שימשו לייצור בירה. איזה ממצא סיפק את העדות החד משמעית ביותר לכך שהתבצעה במקום תסיסה אלכוהולית של דגנים?",
-                options: [
-                    "נוכחות של פיטוליתים שלא נרקבו לאורך אלפי שנים",
-                    "שרידים של שמנים אתריים בעלי תכונות אנטי בקטריאליות",
-                    "שינויים מבניים אופייניים שהתגלו בשרידי העמילן שנמצאו במכתשים",
-                    "ריכוז גבוה של גז פחמן דו חמצני שנלכד בנקבוביות האבן"
-                ],
-                correctIndex: 2,
-                explanation: "החוקרים גילו כי העמילן שנמצא במכתשים עבר שינויים אופייניים המתרחשים בעת התססה של אלכוהול, מה שהעיד על ייצור בירה ולא רק על אחסון דגנים."
-            },
-            {
-                question: "במבשלת בירה הוחלט לשנות את צבע הבירה מבהיר מאוד לכהה עמוק, מבלי להוסיף צבעי מאכל. באיזה שלב בתהליך הייצור יש להתערב כדי להשיג תוצאה זו בצורה היעילה ביותר?",
-                options: [
-                    "הארכת משך זמן התסיסה המשנית",
-                    "שינוי טמפרטורת התסיסה מ-12 מעלות ל-22 מעלות",
-                    "הגברת עוצמת ומשך הקלייה של הלתת כדי להעצים את ראקציית מייאר",
-                    "הוספת כמות כפולה של כשות בשלב ההרתחה"
-                ],
-                correctIndex: 2,
-                explanation: "צבע הבירה נקבע בעיקר על ידי הלתת. ראקציית מייאר המתרחשת בשלב קליית הלתת ובבישול התירוש היא האחראית ליצירת הפיגמנטים הכהים."
-            },
-            {
-                question: "תהליך ה-Mashing מבוצע בטמפרטורה של עד 67 מעלות צלזיוס. מה יקרה בסבירות הגבוהה ביותר אם השלב יבוצע בטמפרטורה של 95 מעלות צלזיוס?",
-                options: [
-                    "השמרים יתרבו בקצב מהיר יותר והתסיסה תסתיים מוקדם מהרגיל",
-                    "האנזימים העמילוליטיים יעברו דנטורציה ולא יפרקו את העמילן לסוכרים פשוטים",
-                    "הכשות תאבד את תכונותיה האנטי בקטריאליות לחלוטין",
-                    "ראקציית מייאר תואץ והבירה תהפוך שקופה לחלוטין"
-                ],
-                correctIndex: 1,
-                explanation: "בשלב הכתישה האנזימים פועלים לפירוק העמילן. חשיפה לטמפרטורה של 95 מעלות תגרום להרס המבנה החלבוני של האנזימים (דנטורציה), תעצור את ההידרוליזה ותמנע יצירת סוכרים לתסיסה."
-            },
-            {
-                question: "בשלב ה-Lautering, התירוש מופרד מהקליפות באמצעות מסננת בעלת תחתית כפולה. מדוע חשוב לבצע שלב זה לפני הרתחת התירוש עם הכשות?",
-                options: [
-                    "מכיוון שהקליפות יספגו את כל האלכוהול שנוצר בשלב ה-Mashing",
-                    "כדי למנוע מיצוי של טעמים לא רצויים מהקליפות וכדי לקבל נוזל צלול שניתן להרתיח ביעילות",
-                    "על מנת לאפשר לשמרים לשקוע לתחתית המיכל ללא הפרעה",
-                    "מפני שהקליפות מנטרלות את הפעילות האנטי בקטריאלית של הכשות"
-                ],
-                correctIndex: 1,
-                explanation: "הפרדת הקליפות (שנמכרות כמספוא) חיונית כדי לקבל תירוש נקי וצלול לפני שלב הבישול, וכדי למנוע מיצוי של חומרים עפיצים וטעמי לוואי ממעטפת הגרעין בזמן ההרתחה החזקה."
-            },
-            {
-                question: "במהלך בישול התירוש (הרתחה), מוסיפים את הכשות למשך שעה עד שעתיים. איזה מהבאים אינו נמנה עם מטרותיו של שלב זה?",
-                options: [
-                    "פסטור התירוש וחיסול מיקרואורגניזמים מתחרים",
-                    "הענקת ארומה וטעם מריר אופייני למשקה",
-                    "הידרוליזה אנזימטית של עמילן לסוכרים פשוטים",
-                    "מיצוי שמנים אתריים בעלי פעילות אנטי בקטריאליות"
-                ],
-                correctIndex: 2,
-                explanation: "הידרוליזה של עמילן לסוכרים מתבצעת בשלב ה-Mashing על ידי אנזימים. בשלב הבישול (הרתחה) האנזימים כבר נהרסים, ומטרת ההרתחה היא פסטור, מיצוי כשות וקבלת מרירות."
-            },
-            {
-                question: "מבשלת בירה חוותה זיהום חיידקי חמור באחת ממנות הייצור. בבדיקה התברר כי שלב אחד בתהליך קוצר משמעותית. איזה שלב קשור באופן הישיר ביותר למניעת זיהומים חיידקיים בתירוש לפני הוספת השמרים?",
-                options: [
-                    "שלב ההלתתה (Malting)",
-                    "שלב הכתישה (Mashing)",
-                    "שלב ההרתחה עם הכשות",
-                    "שלב הצנטריפוגה וההצללה"
-                ],
-                correctIndex: 2,
-                explanation: "שלב ההרתחה בתוספת הכשות משרת מטרה כפולה: פסטור התירוש בטמפרטורה גבוהה, ומיצוי שמנים אתריים מהכשות שלהם יש פעילות אנטי בקטריאלית מובהקת."
-            },
-            {
-                question: "במהלך התסיסה הראשונית, מבחין המבשל כי צפיפות הנוזל (התירוש) הולכת ויורדת באופן עקבי. מהו ההסבר המדעי העיקרי לתופעה זו?",
-                options: [
-                    "השמרים צורכים את המים שבנוזל ומאדים אותם",
-                    "סוכרים כבדים מומרים לאלכוהול קל יותר ולגז פחמן דו חמצני שמשתחרר מהמערכת",
-                    "החלבונים שבתירוש עוברים דנטורציה ושוקעים לקרקעית המיכל",
-                    "הכשות מתפרקת לחומצות אמינו קלות המרחפות על פני הנוזל"
-                ],
-                correctIndex: 1,
-                explanation: "במהלך התסיסה, השמרים צורכים סוכרים (שהם בעלי צפיפות גבוהה) ומייצרים אלכוהול (שהוא פחות צפוף ממים) ופחמן דו חמצני (שעוזב את הנוזל כגז), ולכן הצפיפות הכוללת של הנוזל יורדת."
-            },
-            {
-                question: "מבשלה מעוניינת לייצר בירה בעלת מתיקות מודגשת ומרקם סמיך יותר, מבלי להוסיף סוכר לאחר סיום התסיסה. כיצד ניתן להשיג יעד זה באמצעות בחירת השמרים?",
-                options: [
-                    "שימוש בזן שמרים בעל עמידות גבוהה מאוד לאלכוהול",
-                    "שימוש בזן שמרים שאינו מסוגל לפרק סוכרים מורכבים מסוימים, כגון רפינוז",
-                    "שימוש בשמרים לתסיסה תחתית בלבד, שכן הם מייצרים סוכר בעצמם",
-                    "הוספת שמרים בשלב ה-Mashing כדי שיפרקו את כל העמילן למים"
-                ],
-                correctIndex: 1,
-                explanation: "סוכרים שאינם מנוצלים על ידי השמרים (כמו רפינוז) נותרים במשקה ונותנים לו טעם מתוק וסמיכות. בחירת זן שמרים שאינו מתסיס סוכרים אלו מאפשרת שליטה במתיקות ובסמיכות."
-            },
-            {
-                question: "לפניך תיאור של תהליך ייצור: התירוש מקורר לטמפרטורה של 8 מעלות צלזיוס, ומוספים לו שמרים. במהלך התסיסה, נצפית שכבת שמרים השוקעת לתחתית המיכל. איזה סוג בירה מיוצר בתהליך זה?",
-                options: [
-                    "בירה מסוג Ale המיוצרת באמצעות שמרי סקרומיצס סרוויזיה",
-                    "בירה מסוג Lager המיוצרת באמצעות שמרי סקרומיצס קרלסברגנסיס",
-                    "בירה חיטה עתיקה בשיטת תסיסה ספונטנית",
-                    "בירה ללא אלכוהול העוברת תסיסה עילית"
-                ],
-                correctIndex: 1,
-                explanation: "תסיסה בטמפרטורות נמוכות (5-12 מעלות) בה השמרים שוקעים לתחתית (Bottom fermentation) אופיינית לייצור בירה מסוג לאגר (Lager) באמצעות השמר סקרומיצס קרלסברגנסיס."
-            },
-            {
-                question: "מהי המטרה המרכזית של שלב התסיסה המשנית בייצור בירה?",
-                options: [
-                    "להמיר את שאריות העמילן שלא פורקו בשלב הכתישה לסוכרים פשוטים",
-                    "ליצור מצב הרעבה בו השמרים צורכים שאריות מזון ומייצרים תוצרי לוואי המעמיקים את הטעם והמרקם",
-                    "לסנן באופן סופי את חלקיקי הכשות והקליפות שנותרו בנוזל",
-                    "להעלות את רמת החומציות כדי למנוע התרבות של חיידקים פתוגניים"
-                ],
-                correctIndex: 1,
-                explanation: "בתסיסה משנית, שנמשכת כשבוע נוסף, השמרים נמצאים במצב של חוסר בסוכרים פשוטים (הרעבה). הם מתחילים לצרוך שאריות מזון ולייצר תוצרי לוואי שתורמים למורכבות הטעם והמרקם של הבירה."
-            },
-            {
-                question: "במפעל הוחלט לדלג על שלב היישון ולהעביר את הבירה ישירות מתסיסה משנית לסינון ומילוי. מה תהיה ההשפעה הסבירה ביותר על המוצר הסופי?",
-                options: [
-                    "הבירה תכיל ריכוז גבוה של רעלנים מסוכנים",
-                    "הבירה תהיה חסרת אלכוהול לחלוטין",
-                    "הבירה לא תפתח את מלוא פרופיל הטעמים שלה ועלולה להיות פחות חלקה לשתייה",
-                    "צבע הבירה יהפוך משקוף לשחור אטום"
-                ],
-                correctIndex: 2,
-                explanation: "שלב היישון (שנמשך שבועות לאייל או חודשים ללאגר) מאפשר לבירה להתיישן, להתייצב ולשפר את טעמה. דילוג עליו יפגע באיכות ובמורכבות הטעם."
-            },
-            {
-                question: "איזה מהרכיבים הבאים אינו מוגדר כאחד מחומרי הגלם העיקריים וההכרחיים לייצור בירה קלאסית?",
-                options: [
-                    "מים",
-                    "כשות",
-                    "תירס",
-                    "שמרים"
-                ],
-                correctIndex: 2,
-                explanation: "חומרי הגלם העיקריים הם שעורה/חיטה (לתת), מים, כשות ושמרים. תירס יכול לשמש כמקור עמילן משני, אך אינו חומר גלם עיקרי והכרחי בייצור הקלאסי."
-            },
-            {
-                question: "מבשלת בירה מדווחת כי הבירה שלה עכורה מאוד למרות שהשתמשו בחומרי גלם איכותיים. איזה שלב בסוף התהליך כנראה לא בוצע כראוי?",
-                options: [
-                    "תהליך ההלתתה",
-                    "תהליך ההצללה באמצעות צנטריפוגות ומסנני אדמה",
-                    "תהליך התסיסה העילית",
-                    "תהליך ריכוך המים"
-                ],
-                correctIndex: 1,
-                explanation: "לאחר היישון, הבירה חייבת לעבור תהליך של הצללה (סינון חלקיקים מרחפים) בעזרת צנטריפוגה ומסנני אדמה כדי לקבל נוזל צלול לפני המילוי."
-            },
-            {
-                question: "מהי הסיבה העיקרית לכך שמים המשמשים לייצור בירה עוברים לרוב תהליך של ריכוך לפני השימוש?",
-                options: [
-                    "כדי להרוג חיידקים פתוגניים הנמצאים במי התהום",
-                    "כדי להוציא את הסידן מהמים, שכן הרכב המים משפיע משמעותית על אופי המוצר הסופי",
-                    "כדי להוסיף למים מינרלים המסייעים בפעילות האנטי-בקטריאלית של הכשות",
-                    "כדי להוריד את טמפרטורת המים לפני שלב הכתישה"
-                ],
-                correctIndex: 1,
-                explanation: "איכות והרכב המים חשובים מאוד לייצור. המים הרצויים לרוב הם מים מרוככים, שעברו תהליך של הוצאת הסידן, כיוון שמינרלים במים משפיעים ישירות על התגובות האנזימטיות ועל פרופיל הטעם."
-            },
-            {
-                question: "מדוע היסטורית, באירופה, בירה נחשבה למשקה בטוח יותר לשתייה מאשר מים?",
-                options: [
-                    "מפני שהבירה הכילה ויטמין C שמנע את מחלת הצפדינה",
-                    "מפני שתהליך ייצור הבירה כלל הרתחה ממושכת ונוכחות אלכוהול וכשות שמנעו התפתחות פתוגנים במים מזוהמים",
-                    "מפני שהשעורה סופחת רעלים מתוך מערכת העיכול של האדם",
-                    "מפני שהבירה הוגשה תמיד קפואה, מה שהרג את כל החיידקים"
-                ],
-                correctIndex: 1,
-                explanation: "בעבר המים באירופה היו מזוהמים. תהליך ייצור הבירה כולל הרתחה (פסטור), וכן יצירת סביבה אלכוהולית וחומצית עם כשות (אנטי-בקטריאלית), מה שהפך אותה לבטוחה יותר לשתייה."
-            },
-            {
-                question: "צוות טועמים מוסמך במבשלה פוסל אצווה של בירה עקב טעם חמוץ ולא אופייני. איזה סוג של אבטחת איכות חשף את הבעיה, ומה יכול להיות המקור הסביר לבעיה?",
-                options: [
-                    "בדיקה כימית; חוסר בסוכר רפינוז",
-                    "בדיקה מיקרוביאלית; עודף של חמצן בבקבוק",
-                    "בדיקה אורגנולפטית; זיהום ממקור חיידקי או שמרי בר",
-                    "בדיקת פיטוליתים; שימוש בשעורה שלא עברה הלתתה"
-                ],
-                correctIndex: 2,
-                explanation: "צוות טועמים מבצע בדיקות אורגנולפטיות (חושיות). טעם חמוץ לא רצוי מצביע לרוב על זיהום מיקרוביאלי (חיידקי חומצת חלב או שמרי בר) שהתרחש למרות תנאי האספטיקה."
-            },
-            {
-                question: "אם נשווה את האנזימים הפועלים בשלב ה-Mashing לאלו הפועלים בשלב ה-Lautering, איזו עובדה בולטת בנוגע לגלוקו-עמילאזות?",
-                options: [
-                    "הם נהרסים לחלוטין ברגע שהמים נוגעים בלתת",
-                    "הם הופכים לרעילים בטמפרטורות העולות על 40 מעלות",
-                    "רובם מפגינים עמידות בטמפרטורה של 60 מעלות צלזיוס, מה שמאפשר להם להמשיך לפעול במהלך השריית הלתת",
-                    "הם דורשים נוכחות של כשות כדי לפעול ביעילות"
-                ],
-                correctIndex: 2,
-                explanation: "בשלב ה-Lautering, הלתת מושרה במים חמים למיצוי. מצוין כי רוב הגלוקו-עמילאזות עמידות בטמפרטורה של 60 מעלות, ולכן הן יכולות להמשיך לפרק שאריות סוכרים בשלב זה."
-            },
-            {
-                question: "באילו תנאים סביבתיים מוספים השמרים למיכלי הפרמנטציה (התסיסה) לאחר קירור התירוש?",
-                options: [
-                    "בתנאים חשופים לאוויר הפתוח כדי לאפשר קליטת שמרי בר מהסביבה",
-                    "בתנאים אספטיים (סטריליים) כדי למנוע חדירת מיקרואורגניזמים מתחרים",
-                    "תחת לחץ אטמוספרי כפול כדי להאיץ את תהליך התסיסה",
-                    "בטמפרטורת רתיחה כדי להבטיח את ניקיון המיכל"
-                ],
-                correctIndex: 1,
-                explanation: "השמרים מוספים למכליי הפרמנטציה בתנאים אספטיים (סטריליים) לחלוטין. התירוש בשלב זה עשיר בסוכרים ומהווה מצע גידול מצוין, ולכן חובה למנוע זיהום על ידי חיידקים או שמרים זרים."
-            },
-            {
-                question: "מה מטרת הוספת שמרים בריכוז של 70 עד 80 גרם לליטר בשלב התסיסה?",
-                options: [
-                    "להבטיח שהשמרים ישתלטו במהירות על התירוש ויתחילו להתסיס את הסוכרים לפני שמיקרואורגניזמים אחרים יוכלו להתפתח",
-                    "לספוג את עודפי המים ולייצר בירה בעלת מרקם ג'לטיני",
-                    "לפרק את הקליפות שנותרו לאחר שלב הסינון",
-                    "לייצר את תגובת מייאר הנדרשת לקביעת צבע הבירה"
-                ],
-                correctIndex: 0,
-                explanation: "הוספת מאסה גדולה של שמרים ספציפיים נועדה להבטיח תסיסה מהירה ויעילה של הסוכרים לאלכוהול ולגז, תוך מניעת אפשרות של חיידקים מתחרים להתרבות בתירוש."
-            },
-            {
-                question: "באיזה שלב בתהליך ייצור הבירה מתבצעת השליטה העיקרית ברמת הסמיכות של המוצר הסופי, מעבר לבחירת זן השמרים?",
-                options: [
-                    "בשלב ההלתתה, על ידי שליטה בזמן הייבוש",
-                    "בזמן האריזה, על ידי הוספת חומר לא מסונן",
-                    "בשלב ההרתחה, על ידי שינוי כמות הכשות",
-                    "בשלב ה-Lautering, על ידי שינוי צורת המסננת"
-                ],
-                correctIndex: 1,
-                explanation: "לפי חומר הלימוד, בזמן האריזה (בנוסף לסידור רמת הגזים), ניתן גם לשלוט בסמיכות הבירה על ידי הוספת חומר לא מסונן למוצר הסופי."
-            },
-            {
-                question: "מהו התוצר העיקרי של תהליך ההידרוליזה המתרחש בשלב הכתישה (Mashing)?",
-                options: [
-                    "חלבונים מורכבים המשמשים לבניית קצף הבירה",
-                    "סוכרים פשוטים שהשמרים מסוגלים להתסיס",
-                    "אלכוהול בריכוז של כ-5 אחוזים",
-                    "שמנים אתריים המעניקים ארומה"
-                ],
-                correctIndex: 1,
-                explanation: "בשלב ה-Mashing, האנזימים העמילוליטיים מבצעים הידרוליזה של העמילן (שהוא פוליסכריד) ומפרקים אותו לסוכרים פשוטים יותר, שהם זמינים לתסיסה על ידי השמרים."
-            },
-            {
-                question: "כיצד משפיעה הטמפרטורה על סוג התסיסה ועל אופי הבירה?",
-                options: [
-                    "טמפרטורה גבוהה גורמת לשמרים לשקוע ומייצרת לאגר, בעוד טמפרטורה נמוכה גורמת להם לצוף ומייצרת אייל",
-                    "לטמפרטורה אין השפעה על סוג התסיסה, אלא רק על קצב התרבות השמרים",
-                    "תסיסה בטמפרטורה גבוהה (20-22 מעלות) מתאימה לשמרי אייל המרחפים בנוזל, ותסיסה בטמפרטורה נמוכה (5-12 מעלות) מתאימה לשמרי לאגר השוקעים",
-                    "כל השמרים דורשים טמפרטורה של מעל 30 מעלות כדי להתחיל בפעולת התסיסה"
-                ],
-                correctIndex: 2,
-                explanation: "קיים הבדל מהותי: תסיסה עילית (Ale) מתבצעת בטמפרטורות גבוהות יחסית עם שמרים שמרחפים, בעוד תסיסה תחתית (Lager) דורשת קירור לטמפרטורות נמוכות עם שמרים שוקעים."
-            },
-            {
-                question: "מדוע נדרש לקרר את התירוש באופן אקטיבי במהלך שלב התסיסה במכלים?",
-                options: [
-                    "מפני שהאלכוהול מתנדף בטמפרטורת החדר",
-                    "מכיוון שתהליך התסיסה פולט חום, ויש לשמור על טמפרטורה מבוקרת כדי שהשמרים יפעלו בצורה אופטימלית ולא ימותו",
-                    "כדי למנוע מראקציית מייאר להתרחש שוב ולהשחיר את הבירה",
-                    "על מנת להקפיא את המים ולהפריד אותם מהאלכוהול"
-                ],
-                correctIndex: 1,
-                explanation: "השליטה בתסיסה היא בעיקר דרך הטמפרטורה. התסיסה היא תהליך אקסותרמי (פולט חום), ולכן בדרך כלל יש צורך לקרר את המכלים כדי לשמור על טווח הטמפרטורות הרצוי לסוג השמרים (אייל או לאגר)."
-            },
-            {
-                question: "מה יקרה אם יתווסף מקור עמילן משני (כמו תירס או אורז) ללא הוספת לתת שעורה כלל בתהליך הייצור?",
-                options: [
-                    "תתקבל בירה בהירה מאוד וחסרת טעם",
-                    "התהליך ייעצר בשלב הכתישה, מכיוון שיחסרו האנזימים העמילוליטיים הנמצאים בלתת והדרושים לפירוק העמילן לסוכרים",
-                    "התסיסה תהיה מהירה פי שניים בגלל פשטות העמילן בתירס",
-                    "השמרים ייצרו רעלנים במקום אלכוהול"
-                ],
-                correctIndex: 1,
-                explanation: "לתת השעורה אינו רק מקור לעמילן, אלא המקור הקריטי לאנזימים המפרקים את העמילן. תירס או אורז גולמיים אינם מכילים אנזימים אלו בכמות מספקת, ולכן ללא לתת שעורה, העמילן לא יפורק לסוכרים זמינים לתסיסה."
-            },
-            {
-                question: "איזו בדיקה מבין הבאות נחשבת לבדיקה כימית באבטחת איכות של בירה?",
-                options: [
-                    "זיהוי שמרי בר במיקרוסקופ",
-                    "מבחן טעימה עיוורת לזיהוי עפיצות",
-                    "מדידת ערכי pH ותכולת סוכרים",
-                    "בדיקת טיב תרביות השמרים בצלחות פטרי"
-                ],
-                correctIndex: 2,
-                explanation: "בדיקות כימיות כוללות מדידת פרמטרים כגון טוקסינים, רמות פחמן דו חמצני, ריכוז אלכוהול, תכולת סוכרים, ערכי חומציות (pH), צבע ועכירות."
-            },
-            {
-                question: "כיצד תורמת הקלייה של הלתת לפרופיל הטעם של הבירה, מלבד קביעת הצבע?",
-                options: [
-                    "היא מחסלת את כל האנזימים ובכך מונעת מתיקות יתר",
-                    "היא יוצרת תרכובות טעם וארומה מורכבות באמצעות ראקציית מייאר בין חומצות אמינו לסוכרים",
-                    "היא מסננת את הקליפות באופן אוטומטי",
-                    "היא מוסיפה את הטעם המריר האופייני, המייתר את הצורך בכשות"
-                ],
-                correctIndex: 1,
-                explanation: "ראקציית מייאר, המתרחשת בחום הקלייה, יוצרת מגוון רחב של תרכובות צבע, טעם וארומה (כגון לחם קלוי, קרמל, קפה) המשפיעות עמוקות על אופי הבירה."
-            },
-            {
-                question: "מהו התפקיד של הקליפות (Husks) שנותרו מהשעורה לאחר שלב ה-Lautering?",
-                options: [
-                    "הן משמשות כחומר גלם עיקרי לתסיסה המשנית",
-                    "הן מוספות בחזרה בשלב האריזה כדי להוסיף סמיכות",
-                    "הן מופרדות ונמכרות כמספוא (מזון) לבקר",
-                    "הן עוברות זיקוק להפקת שמנים אתריים"
-                ],
-                correctIndex: 2,
-                explanation: "לאחר מיצוי הסוכרים מהלתת הכתוש, הקליפות הנותרות על המסננת (False bottom) מופרדות מהנוזל ונמכרות לתעשיית החקלאות כמספוא מזין לבקר."
-            },
-            {
-                question: "איזה משפט מתאר בצורה המדויקת ביותר את ההבדל בין שעורה גולמית ללתת (Malt)?",
-                options: [
-                    "שעורה גולמית מכילה אלכוהול, בעוד הלתת עבר ניקוי מאלכוהול",
-                    "שעורה גולמית מכילה עמילן בלתי זמין לתסיסה, בעוד הלתת עבר הנבטה שיצרה אנזימים המאפשרים את פירוק העמילן",
-                    "אין הבדל כימי, ההבדל הוא רק בשם המסחרי של המוצר",
-                    "לתת הוא שעורה שעברה הרתחה ממושכת ומוכנה לאכילה ישירה"
-                ],
-                correctIndex: 1,
-                explanation: "זהו מהות תהליך ההלתתה. השעורה הגולמית מכילה עמילן, אך חסרה את האנזימים הדרושים לפירוקו. ההנבטה (הפיכתה ללתת) מפעילה את ייצור האנזימים הללו."
-            },
-            {
-                question: "מבשלת בוטיק רוצה לייצר בירה ללא מרירות כלל. איזה חומר גלם עליהם להסיר לחלוטין מהמתכון, ומה תהיה ההשלכה הנוספת של הסרה זו?",
-                options: [
-                    "הסרת השמרים; ההשלכה תהיה בירה ללא אלכוהול",
-                    "הסרת לתת השעורה; ההשלכה תהיה בירה שקופה כמים",
-                    "הסרת הכשות; ההשלכה תהיה אובדן הפעילות האנטי-בקטריאלית ופגיעה בארומה",
-                    "הסרת המים המרוככים; ההשלכה תהיה הצטברות סידן בבקבוקים"
-                ],
-                correctIndex: 2,
-                explanation: "הכשות (Hops) היא האחראית המרכזית למרירות הבירה. הסרתה תבטל את המרירות, אך גם תסלק את השמנים האתריים שלהם יש תפקיד חשוב בהגנה אנטי-בקטריאלית על המשקה ובהענקת ארומה."
-            },
-            {
-                question: "בגרף המתאר את בקרת תהליך התסיסה, מה צפוי לקרות לערכי הבריקס (המעידים על ריכוז חומרים מומסים, בעיקר סוכר) ולאחוז האלכוהול לאורך זמן התסיסה הראשונית?",
-                options: [
-                    "שניהם יעלו במקביל",
-                    "שניהם ירדו במקביל",
-                    "ערכי הבריקס ירדו ואחוז האלכוהול יעלה",
-                    "ערכי הבריקס יעלו ואחוז האלכוהול ירד"
-                ],
-                correctIndex: 2,
-                explanation: "במהלך התסיסה, השמרים צורכים את הסוכרים (ולכן ריכוז המומסים - בריקס/צפיפות - יורד) ופולטים אלכוהול (ולכן אחוז האלכוהול עולה)."
-            },
-            {
-                question: "מדוע תהליך הפסטור מתבצע (אם בכלל) רק בשלבים המאוחרים של האריזה ולא מיד לאחר התסיסה?",
-                options: [
-                    "מפני שהפסטור יהרוס את האלכוהול שנוצר",
-                    "מפני שבשלב התסיסה המשנית והיישון אנו עדיין זקוקים לפעילות ביולוגית של השמרים כדי לפתח טעמים",
-                    "מפני שפסטור מוקדם יגרום לראקציית מייאר להתרחש בתוך מיכלי התסיסה",
-                    "מפני שמיכלי התסיסה אינם עמידים לחום"
-                ],
-                correctIndex: 1,
-                explanation: "השמרים צריכים להישאר פעילים (גם אם במצב הרעבה) במהלך התסיסה המשנית והיישון כדי להעמיק את הטעם ולצרוך תוצרי לוואי. פסטור מוקדם יהרוג אותם ויעצור תהליכים חיוניים אלו."
-            },
-            {
-                question: "מהו ההסבר האפשרי למציאת בירה שיוצרה לפני מאות שנים באירופה כמכילה רמה נמוכה מאוד של זיהומים, למרות תנאי התברואה הירודים באותה תקופה?",
-                options: [
-                    "השימוש במים מזוהמים הוביל ליצירת נוגדנים טבעיים בבירה",
-                    "תהליך ההרתחה של התירוש והוספת הכשות בעלת התכונות האנטי-בקטריאליות יצרו סביבה עוינת לפתוגנים",
-                    "השעורה מכילה חומרי חיטוי כימיים חזקים המשתחררים בזמן הכתישה",
-                    "הבירה אוחסנה תמיד במערות קפואות שמנעו התפתחות חיידקים"
-                ],
-                correctIndex: 1,
-                explanation: "הרתחת התירוש מפסתרת אותו, והוספת הכשות (שיש לה שמנים אתריים אנטי-בקטריאליים) יחד עם האלכוהול הנוצר והחומציות, הופכים את הבירה לסביבה שקשה מאוד לחיידקים פתוגניים לשרוד בה."
-            },
-            {
-                question: "איזו סכנה קיימת בשימוש במים שלא עברו תהליך ריכוך (הוצאת סידן) במבשלת בירה?",
-                options: [
-                    "המים יגרמו להתאדות מיידית של האלכוהול",
-                    "עודף הסידן עלול להשפיע לרעה על התגובות האנזימטיות בשלב הכתישה ולפגוע בפרופיל הטעם של התוצר הסופי",
-                    "הסידן יהפוך את הבירה לרעילה למאכל אדם",
-                    "המים הקשים יגרמו לשמרים להתרבות בקצב מהיר מדי ולפוצץ את המיכל"
-                ],
-                correctIndex: 1,
-                explanation: "הרכב המים, ובמיוחד נוכחות מינרלים כמו סידן, משפיע על רמת החומציות (pH) של התירוש, על תפקוד האנזימים בשלב ה-Mashing, ועל מיצוי הטעמים. לכן נהוג לרכך את המים."
-            },
-            {
-                question: "מה מייחד את צמח הכשות (Hops) מבחינה בוטנית, על פי חומר הלימוד?",
-                options: [
-                    "זהו דגן חורפי הגדל באזורים טרופיים בלבד",
-                    "זהו שורש עמוק המשמש לספיחת מים",
-                    "זהו צמח מטפס רב-שנתי, שתפרחתו קשורה למשפחת הקנאביס",
-                    "זוהי פטרייה סימביוטית הגדלה על שורשי השעורה"
-                ],
-                correctIndex: 2,
-                explanation: "הכשות היא התפרחת של צמח מטפס רב-שנתי, המשתייך למשפחת הקנאביים (Cannabaceae)."
-            },
-            {
-                question: "האם ניתן לייצר בירה בכל עונות השנה, ומדוע?",
-                options: [
-                    "לא, מכיוון שהשעורה זמינה רק בעונת הקציר",
-                    "לא, מכיוון שהשמרים מתים בטמפרטורות חורף",
-                    "כן, מכיוון שניתן לאחסן את חומרי הגלם (לתת, כשות) ולשלוט מלאכותית בטמפרטורות התסיסה בכל מקום ולאורך כל השנה",
-                    "כן, אך רק בירות מסוג לאגר ניתן לייצר בקיץ"
-                ],
-                correctIndex: 2,
-                explanation: "בניגוד ליין שמושפע מאוד מעונת הבציר, ייצור בירה יכול להתבצע בכל מקום ולאורך כל השנה, בזכות היכולת לשמר את הלתת והכשות, והשימוש בטכנולוגיות בקרת אקלים (קירור/חימום) למיכלי התסיסה."
-            },
-            {
-                question: "איזה מהשלבים הבאים אינו חלק מתהליך האריזה והסיום של הבירה?",
-                options: [
-                    "הצללה בצנטריפוגות",
-                    "סינון במסנני אדמה",
-                    "הנבטת הדגן ביבוש",
-                    "סידור רמת הגזים ופיסטור"
-                ],
-                correctIndex: 2,
-                explanation: "הנבטת הדגן (הלתתה) היא השלב הראשון בתהליך הייצור, הרבה לפני התסיסה והאריזה. שאר האופציות הן חלק משלבי הסינון, ההצללה והאריזה הסופיים."
-            },
-            {
-                question: "במהלך בדיקות מיקרוביאליות שגרתיות, התגלתה נוכחות של שמרי בר במיכל התסיסה, בנוסף לשמרי התרבית שהוספו. מהי ההשפעה הצפויה ביותר?",
-                options: [
-                    "עלייה דרמטית ברמת האלכוהול ל-40 אחוזים",
-                    "פגיעה בפרופיל הטעם המתוכנן ויצירת טעמי לוואי לא רצויים עקב תסיסה בלתי נשלטת",
-                    "הפיכת הבירה לצלולה לחלוטין תוך שעות ספורות",
-                    "שמרי הבר ישפרו את עמידות הבירה לאורך שנים"
-                ],
-                correctIndex: 1,
-                explanation: "שמרי בר (זיהום מיקרוביאלי) מתסיסים סוכרים בצורה שונה משמרי התרבית הספציפיים (אייל או לאגר), ומייצרים תוצרי לוואי כימיים שמובילים לטעמים חמוצים או לא נעימים, ולכן הם נחשבים לזיהום."
-            },
-            {
-                question: "למה משמשת 'תחתית כפולה' (False bottom) בתעשיית הבירה?",
-                options: [
-                    "לשמירה על טמפרטורה קבועה במיכל התסיסה",
-                    "לסינון והפרדת קליפות השעורה מן התירוש הנוזלי בשלב ה-Lautering",
-                    "לאחסון כשות יבשה למניעת לחות",
-                    "להגנה על המיכל מפני לחץ הגזים בתסיסה המשנית"
-                ],
-                correctIndex: 1,
-                explanation: "התחתית הכפולה מותקנת במיכל ה-Lauter Tun ומשמשת כמסננת פיזית המאפשרת לנוזל (התירוש) לעבור, תוך שהיא עוצרת את המוצקים (הקליפות)."
-            },
-            {
-                question: "מהו היחס הכללי בין כמות החומר היבש העובר הידרוליזה בשלב הכתישה לבין סך החומר היבש של הלתת?",
-                options: [
-                    "כרבע מהחומר היבש",
-                    "כמחצית מהחומר היבש",
-                    "כשלושת רבעי מהחומר היבש",
-                    "כל החומר היבש הופך לנוזל"
-                ],
-                correctIndex: 2,
-                explanation: "על פי הנתונים, בשלב הכתישה (Mashing) כשלושת רבעי מהחומר היבש עובר הידרוליזה אנזימטית ומפורק לסוכרים פשוטים."
-            }
+            { question: "מדוע נחשבה הבירה בעבר באירופה למשקה בטוח יותר לשתייה מאשר מים?", options: ["מכיוון שהמים היו דלים במינרלים חיוניים", "מכיוון שהבירה הכילה ריכוז גבוה של ויטמין C שמנע מחלות", "מכיוון שהמים היו מזוהמים, ותהליך ייצור הבירה כלל הרתחה ושימוש בחומרים אנטי-בקטריאליים", "מכיוון שהאלכוהול בבירה היה בריכוז של מעל 40 אחוז והשמיד את כל החיידקים"], correctIndex: 2, explanation: "בתקופות עברו באירופה מקורות המים היו מזוהמים. תהליך הרתחת התירוש והוספת הכשות (בעלת תכונות אנטי-בקטריאליות) הפכו את הבירה למשקה בטוח יותר." },
+            { question: "אילו ממצאים ארכיאולוגיים ממערת רקפת בכרמל מעידים על ייצור בירה לפני כ-5000 שנה?", options: ["שרידי חביות עץ אלון חרוכות", "שינויים אופייניים בעמילן המתרחשים בעת התססת אלכוהול", "מאובנים של שמרי S. cerevisiae", "כתובות על קירות המערה המתארות את תהליך ההלתתה"], correctIndex: 1, explanation: "במכתשים במערת רקפת נמצאו שרידי עמילנים שעברו שינויים האופייניים לתהליך התססה של אלכוהול." },
+            { question: "מהי המטרה הביולוגית העיקרית של שלב ההלתתה (Malting)?", options: ["לנקות את השעורה מחיידקים ופטריות לפני הכתישה", "לייבש את השעורה כדי להאריך את חיי המדף שלה", "להנביט את הדגן כדי שייצר אנזימים עמילוליטיים המסוגלים לפרק עמילן", "להמיר את האלכוהול שבזרע לסוכרים פשוטים"], correctIndex: 2, explanation: "שעורה גולמית אינה תסיסה. ההנבטה גורמת לזרע לייצר אנזימים (כמו עמילאזות) שישמשו בהמשך לפירוק העמילן לסוכרים שהשמרים יכולים לאכול." },
+            { question: "כיצד מופסק תהליך ההנבטה במהלך ייצור הלתת?", options: ["על ידי הקפאה מהירה של הזרעים", "על ידי הוספת כשות שעוצרת את צמיחת השורש", "על ידי ייבוש השעורה בתנור", "על ידי הוספת שמרי תסיסה תחתית"], correctIndex: 2, explanation: "תהליך ההלתתה (Malting) מופסק על ידי ייבוש השעורה בתנור, מה שמקבע את האנזימים אך עוצר את צמיחת הצמח." },
+            { question: "איזה תהליך כימי אחראי במידה רבה לקביעת צבע הבירה?", options: ["פירוק אנזימטי של גלוקוז", "ראקציית מייארד (Maillard) המתרחשת בקלייה ובבישול", "תסיסה כוהלית אקסותרמית", "הוספת שמנים אתריים מצמח הכשות"], correctIndex: 1, explanation: "הלתת קובע את צבע הבירה בעקבות ראקציית מייארד המתרחשת בזמן הקלייה ובבישול התירוש." },
+            { question: "מה מתרחש מבחינה כימית במהלך שלב הכתישה (Mashing)?", options: ["השמרים הופכים את הסוכר לאלכוהול ולפחמן דו-חמצני", "החומר היבש עובר הידרוליזה אנזימטית ומפורק לסוכרים פשוטים", "החלבונים מתקרשים ומופרדים מהנוזל הצלול", "הכשות משחררת את השמנים האתריים שלה אל תוך התירוש"], correctIndex: 1, explanation: "בשלב ה-Mashing, הלתת נכתש עם מים חמים, ורוב החומר היבש (כ-3/4) עובר הידרוליזה אנזימטית לסוכרים פשוטים שהשמרים יוכלו להתסיס." },
+            { question: "מדוע מחממים את הלתת והמים לטמפרטורה של עד 67 מעלות צלזיוס בשלב הכתישה?", options: ["כדי להרוג את השמרים לפני תחילת התסיסה", "כדי לאפשר פעילות אופטימלית של האנזימים העמילוליטיים מבלי להרוס אותם", "כדי לאדות את עודפי המים ולרכז את הסוכרים", "כדי להפעיל את התכונות האנטי-בקטריאליות של הכשות"], correctIndex: 1, explanation: "טמפרטורה זו מאפשרת פירוק אנזימטי יעיל של העמילן לסוכרים פשוטים. חימום יתר יהרוס (ידנטר) את האנזימים." },
+            { question: "מה קורה לשאריות הקליפות של הלתת לאחר שלב הסינון (Lautering)?", options: ["הן מועברות לתסיסה משנית כדי להפיק מהן אלכוהול נוסף", "הן נמכרות כמספוא לבקר", "הן נשרפות כדי לייצר אנרגיה לחימום דודי הבישול", "הן משמשות כחומר משמר טבעי בבקבוקי הבירה"], correctIndex: 1, explanation: "לאחר מיצוי התירוש והפרדת הקליפות במסננת, הקליפות נמכרות כמספוא לבקר." },
+            { question: "איזה מהרכיבים הבאים אינו מוסף בשלב בישול התירוש?", options: ["כשות", "מים", "שמרים", "תירוש (תמצית סוכרית)"], correctIndex: 2, explanation: "שמרים מוספים רק לאחר סיום הבישול וקירור התירוש. הוספתם בזמן הבישול (הרתחה) תהרוג אותם." },
+            { question: "מהי מטרתו הכפולה של שלב הרתחת התירוש (הבישול)?", options: ["פיסטור הנוזל ומיצוי הטעם המריר והארומה של הכשות", "פירוק העמילן לסוכר ואידוי האלכוהול העודף", "הפעלת השמרים והתחלת תהליך התסיסה", "קביעת צבע הבירה וסינון הקליפות"], correctIndex: 0, explanation: "הבישול נמשך שעה-שעתיים, מפסטר את התמצית ומעניק לבירה את המרירות והארומה האופייניים המגיעים מהכשות." },
+            { question: "מאיזו משפחה בוטנית מגיע צמח הכשות (Hops)?", options: ["משפחת הדגניים (Gramineae)", "צמחים קרובים לקנאביס (Cannabis)", "משפחת הסולניים (Solanaceae)", "משפחת הוורדיים (Rosaceae)"], correctIndex: 1, explanation: "הכשות היא תפרחת של צמח מטפס הקשור בוטנית למשפחת הקנאביים." },
+            { question: "מלבד טעם וארומה, איזה יתרון פונקציונלי מספקת הכשות לבירה?", options: ["היא מזרזת את קצב ההתרבות של השמרים", "היא פועלת כחומר מצליל המונע עכירות", "לשמנים האתריים שלה יש פעילות אנטי-בקטריאלית", "היא מעלה את אחוז האלכוהול הסופי במשקה"], correctIndex: 2, explanation: "לשמנים האתרים המצויים בכשות יש פעילות אנטי-בקטריאלית שעוזרת לשמור על הבירה מפני קלקול." },
+            { question: "באיזה שלב ובאילו תנאים מוספים השמרים לתהליך?", options: ["בזמן הבישול, בטמפרטורת רתיחה", "מיד לאחר הכתישה, בתנאים עתירי חמצן", "לאחר סילוק הכשות וקירור התמצית, בתנאים אספטיים", "בזמן היישון, בתוך חביות העץ"], correctIndex: 2, explanation: "השמרים מוספים למכליי הפרמנטציה בתנאים אספטיים (סטריליים) רק לאחר שהתירוש בושל, הכשות סולקה, והנוזל קורר לטמפרטורה מתאימה." },
+            { question: "מה מתרחש לצפיפות התמצית (התירוש) במהלך התסיסה הראשונית, ומדוע?", options: ["הצפיפות עולה, מכיוון שהשמרים מתרבים ומגדילים את המסה בנוזל", "הצפיפות נשארת קבועה, אך צבע הנוזל מתכהה", "הצפיפות יורדת, מכיוון שסוכרים כבדים מומרים לאלכוהול קל ולגז שמשתחרר", "הצפיפות עולה, בגלל התגבשות של סוכר רפינוז בקרקעית"], correctIndex: 2, explanation: "במהלך התסיסה, סוכרים מומסים (בעלי צפיפות גבוהה) מומרים לאלכוהול (בעל צפיפות נמוכה ממים) ולגז פחמן דו-חמצני שנפלט, ולכן צפיפות התמצית יורדת." },
+            { question: "איזה תוצר לוואי גזי נוצר כתוצאה מפעילות השמרים בתסיסה?", options: ["חמצן ($O_2$)", "פחמן דו-חמצני ($CO_2$)", "מתאן ($CH_4$)", "חנקן ($N_2$)"], correctIndex: 1, explanation: "השמרים הופכים את הסוכרים לאלכוהול ולפחמן דו-חמצני ($CO_2$) בתהליך התסיסה הכוהלית." },
+            { question: "כיצד משפיעים סוכרים שאינם מנוצלים על ידי השמרים (כמו רפינוז) על הבירה הסופית?", options: ["הם גורמים לבירה להחמיץ מהר יותר", "הם נותנים טעם מתוק ומוסיפים סמיכות לבירה", "הם מעלים את אחוז האלכוהול בצורה עקיפה", "הם מנטרלים את המרירות של הכשות לחלוטין"], correctIndex: 1, explanation: "סוכרים שהשמרים אינם מסוגלים לפרק (כמו רפינוז) נשארים במשקה ותורמים למתיקות ולגוף (סמיכות) של הבירה." },
+            { question: "מה מאפיין תסיסה עילית (Top fermentation)?", options: ["שימוש בשמרי S. carlsbergensis וטמפרטורה של 5-12 מעלות", "השמרים שוקעים לתחתית המיכל והתהליך אורך מספר חודשים", "שימוש בשמרי S. cerevisiae בטמפרטורה של 20-22 מעלות כשהשמרים מרחפים בנוזל", "היעדר מוחלט של פחמן דו-חמצני ושימוש בחיטה בלבד"], correctIndex: 2, explanation: "תסיסה עילית (המייצרת בירת Ale) מתבצעת בטמפרטורות חמות יחסית (20-22 מעלות) עם שמרים שמרחפים בנוזל." },
+            { question: "איזה סוג בירה מופק בדרך כלל באמצעות תסיסה תחתית (Bottom fermentation)?", options: ["בירת Ale", "בירת Stout", "בירת Lager", "בירת חיטה בלגית"], correctIndex: 2, explanation: "תסיסה תחתית, המשתמשת בשמרים ששוקעים לתחתית בטמפרטורות נמוכות, אופיינית לייצור בירת לאגר (Lager)." },
+            { question: "מהי המטרה של שלב התסיסה המשנית?", options: ["להוסיף צבע לבירה על ידי קלייה נוספת של הלתת", "להעמיק את הטעם והמרקם על ידי הרעבת השמרים ויצירת תוצרי לוואי", "לסנן את הקליפות שנותרו משלב הכתישה", "להעלות את אחוז האלכוהול למעל 15 אחוז"], correctIndex: 1, explanation: "בתסיסה המשנית השמרים נמצאים במצב הרעבה, צורכים שאריות מזון ומייצרים תוצרי לוואי שמעמיקים ומשפרים את טעם ומרקם הבירה." },
+            { question: "מהו ההבדל העיקרי בזמן היישון בין בירות Ale לבירות Lager?", options: ["בירות Ale מיושנות למשך חודשים, בעוד בירות Lager מיושנות למספר שבועות", "בירות Lager מיושנות למשך חודשים, בעוד בירות Ale מיושנות למספר שבועות", "שני הסוגים מיושנים בדיוק לאותו פרק זמן", "בירות Ale לא עוברות יישון כלל, הן נארזות מיד לאחר התסיסה"], correctIndex: 1, explanation: "לאחר התסיסה, בירות מסוג Ale מאוכסנות למספר שבועות, בעוד בירות מסוג Lager מאוכסנות למשך מספר חודשים." },
+            { question: "מה מבוצע בשלב הראשון של סינון והצללת הבירה לאחר היישון?", options: ["הרתחה נוספת בדודי נחושת", "העברה דרך מסנני פחם פעיל", "סינון באמצעות צנטריפוגות ולאחר מכן מסנני אדמה", "הוספת אנזימים מפרקי חלבון"], correctIndex: 2, explanation: "תהליך ההצללה מתחיל בצנטריפוגות ולאחר מכן ממשיך דרך מסנני אדמה." },
+            { question: "כיצד ניתן לשלוט בסמיכות הבירה בשלב האריזה?", options: ["על ידי הוספת כמות גדולה של מים מזוקקים", "על ידי הוספת חומר לא מסונן", "על ידי חימום הבקבוקים בתנור", "על ידי שאיבת כל הגזים מהנוזל"], correctIndex: 1, explanation: "בזמן האריזה ניתן לשלוט בסמיכות הבירה על ידי הוספת חומר לא מסונן." },
+            { question: "איזו מהבדיקות הבאות נחשבת לבדיקה כימית באבטחת איכות של בירה?", options: ["בדיקת נוכחות של שמרי בר", "זיהוי טעמי לוואי על ידי צוות טועמים", "מדידת ערכי pH ותכולת סוכרים", "ספירת חיידקים במיכל התסיסה"], correctIndex: 2, explanation: "מדידת pH, אלכוהול, סוכרים, טוקסינים וצבע מוגדרות כבדיקות כימיות." },
+            { question: "מה מטרתן של הבדיקות האורגנולפטיות?", options: ["לזהות זיהום חיידקי מסוכן", "למדוד את רמת ה-pH במדויק", "לזהות טעמי לוואי ופרמטרים המשפיעים על הטעם בעזרת צוות טועמים", "לקבוע את אחוז החלבון בלתת"], correctIndex: 2, explanation: "בדיקות אורגנולפטיות מתבססות על חושים אנושיים (צוות טועמים מוסמך) כדי לזהות טעמי לוואי ופרמטרים של טעם." },
+            { question: "מהו הצעד המקדים שנעשה לרוב למים המשמשים לייצור בירה?", options: ["הרתחה ממושכת לאידוי כלור", "תהליך ריכוך הכולל הוצאת הסידן מהמים", "הוספת מלחים כדי להקשות את המים", "הקפאה והפשרה לשיפור צלילות"], correctIndex: 1, explanation: "המים הרצויים הם מים שעברו תהליך של ריכוך, כלומר הוצאת הסידן מהמים." },
+            { question: "אם יצרן מעוניין בבירה בעלת טעם מר חזק במיוחד, באיזה שלב עליו להתמקד?", options: ["בשלב ה-Malting, על ידי הארכת זמן ההנבטה", "בשלב ה-Lautering, על ידי הוספת מים קרים", "בשלב הבישול, על ידי הוספת כמות גדולה יותר של כשות", "בשלב התסיסה המשנית, על ידי הוספת שמרי בר"], correctIndex: 2, explanation: "הכשות, המוספת בשלב הבישול, היא הרכיב שמקנה לבירה את הטעם המריר." },
+            { question: "מדוע רוב הגלוקו-עמילאזות שורדות בשלב ה-Lautering?", options: ["מפני שהן עטופות בשכבת שומן המגינה עליהן", "מפני שהטמפרטורה בשלב זה עומדת על כ-60 מעלות, טמפרטורה בה הן עדיין עמידות", "מפני שהן מופקות מכשות שעמידה בחום", "מפני שהן מוספות רק לאחר קירור התירוש"], correctIndex: 1, explanation: "הטקסט מציין שרוב הגלוקו-עמילאזות עמידות בטמפרטורה של 60 מעלות, שהיא הטמפרטורה האופיינית למיצוי הסוכרים בשלב זה." },
+            { question: "אם בירה נארזת מבלי לעבור פיסטור, מהו הסיכון העיקרי?", options: ["הבירה תאבד את הצבע שלה לחלוטין", "הבירה עלולה להתקלקל עקב פעילות של מיקרואורגניזמים ששרדו", "האלכוהול שבבירה יתנדף דרך הבקבוק", "הבירה תהפוך למתוקה מדי עקב פירוק ספונטני של רפינוז"], correctIndex: 1, explanation: "פיסטור נועד להשמיד מיקרואורגניזמים. ללא פיסטור (הטקסט מציין שהבירה מפוסטרת 'לא תמיד'), יש סיכון לחיי מדף קצרים יותר עקב קלקול מיקרוביאלי." },
+            { question: "מה תהיה התוצאה הסבירה אם שלב ההלתתה (Malting) ידולג והשעורה הגולמית תיכנס ישירות לשלב הכתישה?", options: ["הבירה תהיה כהה יותר עקב ראקציית מייארד מוגברת", "לא ייווצרו מספיק סוכרים פשוטים, והשמרים לא יוכלו לבצע תסיסה יעילה", "תהליך התסיסה יהיה מהיר פי שניים", "הבירה תהיה בעלת אחוז אלכוהול כפול מהרגיל"], correctIndex: 1, explanation: "ההלתתה מייצרת את האנזימים הדרושים לפירוק העמילן. ללא אנזימים אלו, העמילן לא יפורק לסוכרים פשוטים, והשמרים ירעבו." },
+            { question: "מהי המשמעות של 'תנאים אספטיים' בשלב הוספת השמרים למכליי התסיסה?", options: ["תנאים של ואקום מוחלט ללא גזים", "תנאים של קור קיצוני למניעת הקפאה", "תנאים סטריליים המונעים חדירת מיקרואורגניזמים לא רצויים (זיהום)", "תנאים בהם התירוש מורתח באופן רציף"], correctIndex: 2, explanation: "תנאים אספטיים פירושם סביבה נקייה ממזהמים, כדי להבטיח שרק השמרים הרצויים יתרבו ויתסיסו את הבירה, ללא תחרות מחיידקים או שמרי בר." },
+            { question: "איזה מהמשפטים הבאים מתאר נכונה את הקשר בין טמפרטורה לסוג התסיסה?", options: ["תסיסה תחתית דורשת חימום מתמיד, ואילו תסיסה עילית דורשת קירור קיצוני", "תסיסה עילית מתרחשת ב-5-12 מעלות, ותסיסה תחתית ב-20-22 מעלות", "תסיסה עילית מתרחשת ב-20-22 מעלות, ותסיסה תחתית ב-5-12 מעלות", "אין קשר בין הטמפרטורה לסוג התסיסה, ההבדל הוא רק בסוג הדגן"], correctIndex: 2, explanation: "תסיסה עילית (Ale) מתבצעת ב-20-22 מעלות, ואילו תסיסה תחתית (Lager) דורשת טמפרטורות קרות יותר של 5-12 מעלות." },
+            { question: "מהי הסיבה העיקרית לכך שבדרך כלל יש צורך לקרר את מכליי התסיסה במהלך התהליך?", options: ["כדי למנוע אידוי של המים מהתירוש", "מכיוון שתהליך התסיסה פולט חום, ויש לשמור על טמפרטורה מבוקרת כדי לא לפגוע בשמרים", "כדי לגרום לשמרים לשקוע מהר יותר לתחתית", "כדי להגביר את הפעילות האנטי-בקטריאלית של הכשות"], correctIndex: 1, explanation: "השליטה היא בעיקר דרך הטמפרטורה, ובדרך כלל יש צורך לקרר (מכיוון שהתסיסה היא תהליך אקסותרמי הפולט חום)." },
+            { question: "מהו 'False bottom' (תחתית כפולה) ומה תפקידו בתהליך?", options: ["מנגנון במיכל התסיסה המאפשר לשמרים לשקוע", "מסננת במיכל ה-Lauter Tun המאפשרת הפרדה של הקליפות מהתירוש הנוזלי", "שכבת בידוד בדודי הבישול המונעת שריפה של הלתת", "מנגנון בבקבוק הבירה המונע הצטברות משקעים"], correctIndex: 1, explanation: "בשלב הסינון לאחר ה-Lautering, מופרדות הקליפות מן התירוש באמצעות מסננת בעלת תחתית כפולה (false bottom)." },
+            { question: "כיצד בדיקת נוכחות שמרי בר מסווגת במערך אבטחת האיכות של המבשלה?", options: ["בדיקה כימית", "בדיקה מיקרוביאלית", "בדיקה אורגנולפטית", "בדיקה פיזיקלית"], correctIndex: 1, explanation: "זיהוי זיהום ממקור חיידקי או זיהום של שמרי בר מוגדר בטקסט תחת 'בדיקות מיקרוביאליות'." },
+            { question: "מה יקרה אם יצרן ישתמש בשמרי S. cerevisiae אך ישמור את המיכל בטמפרטורה של 5 מעלות?", options: ["השמרים יתפקדו בצורה אופטימלית וייצרו בירת לאגר", "השמרים ימותו מחוסר חמצן", "התסיסה תהיה איטית מאוד או תיעצר, שכן אלו שמרי Ale המעדיפים 20-22 מעלות", "הבירה תחמיץ באופן מיידי"], correctIndex: 2, explanation: "S. cerevisiae הם שמרי תסיסה עילית שזקוקים לטמפרטורה של 20-22 מעלות. קירור ל-5 מעלות יעכב או יעצור את פעילותם." },
+            { question: "מדוע מוספים שמרים בריכוז גבוה יחסית של 70-80 גרם לליטר?", options: ["כדי להרוג חיידקים מתחרים באמצעות תחרות על משאבים", "כדי להבטיח תסיסה מהירה ויעילה של הסוכרים לפני שהתירוש יזדהם", "כדי להסמיך את הבירה ולהפוך אותה לכהה יותר", "כדי למנוע את הצורך בשלב היישון"], correctIndex: 1, explanation: "הוספת מאסה גדולה של שמרים מבטיחה השתלטות מהירה על התירוש ותחילת תסיסה יעילה שמייצרת אלכוהול ומורידה את ה-pH, מה שמונע התפתחות מזהמים." },
+            { question: "על פי הטקסט, מהו המקור של החומר האורגני שנמצא במכתשים במערת רקפת?", options: ["שרידי שמרים מודרניים שזיהמו את המערה", "שאריות של צמחי קנאביס ששימשו לרפואה", "עדויות לנוכחות של דגנים שונים כמו חיטה, שעורה ושיבולת שועל שעברו התססה", "שרידי עצמות של בקר שניזון מקליפות לתת"], correctIndex: 2, explanation: "במערה נמצאו עדויות לנוכחות של דגנים שונים (חיטה, שעורה, שיבולת שועל) שעברו התססה של אלכוהול." },
+            { question: "איזה שלב בתהליך אחראי להפיכת עמילן מורכב למזון זמין עבור השמרים?", options: ["הלתתה (Malting) בלבד", "בישול בלבד", "השילוב של ייצור אנזימים בהלתתה ופעולתם בשלב הכתישה (Mashing)", "היישון בחביות"], correctIndex: 2, explanation: "ההלתתה מייצרת את האנזימים, אך הפירוק בפועל מתרחש בשלב הכתישה כאשר מוסיפים מים חמים." },
+            { question: "באיזה שלב בתהליך הייצור מופרד החומר המוצק (הקליפות) מהנוזל בפעם הראשונה?", options: ["לאחר שלב הבישול", "לאחר שלב התסיסה הראשונית", "לאחר שלב ה-Lautering", "לפני שלב ההלתתה"], correctIndex: 2, explanation: "הקליפות מופרדות מן התירוש לאחר שלב ה-Lautering (סינון), ונמכרות כמספוא." },
+            { question: "איזה מהשינויים הבאים אינו מתרחש במהלך התסיסה המשנית?", options: ["העמקת הטעם והמרקם", "יצירת תוצרי לוואי על ידי השמרים", "פירוק מוחלט של כל העמילן שנותר בשעורה", "צריכת שאריות מזון על ידי השמרים המורעבים"], correctIndex: 2, explanation: "פירוק העמילן מתרחש בשלב הכתישה (Mashing), לא בתסיסה המשנית. בתסיסה המשנית השמרים צורכים שאריות סוכרים ומייצרים תוצרי לוואי טעמיים." }
         ];
 
         const tfData = [
-            {
-                question: "שעורה גולמית מכילה את כל האנזימים הדרושים לפירוק העמילן לסוכרים, ולכן ניתן להתסיס אותה ישירות לאחר הקציר.",
-                answer: false,
-                explanation: "שעורה בצורתה הגולמית אינה מהווה תמצית טובה לתסיסה. יש להנביט אותה (תהליך ההלתתה) כדי לייצר את האנזימים העמילוליטיים הדרושים."
-            },
-            {
-                question: "תגובת מייאר (Maillard) המתרחשת בשלב קליית הלתת היא הגורם המרכזי הקובע את צבעה של הבירה.",
-                answer: true,
-                explanation: "הלתת קובע את צבע הבירה, וזאת באמצעות ראקציית מייאר המתרחשת בקלייה ובבישול התירוש."
-            },
-            {
-                question: "בשלב הכתישה (Mashing), המים חייבים להגיע לנקודת רתיחה (100 מעלות צלזיוס) כדי להבטיח פירוק מלא של העמילן.",
-                answer: false,
-                explanation: "שלב הכתישה מתבצע בטמפרטורה של עד 67 מעלות צלזיוס. טמפרטורת רתיחה תהרוס את האנזימים (דנטורציה) ותעצור את פירוק העמילן."
-            },
-            {
-                question: "בירה מסוג לאגר (Lager) מיוצרת באמצעות שמרים השוקעים לתחתית המיכל בטמפרטורות נמוכות יחסית.",
-                answer: true,
-                explanation: "שמרי לאגר (S. carlsbergensis) מבצעים תסיסה תחתית בטמפרטורות של 5-12 מעלות צלזיוס ושוקעים לתחתית."
-            },
-            {
-                question: "הכשות מוספת לבירה אך ורק כדי להעניק לה טעם מתוק ופירותי.",
-                answer: false,
-                explanation: "הכשות מקנה לבירה את הטעם המריר והארומה האופייניים, ובנוסף יש לשמנים האתריים שלה פעילות אנטי-בקטריאלית."
-            },
-            {
-                question: "במהלך התסיסה הראשונית, צפיפות התירוש עולה עקב ייצור מסיבי של סוכרים על ידי השמרים.",
-                answer: false,
-                explanation: "הצפיפות יורדת במהלך התסיסה הראשונית, כיוון שהשמרים צורכים את הסוכרים (הכבדים) והופכים אותם לאלכוהול (קל יותר) ולגז שמשתחרר."
-            },
-            {
-                question: "שלב התסיסה המשנית מתאפיין בכך שהשמרים נמצאים במצב הרעבה וצורכים שאריות מזון, מה שמעמיק את טעם הבירה.",
-                answer: true,
-                explanation: "מטרת התסיסה המשנית היא להעמיק את הטעם והמרקם. השמרים מורעבים, צורכים שאריות ומייצרים תוצרי לוואי רצויים."
-            },
-            {
-                question: "מים המיועדים לייצור בירה עוברים לרוב תהליך ריכוך שבו מוסיפים להם כמויות גדולות של סידן.",
-                answer: false,
-                explanation: "תהליך ריכוך מים משמעותו דווקא הוצאת הסידן מהמים, ולא הוספתו, כדי לשפר את תהליך הייצור."
-            },
-            {
-                question: "הקליפות המופרדות מהתירוש בשלב ה-Lautering נזרקות לרוב כפסולת חסרת ערך.",
-                answer: false,
-                explanation: "הקליפות לאחר המיצוי נמכרות כמספוא מזין לבקר, ולכן יש להן ערך כלכלי וחקלאי."
-            },
-            {
-                question: "ניתן לייצר בירה בכל מקום בעולם ולאורך כל השנה, בניגוד למוצרים חקלאיים התלויים בעונה ספציפית.",
-                answer: true,
-                explanation: "ניתן לייצר בירה בכל מקום ולאורך כל השנה בזכות היכולת לשמר את חומרי הגלם (לתת, כשות) ולבקר את תנאי האקלים במבשלה."
-            },
-            {
-                question: "נוכחות של סוכר הרפינוז בבירה לאחר סיום התסיסה מעידה בהכרח על זיהום חיידקי חמור.",
-                answer: false,
-                explanation: "רפינוז הוא דוגמה לסוכר שחלק מזני השמרים אינם מנצלים. הישארותו בבירה היא מתוכננת ולעיתים רצויה, שכן היא נותנת טעם מתוק וסמיכות."
-            },
-            {
-                question: "בישול התירוש (הרתחה) בתוספת כשות משמש גם כאמצעי פיסטור המשמיד מיקרואורגניזמים מתחרים.",
-                answer: true,
-                explanation: "ההרתחה למשך שעה-שעתיים מפסתרת את הנוזל ומכינה סביבה נקייה להוספת השמרים בהמשך."
-            },
-            {
-                question: "השמרים המוספים למיכלי הפרמנטציה חייבים להיות מוספים בתנאים חשופים לאוויר כדי שינשמו חמצן באופן רציף.",
-                answer: false,
-                explanation: "השמרים מוספים בתנאים אספטיים (סטריליים וסגורים) כדי למנוע חדירת זיהומים. תסיסה כוהלית היא תהליך אנאירובי (ללא חמצן) בעיקרו."
-            },
-            {
-                question: "זיהוי שאריות עמילן שעברו שינויים האופייניים להתססת אלכוהול במכתשים ארכיאולוגיים בכרמל מהווה עדות לייצור בירה קדום.",
-                answer: true,
-                explanation: "מחקר מ-2018 גילה במערת רקפת בכרמל שרידי עמילן שעברו שינויים המעידים על התססה, מה שמעיד על ייצור בירה לפני כ-13 אלף שנה."
-            },
-            {
-                question: "תהליך יישון של בירת לאגר (Lager) אורך בדרך כלל מספר ימים בודדים בלבד.",
-                answer: false,
-                explanation: "יישון של בירת לאגר אורך מספר חודשים (בניגוד לאייל שאורך מספר שבועות), ובזמן זה הבירה מתיישנת וטעמה משתפר."
-            },
-            {
-                question: "בדיקה אורגנולפטית של בירה מבוצעת באמצעות ציוד מעבדה אופטי מתקדם בלבד, ללא מגע אדם.",
-                answer: false,
-                explanation: "בדיקות אורגנולפטיות מבוצעות על ידי צוות טועמים מוסמך אנושי, הבוחן טעמי לוואי ופרמטרים חושיים."
-            },
-            {
-                question: "לצמח הכשות יש תכונות אנטי-בקטריאליות בזכות השמנים האתרים המצויים בו.",
-                answer: true,
-                explanation: "השמנים האתרים של הכשות אינם מספקים רק ארומה, אלא גם פועלים כחומר משמר טבעי נגד חיידקים."
-            },
-            {
-                question: "תסיסה עילית (Ale) מאופיינת בשימוש בשמרי סקרומיצס סרוויזיה בטמפרטורות של 20-22 מעלות צלזיוס.",
-                answer: true,
-                explanation: "זהו המאפיין המרכזי של תסיסת אייל - שימוש בשמרי S. cerevisiae בטמפרטורה גבוהה יחסית, כאשר השמרים מרחפים בנוזל."
-            },
-            {
-                question: "בשלב האריזה, לא ניתן יותר לשלוט בסמיכות הבירה בשום אמצעי.",
-                answer: false,
-                explanation: "בזמן האריזה ניתן עדיין לשלוט בסמיכות על ידי הוספת חומר לא מסונן לבירה."
-            },
-            {
-                question: "חיטה ותירס יכולים לשמש כמקור עמילן משני בייצור בירה, בנוסף לשעורה.",
-                answer: true,
-                explanation: "לעתים קרובות מוסיפים מקור עמילן משני כגון חיטה, תירס או שיפון לתערובת הלתת."
-            },
-            {
-                question: "תהליך ההלתתה (Malting) מסתיים כאשר מרתיחים את השעורה בסיר לחץ.",
-                answer: false,
-                explanation: "התהליך מופסק על ידי ייבוש השעורה המונבטת בתנור ייבוש (קלייה), ולא על ידי הרתחה בסיר לחץ."
-            },
-            {
-                question: "הגז הנוצר באופן טבעי במהלך התסיסה הכוהלית של הבירה הוא חמצן נקי.",
-                answer: false,
-                explanation: "הגז הנוצר כתוצר לוואי של התסיסה הוא פחמן דו חמצני, ולא חמצן."
-            },
-            {
-                question: "היסטורית, בירה נחשבה למשקה בטוח יותר ממים באירופה עקב תהליך הייצור שכלל הרתחה ונוכחות אלכוהול.",
-                answer: true,
-                explanation: "בתקופות בהן המים היו מזוהמים וגרמו למחלות, תהליך ייצור הבירה (הרתחה, כשות, אלכוהול) הפך אותה לחלופה בטוחה ובריאה יותר."
-            },
-            {
-                question: "כדי לזרז את תהליך הייצור, רוב המבשלות מוותרות לחלוטין על תהליך ההצללה והסינון לפני הביקבוק.",
-                answer: false,
-                explanation: "תהליך ההצללה (באמצעות צנטריפוגות ומסנני אדמה) הוא שלב קריטי כדי לקבל בירה צלולה ונקייה ממשקעים לפני המילוי."
-            },
-            {
-                question: "רוב הגלוקו-עמילאזות נהרסות מיד בטמפרטורה של 40 מעלות, ולכן יש לקרר את התירוש לפני שלב הכתישה.",
-                answer: false,
-                explanation: "רוב הגלוקו-עמילאזות עמידות בטמפרטורות גבוהות יותר (אזור ה-60 מעלות), מה שמאפשר להן לפעול ביעילות בשלבי הכתישה וההשריה."
-            },
-            {
-                question: "השליטה העיקרית בקצב התסיסה הראשונית מתבצעת באמצעות בקרת טמפרטורה, ולרוב נדרש קירור של המכלים.",
-                answer: true,
-                explanation: "התסיסה היא תהליך פולט חום. כדי לשמור על תפקוד אופטימלי של השמרים, יש לקרר את המכלים ולשלוט בטמפרטורה במדויק."
-            },
-            {
-                question: "בירה מפוסטרת תמיד, ללא יוצא מן הכלל, לפני שהיא נארזת בבקבוקים או בחביות.",
-                answer: false,
-                explanation: "במצגת מצוין בפירוש 'הבירה מפוסטרת (לא תמיד)'. ישנן בירות טריות או בירות בוטיק שאינן עוברות פסטור כדי לשמור על טעמים מסוימים."
-            },
-            {
-                question: "בדיקת כמות טוקסינים (רעלנים) בבירה היא חלק מבדיקות האיכות המיקרוביאליות.",
-                answer: false,
-                explanation: "בדיקת טוקסינים מסווגת תחת 'בדיקות כימיות', בעוד בדיקות מיקרוביאליות מתמקדות בזיהוי חיידקים ושמרי בר."
-            },
-            {
-                question: "כמות השמרים המוספת למיכלי הפרמנטציה היא זעירה, כ-1 גרם לכל 100 ליטר תירוש.",
-                answer: false,
-                explanation: "כמות השמרים המוספת היא משמעותית מאוד: בין 70 ל-80 גרם לכל ליטר של תירוש."
-            },
-            {
-                question: "הכשות (Hops) יכולה להגיע למבשלה בצורה של תמצית נוזלית או כחומר צמחי יבש.",
-                answer: true,
-                explanation: "הכשות משווקת ומשמשת בתעשייה גם בצורתה היבשה (פרחים/כופתיות) וגם כתמצית מרוכזת."
-            }
+            { question: "בימי הביניים באירופה, בירה נחשבה למשקה בטוח יותר לשתייה מאשר מים.", answer: true, explanation: "נכון. המים באירופה באותה תקופה היו מזוהמים, ותהליך ייצור הבירה (שכלל הרתחה) הפך אותה למשקה בטוח יותר." },
+            { question: "השעורה היא הדגן היחיד שניתן להשתמש בו לייצור בירה.", answer: false, explanation: "לא נכון. למרות ששעורה היא המקור העיקרי, לעיתים מוסיפים מקור עמילן משני כמו חיטה, תירס או שיפון." },
+            { question: "תהליך ההלתתה (Malting) מופסק על ידי הרתחת השעורה במים.", answer: false, explanation: "לא נכון. התהליך מופסק על ידי ייבוש השעורה בתנור ייבוש, ולא על ידי הרתחה." },
+            { question: "ראקציית מייארד (Maillard) המתרחשת בקליית הלתת היא הגורם המרכזי שקובע את צבע הבירה.", answer: true, explanation: "נכון. ראקציה זו מתרחשת בקלייה ובבישול וקובעת את הצבע." },
+            { question: "בשלב הכתישה (Mashing), כל החומר היבש הופך לסוכרים פשוטים.", answer: false, explanation: "לא נכון. רק כ-3/4 מהחומר היבש עובר הידרוליזה ומפורק לסוכרים פשוטים." },
+            { question: "קליפות הלתת הנותרות לאחר הסינון נזרקות לאשפה מכיוון שאין להן שימוש.", answer: false, explanation: "לא נכון. הקליפות נמכרות כמספוא לבקר." },
+            { question: "הכשות (Hops) מוספת לתירוש בשלב הכתישה (Mashing).", answer: false, explanation: "לא נכון. הכשות מוספת בשלב הבישול (הרתחה)." },
+            { question: "לצמח הכשות יש תכונות אנטי-בקטריאליות טבעיות.", answer: true, explanation: "נכון. לשמנים האתריים של הכשות יש פעילות אנטי-בקטריאלית." },
+            { question: "במהלך התסיסה הראשונית, צפיפות התמצית עולה.", answer: false, explanation: "לא נכון. צפיפות התמצית יורדת במהלך התסיסה מכיוון שסוכר כבד הופך לאלכוהול קל ולגז שמשתחרר." },
+            { question: "תהליך התסיסה הראשונית נמשך בדרך כלל כחודש ימים.", answer: false, explanation: "לא נכון. תהליך התסיסה הראשונית נמשך כשבוע." },
+            { question: "רפינוז הוא סוג של סוכר שהשמרים אינם מסוגלים להתסיס.", answer: true, explanation: "נכון. רפינוז אינו מנוצל על ידי השמרים ונותן טעם מתוק וסמיכות לבירה." },
+            { question: "בירת Ale מיוצרת בתהליך של תסיסה תחתית.", answer: false, explanation: "לא נכון. בירת Ale מיוצרת בתסיסה עילית (Top fermentation)." },
+            { question: "שמרי S. carlsbergensis אופייניים לייצור בירת לאגר (Lager).", answer: true, explanation: "נכון. אלו הם שמרים של תסיסה תחתית המשמשים לבירת לאגר." },
+            { question: "תסיסה עילית מתרחשת בטמפרטורות קרות יותר מאשר תסיסה תחתית.", answer: false, explanation: "לא נכון. תסיסה עילית מתרחשת ב-20-22 מעלות, ואילו תסיסה תחתית ב-5-12 מעלות." },
+            { question: "במהלך התסיסה המשנית, השמרים נמצאים במצב של שפע מזון ומגבירים את קצב ההתרבות שלהם.", answer: false, explanation: "לא נכון. בתסיסה המשנית השמרים נמצאים במצב של הרעבה." },
+            { question: "בירות מסוג לאגר (Lager) דורשות בדרך כלל זמן יישון ארוך יותר מאשר בירות מסוג Ale.", answer: true, explanation: "נכון. בירות לאגר מיושנות למספר חודשים, בעוד Ale מיושנות למספר שבועות." },
+            { question: "סינון הבירה לאחר היישון מתבצע לעיתים באמצעות מסנני אדמה.", answer: true, explanation: "נכון. תהליך ההצללה כולל צנטריפוגות ולאחר מכן מסנני אדמה." },
+            { question: "כל סוגי הבירה המסחרית עוברים תהליך חובה של פיסטור לפני האריזה.", answer: false, explanation: "לא נכון. הטקסט מציין שהבירה מפוסטרת 'לא תמיד'." },
+            { question: "בדיקת תכולת האלכוהול בבירה נחשבת לבדיקה מיקרוביאלית.", answer: false, explanation: "לא נכון. בדיקת תכולת אלכוהול היא בדיקה כימית." },
+            { question: "בדיקות אורגנולפטיות מבוצעות על ידי מכשירים אלקטרוניים למדידת רמות גזים.", answer: false, explanation: "לא נכון. בדיקות אורגנולפטיות מבוצעות על ידי צוות טועמים אנושי מוסמך." },
+            { question: "צמח הכשות שייך לאותה משפחה בוטנית כמו צמח הקנאביס.", answer: true, explanation: "נכון. הטקסט מציין שזהו פרח של צמח הקשור לקנאביס (related to Cannabis)." },
+            { question: "האנזימים העמילוליטיים נוצרים באופן טבעי בשעורה רק לאחר הרתחתה במים.", answer: false, explanation: "לא נכון. האנזימים נוצרים במהלך ההנבטה (Malting), הרתחה רק תהרוס אותם." },
+            { question: "מים קשים העשירים בסידן הם המומלצים ביותר לייצור בירה איכותית.", answer: false, explanation: "לא נכון. המים הרצויים הם מים שעברו תהליך ריכוך (הוצאת הסידן)." },
+            { question: "השמרים מוספים לתירוש כשהוא עדיין חם מאוד, מיד לאחר שלב הבישול.", answer: false, explanation: "לא נכון. השמרים מוספים לאחר קירור התמצית, אחרת החום יהרוג אותם." },
+            { question: "בזמן האריזה, ניתן להוסיף לבירה חומר לא מסונן כדי לשלוט בסמיכות שלה.", answer: true, explanation: "נכון. ניתן לשלוט בסמיכות על ידי הוספת חומר לא מסונן בזמן האריזה." },
+            { question: "הממצאים ממערת רקפת מוכיחים שהאדם המודרני המציא את הבירה רק לפני כ-500 שנה.", answer: false, explanation: "לא נכון. הממצאים הם מלפני כ-5000 שנה, והאדם מייצר בירה כבר אלפי שנים." },
+            { question: "תפקיד הכשות הוא לספק את עיקר העמילן לתהליך הייצור.", answer: false, explanation: "לא נכון. השעורה (והדגנים) מספקת את העמילן. הכשות מספקת טעם, ארומה והגנה אנטי-בקטריאלית." },
+            { question: "בתסיסה תחתית (Lager), השמרים שוקעים לתחתית המיכל.", answer: true, explanation: "נכון. זהו מאפיין מרכזי של תסיסה תחתית." },
+            { question: "שמרי S. cerevisiae גורמים לתסיסה עילית ואופייניים לבירות בריטיות במקור.", answer: true, explanation: "נכון. הטקסט מציין שתסיסה זו אופיינית בעיקר לבריטניה ומשתמשת ב-S. cerevisiae." },
+            { question: "בדיקת איכות מיקרוביאלית מחפשת בין היתר נוכחות של שמרי בר לא רצויים.", answer: true, explanation: "נכון. בדיקות אלו נועדו לזהות זיהום של שמרי בר או חיידקים." }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -918,6 +521,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -928,11 +538,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([flashcardContent]);
-            }
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -951,11 +557,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                
-                // Re-render MathJax if present
-                if (window.MathJax) {
-                    MathJax.typesetPromise([flashcardContent]);
-                }
+                triggerMathJax();
             }, 300);
         }
 
@@ -978,11 +580,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -998,25 +596,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1058,11 +648,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1074,8 +660,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1085,11 +669,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1106,25 +686,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             
-             // Re-render MathJax if present
-             if (window.MathJax) {
-                 MathJax.typesetPromise([explanationEl]);
-             }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1167,11 +739,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             
-             // Re-render MathJax if present
-             if (window.MathJax) {
-                 MathJax.typesetPromise([tfAllQuestionsContainer]);
-             }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1187,6 +755,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

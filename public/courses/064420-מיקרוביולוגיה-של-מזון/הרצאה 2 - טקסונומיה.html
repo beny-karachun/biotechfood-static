@@ -1,206 +1,327 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>טקסונומיה ומיקרוביולוגיה של מזון</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הטקסונומיה היא מדע המיון, המאפשר לזהות שייכות וקרבה בין אורגניזמים שונים. על ידי הבנת מיקומו של אורגניזם בעץ הפילוגנטי, ניתן להסיק רבות על תכונותיו בהתבסס על מינים קרובים אליו. ההיררכיה הטקסונומית מתחילה ברמה הרחבה ביותר (ממלכה) ויורדת עד לרמה הספציפית ביותר (מין). שמו המדעי של כל אורגניזם מורכב משני חלקים: <strong>סוג (Genus) ומין (Species)</strong>.</p>
+                
+                <h3>הגדרת המין: מאקרו מול מיקרו</h3>
+                <p>בעוד שבאורגניזמים מורכבים (כמו בעלי חיים) ההבחנה בין מינים שונים מתבססת על היכולת להתרבות ולהעמיד צאצאים פוריים (למשל, סוס וחמור יוצרים פרד עקר, ולכן הם מינים נפרדים), במיקרוביולוגיה ההגדרה שונה לחלוטין. חיידקים אינם מתרבים ברבייה מינית קלאסית. לכן, מין חיידקי מוגדר כקבוצה של קווים (זנים) בעלי תכונות דומות וגנום דומה. המדריך המקובל לסיווג חיידקים הוא ה-Bergey's manual.</p>
+
+                <h3>סיווג חיידקים והגורמים המזהמים במזון</h3>
+                <p>חיידקים מסווגים על פי מספר קריטריונים מרכזיים: צביעת גרם (חיובי/שלילי), צורה (נקדים, מתגים, סלילונים, פסיקים), דרישות חמצן (אווירניים/אל-אווירניים), ביוכימיה, אימונולוגיה וגנום. מלבד חיידקים, קיימים גורמים נוספים המזהמים מזון:</p>
+                <ul>
+                    <li><strong>פריונים:</strong> חלבונים פגומים הגורמים למחלה, אינם אורגניזמים חיים.</li>
+                    <li><strong>וירוסים:</strong> אחראים למעל מ-($70\%$) מהאינפקציות ממזון. מועברים לרוב במסלול פקאלי-אוראלי. רגישים לחום.</li>
+                    <li><strong>תולעים:</strong> טפילים רב-תאיים, רגישים לחום ולקרינת UV. נפוצים בבשר נא (כמו חזיר - Trichinella) ודגים.</li>
+                    <li><strong>פרוטוזואות:</strong> טפילים אאוקריוטים חד-תאיים. דוגמה בולטת היא <em>Entamoeba histolytica</em> הגורמת לדיזנטריה ועלולה לפגוע בכבד ובמוח.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: פרדוקס הטיפול בפרוטוזואה</strong>
+                    מכיוון שפרוטוזואות הן אורגניזמים אאוקריוטיים (בעלי גרעין, בדומה לתאי האדם), הטיפול בהן מורכב יותר מטיפול בחיידקים (פרוקריוטים). יש צורך באנטיביוטיקות ייחודיות שיודעות לפגוע במסלולים ספציפיים של הטפיל האאוקריוטי מבלי לגרום נזק רעיל לתאי המאכסן האנושי.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: וירוסים במזון - נשאים, לא מתרבים</strong>
+                    וירוסים אינם יכולים להתרבות על גבי המזון עצמו, שכן הם זקוקים לתא מאכסן חי. המזון משמש עבורם אך ורק ככלי תחבורה (וקטור) בדרך למערכת העיכול של האדם. זו הסיבה שההדבקה היא לרוב פקאלית-אוראלית, וטיפול תרמי (בישול) יעיל מאוד בהשמדתם טרם האכילה.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -213,7 +334,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -233,11 +353,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -260,8 +378,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -269,99 +386,498 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "טקסונומיה", definition: "תחום מדע המאפשר לזהות שייכות וקירבה של אורגניזמים ובכך ללמוד עליהם על סמך מינים קרובים" },
-            { term: "הגדרת מין במיקרוביולוגיה", definition: "הבחנה המתבססת בעיקר על דמיון בתכונות ובגנום ולא על יכולת רבייה מינית" },
-            { term: "שיום בינומי", definition: "שיטה למתן שמות מדעיים המורכבת משם הסוג ושם המין של האורגניזם" },
-            { term: "פריונים", definition: "גורמי מחלה המורכבים מחלבון בלבד ואינם נחשבים לאורגניזמים שלמים" },
-            { term: "העברה פקאלית אוראלית", definition: "מנגנון הדבקה נפוץ של וירוסים במזון העובר דרך מים מזון וידיים מזוהמות אל מערכת העיכול" },
-            { term: "קוקים (Cocci)", definition: "חיידקים בעלי צורה כדורית המהווים קריטריון מורפולוגי לסיווג" },
-            { term: "בצילוס (Bacilli)", definition: "חיידקים בעלי צורה מתגית המשמשים כבסיס לסיווג מורפולוגי" },
-            { term: "ויבריו (Vibrio)", definition: "חיידקים בעלי צורה כפופה או פסיקית" },
-            { term: "פרוטוזואה", definition: "טפילים אאוקריוטים חד תאיים העלולים לזהם מזון ולגרום למחלות" },
-            { term: "אנטאמבה היסטוליטיקה", definition: "פרוטוזואה הגורמת לדיזנטריה העלולה לחדור לזרם הדם ולפגוע בכבד ובמוח" },
-            { term: "טריכינלה", definition: "סוג של תולעת טפילה הנפוצה בעיקר בבשר חזיר וניתנת לזיהוי ברקמת השריר" },
-            { term: "בדיקת PCR", definition: "שיטה מולקולרית המשמשת לזיהוי וירוסים במזון באמצעות איתור חומר גנטי" },
-            { term: "בדיקה סרולוגית", definition: "אבחון המבוסס על איתור נוגדנים ספציפיים במים במזון או בצואת החולה" },
-            { term: "אצות חד תאיות", definition: "קבוצה של מיקרואורגניזמים אאוקריוטיים היכולים להימצא במזון" },
-            { term: "מדריך ברגי (Bergey)", definition: "המדריך המקיף לסיווג וטקסונומיה של חיידקים המבוסס על תכונות וגנום" }
+            { term: "טקסונומיה", definition: "מדע המיון המאפשר לזהות שייכות וקרבה של אורגניזמים, וללמוד על תכונותיהם." },
+            { term: "נומנקלטורה כפולה", definition: "שיטת מתן השמות לאורגניזמים, המורכבת משם הסוג (Genus) ושם המין (Species)." },
+            { term: "הגדרת מין (בבעלי חיים)", definition: "קבוצת אורגניזמים בעלי יכולת רבייה ביניהם המעמידים צאצאים פוריים (היבריד בין מינים שונים הוא עקר)." },
+            { term: "הגדרת מין (במיקרוביולוגיה)", definition: "קבוצות של קווים (זנים) בעלי תכונות דומות וגנום דומה, ללא התבססות על רבייה מינית." },
+            { term: "Cocci", definition: "חיידקים בעלי צורה כדורית (נקדים)." },
+            { term: "Bacilli", definition: "חיידקים בעלי צורה מתגית (מקלונים)." },
+            { term: "פריונים", definition: "גורמי מחלה שהם חלבונים פגומים בלבד, ללא חומצת גרעין, ואינם נחשבים לאורגניזמים." },
+            { term: "העברה פקאלית-אוראלית", definition: "מסלול הדבקה נפוץ בוירוסים, בו חלקיקי צואה מגיעים אל הפה דרך מזון, מים או ידיים מזוהמות." },
+            { term: "Norovirus", definition: "וירוס נפוץ מאוד הגורם לאינפקציות במערכת העיכול, מועבר לרוב דרך מזון." },
+            { term: "PCR", definition: "שיטה מולקולרית מתקדמת המשמשת, בין היתר, לזיהוי וירוסים במזון או בדגימות קליניות." },
+            { term: "Trichinella", definition: "סוג של תולעת טפילה הנפוצה בבשר חזירים, עלולה לעבור לאדם באכילת בשר נא." },
+            { term: "פרוטוזואה", definition: "טפילים אאוקריוטיים חד-תאיים, כגון אמבות, העלולים לזהם מזון ומים." },
+            { term: "Entamoeba histolytica", definition: "פרוטוזואה הגורמת לדיזנטריה, בולעת תאי דם אדומים, ועלולה להתפשט לכבד ולמוח." },
+            { term: "סרולוגיה", definition: "בדיקת נוכחות נוגדנים ספציפיים בדם, משמשת לאבחון הדבקה בתולעים ופרוטוזואות." },
+            { term: "Bergey's manual", definition: "המדריך המקיף והמקובל בעולם לסיווג וטקסונומיה של חיידקים." }
         ];
 
         const mcqData = [
-            { question: "איזה מהמשפטים הבאים מתאר בצורה המדויקת ביותר את ההבדל בהגדרת מין בין בעלי חיים לחיידקים?", options: ["בבעלי חיים ההגדרה מבוססת על דמיון גנומי בעוד שבחיידקים על יכולת רבייה מינית", "בבעלי חיים ההגדרה מתבססת על יכולת העמדת צאצאים פוריים בעוד שבחיידקים היא מבוססת על דמיון בתכונות ובגנום", "אין הבדל ושתי הקבוצות מוגדרות על סמך סטריליות של היברידים", "חיידקים מוגדרים על פי מורפולוגיה בלבד ובעלי חיים על פי גנטיקה"], correctIndex: 1, explanation: "בניגוד לבעלי חיים שבהם מין מוגדר על ידי יכולת רבייה מינית והעמדת צאצאים פוריים במיקרוביולוגיה ההבחנה מתבססת על קבוצות בעלות קווים של תכונות דומות וגנום דומה" },
-            { question: "על פי כללי הטקסונומיה כיצד נכתב שמו המדעי המלא של אורגניזם?", options: ["שם המין תחילה ואחריו שם המשפחה", "שם המחלקה תחילה ואחריה שם הסוג", "שם הסוג תחילה ואחריו שם המין", "שם הממלכה תחילה ואחריה שם המין"], correctIndex: 2, explanation: "מין האורגניזם מצוין תמיד על ידי צירוף של שם הסוג ולאחריו שם המין" },
-            { question: "איזה מהגורמים הבאים אינו משמש כקריטריון לסיווג חיידקים?", options: ["דרישות חמצן", "צביעת גראם", "יכולת יצירת היברידים סטריליים", "מאפיינים אימונולוגיים"], correctIndex: 2, explanation: "יכולת יצירת היברידים סטריליים היא מאפיין של בעלי חיים מורכבים ולא של חיידקים המתרבים ברבייה אל מינית" },
-            { question: "מהו המאפיין הייחודי של פריונים בהשוואה לשאר גורמי המחלה המועברים במזון?", options: ["הם מכילים חומר גנטי מסוג רנא בלבד", "הם מורכבים מחלבון בלבד ואינם נחשבים לאורגניזם", "הם עמידים לחלוטין בפני כל טיפול תרמי", "הם תוקפים רק תאים פרוקריוטיים"], correctIndex: 1, explanation: "פריונים הם חלבונים פגומים הגורמים למחלה ואינם מכילים חומר גנטי לכן אינם מוגדרים כאורגניזם" },
-            { question: "מדוע קשה במיוחד למנוע התפשטות של וירוסים במזון בזמן אפידמיה?", options: ["מכיוון שהם מתרבים במהירות בתוך המזון עצמו לפני האכילה", "בשל רגישותם הגבוהה וקושי בניטורם בסביבה ובמזון", "משום שהם אינם מגיבים לשום סוג של חיטוי כימי", "כי הם מועברים אך ורק דרך האוויר ולא דרך מגע"], correctIndex: 1, explanation: "וירוסים קשים לניטור ברגישות גבוהה מה שמקשה על זיהוי מוקדם ומניעת התפשטותם בזמן התפרצות" },
-            { question: "מהי הדרך היעילה ביותר לנטרל וירוסים המועברים במזון?", options: ["הקפאה עמוקה לתקופה ממושכת", "טיפול בחום ובישול יסודי", "הוספת אנטיביוטיקה למזון", "שטיפה במים קרים בלבד"], correctIndex: 1, explanation: "הרגישות של וירוסים במזון לחום הופכת את תהליך הבישול לדרך היעילה ביותר למניעת הדבקה" },
-            { question: "איזו מהקבוצות הבאות אינה נחשבת למיקרואורגניזם אאוקריוטי המצוי במזון?", options: ["תולעים", "פרוטוזואה", "וירוסים", "אצות חד תאיות"], correctIndex: 2, explanation: "וירוסים אינם נחשבים לאאוקריוטים או פרוקריוטים הם ישויות ביולוגיות נפרדות שאינן בנויות מתאים" },
-            { question: "מטופל מגיע למרפאה עם כאבי בטן עזים לאחר שאכל בשר חזיר נא בבדיקת רקמת שריר נמצאו טפילים מאיזה סוג סביר להניח שהמטופל סובל?", options: ["וירוס מסוג רוטה", "תולעת מסוג טריכינלה", "חיידק מסוג בצילוס", "פרוטוזואה מסוג אנטאמבה"], correctIndex: 1, explanation: "תולעי טריכינלה נפוצות בבשר חזירים וניתן לזהות את הפגיעה שלהן ולראותן בתוך רקמת שריר" },
-            { question: "מדוע מטפלים בזיהומי פרוטוזואה באמצעות אנטיביוטיקות ייחודיות ולא באנטיביוטיקה רגילה לחיידקים?", options: ["מכיוון שפרוטוזואה הם וירוסים חסרי דופן תא", "משום שפרוטוזואה הם אורגניזמים אאוקריוטיים בעלי מבנה תאי שונה מחיידקים", "כי פרוטוזואה מורכבים מחלבון בלבד", "מפני שפרוטוזואה עמידים לחלוטין לכל חומר כימי"], correctIndex: 1, explanation: "פרוטוזואה הם טפילים אאוקריוטים ולכן נדרשות תרופות ייחודיות הפוגעות במנגנונים אאוקריוטיים ספציפיים מבלי לפגוע בתאי המאכסן" },
-            { question: "מהי הסכנה המרכזית בנשאות לא מטופלת של אנטאמבה היסטוליטיקה?", options: ["התפתחות של דלקת קרום המוח ויראלית", "חדירה לזרם הדם ופגיעה באיברים פנימיים כמו הכבד והמוח", "הפיכת הטפיל לפריון עמיד לחום", "פגיעה בלתי הפיכה במערכת הנשימה העליונה"], correctIndex: 1, explanation: "אם הטפיל אינו מטופל הוא עלול לעבור מהמעי לזרם הדם להגיע לכבד ולעיתים אף למוח ולגרום למוות" },
-            { question: "כיצד משפיעה אוכלוסיית חיידקי המעי על נשאות של טפילי פרוטוזואה?", options: ["היא מחסלת אותם באופן מיידי ומונעת הדבקה לחלוטין", "נמצא כי הרכב חיידקי המעי משפיע על רמת הנשאות והשגשוג של הטפיל", "חיידקי המעי הופכים לטפילים בעצמם בנוכחות הפרוטוזואה", "אין שום קשר בין חיידקי המעי לבין הדבקה בפרוטוזואה"], correctIndex: 1, explanation: "מחקרים מראים כי הרכב המיקרוביום חיידקי המעי משפיע על האופן שבו המאכסן נושא את הטפיל ועל חומרת הסימפטומים" },
-            { question: "מהו אחוז האינפקציות המועברות במזון שנגרמות על ידי וירוסים?", options: ["פחות מ עשרה אחוזים", "כ שלושים אחוזים", "סביב חמישים אחוזים", "מעל שבעים אחוזים"], correctIndex: 3, explanation: "וירוסים אחראים למספר עצום של אינפקציות המועברות במזון המוערך בלמעלה מ ($70\\%$)" },
-            { question: "איזה מבין הוירוסים הבאים נחשב לפחות נפוץ בהעברה דרך מזון?", options: ["נורו-וירוס", "רוטה-וירוס", "אדנו-וירוס", "הפטיטיס אי"], correctIndex: 3, explanation: "נורו-וירוס רוטה-וירוס ואדנו-וירוס הם העיקריים בעוד שהפטיטיס אי ואסטרו-וירוס נחשבים לפחות נפוצים בקונטקסט זה" },
-            { question: "איזה סוג של מיקרואורגניזם בולע תאי דם אדומים כחלק ממנגנון הפעולה שלו?", options: ["חיידקי ויבריו", "וירוסי הפטיטיס", "פרוטוזואה מסוג אנטאמבה היסטוליטיקה", "תולעי טריכינלה"], correctIndex: 2, explanation: "אנטאמבה היסטוליטיקה היא פרוטוזואה הגורמת לדיזנטריה וידועה ביכולתה לבלוע תאי דם אדומים כחלק מפגיעתה ברקמות" },
-            { question: "מהי המשמעות המעשית של רגישות תולעים טפילות לקרינת על סגול ולחום?", options: ["שתולעים יכולות לשרוד רק באזורים טרופיים", "שבישול ראוי של מזון ובמיוחד מאכלי ים מונע הדבקה", "שתולעים מתרבות מהר יותר בחשיפה לשמש", "שאי אפשר להידבק בתולעים מאכילת דג נא"], correctIndex: 1, explanation: "בשל רגישותן לחום בישול יעיל משמיד את התולעים ולכן ההדבקה נפוצה בעיקר באכילת מאכלי ים לא מבושלים" },
-            { question: "איזו שיטה אינה משמשת כדרך מקובלת לזיהוי נוכחות של תולעים באדם?", options: ["בדיקה סרולוגית לאיתור נוגדנים ספציפיים", "מבחן ישיר דרך מיקרוסקופ", "צביעת גראם של דגימת צואה", "בדיקת צואת חולה"], correctIndex: 2, explanation: "צביעת גראם היא שיטה ספציפית לסיווג חיידקים על פי מבנה דופן התא שלהם ואינה רלוונטית לזיהוי תולעים אאוקריוטיות" },
-            { question: "מהו הסימפטום הראשוני הנפוץ ביותר של נשאות אקטיבית של אנטאמבה היסטוליטיקה?", options: ["שיתוק שרירים", "שלשול", "אובדן ראייה", "התקרחות"], correctIndex: 1, explanation: "הסימפטומים הראשוניים של פגיעת אנטאמבה היסטוליטיקה במעי הם שלשולים ודיזנטריה" },
-            { question: "כיצד מועברות רוב המחלות הויראליות הקשורות למזון?", options: ["ממגע ישיר עם חיות בר בלבד", "דרך עקיצות יתושים הנמצאים בקרבת מזון", "במסלול פקאלי אוראלי דרך מזון מים וידיים מזוהמות", "דרך קרינת שמש הפוגעת במזון מקולקל"], correctIndex: 2, explanation: "המסלול המרכזי להעברת וירוסים במזון הוא המסלול הפקאלי אוראלי לעיתים גם בשילוב הדבקה טיפתית" },
-            { question: "לפי הידוע כיום מהי רמת הסיכון להדבקה בנגיף הקורונה דרך מזון?", options: ["גבוהה מאוד ולכן יש לחטא כל פריט מזון", "הנגיף מתרבה בתוך בשר נא ולכן מסוכן", "אין כיום תיעוד או עדות להדבקה בנגיף דרך המזון", "הנגיף מועבר דרך מזון רק אם הוא חומם לטמפרטורה נמוכה"], correctIndex: 2, explanation: "ארגוני הבריאות קבעו כי אין עדות או תיעוד לכך שנגיף הקורונה מועבר דרך אכילת מזון או אריזות מזון" },
-            { question: "איזה מונח טקסונומי מתאר את הרמה הרחבה והכוללנית ביותר מבין האפשרויות הבאות?", options: ["סוג", "משפחה", "מערכה", "סדרה"], correctIndex: 2, explanation: "מבנה ההיררכיה הטקסונומית הוא ממלכה מערכה מחלקה סדרה משפחה סוג ומין לכן מערכה היא הרחבה ביותר מבין האפשרויות" },
-            { question: "איזו צורה מורפולוגית מאפיינת חיידקים המוגדרים כספירילה?", options: ["כדורית", "מתגית", "סלילונית", "פסיקית"], correctIndex: 2, explanation: "חיידקים מסוג ספירילה הם בעלי צורה סלילונית ספירלית" },
-            { question: "מה מאפיין את רוב מקרי הנשאות של טפיל האנטאמבה היסטוליטיקה?", options: ["תמותה מיידית תוך מספר ימים", "הופעת פריחה עורית קשה", "נשאות אסימפטומטית ללא תסמינים מורגשים", "התפתחות של דלקת ריאות כרונית"], correctIndex: 2, explanation: "בדרך כלל הנשאות של הטפיל היא ללא סימפטומים ורק בכ ($10\\%$) מהמקרים מתפתחת פגיעה קשה במוקוזה של המעי" },
-            { question: "איזה סוג של מיקרואורגניזם הוא טפיל חד תאי הגורם לדיזנטריה?", options: ["וירוס", "תולעת נימית", "פרוטוזואה", "פריון"], correctIndex: 2, explanation: "פרוטוזואה הם טפילים אאוקריוטים חד תאיים כדוגמת האנטאמבה הגורמת לדיזנטריה" },
-            { question: "איזו קבוצת אורגניזמים כוללת פטריות ואצות חד תאיות?", options: ["וירוסים", "מיקרואורגניזמים פרוקריוטיים", "מיקרואורגניזמים אאוקריוטיים", "פריונים"], correctIndex: 2, explanation: "פטריות אצות חד תאיות תולעים ופרוטוזואה שייכים כולם לקבוצת המיקרואורגניזמים האאוקריוטיים" },
-            { question: "מהי הסיבה העיקרית לכך שוירוסים במזון גורמים לאינפקציות רבות כל כך?", options: ["הם מסוגלים להתרבות בתוך המזון עצמו גם בטמפרטורת החדר", "הם עמידים לחלוטין בפני הרתחה ממושכת", "הם עוברים בקלות במסלול פקאלי אוראלי וקשה לנטר אותם", "הם גורמים למזון להיראות מקולקל ולכן אנשים נמשכים אליו"], correctIndex: 2, explanation: "וירוסים אינם מתרבים במזון אך הם מועברים בקלות רבה דרך מגע ומים מזוהמים וקשה מאוד לזהותם בשל הצורך ברגישות ניטור גבוהה" },
-            { question: "איזה מנגנון ביולוגי מאפשר את זיהויים של וירוסים במזון במעבדה?", options: ["צביעת גראם", "בדיקת עמידות לאנטיביוטיקה", "שימוש בנוגדנים ובשיטות הגברה גנטית כמו פי סי אר", "גידול על מצע אגר רגיל למשך עשרים וארבע שעות"], correctIndex: 2, explanation: "מכיוון שוירוסים אינם גדלים על מצעי מזון רגילים זיהויים דורש שיטות מולקולריות ואימונולוגיות מתקדמות" },
-            { question: "אילו איברים נוספים מלבד המעי עלולים להיפגע מזיהום חמור של תולעים?", options: ["רק השיער והציפורניים", "מערכת השלד בלבד", "רקמות שונות בגוף ובמקרים קיצוניים פגיעה המובילה למוות", "תולעים פוגעות אך ורק במערכת העיכול ואינן נודדות"], correctIndex: 2, explanation: "תולעים יכולות לנדוד ולפגוע ברקמות שונות בגוף להשפיע על המערכת האימונית ואף להגיע לאיברים קריטיים כמו המוח" },
-            { question: "מהו הקריטריון המבדיל בין מינים שונים של בעלי חיים בטבע?", options: ["היכולת ליצור הכלאות פוריות בתוך המין וסטריליות בין מינים שונים", "ההבדל בצבע הפרווה בלבד", "סוג המזון שהם צורכים", "המיקום הגיאוגרפי שבו הם חיים"], correctIndex: 0, explanation: "הבחנה קלאסית בין מינים בבעלי חיים מבוססת על היכולת להעמיד צאצאים פוריים יחד כאשר הכלאה בין מינים שונים יוצרת היבריד עקר כמו פרד" },
-            { question: "מהו אחוז התמותה השנתי המשוער מנשאות של אנטאמבה היסטוליטיקה?", options: ["כחמש מאות איש", "כחמישים אלף איש", "כמיליון איש", "אין תמותה כלל מהטפיל"], correctIndex: 1, explanation: "מתוך חמישים מיליון נשאים ברחבי העולם ישנה תמותה של כ ($50,000$) איש בשנה כתוצאה מסיבוכי המחלה" },
-            { question: "איזו רמה טקסונומית ממוקמת מיד מתחת לרמת המשפחה?", options: ["מחלקה", "מין", "סוג", "סדרה"], correctIndex: 2, explanation: "הסדר ההיררכי הוא סדרה משפחה סוג ולבסוף מין לכן הסוג נמצא מיד מתחת למשפחה" },
-            { question: "אילו מהווירוסים הבאים נחשבים לאלימים יותר אך נפוצים פחות בהעברה דרך מזון?", options: ["נורו-וירוס ורוטה-וירוס", "אדנו-וירוס ואסטרו-וירוס", "הפטיטיס אבולה ופוליו", "וירוסי שפעת עונתית"], correctIndex: 2, explanation: "וירוסים כמו הפטיטיס פוליו ואבולה הם אלימים ומסוכנים מאוד אך שכיחות ההעברה שלהם דרך מזון נמוכה יותר מוירוסים כמו נורו-וירוס" },
-            { question: "מהי המשמעות של היעדר דופן תא במיקרואורגניזם בהקשר טקסונומי?", options: ["הוא יסווג אוטומטית כוירוס", "הוא עשוי להשתייך לקבוצת המיקופלזמה בחיידקים", "הוא נחשב לפריון", "הוא בהכרח אורגניזם אירובי"], correctIndex: 1, explanation: "בעץ הפילוגנטי של חיידקים קיימת קבוצה חסרת דופן תא הנקראת מיקופלזמה המאובחנת כחלק מהסיווג הטקסונומי" },
-            { question: "מדוע טיפול תרמי אינו יעיל כנגד הרעלת מזון הנגרמת מפריונים?", options: ["כי פריונים מתרבים מהר יותר בחום", "משום שפריונים הם חלבונים פגומים ועמידים ביותר שאינם נהרסים בטמפרטורות בישול רגילות", "כי פריונים עטופים בשכבת שומן עבה המבודדת אותם", "טיפול תרמי דווקא יעיל לחלוטין נגד פריונים"], correctIndex: 1, explanation: "פריונים הם חלבונים יציבים מאוד הגורמים לשינוי מבני בחלבונים אחרים ואינם נהרסים בבישול סטנדרטי בניגוד לוירוסים וחיידקים" },
-            { question: "מה תפקידו של משרד החקלאות בהקשר של מיקרוביולוגיה של מזון בישראל?", options: ["ייצור חיסונים נגד וירוסים במזון", "פיקוח על תולעים וטפילים במזון דרך המעבדות הווטרינריות", "טיפול רפואי בנשאי אנטאמבה", "פיתוח זנים חדשים של צמחים עמידים"], correctIndex: 1, explanation: "הפיקוח על הימצאות תולעים וטפילים בבשר ובמזון מן החי נעשה בארץ על ידי המעבדות הווטרינריות של משרד החקלאות" },
-            { question: "מהי הדרך העיקרית בה נמנעת הדבקה נרחבת של תולעים במאכלי ים?", options: ["הקפאה עמוקה או בישול יסודי ההורסים את הטפילים", "שטיפת הדג במי מלח בלבד", "הוצאת העצמות מהדג", "אכילת הדג מיד לאחר הדיג"], correctIndex: 0, explanation: "תולעים רגישות לחום ולכן בישול מונע הדבקה בנוסף בתעשיית הסושי נהוג להקפיא דגים להקפאה עמוקה כדי להשמיד טפילים לפני אכילתם כנאים" },
-            { question: "מהי התכונה המשותפת לכל המיקרואורגניזמים האאוקריוטיים במזון?", options: ["כולם חסרי גרעין מוגדר", "כולם מכילים חומר גנטי המאורגן בתוך גרעין אמיתי", "כולם מתרבים רק בתוך תאים חיים אחרים", "כולם מורכבים מחלבון בלבד"], correctIndex: 1, explanation: "ההגדרה הבסיסית של אאוקריוטים הכוללת פטריות אצות תולעים ופרוטוזואה היא קיומו של גרעין תא מוגדר המכיל את החומר הגנטי" },
-            { question: "מדוע זיהוי סרולוגי יעיל באבחון של מחלות טפיליות?", options: ["כי הוא מזהה את הצורה החיצונית של הטפיל בצואה", "משום שהוא מאתר נוגדנים ספציפיים שהגוף ייצר בתגובה לנוכחות הטפיל", "כי הוא בודק את רמת החומציות בקיבה", "מפני שהוא מזהה פריונים בזרם הדם"], correctIndex: 1, explanation: "בדיקה סרולוגית מתבססת על תגובת המערכת החיסונית ומאתרת נוגדנים ספציפיים למחולל המחלה בדם או בהפרשות" },
-            { question: "איזה מבין הבאים אינו מהווה גורם מחלה ביולוגי שלם?", options: ["חיידק סלמונלה", "תולעת טריכינלה", "פריון", "אצת ים חד תאית"], correctIndex: 2, explanation: "פריון הוא מולקולת חלבון פגומה ואינו נחשב לאורגניזם חי או לתא שלם בניגוד לשאר האפשרויות" },
-            { question: "כיצד מתבצעת לרוב הדבקה בוירוסים התוקפים את מערכת העיכול?", options: ["דרך חתכים פתוחים בעור", "באמצעות מגע עם דם נגוע בלבד", "בעיקר דרך מזון מים וידיים מזוהמות במסלול פקאלי אוראלי", "דרך נשימת אוויר קר"], correctIndex: 2, explanation: "וירוסים הפוגעים במערכת העיכול כמו נורו-וירוס עוברים לרוב במסלול פקאלי אוראלי עקב היגיינה לקויה או מזון מזוהם" },
-            { question: "מהי ההשלכה של עמידות חיידקים לצביעת גראם על הטקסונומיה שלהם?", options: ["היא קובעת אם החיידק הוא אירובי או אנאירובי", "היא מחלקת את החיידקים לשתי קבוצות עיקריות על בסיס מבנה דופן התא", "היא מעידה על יכולת החיידק לבצע פוטוסינתזה", "אין לה שום משמעות טקסונומית"], correctIndex: 1, explanation: "צביעת גראם היא אחד הכלים הבסיסיים בטקסונומיה של חיידקים המחלקת אותם לגראם חיוביים ושליליים על בסיס עובי והרכב דופן התא" }
+            { 
+                question: "חוקר גילה שני סוגי חיידקים החיים באותה סביבה. כיצד יקבע האם הם שייכים לאותו ״מין״ (Species)?", 
+                options: [
+                    "יבדוק האם הם מסוגלים להעביר פלסמידים זה לזה.",
+                    "יבחן האם הם מסוגלים להתרבות יחד וליצור מושבה פורייה.",
+                    "יבדוק את מידת הדמיון בתכונות הביוכימיות וברצף הגנומי שלהם.",
+                    "יבדוק האם שניהם מגיבים באופן זהה לצביעת גרם."
+                ], 
+                correctIndex: 2, 
+                explanation: "במיקרוביולוגיה, ההבחנה בין מינים מתבססת על דמיון בתכונות ובגנום, ולא על יכולת רבייה מינית כפי שמקובל בבעלי חיים." 
+            },
+            { 
+                question: "מהי הסיבה המרכזית לכך שפריונים אינם מסווגים תחת אחת הממלכות בעץ החיים הטקסונומי?", 
+                options: [
+                    "הם קטנים מדי מכדי להיראות במיקרוסקופ אלקטרוני.",
+                    "הם מורכבים מחלבון בלבד ואינם מהווים אורגניזם חי.",
+                    "הם אינם מכילים חומצות אמינו חיוניות.",
+                    "הם מתרבים באמצעות רבייה מינית ייחודית שטרם פוענחה."
+                ], 
+                correctIndex: 1, 
+                explanation: "פריונים הם חלבונים פגומים הגורמים למחלה. מכיוון שאין להם חומצת גרעין (DNA/RNA) והם אינם תאים, הם אינם נחשבים לאורגניזמים חיים ואינם חלק מעץ החיים." 
+            },
+            { 
+                question: "קבוצת מטיילים אכלה פירות ים שלא בושלו כראוי ונדבקה בזיהום. בבדיקת מעבדה נמצאו אורגניזמים רב-תאיים. מיהו הגורם הסביר ביותר למחלה?", 
+                options: [
+                    "נורו-וירוס (Norovirus)",
+                    "פרוטוזואה מסוג Entamoeba",
+                    "תולעים טפילות",
+                    "חיידקי מתגים (Bacilli)"
+                ], 
+                correctIndex: 2, 
+                explanation: "מבין האפשרויות, רק תולעים הן אורגניזמים רב-תאיים. וירוסים אינם תאים, חיידקים ופרוטוזואות הם חד-תאיים. תולעים אכן נפוצות במאכלי ים לא מבושלים." 
+            },
+            { 
+                question: "מדוע טיפול אנטיביוטי סטנדרטי הפוגע בדופן התא החיידקי לא יהיה יעיל נגד זיהום של Entamoeba histolytica?", 
+                options: [
+                    "מכיוון שהאמבה היא וירוס החודר לתוך תאי המאכסן.",
+                    "מכיוון שהאמבה היא אורגניזם אאוקריוטי החסר דופן תא פפטידוגליקני.",
+                    "מכיוון שהאמבה מייצרת נבגים העמידים לחום וליובש.",
+                    "מכיוון שהאמבה היא פריון המורכב מחלבון בלבד."
+                ], 
+                correctIndex: 1, 
+                explanation: "Entamoeba histolytica היא פרוטוזואה, כלומר יצור אאוקריוטי (כמו תאי אדם). אין לה דופן תא חיידקית (פפטידוגליקן) שאותה אנטיביוטיקות רבות תוקפות, ולכן נדרש טיפול ייעודי לאאוקריוטים." 
+            },
+            { 
+                question: "מהו המסלול העיקרי שבו וירוסים מחוללי מחלות מגיעים למזון שלנו?", 
+                options: [
+                    "התרבות מהירה על פני השטח של מזון עשיר בחלבון.",
+                    "העברה פקאלית-אוראלית עקב היגיינה לקויה או מים מזוהמים.",
+                    "יצירת רעלנים בתוך המזון במהלך אחסון ממושך בקירור.",
+                    "הדבקה ישירה דרך מערכת הנשימה של חיות המשק."
+                ], 
+                correctIndex: 1, 
+                explanation: "וירוסים אינם יכולים להתרבות במזון עצמו אלא רק בתא מאכסן חי. ההדבקה במזון מתרחשת בעיקר בדרך פקאלית-אוראלית (צואה המגיעה לפה דרך ידיים או מים מזוהמים שבאו במגע עם המזון)." 
+            },
+            { 
+                question: "באיזו מהשיטות הבאות נשתמש כדי לסווג חיידק ספציפי למשפחת ה״מתגים״ (Bacilli)?", 
+                options: [
+                    "בדיקת הרגישות שלו לאנטיביוטיקה.",
+                    "בחינת צורתו המורפולוגית תחת מיקרוסקופ.",
+                    "בדיקת יכולתו לשרוד בסביבה נטולת חמצן.",
+                    "ריצוף מלא של חלבוני המעטפת שלו."
+                ], 
+                correctIndex: 1, 
+                explanation: "המונח Bacilli מתייחס לצורה המורפולוגית של החיידק (בצורת מקלון/מתג). הבחנה זו נעשית באמצעות התבוננות מיקרוסקופית." 
+            },
+            { 
+                question: "אם נרצה למנוע התפרצות של נורו-וירוס (Norovirus) במסעדה, מה תהיה הפעולה היעילה ביותר?", 
+                options: [
+                    "הקפאת כל חומרי הגלם בטמפרטורה של מינוס 18 מעלות.",
+                    "הקפדה על בישול יסודי של המזון וחימום לטמפרטורות גבוהות.",
+                    "הוספת חומרים משמרים המונעים התרבות וירוסים במזון.",
+                    "אחסון המזון בוואקום למניעת מגע עם חמצן."
+                ], 
+                correctIndex: 1, 
+                explanation: "וירוסים אינם מתרבים במזון (לכן חומרים משמרים או ואקום לא רלוונטיים), והקפאה לרוב רק משמרת אותם. בישול וחימום הם הדרך היעילה להרוס את חלבוני הווירוס." 
+            },
+            { 
+                question: "איזה מהמשפטים הבאים מתאר נכונה את השפעת נגיף ה-COVID-19 בהקשר של מיקרוביולוגיה של מזון?", 
+                options: [
+                    "הנגיף מתרבה במהירות על משטחי בשר נא וגורם להרעלת קיבה.",
+                    "אין תיעוד מדעי מבוסס להדבקה בנגיף דרך צריכת מזון.",
+                    "הנגיף עמיד במיוחד לחום ולכן בישול אינו משמיד אותו.",
+                    "הנגיף מועבר באופן בלעדי דרך פירות ים מיובאים."
+                ], 
+                correctIndex: 1, 
+                explanation: "כפי שצוין מפורשות במקורות הרפואיים (כגון ארגון הבריאות העולמי), אין תיעוד להדבקה ב-COVID-19 דרך אכילת מזון או אריזות מזון." 
+            },
+            { 
+                question: "מטופל מגיע למיון עם כאבי בטן עזים ושלשולים. בבדיקת צואה נמצאו מיקרואורגניזמים חד-תאיים המכילים בתוכם תאי דם אדומים. מהי האבחנה הסבירה ביותר?", 
+                options: [
+                    "הרעלת פריונים.",
+                    "זיהום בחיידקי סלמונלה.",
+                    "הדבקה בתולעי Trichinella.",
+                    "זיהום בפרוטוזואה Entamoeba histolytica."
+                ], 
+                correctIndex: 3, 
+                explanation: "הטפיל Entamoeba histolytica הוא פרוטוזואה חד-תאית הידועה בכך שהיא בולעת תאי דם אדומים וגורמת לדיזנטריה וכאבי בטן." 
+            },
+            { 
+                question: "כיצד תסייע שיטת ה-PCR באבחון הרעלת מזון נגיפית?", 
+                options: [
+                    "היא תזהה את הנוגדנים שהגוף ייצר נגד הנגיף.",
+                    "היא תאפשר לגדל את הנגיף על צלחת פטרי ולספור מושבות.",
+                    "היא תשכפל ותזהה רצפים ספציפיים של חומצת הגרעין של הנגיף.",
+                    "היא תצבע את מעטפת הנגיף בצביעת גרם לאבחון מהיר."
+                ], 
+                correctIndex: 2, 
+                explanation: "PCR (Polymerase Chain Reaction) היא שיטה מולקולרית המזהה ומשכפלת מקטעי DNA או RNA ספציפיים של הגורם המזהם, וכך מאפשרת זיהוי ודאי של וירוסים." 
+            },
+            { 
+                question: "על פי כללי הנומנקלטורה הבינארית, בשם החיידק 'Staphylococcus aureus', מה מייצגת המילה הראשונה (Staphylococcus)?", 
+                options: [
+                    "את המין (Species).",
+                    "את הסוג (Genus).",
+                    "את המשפחה (Family).",
+                    "את המערכה (Phylum)."
+                ], 
+                correctIndex: 1, 
+                explanation: "בשיטת השיום המדעית, המילה הראשונה מציינת את הסוג (Genus) ומתחילה באות גדולה, והמילה השנייה מציינת את המין (Species)." 
+            },
+            { 
+                question: "באיזה מהמקרים הבאים סביר להניח שנשתמש בסרולוגיה כאמצעי אבחון עיקרי?", 
+                options: [
+                    "כדי לקבוע האם חיידק הוא אווירני או אל-אווירני.",
+                    "כדי לזהות נוכחות של תולעים טפילות או פרוטוזואות באמצעות נוגדנים.",
+                    "כדי למדוד את רמת ה-pH של מזון מקולקל.",
+                    "כדי לאפיין את צורתם של חיידקי נקדים (Cocci)."
+                ], 
+                correctIndex: 1, 
+                explanation: "סרולוגיה היא בדיקת דם (או נוזלי גוף אחרים) המזהה נוכחות של נוגדנים נגד פתוגנים. היא משמשת רבות לזיהוי הדבקות עמוקות ברקמות, כגון תולעים ופרוטוזואות." 
+            },
+            { 
+                question: "מהי הסכנה העיקרית באכילת בשר חזיר שלא בושל כראוי, מבחינה מיקרוביולוגית?", 
+                options: [
+                    "הדבקה בנגיפי הפטיטיס A.",
+                    "הרעלת פריונים קטלנית.",
+                    "הדבקה בתולעי Trichinella הנמצאות ברקמת השריר.",
+                    "התפתחות אצות חד-תאיות במערכת העיכול."
+                ], 
+                correctIndex: 2, 
+                explanation: "תולעי Trichinella חודרות ומתבססות ברקמת השריר של חזירים. אכילת בשר נא המכיל את זחלי התולעת גורמת להדבקה באדם." 
+            },
+            { 
+                question: "מהו ההבדל המהותי בין וירוסים לבין מקרואורגניזמים פרוקריוטיים (חיידקים) בהקשר של מזון?", 
+                options: [
+                    "וירוסים רגישים לחום, ואילו כל החיידקים עמידים לחימום קיצוני.",
+                    "וירוסים אינם יכולים להגדיל את כמותם בתוך המזון עצמו, בעוד חיידקים יכולים להתרבות בו.",
+                    "וירוסים גורמים למחלות רק בבעלי חיים, בעוד חיידקים תוקפים רק בני אדם.",
+                    "וירוסים ניתנים לטיפול באנטיביוטיקה, בעוד חיידקים דורשים חיסון מונע."
+                ], 
+                correctIndex: 1, 
+                explanation: "וירוס הוא טפיל תוך-תאי מוחלט ואינו יכול להתרבות ללא תא מאכסן חי. לכן, מזון משמש רק כווקטור העברה עבור וירוסים, בעוד חיידקים יכולים להשתמש בחומרי המזון כדי להתרבות בתוכו." 
+            },
+            { 
+                question: "איזה מהגורמים הבאים נמצא כי הוא משפיע על נשאות של הטפיל Entamoeba histolytica במעי האדם?", 
+                options: [
+                    "רמות ויטמין C בדם.",
+                    "אוכלוסיית חיידקי המעי (המיקרוביום) של המאכסן.",
+                    "סוג צביעת הגרם של הטפיל.",
+                    "כמות קרינת ה-UV שאליה נחשף האדם בילדותו."
+                ], 
+                correctIndex: 1, 
+                explanation: "מחקרים עדכניים מצביעים על כך שאוכלוסיית חיידקי המעי (המיקרוביום) משפיעה משמעותית על התבססות ונשאות של טפילי מעיים כגון Entamoeba histolytica." 
+            },
+            { 
+                question: "מה עלול לקרות אם הדבקה ב-Entamoeba histolytica אינה מטופלת בזמן?", 
+                options: [
+                    "הטפיל יתמיין לתולעת רב-תאית בתוך המעי.",
+                    "הטפיל עלול לחדור לזרם הדם, לפגוע בכבד ואף להגיע למוח.",
+                    "הטפיל ישנה את ה-DNA של המאכסן וייצור מוטציות סרטניות.",
+                    "הטפיל יתפרק מעצמו וישחרר פריונים למחזור הדם."
+                ], 
+                correctIndex: 1, 
+                explanation: "בכ-($10\%$) מהמקרים, הטפיל חודר את רירית המעי, נכנס לזרם הדם ופוגע באיברים פנימיים קריטיים כמו הכבד והמוח, מה שעלול להוביל למוות." 
+            },
+            { 
+                question: "מנהל מפעל מזון רוצה לוודא כי המים המשמשים לשטיפת ירקות אינם מכילים ביצי תולעים. איזה טיפול פיזיקלי עשוי להיות יעיל למטרה זו?", 
+                options: [
+                    "הזרמת חמצן בלחץ גבוה.",
+                    "חשיפה לקרינת UV או טיפול בחום.",
+                    "הורדת הטמפרטורה ל-4 מעלות צלזיוס.",
+                    "הוספת תרביות חיידקים פרוקריוטיים למים."
+                ], 
+                correctIndex: 1, 
+                explanation: "תולעים וביציהן רגישות מאוד לחום וכן לקרינת UV, ולכן שיטות אלו משמשות כטיפולי מניעה יעילים בתעשיית המזון." 
+            },
+            { 
+                question: "מדוע קשה במיוחד לנטר ולמנוע התפשטות של וירוסים בזמן אפידמיה (מגפה) הקשורה למזון?", 
+                options: [
+                    "מכיוון שהם גדולים מאוד וקשה להפריד אותם מהמזון.",
+                    "מכיוון שהם מתרבים במהירות אדירה על משטחי נירוסטה.",
+                    "מכיוון שהם דורשים רגישות ניטור גבוהה מאוד, וקשה לזהותם בכמויות קטנות המחוללות מחלה.",
+                    "מכיוון שכולם עמידים לכל סוגי חומרי החיטוי המוכרים."
+                ], 
+                correctIndex: 2, 
+                explanation: "וירוסים מחוללי מחלות במזון (כמו נורו-וירוס) יכולים לגרום להדבקה גם במינון נמוך מאוד (כמות קטנה של חלקיקים), מה שהופך את הניטור שלהם לקשה ודורש רגישות אנליטית גבוהה מאוד." 
+            },
+            { 
+                question: "אם נמצא אורגניזם חד-תאי בעל גרעין, הגורם למחלה המועברת במזון, לאיזו קבוצה הוא ככל הנראה שייך?", 
+                options: [
+                    "חיידקים (פרוקריוטים).",
+                    "וירוסים.",
+                    "פרוטוזואות (אאוקריוטים).",
+                    "פריונים."
+                ], 
+                correctIndex: 2, 
+                explanation: "אורגניזם חד-תאי בעל גרעין הוא אאוקריוט. מבין האפשרויות, פרוטוזואות הן טפילים חד-תאיים אאוקריוטיים. חיידקים הם חסרי גרעין מוגדר." 
+            },
+            { 
+                question: "באיזו רמה טקסונומית ימצאו אורגניזמים בעלי הדמיון הגנטי והפיזיולוגי הרב ביותר?", 
+                options: [
+                    "ממלכה (Kingdom)",
+                    "מערכה (Phylum)",
+                    "משפחה (Family)",
+                    "מין (Species)"
+                ], 
+                correctIndex: 3, 
+                explanation: "ככל שיורדים בהיררכיה הטקסונומית, הקבוצות הופכות לספציפיות יותר. 'מין' היא הרמה הנמוכה והספציפית ביותר, בה האורגניזמים הם בעלי הדמיון הרב ביותר." 
+            },
+            { 
+                question: "מהו המאפיין המשותף להפטיטיס A, רוטה-וירוס ונורו-וירוס?", 
+                options: [
+                    "כולם גורמים למחלות כבד קשות ללא תסמיני מעיים.",
+                    "כולם וירוסים המועברים לרוב במזון במסלול פקאלי-אוראלי.",
+                    "כולם מגיבים היטב לטיפול אנטיביוטי רחב טווח.",
+                    "כולם מתרבים במהירות במוצרי חלב מפוסטרים."
+                ], 
+                correctIndex: 1, 
+                explanation: "אלו הם וירוסים עיקריים המועברים במזון (או מים/ידיים מזוהמות) דרך המסלול הפקאלי-אוראלי וגורמים לאינפקציות." 
+            },
+            { 
+                question: "לשם מה משמש ה-Bergey's manual במיקרוביולוגיה?", 
+                options: [
+                    "מדריך לזיהוי רעלני פטריות במזון.",
+                    "ספר חוקים לטיפול תרמי בתעשיית הבשר.",
+                    "מדריך סיסטמטי וטקסונומי לסיווג והגדרת חיידקים.",
+                    "פרוטוקול לביצוע בדיקות PCR לוירוסים."
+                ], 
+                correctIndex: 2, 
+                explanation: "ה-Bergey's manual of Systematic Bacteriology הוא המקור המוסמך והמקובל בעולם לסיווג, זיהוי וטקסונומיה של חיידקים." 
+            },
+            { 
+                question: "מה משמעות המונח 'Vibrio' בסיווג חיידקים?", 
+                options: [
+                    "חיידק בעל דופן תא עבה (גרם חיובי).",
+                    "חיידק המסוגל לשרוד ללא חמצן.",
+                    "חיידק בעל צורה מורפולוגית של פסיק (מעוקל).",
+                    "חיידק המייצר נבגים עמידים לחום."
+                ], 
+                correctIndex: 2, 
+                explanation: "בסיווג לפי צורה, Vibrio מתאר חיידקים בעלי צורה מעוקלת המזכירה פסיק (כגון חיידק הכולרה)." 
+            },
+            { 
+                question: "בבדיקת מעבדה נמצא מזהם חסר דופן תא לחלוטין, שאינו וירוס. לאיזו קבוצה הוא עשוי להשתייך?", 
+                options: [
+                    "חיידקי גרם חיוביים.",
+                    "ארכאונים (Archaea) קלאסיים.",
+                    "מיקופלזמה (Mycoplasmas).",
+                    "חיידקי מתגים."
+                ], 
+                correctIndex: 2, 
+                explanation: "מיקופלזמה הם חיידקים ייחודיים החסרים דופן תא לחלוטין (Wall-less), כפי שמופיע בתרשים הפילוגנטי של הפרוקריוטים." 
+            },
+            { 
+                question: "כיצד תסווג אצה חד-תאית (Single-celled alga) המזהמת מאגר מים?", 
+                options: [
+                    "כפרוקריוט מתג.",
+                    "כמיקרואורגניזם אאוקריוטי.",
+                    "כוירוס מורכב.",
+                    "כפריון צמחי."
+                ], 
+                correctIndex: 1, 
+                explanation: "אצות חד-תאיות, בדומה לפטריות ולפרוטוזואות, נמנות על קבוצת המיקרואורגניזמים האאוקריוטיים (בעלי גרעין אמת)." 
+            },
+            { 
+                question: "מהו הגורם העיקרי המבדיל בין חיידקי גרם חיוביים לגרם שליליים?", 
+                options: [
+                    "נוכחות או היעדר של גרעין תא.",
+                    "היכולת לבצע פוטוסינתזה.",
+                    "עובי ומבנה דופן התא (Thick vs Thin walls).",
+                    "סוג חומצת הגרעין (DNA לעומת RNA)."
+                ], 
+                correctIndex: 2, 
+                explanation: "צביעת גרם מבדילה בין חיידקים על בסיס מבנה ועובי דופן התא שלהם. לחיוביים דופן עבה, ולשליליים דופן דקה." 
+            },
+            { 
+                question: "מדוע זיהומים מתולעים נפוצים יותר במאכלי ים מסוימים (כמו סושי) בהשוואה לתבשילי קדרה?", 
+                options: [
+                    "כי תולעים זקוקות לסביבה מלוחה כדי להתרבות.",
+                    "כי תולעים רגישות לחום, ומאכלי ים נאכלים לעיתים קרובות ללא בישול.",
+                    "כי דגים מכילים רכיבים המעודדים יצירת פריונים.",
+                    "כי תבשילי קדרה מכילים חומציות גבוהה הממיסה את התולעים."
+                ], 
+                correctIndex: 1, 
+                explanation: "תולעים וביציהן רגישות לטיפול תרמי (חום). מאכלים המוגשים נאים (ללא בישול) שומרים על הטפילים בחיים, ולכן מהווים מקור הדבקה משמעותי." 
+            },
+            { 
+                question: "איזה מהמשפטים הבאים מתאר בצורה הטובה ביותר את הקשר בין טקסונומיה לאפידמיולוגיה של מזון?", 
+                options: [
+                    "הטקסונומיה קובעת את המחיר של בדיקות המעבדה.",
+                    "הטקסונומיה מאפשרת להסיק על תכונות של אורגניזם לא מוכר על סמך קרובי משפחתו הידועים.",
+                    "הטקסונומיה משמשת רק לקיטלוג פטריות, ואינה רלוונטית לחיידקים.",
+                    "הטקסונומיה אוסרת על מתן שמות לוירוסים מטעמי בטיחות ביולוגית."
+                ], 
+                correctIndex: 1, 
+                explanation: "סיווג טקסונומי מאפשר למדענים לשייך אורגניזם חדש לקבוצה מוכרת, וכך ללמוד ולחזות את תכונותיו (כגון עמידות לחום, רעלנים) בהתבסס על מינים קרובים לו." 
+            },
+            { 
+                question: "באיזו קבוצה טקסונומית נכלל האורגניזם 'Saccharomyces cerevisiae'?", 
+                options: [
+                    "וירוסים אנטריים.",
+                    "חיידקי גרם שליליים.",
+                    "פטריות (אאוקריוטים).",
+                    "תולעים עגולות."
+                ], 
+                correctIndex: 2, 
+                explanation: "Saccharomyces cerevisiae הוא שמר (פטרייה חד-תאית), ולכן שייך לקבוצת האאוקריוטים." 
+            },
+            { 
+                question: "מהו המנגנון באמצעותו פריון גורם למחלה?", 
+                options: [
+                    "הוא מזריק RNA ויראלי לתוך תאי המעי.",
+                    "הוא מפריש רעלנים חלבוניים המשתקים את השרירים.",
+                    "הוא חלבון פגום הגורם לחלבונים תקינים בגוף לשנות את המבנה שלהם למבנה פגום.",
+                    "הוא מתרבה בזרם הדם וסותם את כלי הדם הקטנים."
+                ], 
+                correctIndex: 2, 
+                explanation: "פריון הוא חלבון בעל קיפול שגוי. כאשר הוא בא במגע עם חלבונים תקינים מאותו סוג, הוא משרה עליהם שינוי מבני, וכך ה״מחלה״ מתפשטת ללא מעורבות של גנום." 
+            },
+            { 
+                question: "חולה אובחן עם זיהום של תולעי סרט (Tapeworms) במוח. מהיכן סביר להניח שהגיעה ההדבקה הראשונית?", 
+                options: [
+                    "נשימת אוויר מזוהם בקרבת חזירים חולים.",
+                    "אכילת מזון (כגון בשר) המכיל ביצי תולעים או זחלים שלא הושמדו בבישול.",
+                    "שתיית מים שעברו הרתחה כפולה.",
+                    "מגע ישיר עם אדם הנושא נורו-וירוס."
+                ], 
+                correctIndex: 1, 
+                explanation: "תולעים טפילות מועברות לרוב דרך מערכת העיכול, עקב צריכת מזון נגוע (בשר נא או מים מזוהמים בביצים/זחלים) שלא עבר טיפול תרמי מתאים." 
+            },
+            { 
+                question: "איזה סוג של מיקרואורגניזם אחראי למרבית האינפקציות המועברות במזון?", 
+                options: [
+                    "חיידקי גרם חיוביים.",
+                    "פרוטוזואות.",
+                    "וירוסים.",
+                    "פריונים."
+                ], 
+                correctIndex: 2, 
+                explanation: "על פי הנתונים, וירוסים אחראים למספר רב מאוד של אינפקציות ממזון (מעל ל-($70\\%$))." 
+            },
+            { 
+                question: "מדוע זיהוי נוגדנים (סרולוגיה) משמש ככלי מרכזי באבחון מחלות טפיליות (תולעים ופרוטוזואות)?", 
+                options: [
+                    "כי טפילים אלו אינם מכילים DNA שניתן לזהות ב-PCR.",
+                    "כי טפילים חודרים לרקמות הגוף (כמו שריר וכבד) ומעוררים תגובה חיסונית מערכתית שניתן למדוד בדם.",
+                    "כי נוגדנים הם הדרך היחידה להבדיל בין חיידק לוירוס.",
+                    "כי טפילים מפרישים נוגדנים משל עצמם אל תוך המזון."
+                ], 
+                correctIndex: 1, 
+                explanation: "טפילים רב-תאיים ופרוטוזואות פולשים פעמים רבות מעבר למערכת העיכול אל תוך רקמות הגוף. פלישה זו מעוררת את מערכת החיסון לייצר נוגדנים ספציפיים המהווים סמן הדבקה ברור בדם החולה." 
+            },
+            { 
+                question: "כיצד מוגדרת רגישותם של רוב הפרוטוזואות לתנאי סביבה קיצוניים בהקשר של בטיחות מזון?", 
+                options: [
+                    "עמידים לחלוטין לקרינת UV אך רגישים להקפאה.",
+                    "רובם רגישים לחום, ולכן בישול מהווה אמצעי מניעה יעיל.",
+                    "משגשגים בטמפרטורות רתיחה (מעל 100 מעלות).",
+                    "עמידים לכל סוגי האנטיביוטיקה בשל היותם פרוקריוטים."
+                ], 
+                correctIndex: 1, 
+                explanation: "כמו וירוסים ותולעים, רוב הפרוטוזואות רגישות לחום. טיפול תרמי (בישול/הרתחה) יעיל בהשמדתן." 
+            },
+            { 
+                question: "מה מטרתו של מבחן ישיר תחת מיקרוסקופ באבחון של תולעים?", 
+                options: [
+                    "לזהות את רצף ה-RNA של התולעת.",
+                    "לזהות נוכחות פיזית של ביצים או זחלים בדגימות צואה או רקמה.",
+                    "לבדוק את תגובת התולעת לצביעת גרם.",
+                    "למדוד את קצב החלוקה המיטוטית של התולעת במזון."
+                ], 
+                correctIndex: 1, 
+                explanation: "מבחן מיקרוסקופי ישיר מאפשר לזהות חזותית את הביצים, הזחלים או חלקי התולעת בדגימה קלינית (כמו צואה) או במזון." 
+            },
+            { 
+                question: "אם נשווה את ההשפעה של אדנו-וירוס (Adenovirus) לנורו-וירוס (Norovirus) במזון, מהו המאפיין המשותף להם?", 
+                options: [
+                    "שניהם מתרבים באופן עצמאי בתוך מוצרי בשר.",
+                    "שניהם שייכים לקבוצת הארכאונים (Archaea).",
+                    "שניהם מהווים וירוסים עיקריים המועברים במזון וגורמים לאינפקציות.",
+                    "שניהם חסרי חומצת גרעין לחלוטין."
+                ], 
+                correctIndex: 2, 
+                explanation: "אדנו-וירוס, נורו-וירוס ורוטה-וירוס מוזכרים כוירוסים עיקריים ומרכזיים המועברים במזון." 
+            },
+            { 
+                question: "מה מייחד את הארכאונים (Archaea) מבחינה מבנית בהשוואה לחיידקים קלאסיים?", 
+                options: [
+                    "הם אאוקריוטים בעלי גרעין מוגדר.",
+                    "הם בעלי דפנות תא יוצאות דופן (Unusual walls).",
+                    "הם מתרבים אך ורק בתוך תאי דם אדומים.",
+                    "הם אינם מכילים חומר תורשתי כלל."
+                ], 
+                correctIndex: 1, 
+                explanation: "על פי התרשים הפילוגנטי, הארכאונים מאופיינים בדפנות תא יוצאות דופן (Unusual walls) המבדילות אותם מהחיידקים (Eubacteria)." 
+            },
+            { 
+                question: "איזה מהמשפטים הבאים מסביר מדוע מחלות הנגרמות מפריונים נחשבות למאתגרות במיוחד בתחום המזון?", 
+                options: [
+                    "הם מתרבים בקצב של עשרות דורות בדקה אחת.",
+                    "הם חלבונים פגומים, ולכן קשה מאוד להשמידם באמצעים שגרתיים (כמו בישול רגיל) המשמידים אורגניזמים חיים.",
+                    "הם נישאים רק על ידי חרקים מעופפים.",
+                    "הם מפתחים עמידות לאנטיביוטיקה באמצעות העברת פלסמידים."
+                ], 
+                correctIndex: 1, 
+                explanation: "מכיוון שפריונים אינם אורגניזמים חיים אלא מולקולות חלבון עמידות במיוחד, אמצעי עיקור שגרתיים המשמידים חיידקים ווירוסים לרוב אינם מספיקים כדי לנטרל אותם." 
+            },
+            { 
+                question: "איזה מהתסמינים הבאים מאפיין לרוב הדבקה נגיפית דרך מזון (כגון נורו-וירוס)?", 
+                options: [
+                    "שיתוק שרירים מיידי.",
+                    "כאב בטן, שלשול, חום, בחילות והקאות.",
+                    "הופעת פריחה כחולה על העור בלבד.",
+                    "אובדן ראייה הדרגתי."
+                ], 
+                correctIndex: 1, 
+                explanation: "התסמינים הקלאסיים של וירוסים במזון (גסטרואנטריטיס) כוללים לרוב כאבי בטן, שלשולים, הקאות, חום וחולשה כללית." 
+            },
+            { 
+                question: "באיזו רמת סיווג טקסונומית נכללים בני האדם, הכלבים והחזירים יחד?", 
+                options: [
+                    "סוג (Genus)",
+                    "מין (Species)",
+                    "מחלקה (Class) - יונקים",
+                    "משפחה (Family)"
+                ], 
+                correctIndex: 2, 
+                explanation: "על פי הדוגמה ההיררכית, יונקים (Mammalia) היא מחלקה (Class) הכוללת את כל בעלי החיים בעלי בלוטות חלב ושיער, כולל בני אדם, כלבים וחזירים. ברמות נמוכות יותר (כמו סדרה או משפחה) הם מתפצלים." 
+            }
         ];
 
         const tfData = [
-            { question: "טקסונומיה במיקרוביולוגיה מאפשרת להסיק מסקנות על אורגניזם לא מוכר על סמך מידע הקיים על אורגניזמים הקרובים אליו אבולוציונית", answer: true, explanation: "זוהי אחת המטרות המרכזיות של הטקסונומיה לאפשר זיהוי ושיוך כדי להשתמש בידע קיים על משפחות וסוגים דומים" },
-            { question: "הגדרת מין בחיידקים מבוססת באופן מוחלט על היכולת שלהם להתרבות זה עם זה ולהעמיד צאצאים פוריים", answer: false, explanation: "בחיידקים הגדרת מין מבוססת על דמיון בתכונות ובגנום ולא על רבייה מינית שכן חיידקים מתרבים ברבייה אל מינית" },
-            { question: "פריונים הם מיקרואורגניזמים זעירים המכילים חומר גנטי מסוג רנא בלבד", answer: false, explanation: "פריונים אינם מיקרואורגניזמים ואינם מכילים חומר גנטי כלל הם מורכבים מחלבון פגום בלבד" },
-            { question: "וירוסים אחראים ליותר משבעים אחוזים מהאינפקציות המועברות במזון", answer: true, explanation: "על פי הנתונים וירוסים מהווים את הגורם המרכזי למחלות זיהומיות המועברות דרך מזון" },
-            { question: "המסלול הפקאלי אוראלי הוא דרך הדבקה נדירה מאוד בקרב מחלות ויראליות המועברות במזון", answer: false, explanation: "ההפך הוא הנכון זהו מסלול ההדבקה העיקרי של וירוסים במזון דרך מים ידיים ומזון מזוהמים" },
-            { question: "בישול מזון בטמפרטורות גבוהות אינו משפיע כלל על שרידותם של וירוסים במזון", answer: false, explanation: "וירוסים במזון רגישים לחום ולכן בישול יעיל נחשב לדרך טובה לנטרל אותם ולמנוע הדבקה" },
-            { question: "נגיף הקורונה הוכח מדעית כאחד הגורמים המרכזיים להרעלות מזון בשנים האחרונות", answer: false, explanation: "אין שום תיעוד או עדות מדעית להדבקה בנגיף הקורונה דרך מזון או אריזות מזון" },
-            { question: "תולעים טפילות המועברות במזון רגישות לקרינת על סגול ולטיפול בחום", answer: true, explanation: "רגישות זו הופכת את הבישול וטיפולי הקרינה ליעילים במניעת הדבקה בתולעים דרך מזון" },
-            { question: "זיהוי נוכחות של תולעים באדם יכול להתבצע באמצעות בדיקת נוגדנים ספציפיים בדם", answer: true, explanation: "בדיקות סרולוגיות לאיתור נוגדנים הן כלי מרכזי באבחון מחלות טפיליות הנגרמות על ידי תולעים" },
-            { question: "פרוטוזואה הם אורגניזמים פרוקריוטיים רב תאיים", answer: false, explanation: "פרוטוזואה הם מיקרואורגניזמים אאוקריוטיים והם חד תאיים ולא רב תאיים" },
-            { question: "אנטאמבה היסטוליטיקה היא סוג של חיידק הגורם לדיזנטריה", answer: false, explanation: "אנטאמבה היסטוליטיקה אינה חיידק אלא טפיל אאוקריוטי חד תאי השייך לקבוצת הפרוטוזואה" },
-            { question: "הטיפול בזיהומי פרוטוזואה מתבצע לרוב בעזרת אנטיביוטיקות ייחודיות המותאמות למבנה האאוקריוטי שלהם", answer: true, explanation: "מכיוון שהם אאוקריוטים נדרשות תרופות ספציפיות שלא יפגעו בתאי המאכסן האאוקריוטי גם כן" },
-            { question: "כל אדם שנדבק באנטאמבה היסטוליטיקה יפתח מיד תסמינים קשים של דיזנטריה ופגיעה בכבד", answer: false, explanation: "בדרך כלל הנשאות היא ללא סימפטומים ורק בכ ($10\\%$) מהמקרים מתפתחת מחלה קשה הפוגעת באיברים פנימיים" },
-            { question: "על פי שיטת השיום הבינומית השם הראשון המצוין הוא תמיד שם המין והשני הוא שם הסוג", answer: false, explanation: "בשיטת השיום הבינומית השם הראשון הוא תמיד שם הסוג והשם השני הוא שם המין" },
-            { question: "הפרד הוא דוגמה להיבריד סטרילי הממחיש את הגדרת המין בקרב בעלי חיים מורכבים", answer: true, explanation: "חוסר היכולת של הפרד להעמיד צאצאים מוכיח שהסוס והחמור שייכים למינים נפרדים" },
-            { question: "דרישות חמצן אינן מהוות קריטריון לסיווג חיידקים מכיוון שכל החיידקים זקוקים לחמצן כדי לשרוד", answer: false, explanation: "דרישות חמצן הן קריטריון טקסונומי חשוב המחלק את החיידקים לאירוביים הזקוקים לחמצן ואנאירוביים היכולים לחיות בלעדיו" },
-            { question: "אצות חד תאיות נחשבות למיקרואורגניזמים אאוקריוטיים העשויים להימצא במזון", answer: true, explanation: "אצות חד תאיות שייכות לקבוצת האאוקריוטים ומוגדרות כחלק מהמיקרוביולוגיה של המזון" },
-            { question: "מדריך ברגי הוא ספר עזר מרכזי המשמש לסיווג וטקסונומיה של וירוסים בלבד", answer: false, explanation: "מדריך ברגי מוקדש לטקסונומיה וסיווג שיטתי של חיידקים ולא של וירוסים" },
-            { question: "צורת מתג היא אחת מהצורות המורפולוגיות הבסיסיות המשמשות לסיווג חיידקים", answer: true, explanation: "חיידקים מתגיים המכונים בצילוס מהווים קבוצה מורפולוגית מרכזית בסיווג החיידקי" },
-            { question: "וירוסים מסוג הפטיטיס ואבולה נפוצים מאוד בהעברה יומיומית דרך מזון מהיר", answer: false, explanation: "למרות שהם וירוסים אלימים ומסוכנים הם נחשבים לפחות נפוצים בהעברה דרך מזון בהשוואה לנורו-וירוס ורוטה-וירוס" },
-            { question: "אחד המאפיינים הייחודיים של אנטאמבה היסטוליטיקה הוא היכולת שלה לבלוע תאי דם אדומים", answer: true, explanation: "זהו מאפיין פתולוגי חשוב של הטפיל המסייע לו לגרום לנזק רקמתי ולדיזנטריה" },
-            { question: "הרכב אוכלוסיית חיידקי המעי אינו משפיע כלל על שגשוגם של טפילי פרוטוזואה במערכת העיכול", answer: false, explanation: "מחקרים עדכניים מראים כי ישנו קשר ישיר בין המיקרוביום של המעי לבין רמת הנשאות והפגיעה של הטפיל" },
-            { question: "תולעים טפילות מסוג טריכינלה ניתן למצוא לרוב בבשר עוף שלא בושל כראוי", answer: false, explanation: "טריכינלה היא תולעת הנפוצה באופן ספציפי בבשר חזירים ולא בעופות" },
-            { question: "שיטות אימונולוגיות יכולות לשמש ככלי עזר בסיווג וטקסונומיה של חיידקים", answer: true, explanation: "אימונולוגיה היא אחד הכלים המשמשים לאפיון וחלוקה טקסונומית של חיידקים על בסיס תגובת נוגדנים למעטפת התא שלהם" },
-            { question: "הימצאות תולעים במזון מוגבלת אך ורק למדינות עולם שלישי ואינה קיימת במדינות מפותחות", answer: false, explanation: "תולעים יכולות להימצא במזון בכל העולם במיוחד במאכלי ים נאים כמו סושי הדורשים פיקוח וטרינרי קפדני" },
-            { question: "לכל הוירוסים המועברים במזון קיים כיום חיסון יעיל וזמין המונע הדבקה לחלוטין", answer: false, explanation: "רק לחלק מהוירוסים כמו הפטיטיס איי יש חיסון יעיל אך לוירוסים נפוצים רבים כמו נורו-וירוס אין עדיין חיסון זמין" },
-            { question: "זיהוי וירוסים במזון נחשב למשימה פשוטה ומהירה שאינה דורשת ציוד מעבדה מורכב", answer: false, explanation: "זיהוי וירוסים הוא תהליך קשה הדורש רגישות ניטור גבוהה ושימוש בשיטות מולקולריות מתקדמות" },
-            { question: "תולעים במעי האדם עלולות להשפיע על המערכת האימונית של המאכסן", answer: true, explanation: "נוכחות של טפילים גדולים כמו תולעים גורמת לתגובה אימונית מורכבת ולעיתים אף לוויסות של מערכת החיסון" },
-            { question: "היררכיה טקסונומית מתחילה ברמת המין שהיא הרחבה ביותר ומסתיימת ברמת הממלכה שהיא הספציפית ביותר", answer: false, explanation: "הסדר הוא הפוך הממלכה היא הרמה הרחבה והכוללנית ביותר בעוד שהמין הוא הרמה הספציפית והצרה ביותר" },
-            { question: "חיידקים גראם חיוביים וגראם שליליים נבדלים זה מזה במבנה דופן התא שלהם", answer: true, explanation: "צביעת גראם מבחינה בין חיידקים בעלי דופן פפטידוגליקן עבה לחיוביים לבין אלו בעלי דופן דקה לשליליים" }
+            { question: "הגדרת ״מין״ (Species) במיקרוביולוגיה מבוססת באופן בלעדי על היכולת של החיידקים להתרבות רבייה מינית זה עם זה.", answer: false, explanation: "לא נכון. במיקרוביולוגיה ההגדרה מתבססת על דמיון בתכונות ובגנום, ולא על יכולת רבייה מינית." },
+            { question: "שמו המדעי של אורגניזם נכתב תמיד מצירוף של המערכה (Phylum) והסוג (Genus).", answer: false, explanation: "לא נכון. השם נכתב מצירוף של הסוג (Genus) והמין (Species)." },
+            { question: "צביעת גרם היא אחת השיטות המרכזיות לסיווג חיידקים.", answer: true, explanation: "נכון. צביעת גרם מבחינה בין חיידקים בעלי דופן עבה (חיוביים) לדופן דקה (שליליים)." },
+            { question: "פריונים הם אורגניזמים פרוקריוטיים זעירים הגורמים למחלות במערכת העצבים.", answer: false, explanation: "לא נכון. פריונים אינם אורגניזמים חיים ואינם פרוקריוטים; הם חלבונים פגומים בלבד." },
+            { question: "וירוסים אחראים למעל מ-($70\\%$) מהאינפקציות המועברות במזון.", answer: true, explanation: "נכון. וירוסים הם גורם מרכזי מאוד לתחלואה ממזון." },
+            { question: "אפידמיות הנגרמות על ידי וירוסים במזון קלות מאוד לניטור ולשליטה.", answer: false, explanation: "לא נכון. וירוסים קשים לניטור (דורשים רגישות גבוהה) וקשה למנוע את התפשטותם בזמן מגפה." },
+            { question: "בישול המזון בטמפרטורות גבוהות הוא אמצעי יעיל כנגד וירוסים במזון.", answer: true, explanation: "נכון. רוב הווירוסים במזון רגישים לחום." },
+            { question: "נגיף הקורונה (COVID-19) הוכח כאחד הנגיפים הנפוצים ביותר המועברים דרך אריזות מזון.", answer: false, explanation: "לא נכון. אין תיעוד מדעי להדבקה ב-COVID-19 דרך מזון או אריזותיו." },
+            { question: "פטריות ואצות חד-תאיות נחשבות למיקרואורגניזמים אאוקריוטיים.", answer: true, explanation: "נכון. בניגוד לחיידקים שהם פרוקריוטים, פטריות ואצות הן בעלות גרעין תא מוגדר." },
+            { question: "הדבקה בתולעים מתרחשת לרוב עקב אכילת מאכלי ים או בשר שעברו בישול יתר.", answer: false, explanation: "לא נכון. ההדבקה נפוצה דווקא במאכלים לא מבושלים (נאים), כיוון שהתולעים רגישות לחום." },
+            { question: "הטפיל Entamoeba histolytica גורם לדיזנטריה ועלול לפגוע בכבד.", answer: true, explanation: "נכון. זהו טפיל פרוטוזואי שעלול לחדור לזרם הדם ולפגוע באיברים פנימיים." },
+            { question: "הטיפול בזיהום של פרוטוזואה זהה לחלוטין לטיפול בזיהום חיידקי פשוט.", answer: false, explanation: "לא נכון. מכיוון שפרוטוזואות הן אאוקריוטיות, נדרשות אנטיביוטיקות ייחודיות השונות מאלו הפוגעות בפרוקריוטים." },
+            { question: "כל מי שנושא את הטפיל Entamoeba histolytica יפתח מיידית תסמינים קשים של מחלה.", answer: false, explanation: "לא נכון. בדרך כלל הנשאות היא ללא סימפטומים, ורק ב-($10\\%$) מהמקרים ישנה פגיעה קשה." },
+            { question: "חיידקי מתגים (Bacilli) מאופיינים בצורה כדורית מושלמת.", answer: false, explanation: "לא נכון. מתגים הם בצורת מקלון. חיידקים כדוריים נקראים נקדים (Cocci)." },
+            { question: "העברה פקאלית-אוראלית מתרחשת לעיתים קרובות עקב צריכת מים או מזון מזוהמים.", answer: true, explanation: "נכון. זהו מסלול הדבקה קלאסי לוירוסים וטפילים רבים." },
+            { question: "תולעים טפילות במזון עמידות לחלוטין לקרינת UV.", answer: false, explanation: "לא נכון. תולעים רגישות לקרינת UV, וניתן להשתמש בה כאמצעי מניעה." },
+            { question: "המדריך המקיף לסיווג חיידקים נקרא Bergey's manual.", answer: true, explanation: "נכון. זהו המדריך הסיסטמטי המקובל בעולם המיקרוביולוגיה." },
+            { question: "זיהוי סרולוגי מסתמך על מציאת ה-DNA של החיידק ישירות במזון.", answer: false, explanation: "לא נכון. סרולוגיה מסתמכת על זיהוי נוגדנים שייצרה מערכת החיסון של המאכסן כנגד הפתוגן." },
+            { question: "מיקופלזמות (Mycoplasmas) הם חיידקים בעלי דופן תא עבה במיוחד.", answer: false, explanation: "לא נכון. מיקופלזמות הן קבוצת חיידקים החסרים דופן תא לחלוטין (Wall-less)." },
+            { question: "תולעי Trichinella נפוצות במיוחד בבשר חזירים.", answer: true, explanation: "נכון. זחלי התולעת מתבססים ברקמת השריר של החזיר." },
+            { question: "על פי הטקסונומיה, 'מערכה' (Phylum) היא קבוצה רחבה יותר מ'משפחה' (Family).", answer: true, explanation: "נכון. ההיררכיה היא: ממלכה > מערכה > מחלקה > סדרה > משפחה > סוג > מין." },
+            { question: "וירוסים יכולים להתרבות במהירות רבה על גבי משטחי פלסטיק במפעלי מזון.", answer: false, explanation: "לא נכון. וירוסים אינם יכולים להתרבות כלל מחוץ לתא מאכסן חי." },
+            { question: "למיקרוביום (אוכלוסיית חיידקי המעי) יש השפעה על נשאות של טפילי מעיים מסוימים.", answer: true, explanation: "נכון. מחקרים עדכניים מראים כי הרכב חיידקי המעי משפיע על שגשוג הטפיל Entamoeba." },
+            { question: "ארכאונים (Archaea) הם השם המדעי לפטריות רעילות המצויות במזון.", answer: false, explanation: "לא נכון. ארכאונים הם קבוצה נפרדת של יצורים חד-תאיים פרוקריוטיים (בעלי דופן תא ייחודית), שאינם פטריות." },
+            { question: "מבחן PCR יכול לשמש לזיהוי נוכחות של וירוסים במזון או בדגימות חולים.", answer: true, explanation: "נכון. PCR משכפל ומזהה רצפי חומצות גרעין, ומהווה כלי מרכזי לזיהוי וירוסים." },
+            { question: "המונח 'Spirilla' מתאר חיידקים המסוגלים לנשום ללא חמצן.", answer: false, explanation: "לא נכון. Spirilla מתאר צורה מורפולוגית של חיידק (סלילון), ולא את דרישות החמצן שלו." },
+            { question: "היבריד הנוצר מהכלאה בין שני מינים שונים של בעלי חיים (כמו פרד) הוא לרוב סטרילי (עקר).", answer: true, explanation: "נכון. זוהי אחת הדרכים להגדיר מינים נפרדים בעולם החי (מאקרו)." },
+            { question: "וירוס הפטיטיס A מועבר בעיקר דרך הדבקה אווירת (עיטוש) ולא דרך מזון.", answer: false, explanation: "לא נכון. הפטיטיס A מועבר לרוב במסלול פקאלי-אוראלי דרך מזון ומים מזוהמים." },
+            { question: "פרוטוזואה היא אורגניזם רב-תאי מורכב בעל מערכת עצבים פרימיטיבית.", answer: false, explanation: "לא נכון. פרוטוזואות הן אורגניזמים חד-תאיים (אאוקריוטיים)." },
+            { question: "פיקוח על הימצאות תולעים במזון בישראל מתבצע לרוב על ידי המעבדות הווטרינריות של משרד החקלאות.", answer: true, explanation: "נכון. המעבדות הווטרינריות מפקחות על תוצרת מן החי כדי למנוע העברת טפילים." }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -398,6 +914,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -408,10 +931,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([flashcardContent]);
-            }
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -430,10 +950,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                
-                if (window.MathJax) {
-                    MathJax.typesetPromise([flashcardContent]);
-                }
+                triggerMathJax();
             }, 300);
         }
 
@@ -456,10 +973,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions, mcqExplanation]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -475,24 +989,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -534,10 +1041,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -549,8 +1053,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -560,10 +1062,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion, tfExplanation]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -580,24 +1079,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             
-             if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-             }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -640,10 +1132,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             
-             if (window.MathJax) {
-                MathJax.typesetPromise([tfAllQuestionsContainer]);
-             }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -659,6 +1148,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

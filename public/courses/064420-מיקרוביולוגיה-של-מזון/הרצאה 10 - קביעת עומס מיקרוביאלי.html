@@ -1,213 +1,325 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <!-- MathJax Configuration -->
-    <script>
-        MathJax = {
-            tex: {
-                inlineMath: [['$', '$']]
-            }
-        };
-    </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>שיטות לקביעת עומס מיקרוביאלי</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>קביעת נוכחות, סוג ומספר של מיקרואורגניזמים במזון ובסביבות נוספות היא תהליך יסודי במיקרוביולוגיה. חשוב להבין כי לרוב לא מדובר בספירה מוחלטת ומדויקת של כל תא ותא, אלא ב<strong>אומדן</strong>. רוב הטעויות בתהליך זה נובעות מדיגום שאינו מייצג או אינו נכון. קיימות מספר גישות מרכזיות להערכת העומס המיקרוביאלי, שלכל אחת יתרונות וחסרונות בהתאם לסוג הדוגמה, סוג החיידק הנדרש והזמן העומד לרשות הבודק.</p>
+                
+                <h3>השיטות המרכזיות</h3>
+                <ul>
+                    <li><strong>זריעה וגידול בפלטות (SPC):</strong> מבוססת על מיהולים עשרוניים וזריעה על מצע מוצק. נספרות יחידות יוצרות מושבה (CFU), המייצגות אגרגטים של חיידקים חיים. השיטות הנפוצות הן Pour Plate (זריעה לעומק - רגישה אך עשויה לפגוע בחיידקים אירוביים או רגישי חום) ו-Spread Plate (זריעה על פני המצע - בטוחה יותר לחיידקים אך פחות רגישה). חלופה מודרנית היא פטריפילם (פילם יבש), החוסכת מקום וכוח אדם אך יקרה יותר.</li>
+                    <li><strong>פילטרציה ממברנאלית:</strong> סינון נוזלים דרך ממברנה בעלת חרירים בגודל 0.45 מיקרון. החיידקים נתקעים על הפילטר שמועבר לגידול. מעולה לסטריליזציה של נוזלים צלולים, אך אינה מתאימה לנוזלים סמיכים או עתירי חלקיקים.</li>
+                    <li><strong>MPN (Most Probable Number):</strong> הערכה סטטיסטית של חיידקים חיים המבוססת על זריעת מיהולים למספר מבחנות (לרוב 3, 5 או 10) המכילות מצע נוזלי. התוצאה נקבעת לפי טבלאות סטטיסטיות של מבחנות חיוביות. רגישה מאוד לריכוזים נמוכים, אך דורשת ציוד רב ואינה מספקת ספירה ישירה של מושבות.</li>
+                    <li><strong>שיטות פיזיקליות:</strong> כוללות הסתכלות מיקרוסקופית (סופרת חיים ומתים יחד, מהירה מאוד אך דורשת כוח אדם ומועדת לסטיות), מדידת עכירות (Turbidity) באמצעות ספקטרופוטומטר (מודדת מסה כללית של חיים ומתים), ומדידת התנגדות חשמלית (Impedance).</li>
+                    <li><strong>שיטות ביוכימיות:</strong> מתבססות על זיהוי תוצרי מטבוליזם, כגון ירידה בחמצן, עלייה בפחמן דו-חמצני, ייצור חומצה, פעילות קטלאז (פירוק מי חמצן), או נוכחות ATP באמצעות האנזים לוציפראז.</li>
+                    <li><strong>שיטות אימונולוגיות וגנטיות:</strong> שימוש ב-ELISA לזיהוי חלבונים או טוקסינים ספציפיים, ושימוש ב-PCR (כולל Real-Time PCR עם SYBR Green או TaqMan) לזיהוי וכימות מדויק ומהיר של רצפי DNA ספציפיים ללא צורך בהרצת ג'ל.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: פרדוקס ההתנגדות החשמלית (Impedance)</strong>
+                    אפשר היה לחשוב שנוכחות פיזית של תאי חיידקים תפריע לזרם החשמלי, אך בפועל קורה ההפך. ככל שיש יותר פעילות מטבולית של חיידקים, הם מפרקים מולקולות גדולות ומורכבות (שאינן מוליכות היטב) במצע המזון לתוצרי פירוק קטנים וטעונים חשמלית (יונים). כתוצאה מכך, המוליכות החשמלית של התמיסה עולה, וההתנגדות (Impedance) יורדת. זהו מדד מהיר (5-12 שעות) ויעיל לעומס מיקרוביאלי חי ופעיל.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: אשליית הדיוק של ספירת מושבות</strong>
+                    כאשר מבצעים ספירת פלטות (SPC), התוצאה אינה מייצגת את המספר המוחלט של תאי החיידקים הבודדים בדוגמה, אלא מבוטאת ב-CFU (Colony Forming Units). לעיתים קרובות, אגרגט (צביר) של מספר חיידקים צמודים ייצור מושבה אחת בלבד. לכן, ספירה מיקרוסקופית תמיד תניב תוצאה מספרית גבוהה משמעותית מספירת פלטות מאותה דוגמה בדיוק, לא רק בגלל ספירת תאים מתים, אלא גם בגלל פירוק האגרגטים.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -220,7 +332,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -240,11 +351,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -267,8 +376,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -276,501 +384,298 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "דיגום", definition: "השלב הקריטי ביותר בבדיקת מזון. רוב הטעויות בתוצאות נובעות מביצוע לא נכון של שלב זה." },
-            { term: "SPC (Standard Plate Count)", definition: "שיטה לספירת מיקרואורגניזמים חיים המבוססת על מיהולים עשרוניים וזריעה על מצע גידול." },
-            { term: "Pour plate", definition: "שיטת זריעה בעלת רגישות גבוהה, מועדפת לחיידקים מיקרואירופיליים, אך עלולה לפגוע בחיידקים רגישים לחום או אירוביים." },
-            { term: "Spread plate", definition: "שיטת זריעה המפיקה מושבות ברורות ואינה פוגעת בחיידקים רגישים לחום, אך בעלת רגישות נמוכה יותר." },
-            { term: "CFU (Colony Forming Unit)", definition: "היחידה לפיה נספרים החיידקים בשיטות הזריעה, מכיוון שאגרגט של חיידקים עשוי ליצור מושבה אחת." },
-            { term: "פטריפילם (Petrifilm)", definition: "פילמים יבשים המכילים מצע מזון וחומר מקריש מסיס במים. שיטה מהירה וחסכונית במקום, אך יקרה." },
-            { term: "פילטרציה ממברנאלית", definition: "שינון נוזלים דרך פילטר (לרוב בגודל פורות של $0.45$ מיקרון) הלוכד חיידקים. משמש גם לסטריליזציה של נוזלים." },
-            { term: "MPN (Most Probable Number)", definition: "שיטה סטטיסטית להערכת מספר חיידקים חיים על ידי זריעת מיהולים למספר מבחנות עם מצע נוזלי ובחינת נוכחות גידול." },
-            { term: "Methylene blue", definition: "צבען המשמש לעיתים בשיטות של הסתכלות מיקרוסקופית כדי להבחין בחיידקים." },
-            { term: "עכירות (Turbidity)", definition: "שיטה פיסיקלית למדידת עומס חיידקים (חיים ומתים) המבוססת על בליעת אור, נמדדת בספקטרופוטומטר." },
-            { term: "התנגדות חשמלית (Impedance)", definition: "שיטה המודדת את הירידה בהתנגדות החשמלית של המצע כתוצאה מתוצרי הפירוק של פעילות פרמנטטיבית של בקטריות." },
-            { term: "קטלאז", definition: "אנזים המפרק מי חמצן. מדידת פעילותו מהווה שיטה ביוכימית להערכת עומס מיקרוביאלי." },
-            { term: "לוציפראז", definition: "אנזים מחרקים המשמש לזיהוי נוכחות של מולקולות ATP באמצעות יצירת פלורסנציה." },
-            { term: "ELISA", definition: "שיטה אמונולוגית המשמשת בעיקר לזיהוי טוקסינים, אך גם לזיהוי חיידקים ספציפיים או ספורות." },
-            { term: "PCR", definition: "שיטה המבוססת על הגברת רצפי DNA לשם זיהוי חיידקים. לעיתים משולבת עם שיטת MPN." },
-            { term: "Real Time PCR", definition: "שיטת DNA מתקדמת המאפשרת זיהוי וכימות בזמן אמת ללא צורך באנליזה של גל אגרוז." },
-            { term: "SYBR Green", definition: "צבען הנקשר ל-DNA דו-גדילי ומשמש ליצירת אות פלורסנטי בשיטת Real Time PCR." },
-            { term: "TaqMan", definition: "סוג של פרובה פלורסנטית המשמשת לזיהוי ספציפי בתהליך של Real Time PCR." },
-            { term: "הומוגניזציה", definition: "תהליך ריסוק וערבול המזון (לרוב בעזרת סטומכר) כשלב מקדים לפני ביצוע מיהולים וזריעה." }
+            { term: "SPC (Standard Plate Count)", definition: "שיטה לספירת מיקרואורגניזמים חיים המבוססת על מיהולים עשרוניים וזריעה על פלטות אגר." },
+            { term: "CFU (Colony Forming Unit)", definition: "יחידה יוצרת מושבה. מדד המייצג תא בודד או אגרגט של חיידקים חיים שהתרבו ויצרו מושבה נראית לעין." },
+            { term: "Pour Plate", definition: "שיטת זריעה לעומק המצע. בעלת רגישות גבוהה ועדיפה למיקרואירופילים, אך עלולה לפגוע בחיידקים רגישי חום או אירוביים אובליגטוריים." },
+            { term: "Spread Plate", definition: "שיטת זריעה על פני המצע. יוצרת מושבות ברורות ואינה פוגעת בחיידקים באמצעות חום, אך בעלת רגישות נמוכה יותר." },
+            { term: "פטריפילם (Petrifilm)", definition: "פילם יבש המכיל מצע מזון וחומר מקריש מסיס במים. חוסך מקום וכוח אדם, אך עלותו גבוהה יחסית." },
+            { term: "פילטרציה ממברנאלית", definition: "סינון נוזלים דרך ממברנה בעלת פורות של 0.45 מיקרון. אידיאלית לסטריליזציה של נוזלים צלולים." },
+            { term: "MPN (Most Probable Number)", definition: "שיטה סטטיסטית להערכת מספר חיידקים חיים, המבוססת על זריעת מיהולים למבחנות עם מצע נוזלי ובדיקת נוכחות/היעדר גידול." },
+            { term: "ספירה מיקרוסקופית", definition: "שיטה פיזיקלית לספירה ישירה של תאים. מהירה מאוד, אך חסרונה המרכזי הוא שהיא סופרת חיידקים חיים ומתים יחד." },
+            { term: "Methylene Blue", definition: "צבע המשמש לעיתים בצביעה מתאימה לפני הסתכלות מיקרוסקופית כדי לסייע בזיהוי וספירת התאים." },
+            { term: "עכירות (Turbidity)", definition: "שיטה פיזיקלית המודדת את כמות בליעת האור בתמיסה כאינדיקציה לעומס החיידקי (חיים ומתים). נמדדת לרוב בספקטרופוטומטר." },
+            { term: "Impedance (התנגדות חשמלית)", definition: "שיטה המודדת את הירידה בהתנגדות החשמלית של המצע, הנובעת מפירוק מולקולות ליונים טעונים על ידי מטבוליזם חיידקי פעיל." },
+            { term: "לוציפראז (Luciferase)", definition: "אנזים מחרקים המשמש בשיטות ביוכימיות לזיהוי נוכחות ATP, המהווה אינדיקציה לפעילות של תאים חיים." },
+            { term: "ELISA", definition: "שיטה אימונולוגית המבוססת על זיהוי ספציפי של אנטיגנים (כמו טוקסינים או ספורות) באמצעות נוגדנים קשורים לאנזים." },
+            { term: "Real-Time PCR", definition: "שיטה גנטית להגברה וכימות של רצפי DNA בזמן אמת, המייתרת את הצורך באנליזה על גבי ג'ל אגרוז." },
+            { term: "SYBR Green", definition: "צבע פלואורסצנטי הנקשר באופן ספציפי ל-DNA דו-גדילי (dsDNA), ומשמש כמדד לכמות התוצר ב-Real-Time PCR." },
+            { term: "קטלאז", definition: "אנזים המפרק מי חמצן. נוכחותו מהווה מדד ביוכימי לפעילות מטבולית של סוגי חיידקים מסוימים." }
         ];
 
         const mcqData = [
-            {
-                question: "חוקר מעוניין לבדוק עומס מיקרוביאלי בדגימת מזון, אך ידוע כי החיידק העיקרי בדגימה רגיש מאוד לחום. איזו משיטות הזריעה הבאות היא הפחות מומלצת לשימוש במקרה זה?",
-                options: [
-                    "Spread plate",
-                    "Pour plate",
-                    "שימוש בפטריפילם",
-                    "פילטרציה ממברנאלית"
-                ],
-                correctIndex: 1,
-                explanation: "בשיטת Pour plate החיידקים מעורבבים עם אגר מותך שחלקו עדיין חם, מה שעלול להרוג חיידקים רגישים לחום. שאר השיטות אינן מערבות חום ישיר בשלב הזריעה."
+            { 
+                question: "מעבדה מקבלת דוגמת חלב גולמי לבדיקת עומס מיקרוביאלי. ידוע כי החלב מכיל חלקיקי שומן וחלבון רבים וסמיכים. איזו מהשיטות הבאות תהיה הפחות מתאימה לשימוש במקרה זה?", 
+                options: ["זריעה בשיטת Spread Plate", "הערכה סטטיסטית בשיטת MPN", "פילטרציה ממברנאלית", "מדידת התנגדות חשמלית (Impedance)"], 
+                correctIndex: 2, 
+                explanation: "פילטרציה ממברנאלית אינה מתאימה למדיומים סמיכים או בעלי חלקיקים רבים, מכיוון שהחלקיקים יסתמו במהירות את הפילטר (בעל פורות של 0.45 מיקרון) ולא יאפשרו מעבר של הנוזל." 
             },
-            {
-                question: "מהי הסיבה העיקרית לכך שתוצאות ספירת חיידקים בשיטת SPC מבוטאות ביחידות של CFU ולא כמספר תאים מוחלט?",
-                options: [
-                    "המצע אינו מסוגל להצמיח את כל סוגי החיידקים",
-                    "חלק מהחיידקים מתים במהלך ההומוגניזציה",
-                    "מושבה בודדת עשויה להתפתח מצביר (אגרגט) של מספר חיידקים צמודים",
-                    "העין האנושית אינה מסוגלת להבחין במושבות קטנות מאוד"
-                ],
-                correctIndex: 2,
-                explanation: "מכיוון שחיידקים נוטים להיצמד זה לזה, מושבה שגדלה על הפלטה יכולה לנבוע מחיידק בודד או מקבוצת חיידקים. לכן סופרים יחידות יוצרות מושבה (CFU) ולא תאים בודדים."
+            { 
+                question: "חוקר מעוניין לבודד חיידק שהוא אירובי אובליגטורי (חייב חמצן) ורגיש מאוד לטמפרטורות גבוהות. באיזו שיטת זריעה עליו לבחור כדי לקבל את התוצאות המדויקות ביותר של חיידקים חיים?", 
+                options: ["Pour Plate", "Spread Plate", "ספירה מיקרוסקופית ישירה", "מדידת עכירות (Turbidity)"], 
+                correctIndex: 1, 
+                explanation: "בשיטת Spread Plate הזריעה נעשית על פני המצע (חשיפה טובה לחמצן) ואין שימוש באגר מותך וחם שעלול לפגוע בחיידקים רגישי חום. ספירה מיקרוסקופית ועכירות אינן מבדילות בין חיים למתים." 
             },
-            {
-                question: "מעבדה בודקת דגימות מים צלולים ודגימות של רסק פירות סמיך. מדוע שיטת הפילטרציה הממברנאלית תתאים למים אך תיכשל ככל הנראה ברסק הפירות?",
-                options: [
-                    "רסק הפירות מכיל חומציות גבוהה ההורסת את הממברנה",
-                    "החלקיקים ברסק הפירות יסתמו את הפורות של הפילטר וימנעו סינון",
-                    "חיידקים ברסק פירות קטנים יותר מ-$0.45$ מיקרון",
-                    "הפילטר אינו מסוגל לספוג נוזלים המכילים סוכר"
-                ],
-                correctIndex: 1,
-                explanation: "החיסרון המרכזי של פילטרציה ממברנאלית הוא חוסר התאמה למדיומים סמיכים או בעלי חלקיקים רבים, אשר סותמים את הפילטר במהירות."
+            { 
+                question: "מהי הסיבה העיקרית לכך שתוצאת ספירת חיידקים במיקרוסקופ תהיה לרוב גבוהה משמעותית מתוצאת ספירה בשיטת SPC (Standard Plate Count) מאותה דוגמה בדיוק?", 
+                options: ["במיקרוסקופ נספרים אגרגטים כיחידה אחת, בעוד שב-SPC כל תא יוצר מושבה נפרדת.", "SPC סופרת רק חיידקים חיים ואגרגטים נספרים כ-CFU בודד, בעוד שמיקרוסקופ סופר כל תא פיזי (חי ומת).", "מצעי הגידול ב-SPC מעודדים התרבות מהירה יותר של החיידקים מאשר על זכוכית הנושא.", "במיקרוסקופ משתמשים בצבע Methylene Blue המכפיל את הנפח הנראה של התאים."], 
+                correctIndex: 1, 
+                explanation: "הפער נובע משתי סיבות מרכזיות: המיקרוסקופ סופר תאים מתים (שלא יגדלו ב-SPC), ובנוסף, ב-SPC אגרגט של מספר תאים יוצר מושבה אחת (CFU), בעוד שבמיקרוסקופ כל תא באגרגט עשוי להיספר בנפרד." 
             },
-            {
-                question: "באיזו מהשיטות הבאות התוצאה הסופית מתקבלת מתוך טבלאות סטטיסטיות ולא מספירה ישירה של מושבות או תאים?",
-                options: [
-                    "Standard Plate Count",
-                    "Most Probable Number",
-                    "הסתכלות מיקרוסקופית",
-                    "Real Time PCR"
-                ],
-                correctIndex: 1,
-                explanation: "שיטת MPN מבוססת על מיהולים למספר מבחנות וקביעה סטטיסטית של ההסתברות למספר החיידקים בהתאם למספר המבחנות שהראו גידול חיובי."
+            { 
+                question: "בשיטת Impedance (התנגדות חשמלית), מהו המנגנון הביוכימי/פיזיקלי המאפשר את הערכת העומס המיקרוביאלי?", 
+                options: ["הצטברות של מסת תאי חיידקים חוסמת את מעבר האלקטרונים ומעלה את ההתנגדות.", "חיידקים מפרישים יוני מתכת כבדה למצע המגבירים את ההתנגדות החשמלית.", "פעילות פרמנטטיבית מפרקת מולקולות גדולות לתוצרי פירוק קטנים וטעונים, מה שמעלה את המוליכות ומוריד את ההתנגדות.", "החיידקים צורכים את כל היונים החופשיים במצע לשם בניית הדופן שלהם, ובכך מורידים את המוליכות."], 
+                correctIndex: 2, 
+                explanation: "ככל שיש יותר פעילות מטבולית (פרמנטציה), החיידקים מפרקים נוטריינטים מורכבים למולקולות קטנות ויונים. עלייה בריכוז היונים מעלה את מוליכות התמיסה (זרם חשמלי עובר בקלות רבה יותר), ולכן ההתנגדות (Impedance) יורדת." 
             },
-            {
-                question: "חברה לייצור מזון מעוניינת לעבור משיטת זריעה מסורתית בפלטות אגר לשימוש בפטריפילם. איזה מהשיקולים הבאים יהווה חיסרון במעבר זה?",
-                options: [
-                    "זמן העבודה של הלבורנטים יגדל משמעותית",
-                    "יידרש שטח אחסון גדול בהרבה במקררי המעבדה",
-                    "העלות הכספית של כל בדיקה צפויה לעלות",
-                    "השיטה אינה מוכרת כסטנדרטית בתעשייה"
-                ],
-                correctIndex: 2,
-                explanation: "פטריפילם חוסך כוח אדם ומקום אחסון והוא מתואם לסטנדרטים, אך החיסרון המרכזי שלו הוא העלות הגבוהה יחסית של הפילמים עצמם."
+            { 
+                question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל המרכזי בין שיטת MPN לשיטת SPC?", 
+                options: ["MPN מספקת ספירה מדויקת של תאים בודדים, בעוד ש-SPC מספקת אומדן סטטיסטי.", "MPN מבוססת על מצעים מוצקים בלבד, בעוד ש-SPC מבוססת על מצעים נוזליים.", "MPN היא הערכה סטטיסטית המבוססת על נוכחות/היעדר גידול במבחנות נוזליות, בעוד ש-SPC מבוססת על ספירת מושבות פיזיות על מצע מוצק.", "ב-MPN ניתן להבחין בין חיידקים חיים למתים, בעוד שב-SPC סופרים את כולם יחד."], 
+                correctIndex: 2, 
+                explanation: "שיטת MPN (Most Probable Number) משתמשת במיהולים במבחנות של מצע נוזלי ומסתמכת על טבלאות סטטיסטיות של מבחנות שבהן הופיע גידול, בעוד ש-SPC סופרת מושבות ממשיות (CFU) על צלחות פטרי." 
             },
-            {
-                question: "כאשר משתמשים בשיטת התנגדות חשמלית (Impedance) להערכת עומס מיקרוביאלי, מה גורם לשינוי במוליכות של התמיסה?",
-                options: [
-                    "המטען החשמלי הסטטי על דופן התא של החיידקים",
-                    "שחרור של אנזימי קטלאז לסביבה",
-                    "תוצרי הפירוק הנוצרים מפעילות הפרמנטציה של החיידקים",
-                    "בליעת האור על ידי מולקולות ה-DNA של החיידקים"
-                ],
-                correctIndex: 2,
-                explanation: "ככל שיש יותר פעילות פרמנטציה, נוצרים תוצרי פירוק המעלים את המוליכות של התמיסה, וכך יכולת המדיום לעכב זרם חשמלי יורדת."
+            { 
+                question: "בבדיקת Real-Time PCR באמצעות SYBR Green, מהו מקור האות הפלואורסצנטי הנמדד במכשיר?", 
+                options: ["פירוק של גלאי TaqMan על ידי אנזים הפולימראז.", "קשירה ספציפית של הצבע למולקולות DNA חד-גדיליות (ssDNA).", "קשירה של הצבע למולקולות DNA דו-גדיליות (dsDNA) שנוצרות במהלך ההגברה.", "ריאקציה כימית בין הצבע לבין אנזים הלוציפראז המשתחרר מהחיידקים."], 
+                correctIndex: 2, 
+                explanation: "SYBR Green הוא צבע הנקשר ספציפית ל-DNA דו-גדילי (dsDNA). ככל שתהליך ה-PCR מתקדם ונוצרים יותר עותקים של מקטעי ה-DNA (Amplicons), כך יש יותר קישור של הצבע ועוצמת הפלואורסצנציה עולה." 
             },
-            {
-                question: "איזו משפחת שיטות היא המתאימה ביותר כאשר המטרה היא לזהות נוכחות של רעלן (טוקסין) שהופרש למזון, גם אם החיידק עצמו כבר אינו חי?",
-                options: [
-                    "שיטות פיסיקליות",
-                    "שיטות אמונולוגיות",
-                    "שיטות מבוססות רצפי DNA",
-                    "שיטות זריעה וגידול"
-                ],
-                correctIndex: 1,
-                explanation: "שיטות אמונולוגיות, כגון ELISA, מבוססות על זיהוי ספציפי באמצעות נוגדנים ונמצאות בשימוש נרחב לזיהוי טוקסינים במזון."
+            { 
+                question: "במפעל מזון התגלתה חריגה משמעותית בעומס המיקרוביאלי במוצר הסופי, למרות שכל בדיקות המעבדה בוצעו במדויק. מהו, על פי רוב, המקור המרכזי לטעויות בתהליך קביעת מספר החיידקים?", 
+                options: ["כיול שגוי של הספקטרופוטומטר.", "שימוש בפיפטות לא סטריליות בשלב המיהולים.", "אופן דיגום לא נכון או שאינו מייצג את מקורות השונות במוצר.", "טעות בקריאת הטבלאות הסטטיסטיות בשיטת MPN."], 
+                correctIndex: 2, 
+                explanation: "העיקרון המרכזי בדיגום הוא שרוב רובן של הטעויות נובעות מדיגום לא נכון. אם הדוגמה שנלקחה אינה מייצגת את הפיזור האמיתי של החיידקים באצווה כולה, כל בדיקת המעבדה המדויקת ביותר תניב תוצאה שגויה לגבי המוצר." 
             },
-            {
-                question: "חוקר ביצע ספירה של דגימת מים בשתי שיטות במקביל: זריעה על פלטות (SPC) והסתכלות מיקרוסקופית ישירה. סביר להניח ש:",
-                options: [
-                    "התוצאה ב-SPC תהיה גבוהה יותר מכיוון שהיא מדויקת יותר",
-                    "התוצאה במיקרוסקופ תהיה גבוהה יותר מכיוון שהיא כוללת גם חיידקים מתים",
-                    "שתי התוצאות יהיו זהות לחלוטין אם המיהול בוצע כהלכה",
-                    "התוצאה במיקרוסקופ תהיה נמוכה יותר בשל חוסר יכולת להבחין בתאים קטנים"
-                ],
-                correctIndex: 1,
-                explanation: "הסתכלות מיקרוסקופית ישירה סופרת את כלל המסה התאית (חיים ומתים), בעוד ששיטת SPC סופרת אך ורק חיידקים חיים המסוגלים ליצור מושבה."
+            { 
+                question: "איזו מהשיטות הבאות משלבת זיהוי ביוכימי של מולקולת אנרגיה תאית כאינדיקציה לנוכחות חיידקים חיים?", 
+                options: ["שימוש באנזים קטלאז לפירוק מי חמצן.", "מדידת שחרור פחמן דו-חמצני ($CO_2$).", "שימוש באנזים לוציפראז מחרקים לזיהוי נוכחות ATP.", "מדידת עכירות באמצעות טורבידימטר."], 
+                correctIndex: 2, 
+                explanation: "לוציפראז הוא אנזים המפיק אור בנוכחות מולקולת האנרגיה ATP. מכיוון ש-ATP קיים ונוצר רק בתאים חיים ופעילים, פלורסנציה/לומניסנציה זו משמשת כמדד ביוכימי מהיר לנוכחות מיקרואורגניזמים חיים." 
             },
-            {
-                question: "מהו היתרון המרכזי של שיטת Real Time PCR על פני PCR רגיל בהקשר של בדיקות מזון?",
-                options: [
-                    "היא אינה דורשת שימוש באנזימים",
-                    "היא מאפשרת זיהוי וכימות בזמן אמת ללא צורך בהרצת גל אגרוז",
-                    "היא השיטה היחידה שמסוגלת להבחין בין חיידקים חיים למתים",
-                    "היא מבוססת על פירוק מי חמצן במקום על שכפול גנטי"
-                ],
-                correctIndex: 1,
-                explanation: "שיטת Real Time PCR מספקת זיהוי מקוון (Online detection) וחוסכת את השלב האיטי של ניתוח התוצאות על גל אגרוז בסיום התהליך."
+            { 
+                question: "מעבדה בודקת דוגמת מים שקופה לחלוטין שאמורה להיות סטרילית. נדרשת רגישות מקסימלית לזיהוי אפילו תא בודד בנפח גדול של נוזל. איזו שיטה תספק את המענה הטוב ביותר?", 
+                options: ["זריעה של 0.1 מ״ל בשיטת Spread Plate.", "פילטרציה ממברנאלית של נפח המים והנחת הפילטר על מצע גידול.", "הסתכלות מיקרוסקופית על טיפה מהדוגמה.", "בדיקת עכירות בספקטרופוטומטר."], 
+                correctIndex: 1, 
+                explanation: "פילטרציה ממברנאלית מאפשרת להעביר נפח גדול מאוד של נוזל צלול דרך הפילטר (0.45 מיקרון). כל החיידקים בנפח הגדול יתרכזו על הפילטר הקטן, שמונח לאחר מכן על מצע גידול. זוהי השיטה האידיאלית לסטריליזציה ובדיקת נוזלים דלילים בחיידקים." 
             },
-            {
-                question: "בשיטת המיהולים העשרוניים לקראת זריעה (SPC), מהי המטרה העיקרית של ביצוע המיהולים?",
-                options: [
-                    "להרוג חיידקים פתוגניים לפני הזריעה",
-                    "לספק לחיידקים חומרי הזנה נוספים",
-                    "להגיע לריכוז חיידקים שיאפשר ספירה של מושבות בודדות וברורות על הפלטה",
-                    "לשנות את רמת החומציות של הדגימה כך שתתאים לאגר"
-                ],
-                correctIndex: 2,
-                explanation: "ללא מיהול, דגימה עמוסה בחיידקים תיצור מרבד צפוף על הפלטה שלא ניתן לספור. המיהולים מאפשרים להגיע לפלטה שבה ניתן לספור מושבות בודדות במדויק."
+            { 
+                question: "מהו החיסרון המרכזי של שיטת ה-Pour Plate לעומת שיטות זריעה אחרות?", 
+                options: ["היא סופרת גם חיידקים מתים.", "היא אינה מתאימה לחיידקים מיקרואירופילים.", "ישנה סכנה לפגיעה בחיידקים רגישים לחום עקב השימוש באגר מותך.", "היא דורשת ציוד יקר מאוד כמו פילמים יבשים (פטריפילם)."], 
+                correctIndex: 2, 
+                explanation: "בשיטת Pour Plate מערבבים את הדוגמה עם אגר מותך (שלרוב נמצא בטמפרטורה של כ-45-50 מעלות צלזיוס כדי להישאר נוזלי). חום זה עלול להרוג או לפגוע בחיידקים רגישים לחום, מה שיוביל לתת-הערכה של העומס המיקרוביאלי." 
             },
-            {
-                question: "בשיטה ביוכימית מסוימת, משתמשים באנזים המופק מחרקים כדי לזהות נוכחות של חיידקים פעילים. מהי המולקולה שהאנזים מזהה וכיצד מתבטא הזיהוי?",
-                options: [
-                    "מזהה מולקולות DNA ויוצר צבע כחול",
-                    "מזהה מולקולות ATP ויוצר פלורסנציה",
-                    "מזהה פחמן דו חמצני ומשנה את רמת החומציות",
-                    "מזהה מי חמצן ומשחרר בועות חמצן"
-                ],
-                correctIndex: 1,
-                explanation: "האנזים לוציפראז המופק מחרקים מזהה מולקולות ATP (המעידות על תאים חיים) ומייצר אור (פלורסנציה) בתגובה."
+            { 
+                question: "מדוע שיטת ה-MPN נחשבת לשיטה בעלת 'חוסר דיוק יחסי' לעומת ספירת פלטות (SPC)?", 
+                options: ["מפני שהיא סופרת רק את החיידקים המתים בדוגמה.", "משום שהיא מספקת הערכה סטטיסטית המבוססת על מבחנות 'יש/אין גידול' ולא ספירה ישירה של מושבות.", "מפני שהיא מחייבת שימוש במיקרוסקופ אלקטרוני שאינו זמין בכל מעבדה.", "מכיוון שהיא מזהה רק חיידקים אנאירוביים אובליגטוריים."], 
+                correctIndex: 1, 
+                explanation: "MPN לא סופרת חיידקים פיזית. היא בודקת באילו מיהולים יש מספיק חיידקים כדי לגרום לעכירות/שינוי במבחנה (יש גידול) ובאילו אין. התוצאה נגזרת ממודל סטטיסטי (המספר המסתבר ביותר), ולכן מדובר בהערכה בעלת טווח שגיאה רחב יותר מספירה ישירה של CFU." 
             },
-            {
-                question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין שימוש ב-SYBR Green לבין שימוש ב-TaqMan בשיטות DNA?",
-                options: [
-                    "SYBR Green משמש ב-PCR רגיל ו-TaqMan ב-Real Time PCR",
-                    "SYBR Green צובע חיידקים מתים ו-TaqMan צובע חיידקים חיים",
-                    "SYBR Green נקשר לכל DNA דו-גדילי, בעוד ש-TaqMan היא פרובה ספציפית",
-                    "SYBR Green מודד עכירות ו-TaqMan מודד התנגדות חשמלית"
-                ],
-                correctIndex: 2,
-                explanation: "SYBR Green הוא צבען כללי הנקשר לכל DNA דו-גדילי (Double-Stranded DNA Binding Dye), ואילו TaqMan הן פרובות פלורסנטיות ספציפיות המזהות רצף מטרה מסוים."
+            { 
+                question: "איזו מהשיטות הבאות תהיה היעילה ביותר לזיהוי נוכחות של טוקסינים ספציפיים שהופרשו על ידי חיידקים למזון, גם אם החיידקים עצמם כבר מתו?", 
+                options: ["Real-Time PCR", "ELISA", "מדידת עכבה חשמלית (Impedance)", "שיטת פטריפילם (Petrifilm)"], 
+                correctIndex: 1, 
+                explanation: "שיטת ELISA (Enzyme-Linked Immunosorbent Assay) מבוססת על נוגדנים הנקשרים באופן ספציפי לאנטיגנים, כגון טוקסינים חלבוניים. היא יכולה לזהות את הטוקסין במזון גם אם התא החיידקי שיצר אותו אינו נוכח או אינו חי עוד. PCR מזהה DNA, לא טוקסינים חלבוניים." 
             },
-            {
-                question: "בבדיקת עכירות (Turbidity) של תרבית חיידקים באמצעות ספקטרופוטומטר, מהי ההנחה המרכזית העומדת בבסיס השיטה?",
-                options: [
-                    "ככל שיש יותר חיידקים, פחות אור יצליח לעבור דרך הדגימה אל הגלאי",
-                    "החיידקים פולטים אור פלורסנטי הנקלט על ידי המכשיר",
-                    "רק חיידקים חיים מסוגלים לבלוע את קרן האור",
-                    "האור גורם לחיידקים לשחרר פחמן דו חמצני שנמדד במכשיר"
-                ],
-                correctIndex: 0,
-                explanation: "המיקרואורגניזמים יוצרים עכירות בנוזל. ככל שהעומס המיקרוביאלי גבוה יותר, התמיסה עכורה יותר ויותר אור נבלע או מפוזר, כך שפחות אור מגיע לגלאי."
+            { 
+                question: "חוקר משתמש בשיטת ה-Petrifilm. איזה נפח של דוגמה נוזלית נהוג לזרוע בדרך כלל בין שכבות הפילם בשיטה זו?", 
+                options: ["0.1 מ״ל", "1 מ״ל", "10 מ״ל", "100 מ״ל"], 
+                correctIndex: 1, 
+                explanation: "על פי הסטנדרט בשימוש בפטריפילם (כפי שמופיע בחומר המקור), דוגמה של 1 מ״ל נזרעת בין השכבות של הפילם היבש, המכיל חומר מקריש מסיס במים." 
             },
-            {
-                question: "חוקר מעוניין לבדוק נוכחות של חיידקים אירוביים אובליגטוריים (חייבים חמצן) בדגימה. מדוע שיטת Spread plate תהיה עדיפה עבורו על פני Pour plate?",
-                options: [
-                    "בשיטת Spread plate החיידקים נמצאים על פני השטח וחשופים לאוויר",
-                    "שיטת Spread plate מספקת הגנה מפני התייבשות מהירה",
-                    "בשיטת Pour plate האגר מכיל חומרים רעילים לחיידקים אירוביים",
-                    "אין הבדל, שתי השיטות מתאימות באותה מידה לחיידקים אירוביים"
-                ],
-                correctIndex: 0,
-                explanation: "בשיטת Pour plate חלק מהחיידקים נלכדים בעומק האגר שם יש פחות חמצן, מה שפוגע בגידול של חיידקים אירוביים. ב-Spread plate כולם נזרעים על פני השטח."
+            { 
+                question: "מהו היתרון הברור של שימוש ב-Real-Time PCR לעומת PCR קונבנציונלי לבדיקת עומס מיקרוביאלי?", 
+                options: ["Real-Time PCR אינו דורש פריימרים ספציפיים.", "Real-Time PCR מאפשר גילוי וכימות אונליין במהלך ההגברה, ללא צורך באנליזה מאוחרת על ג'ל אגרוז.", "Real-Time PCR יכול להבדיל בין חיידקים שונים ללא שימוש ב-DNA.", "Real-Time PCR מתבצע בטמפרטורת החדר ואינו דורש שינויי טמפרטורה (Thermal cycling)."], 
+                correctIndex: 1, 
+                explanation: "היתרון המרכזי של Real-Time PCR הוא היכולת לנטר את יצירת התוצרים (Amplicons) בזמן אמת באמצעות סמנים פלואורסצנטיים (כמו TaqMan או SYBR Green), מה שחוסך את השלב האיטי והמסורבל של הרצת התוצרים על ג'ל אגרוז בסוף התהליך." 
             },
-            {
-                question: "איזו מהפעולות הבאות מהווה דוגמה למדידת פעילות מטבולית כשיטה ביוכימית להערכת מספר חיידקים?",
-                options: [
-                    "שקילת מסת התאים לאחר סרכוז",
-                    "מדידת הירידה באחוז החמצן בסביבת הגידול",
-                    "צביעת התאים ב-Methylene blue",
-                    "העברת הדגימה דרך פילטר בעל פורות זעירות"
-                ],
-                correctIndex: 1,
-                explanation: "הורדת אחוז חמצן, שחרור פחמן דו חמצני ויצור חומצה הם כולם סמנים לפעילות מטבולית של חיידקים המשמשים בשיטות ביוכימיות."
+            { 
+                question: "בשיטת הספירה המיקרוסקופית באמצעות זכוכית נושא משונתת, כיצד מחושב הנפח שלתוכו מתייחסים בספירה?", 
+                options: ["הנפח נקבע על ידי משקל הדוגמה לפני הנחתה על הזכוכית.", "הנפח מחושב על ידי הכפלת העומק (המרחק בין זכוכית הנושא לזכוכית המכסה) בשטח המשבצות הידוע מראש.", "הנפח מוערך על ידי מידת העכירות של הטיפה תחת אור המיקרוסקופ.", "הנפח הוא תמיד סטנדרטי וקבוע ל-1 מ״ל בדיוק בכל סוגי זכוכיות הנושא."], 
+                correctIndex: 1, 
+                explanation: "הנפח שמעל משבצת הספירה מחושב גיאומטרית: השטח הידוע של המשבצת (Area) כפול העומק הידוע (Depth) שנוצר על ידי זכוכית המכסה (Coverslip). כך ניתן לתרגם את מספר החיידקים שנספרו במשבצת לריכוז ליחידת נפח (למשל, למ״ל)." 
             },
-            {
-                question: "מהי הסיבה המרכזית לכך ששיטת MPN מועדפת לעיתים קרובות בבדיקות מים?",
-                options: [
-                    "היא השיטה המהירה ביותר ומספקת תוצאות תוך דקות",
-                    "היא אינה דורשת ציוד מעבדה סטרילי כלל",
-                    "היא מותאמת לספירת חיידקים בריכוזים נמוכים מאוד",
-                    "היא מזהה אך ורק חיידקים פתוגניים מסוכנים"
-                ],
-                correctIndex: 2,
-                explanation: "MPN היא שיטה רגישה מאוד המבוססת על מיהולים במצע נוזלי, ולכן היא מתאימה מאוד לדגימות שבהן ריכוז החיידקים נמוך, כמו במי שתייה."
+            { 
+                question: "איזו סדרה של מבחנות חיוביות אופיינית לקביעת ערך בשיטת MPN?", 
+                options: ["10, 20, 30 מבחנות", "3, 5 או 10 מבחנות לכל מיהול", "מבחנה אחת לכל מיהול עשרוני", "מבחנות המסודרות לפי צבעי הקשת"], 
+                correctIndex: 1, 
+                explanation: "שיטת MPN דורשת מערך סטטיסטי, ולרוב משתמשים בסטים של 3, 5 או 10 מבחנות עבור כל רמת מיהול עשרוני. צירוף המבחנות החיוביות (למשל 5-3-1 בסט של 5) מושווה לטבלה סטטיסטית לקבלת ההערכה." 
             },
-            {
-                question: "לפי חומר הלימוד, מהו מקור הטעות הנפוץ והמשמעותי ביותר בתהליך קביעת העומס המיקרוביאלי?",
-                options: [
-                    "כיול שגוי של הספקטרופוטומטר",
-                    "שימוש באגר פג תוקף",
-                    "טעויות הנובעות מדיגום לא נכון של המזון",
-                    "זיהום צולב במהלך קריאת התוצאות"
-                ],
-                correctIndex: 2,
-                explanation: "מצוין במפורש כי רוב רובן של הטעויות נובעות מדיגום לא נכון, ולכן לאופן הדיגום יש תפקיד מרכזי."
+            { 
+                question: "איזו מהשיטות הבאות מוגדרת כשיטה 'פיזיקלית' לקביעת מספר חיידקים?", 
+                options: ["מדידת שחרור פחמן דו-חמצני", "ספירת פלטות סטנדרטית (SPC)", "מדידת עכירות (Turbidity) בספקטרופוטומטר", "זיהוי באמצעות ELISA"], 
+                correctIndex: 2, 
+                explanation: "מדידת עכירות מבוססת על תכונה פיזיקלית - מידת בליעת/פיזור האור על ידי החלקיקים (התאים) המרחפים בנוזל. שחרור פחמן הוא ביוכימי, SPC היא שיטת תרבית, ו-ELISA היא אימונולוגית." 
             },
-            {
-                question: "מהו החיסרון הבולט של הסתכלות מיקרוסקופית ישירה באמצעות זכוכית נושא משונתת?",
-                options: [
-                    "השיטה יקרה מאוד ודורשת מצעי מזון מיוחדים",
-                    "השיטה דורשת זמן רב להמתנה עד שהחיידקים יגדלו",
-                    "קיים קושי להבחין בין חיידקים מתים לחיים ובין חיידקים לחלקיקי מזון",
-                    "השיטה גורמת להרס מוחלט של ה-DNA החיידקי"
-                ],
-                correctIndex: 2,
-                explanation: "השיטה אינה מבחינה באופן טבעי בין חיים למתים (ללא צביעה מיוחדת), וישנן סטיות בספירה בשל ספירת חלקיקי חומר שאינם חיידקים."
+            { 
+                question: "אם מעבדה צריכה תוצאה מהירה ככל האפשר של סך כל התאים (חיים ומתים יחד) בדוגמה נוזלית, באיזו שיטה עליה לבחור?", 
+                options: ["Spread Plate", "Impedance", "ספירה מיקרוסקופית", "Real-Time PCR עם פריימרים ספציפיים"], 
+                correctIndex: 2, 
+                explanation: "ספירה מיקרוסקופית היא שיטה ישירה ומידית. אין צורך להמתין שעות או ימים לגידול או ריאקציה. היא סופרת את סך כל התאים (חיים ומתים) באופן מיידי עם הנחת הדוגמה תחת המיקרוסקופ." 
             },
-            {
-                question: "מהו התפקיד של מכשיר הסטומכר בתהליך בדיקת המזון?",
-                options: [
-                    "לשמור את הפלטות בטמפרטורה קבועה במהלך ההדגרה",
-                    "לספור את המושבות באופן אוטומטי",
-                    "לבצע הומוגניזציה (ערבול וריסוק) של דגימת המזון בנוזל",
-                    "למדוד את ההתנגדות החשמלית של הדגימה"
-                ],
-                correctIndex: 2,
-                explanation: "סטומכר הוא סוג של מערבל מזון המשמש בשלב ההומוגניזציה כדי לשחרר את החיידקים מתוך רקמת המזון אל תוך נוזל המיהול."
+            { 
+                question: "מהי המשמעות של המונח 'עדיפות למק״א מיקרואירופיליים' בהקשר של שיטת ה-Pour Plate?", 
+                options: ["השיטה מעודדת צמיחה של חיידקים הדורשים ריכוז גבוה מאוד של חמצן.", "החיידקים הכלואים בתוך עומק האגר נחשפים לריכוז חמצן נמוך יותר מאשר על פני השטח, תנאי האידיאלי למיקרואירופילים.", "מיקרואירופילים אינם רגישים לחום האגר המותך בניגוד לחיידקים אחרים.", "האגר המותך מכיל חומרים כימיים ההורגים כל חיידק שאינו מיקרואירופיל."], 
+                correctIndex: 1, 
+                explanation: "חיידקים מיקרואירופילים דורשים רמות חמצן נמוכות מאלו שבאוויר הפתוח. בזריעת Pour Plate, החיידקים מקובעים בתוך עומק מצע האגר, שם חדירות החמצן מוגבלת, מה שיוצר סביבה מועדפת עבורם לעומת זריעה על פני השטח." 
             },
-            {
-                question: "כאשר משלבים שיטת PCR עם שיטת MPN, מהי המטרה הסבירה ביותר של השילוב?",
-                options: [
-                    "להוזיל את עלויות הבדיקה באופן משמעותי",
-                    "לזהות ולכמת נוכחות של חיידק ספציפי מתוך אוכלוסייה מעורבת",
-                    "להפריד פיזית בין חיידקים גדולים לקטנים",
-                    "למנוע צמיחה של פטריות במבחנות הגידול"
-                ],
-                correctIndex: 1,
-                explanation: "MPN נותן אומדן כמותי מבוסס מיהולים, ו-PCR מזהה ספציפית רצפי DNA. השילוב מאפשר כימות סטטיסטי של חיידק ספציפי."
+            { 
+                question: "כאשר משתמשים בשיטות ביוכימיות למדידת פעילות מטבולית, מה מעידה ירידה באחוז החמצן במצע סגור?", 
+                options: ["עלייה במספר החיידקים הפוטוסינתטיים.", "פעילות נשימה תאית אקטיבית של מיקרואורגניזמים אירוביים הצורכים את החמצן.", "מוות המוני של חיידקים אנאירוביים.", "פירוק של מי חמצן על ידי האנזים קטלאז."], 
+                correctIndex: 1, 
+                explanation: "חיידקים אירוביים צורכים חמצן במהלך הנשימה התאית שלהם כדי להפיק אנרגיה. ירידה בריכוז החמצן במערכת סגורה מעידה על פעילות מטבולית אירובית, המהווה מדד עקיף לעומס החיידקים החיים." 
             },
-            {
-                question: "מעבדה מדווחת על תוצאה של $10^2$ CFU לגרם לאחר 8 שעות מרגע קבלת הדגימה. באיזו שיטה סביר להניח שהשתמשו?",
-                options: [
-                    "Standard Plate Count",
-                    "התנגדות חשמלית (Impedance)",
-                    "Membrane Filtration",
-                    "Most Probable Number"
-                ],
-                correctIndex: 1,
-                explanation: "בשקף על התנגדות חשמלית מצוין כי השיטה מסוגלת להעריך עומס של $10^2$ CFU/g בתוך 5 עד 12 שעות, שזהו זמן מהיר יחסית לשיטות גידול קלאסיות."
+            { 
+                question: "מהו החיסרון הלוגיסטי/כלכלי המרכזי של שיטת הפילטרציה הממברנאלית?", 
+                options: ["היא אורכת שבועות עד לקבלת תוצאה.", "היא דורשת מספר רב של כלים סטריליים (משפכים, בקבוקי ואקום, פינצטות).", "היא מחייבת שימוש באנזימים יקרים מאוד כמו לוציפראז.", "היא מסוכנת לבריאות העובד עקב חשיפה לקרינת UV."], 
+                correctIndex: 1, 
+                explanation: "מערכת פילטרציה ממברנאלית מורכבת ממספר חלקים (משפך, בסיס, פילטר, בקבוק איסוף) שכולם חייבים להיות מעוקרים לחלוטין לפני כל בדיקה כדי למנוע זיהום הדוגמה, מה שמעלה את הדרישה לציוד סטרילי רב." 
             },
-            {
-                question: "מדוע פילטרציה ממברנאלית נחשבת לשיטה יעילה גם לסטריליזציה ולא רק לספירה?",
-                options: [
-                    "הפילטר משחרר חומרים אנטיביוטיים לנוזל",
-                    "הנוזל שעובר דרך הפילטר (בגודל פורות $0.45$ מיקרון) נותר נקי מחיידקים",
-                    "הלחץ המופעל בתהליך הורס את דופן התא של כל החיידקים",
-                    "הממברנה סופחת אליה את כל החמצן המומס במים"
-                ],
-                correctIndex: 1,
-                explanation: "מכיוון שהפורות קטנות מספיק כדי לעצור חיידקים, התסנין (הנוזל שעבר) יוצא סטרילי ונטול חיידקים."
+            { 
+                question: "מדוע שיטת ה-Spread Plate נחשבת לבעלת 'רגישות נמוכה' בהשוואה ל-Pour Plate?", 
+                options: ["כי היא משתמשת בפחות חומרי הזנה במצע.", "מכיוון שניתן לזרוע על פני השטח רק נפח קטן מאוד של נוזל (לרוב 0.1 מ״ל) כדי שהצלחת לא תוצף, לעומת נפח גדול יותר שניתן לערבב ב-Pour Plate.", "מפני שהאור בחדר פוגע בחיידקים שעל פני השטח.", "כי חיידקים על פני השטח נטרפים על ידי פטריות באוויר."], 
+                correctIndex: 1, 
+                explanation: "ב-Spread Plate זורעים נוזל על פני אגר מוצק. אם נזרע נפח גדול (כמו 1 מ״ל), הנוזל לא ייספג היטב והמושבות יתמזגו. לכן זורעים לרוב רק 0.1 מ״ל. ב-Pour Plate ניתן להכניס 1 מ״ל שלם לצלחת ריקה ולערבב עם האגר המותך, מה שמעלה את רגישות הגילוי של דוגמאות דלילות פי 10." 
             },
-            {
-                question: "אם חוקר מעוניין לבדוק אם דגימת בשר עברה עיקור מוחלט, אך הוא חייב לקבל תשובה בתוך דקות ספורות. איזו שיטה תוכל לתת לו אינדיקציה מהירה (גם אם כוללת חסרונות)?",
-                options: [
-                    "זריעה בשיטת פטריפילם",
-                    "הסתכלות מיקרוסקופית",
-                    "שימוש במבחנות MPN",
-                    "מדידת ירידה בהתנגדות חשמלית"
-                ],
-                correctIndex: 1,
-                explanation: "הסתכלות מיקרוסקופית היא שיטה פיסיקלית מהירה מאוד שאינה דורשת זמן הדגרה וגידול, ולכן תספק תשובה מיידית (למרות שתספור גם תאים מתים אם לא תבוצע צביעה מבחינה)."
+            { 
+                question: "בשיטת ה-Impedance, מהו סדר הגודל של זמן הגילוי לעומס של ($10^2$) CFU לגרם?", 
+                options: ["מספר דקות", "5-12 שעות", "24-48 שעות", "למעלה משבוע"], 
+                correctIndex: 1, 
+                explanation: "על פי הנתונים, שיטת ה-Impedance מאפשרת גילוי של עומסים נמוכים יחסית (כמו 100 חיידקים לגרם) בטווח זמן קצר משמעותית של 5 עד 12 שעות, לעומת 24-48 שעות הנדרשות לרוב בספירת פלטות קלאסית." 
             },
-            {
-                question: "בשיטת MPN, כיצד נקבעת התוצאה הסופית של מספר החיידקים?",
-                options: [
-                    "על ידי שקילת המסה התאית בתחתית המבחנה",
-                    "על ידי ספירת המושבות שצמחו על דופן המבחנה",
-                    "על ידי השוואת קומבינציית המבחנות החיוביות לטבלאות סטטיסטיות",
-                    "על ידי מדידת כמות ה-DNA המדויקת בכל מבחנה"
-                ],
-                correctIndex: 2,
-                explanation: "התוצאה ב-MPN מתקבלת מרישום מספר המבחנות שהראו עדות לגידול (מבחנות חיוביות) בכל מיהול, והצלבת הנתונים עם טבלאות MPN סטטיסטיות."
+            { 
+                question: "איזה סוג של צבע משמש לעיתים קרובות בהסתכלות מיקרוסקופית כדי להקל על ספירת תאי החיידקים?", 
+                options: ["SYBR Green", "Methylene blue", "TaqMan", "Luciferin"], 
+                correctIndex: 1, 
+                explanation: "מתילן כחול (Methylene blue) הוא צבע בסיסי פשוט המשמש במיקרוסקופיה אורית רגילה לצביעת תאים כדי להגביר את הניגודיות שלהם מול הרקע הבהיר." 
             },
-            {
-                question: "מהי המשמעות המעשית של העובדה ששיטות הספירה מהוות 'אומדן' ולא מספר מדויק?",
-                options: [
-                    "התוצאה תמיד תהיה גבוהה מהמספר האמיתי",
-                    "אין צורך להקפיד על תנאי סטריליות במעבדה",
-                    "התוצאה תלויה בשיטה, במצע ובמגבלות הטכניות ואינה משקפת בהכרח את כלל התאים הבודדים",
-                    "ניתן לוותר על שלב ההומוגניזציה ללא חשש"
-                ],
-                correctIndex: 2,
-                explanation: "אומדן פירושו שהתוצאה (כגון CFU) היא הערכה קרובה התלויה ביעילות השיטה ובתנאי הגידול, ולא ספירה מוחלטת של כל תא ותא שהיה במזון."
+            { 
+                question: "מהי המשמעות של תוצאה חיובית במבחן קטלאז כשיטה ביוכימית?", 
+                options: ["החיידק מסוגל לפרק חלבונים לחומצות אמינו.", "החיידק מייצר את האנזים קטלאז המפרק מי חמצן למים וחמצן (הופעת בועות).", "החיידק מכיל רצף DNA ספציפי של L. monocytogenes.", "החיידק עמיד לאנטיביוטיקה מסוג פניצילין."], 
+                correctIndex: 1, 
+                explanation: "אנזים הקטלאז מגן על תאים מנזקי חמצון על ידי פירוק מי חמצן רעילים ($H_2O_2$) למים וחמצן גזי. הופעת בועות חמצן מיד עם הוספת מי חמצן היא אינדיקציה ביוכימית לנוכחות חיידקים (לרוב אירוביים) המייצרים אנזים זה." 
             },
-            {
-                question: "איזה ממרכיבי התא החיידקי מהווה מטרה לזיהוי בשיטת ELISA?",
-                options: [
-                    "רצפי הגנום (DNA)",
-                    "מולקולות ATP",
-                    "אנזימי מטבוליזם כמו קטלאז",
-                    "אנטיגנים ספציפיים או טוקסינים המזוהים על ידי נוגדנים"
-                ],
-                correctIndex: 3,
-                explanation: "ELISA היא שיטה אמונולוגית המבוססת על קישור ספציפי בין נוגדנים לאנטיגנים (חלבונים, טוקסינים, מעטפת ספורות וכו')."
+            { 
+                question: "איזה מהבאים מהווה חסרון של שיטת ה-MPN?", 
+                options: ["היא פוגעת בחיידקים רגישי חום.", "היא אינה מתאימה למים ודוגמאות קליניות.", "היא דורשת שימוש בהרבה כלי זכוכית סטריליים ואינה מאפשרת לבדוק את המורפולוגיה של מושבות החיידקים.", "היא מזהה רק חיידקים מתים."], 
+                correctIndex: 2, 
+                explanation: "MPN מתבצעת במערך גדול של מבחנות נוזליות (למשל 15 מבחנות לדוגמה אחת). זה דורש הרבה כלים ומקום באינקובטור. בנוסף, מכיוון שהגידול הוא בנוזל (עכירות), לא ניתן לראות את הצורה (מורפולוגיה) של מושבות בודדות כפי שניתן לראות על פלטת אגר." 
             },
-            {
-                question: "באיזו מהשיטות הבאות נדרש שימוש במספר רב של כלי זכוכית סטריליים כמגבלה לוגיסטית בולטת?",
-                options: [
-                    "פטריפילם",
-                    "MPN",
-                    "Real Time PCR",
-                    "הסתכלות מיקרוסקופית"
-                ],
-                correctIndex: 1,
-                explanation: "שיטת MPN דורשת לכל מיהול סט של 3, 5 או 10 מבחנות, מה שמצריך הכנה ושטיפה של כמות גדולה מאוד של כלי זכוכית סטריליים."
+            { 
+                question: "שיטת הפטריפילם (Petrifilm) פותחה במקור על ידי איזו חברה מסחרית?", 
+                options: ["Pfizer", "3M", "Johnson & Johnson", "Thermo Fisher"], 
+                correctIndex: 1, 
+                explanation: "חברת 3M היא החברה שהכניסה את הרעיון לשימוש מסחרי ופיתחה את הפטריפילם." 
             },
-            {
-                question: "כאשר חיידק מפרק סוכרים ומייצר חומצה בסביבת הגידול שלו, באיזו קטגוריה של שיטות זיהוי מנצלים תכונה זו?",
-                options: [
-                    "שיטות פיסיקליות",
-                    "שיטות אמונולוגיות",
-                    "שיטות ביוכימיות",
-                    "שיטות גנטיות"
-                ],
-                correctIndex: 2,
-                explanation: "יצור חומצה הוא תהליך מטבולי. מדידת פעילות מטבולית נכללת תחת הקטגוריה של שיטות ביוכימיות."
+            { 
+                question: "מהו גודל הפורות (החרירים) השימושי והנפוץ ביותר בפילטרציה ממברנאלית לסינון חיידקים?", 
+                options: ["0.1 מיקרון", "0.22 מיקרון", "0.45 מיקרון", "1.0 מיקרון"], 
+                correctIndex: 2, 
+                explanation: "על פי חומר המקור, גודל פורות של 0.45 מיקרון הוא השימושי ביותר בשיטה זו, כיוון שהוא קטן מספיק כדי לעצור את רוב החיידקים אך מאפשר זרימה סבירה של נוזל." 
             },
-            {
-                question: "מהו היתרון של שימוש בפטריפילם על פני פלטות פלסטיק מסורתיות עם אגר?",
-                options: [
-                    "הוא זול משמעותית מכל שיטה אחרת",
-                    "הוא מאפשר גדילה של וירוסים בנוסף לחיידקים",
-                    "הוא חוסך מקום אחסון במקרר ובאינקובטור ונוח לעבודה בשטח",
-                    "הוא אינו דורש זמן הדגרה כלל"
-                ],
-                correctIndex: 2,
-                explanation: "פטריפילמים הם דקים מאוד, מגיעים מוכנים לשימוש, חוסכים מקום רב וקלים לשינוע, בניגוד לפלטות אגר שתופסות נפח רב."
+            { 
+                question: "באיזה מקרה שיטת ה-PCR הקונבנציונלית (לא Real-Time) תהיה שימושית להערכת עומס מיקרוביאלי?", 
+                options: ["כאשר נדרשת תשובה מיידית ללא הרצת ג'ל.", "כאשר משלבים אותה עם שיטת MPN לזיהוי נוכחות/היעדר של רצף DNA ספציפי במבחנות השונות.", "כאשר רוצים לספור רק את החיידקים החיים, שכן PCR לא עובד על DNA של תאים מתים.", "כאשר רוצים למדוד את ההתנגדות החשמלית של ה-DNA."], 
+                correctIndex: 1, 
+                explanation: "שילוב של PCR עם MPN מאפשר רגישות גבוהה ביותר. זורעים למבחנות ה-MPN נוזל, ובמקום לחפש עכירות כללית, מבצעים PCR על תוכן המבחנות כדי לקבוע באופן ספציפי האם חיידק המטרה (למשל ליסטריה) גדל באותה מבחנה." 
             },
-            {
-                question: "חוקר מבחין כי לאחר זריעה בשיטת Pour plate, התקבלו תוצאות נמוכות בהרבה מהצפוי עבור חיידק הידוע כרגיש לטמפרטורות מעל 45 מעלות צלזיוס. מהו ההסבר המדעי לכך?",
-                options: [
-                    "החיידקים נשטפו החוצה יחד עם נוזל המיהול",
-                    "החיידקים נחשפו לאגר מותך חם בזמן יציקת הפלטה ועברו עקת חום (Heat shock)",
-                    "החיידקים לא הצליחו לפרק את המרכיב המקריש באגר",
-                    "החיידקים נדבקו לדפנות הסטומכר ולא הגיעו לדגימה"
-                ],
-                correctIndex: 1,
-                explanation: "ב-Pour plate, הדגימה מעורבבת עם אגר נוזלי חמים. חיידקים רגישים לחום עלולים להיפגע או למות כתוצאה מהמגע עם האגר החם."
+            { 
+                question: "מדוע דיגום (Sampling) מוגדר כשלב הקריטי ביותר בתהליך קביעת עומס מיקרוביאלי?", 
+                options: ["מפני שזהו השלב היחיד שדורש ציוד חשמלי.", "משום שזהו השלב שבו רוב החיידקים נהרגים בכוונה.", "מפני שרוב רובן של הטעויות נובעות מדיגום לא נכון שאינו לוקח בחשבון את מקורות השונות במזון.", "בגלל שזה השלב שבו מוסיפים את האנזים לוציפראז."], 
+                correctIndex: 2, 
+                explanation: "פיזור חיידקים במזון אינו הומוגני. אם לא לוקחים דוגמה מייצגת (למשל, לוקחים רק מפני השטח ולא מהעומק, או רק מאצווה אחת), התוצאה הסופית תהיה שגויה ללא קשר לרמת הדיוק של בדיקת המעבדה עצמה." 
             },
-            {
-                question: "איזו שיטה תהיה המתאימה ביותר לקביעת נוכחות של ספורות של חיידק האנטרקס בסביבה אזרחית באופן ספציפי?",
-                options: [
-                    "מדידת עכירות",
-                    "ספירת פלטות סטנדרטית (SPC)",
-                    "ELISA",
-                    "מדידת פעילות קטלאז"
-                ],
-                correctIndex: 2,
-                explanation: "ELISA מוזכרת במפורש כשיטה אמונולוגית המסוגלת לזהות באופן ספציפי חיידקים או את הספורות שלהם (למשל ספורות של אנטרקס)."
+            { 
+                question: "מהו התפקיד של 'הומוגניזציה' בתהליך ה-SPC?", 
+                options: ["להרוג את כל החיידקים הפתוגניים באמצעות חימום.", "לפרק את המזון ולפזר את החיידקים באופן שווה בנוזל (למשל באמצעות סטומכר).", "לסנן את החלקיקים הגדולים דרך פילטר 0.45 מיקרון.", "לצבוע את החיידקים כדי שייראו במיקרוסקופ."], 
+                correctIndex: 1, 
+                explanation: "הומוגניזציה (לרוב באמצעות מערבל מזון או 'סטומכר') נועדה לרסק את דוגמת המזון המוצק ולפזר את החיידקים הכלואים בה באופן אחיד לתוך נוזל המיהול, כדי שהמיהולים העשרוניים יהיו מדויקים." 
             },
-            {
-                question: "מהי המשמעות של המונח 'מיהולים עשרוניים' בתהליך קביעת עומס מיקרוביאלי?",
-                options: [
-                    "הוספת עשרה סוגי אנטיביוטיקה לדגימה",
-                    "המתנה של עשר שעות בין דיגום לזריעה",
-                    "דילול הדגימה המקורית בסדרה של שלבים, כך שבכל שלב הריכוז קטן פי עשרה",
-                    "ביצוע הבדיקה על ידי עשרה לבורנטים שונים להבטחת אמינות"
-                ],
-                correctIndex: 2,
-                explanation: "מיהול עשרוני פירושו לקיחת חלק אחד של דגימה והוספתו לתשעה חלקים של ממס, תהליך החוזר על עצמו כדי להקטין את ריכוז החיידקים בפי עשרה בכל שלב."
+            { 
+                question: "אם נמדדה עכירות בספקטרופוטומטר והתקבלה תוצאה גבוהה, האם ניתן להסיק בוודאות שהמזון מסוכן לאכילה עקב חיידקים חיים?", 
+                options: ["כן, עכירות גבוהה תמיד מצביעה על ייצור טוקסינים חיים.", "לא, מכיוון שעכירות מודדת גם חיידקים מתים וגם חלקיקי מזון המרחפים בנוזל.", "כן, אך רק אם העכירות נמדדה באור אולטרה-סגול.", "לא, משום שעכירות מזהה רק וירוסים ולא חיידקים."], 
+                correctIndex: 1, 
+                explanation: "עכירות היא מדד פיזיקלי של חסימת מעבר אור. ספקטרופוטומטר לא יכול להבדיל בין תא חיידק חי, תא חיידק מת, או חלקיק אבק/חלבון המרחף בתמיסה וגורם לפיזור האור." 
             },
-            {
-                question: "באיזה מצב נעדיף להשתמש בשיטת פילטרציה ממברנאלית לקביעת כמות חיידקים?",
-                options: [
-                    "כאשר ריכוז החיידקים בדגימה גבוה מאוד ונדרש מיהול",
-                    "כאשר הדגימה היא נוזל צלול בנפח גדול עם ריכוז חיידקים נמוך מאוד",
-                    "כאשר הדגימה מכילה חתיכות בשר גדולות",
-                    "כאשר אנו מעוניינים לספור רק חיידקים אנאירוביים"
-                ],
-                correctIndex: 1,
-                explanation: "פילטרציה ממברנאלית מאפשרת להעביר נפח גדול של נוזל דרך הפילטר ולרכז את המעט חיידקים שיש בו על גבי הממברנה, ולכן היא אידיאלית לנוזלים צלולים עם עומס נמוך."
+            { 
+                question: "בשיטת ELISA, מהו הרכיב המאפשר את ה'זיהוי באופן ספציפי' של חיידק או טוקסין?", 
+                options: ["אגר סלקטיבי", "פורות בגודל 0.45 מיקרון", "נוגדנים ספציפיים (Immunosorbent)", "צבע Methylene blue"], 
+                correctIndex: 2, 
+                explanation: "ELISA מבוססת על אימונולוגיה - שימוש בנוגדנים המזהים ונקשרים באופן ספציפי מאוד לאנטיגן המטרה (הטוקסין או החיידק), מה שמאפשר זיהוי בררני גם בסביבה מורכבת." 
             },
-            {
-                question: "מה קורה לדופן התא של החיידק בשיטות המבוססות על רצפי DNA (כמו PCR) כשלב מקדים הכרחי?",
-                options: [
-                    "דופן התא מתעבה כדי להגן על ה-DNA",
-                    "דופן התא חייבת לעבור פירוק (ליזיס) כדי לשחרר את חומצות הגרעין לתמיסה",
-                    "דופן התא נקשרת לפרובה הפלורסנטית",
-                    "דופן התא הופכת לפלורסנטית בעצמה"
-                ],
-                correctIndex: 1,
-                explanation: "כדי לבצע אנליזה גנטית באמצעות PCR, ה-DNA חייב להיות נגיש, ולכן חובה לפרק את התא ולשחרר את התוכן הגנטי שלו (ידע כללי הנגזר מהבנת שיטות DNA)."
+            { 
+                question: "מהי המשמעות של ספירת 'אגרגט' כ-CFU אחד?", 
+                options: ["שהחיידקים מתים ולכן נדבקים זה לזה.", "שצביר של 100 חיידקים שהיו מחוברים יחד בדוגמה ייצור מושבה אחת על הפלטה וייספר כאחד.", "שהאגרגט יתפרק במהלך האינקובציה וייצור מושבות מרובות.", "שפילטרציה ממברנאלית לא תצליח לתפוס אגרגטים."], 
+                correctIndex: 1, 
+                explanation: "ב-SPC, כל ישות שיכולה להתרבות וליצור מושבה נספרת כ-CFU (Colony Forming Unit). אם החיידקים היו דבוקים יחד כאגרגט בזמן הזריעה, הם יתרבו באותה נקודה בדיוק וייצרו מושבה ויזואלית אחת, מה שמוביל לתת-הערכה של המספר המוחלט של התאים הבודדים." 
             },
-            {
-                question: "מהו היתרון של שימוש ב-TaqMan על פני SYBR Green בבדיקות Real Time PCR?",
-                options: [
-                    "TaqMan זול בהרבה מ-SYBR Green",
-                    "TaqMan אינו דורש מכשיר PCR מתקדם",
-                    "TaqMan מאפשר ספציפיות גבוהה יותר מכיוון שהפרובה מותאמת לרצף מטרה מדויק",
-                    "TaqMan מזהה גם חלבונים ולא רק DNA"
-                ],
-                correctIndex: 2,
-                explanation: "בעוד SYBR Green נקשר לכל DNA דו-גדילי שנוצר (כולל תוצרי לוואי), TaqMan היא פרובה הנקשרת רק לרצף המטרה הספציפי, מה שמעלה את רמת הספציפיות."
+            { 
+                question: "בשיטת Real-Time PCR, מהו תפקידם של גלאי TaqMan?", 
+                options: ["הם מפרקים את ה-DNA הנגיפי.", "הם סמנים פלואורסצנטיים (Fluorogenic Probes) הנקשרים ספציפית לרצף המטרה ופולטים אור במהלך ההגברה.", "הם אנזימים המייצרים ATP.", "הם משמשים כצבע בסיסי לצביעת מורפולוגיה של חיידקים תחת מיקרוסקופ."], 
+                correctIndex: 1, 
+                explanation: "גלאי TaqMan הם פרובים (גלאים) פלואורסצנטיים ספציפיים שמשתחררים/פולטים אור רק כאשר אנזים הפולימראז משכפל את אזור ה-DNA שאליו הם קשורים, מה שמאפשר זיהוי אונליין ספציפי ב-Real-Time PCR." 
             },
-            {
-                question: "בשיטת MPN, אם כל המבחנות במיהול הראשון הראו עכירות (גידול חיובי) וכל המבחנות במיהול השלישי נשארו צלולות, מה ניתן להסיק?",
-                options: [
-                    "הדגימה המקורית הייתה סטרילית לחלוטין",
-                    "המצע במבחנות המיהול השלישי היה פגום",
-                    "ריכוז החיידקים היה מספיק גבוה כדי להופיע במיהול הראשון, אך המיהול השלישי כבר דילל אותם אל מתחת לסף הגילוי",
-                    "החיידקים מתו במהלך המעבר בין המבחנות"
-                ],
-                correctIndex: 2,
-                explanation: "זהו העיקרון של MPN - מציאת נקודת הקיצון שבה המיהול הופך את הדגימה לדלילה מספיק כך שאין בה אפילו חיידק אחד שיוכל להתפתח."
+            { 
+                question: "איזו מהשיטות הבאות נחשבת לשיטה מהירה מאוד, שעלותה מזערית, אך דורשת כוח אדם מיומן וסובלת מסטיות עקב ספירת חלקיקים שאינם חיידקים?", 
+                options: ["ספירת פלטות (SPC)", "Real-Time PCR", "הסתכלות מיקרוסקופית", "ELISA"], 
+                correctIndex: 2, 
+                explanation: "הסתכלות מיקרוסקופית ישירה אינה דורשת מצעי מזון (עלות מזערית) והיא מידית (מהירה מאוד), אך קשה להבדיל בה בין חיידקים קטנים לבין חלקיקי מזון/לכלוך, והיא דורשת זמן הסתכלות ארוך של עובד מעבדה מיומן." 
             },
-            {
-                question: "מדוע שיטת הספירה המיקרוסקופית אינה נחשבת לשיטה מהימנה לקביעת חיידקים *חיים* במזון מעובד שעבר פיסטור?",
-                options: [
-                    "כי תהליך הפיסטור מעלים את החיידקים לחלוטין מבחינה פיזית",
-                    "כי השיטה תספור גם את תאי החיידקים שנהרגו בתהליך הפיסטור, שכן הם עדיין קיימים פיזית",
-                    "כי החום הורס את צבע ה-Methylene blue",
-                    "כי חיידקים מפוסטרים הופכים לשקופים לחלוטין"
-                ],
-                correctIndex: 1,
-                explanation: "המיקרוסקופ מראה נוכחות פיזית של תאים. תהליך הפיסטור הורג חיידקים אך לא מעלים את הגוף שלהם, ולכן הם ייספרו בטעות כחלק מהעומס המיקרוביאלי."
+            { 
+                question: "מהו היתרון של שיטת ה-Spread Plate מבחינת קריאת התוצאות?", 
+                options: ["התוצאה מתקבלת תוך 5 שעות.", "כל המושבות גדלות על פני השטח ולכן הן ברורות וקלות יותר לספירה ולאפיון מורפולוגי.", "היא אינה דורשת ספירה ידנית אלא נמדדת על ידי ספקטרופוטומטר.", "היא מספקת הערכה סטטיסטית ללא צורך בספירת מושבות כלל."], 
+                correctIndex: 1, 
+                explanation: "ב-Spread Plate כל החיידקים נמצאים על פני האגר. לכן המושבות גדלות בצורה אחידה, ברורה, וקלה לאפיון צורה וצבע, בניגוד ל-Pour Plate שבה מושבות כלואות בעומק האגר עשויות להיות קטנות, מעוכות וקשות לספירה." 
             },
-            {
-                question: "איזה מבין הנתונים הבאים אינו נדרש על מנת לחשב את מספר החיידקים בשיטת הספירה המיקרוסקופית באמצעות זכוכית נושא?",
-                options: [
-                    "נפח הנוזל המונח על הזכוכית",
-                    "מספר החיידקים שנספרו במשבצות",
-                    "זמן ההדגרה של הזכוכית באינקובטור",
-                    "שטח המשבצות על פני זכוכית הנושא"
-                ],
-                correctIndex: 2,
-                explanation: "ספירה מיקרוסקופית מבוצעת באופן מיידי ואינה דורשת זמן הדגרה או גידול, בניגוד לשיטות זריעה."
+            { 
+                question: "מהי המשמעות של 'מיהולים עשרוניים' בתהליך קביעת העומס המיקרוביאלי?", 
+                options: ["דילול הדוגמה פי עשרה בכל שלב (למשל 1:10, 1:100, 1:1000) כדי להגיע לריכוז חיידקים שניתן לספור בצלחת.", "הוספת 10 מ״ל של אגר מותך לכל צלחת פטרי.", "שימוש ב-10 מבחנות שונות בשיטת MPN.", "המתנה של 10 ימים עד לקבלת התוצאה הסופית."], 
+                correctIndex: 0, 
+                explanation: "מכיוון שעומס מיקרוביאלי יכול להיות עצום (למשל מיליוני חיידקים לגרם), זריעה ישירה תייצר 'מרבד' של חיידקים שלא ניתן לספור. מיהול עשרוני (העברת 1 מ״ל ל-9 מ״ל תמיסה סטרילית פעם אחר פעם) מפחית את הריכוז עד שמגיעים לצלחת שבה יגדלו 30-300 מושבות בודדות שניתן לספור." 
             },
-            {
-                question: "בתעשיית המזון, כאשר נדרשת בדיקה שגרתית יומיומית של מאות דגימות לאיתור אינדיקטורים כלליים, איזו שיטה תציע את האיזון הטוב ביותר בין חיסכון במקום, כוח אדם וסטנדרטיזציה?",
-                options: [
-                    "MPN",
-                    "פטריפילם",
-                    "Real Time PCR",
-                    "פילטרציה ממברנאלית"
-                ],
-                correctIndex: 1,
-                explanation: "פטריפילם מתואר כשיטה החוסכת בכוח אדם ומקום אחסון, נוחה לעבודה בשטח ומתואמת לשיטות סטנדרטיות, מה שהופך אותה לאידיאלית לבדיקות שגרתיות המוניות."
+            { 
+                question: "איזה חיידק פתוגני הוזכר ספציפית כדוגמה לזיהוי רגיש באמצעות רצפי DNA (PCR)?", 
+                options: ["Escherichia coli", "Listeria monocytogenes", "Staphylococcus aureus", "Salmonella typhimurium"], 
+                correctIndex: 1, 
+                explanation: "בשקופית העוסקת במבחן רגישות לזיהוי חיידק באמצעות DNA (PCR), מופיעה דוגמה ספציפית של ג'ל אגרוז המזהה את החיידק L. monocytogenes (ליסטריה מונוציטוגנס)." 
             },
-            {
-                question: "איזו מהשיטות הבאות מייצגת גישה עקיפה להערכת מספר החיידקים, המבוססת על תוצרי הלוואי של קיומם?",
-                options: [
-                    "ספירה מיקרוסקופית ישירה",
-                    "מדידת שחרור פחמן דו חמצני",
-                    "זריעה בשיטת Spread plate",
-                    "שימוש בפילטר של $0.45$ מיקרון"
-                ],
-                correctIndex: 1,
-                explanation: "מדידת פחמן דו חמצני היא שיטה ביוכימית המודדת פעילות מטבולית - זהו מדד עקיף לנוכחות חיידקים חיים, בניגוד לספירה ישירה של התאים או המושבות."
+            { 
+                question: "באיזו שיטה נעשה שימוש ב'מצעים סלקטיביים' כדי לספור סוג מסוים של חיידק מתוך אוכלוסייה מעורבת?", 
+                options: ["מדידת עכירות (Turbidity)", "הסתכלות מיקרוסקופית ישירה עם מתילן כחול", "שילוב של ספירה חיה (SPC) או MPN", "מדידת משקל מסת תאים"], 
+                correctIndex: 2, 
+                explanation: "מצעים סלקטיביים (המאפשרים גידול של חיידק מטרה ומדכאים אחרים) משמשים בשיטות מבוססות תרבית כמו ספירת פלטות (SPC) או הערכה סטטיסטית ב-MPN. שיטות פיזיקליות כמו עכירות, משקל או מיקרוסקופיה אינן משתמשות במצעים סלקטיביים וימדדו את כלל האוכלוסייה." 
             }
         ];
 
         const tfData = [
-            { question: "רוב הטעויות בקביעת עומס מיקרוביאלי נובעות משלב קריאת התוצאות במעבדה.", answer: false, explanation: "רוב רובן של הטעויות נובעות מדיגום לא נכון של המזון בשלב הראשוני." },
-            { question: "קביעת העומס המיקרוביאלי במזון נחשבת לאומדן ולא למספר מוחלט ומדויק.", answer: true, explanation: "בדרך כלל לא מדובר בקביעת מספר מדויק אלא באומדן (הערכה) התלוי בשיטה ובתנאים." },
-            { question: "שיטת Pour plate עדיפה על פני Spread plate עבור חיידקים מיקרואירופיליים.", answer: true, explanation: "החיידקים נלכדים בתוך האגר במקום בו יש פחות חמצן, מה שמיטיב עם חיידקים מיקרואירופיליים." },
-            { question: "בשיטת Spread plate קיימת סכנה לפגיעה בחיידקים רגישים לחום.", answer: false, explanation: "הסכנה לפגיעה מחום קיימת בשיטת Pour plate, בה החיידקים באים במגע עם אגר מותך." },
-            { question: "אגרגט (צביר) של חיידקים ייספר כ-CFU בודד בשיטות הזריעה.", answer: true, explanation: "מכיוון שהחיידקים צמודים, הם יצרו מושבה אחת בלבד על הפלטה, שתיספר כ-CFU אחד." },
-            { question: "המרכיב המקריש בפטריפילם אינו מסיס במים.", answer: false, explanation: "המרכיב המקריש (ג'לי) בפטריפילם הוא מסיס במים, מה שמאפשר לדגימה הנוזלית להפעיל אותו." },
-            { question: "שיטת הפילטרציה הממברנאלית אינה מתאימה למדיומים סמיכים.", answer: true, explanation: "מדיומים סמיכים או בעלי חלקיקים יסתמו את הפילטר וימנעו את מעבר הנוזל." },
-            { question: "גודל הפורות הנפוץ ביותר בשימוש בפילטרציה ממברנאלית לחיידקים הוא $0.45$ מיקרון.", answer: true, explanation: "גודל זה מספיק קטן כדי לעצור את רוב החיידקים המהווים סכנה במזון או במים." },
-            { question: "שיטת MPN מחייבת זריעה על פלטות אגר מוצק.", answer: false, explanation: "שיטת MPN מבוססת על זריעת מיהולים למבחנות המכילות מדיום נוזלי, ולא אגר מוצק." },
-            { question: "שיטת MPN נחשבת לשיטה רגישה המתאימה לספירת חיידקים בריכוזים נמוכים.", answer: true, explanation: "השיטה מאפשרת לבחון נפחים גדולים יחסית במיהולים נמוכים, ולכן רגישה מאוד למים או נוזלים דלילי חיידקים." },
-            { question: "חיסרון של שיטת MPN הוא הדרישה למספר רב של כלי זכוכית סטריליים.", answer: true, explanation: "השיטה דורשת 3, 5 או 10 מבחנות לכל מיהול, מה שמצריך ציוד רב." },
-            { question: "הסתכלות מיקרוסקופית ישירה מאפשרת להבחין בקלות בין חיידקים חיים למתים ללא כל תוספת.", answer: false, explanation: "ללא צביעה ספציפית (כמו צביעה פלואורסצנטית של חיות), המיקרוסקופ מראה את כל התאים פיזית, חיים ומתים כאחד." },
-            { question: "השימוש בצבען Methylene blue נעשה במסגרת שיטות ביוכימיות.", answer: false, explanation: "הצבען משמש לעיתים בהסתכלות מיקרוסקופית (שיטה פיסיקלית) כדי להבליט את החיידקים." },
-            { question: "מדידת עכירות בספקטרופוטומטר מספקת מידע על כמות החיידקים החיים בלבד.", answer: false, explanation: "עכירות נגרמת מעצם הנוכחות הפיזית של התאים בנוזל, בין אם הם חיים ובין אם הם מתים." },
-            { question: "ככל שפעילות הפרמנטציה של חיידקים עולה, המוליכות של התמיסה יורדת.", answer: false, explanation: "להפך, תוצרי הפירוק מעלים את המוליכות של התמיסה, ולכן ההתנגדות החשמלית (Impedance) יורדת." },
-            { question: "מדידת שחרור של פחמן דו חמצני מהווה שיטה פיסיקלית להערכת עומס מיקרוביאלי.", answer: false, explanation: "מדידת גזים הנפלטים ממטבוליזם נחשבת לשיטה ביוכימית." },
-            { question: "נוכחות של מולקולות ATP מעידה על קיומם של תאים חיים בדגימה.", answer: true, explanation: "ATP היא מולקולת האנרגיה של התא וקיומה מעיד על תא חי ופעיל מטבולית." },
-            { question: "האנזים לוציפראז מפרק מי חמצן בתהליך הפקת הפלורסנציה.", answer: false, explanation: "לוציפראז מגיב עם ATP. האנזים המפרק מי חמצן הוא קטלאז." },
-            { question: "שיטת ELISA מבוססת על שימוש בנוגדנים ויכולה לזהות טוקסינים במזון.", answer: true, explanation: "זוהי מהותה של השיטה האמונולוגית." },
-            { question: "שיטת PCR יכולה לשמש לזיהוי נוכחות של חיידק ספציפי ללא צורך בהמתנה ליצירת מושבות נראות לעין.", answer: true, explanation: "השיטה עובדת ברמה הגנטית ומשכפלת רצפי DNA במהירות, ללא תלות בגידול המקרוסקופי של החיידק." },
-            { question: "בשיטת Real Time PCR, חובה להריץ את התוצרים על גל אגרוז בסוף התהליך.", answer: false, explanation: "היתרון הגדול של Real Time PCR הוא שהזיהוי נעשה תוך כדי התהליך (Online detection) ואין צורך באנליזה של גל אגרוז." },
-            { question: "SYBR Green היא פרובה ספציפית הנקשרת רק לרצף DNA של חיידק מסוים.", answer: false, explanation: "SYBR Green הוא צבען כללי הנקשר לכל DNA דו-גדילי. הפרובה הספציפית היא TaqMan." },
-            { question: "הומוגניזציה בעזרת סטומכר היא שלב הכרחי לפני זריעת דגימת מזון מוצק.", answer: true, explanation: "יש לרסק ולערבל את המזון בנוזל כדי לשחרר את החיידקים לתוך התמיסה לפני ביצוע המיהולים והזריעה." },
-            { question: "שיטת Spread plate מציעה רגישות גבוהה יותר משיטת Pour plate.", answer: false, explanation: "Pour plate מציעה רגישות גבוהה יותר מכיוון שניתן להכניס נפח דגימה גדול יותר לתוך פלטת האגר הריקה לפני היציקה." },
-            { question: "שיטות המבוססות על התנגדות חשמלית יכולות לספק תוצאות בתוך 5 עד 12 שעות.", answer: true, explanation: "זהו זמן מהיר יחסית לשיטות זריעה, והוא מצוין במפורש כיתרון של שיטת ה-Impedance." },
-            { question: "פילטרציה ממברנאלית משמשת לעיתים קרובות לסטריליזציה של נוזלים הרגישים לחום.", answer: true, explanation: "הפילטר עוצר את החיידקים ומאפשר לנוזל לעבור, וכך מעקר אותו ללא שימוש בחום." },
-            { question: "בשיטת MPN, התשובה הסופית מתקבלת כ'יש גידול' או 'אין גידול' ללא כל הערכה מספרית.", answer: false, explanation: "אמנם בוחנים יש/אין גידול בכל מבחנה, אך השילוב של התוצאות מאפשר קביעה של הערכה מספרית מתוך טבלה סטטיסטית." },
-            { question: "עלות הפטריפילמים נחשבת לחיסרון העיקרי של שיטה זו.", answer: true, explanation: "למרות החיסכון בזמן ומקום, העלות פר-יחידה של הפילמים גבוהה יחסית לפלטות אגר רגילות." },
-            { question: "מדידת עכירות דורשת שימוש במיקרוסקופ אור רגיל.", answer: false, explanation: "מדידת עכירות מבוצעת באמצעות ספקטרופוטומטר או טורבידימטר, המודדים בליעת/פיזור אור." },
-            { question: "ניתן לשלב שיטת PCR עם שיטת MPN על מנת לקבל כימות של חיידק ספציפי מתוך דגימה.", answer: true, explanation: "השילוב מאפשר לנצל את הסטטיסטיקה של MPN יחד עם הספציפיות הגנטית של PCR לזיהוי וכימות." }
+            { question: "קביעת מספר המיקרואורגניזמים במזון מספקת תמיד מספר מדויק ומוחלט של כל התאים הקיימים בדוגמה.", answer: false, explanation: "בדרך כלל לא מדובר בקביעת מספר מדויק אלא באומדן (הערכה), עקב מגבלות טכניות כמו ספירת אגרגטים כ-CFU בודד." },
+            { question: "שיטת Spread Plate מועדפת על פני Pour Plate כאשר עובדים עם חיידקים הרגישים לחום.", answer: true, explanation: "ב-Spread Plate זורעים על אגר מוצק וקר, בעוד שב-Pour Plate מערבבים את החיידקים עם אגר מותך וחם שעלול לפגוע בחיידקים רגישים." },
+            { question: "פילטרציה ממברנאלית מתאימה מאוד למדידת עומס חיידקי במזונות סמיכים כמו יוגורט או דבש.", answer: false, explanation: "השיטה אינה מתאימה למדיומים סמיכים או בעלי חלקיקים רבים מכיוון שהם סותמים את הפורות של הפילטר (0.45 מיקרון)." },
+            { question: "שיטת MPN (Most Probable Number) מתאימה במיוחד לספירת חיידקים בריכוזים נמוכים מאוד.", answer: true, explanation: "MPN היא שיטה רגישה מאוד המתאימה לדוגמאות דלילות (כמו מי שתייה), שכן היא בוחנת נוכחות או היעדר גידול בנפחי נוזל גדולים יחסית." },
+            { question: "ספירה מיקרוסקופית ישירה אינה מבחינה בין חיידקים חיים לחיידקים מתים ללא שימוש בצביעות מיוחדות.", answer: true, explanation: "המיקרוסקופ מראה את הנוכחות הפיזית של התא בלבד. ללא צבעים חיוניים מיוחדים, החוקר יספור תאים חיים ומתים כאחד." },
+            { question: "עלות הפטריפילם (Petrifilm) נמוכה משמעותית מעלות הכנת צלחות אגר רגילות במעבדה.", answer: false, explanation: "אחד החסרונות המצוינים של פטריפילם הוא העלות הגבוהה יחסית של הפילמים עצמם בהשוואה להכנת אגר מסורתי." },
+            { question: "ירידה באחוז החמצן בסביבת הגידול יכולה לשמש כמדד לפעילות מטבולית של מיקרואורגניזמים.", answer: true, explanation: "זוהי אחת השיטות הביוכימיות. חיידקים אירוביים צורכים חמצן לשם נשימה תאית, ולכן ירידה ברמתו מעידה על פעילותם." },
+            { question: "שיטת ELISA מזהה את נוכחות החיידק על בסיס רצף ה-DNA הייחודי שלו.", answer: false, explanation: "ELISA היא שיטה אימונולוגית המבוססת על קישור של נוגדנים לאנטיגנים (חלבונים/טוקסינים). זיהוי על בסיס רצף DNA מתבצע בשיטות כמו PCR." },
+            { question: "בשיטת Real-Time PCR יש צורך להריץ את התוצרים על ג'ל אגרוז בסיום התהליך כדי לראות את התוצאות.", answer: false, explanation: "היתרון הגדול של Real-Time PCR הוא זיהוי אונליין (Online amplification detection) ללא צורך באנליזה מאוחרת על ג'ל." },
+            { question: "ככל שיש יותר חיידקים במצע נוזלי המבצעים פעילות פרמנטציה, כך ההתנגדות החשמלית (Impedance) של המצע עולה.", answer: false, explanation: "ההתנגדות יורדת (המוליכות עולה). החיידקים מפרקים מולקולות גדולות ליונים קטנים וטעונים המוליכים זרם טוב יותר." },
+            { question: "CFU מייצג בהכרח תא חיידקי בודד שהתרבה ויצר מושבה.", answer: false, explanation: "CFU (Colony Forming Unit) יכול לייצג תא בודד, אך לעיתים קרובות הוא מייצג אגרגט (צביר) של מספר תאים שהיו דבוקים יחד בדוגמה המקורית." },
+            { question: "זריעה של 1 מ״ל על צלחת בשיטת Spread Plate תגרום להצפת הצלחת ולמיזוג מושבות.", answer: true, explanation: "ב-Spread Plate נהוג לזרוע נפחים קטנים (כמו 0.1 מ״ל). נפח של 1 מ״ל לא ייספג מהר וייצור שכבת נוזל שתגרום למושבות להתחבר." },
+            { question: "שיטת ה-MPN אינה מאפשרת לבחון את המורפולוגיה (הצורה) של המושבות.", answer: true, explanation: "מכיוון שהגידול ב-MPN מתבצע במבחנות המכילות מצע נוזלי, ניתן לראות רק עכירות או שינוי צבע, ולא מושבות בודדות כפי שרואים על מצע מוצק." },
+            { question: "צבע SYBR Green נקשר באופן בלעדי ל-DNA חד-גדילי (ssDNA).", answer: false, explanation: "SYBR Green הוא צבע פלואורסצנטי הנקשר באופן ספציפי ל-DNA דו-גדילי (dsDNA) שנוצר במהלך ההגברה ב-PCR." },
+            { question: "נוכחות האנזים קטלאז מהווה מדד ביוכימי המבוסס על היכולת של חיידקים לפרק מי חמצן.", answer: true, explanation: "קטלאז הוא אנזים המפרק מי חמצן ($H_2O_2$) למים וחמצן, ונוכחותו מעידה על פעילות מטבולית אופיינית לסוגי חיידקים מסוימים." },
+            { question: "פילטרציה ממברנאלית יכולה לשמש כשיטה לסטריליזציה של נוזלים רגישים לחום.", answer: true, explanation: "העברת נוזל דרך פילטר בעל פורות של 0.45 מיקרון (או 0.22) מסלקת את החיידקים הפיזית ומשאירה את הנוזל סטרילי מבלי לחמם אותו." },
+            { question: "ספירה מיקרוסקופית נחשבת לשיטה הדורשת זמן רב מאוד עד לקבלת התוצאה הראשונית.", answer: false, explanation: "הסתכלות מיקרוסקופית היא שיטה מהירה מאוד. ניתן לראות ולספור את התאים מיד לאחר הנחת הדוגמה על זכוכית הנושא, ללא צורך בזמן אינקובציה." },
+            { question: "רוב הטעויות בקביעת העומס המיקרוביאלי נובעות משגיאות בכיול מכשיר ה-PCR.", answer: false, explanation: "על פי החומר, רוב רובן של הטעויות נובעות מדיגום לא נכון שאינו לוקח בחשבון את מקורות השונות במזון." },
+            { question: "האנזים לוציפראז משמש לזיהוי נוכחות של ATP, המשמש כסמן לתאים חיים.", answer: true, explanation: "לוציפראז מפיק אור בנוכחות ATP. מכיוון ש-ATP מתפרק במהירות לאחר מוות תאי, נוכחותו מעידה על פעילות של תאים חיים." },
+            { question: "פטריפילם דורש הכנה מוקדמת של בישול והתכת אגר במעבדה.", answer: false, explanation: "פטריפילם הם פילמים יבשים המוכנים לשימוש. הם מכילים מצע מזון וחומר מקריש מסיס במים, ואין צורך לבשל או להתריח אגר עבורם." },
+            { question: "שיטת ה-Pour Plate עדיפה לגידול חיידקים אירוביים אובליגטוריים לעומת Spread Plate.", answer: false, explanation: "ב-Pour Plate החיידקים כלואים בעומק האגר שם חדירות החמצן נמוכה. לחיידקים אירוביים עדיפה שיטת Spread Plate בה הם גדלים על פני השטח החשופים לאוויר." },
+            { question: "מדידת עכירות באמצעות ספקטרופוטומטר מספקת נתון המפריד בין חיידקים שנוצרו לאחרונה לבין אלו שכבר מתו.", answer: false, explanation: "עכירות מודדת את סך החלקיקים המרחפים שחוסמים אור, ואינה מבדילה בין חיידק חי, מת, או אפילו חלקיק מזון קטן." },
+            { question: "בשיטת MPN, תוצאת הספירה מתקבלת מתוך טבלאות סטטיסטיות בהתאם לקומבינציית המבחנות החיוביות.", answer: true, explanation: "לאחר האינקובציה, בודקים כמה מבחנות הראו גידול בכל רמת מיהול (למשל 5 חיוביות, 3 חיוביות, 1 חיובית). את הקומבינציה הזו (5-3-1) מחפשים בטבלת MPN כדי לקבל את ההערכה המספרית." },
+            { question: "שימוש ב-Methylene blue נועד לצבוע את מצע האגר כדי שהמושבות יבלטו יותר בספירת פלטות.", answer: false, explanation: "מתילן כחול משמש כצבע בהסתכלות מיקרוסקופית כדי לעזור להבחין בתאים תחת מיקרוסקופ האור, ולא לצביעת מצעי אגר ב-SPC." },
+            { question: "מדידת מסת תאים (משקל) היא אחת השיטות הפיזיקליות להערכת עומס חיידקי.", answer: true, explanation: "שקילת מסת התאים (לרוב לאחר סירכוז וייבוש) היא אכן אחת השיטות הפיזיקליות המופיעות בחומר, לצד מיקרוסקופיה, עכירות והתנגדות חשמלית." },
+            { question: "השימוש ב-Real-Time PCR מתאים רק לחיידקים אנאירוביים.", answer: false, explanation: "PCR מבוסס על הגברת DNA ואינו תלוי בדרישות החמצן המטבוליות של החיידק. הוא מתאים לכל אורגניזם שיש לו DNA ספציפי שניתן לזהות." },
+            { question: "בשיטת ההתנגדות החשמלית (Impedance), ניתן לזהות עומס של 100 חיידקים לגרם תוך פחות מ-12 שעות.", answer: true, explanation: "על פי הנתונים, השיטה מסוגלת לזהות עומס של ($10^2$) CFU לגרם בטווח זמן של 5 עד 12 שעות." },
+            { question: "הומוגניזציה באמצעות מעכל (סטומכר) נועדה לרכז את החיידקים בנקודה אחת בדוגמה.", answer: false, explanation: "להפך, ההומוגניזציה נועדה לפזר את החיידקים באופן אחיד ושווה בכל נוזל המיהול כדי שהדוגמאות שיילקחו ממנו יהיו מייצגות." },
+            { question: "שיטת ה-Spread Plate היא בעלת רגישות גבוהה יותר משיטת ה-Pour Plate.", answer: false, explanation: "Pour Plate רגישה יותר מכיוון שניתן לזרוע בה נפח גדול יותר של דוגמה (למשל 1 מ״ל) לתוך האגר המותך, בעוד שב-Spread Plate מוגבלים לנפחים קטנים (כ-0.1 מ״ל) כדי לא להציף את פני הצלחת." },
+            { question: "איתור ספורות של חיידק האנטרקס יכול להתבצע באופן מעשי באמצעות שיטת ELISA.", answer: true, explanation: "השקופית העוסקת בשיטות אימונולוגיות (ELISA) מציינת במפורש שניתן להשתמש בשיטה זו לזיהוי טוקסינים ואף חיידקים ספציפיים, כגון ספורות של אנטרקס." }
         ];
 
         // --- Global State Variables ---
@@ -809,9 +714,9 @@
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
         // --- MathJax Re-rendering Helper ---
-        function renderMath() {
-            if (window.MathJax) {
-                MathJax.typesetPromise().catch((err) => console.log('MathJax error: ', err.message));
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
             }
         }
 
@@ -825,7 +730,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            renderMath();
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -844,7 +749,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                renderMath();
+                triggerMathJax();
             }, 300);
         }
 
@@ -867,7 +772,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            renderMath();
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -883,20 +788,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -938,7 +840,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            renderMath();
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -950,8 +852,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -961,7 +861,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            renderMath();
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -978,20 +878,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1034,7 +931,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             renderMath();
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1050,6 +947,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

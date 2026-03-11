@@ -1,207 +1,331 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <!-- MathJax Configuration -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>מיקרואורגניזמים פתוגנים לאדם</h1>
+        <h1>מיקרואורגניזמים פתוגנים לאדם, טוקסינים וסלמונלה</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>התמודדות האדם עם מיקרואורגניזמים פתוגנים מורכבת משני גורמי סיכון עיקריים: אינפקציות (זיהומים חיים) והרעלות (חשיפה לטוקסינים). טוקסינים נחלקים למספר סוגים, כאשר הבולטים בהם הם אקסוטוקסינים (מופרשים לסביבה, לרוב חלבוניים), אנדוטוקסינים (חלק ממבנה התא, כגון LPS בחיידקי גראם שליליים), ומיקוטוקסינים המיוצרים על ידי פטריות.</p>
+                
+                <h3>מיקוטוקסינים - רעלני פטריות</h3>
+                <p>מיקוטוקסינים אחראים לרעילות אקוטית וכרונית ומועברים לרוב דרך מזון (ישירות או בעקיפין דרך בעלי חיים). בין המיקוטוקסינים הבולטים:</p>
+                <ul>
+                    <li><strong>Aflatoxin:</strong> מיוצר על ידי פטריות שונות, פוגע קשות בכבד, מסוכן ביותר עקב יכולתו להיקשר ל-DNA ולגרום למוטציות (קרצינוגני).</li>
+                    <li><strong>Zearalenone:</strong> נקשר באפיניות גבוהה לרצפטורים של אסטרוגן ופוגע בפוריות בקר. הוא עובר מטבוליזם מהיר בחיות, ולכן בשרן בטוח למאכל.</li>
+                    <li><strong>Fumonisin:</strong> קרצינוגני, משרה תמותת תאים, פוגע נוירולוגית ומצטבר בשיער אדם.</li>
+                </ul>
+
+                <h3>סלמונלה (Salmonella)</h3>
+                <p>סלמונלה הוא חיידק גראם שלילי, זואונוטי, השייך למשפחת ה-Enterobacteriaceae. הוא מתאפיין ביכולת תנועה, התססת גלוקוז (אך לא לקטוז או סוכרוז), וייצור גז ($H_2S$). החיידק מותאם אבולוציונית למערכת העיכול, בעל מנגנוני היצמדות, ויכולת לחדור לתאים דרך מערכות הפרשה ייעודיות (כמו מערכת הפרשה מסוג 3). בעוד שזנים כמו <em>Salmonella typhimurium</em> נפוצים בבקר ובעופות, הזן <em>Salmonella typhi</em> נישא אך ורק בבני אדם.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: פרדוקס חומרי השימור והעקה</strong>
+                    לרוב, ייצור מיקוטוקסינים על ידי פטריות גובר בתנאי עקה. לכן, הוספת חומר משמר למזון שכבר קיים בו זיהום פטרייתי עלולה להוות טריגר סביבתי שישרה ייצור מוגבר של מיקוטוקסינים, במקום להגן על המזון.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: עמידות לחום - חיידקים מול רעלנים</strong>
+                    בעוד שחיידקים פתוגנים רבים (כמו סלמונלה) רגישים לחום וניתנים להשמדה בטמפרטורות בישול (למשל $60^\circ C$ למשך 15-20 דקות), חלק ניכר מהמיקוטוקסינים עמידים לחלוטין לטיפול בחום. המשמעות היא שבישול מזון נגוע בפטריות עשוי להרוג את הפטרייה, אך לא ינטרל את הסכנה ההרעלתית.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: סכנת המינון האינפקטיבי המינימלי (MID)</strong>
+                    במקרים מסוימים, המינון הנדרש ליצירת זיהום עומד על 1-10 חיידקים בלבד. בריכוזים כה נמוכים, הפתוגן אינו משפיע על תכונות המזון, ולכן הצרכן אינו יכול לזהות את הסכנה באמצעות חושיו (ריח, טעם או מראה).
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -214,7 +338,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -234,11 +357,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -261,8 +382,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -270,497 +390,97 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: `Exotoxins`, definition: `טוקסינים המופרשים למדיום הגידול, בדרך כלל חלבונים או פפטידים המקודדים על פלסמידים או אזורים כרומוזומליים המועברים הוריזונטלית.` },
-            { term: `Endotoxins`, definition: `טוקסינים שהם חלק מהתא עצמו, כגון ליפופוליסכרידים בדופן חיידקי גרם שליליים, הגורמים לתגובה חיסונית קשה.` },
-            { term: `Toxoids`, definition: `טוקסינים מוחלשים המשמשים למטרות חיסון. הם חסרי רעילות אך שומרים על היכולת לעורר תגובה חיסונית.` },
-            { term: `Mycotoxins`, definition: `טוקסינים המיוצרים על ידי פטריות, האחראים לרעילות אקוטית וכרונית, שייצורם גובר בתנאי עקה.` },
-            { term: `Aflatoxin`, definition: `מיקוטוקסין קרצינוגני מסוכן המיוצר על ידי פטריות מסוימות, נקשר לדי אן איי, גורם למוטציות ופוגע בעיקר בכבד.` },
-            { term: `Zearalenone`, definition: `מיקוטוקסין המיוצר על ידי פוזריום, הנקשר באפיניות גבוהה לקולטני אסטרוגן וגורם לפגיעה בפוריות בבקר.` },
-            { term: `Fumonisin`, definition: `מיקוטוקסין קרצינוגני המשרה תמותת תאים, פגיעה נוירולוגית, פגמים בצינור העצבי בעוברים, ומצטבר בשיער אדם.` },
-            { term: `Sepsis`, definition: `אלח דם. זיהום הגורם לתגובה דלקתית קיצונית ונרחבת ולתפקוד לקוי של איברי הגוף.` },
-            { term: `Minimal Infective Dose (MID)`, definition: `מספר החיידקים המינימלי הנבלע במזון וגורם לזיהום, אשר במקרים מסוימים יכול להיות נמוך מאוד.` },
-            { term: `Opportunistic Pathogens`, definition: `פתוגנים אופורטוניסטים. חיידקים הנמצאים מחוץ לנישה האקולוגית הטבעית שלהם או תחת עקה, ועלולים לגרום למחלה.` },
-            { term: `Salmonella`, definition: `מתגים גרם שליליים קצרים, חסרי ספורות, אירובים פקולטטיביים ממשפחת אנטרובקטריאצה, בעלי יכולת תנועה.` },
-            { term: `Salmonella typhi`, definition: `סרוטיפ של סלמונלה שנישא אך ורק בבני אדם, וישנם זנים שלו העמידים למספר רב של תרופות.` },
-            { term: `Salmonella typhimurium`, definition: `סרוטיפ של סלמונלה הגורם לזיהום נפוץ בבקר ובעופות.` },
-            { term: `Claviceps purpurea`, definition: `פטרייה המייצרת אפלטוקסין, פוגעת קשות בדגניים וגרמה היסטורית למגפת אש אנטוניוס הקדוש.` },
-            { term: `Lipid A`, definition: `רכיב שומני המהווה חלק מהאנדוטוקסין בדופן חיידקי גרם שליליים, יחד עם אנטיגן או, וגורם לתגובה אימונית חריפה.` }
+            { term: "Exotoxins", definition: "טוקסינים המופרשים למדיום הגידול, לרוב חלבונים או פפטידים, וחלקם רגישים לטיפול חום." },
+            { term: "Endotoxins", definition: "טוקסינים שהם חלק ממבנה התא, כגון LPS בחיידקי גראם שליליים, הגורמים לתגובה אימונית קשה." },
+            { term: "Toxoids", definition: "טוקסינים מוחלשים המשמשים למטרות חיסון; נטולי רעילות אך שומרים על יכולת חיסונית." },
+            { term: "Mycotoxins", definition: "טוקסינים המיוצרים על ידי פטריות, אחראים לרעילות אקוטית וכרונית, וחלקם הגדול עמיד לטיפול חום." },
+            { term: "Aflatoxin", definition: "מיקוטוקסין קרצינוגני הנקשר ל-DNA, פוגע בעיקר בכבד, ומיוצר על ידי פטריות כמו אספרגילוס." },
+            { term: "Zearalenone", definition: "מיקוטוקסין הנקשר לרצפטורים של אסטרוגן ופוגע בפוריות, אך עובר מטבוליזם מהיר בבעלי חיים." },
+            { term: "Fumonisin", definition: "מיקוטוקסין קרצינוגני הגורם לפגיעה נוירולוגית, תמותת תאים, ומצטבר בשיער אדם." },
+            { term: "Sepsis", definition: "אלח דם; זיהום הגורם לתגובה דלקתית קיצונית ונרחבת ולכשל מערכות." },
+            { term: "MID", definition: "המינון האינפקטיבי המינימלי; מספר החיידקים הנבלעים שגורמים לזיהום." },
+            { term: "Salmonella", definition: "חיידק גראם שלילי, זואונוטי, אירובי פקולטטיבי, מתסיס גלוקוז ויוצר גז מימן גופרתי." },
+            { term: "Salmonella typhi", definition: "זן של סלמונלה הנישא אך ורק בבני אדם, בניגוד לזנים אחרים הנפוצים בבעלי חיים." },
+            { term: "Enterobacteriaceae", definition: "משפחת חיידקי מעיים גראם שליליים שאליה משתייך חיידק הסלמונלה." },
+            { term: "LPS", definition: "ליפופוליסכריד; מרכיב בדופן תא של חיידקי גראם שליליים המשמש כאנדוטוקסין." },
+            { term: "Claviceps purpurea", definition: "פטרייה הפוגעת בדגניים ונקשרה היסטורית למגפת אש סנט אנטוני." },
+            { term: "אופורטוניסטים", definition: "מיקרואורגניזמים ההופכים לפתוגנים כאשר הם מחוץ לנישה הטבעית שלהם או תחת עקה." }
         ];
 
         const mcqData = [
-            {
-                question: `חקלאי הבחין בזיהום פטרייתי קל במאגר התבואה שלו והחליט להוסיף חומר משמר כדי לעצור את ההתפשטות. לאיזו תוצאה בלתי רצויה עלולה פעולה זו לגרום, ומה המנגנון הביולוגי העומד מאחוריה?`,
-                options: [
-                    `השמדת הפטרייה אך שחרור אנדוטוקסינים מתוך דופן התא שלה עקב פירוק.`,
-                    `השריית יצירת מיקוטוקסינים עקב כניסת הפטרייה למצב עקה וספורולציה.`,
-                    `הפיכת המיקוטוקסינים לטוקסואידים בעלי עמידות גבוהה יותר לחום.`,
-                    `עידוד יצירת אקזוטוקסינים המופרשים ישירות למדיום הגידול של התבואה.`
-                ],
-                correctIndex: 1,
-                explanation: `הוספת חומר משמר כאשר כבר ישנו זיהום פטרייתי מכניסה את הפטרייה למצב עקה. לרוב, ייצור מיקוטוקסינים גובר בתנאי עקה, אשר משרים גם ספורולציה.`
-            },
-            {
-                question: `חיידק גרם שלילי עבר מוטציה שמנעה ממנו לסנתז פלסמידים באופן מוחלט. אילו מהרעלנים הבאים סביר להניח שימשיך להיות מיוצר על ידי החיידק למרות המוטציה?`,
-                options: [
-                    `אקזוטוקסינים חלבוניים בלבד.`,
-                    `טוקסואידים המשמשים לחיסון.`,
-                    `אנדוטוקסינים המבוססים על ליפופוליסכרידים.`,
-                    `אקזוטוקסינים המקודדים הוריזונטלית.`
-                ],
-                correctIndex: 2,
-                explanation: `אנדוטוקסינים (כמו ליפופוליסכרידים) הם חלק מבני קבוע מדופן התא של חיידקי גרם שליליים ומקודדים בגנום המרכזי, בניגוד לאקזוטוקסינים שלרוב מקודדים על פלסמידים או מועברים הוריזונטלית.`
-            },
-            {
-                question: `בבדיקת מעבדה התגלה כי בשר בקר מכיל שאריות של פטרייה מסוג פוזריום שהפרישה רעלן למזון הפרה. מדוע צריכת בשר זה על ידי בני אדם אינה נחשבת למסוכנת בהכרח בהקשר של רעלן זה?`,
-                options: [
-                    `מכיוון שהרעלן מצטבר רק בשיער בעל החיים ולא ברקמות השריר.`,
-                    `מכיוון שהרעלן עובר מטבוליזם מהיר בחיות ובאדם, ולכן אין חשש להצטברותו.`,
-                    `מכיוון שרעלני פוזריום פוגעים אך ורק בפוריות של עופות ואינם משפיעים על יונקים.`,
-                    `מכיוון שהרעלן רגיש מאוד לטיפול בחום ונהרס לחלוטין בטמפרטורת הגוף של הפרה.`
-                ],
-                correctIndex: 1,
-                explanation: `הרעלן זיראלנון (המיוצר על ידי פוזריום) עובר מטבוליזם מהיר בחיות ובאדם, ולכן אין חשש לצרוך בעלי חיים שהוזנו בו.`
-            },
-            {
-                question: `איזה מהמאפיינים הביוכימיים הבאים מאפשר להבדיל בין חיידק סלמונלה לבין חיידקים אנטריים אחרים בתרבית מעבדה?`,
-                options: [
-                    `יכולתו להתסיס לקטוז וסוכרוז בסביבה אנאירובית.`,
-                    `היעדר אנזים אוראז ויכולתו לייצר מימן גופרתי הגורם להשחלה עם ברזל.`,
-                    `יכולתו לגדול בטמפרטורות נמוכות מ-7 מעלות צלזיוס.`,
-                    `חוסר יכולתו להתסיס גלוקוז למרות היותו פקולטטיבי.`
-                ],
-                correctIndex: 1,
-                explanation: `סלמונלה אינה מתסיסה לקטוז וסוכרוז, אין לה אוראז, והיא מייצרת מימן גופרתי (H2S) אשר מגיב עם ברזל וגורם להשחרה.`
-            },
-            {
-                question: `מטופל מגיע למיון עם סימפטומים של נמק (גנגרנה) בקצות האצבעות והזיות הדומות להשפעת סמים הלוצינוגניים. מאיזה סוג של מזון נגוע סביר ביותר שהמטופל צרך את הרעלן?`,
-                options: [
-                    `תירס הנגוע בחיידקי סלמונלה טיפימוריום.`,
-                    `דגניים הנגועים בפטרייה המייצרת אפלטוקסין הקשור למגפת אש אנטוניוס הקדוש.`,
-                    `בשר בקר שהוזן בתערובת המכילה זיראלנון.`,
-                    `מוצרי חלב המכילים אקזוטוקסינים עמידים לחום.`
-                ],
-                correctIndex: 1,
-                explanation: `הסימפטומים של חסימת כלי דם, גנגרנה והזיות אופייניים להרעלת אפלטוקסין המיוצר על ידי הפטרייה Claviceps purpurea, שפוגעת בדגניים וגרמה היסטורית למגפת אש אנטוניוס הקדוש.`
-            },
-            {
-                question: `בניסוי מעבדה נבדקו השפעותיו של רעלן על התפתחות עוברית של עכברים, ונמצאו פגמים חמורים בהתפתחות הצינור העצבי. איזה רעלן נבדק בניסוי זה?`,
-                options: [
-                    `Aflatoxin B1`,
-                    `Zearalenone`,
-                    `Fumonisin B1`,
-                    `Lipid A`
-                ],
-                correctIndex: 2,
-                explanation: `Fumonisin B1 משרה פגיעה נוירולוגית ופגמים בצינור העצבי (neural tube defects) בהתפתחות עוברית של עכברים.`
-            },
-            {
-                question: `מהי הסיבה המרכזית לכך שזיהום מזון על ידי מיקוטוקסינים מהווה אתגר משמעותי יותר לתעשיית המזון בהשוואה לזיהום על ידי אקזוטוקסינים חיידקיים מסוימים?`,
-                options: [
-                    `מיקוטוקסינים תמיד דורשים ריכוזים עצומים כדי להשפיע, ולכן קשה לאתרם.`,
-                    `חלק גדול מהמיקוטוקסינים עמידים לטיפול בחום ואינם נהרסים בבישול או פסטור.`,
-                    `מיקוטוקסינים מיוצרים רק כאשר המזון מאוחסן בטמפרטורות הקפאה.`,
-                    `לא קיימות שיטות אנליטיות מודרניות לזיהוי מיקוטוקסינים במזון.`
-                ],
-                correctIndex: 1,
-                explanation: `בעוד שחלק מהאקזוטוקסינים רגישים לטיפול חום, חלק גדול מהמיקוטוקסינים עמידים לטיפול חום, מה שהופך אותם לקשים מאוד להכחדה בתהליכי עיבוד מזון רגילים.`
-            },
-            {
-                question: `חיידק סלמונלה חודר למערכת העיכול. כיצד הוא משנה את סביבתו המיידית כדי לשפר את שרידותו בסביבה חומצית?`,
-                options: [
-                    `מפריש ליפופוליסכרידים היוצרים מעטפת הגנה סביב התא.`,
-                    `מייצר אמינים בעלי ריח אופייני אשר תורמים להעלאת רמת ה-pH בסביבתו.`,
-                    `מפעיל מנגנון ספורולציה המאפשר לו לשרוד עד הגעה למעי הגס.`,
-                    `משתמש באנזים אוראז לפירוק שתנן ויצירת אמוניה בסיסית.`
-                ],
-                correctIndex: 1,
-                explanation: `חיידקי סלמונלה יוצרים אמינים (הגורמים לריח) התורמים להעלאת ה-pH, ובכך מסייעים לחיידק לשרוד בסביבה חומצית. (לסלמונלה אין אוראז ואינה יוצרת ספורות).`
-            },
-            {
-                question: `מהי המשמעות הקלינית המרכזית של כך שחיידק סלמונלה טיפי (Salmonella typhi) נישא אך ורק בבני אדם?`,
-                options: [
-                    `המחלה מועברת בעיקר דרך אכילת בשר עופות ובקר נגוע.`,
-                    `ההדבקה מתרחשת בדרך כלל ממקורות סביבתיים טבעיים כמו אדמה בלבד.`,
-                    `התפרצויות של המחלה קשורות ישירות להיגיינה אישית לקויה וזיהום צואתי אנושי של מקורות מים ומזון.`,
-                    `החיידק אינו מסוגל לפתח עמידות לאנטיביוטיקה מכיוון שאינו נחשף לתרופות וטרינריות.`
-                ],
-                correctIndex: 2,
-                explanation: `מכיוון שסלמונלה טיפי נישא רק באדם (ולא בבעלי חיים כפי שקורה בסרוטיפים זואונוטיים), מעבר המחלה מחייב חשיפה להפרשות של אדם נגוע, לרוב עקב תנאי תברואה והיגיינה ירודים.`
-            },
-            {
-                question: `חוקר מנסה לפתח חיסון נגד תסמונת ההלם הרעלי (Toxic shock syndrome) הנגרמת מחיידקי גרם שליליים. באיזה רכיב חיידקי עליו למקד את מאמציו?`,
-                options: [
-                    `מערכת הפרשה מסוג 3 (Type 3 Secretion System).`,
-                    `פלסמידים המקודדים לאקזוטוקסינים חלבוניים.`,
-                    `פוליסכרידים המהווים את אנטיגן O וליפיד A בדופן התא.`,
-                    `אמינים המופרשים למדיום הגידול ומעלים את ה-pH.`
-                ],
-                correctIndex: 2,
-                explanation: `תסמונת ההלם הרעלי בחיידקי גרם שליליים נגרמת מתגובה אימונית קשה לאנדוטוקסינים שהם חלק מהתא, ספציפית ליפיד A ואנטיגן O המרכיבים את הליפופוליסכריד (LPS) בדופן החיידק.`
-            },
-            {
-                question: `מדוע זיהוי של מנה מדבקת מינימלית (MID) נמוכה, כגון $1-10$ CFU, מהווה בעיה משמעותית עבור הצרכן?`,
-                options: [
-                    `מכיוון שבכמויות אלו החיידקים מתרבים בקצב אקספוננציאלי מהיר יותר מאשר בריכוזים גבוהים.`,
-                    `מכיוון שריכוז כה נמוך של פתוגנים אינו ניתן לחישה, הרחה או זיהוי על ידי הצרכן טרם אכילת המזון.`,
-                    `מכיוון שחיידקים בריכוז נמוך מפרישים כמות אקזוטוקסינים הגבוהה פי עשרה מאשר בריכוזים גבוהים.`,
-                    `מכיוון שמערכת החיסון מתעלמת לחלוטין מכמויות הנמוכות מ-100 CFU ואינה מייצרת נוגדנים.`
-                ],
-                correctIndex: 1,
-                explanation: `הבעיה המרכזית עם מנה מדבקת מינימלית נמוכה היא שבכמות כה קטנה (CFU בודדים), הצרכן אינו יכול לחוש, להריח או לזהות שהמזון מקולקל או נגוע.`
-            },
-            {
-                question: `איזה מנגנון פתוגני מאפשר לחיידק הסלמונלה לחדור לתאי המאכסן ולשרוד בתוכם?`,
-                options: [
-                    `הפרשת טוקסואידים המשתקים את מערכת החיסון המקומית.`,
-                    `שימוש במערכות הפרשה (Secretion systems) מסוגים 1, 3, 4, 6, כגון מבני מחט.`,
-                    `יצירת ספורות עמידות הנבלעות על ידי תאי המעי ונפתחות בתוכם.`,
-                    `קישור לרצפטורים של אסטרוגן הגורם לאנדוציטוזה ספונטנית.`
-                ],
-                correctIndex: 1,
-                explanation: `סלמונלה משתמשת במערכות הפרשה (כגון מבני מחט - Secretion system type 1,3,4,6) כדי להזריק חלבונים לתא המאכסן, לאפשר אדהזיה, חדירה ושרידות בתוך התאים (פגוציטוזה).`
-            },
-            {
-                question: `אדם נחשף באופן כרוני לריכוזים נמוכים של אפלטוקסין דרך תזונתו. מהי הסכנה המרכזית ארוכת הטווח הצפויה לו, ומהו איבר המטרה העיקרי?`,
-                options: [
-                    `פגיעה בפוריות עקב היקשרות לקולטני אסטרוגן במערכת הרביה.`,
-                    `קרצינוגניות וגרימת מוטציות ב-DNA, כאשר הפגיעה העיקרית היא בכבד.`,
-                    `פגמים נוירולוגיים המצטברים בשיער ומובילים לאלצהיימר מוקדם.`,
-                    `אלח דם (Sepsis) כתוצאה מתגובה דלקתית קיצונית בריאות.`
-                ],
-                correctIndex: 1,
-                explanation: `אפלטוקסין מסוכן ביותר בגלל היותו קרצינוגני (נקשר ל-DNA וגורם מוטציות). המטבוליזם שלו מתבצע בכבד, ולכן הפגיעה העיקרית היא בכבד.`
-            },
-            {
-                question: `מהו ההבדל המהותי בין זיהום מזון ישיר לזיהום מזון עקיף על ידי מיקוטוקסינים?`,
-                options: [
-                    `זיהום ישיר מתרחש רק בטמפרטורות גבוהות, בעוד עקיף מתרחש בהקפאה.`,
-                    `זיהום ישיר נובע מאכילת המזון הנגוע עצמו (פעילות בריכוז נמוך שקשה לזהות), בעוד זיהום עקיף נובע מאכילת בעלי חיים שניזונו ממזון נגוע או נשימה.`,
-                    `זיהום ישיר נגרם מאקזוטוקסינים חיידקיים, בעוד זיהום עקיף נגרם מפטריות.`,
-                    `זיהום ישיר פוגע במערכת העיכול, בעוד זיהום עקיף פוגע אך ורק בעור.`
-                ],
-                correctIndex: 1,
-                explanation: `זיהום ישיר משמעו שהרעלן נמצא במזון עצמו (פעילות בריכוז נמוך שקשה לזהות בקלות), בעוד זיהום עקיף מתרחש דרך שרשרת המזון (אכילת בעלי חיים שניזונו מהרעלן) או דרך נשימה.`
-            },
-            {
-                question: `מדוע ההמלצה הרפואית והבטיחותית היא לא לשטוף עוף חי לפני הבישול?`,
-                options: [
-                    `השטיפה גורמת להורדת רמת החומציות של העוף ומעודדת שגשוג סלמונלה.`,
-                    `המים מפעילים את הספורות של החיידקים הנמצאים על העוף והופכים אותם לפתוגניים.`,
-                    `השטיפה אינה מנקה את העוף, אלא מפיצה את החיידקים (כמו סלמונלה) על פני כל המטבח באמצעות התזת מים.`,
-                    `השטיפה ממיסה את הטוקסואידים המגינים על העוף מפני ריקבון מהיר.`
-                ],
-                correctIndex: 2,
-                explanation: `כפי שמוצג בכתבה במצגת, שטיפת עוף חי אינה מנקה אותו ביעילות אלא גורמת להתזת מים המפיצה חיידקים פתוגניים ברחבי המטבח, מה שמגביר את סכנת ההדבקה הצולבת.`
-            },
-            {
-                question: `באיזה תנאי סביר שחיידק יהפוך ל"פתוגן אופורטוניסטי"?`,
-                options: [
-                    `כאשר הוא נמצא בתוך הנישה האקולוגית הטבעית שלו ובתנאי גידול אופטימליים.`,
-                    `כאשר הוא עובר תהליך של ספורולציה בסביבה עשירה בנוטריאנטים.`,
-                    `כאשר הוא נמצא מחוץ לנישה האקולוגית הטבעית שלו, תחת עקה, או רוכש עמידות לאנטיביוטיקה.`,
-                    `כאשר הוא מאבד את הפלסמידים המקודדים לאקזוטוקסינים.`
-                ],
-                correctIndex: 2,
-                explanation: `פתוגנים אופורטוניסטים הם לרוב חיידקים שגורמים למחלה כאשר הם נמצאים מחוץ לנישה האקולוגית הטבעית שלהם, תחת תנאי עקה, או כאשר הם מפתחים עמידות לאנטיביוטיקה.`
-            },
-            {
-                question: `איזה מהמשפטים הבאים מתאר נכונה את התנאים הפיזיקליים בהם חיידק סלמונלה יכול לשרוד ולהתרבות?`,
-                options: [
-                    `דורש סביבה בסיסית בלבד ומתרבה בצורה מיטבית בטמפרטורת החדר.`,
-                    `מסוגל לחיות בטווח pH של 4 עד 9, בעל טמפרטורה אופטימלית של $38^\\circ C$, ואינו גדל מתחת ל-$7^\\circ C$.`,
-                    `שורד היטב בהקפאה עמוקה ונהרס רק בטמפרטורות העולות על $100^\\circ C$.`,
-                    `גדל באופן בלעדי בתנאים אנאירוביים מוחלטים ורגיש מאוד לשינויים קלים ברמת החומציות.`
-                ],
-                correctIndex: 1,
-                explanation: `סלמונלה חיה בטווח pH רחב ($4-9$), הטמפרטורה האופטימלית שלה היא $38^\\circ C$, היא אינה גדלה מתחת ל-$7^\\circ C$, וניתנת להשמדה ב-$60^\\circ C$ תוך 15-20 דקות.`
-            },
-            {
-                question: `אילו מהסימפטומים הבאים אינם אופייניים להדבקה קלאסית בסלמונלה באדם בריא?`,
-                options: [
-                    `שלשול, חום והתכווצויות בטן.`,
-                    `בחילות, הקאות וכאבי ראש.`,
-                    `אלח דם (Sepsis) כרוני וקריסת מערכות מיידית כסימפטום ראשוני.`,
-                    `דם בצואה וצמרמורות.`
-                ],
-                correctIndex: 2,
-                explanation: `הסימפטומים האופייניים הם שלשול, חום, כאבי בטן, הקאות וכו'. סכנת חיים ואלח דם (Sepsis) הם נדירים לעיתים ואינם מהווים סימפטום ראשוני קלאסי ונפוץ באדם בריא.`
-            },
-            {
-                question: `מהי ההשפעה של רעלן זיראלנון (Zearalenone) ברמות של 14 ppm על בקר?`,
-                options: [
-                    `גורם לחסימת כלי דם ולנמק בפרסות.`,
-                    `גורם לפגיעה בפוריות עקב היקשרות לרצפטורים של אסטרוגן.`,
-                    `משרה תמותת תאים מהירה בכבד ובכליות.`,
-                    `מעודד יצירת פגמים בצינור העצבי בעוברי הבקר.`
-                ],
-                correctIndex: 1,
-                explanation: `זיראלנון נקשר באפיניות גבוהה לרצפטורים של אסטרוגן, ובבקר חשיפה לרמות של 14 ppm גורמת לפגיעה בפוריות.`
-            },
-            {
-                question: `איזה מהמיקוטוקסינים הבאים שייך לקבוצת אנלוגים של ספינגנין (Sphinganine analogs)?`,
-                options: [
-                    `Aflatoxin B1`,
-                    `Zearalenone`,
-                    `Fumonisin`,
-                    `Shiga toxin`
-                ],
-                correctIndex: 2,
-                explanation: `Fumonisin (כמו FUM5 המיוצר על ידי Fusarium verticillioides) וכן AAL toxins שייכים לקבוצת האנלוגים של ספינגנין.`
-            },
-            {
-                question: `מה מהווה את אחד ההבדלים המרכזיים בין אקזוטוקסין לאנדוטוקסין מבחינת ההרכב הכימי שלהם?`,
-                options: [
-                    `אקזוטוקסינים הם בעיקר שומנים, בעוד אנדוטוקסינים הם חלבונים טהורים.`,
-                    `אקזוטוקסינים הם בדרך כלל חלבונים או פפטידים, בעוד אנדוטוקסינים מבוססים על ליפופוליסכרידים.`,
-                    `אקזוטוקסינים מורכבים אך ורק מחומצות גרעין, בעוד אנדוטוקסינים הם פוליסכרידים פשוטים.`,
-                    `אין הבדל כימי ביניהם, ההבדל הוא רק במיקום ההפרשה.`
-                ],
-                correctIndex: 1,
-                explanation: `אקזוטוקסינים הם לרוב חלבונים או פפטידים המופרשים החוצה, בעוד אנדוטוקסינים הם חלק מהתא (כמו ה-LPS - ליפופוליסכריד) המורכב משומן וסוכר.`
-            },
-            {
-                question: `חוקר מצא פלסמיד חדש בחיידק פתוגני. איזה סוג של רעלן סביר ביותר שהפלסמיד יקודד אליו?`,
-                options: [
-                    `אנדוטוקסין מסוג ליפיד A.`,
-                    `אקזוטוקסין חלבוני.`,
-                    `מיקוטוקסין מסוג אפלטוקסין.`,
-                    `אנטיגן O.`
-                ],
-                correctIndex: 1,
-                explanation: `אקזוטוקסינים מקודדים בדרך כלל על פלסמידים או אזורים כרומוזומליים המועברים הוריזונטלית. אנדוטוקסינים (ליפיד A, אנטיגן O) הם חלק מבני המקודד בגנום, ומיקוטוקסינים מיוצרים על ידי פטריות, לא חיידקים.`
-            },
-            {
-                question: `איזה מהבאים הוא מאפיין של חיידק מזן Salmonella typhimurium?`,
-                options: [
-                    `הוא גורם למחלה אך ורק בבני אדם ואינו זואונוטי.`,
-                    `הוא חיידק גרם חיובי היוצר ספורות עמידות לחום.`,
-                    `הוא מהווה גורם זיהום נפוץ בבקר ובעופות.`,
-                    `הוא חסר יכולת תנועה וחסר שוטונים לחלוטין.`
-                ],
-                correctIndex: 2,
-                explanation: `Salmonella typhimurium הוא זיהום נפוץ בבקר ובעופות (זואונוטי), בניגוד ל-Salmonella typhi הנישא רק באדם. סלמונלה בכלל היא גרם שלילית ובעלת שוטונים לתנועה.`
-            },
-            {
-                question: `מהי המשמעות של המונח "טוקסואיד" (Toxoid) בהקשר הרפואי?`,
-                options: [
-                    `רעלן בעל רעילות מוגברת המשמש כנשק ביולוגי.`,
-                    `רעלן מוחלש שאיבד את רעילותו אך שמר על היכולת לעורר תגובה חיסונית, ולכן משמש לחיסונים.`,
-                    `רעלן המופרש אך ורק בתנאי עקה קיצוניים על ידי פטריות.`,
-                    `תגובה דלקתית נרחבת הנגרמת מנוכחות חיידקים בדם.`
-                ],
-                correctIndex: 1,
-                explanation: `טוקסואידים הם טוקסינים מוחלשים למטרות חיסון. הם ללא רעילות אך היכולת לחסן (לעורר תגובה אימונית) קיימת בהם.`
-            },
-            {
-                question: `במהלך ייצור מזון, בוצע טיפול בחום גבוה (פסטור כפול) בניסיון להשמיד רעלנים. אילו רעלנים סביר להניח שישרדו את הטיפול הזה?`,
-                options: [
-                    `אקזוטוקסינים חלבוניים רגישי חום בלבד.`,
-                    `חלק גדול מהמיקוטוקסינים, שכן הם עמידים לטיפול חום.`,
-                    `תאי סלמונלה פעילים בסביבה מימית.`,
-                    `טוקסואידים שעברו דנטורציה מלאה.`
-                ],
-                correctIndex: 1,
-                explanation: `הטקסט מציין במפורש כי חלק גדול מהמיקוטוקסינים עמידים לטיפול חום. אקזוטוקסינים רבים רגישים לחום, וסלמונלה מושמדת ב-$60^\\circ C$ תוך 15-20 דקות.`
-            },
-            {
-                question: `מה מגביל את היעילות של ניטור מיקוטוקסינים במזון באמצעות מבחנים לזיהוי מהיר?`,
-                options: [
-                    `המיקוטוקסינים מתאדים מיד עם חשיפתם לאוויר.`,
-                    `המורכבות של השיטות והצורך לזהות ריכוזים נמוכים מאוד של הרעלן.`,
-                    `העובדה שמיקוטוקסינים אינם מעוררים תגובה אלרגית כלל.`,
-                    `מיקוטוקסינים מיוצרים רק בתוך גוף האדם ולא במזון עצמו.`
-                ],
-                correctIndex: 1,
-                explanation: `המורכבות של השיטות והצורך לזהות ריכוזים נמוכים (לעיתים ברמת ppb) מגביל את יעילות הניטור של מיקוטוקסינים.`
-            },
-            {
-                question: `מדוע ריכוז של 15 ppb נחשב לנתון קריטי בהקשר של אפלטוקסין?`,
-                options: [
-                    `זהו הריכוז המינימלי הנדרש כדי להרוג חיידקי מעיים מועילים.`,
-                    `זוהי הכמות המותרת המקסימלית במזון, עקב הרעילות והקרצינוגניות החמורה של הרעלן.`,
-                    `זהו הריכוז שבו הרעלן הופך לטוקסואיד באופן ספונטני.`,
-                    `זהו הריכוז הדרוש כדי שהפטרייה תתחיל לייצר ספורות.`
-                ],
-                correctIndex: 1,
-                explanation: `הכמות המותרת במזון לאפלטוקסין היא 15 ppb, ריכוז זעיר המעיד על רעילותו העצומה והסכנה הקרצינוגנית שבו.`
-            },
-            {
-                question: `כיצד פועל המנגנון הקרצינוגני של אפלטוקסין ברמה התאית?`,
-                options: [
-                    `הוא מפרק את הליפידים בקרום התא וגורם לליזיס.`,
-                    `הוא נקשר לרצפטורים של אסטרוגן וגורם לחלוקת תאים בלתי מבוקרת ברחם.`,
-                    `הוא נקשר ל-DNA וגורם למוטציות בחומר התורשתי.`,
-                    `הוא מונע ספיגת ברזל במעיים וגורם לאנמיה ממארת.`
-                ],
-                correctIndex: 2,
-                explanation: `אפלטוקסין מסוכן ביותר בגלל קרצינוגניות: הוא נקשר ל-DNA וגורם למוטציות.`
-            },
-            {
-                question: `איזו מהבאות אינה נחשבת לשיטה מקובלת לזיהוי מיקוטוקסינים על פי החומר הנלמד?`,
-                options: [
-                    `שימוש בנוגדנים ספציפיים.`,
-                    `כרומטוגרפיה נוזלית בביצועים גבוהים (HPLC).`,
-                    `מבחני מיצוי כימיים.`,
-                    `מדידת רמת המימן הגופרתי הנפלט מהמזון.`
-                ],
-                correctIndex: 3,
-                explanation: `מדידת מימן גופרתי קשורה לזיהוי ביוכימי של חיידקים כמו סלמונלה. זיהוי מיקוטוקסינים מבוצע באמצעות מיצויים, HPLC, ונוגדנים.`
-            },
-            {
-                question: `מהו אלח דם (Sepsis) מבחינה פתופיזיולוגית?`,
-                options: [
-                    `זיהום מקומי חמור במערכת העיכול בלבד.`,
-                    `זיהום הגורם לתגובה דלקתית קיצונית ונרחבת ולתפקוד לקוי של איברים.`,
-                    `הרעלת מזון אקוטית הנגרמת מאכילת בשר עוף נא בלבד.`,
-                    `מצב בו חיידקים אופורטוניסטים מפתחים עמידות לאנטיביוטיקה במעבדה.`
-                ],
-                correctIndex: 1,
-                explanation: `ההגדרה של אלח דם (Sepsis) היא זיהום הגורם לתגובה דלקתית קיצונית ונרחבת (widespread extreme inflammation response) ולתפקוד לקוי של איברים (organ dysfunction).`
-            },
-            {
-                question: `אם חיידק משתייך למשפחת ה-Enterobacteriaceae, מציג צורת מתג קצר, אינו יוצר ספורות, מתסיס גלוקוז אך לא לקטוז, ויוצר השחרה בנוכחות ברזל - מיהו החיידק הסביר ביותר?`,
-                options: [
-                    `Aspergillus flavus`,
-                    `Claviceps purpurea`,
-                    `Salmonella`,
-                    `Fusarium spp.`
-                ],
-                correctIndex: 2,
-                explanation: `אלו הם בדיוק המאפיינים הביוכימיים והמורפולוגיים של סלמונלה כפי שתוארו בטקסט.`
-            },
-            {
-                question: `אילו מהפטריות הבאות אינה מוזכרת כיצרנית של אפלטוקסין?`,
-                options: [
-                    `Fusarium`,
-                    `Aspergillus`,
-                    `Penicillium`,
-                    `Alternaria`
-                ],
-                correctIndex: 3,
-                explanation: `אפלטוקסין מיוצר על ידי פטריות כגון Fusarium, Aspergillus, Penicillium (וכן Claviceps הוזכרה בהקשר זה). Alternaria הוזכרה בהקשר של AAL toxins (אנלוגים של ספינגנין), לא אפלטוקסין.`
-            },
-            {
-                question: `מדוע פתוגנים במזון בעלי MID קטן (למשל $1-10$ CFU) מהווים סכנה גדולה לבריאות הציבור גם במזון שנראה, מריח ונטעם תקין לחלוטין?`,
-                options: [
-                    `כי הם עמידים לחלוטין לכל סוגי האנטיביוטיקה הידועים לאדם.`,
-                    `כי כמות החיידקים הנדרשת כדי לגרום למחלה היא כה קטנה, עד שהיא אינה מספיקה כדי ליצור שינוי פיזיקלי או כימי מורגש במזון.`,
-                    `כי חיידקים אלו מפרישים טוקסואידים המשתקים את בלוטות הטעם של הצרכן.`,
-                    `כי הם תמיד גורמים לאלח דם (Sepsis) בתוך דקות ספורות מרגע האכילה.`
-                ],
-                correctIndex: 1,
-                explanation: `הבעיה המרכזית ב-MID נמוך היא שבריכוז כה נמוך של תאים (CFU), החיידקים אינם משנים את תכונות המזון באופן שהצרכן יכול לזהות (לא ניתן לחוש או לזהות אותם).`
-            },
-            {
-                question: `מה מאפשר את יכולת התנועה וההתפשטות של רוב חיידקי הסלמונלה על גבי מצע אגר?`,
-                options: [
-                    `הפרשת רעלנים הממיסים את האגר.`,
-                    `נוכחות של שוטונים (Flagella) המקנים להם יכולת תנועה.`,
-                    `מערכת הפרשה מסוג 3 הפועלת כמנוע סילון.`,
-                    `היכולת לייצר ספורות המרחפות באוויר ונוחתות באזורים חדשים.`
-                ],
-                correctIndex: 1,
-                explanation: `לרוב חיידקי הסלמונלה יש שוטונים המקנים להם יכולת תנועה והתפשטות באגר.`
-            },
-            {
-                question: `איזה מהמשפטים הבאים מתאר נכון את הקשר בין הרעלת מזון לאינפקציה ממזון?`,
-                options: [
-                    `שתיהן נגרמות אך ורק על ידי פטריות המייצרות מיקוטוקסינים.`,
-                    `הרעלה היא פגיעה אקוטית הנגרמת על ידי רעלן (טוקסין) המצוי במזון, בעוד אינפקציה נגרמת על ידי הדבקה בחיידק או מיקרואורגניזם חי עצמו.`,
-                    `הרעלה מתרחשת רק לאחר אכילת בעלי חיים, בעוד אינפקציה מתרחשת רק לאחר אכילת צמחים.`,
-                    `אין הבדל בין המושגים, שניהם מתארים בדיוק את אותו התהליך הביולוגי.`
-                ],
-                correctIndex: 1,
-                explanation: `הרעלת מזון מחולקת להרעלות (פגיעה אקוטית על ידי רעלן, Intoxication) ולאינפקציות (זיהום על ידי המיקרואורגניזמים עצמם, Infection).`
-            },
-            {
-                question: `כיצד פועל רעלן מסוג Endotoxin בהשוואה ל-Exotoxin מבחינת הקשר שלו למבנה תא החיידק?`,
-                options: [
-                    `אנדוטוקסין מופרש החוצה לסביבה באופן פעיל, בעוד אקזוטוקסין נשאר תמיד קשור לריבוזום.`,
-                    `אנדוטוקסין הוא חלק אינטגרלי מדופן תא החיידק (כמו ה-LPS), בעוד אקזוטוקסין מיוצר ומופרש אל מחוץ לתא.`,
-                    `שניהם מהווים חלק מדופן התא, אך אנדוטוקסין נמצא רק בחיידקי גרם חיוביים.`,
-                    `אקזוטוקסין מורכב מסוכרים בלבד ואנדוטוקסין מורכב מחלבונים בלבד.`
-                ],
-                correctIndex: 1,
-                explanation: `אנדוטוקסינים הם חלק מהתא (למשל LPS בדופן גרם שליליים), בעוד אקזוטוקסינים מופרשים למדיום הגידול.`
-            },
-            {
-                question: `אדם צורך כמות גדולה של בוטנים שהעלו עובש מסוג Aspergillus flavus. איזו בדיקה רפואית תהיה הרלוונטית ביותר למעקב אחר נזק אפשרי, בהתחשב באיבר המטרה של הרעלן?`,
-                options: [
-                    `בדיקת תפקודי ריאות עקב סכנה לדלקת ריאות חריפה.`,
-                    `בדיקת תפקודי כבד עקב המטבוליזם של הרעלן וסכנת הקרצינוגניות.`,
-                    `בדיקת צפיפות עצם עקב פגיעה בספיגת סידן.`,
-                    `בדיקת ראייה עקב סכנה לעיוורון הפיך.`
-                ],
-                correctIndex: 1,
-                explanation: `הפטרייה Aspergillus flavus מייצרת אפלטוקסין. המטבוליזם של אפלטוקסין מתבצע בכבד ולכן הפגיעה העיקרית היא בכבד.`
-            },
-            {
-                question: `מהי הסיבה האבולוציונית לכך שלחיידקי סלמונלה יש מערכות הפרשה מורכבות (כמו מבני מחט Type 3)?`,
-                options: [
-                    `כדי שיוכלו להפריש אנדוטוקסינים לסביבה מבלי לעבור פירוק (ליזיס).`,
-                    `מכיוון שהם מותאמים אבולוציונית למערכת עיכול של בעלי חיים, מערכות אלו מאפשרות להם לחדור לתוך תאי המאכסן ולשרוד פגוציטוזה.`,
-                    `כדי לאפשר להם להתסיס לקטוז וסוכרוז בסביבה תחרותית.`,
-                    `מערכות אלו משמשות אך ורק להעברה הוריזונטלית של גנים ולא לפתוגניות.`
-                ],
-                correctIndex: 1,
-                explanation: `סלמונלה מותאמת אבולוציונית למערכת העיכול, ויש לה יכולת קיום מחוץ לתא וכן לחדור לתוך התאים (לשרוד פגוציטוזה). מערכות ההפרשה (כמו Type 3) חיוניות להזרקת חלבונים המאפשרים חדירה ושרידות זו.`
-            },
-            {
-                question: `היכן בגוף האדם ניתן למצוא הצטברות של מיקוטוקסין מסוג Fumonisin לאחר חשיפה ממושכת?`,
-                options: [
-                    `ברקמת השומן התת-עורית בלבד.`,
-                    `בנוזל השדרה המוחית.`,
-                    `בשיער אדם.`,
-                    `בדפנות כלי הדם הקורונריים.`
-                ],
-                correctIndex: 2,
-                explanation: `הטקסט מציין במפורש כי Fumonisin מצטבר בשיער אדם.`
-            },
-            {
-                question: `לפי ההיסטוריה המוצגת, איזה רעלן היה קשור קשר הדוק למגפה שנודעה בשם "אש אנטוניוס הקדוש" (St. Anthony's fire)?`,
-                options: [
-                    `רעלן הכולרה שהופץ במים מזוהמים.`,
-                    `אפלטוקסין המיוצר על ידי הפטרייה Claviceps purpurea שפגעה בדגניים.`,
-                    `זיראלנון שזוהה בבשר בקר נגוע.`,
-                    `ליפיד A מתוך חיידקי סלמונלה טיפי.`
-                ],
-                correctIndex: 1,
-                explanation: `הפטרייה Claviceps purpurea המייצרת אפלטוקסין (על פי הטקסט הספציפי במצגת) פגעה קשות בדגניים וגרמה למגפת St. Anthony's fire.`
-            }
+            { question: "איזו מהתופעות הבאות צפויה להתרחש בעקבות הוספת חומר משמר למזון שכבר קיים בו זיהום פטרייתי פעיל?", options: ["השמדה מוחלטת של הפטרייה ופירוק כל הרעלנים שבמזון.", "הפחתה מיידית בייצור המיקוטוקסינים עקב דיכוי מטבולי.", "השריית עקה על הפטרייה שתוביל לעלייה בייצור מיקוטוקסינים וספורולציה.", "שינוי מבני במיקוטוקסינים שיהפוך אותם לטוקסואידים בלתי מזיקים."], correctIndex: 2, explanation: "לרוב, ייצור מיקוטוקסינים גובר בתנאי עקה. הוספת חומר משמר לזיהום קיים מהווה עקה עבור הפטרייה, מה שמשרה יצירת מיקוטוקסינים וספורולציה." },
+            { question: "מהו ההבדל המהותי ביותר בין אקסוטוקסינים לאנדוטוקסינים בהקשר של מבנה התא החיידקי?", options: ["אקסוטוקסינים הם חלק אינטגרלי מדופן התא, ואילו אנדוטוקסינים מופרשים החוצה.", "אקסוטוקסינים מופרשים למדיום הגידול, בעוד אנדוטוקסינים מהווים רכיב מבני של התא עצמו.", "אקסוטוקסינים מורכבים תמיד מליפידים, ואילו אנדוטוקסינים הם חלבונים טהורים.", "אנדוטוקסינים רגישים תמיד לחום, בעוד אקסוטוקסינים עמידים לחלוטין להרתחה."], correctIndex: 1, explanation: "אקסוטוקסינים מופרשים למדיום (לרוב חלבונים), בעוד אנדוטוקסינים (כמו LPS) הם חלק ממבנה התא, במיוחד בדופן של חיידקי גראם שליליים." },
+            { question: "כיצד פועל המנגנון המולקולרי שהופך את האפלטוקסין (Aflatoxin) למסוכן במיוחד עבור בני אדם?", options: ["הוא נקשר באפיניות גבוהה לרצפטורים של אסטרוגן ומשבש את המערכת ההורמונלית.", "הוא מפרק את דופן התא של חיידקי המעיים וגורם לאלח דם.", "הוא נקשר ל-DNA בתא האאוקריוטי, גורם למוטציות ופועל כחומר קרצינוגני.", "הוא מעכב את פעילות האנזים אוראז ומונע פירוק חלבונים בקיבה."], correctIndex: 2, explanation: "אפלטוקסין מסוכן ביותר בגלל הקרצינוגניות שלו, הנובעת מיכולתו להיקשר ל-DNA ולגרום למוטציות." },
+            { question: "חקלאי גילה כי פרותיו צרכו מזון הנגוע ברמות גבוהות של המיקוטוקסין Zearalenone. למרות זאת, בשר הפרות הותר לשיווק למאכל אדם. מהי הסיבה המדעית לכך?", options: ["הרעלן נהרס לחלוטין בטמפרטורת הגוף של הפרה.", "הרעלן מופרש ישירות לחלב ואינו נאגר ברקמת השריר.", "האדם חסר את הרצפטורים הייחודיים שאליהם נקשר הרעלן.", "הרעלן עובר מטבוליזם מהיר בחיות, ולכן אינו מצטבר בבשרן לרמות מסוכנות."], correctIndex: 3, explanation: "זירלנון עובר מטבוליזם מהיר בחיות ובאדם, ולכן אין חשש לצרוך בעלי חיים שהוזנו במזון נגוע בו, שכן הוא אינו מצטבר בבשר." },
+            { question: "בבדיקת מעבדה של דגימת מזון נמצא חיידק מתג קצר, גראם שלילי, בעל יכולת תנועה, שמתסיס גלוקוז אך אינו מתסיס לקטוז, ומייצר גז המייצר צבע שחור בנוכחות ברזל. מהו הזיהוי הסביר ביותר?", options: ["Salmonella", "Aspergillus flavus", "Claviceps purpurea", "Fusarium"], correctIndex: 0, explanation: "המאפיינים הביוכימיים של סלמונלה כוללים: גראם שלילי, מתג קצר, תנועתיות, התססת גלוקוז (ללא התססת לקטוז/סוכרוז), וייצור מימן גופרתי המגיב עם ברזל ליצירת צבע שחור." },
+            { question: "מהי המשמעות הקלינית והצרכנית של ערך MID (Minimal Infective Dose) העומד על 1-10 חיידקים?", options: ["המזון יקבל טעם לוואי חזק שיזהיר את הצרכן לפני האכילה.", "מערכת החיסון תזהה את החיידקים מיד ותנטרל אותם ללא הופעת תסמינים.", "הצרכן אינו יכול לזהות את נוכחות הפתוגן במזון באמצעות חושיו, למרות סכנת ההדבקה.", "החיידקים יתרבו במהירות כזו שהמזון יירקב תוך דקות מרגע החשיפה לאוויר."], correctIndex: 2, explanation: "כאשר ה-MID נמוך מאוד (1-10 תאים), הצרכן אינו יכול להרגיש בשינוי במראה, בריח או בטעם של המזון, מה שהופך את הזיהוי החושי לבלתי אפשרי." },
+            { question: "אילו מההליכים הבאים יהיה היעיל ביותר למניעת הרעלת מיקוטוקסינים ממזון נגוע?", options: ["בישול המזון בטמפרטורה של 100 מעלות צלזיוס למשך חצי שעה.", "הקפאת המזון בטמפרטורה של מינוס 18 מעלות למשך שבוע.", "מניעת התפתחות הפטרייה במזון מלכתחילה טרם יצירת הרעלן.", "הוספת חומרי טעם וריח לנטרול חמיצות הרעלן."], correctIndex: 2, explanation: "חלק גדול מהמיקוטוקסינים עמידים לטיפול חום (ולכן בישול לא יעזור). הדרך היעילה היחידה היא מניעת צמיחת הפטרייה וייצור הרעלן מלכתחילה." },
+            { question: "מהו המנגנון העיקרי שבאמצעותו טוקסואידים (Toxoids) משמשים ברפואה המודרנית?", options: ["הם משמשים כאנטיביוטיקה הפוגעת בדופן התא של החיידק.", "הם משמשים לחיסון מכיוון שאיבדו את רעילותם אך שמרו על יכולתם לעורר תגובה אימונית.", "הם חומרים משמרים המוספים למזון כדי למנוע ייצור של אקסוטוקסינים.", "הם אנזימים המפרקים מיקוטוקסינים בכבד האנושי."], correctIndex: 1, explanation: "טוקסואידים הם טוקסינים מוחלשים המשמשים לחיסון. הם נטולי רעילות אך שומרים על היכולת לחסן (לעורר את מערכת החיסון)." },
+            { question: "חולה אובחן עם זיהום של Salmonella typhi. מה ניתן להסיק בוודאות לגבי מקור ההדבקה?", options: ["הוא נדבק כתוצאה מאכילת בשר בקר שלא בושל כראוי.", "הוא נדבק ממגע ישיר עם עופות נגועים בלול.", "המקור לזיהום חייב להיות אדם אחר, שכן זן זה נישא רק באדם.", "הזיהום נגרם מאכילת בוטנים הנגועים בהפרשות מכרסמים."], correctIndex: 2, explanation: "הזן סלמונלה טיפי (Salmonella typhi) מתאפיין בכך שהוא נישא ומועבר אך ורק בבני אדם, בניגוד לזנים אחרים שהם זואונוטיים." },
+            { question: "אילו מהסימפטומים הבאים אופייניים ביותר להרעלה אקוטית של אפלטוקסין (Aflatoxin) על פי המידע שנלמד?", options: ["פגיעה בפוריות ושינויים הורמונליים עקב קישור לרצפטורים אסטרוגניים.", "חסימת כלי דם, גנגרנה, הזיות, ופגיעה חמורה בכבד.", "מומים מולדים במערכת העצבים המרכזית (Neural tube defects) בעוברים.", "התכווצויות בטן, שלשול דמי, והעלאת רמת החומציות בקיבה."], correctIndex: 1, explanation: "אפלטוקסין גורם לחסימת כלי דם, לגנגרנה, להזיות (כמו LSD), והפגיעה העיקרית שלו היא בכבד עקב המטבוליזם המתרחש שם." },
+            { question: "במהלך תהליך פגוציטוזה של חיידקי סלמונלה, מהו היתרון האבולוציוני של החיידק?", options: ["הוא מפריש רעלן הממיס את קרום התא של הפגוציט מבחוץ.", "יש לו יכולת קיום מחוץ לתא וכן מנגנונים לחדור ולשרוד בתוך התאים המארחים.", "הוא משנה את צורתו לפטרייה כדי לחמוק מזיהוי חיסוני.", "הוא הופך לאנדוטוקסין טהור הנספג בזרם הדם באופן פסיבי."], correctIndex: 1, explanation: "סלמונלה מותאמת אבולוציונית למערכת העיכול, ובעלת יכולת קיום מחוץ לתא וכן לחדור לתוך התאים המארחים (כולל פגוציטים) ולשרוד בהם." },
+            { question: "איזה מהרכיבים הבאים אחראי לתסמונת ההלם הרעלי (Toxic shock syndrome) הנגרמת על ידי אנדוטוקסינים?", options: ["מערכת הפרשה מסוג 3 (Type 3 secretion system).", "החלבון Shiga toxin המופרש למדיום.", "ליפיד A ואנטיגן O המהווים חלק מדופן התא של חיידקי גראם שליליים.", "מיקוטוקסינים המיוצרים על ידי פטריית הפוזריום."], correctIndex: 2, explanation: "אנדוטוקסינים הם חלק מהתא, כמו LPS בחיידקי גראם שליליים. רכיבי ה-LPS, ליפיד A ואנטיגן O, הם הגורמים לתגובה אימונית קשה כגון Toxic shock syndrome." },
+            { question: "מדוע ניטור יעיל של מיקוטוקסינים במזון נחשב לאתגר טכנולוגי משמעותי?", options: ["מכיוון שהם מתאדים במהירות בטמפרטורת החדר ולא מותירים עקבות.", "בשל מורכבות שיטות המיצוי והצורך לזהות ריכוזים נמוכים מאוד (כמו ppb).", "מפני שהם משנים את המבנה המרחבי שלהם בכל פעם שהם נחשפים לאור.", "מכיוון שרק פטריות מתות מייצרות אותם, וקשה לבודד פטריות מתות."], correctIndex: 1, explanation: "המורכבות של שיטות המיצוי והצורך לזהות ריכוזים נמוכים מאוד מגבילים את יעילות הניטור של מיקוטוקסינים." },
+            { question: "מהי מטרת ייצור האמינים על ידי חיידקי סלמונלה בסביבת הגידול שלהם?", options: ["להוריד את ה-pH כדי למנוע צמיחת פטריות מתחרות.", "להעלות את ה-pH של הסביבה, תהליך המלווה ביצירת ריח אופייני.", "לפרק חלבוני בשר לרעלנים מסוג אקסוטוקסין.", "לאפשר לחיידק לעבור ספורולציה בתנאי יובש קיצוניים."], correctIndex: 1, explanation: "חיידקי סלמונלה יוצרים אמינים כדי להעלאת ה-pH, תהליך המלווה ביצירת ריח." },
+            { question: "איזה מהמשפטים הבאים מתאר נכונה את המושג 'פתוגנים אופורטוניסטים'?", options: ["חיידקים הגורמים למחלה רק כאשר הם נמצאים בנישה האקולוגית הטבעית שלהם.", "חיידקים המייצרים מיקוטוקסינים כתגובה להוספת חומרי הדברה.", "חיידקים ההופכים לאלימים כאשר הם נמצאים מחוץ לנישה הטבעית שלהם או תחת עקה.", "וירוסים המנצלים חיידקים כדי להתרבות בתוך מערכת העיכול."], correctIndex: 2, explanation: "פתוגנים אופורטוניסטים הם חיידקים הנמצאים מחוץ לנישה האקולוגית הטבעית שלהם, נמצאים תחת עקה, או מפתחים עמידות לאנטיביוטיקה, וכך הופכים לפתוגניים." },
+            { question: "מהי ההשפעה של המיקוטוקסין פומוניזין (Fumonisin) על התפתחות עוברית, כפי שנצפה במודלים של עכברים?", options: ["הוא גורם לגדילת יתר של איברים פנימיים עקב חיקוי הורמון גדילה.", "הוא גורם למומים בצינור העצבי (Neural tube defects).", "הוא מונע התפתחות של מערכת החיסון הנרכשת בעובר.", "הוא גורם להיווצרות תאומים סיאמיים עקב פגיעה בחלוקת התא הראשונית."], correctIndex: 1, explanation: "פומוניזין משרה מומים בצינור העצבי (Neural tube defects) בהתפתחות עוברית, בנוסף להיותו קרצינוגני וגורם לתמותת תאים." },
+            { question: "באילו תנאי טמפרטורה חיידקי סלמונלה אינם מסוגלים לגדול?", options: ["מעל 20 מעלות צלזיוס.", "מתחת ל-7 מעלות צלזיוס.", "בטמפרטורת הגוף האנושי (37-38 מעלות).", "בין 15 ל-25 מעלות צלזיוס."], correctIndex: 1, explanation: "הטמפרטורה האופטימלית לגידול סלמונלה היא 38 מעלות, והם אינם גדלים בטמפרטורה שמתחת ל-7 מעלות צלזיוס." },
+            { question: "איזו בדיקה ביוכימית תאפשר להבדיל בין סלמונלה לחיידקי מעיים אחרים המתסיסים לקטוז?", options: ["מבחן התססת גלוקוז, שכן סלמונלה אינה מתסיסה גלוקוז.", "מבחן התססת לקטוז, שכן סלמונלה אינה מתסיסה לקטוז.", "מבחן ייצור אוראז, שכן סלמונלה מייצרת אוראז בכמויות גדולות.", "מבחן תנועתיות, שכן סלמונלה היא החיידק היחיד חסר השוטונים במשפחה."], correctIndex: 1, explanation: "סלמונלה מתסיסה גלוקוז אך לא מתסיסה לקטוז (וסוכרוז). בדיקת התססת לקטוז תהיה שלילית עבור סלמונלה." },
+            { question: "מהו ההסבר הביולוגי לכך שחשיפה לאפלטוקסין מובילה בעיקר לפגיעה בכבד?", options: ["הכבד הוא האיבר היחיד המכיל רצפטורים לאסטרוגן שאליהם נקשר הרעלן.", "הרעלן נספג ישירות דרך העור ומגיע לכבד דרך מערכת הלימפה בלבד.", "המטבוליזם של הרעלן מתבצע בכבד, ולכן הפגיעה העיקרית מתרחשת שם.", "הכבד מספק את סביבת ה-pH החומצית היחידה המאפשרת את שפעול הרעלן."], correctIndex: 2, explanation: "המטבוליזם של האפלטוקסין מתבצע בכבד, ולכן תוצרי הפירוק הרעילים והפגיעה העיקרית מרוכזים באיבר זה." },
+            { question: "חיידק המייצר רעלן רגיש לחום מפריש אותו לסביבת הגידול. לאיזו קבוצת רעלנים סביר ביותר להניח שהרעלן שייך?", options: ["אנדוטוקסינים", "מיקוטוקסינים", "אקסוטוקסינים", "טוקסואידים"], correctIndex: 2, explanation: "אקסוטוקסינים הם טוקסינים המופרשים למדיום הגידול, לרוב חלבונים, וחלקם רגישים לטיפול בחום." },
+            { question: "מהו תפקידה של מערכת ההפרשה (Secretion system) מסוג 3, 4, ו-6 בחיידק הסלמונלה?", options: ["לשאוב חומרי הזנה מהסביבה לתוך תא החיידק.", "לייצר מבנה דמוי מחט המאפשר לחיידק לחדור לתאים המארחים ולהזריק להם חומרים.", "להפריש מיקוטוקסינים לסביבה כדי לדכא צמיחת פטריות.", "להגן על החיידק מפני טמפרטורות גבוהות בזמן בישול."], correctIndex: 1, explanation: "מערכות ההפרשה בסלמונלה (כמו סוג 3) יוצרות מבנים דמויי מחט (needle complexes) המאפשרים לחיידק לתקשר, לחדור ולהדביק את התאים המארחים." },
+            { question: "מהי המשמעות של היות הסלמונלה 'זואונוטית'?", options: ["היא מסוגלת לבצע פוטוסינתזה בתנאי תאורה מתאימים.", "היא תלויה לחלוטין בוקטורים חרקיים (כמו יתושים) לשם העברתה.", "היא מועברת בין בעלי חיים לבני אדם.", "היא קיימת אך ורק בסביבות מימיות מלוחות."], correctIndex: 2, explanation: "מחלה או חיידק זואונוטי משמעותו שהוא עובר בין בעלי חיים לבני אדם. סלמונלה נפוצה מאוד בבעלי חיים ומועברת לאדם." },
+            { question: "איזו סכנה בריאותית מאפיינת את המיקוטוקסינים מעבר לרעילותם הישירה?", options: ["הם גורמים להתרבות בלתי נשלטת של נגיפים בדם.", "יש להם אלרגניות גבוהה העלולה לעורר תגובות חיסוניות קשות.", "הם מונעים ספיגת מים במעי הגס וגורמים להתייבשות כרונית.", "הם הופכים חיידקים ידידותיים לפטריות פתוגניות."], correctIndex: 1, explanation: "מלבד רעילות אקוטית וכרונית, למיקוטוקסינים ישנה גם אלרגניות גבוהה." },
+            { question: "התפרצות של מחלת 'אש סנט אנטוני' (St. Anthony's fire) מקושרת היסטורית לצריכת מזון נגוע ב:", options: ["בשר בקר שלא בושל מספיק והכיל סלמונלה טיפימוריום.", "דגניים הנגועים בפטרייה Claviceps purpurea המייצרת רעלנים.", "מי שתייה המזוהמים באנדוטוקסינים של חיידקי מעיים.", "חלב אם המכיל ריכוזים גבוהים של זירלנון."], correctIndex: 1, explanation: "הפטרייה Claviceps purpurea פוגעת קשות בדגניים, וצריכתם גרמה היסטורית למגפת אש סנט אנטוני." },
+            { question: "מה ההבדל בין הרעלת מזון (טוקסיקציה) לבין אינפקציה ממזון?", options: ["הרעלה נגרמת מנוכחות רעלן במזון, בעוד אינפקציה נגרמת מחדירה והתרבות של המיקרואורגניזם עצמו בגוף.", "הרעלה תמיד מלווה בחום גבוה, ואילו אינפקציה מתבטאת רק בסימפטומים נוירולוגיים.", "אינפקציה ניתנת לריפוי רק על ידי חיסון מקדים, בעוד הרעלה אינה דורשת טיפול.", "הרעלה נגרמת רק על ידי פטריות, ואינפקציה נגרמת רק על ידי חיידקים."], correctIndex: 0, explanation: "הרעלה היא פגיעה אקוטית הנגרמת על ידי רעלן (טוקסין) שכבר קיים במזון, בעוד אינפקציה מחייבת חדירה והתרבות של המיקרואורגניזם הפתוגני בתוך גוף המארח." },
+            { question: "כיצד תנאי סביבה משפיעים על ייצור אפלטוקסין על ידי פטריית Aspergillus flavus?", options: ["ייצור הרעלן נפסק לחלוטין בנוכחות אור שמש ישיר.", "ייצור הרעלן גובר משמעותית בתנאי עקה, שלעיתים מלווים גם בספורולציה.", "הפטרייה מייצרת את הרעלן רק בטמפרטורות קיפאון.", "ייצור הרעלן דורש סביבה סטרילית נטולת חיידקים מתחרים."], correctIndex: 1, explanation: "היכולת ליצור מיקוטוקסינים נקבעת גנטית, אך לרוב הייצור גובר בתנאי עקה, שמשרים גם ספורולציה." },
+            { question: "איזה מהמשפטים הבאים מסביר מדוע אלח דם (Sepsis) הוא מצב מסכן חיים?", options: ["הוא גורם להקפאת נוזלי הדם ומונע זרימת חמצן למוח.", "הוא יוצר תגובה דלקתית קיצונית ונרחבת המובילה לכשל מערכות (Organ dysfunction).", "הוא מפרק את כל הכדוריות האדומות בבת אחת וגורם לאנמיה מיידית.", "הוא חוסם את דרכי הנשימה העליונות באמצעות הצטברות חיידקים."], correctIndex: 1, explanation: "אלח דם (Sepsis) מוגדר כזיהום הגורם לתגובה דלקתית קיצונית ונרחבת בגוף, המובילה לתפקוד לקוי וכשל של איברים." },
+            { question: "מה מייחד את המטבוליזם של חיידקי הסלמונלה ביחס לסוכרים?", options: ["הם אינם מסוגלים להתסיס אף סוג של סוכר ותלויים בחלבונים בלבד.", "הם מתסיסים לקטוז וסוכרוז אך אינם מסוגלים לפרק גלוקוז.", "הם מתסיסים גלוקוז אך אינם מסוגלים להתסיס לקטוז וסוכרוז.", "הם מייצרים אלכוהול כתוצר לוואי יחיד של פירוק כל הסוכרים."], correctIndex: 2, explanation: "מבחינה ביוכימית, סלמונלה מתסיסה גלוקוז, אך אינה מסוגלת להתסיס לקטוז וסוכרוז." },
+            { question: "מה משמעות המונח 'זיהום עקיף' בהקשר של מיקוטוקסינים?", options: ["הדבקה המתרחשת דרך עקיצת חרק הנושא את נבגי הפטרייה.", "צריכת הרעלן דרך אכילת בעלי חיים שניזונו ממזון נגוע, או דרך נשימה.", "העברת הפטרייה מאדם לאדם באמצעות מגע ידיים.", "זיהום המתרחש רק לאחר שהמזון עובר תהליך בישול ארוך."], correctIndex: 1, explanation: "זיהום עקיף במיקוטוקסינים מתרחש כאשר האדם נחשף לרעלן לא ישירות מהצומח, אלא דרך אכילת תוצרת בעלי חיים שניזונו ממזון נגוע, או דרך נשימה." },
+            { question: "מהי הסיבה לכך שטוקסינים מסוימים גורמים ל-Toxic shock syndrome?", options: ["הם חודרים לגרעין התא ומונעים שעתוק של חלבוני נשימה.", "מרכיבים כמו ליפיד A ואנטיגן O גורמים לעירור יתר של מערכת החיסון ולתגובה אימונית קשה.", "הם ממיסים את שכבת המיאלין סביב תאי עצב וגורמים לשיתוק.", "הם מורידים את חום הגוף לטמפרטורות מסכנות חיים באופן פתאומי."], correctIndex: 1, explanation: "אנדוטוקסינים, ובמיוחד הרכיבים ליפיד A ואנטיגן O של דופן הגראם שליליים, מעוררים תגובה אימונית סוערת המובילה לתסמונת ההלם הרעלי." },
+            { question: "איזו קבוצת אוכלוסייה רגישה במיוחד להדבקה בסלמונלה?", options: ["קשישים מעל גיל 80 בלבד.", "ספורטאים בעלי מסת שריר גבוהה.", "ילדים.", "נשים בהיריון בחודש הראשון בלבד."], correctIndex: 2, explanation: "על פי החומר הנלמד, קיימת רגישות מיוחדת של ילדים לזיהומי סלמונלה." },
+            { question: "האם טיפול בחום מהווה פתרון אוניברסלי לטיהור מזון מכל סוגי הפתוגנים והרעלנים?", options: ["כן, הרתחה של 10 דקות משמידה את כל סוגי החיידקים והמיקוטוקסינים.", "לא, בעוד חיידקים כמו סלמונלה מושמדים בחום, חלק גדול מהמיקוטוקסינים עמידים לחום.", "כן, חום מפרק את כל הקשרים הפפטידיים ולכן מנטרל כל רעלן אפשרי.", "לא, חום מעודד התרבות מהירה של סלמונלה גם בטמפרטורות של מעל 80 מעלות."], correctIndex: 1, explanation: "סלמונלה ניתנת להשמדה בחום (60 מעלות למשך 15-20 דקות), אך חלק גדול מהמיקוטוקסינים עמידים לטיפול חום, ולכן בישול אינו מבטיח את בטיחות המזון מפניהם." },
+            { question: "אילו מזונות מועדים במיוחד לזיהום במיקוטוקסינים?", options: ["בשר טרי ודגים בלבד.", "מים מינרליים ומשקאות מוגזים.", "גרעינים, דגנים, פירות יבשים, אגוזים ובוטנים.", "ירקות עליים ירוקים בלבד."], correctIndex: 2, explanation: "מיקוטוקסינים, ובמיוחד אפלטוקסין, שכיחים מאוד בגרעינים שונים, דגנים, פירות יבשים, ומוצרים כמו בוטנים." },
+            { question: "מהו הטווח האופטימלי של רמת ה-pH להישרדות חיידקי סלמונלה?", options: ["טווח צר מאוד של 7.0 עד 7.2.", "טווח חומצי קיצוני של 1 עד 3.", "טווח רחב של 4 עד 9.", "טווח בסיסי קיצוני של 10 עד 14."], correctIndex: 2, explanation: "חיידקי סלמונלה יכולים לחיות בטווח pH רחב יחסית הנע בין 4 ל-9." },
+            { question: "איזו הצהרה לגבי האנזים אוראז (Urease) וסלמונלה היא נכונה?", options: ["סלמונלה מייצרת כמויות גדולות של אוראז כדי לשרוד בקיבה.", "לסלמונלה אין אנזים אוראז, וזהו אחד המאפיינים הביוכימיים שלה.", "אוראז הוא האקסוטוקסין העיקרי המופרש על ידי סלמונלה.", "סלמונלה רוכשת את האנזים אוראז רק כאשר היא פוגשת פטריות."], correctIndex: 1, explanation: "מבחינה ביוכימית, אחד המאפיינים של סלמונלה הוא שאין להם אוראז." },
+            { question: "מהי המשמעות של 'נשאות' בהקשר של זיהומי סלמונלה?", options: ["החיידק נישא באוויר למרחקים ארוכים וגורם להדבקה נשימתית.", "אדם או חיה יכולים להכיל את החיידק בגופם ולהפריש אותו ללא הופעת סימפטומים קליניים.", "החיידק חייב להינשא על גבי נבגי פטריות כדי לשרוד בסביבה החיצונית.", "החיידק מועבר אך ורק באמצעות תרומות דם."], correctIndex: 1, explanation: "נשאות (Carrier state) משמעותה שהפרט נושא את הפתוגן ומסוגל להפיץ אותו, לעיתים קרובות מבלי להראות סימפטומים של המחלה." },
+            { question: "איזה מהרעלנים הבאים גורם לאפקט הדומה להשפעת הסם LSD (הזיות)?", options: ["LPS", "Fumonisin", "Aflatoxin", "Zearalenone"], correctIndex: 2, explanation: "אפלטוקסין מוזכר בחומר כרעלן הגורם לחסימת כלי דם, גנגרנה, וכן להזיות בדומה להשפעת LSD." },
+            { question: "מהו ההסבר האבולוציוני ליכולתה של סלמונלה לחדור לתאים אאוקריוטיים?", options: ["היא התפתחה במקור כוירוס ורק מאוחר יותר רכשה תכונות של חיידק.", "היא מותאמת אבולוציונית למערכת העיכול של בעלי חיים, ולכן פיתחה מנגנונים כמו מערכות הפרשה לשם הישרדות והדבקה.", "היא מסוגלת לבצע מוטציות אקראיות בקצב מהיר יותר מכל חיידק אחר בעת מגע עם תא.", "היא מייצרת מיקוטוקסינים הממיסים את קרום התא המארח."], correctIndex: 1, explanation: "סלמונלה היא חיידק המותאם אבולוציונית למערכת העיכול של בעלי חיים, ופיתחה מנגנונים מתקדמים (Adhesion, Secretion systems) כדי לחדור ולשרוד בתאים." },
+            { question: "מדוע הוספת חומר משמר למזון עלולה להיות פעולה מסוכנת במצבים מסוימים?", options: ["החומר המשמר מגיב עם החמצן באוויר ויוצר גז רעיל.", "אם כבר ישנו זיהום פטרייתי, העקה הנגרמת מהחומר המשמר עלולה להשרות יצירת מיקוטוקסינים.", "החומר המשמר מספק מקור פחמן זמין המאיץ את קצב החלוקה של סלמונלה.", "חומרים משמרים מנטרלים את חומציות הקיבה ומאפשרים לכל הפתוגנים לשרוד."], correctIndex: 1, explanation: "הוספת חומר משמר למזון שכבר קיים בו זיהום יוצרת עקה על הפטרייה, מה שעלול להשרות ייצור מוגבר של מיקוטוקסינים במקום למנוע את הסכנה." },
+            { question: "מהי המשמעות של הערך התקני 15 ppb בהקשר של אפלטוקסין?", options: ["זהו הריכוז המינימלי הנדרש כדי להרוג את הפטרייה המייצרת את הרעלן.", "זוהי הכמות המרבית המותרת של הרעלן במזון, מכיוון שהוא מסוכן ביותר וקרצינוגני.", "זהו המינון המומלץ לשימוש ברעלן כטוקסואיד לחיסון.", "זהו ריכוז הרעלן המיוצר באופן טבעי על ידי מערכת העיכול האנושית."], correctIndex: 1, explanation: "הכמות המותרת של אפלטוקסין במזון היא 15 ppb (חלקים למיליארד), ערך נמוך מאוד המעיד על רעילותו הגבוהה והסכנה הקרצינוגנית שלו." }
         ];
 
         const tfData = [
-            { question: `אקזוטוקסינים הם טוקסינים שהם חלק בלתי נפרד ממבנה דופן תא החיידק.`, answer: false, explanation: `אקזוטוקסינים מופרשים למדיום הגידול החיצוני, בעוד שאנדוטוקסינים הם חלק מדופן התא.` },
-            { question: `חלק גדול מהאקזוטוקסינים מקודדים על ידי פלסמידים או אזורים כרומוזומליים המועברים באופן הוריזונטלי.`, answer: true, explanation: `הגנטיקה של ייצור אקזוטוקסינים לרוב קשורה לאלמנטים גנטיים ניידים כמו פלסמידים.` },
-            { question: `טוקסואידים הם רעלנים שעברו שינוי כך שהם רעילים יותר ומשמשים כנשק ביולוגי.`, answer: false, explanation: `טוקסואידים הם טוקסינים מוחלשים למטרות חיסון, ללא רעילות אך עם יכולת לחסן.` },
-            { question: `מיקוטוקסינים מיוצרים אך ורק על ידי חיידקי מעיים.`, answer: false, explanation: `מיקוטוקסינים מיוצרים על ידי פטריות, לא חיידקים.` },
-            { question: `ייצור מיקוטוקסינים על ידי פטריות גובר בדרך כלל כאשר הפטרייה נמצאת בתנאי עקה.`, answer: true, explanation: `תנאי עקה משרים ספורולציה וגובר בהם ייצור המיקוטוקסינים.` },
-            { question: `הוספת חומר משמר למזון שכבר זוהם בפטריות תמיד תמנע לחלוטין ייצור רעלנים נוספים.`, answer: false, explanation: `הוספת חומר משמר עלולה להוות תנאי עקה עבור הפטרייה ולהשרות יצירת מיקוטוקסינים.` },
-            { question: `אפלטוקסין (Aflatoxin) הוא רעלן בעל תכונות קרצינוגניות (מסרטנות) חזקות.`, answer: true, explanation: `אפלטוקסין מסוכן ביותר בשל היותו קרצינוגני, נקשר ל-DNA וגורם למוטציות.` },
-            { question: `איבר המטרה העיקרי הנפגע כתוצאה ממטבוליזם של אפלטוקסין הוא הלב.`, answer: false, explanation: `המטבוליזם מתבצע בכבד ולכן הפגיעה העיקרית היא בכבד.` },
-            { question: `רמות החשיפה המותרות לאפלטוקסין במזון נמדדות בחלקים למיליארד (ppb), מה שמעיד על רעילותו הגבוהה.`, answer: true, explanation: `הכמות המותרת במזון היא 15 ppb בלבד.` },
-            { question: `זיראלנון (Zearalenone) נקשר באפיניות גבוהה לקולטנים של הורמון הטסטוסטרון.`, answer: false, explanation: `זיראלנון נקשר באפיניות גבוהה לרצפטורים של אסטרוגן.` },
-            { question: `צריכת בשר בקר מפרות שהוזנו בזיראלנון מהווה סכנה חמורה לבני אדם עקב הצטברות הרעלן בשריר.`, answer: false, explanation: `הוא עובר מטבוליזם מהיר בחיות ובאדם, ולכן אין חשש לצרוך בעלי חיים שהוזנו בו.` },
-            { question: `פומוניזין (Fumonisin) הוכח כמשרה פגמים בהתפתחות הצינור העצבי בעוברי עכברים.`, answer: true, explanation: `המחקר מראה השפעות של FB1 על התפתחות עוברית הגורמות לפגמים בצינור העצבי.` },
-            { question: `חלק גדול מהמיקוטוקסינים נהרסים בקלות בטמפרטורות בישול סטנדרטיות ולכן אינם מהווים סכנה במזון מבושל.`, answer: false, explanation: `חלק גדול מהמיקוטוקסינים עמידים לטיפול חום.` },
-            { question: `זיהום עקיף במיקוטוקסינים יכול להתרחש דרך נשימה או אכילת בעלי חיים שניזונו ממזון נגוע.`, answer: true, explanation: `אלו הן בדיוק דרכי ההעברה של זיהום עקיף.` },
-            { question: `אלח דם (Sepsis) מוגדר כתגובה מקומית קלה לזיהום, החולפת מעצמה ללא טיפול.`, answer: false, explanation: `ספסיס הוא זיהום הגורם לתגובה דלקתית קיצונית ונרחבת ולתפקוד לקוי של איברים.` },
-            { question: `המנה המדבקת המינימלית (MID) עבור כל הפתוגנים עומדת על לפחות מיליון תאים (CFU).`, answer: false, explanation: `במקרים מסוימים ה-MID יכול להיות נמוך מאוד, בין 1 ל-10 CFU.` },
-            { question: `פתוגנים אופורטוניסטים נוטים לגרום למחלה כאשר הם נמצאים מחוץ לנישה האקולוגית הטבעית שלהם.`, answer: true, explanation: `יציאה מהנישה האקולוגית הטבעית היא אחד הגורמים להפיכת חיידק לפתוגן אופורטוניסטי.` },
-            { question: `חיידקי סלמונלה שייכים לקבוצת החיידקים הגרם-חיוביים.`, answer: false, explanation: `סלמונלה הם מתגים גרם שליליים ממשפחת ה-Enterobacteriaceae.` },
-            { question: `סלמונלה מסוגלת לייצר ספורות המאפשרות לה לשרוד תנאי יובש קיצוניים.`, answer: false, explanation: `סלמונלה מתוארת כחיידקים מתגים קצרים "חסרי ספורות".` },
-            { question: `מבחינה ביוכימית, חיידקי סלמונלה מתסיסים גלוקוז אך אינם מתסיסים לקטוז וסוכרוז.`, answer: true, explanation: `זהו אחד המאפיינים הביוכימיים המבדילים של סלמונלה.` },
-            { question: `חיידקי סלמונלה מייצרים מימן גופרתי ($H_2S$) הגורם להשחרה בנוכחות ברזל.`, answer: true, explanation: `ייצור מימן גופרתי וריח אופייני, יחד עם השחרה עם ברזל, הוא מאפיין של סלמונלה.` },
-            { question: `סלמונלה רגישה מאוד לחומציות ואינה יכולה לשרוד ברמת pH הנמוכה מ-7.`, answer: false, explanation: `סלמונלה יכולה לחיות בטווח pH רחב של 4 עד 9.` },
-            { question: `חיידקי סלמונלה יכולים להעלות את רמת ה-pH בסביבתם על ידי ייצור אמינים.`, answer: true, explanation: `הם יוצרים אמינים (הגורמים לריח) התורמים להעלאת ה-pH.` },
-            { question: `הטמפרטורה האופטימלית לגידול חיידקי סלמונלה היא $7^\\circ C$.`, answer: false, explanation: `הטמפרטורה האופטימלית היא $38^\\circ C$. הם אינם גדלים מתחת ל-$7^\\circ C$.` },
-            { question: `חיידקי סלמונלה מותאמים אבולוציונית למערכת העיכול של בעלי חיים ובעלי יכולת לחדור לתוך התאים.`, answer: true, explanation: `הם מותאמים למערכת העיכול ובעלי יכולת קיום מחוץ לתא וכן חדירה לתוך תאים (פגוציטוזה).` },
-            { question: `שטיפת עוף חי במים לפני הבישול מומלצת כדי להשמיד את חיידקי הסלמונלה שעליו.`, answer: false, explanation: `שטיפה אינה מנקה אלא גורמת להפצת החיידקים על פני כל המטבח באמצעות התזת מים.` },
-            { question: `הסרוטיפ Salmonella typhi יכול להדביק רק בני אדם ואינו נישא על ידי בעלי חיים.`, answer: true, explanation: `סלמונלה טיפי נישא רק באדם, בניגוד לסרוטיפים זואונוטיים אחרים.` },
-            { question: `מערכות הפרשה מסוג 1, 3, 4, 6 (Secretion systems) משמשות את הסלמונלה כדי להזריק רעלנים למזון לפני אכילתו.`, answer: false, explanation: `מערכות אלו (כמו מבני המחט) משמשות לחדירה ולהישרדות בתוך תאי המאכסן לאחר ההדבקה, ולא להרעלת המזון מראש.` },
-            { question: `ליפיד A (Lipid A) הוא רכיב של אקזוטוקסין המופרש על ידי פטריות.`, answer: false, explanation: `ליפיד A הוא רכיב של אנדוטוקסין (LPS) הנמצא בדופן תא של חיידקי גרם שליליים.` },
-            { question: `אחד הסימפטומים האפשריים להרעלת אפלטוקסין באדם הוא הזיות דמויות LSD.`, answer: true, explanation: `הרעלת אפלטוקסין (כמו זו הנגרמת מ-Claviceps purpurea) גורמת לחסימת כלי דם, נמק והזיות כמו LSD.` }
+            { question: "אקסוטוקסינים מורכבים לרוב מפוליסכרידים המהווים חלק מדופן התא.", answer: false, explanation: "אקסוטוקסינים הם לרוב חלבונים או פפטידים המופרשים לסביבה, בעוד אנדוטוקסינים (כמו LPS) הם פוליסכרידים/ליפידים המהווים חלק מדופן התא." },
+            { question: "כל האקסוטוקסינים עמידים לחלוטין לטיפול בחום.", answer: false, explanation: "חלק מהאקסוטוקסינים רגישים לטיפול חום ונהרסים בטמפרטורות גבוהות." },
+            { question: "טוקסואידים הם רעלנים מוחלשים שאיבדו את רעילותם אך שמרו על יכולתם לעורר תגובה חיסונית.", answer: true, explanation: "טוקסואידים משמשים למטרות חיסון בדיוק בשל תכונה זו." },
+            { question: "היכולת של פטרייה לייצר מיקוטוקסין תלויה אך ורק בתנאי הסביבה ואינה קשורה לגנטיקה של הפטרייה.", answer: false, explanation: "היכולת ליצור מיקוטוקסין נקבעת גנטית, אם כי היא מושפעת ומתגברת בתנאי סביבה (עקה)." },
+            { question: "תנאי עקה המופעלים על פטריות מעודדים יצירת ספורות במקביל לעלייה בייצור מיקוטוקסינים.", answer: true, explanation: "לרוב היצור של המיקוטוקסין גובר בתנאי עקה, שמשרים גם ספורולציה." },
+            { question: "אפלטוקסין מהווה סכנה חמורה בעיקר בשל יכולתו לגרום למוטציות ב-DNA.", answer: true, explanation: "אפלטוקסין הוא מסוכן ביותר בגלל קרצינוגניות: קישור ל-DNA וגרימת מוטציות." },
+            { question: "הרעלת אפלטוקסין פוגעת באופן בלעדי במערכת הנשימה.", answer: false, explanation: "המטבוליזם מתבצע בכבד ולכן הפגיעה העיקרית הינה בכבד (ותיתכן גם פגיעה בוושט)." },
+            { question: "מיקוטוקסינים שכיחים במיוחד במוצרי חלב טריים בלבד ואינם שורדים במוצרים יבשים.", answer: false, explanation: "מיקוטוקסינים שכיחים מאוד בגרעינים שונים, דגנים, פירות יבשים, ומוצרים כמו בוטנים." },
+            { question: "צריכת בשר בקר שניזון ממזון הנגוע בזירלנון (Zearalenone) מסוכנת מאוד לאדם עקב הצטברות הרעלן בשריר.", answer: false, explanation: "זירלנון עובר מטבוליזם מהיר בחיות ובאדם, ולכן אין חשש לצרוך בעלי חיים שהוזנו בו." },
+            { question: "פומוניזין (Fumonisin) ידוע ביכולתו להצטבר בשיער אדם.", answer: true, explanation: "פומוניזין מצטבר בשיער אדם, בנוסף להיותו קרצינוגני ופוגע במערכת העצבים." },
+            { question: "זיהום עקיף במיקוטוקסינים יכול להתרחש דרך נשימה.", answer: true, explanation: "זיהום עקיף אכן יכול להתרחש דרך אכילת בעלי חיים שניזונו ממזון נגוע או דרך נשימה." },
+            { question: "בישול מזון בטמפרטורות גבוהות מבטיח את השמדתם של כל המיקוטוקסינים.", answer: false, explanation: "חלק גדול מהמיקוטוקסינים עמידים לטיפול חום." },
+            { question: "הרעלת מזון (טוקסיקציה) מחייבת שהמיקרואורגניזם שיצר את הרעלן יהיה חי ופעיל בתוך גוף האדם.", answer: false, explanation: "הרעלת מזון נגרמת מעצם נוכחות הרעלן במזון, גם אם המיקרואורגניזם עצמו כבר אינו חי." },
+            { question: "אלח דם (Sepsis) מתאפיין בתגובה דלקתית חלשה ומקומית בלבד.", answer: false, explanation: "אלח דם הוא זיהום הגורם לתגובה דלקתית קיצונית ונרחבת (widespread extreme inflammation) ולכשל מערכות." },
+            { question: "כאשר המינון האינפקטיבי המינימלי (MID) הוא 1-10 חיידקים, הצרכן בדרך כלל אינו מסוגל לזהות שהמזון מקולקל.", answer: true, explanation: "בריכוזים כה נמוכים של פתוגנים, אין שינוי חושי הניתן לזיהוי על ידי הצרכן." },
+            { question: "סלמונלה הוא חיידק גראם חיובי היוצר ספורות להגנה.", answer: false, explanation: "סלמונלה הוא חיידק גראם שלילי וחסר ספורות." },
+            { question: "אחד המאפיינים הביוכימיים של סלמונלה הוא חוסר היכולת להתסיס לקטוז וסוכרוז.", answer: true, explanation: "סלמונלה מתסיסה גלוקוז, אך לא מתסיסה לקטוז וסוכרוז." },
+            { question: "חיידקי סלמונלה מייצרים גז מימן גופרתי הגורם להשחרה בנוכחות ברזל.", answer: true, explanation: "סלמונלה הם יוצרי גז מימן גופרתי המגיב עם ברזל ויוצר צבע שחור וריח אופייני." },
+            { question: "חיידקי סלמונלה משגשגים בטמפרטורות קירור של 4 מעלות צלזיוס.", answer: false, explanation: "הטמפרטורה האופטימלית שלהם היא 38 מעלות, והם אינם גדלים מתחת ל-7 מעלות צלזיוס." },
+            { question: "הסימפטומים של זיהום סלמונלה כוללים שלשול, חום, התכווצויות בטן ולעיתים דם בצואה.", answer: true, explanation: "אלו הם בדיוק התסמינים האופייניים לזיהום סלמונלה." },
+            { question: "זיהום סלמונלה תמיד מוביל לאלח דם (Sepsis) ולמוות תוך מספר שעות.", answer: false, explanation: "הסכנה לחיים ולאלח דם כתוצאה מסלמונלה קיימת, אך היא נדירה." },
+            { question: "לסלמונלה אין יכולת קיום מחוץ לתאים המארחים, והיא מתה מיד באוויר הפתוח.", answer: false, explanation: "לסלמונלה יש יכולת קיום מחוץ לתא וכן מנגנונים לחדור לתוך התאים." },
+            { question: "מערכות ההפרשה (Secretion systems) של סלמונלה יוצרות מבנים דמויי מחט המסייעים בהדבקה.", answer: true, explanation: "מערכות אלו (סוג 1,3,4,6) מאפשרות לחיידק לחדור ולהזריק חומרים לתאים המארחים." },
+            { question: "הזן Salmonella typhi נפוץ מאוד בבקר ובעופות ומועבר מהם לאדם.", answer: false, explanation: "הזן Salmonella typhi נישא אך ורק בבני אדם. הזן Salmonella typhimurium הוא זה שנפוץ בבקר ועופות." },
+            { question: "חיידקים אופורטוניסטים הם כאלה הגורמים למחלה רק כאשר הם נמצאים בתנאים האופטימליים של הנישה הטבעית שלהם.", answer: false, explanation: "הם הופכים לפתוגניים דווקא כאשר הם מחוץ לנישה הטבעית שלהם, תחת עקה, או כשהם מפתחים עמידות." },
+            { question: "הפטרייה Claviceps purpurea קשורה היסטורית למגפת 'אש סנט אנטוני' עקב פגיעתה בדגניים.", answer: true, explanation: "פטרייה זו אכן גרמה למגפה היסטורית זו." },
+            { question: "בבדיקת HPLC ניתן לזהות נוכחות של מיקוטוקסינים בדגימות מזון.", answer: true, explanation: "HPLC היא אחת השיטות המקובלות והמוזכרות לזיהוי מיקוטוקסינים." },
+            { question: "טמפרטורת השמדה של 60 מעלות צלזיוס למשך 15-20 דקות מספיקה כדי לחסל חיידקי סלמונלה.", answer: true, explanation: "נתון זה מדויק ומופיע במפורש בתיאור מאפייני החיידק." },
+            { question: "חיידקי סלמונלה מפרישים אמינים כדי להוריד את רמת ה-pH בסביבתם ולהפוך אותה לחומצית יותר.", answer: false, explanation: "הם יוצרים אמינים על מנת להעלות את ה-pH (להפוך את הסביבה לבסיסית יותר)." },
+            { question: "LPS הוא דוגמה לאקסוטוקסין המופרש על ידי חיידקי גראם חיוביים.", answer: false, explanation: "LPS הוא אנדוטוקסין (חלק מהתא) האופייני לחיידקי גראם שליליים." }
         ];
 
         // --- Global State Variables ---
@@ -798,6 +518,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -808,11 +535,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([flashcardContent]);
-            }
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -831,10 +554,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                
-                if (window.MathJax) {
-                    MathJax.typesetPromise([flashcardContent]);
-                }
+                triggerMathJax();
             }, 300);
         }
 
@@ -857,10 +577,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions, mcqExplanation]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -876,24 +593,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -935,10 +645,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -950,8 +657,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -961,10 +666,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion, tfExplanation]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -981,24 +683,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             
-             if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-             }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1041,10 +736,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             
-             if (window.MathJax) {
-                MathJax.typesetPromise([tfAllQuestionsContainer]);
-             }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1060,6 +752,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

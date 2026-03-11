@@ -1,204 +1,332 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>בקרת איכות, אמינות והערכת סיכונים בתעשיית המזון</h1>
+        <h1>בקרת איכות, רגולציה וניהול סיכונים בתעשיית המזון</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>תעשיית המזון פועלת תחת מערכת מורכבת של תקנים, רגולציות ושיטות בקרת איכות שנועדו להבטיח את בטיחות הצרכן. בישראל, האכיפה מתבצעת על ידי משרד הבריאות ומשרד החקלאות, בעוד שהתקנים נקבעים על ידי מכון התקנים. ברמה המפעלית, קיימים נוהלי עבודה המקנים דירוג למפעל, כגון <strong>GMP</strong> (תנאי ייצור נאותים) הנכתב על ידי אנשי המפעל ומתייחס לכלל סביבת המפעל, ו-<strong>ISO 22000</strong>, שהוא סטנדרט בינלאומי המוכתב מבחוץ ומאפשר ייצוא למדינות עם דרישות מחמירות.</p>
+                
+                <p>הגישה המודרנית לבטיחות מזון מתבססת על מערכת ה-<strong>HACCP</strong> (Hazard Analysis Critical Control Point). בניגוד לגישה הישנה שהסתמכה על דגימות של התוצר הסופי, HACCP מתמקדת ב<strong>מניעה</strong> לאורך כל שרשרת הייצור - מהשדה ועד לשולחן הצרכן. המערכת מנתחת סיכונים ביולוגיים, כימיים ופיזיקליים, ומזהה נקודות בקרה קריטיות (CCP) שבהן ניתן למנוע או להפחית את הסיכון לרמה סבירה.</p>
+
+                <h3>שבעת עקרונות ה-HACCP:</h3>
+                <ul>
+                    <li>1. אומדן הזיהום והסיכון (זיהוי אוכלוסיות רגישות, פוטנציאל זיהום חוזר).</li>
+                    <li>2. זיהוי נקודות בקרה קריטיות (CCP).</li>
+                    <li>3. קביעת חוקים וגבולות לכל CCP (כגון טמפרטורה, זמן, חומציות).</li>
+                    <li>4. קביעת פרוצדורה לבדיקה וניטור ה-CCP (עדיפות לבדיקה רציפה).</li>
+                    <li>5. קביעת פעולות מתקנות מראש למקרה של חריגה מהגבולות.</li>
+                    <li>6. ניהול נוהל תיעוד מסודר ויומיומי.</li>
+                    <li>7. הקמת מערכת לאישור ואימות תפעול התוכנית.</li>
+                </ul>
+
+                <p>בנוסף, התעשייה משתמשת ב<strong>מודלים מיקרוביאליים</strong> כדי לנבא את חיי המדף של המוצר ואת התנהגות המיקרואורגניזמים לאורך שלבי הייצור, האחסון והשימוש הביתי. תהליך <strong>הערכת הסיכונים (Risk Assessment)</strong> כולל ארבעה שלבים: זיהוי הגורם, הערכת החשיפה, הערכת מנת התגובה (Dose Response), ואפיון הסיכון הכולל.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: כשלון גישת הדגימה הסופית</strong>
+                    הסתמכות על בדיקת המוצר הסופי בלבד אינה מספקת מכיוון ששכיחות הפתוגנים במוצר היא לרוב נמוכה, ולכן קל לפספס אותם בדגימה סטטיסטית. בנוסף, בדיקות אלו יקרות, איטיות, ואינן מסוגלות לזהות את כל סוגי הפתוגנים. לכן, גישת ה-HACCP מסיטה את הפוקוס למניעה פרואקטיבית בתהליך עצמו.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: משוואת הסיכון המיקרוביאלי</strong>
+                    סיכון אינו נובע מעצם קיומו של חיידק בלבד. הסיכון מוגדר כהסתברות לתחלואה, והוא מחושב כשילוב של שני גורמים: מידת החשיפה (כמה חיידקים הגיעו לצרכן) ומנת התגובה (מהי הכמות הדרושה כדי לגרום למחלה, ובאיזו חומרה). הנוסחה היא: 
+                    <br><br>
+                    $Risk = F(exposure) \times F(dose response)$
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -211,7 +339,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -231,11 +358,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -258,8 +383,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -267,620 +391,98 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: `GMP (Good Manufacturing Practices)`, definition: `תכנית עבודה הנכתבת על ידי אנשי המפעל, שמטרתה לבקר ולשלוט בתנאים התברואתיים והבטיחותיים של כלל אזורי המפעל וסביבתו.` },
-            { term: `ISO 22000`, definition: `סטנדרט בינלאומי לבטיחות מזון. תכנית ניהול עבודה הנכתבת ומוכתבת מבחוץ, המאפשרת ייצוא למדינות עם תקנים מחמירים.` },
-            { term: `HACCP`, definition: `מערכת אנליזה של סיכונים בנקודות בקרה קריטיות. מטרתה להבטיח ייצור מוצר בטיחותי תוך דגש על מניעה לאורך כל שרשרת הייצור.` },
-            { term: `CCP (Critical Control Point)`, definition: `נקודה בשלב הייצור בה ניתן להפעיל בקרה על מנת למנוע סיכון בטיחותי או להחליש אותו לרמות סבירות.` },
-            { term: `Hazard Identification (זיהוי הגורם)`, definition: `השלב הראשון בהערכת סיכונים, הכולל שימוש בידע קיים כדי להעריך את שכיחות הגורם הביולוגי, חומרת המחלה שהוא גורם וכדומה.` },
-            { term: `Exposure Assessment (הערכת חשיפה)`, definition: `שלב בהערכת סיכונים הבוחן מהו המספר האמיתי של החיידקים אליו ייחשף הצרכן, וכמה אנשים צפויים להיחשף לסכנה.` },
-            { term: `Dose Response Assessment (הערכת מנת תגובה)`, definition: `שלב בהערכת סיכונים המעריך מהי הכמות של הגורם המזהם שתגרום למחלה, ובאיזו דרגת חומרה.` },
-            { term: `Risk Characterization (אפיון הסיכון)`, definition: `הערכה מסכמת לגבי הסיכוי שהמוצר יגרום לסכנה כלשהי והערכת מידת חומרתה, מחושב כפונקציה של חשיפה ומנת תגובה.` },
-            { term: `Microbial Modeling (מודל מיקרוביאלי)`, definition: `כלי המשמש לניבוי התנהגות מיקרואורגניזמים לאורך קו הייצור, ניבוי חיי מדף, והערכת השפעת שינויים בתהליך על הגידול החיידקי.` },
-            { term: `מכון התקנים הישראלי`, definition: `מכון ציבורי האחראי על קביעת התקן הישראלי בתחומים שונים, כולל תעשיית המזון.` },
-            { term: `אכיפת תקנות מזון בישראל`, definition: `מבוצעת בעיקר על ידי שני גופים ממשלתיים: משרד הבריאות ומשרד החקלאות.` },
-            { term: `עקרון 1 של HACCP`, definition: `אומדן הזיהום והסיכון. כולל בחינת המוצר לפי קטגוריות רגישות כמו אוכלוסיות יעד ושלבי עיבוד.` },
-            { term: `עקרון 3 של HACCP`, definition: `קביעת חוקים וגבולות לכל נקודת בקרה קריטית (CCP), כגון טווח טמפרטורה, זמן בישול, או רמת חומציות נדרשת.` },
-            { term: `עקרון 5 של HACCP`, definition: `קביעה מראש של חוקים ודרכי פעולה מתקנות למקרים בהם ישנם שינויים או חריגות מהגבולות שהוגדרו בנקודות הבקרה.` },
-            { term: `עקרון 6 של HACCP`, definition: `נוהל תיעוד. דרישה להכנת טפסים מראש למילוי יומיומי מסודר, הכולל חתימות, כדי להוכיח שהמערכת פועלת כנדרש.` },
-            { term: `עקרון 7 של HACCP`, definition: `הקמת מערכת אימות ובקרה שבודקת שהמפעל אכן פועל לפי תכנית ה-HACCP שהוגדרה. לעיתים מנוהל על ידי חברות ייעוץ חיצוניות.` }
+            { term: `GMP`, definition: `תנאי ייצור נאותים. תוכנית עבודה פנימית של המפעל לשליטה בתנאים תברואתיים ובטיחותיים בכלל סביבת המפעל.` },
+            { term: `ISO 22000`, definition: `סטנדרט בינלאומי לניהול בטיחות מזון. התוכנית מוכתבת מבחוץ ומאפשרת למפעל לייצא למדינות עם תקנים מחמירות.` },
+            { term: `HACCP`, definition: `מערכת לאנליזה של סיכונים בנקודות בקרה קריטיות. מתמקדת במניעת סיכונים לאורך כל שרשרת הייצור במקום בבדיקת התוצר הסופי.` },
+            { term: `CCP`, definition: `נקודת בקרה קריטית. שלב בתהליך הייצור בו ניתן להפעיל בקרה כדי למנוע סיכון בטיחותי או להפחיתו לרמה סבירה.` },
+            { term: `מודל מיקרוביאלי`, definition: `כלי לניבוי התנהגות מיקרואורגניזמים לאורך קו הייצור וקביעת חיי המדף של המוצר בהתאם לתנאים משתנים.` },
+            { term: `Hazard Identification`, definition: `זיהוי הגורם. השלב הראשון בהערכת סיכונים, בו משתמשים בידע קיים כדי להעריך את שכיחות הגורם המסוכן וחומרתו.` },
+            { term: `Exposure Assessment`, definition: `הערכת החשיפה. השלב השני בהערכת סיכונים, הבוחן מהו המספר האמיתי של חיידקים אליו ייחשף הצרכן וכמה אנשים ייחשפו.` },
+            { term: `Dose Response Assessment`, definition: `הערכת מנת התגובה. השלב השלישי בהערכת סיכונים, הקובע מהי כמות הגורם המסוכן הנדרשת כדי לגרום למחלה ובאיזו רמת חומרה.` },
+            { term: `Risk Characterization`, definition: `אפיון הסיכון. השלב הסופי בהערכת סיכונים, המשלב את כל הנתונים להערכה כללית של הסבירות והחומרה של הסכנה מהמוצר.` },
+            { term: `מכון התקנים הישראלי`, definition: `מכון ציבורי האחראי על התקן הישראלי, המהווה את הבסיס לדרישות האיכות והבטיחות המקומיות.` },
+            { term: `עקרון 1 ב-HACCP`, definition: `אומדן הזיהום והסיכון. בחינת המוצר לפי קטגוריות סיכון, רגישות הצרכנים ופוטנציאל לזיהום חוזר.` },
+            { term: `עקרון 3 ב-HACCP`, definition: `קביעת חוקים וגבולות לכל CCP, כגון טווחי טמפרטורה, זמן וחומציות קריטיים לבטיחות המוצר.` },
+            { term: `עקרון 5 ב-HACCP`, definition: `קביעת חוקים ודרכי פעולה מתקנות מראש, למקרה שמתגלה חריגה מהגבולות שהוגדרו בנקודת הבקרה הקריטית.` },
+            { term: `עקרון 7 ב-HACCP`, definition: `הקמת מערכת לאישור ואימות (Verification) שתפקידה לוודא שכלל תוכנית ה-HACCP פועלת כראוי.` },
+            { term: `FDA / USDA / EFSA`, definition: `רשויות בינלאומיות מרכזיות (בארהב ובאירופה) הקובעות תקנים ורגולציות מחמירות בתחום בטיחות המזון.` }
         ];
 
         const mcqData = [
-            {
-                question: `מפעל מזון מעוניין ליישם מערכת בקרת איכות שתאפשר לו לייצא את מוצריו לשוק האירופאי, הידוע בתקניו המחמירים. איזו מהמערכות הבאות תספק את המענה המתאים ביותר למטרה זו, ומה מאפיין אותה?`,
-                options: [
-                    `מערכת GMP, מכיוון שהיא נכתבת על ידי אנשי המפעל ומותאמת בדיוק לצרכיו הפנימיים.`,
-                    `תקן ISO 22000, מכיוון שזהו סטנדרט בינלאומי המוכתב ונבדק על ידי גורמי חוץ, המקנה דירוג הסמכה גבוה.`,
-                    `תקן ישראלי של מכון התקנים, מכיוון שהוא מבוסס על רגולציה מחמירה של משרד הבריאות.`,
-                    `מערכת HACCP בלבד, מכיוון שהיא מתמקדת בבדיקות מעבדה של המוצר הסופי לפני ייצוא.`
-                ],
-                correctIndex: 1,
-                explanation: `תקן ISO 22000 הוא סטנדרט בינלאומי המנוהל ומוכתב מבחוץ. קבלת הסמכה זו מעניקה דירוג בינלאומי גבוה למפעל, מה שמהווה תנאי הכרחי לייצוא למדינות עם דרישות רגולטוריות נוקשות.`
-            },
-            {
-                question: `מהו ההבדל המהותי ביותר בין תכנית GMP לתכנית ISO 22000 מבחינת אופן יצירתן וניהולן?`,
-                options: [
-                    `GMP נכתבת על ידי רגולטור ממשלתי, בעוד ISO נכתבת על ידי הנהלת המפעל.`,
-                    `GMP מתמקדת רק בקו הייצור הישיר, בעוד ISO בוחנת את סביבת המפעל החיצונית.`,
-                    `GMP נכתבת על ידי אנשי המפעל עצמם, בעוד ISO היא תכנית ניהול הנכתבת ומוכתבת על ידי ארגון חיצוני.`,
-                    `אין הבדל מהותי, שתיהן נכתבות על ידי מכון התקנים הישראלי ומועברות למפעל לאישור.`
-                ],
-                correctIndex: 2,
-                explanation: `על פי חומר הלימוד, נוהל העבודה של GMP נכתב על ידי אנשי המפעל עצמו ומתייחס למכלול האזור. לעומת זאת, ISO 22000 היא תכנית ניהול עבודה הנכתבת ומוכתבת מבחוץ על ידי ארגון בינלאומי.`
-            },
-            {
-                question: `מדוע גישת ה-HACCP נחשבת ליעילה יותר מאשר הסתמכות בלעדית על דגימות מעבדה של המוצר הסופי?`,
-                options: [
-                    `מפני שדגימות של מוצר סופי יקרות פחות אך אינן מאושרות על ידי משרד הבריאות.`,
-                    `מפני ששכיחות הפתוגנים במוצר הסופי היא נמוכה, קשה לזהות את כולם, והבדיקות איטיות ויקרות, בעוד ש-HACCP מתמקדת במניעה במהלך התהליך.`,
-                    `מפני ש-HACCP מבוססת אך ורק על בדיקות מהירות (Rapid tests) בסוף התהליך, החוסכות זמן יקר.`,
-                    `מפני שדגימות סופיות מזהות רק סיכונים כימיים, בעוד HACCP מתמקדת רק בסיכונים ביולוגיים.`
-                ],
-                correctIndex: 1,
-                explanation: `ההסתמכות על דגימות מוצר סופי בעייתית כי שכיחות הפתוגנים נמוכה (קשה לתפוס אותם סטטיסטית), קשה לזהות את כולם, והשיטה יקרה ואיטית. HACCP פותרת זאת על ידי מעבר מגישה של בדיקה לגישה של מניעה מראש.`
-            },
-            {
-                question: `באיזה הקשר היסטורי הוצגה לראשונה שיטת ה-HACCP לציבור בשנת 1971?`,
-                options: [
-                    `כחלק מניסיון של משרד החקלאות האמריקאי למגר התפרצות סלמונלה בתעשיית הביצים.`,
-                    `כפרויקט משותף של חברת פילסברי וסוכנות החלל נאסא להבטחת בטיחות מזון לאסטרונאוטים.`,
-                    `כיוזמה של ארגון הבריאות העולמי להתמודדות עם רעלנים כימיים במזון במדינות מתפתחות.`,
-                    `כחלק מהקמת מכון התקנים הישראלי וניסוח חוקי המזון הראשונים.`
-                ],
-                correctIndex: 1,
-                explanation: `הרעיון המקורי פותח בשנת 1959 על ידי חברת פילסברי ו-NASA כדי להבטיח מזון בטוח לחלל, והוצג לראשונה לציבור בשנת 1971.`
-            },
-            {
-                question: `צוות פיתוח במפעל מזון מתחיל לבנות תכנית HACCP למוצר חדש. לאחר בחירת הצוות, מהו השלב המקדים הבא שעליהם לבצע לפני שהם ניגשים לזיהוי הסכנות (עקרון 1)?`,
-                options: [
-                    `קביעת נקודות הבקרה הקריטיות (CCP) בקו הייצור.`,
-                    `תיאור המוצר ותכונותיו, פירוט אופן החלוקה והאחסון, ואפיון צרכני המוצר.`,
-                    `הכנת טפסים יומיים לתיעוד חריגות טמפרטורה.`,
-                    `ביצוע מודל מיקרוביאלי לניבוי חיי המדף של המוצר.`
-                ],
-                correctIndex: 1,
-                explanation: `לפני שמגיעים לשבעת העקרונות (שהראשון בהם הוא אומדן סיכונים), ישנם שלבים מקדימים: בחירת צוות, תיאור המוצר, אופן חלוקה ואחסון, הגדרת צרכנים, ושרטוט תרשים זרימה.`
-            },
-            {
-                question: `על פי עקרון 1 של HACCP (אומדן הזיהום והסיכון), איזה מהמוצרים הבאים יוגדר ברמת סיכון גבוהה יותר הדורשת בחינה קפדנית יותר?`,
-                options: [
-                    `חטיף מלוח יבש הנארז בוואקום ונמכר למבוגרים.`,
-                    `תחליף חלב אם באבקה המיועד לתינוקות.`,
-                    `קופסת שימורי תירס שעברה תהליך עיקור מלא באוטוקלב.`,
-                    `בקבוק מים מינרליים אטום.`
-                ],
-                correctIndex: 1,
-                explanation: `עקרון 1 קובע כי מוצר נבחן לפי קטגוריות, ביניהן מזון לבני אדם בסיכון גבוה כגון תינוקות או חולים בבתי חולים. לכן תחליף חלב לתינוקות מהווה סיכון משמעותי יותר.`
-            },
-            {
-                question: `במפעל לייצור קציצות בשר, הוגדר שלב הטיגון כנקודת בקרה קריטית (CCP). מה תהיה הפעולה המתאימה ביותר ליישום עקרון 3 (קביעת גבולות) עבור נקודה זו?`,
-                options: [
-                    `החלטה כי במידה והבשר לא טוגן מספיק, יש לזרוק את המנה לפח.`,
-                    `הגדרת טמפרטורה מינימלית של 70 מעלות צלזיוס במרכז הקציצה למשך לפחות 2 דקות.`,
-                    `מינוי עובד ספציפי שיהיה אחראי לחתום על טופס הטיגון בסוף כל משמרת.`,
-                    `ביצוע בדיקת מעבדה לסלמונלה אחת לשבוע למדגם של קציצות מטוגנות.`
-                ],
-                correctIndex: 1,
-                explanation: `עקרון 3 מדבר על קביעת חוקים וגבולות מדידים (כגון טמפרטורה, זמן, חומציות) כדי להבטיח את בטיחות המוצר בנקודת ה-CCP. הגדרת טמפרטורה וזמן מדויקים היא היישום הנכון של עקרון זה.`
-            },
-            {
-                question: `במהלך ייצור יוגורט מפוסטר, התגלה כי מד הטמפרטורה במפסטר הראה קריאה הנמוכה ב-5 מעלות מהגבול התחתון שהוגדר בתוכנית. על פי עקרון 5 של HACCP, כיצד יש לפעול?`,
-                options: [
-                    `יש לעצור את התהליך ולכנס את הנהלת המפעל כדי להחליט על דרך פעולה אד-הוק.`,
-                    `יש להמשיך בייצור אך לשלוח את כל המנה לבדיקת מעבדה חיצונית מקיפה.`,
-                    `יש להפעיל את הנוהל שנקבע מראש בתוכנית הכתובה לטיפול בחריגות מסוג זה.`,
-                    `יש לתעד את התקלה בטופס היומי ולהמתין לביקורת של משרד הבריאות.`
-                ],
-                correctIndex: 2,
-                explanation: `עקרון 5 דורש קביעה מראש של חוקים ודרכי פעולה מתקנות למקרה של חריגות בגבולות ה-CCP. לכן, הפעולה הנכונה היא להפעיל את הנוהל שכבר תוכנן ונכתב מראש עבור מצב זה.`
-            },
-            {
-                question: `מהי המטרה העיקרית של עקרון 7 בתוכנית ה-HACCP?`,
-                options: [
-                    `לזהות סכנות כימיות פוטנציאליות בחומרי הגלם המגיעים מהחקלאי.`,
-                    `להקים מערכת שמוודאת ומאשרת שהתפעול השוטף אכן מתבצע בהתאם לכללי תכנית ה-HACCP שהוגדרה.`,
-                    `לקבוע את הערכים המדויקים של טמפרטורה וזמן הנדרשים להשמדת פתוגנים.`,
-                    `לשרטט תרשים זרימה מעודכן של קו הייצור לאחר הכנסת מכונה חדשה.`
-                ],
-                correctIndex: 1,
-                explanation: `עקרון 7 עוסק בהקמת מערכת אימות (Verification) שתפקידה לאשר שהמפעל אכן מתופעל ועובד על פי תכנית ה-HACCP שהוגדרה (לעיתים באמצעות חברות ייעוץ חיצוניות).`
-            },
-            {
-                question: `מושג ה- Risk Assessment (הערכת סיכונים) כולל מספר שלבים. איזה מהתיאורים הבאים מתאים לשלב ה- Exposure assessment (הערכת חשיפה)?`,
-                options: [
-                    `קביעת מידת החומרה של המחלה שיגרום החיידק לאדם בוגר.`,
-                    `שימוש בספרות מדעית כדי להבין מהי השכיחות הכללית של הימצאות סלמונלה בביצים.`,
-                    `חישוב המספר האמיתי של החיידקים שיגיעו לצלחת של הצרכן והערכת כמות האנשים שייחשפו אליהם.`,
-                    `הכפלת ההסתברות לחלות בחומרת המחלה כדי לקבל ציון סיכון משוקלל.`
-                ],
-                correctIndex: 2,
-                explanation: `הערכת חשיפה (Exposure assessment) עוסקת בכימות החשיפה בפועל: מה המספר האמיתי של חיידקים אליו ייחשף הצרכן וכמה אנשים ייחשפו לסכנה.`
-            },
-            {
-                question: `במשוואת הערכת הסיכונים: $Risk = F(exposure) \\times F(dose response)$, מה מייצג הרכיב של Dose response?`,
-                options: [
-                    `את ההסתברות הסטטיסטית שהמוצר יזדהם במהלך שלב האריזה.`,
-                    `את כמות החיידקים המינימלית הנדרשת כדי לגרום למחלה בגוף האדם ואת דרגת חומרתה.`,
-                    `את כמות האנשים באוכלוסייה שצורכים את המוצר מדי יום.`,
-                    `את מהירות התגובה של צוות בקרת האיכות מרגע גילוי התקלה בקו הייצור.`
-                ],
-                correctIndex: 1,
-                explanation: `מנת התגובה (Dose response) מתייחסת להערכת הכמות הספציפית של פתוגן שעלולה לגרום למחלה קלינית, ובאיזו דרגת חומרה היא תתבטא באדם שנחשף.`
-            },
-            {
-                question: `גרף ה- Food System (מודל חיי מדף) מציג עליות וירידות בספירה המיקרוביאלית לאורך חיי המוצר. מה סביר להניח שיגרום לירידה חדה בספירת החיידקים בשלב הצרכן הביתי?`,
-                options: [
-                    `אחסון ממושך במקרר ביתי שאינו מכוון לטמפרטורה הנכונה (Abuse).`,
-                    `הפשרת המוצר על השיש בטמפרטורת החדר.`,
-                    `בישול ביתי (Home cooking) בטמפרטורות גבוהות.`,
-                    `המתנה ממושכת (Holding) של המזון המוכן לפני ההגשה.`
-                ],
-                correctIndex: 2,
-                explanation: `על פי הגרף שהוצג, פעולת הבישול הביתי (Home cooking) גורמת לירידה חדה בספירה המיקרוביאלית, בדומה לשלב העיבוד (Processing) במפעל.`
-            },
-            {
-                question: `מפעל משתמש במודל מיקרוביאלי (Microbial Modeling). מהי התועלת המרכזית של כלי זה עבור טכנולוג המזון?`,
-                options: [
-                    `החלפת הצורך בקבלת אישור ממשרד הבריאות לייצור המוצר.`,
-                    `יכולת לנבא באופן מתמטי את חיי המדף של המוצר וכיצד שינויים בתנאי הייצור ישפיעו על גידול החיידקים.`,
-                    `איתור מדויק של העובד שגרם לזיהום בקו הייצור באמצעות אלגוריתמים.`,
-                    `חישוב עלויות הייצור והפחתת פחת כלכלי בחומרי אריזה.`
-                ],
-                correctIndex: 1,
-                explanation: `מודל מיקרוביאלי משמש כדי להבין מה קורה לחיידקים לאורך קו הייצור, לנבא חיי מדף, ולהעריך כיצד שינויים בתכונות המוצר או בסביבה ישפיעו על הגידול המיקרוביאלי.`
-            },
-            {
-                question: `החלטתם לרכוש מיליון ביצים להכנת מיונז תעשייתי. ידוע כי 0.1 אחוז מהביצים נגועות בסלמונלה. לפי עקרונות אנליזת סיכונים, מהי הגישה המקצועית לקבלת החלטה האם להשתמש בהן?`,
-                options: [
-                    `השמדה מיידית של כל הביצים, שכן כל נוכחות של סלמונלה, ולו הקטנה ביותר, מחייבת פסילה מוחלטת ללא חריגים.`,
-                    `שימוש בביצים כרגיל, שכן 0.1 אחוז הוא אחוז זניח שאינו דורש התייחסות בתעשייה המודרנית.`,
-                    `ביצוע הערכת סיכונים הכוללת הערכת חשיפה ומנת תגובה, וקבלת החלטה מנומקת (למשל, הוספת שלב פסטור) המבוססת על המודלים המתמטיים.`,
-                    `החזרת הביצים לספק ודרישה לקבלת ביצים שעברו עיקור כימי מלא בלבד.`
-                ],
-                correctIndex: 2,
-                explanation: `באנליזת סיכונים, נוכחות פתוגן אינה גוררת בהכרח השמדה אוטומטית. יש לבצע הערכת סיכונים מקיפה (Risk Assessment), להיעזר במודלים, ולקבל החלטה מושכלת אם לקחת את הסיכון או לנהל אותו (למשל על ידי פסטור).`
-            },
-            {
-                question: `איזה מהגופים הבאים אינו מוזכר במקורות כגוף רלוונטי לקביעת סטנדרטים, אכיפה או רגולציה של בטיחות מזון?`,
-                options: [
-                    `משרד הבריאות`,
-                    `מכון התקנים הישראלי`,
-                    `רשות המיסים`,
-                    `משרד החקלאות`
-                ],
-                correctIndex: 2,
-                explanation: `הגופים המוזכרים כאחראים על סטנדרטים ואכיפה הם מכון התקנים, משרד הבריאות ומשרד החקלאות. רשות המיסים אינה קשורה לבקרת איכות של מזון.`
-            },
-            {
-                question: `כיצד מוגדרת תכנית GMP ביחס למרחב הפיזי של המפעל?`,
-                options: [
-                    `היא חלה אך ורק על המכונות הבאות במגע ישיר עם המזון.`,
-                    `היא מתייחסת למכלול האזור של המפעל וסביבתו, ולא רק לקו הייצור בלבד.`,
-                    `היא חלה רק על אזורי האחסון של חומרי הגלם.`,
-                    `היא מגדירה רק את היגיינת העובדים בחדר האוכל של המפעל.`
-                ],
-                correctIndex: 1,
-                explanation: `הנוהל של GMP מתייחס מפורשות למכלול האזור של המפעל וסביבתו כדי לשלוט בתנאים התברואתיים, ולא מצטמצם אך ורק לקו הייצור הישיר.`
-            },
-            {
-                question: `מהו החסרון המרכזי של הסתמכות על בדיקות מעבדה של המוצר הסופי ככלי בלעדי להבטחת איכות?`,
-                options: [
-                    `הבדיקות מהירות מדי ולכן אינן מדויקות סטטיסטית.`,
-                    `הן מזהות רק פגמים פיזיים ולא ביולוגיים.`,
-                    `השיטה יקרה, איטית, וקשה לזהות דרכה את כל הפתוגנים בשל שכיחותם הנמוכה במדגם.`,
-                    `משרד הבריאות אוסר על ביצוע בדיקות מוצר סופי במפעלים המייצאים לחוץ לארץ.`
-                ],
-                correctIndex: 2,
-                explanation: `כפי שהוסבר לגבי הצורך ב-HACCP, הסתמכות על בדיקות סופיות היא יקרה, איטית, ושכיחות הפתוגנים נמוכה ולכן מדגם עלול לפספס זיהום.`
-            },
-            {
-                question: `חברת מזון מייצרת גבינה עם תוספות פרי (שמוספות לאחר פסטור החלב). על פי עקרון 1 של HACCP, מה תהיה הסכנה המרכזית שיש לבחון בשלב זה?`,
-                options: [
-                    `רמת החומציות הטבעית של החלב הגולמי לפני הפסטור.`,
-                    `רמת חשיפת המזון לזיהום חוזר (Cross-contamination) לפני האריזה עקב הוספת הפרי.`,
-                    `עמידות אריזת הפלסטיק לחום במיקרוגל.`,
-                    `תקינות המשקל האלקטרוני המודד את כמות הפרי.`
-                ],
-                correctIndex: 1,
-                explanation: `עקרון 1 מציין במפורש שיש להעריך את "רמת חשיפת המזון לזיהום חוזר לפני האריזה (גבינה עם תוספות)". הוספת רכיב לאחר שלב השמדה (פסטור) מהווה סיכון משמעותי לזיהום מחדש.`
-            },
-            {
-                question: `מהי הדרך המומלצת והרצויה ביותר לבצע בדיקה בנקודת CCP (עקרון 4)?`,
-                options: [
-                    `לקיחת דגימה למעבדה חיצונית אחת לחודש.`,
-                    `בדיקה חזותית של מנהל המשמרת בסוף היום.`,
-                    `בדיקה רציפה (Continuous monitoring), למשל באמצעות חיישנים דיגיטליים.`,
-                    `הסתמכות על תלונות צרכנים כדי לזהות חריגות.`
-                ],
-                correctIndex: 2,
-                explanation: `על פי עקרון 4 (קביעת פרוצדורה לבדיקה), השיטה הרצויה ביותר היא בדיקה רציפה, המאפשרת זיהוי מיידי של חריגות מגבולות ה-CCP.`
-            },
-            {
-                question: `מפעל משתמש בגלאי מתכות לאיתור שבבי ברזל במוצר. הגלאי מוגדר כ-CCP. באיזו קטגוריה של סיכונים מטפל שלב זה על פי גישת ה-HACCP?`,
-                options: [
-                    `סיכון ביולוגי.`,
-                    `סיכון כימי.`,
-                    `סיכון פיזיקלי.`,
-                    `סיכון תפעולי.`
-                ],
-                correctIndex: 2,
-                explanation: `מערכת HACCP כוללת את כל סוגי הסיכונים: ביולוגי, כימי ופיזיקלי. מתכת היא עצם זר המהווה סיכון פיזיקלי.`
-            },
-            {
-                question: `האם תכנית HACCP מסתיימת ברגע שהמוצר נארז ויוצא משערי המפעל?`,
-                options: [
-                    `כן, אחריות המפעל מסתיימת בשער, והאחריות עוברת לחברת ההפצה.`,
-                    `כן, כל עוד המוצר עבר את הבדיקות במפעל, אין צורך בהתייחסות נוספת.`,
-                    `לא, התכנית מתייחסת לכל השלבים מהשדה אל השולחן, כולל חלוקה ושימוש על ידי הצרכן.`,
-                    `לא, אך היא מתייחסת רק לזמן השהייה במחסני הרשתות הקמעונאיות ולא לצרכן הביתי.`
-                ],
-                correctIndex: 2,
-                explanation: `מערכת HACCP מתייחסת לכל שלבי הייצור "מהשדה אל השולחן", כולל חקלאות, הכנה, אריזה, חלוקה, ואף השימוש על ידי הצרכן בביתו.`
-            },
-            {
-                question: `בשלב של "Hazard Identification" (זיהוי הגורם), באיזה כלי מרכזי משתמשים כדי להעריך את הסכנה?`,
-                options: [
-                    `ניסויים קליניים חדשים בבני אדם עבור כל מוצר.`,
-                    `שימוש בידע קיים (ספרות רפואית, מחקרים) להערכת שכיחות הגורם וחומרת המחלה.`,
-                    `סקר שוק בקרב צרכנים פוטנציאליים.`,
-                    `מדידת טמפרטורת הסביבה במפעל.`
-                ],
-                correctIndex: 1,
-                explanation: `זיהוי הגורם מבוסס על שימוש בידע קיים להערכת שכיחותו של הגורם, חומרת המחלה שהוא גורם ועוד, ולא על ניסויים חדשים או סקרי שוק.`
-            },
-            {
-                question: `איזה מהגופים הבאים אינו מוזכר כסוכנות בינלאומית או זרה המספקת מידע ותקנים חשובים בתחום המזון?`,
-                options: [
-                    `FDA (מנהל המזון והתרופות האמריקאי)`,
-                    `USDA (משרד החקלאות האמריקאי)`,
-                    `EFSA (הרשות האירופית לבטיחות מזון)`,
-                    `WHO (ארגון הבריאות העולמי)`
-                ],
-                correctIndex: 3,
-                explanation: `האתרים החשובים שהוזכרו במפורש הם ה-FDA, ה-USDA, וה-EFSA, וכן מכון התקנים הישראלי. ארגון הבריאות העולמי (WHO) לא הוזכר ברשימה זו.`
-            },
-            {
-                question: `על פי עקרון 6 של HACCP, מהי החשיבות של יצירת טפסים מסודרים וחתימה עליהם?`,
-                options: [
-                    `כדי לחשב את שעות הנוספות של העובדים לצורך תשלום שכר.`,
-                    `כדי לספק הוכחה מתועדת ומשפטית לכך שהבקרה אכן בוצעה בפועל ושגבולות ה-CCP נשמרו.`,
-                    `כדי שמשרד הפנים יוכל לעקוב אחר מצבת כוח האדם במפעל.`,
-                    `כדי להחליף את הצורך בבדיקות מעבדה של רכיבי המוצר.`
-                ],
-                correctIndex: 1,
-                explanation: `עקרון 6 מדגיש את נוהל התיעוד: חשיבות התיעוד המסודר והחתימה היא כדי להוכיח שהמערכת מנוהלת כראוי, המדדים נבדקים, ופעולות מתקנות מבוצעות בעת תקלה.`
-            },
-            {
-                question: `חברה מייצרת סלטי חומוס. באחד הימים הייתה הפסקת חשמל שגרמה להתחממות המקררים מעל לטמפרטורה המותרת למשך שעה. איזה עקרון של HACCP אמור לספק את התשובה המיידית כיצד לטפל בסלטים אלו?`,
-                options: [
-                    `עקרון 1 - זיהוי סכנות.`,
-                    `עקרון 2 - קביעת נקודות בקרה.`,
-                    `עקרון 5 - קביעת דרכי פעולה מתקנות במקרה של חריגה.`,
-                    `עקרון 7 - מערכת אימות.`
-                ],
-                correctIndex: 2,
-                explanation: `עקרון 5 עוסק בקביעה מראש של חוקים ודרכי פעולה כאשר ישנם שינויים או חריגות מהגבולות שהוגדרו ב-CCP. לכן הנוהל שנכתב במסגרת עקרון זה אמור להנחות מה לעשות עם הסלטים.`
-            },
-            {
-                question: `מהי המטרה של שרטוט "תרשים זרימה" (Flowchart) במסגרת השלבים המקדימים של HACCP?`,
-                options: [
-                    `להציג את המבנה הארגוני של הנהלת המפעל.`,
-                    `למפות באופן ויזואלי את כל שלבי התהליך, מקבלת חומרי הגלם ועד למוצר הסופי, כדי לאתר היכן עלולות להיווצר סכנות.`,
-                    `לתכנן את מסלול הפינוי של עובדים במקרה של שריפה.`,
-                    `להראות את התפלגות הרווחים של המפעל על פני השנה.`
-                ],
-                correctIndex: 1,
-                explanation: `תרשים הזרימה מתאר את קו הייצור ושלביו השונים. זהו כלי חיוני כדי שהצוות יוכל לעבור שלב אחר שלב ולזהות היכן יש צורך להציב נקודות בקרה קריטיות (CCP).`
-            },
-            {
-                question: `כיצד מוגדרת נקודת בקרה קריטית (CCP)?`,
-                options: [
-                    `כל נקודה במפעל בה עובד בא במגע עם המזון.`,
-                    `נקודה בשלב הייצור בה ניתן להפעיל בקרה כדי למנוע סיכון בטיחותי או להחליש אותו לרמה סבירה.`,
-                    `השלב הסופי בו המוצר נבדק על ידי לקוח הקצה בסופרמרקט.`,
-                    `הנקודה בה חומר הגלם נכנס לשערי המפעל בלבד.`
-                ],
-                correctIndex: 1,
-                explanation: `ההגדרה הרשמית של CCP היא נקודה בה ניתן להפעיל בקרה (Control) כדי למנוע, לסלק או להפחית סיכון בטיחותי לרמה מקובלת וסבירה.`
-            },
-            {
-                question: `שלב "אפיון הסיכון" (Risk Characterization) משלב בתוכו שני משתנים עיקריים. מהם?`,
-                options: [
-                    `עלות המוצר וזמן חיי המדף שלו.`,
-                    `ההסתברות לחשיפה והערכת מנת התגובה (חומרת המחלה).`,
-                    `יעילות המפסטר וטמפרטורת האחסון.`,
-                    `דרישות משרד הבריאות ודרישות מכון התקנים.`
-                ],
-                correctIndex: 1,
-                explanation: `אפיון הסיכון הוא הערכה כללית המשלבת את מידת החשיפה לסיכון (Exposure) יחד עם מנת התגובה הנדרשת כדי לגרום למחלה (Dose response).`
-            },
-            {
-                question: `מדוע חשוב לאשר את תרשים הזרימה "בקו הייצור עצמו" (שלב 6 בשלבים המקדימים), ולא להסתפק בשרטוט שנעשה במשרד?`,
-                options: [
-                    `כדי להראות לעובדי הקו שההנהלה מפקחת עליהם.`,
-                    `מכיוון שלעיתים יש פערים בין מה שתוכנן תיאורטית לבין מה שקורה בפועל ברצפת הייצור, ויש לאמת את התהליך האמיתי.`,
-                    `כדי לקבל חתימה של משרד הבריאות על התרשים.`,
-                    `כדי שניתן יהיה לתלות את התרשים על קירות המפעל ליופי.`
-                ],
-                correctIndex: 1,
-                explanation: `אישור התרשים בקפדנות בקו הייצור נועד לוודא שהתרשים התיאורטי משקף במדויק את תהליך הייצור בפועל, שכן סכנות יכולות להיווצר מפרקטיקות עבודה אמיתיות שלא תועדו במשרד.`
-            },
-            {
-                question: `מה משמעות המונח "Abuse" בגרף המציג את ספירת החיידקים במערכת המזון (Food System)?`,
-                options: [
-                    `שימוש בכימיקלים אסורים לניקוי המפעל.`,
-                    `התעללות בבעלי חיים בשלב החקלאות.`,
-                    `הפרה של תנאי האחסון האופטימליים (למשל, השארת מזון מחוץ למקרר), המובילה לעלייה מהירה בכמות החיידקים.`,
-                    `צריכת כמות גדולה מדי של מזון על ידי הצרכן.`
-                ],
-                correctIndex: 2,
-                explanation: `בהקשר של מודל חיי המדף, המונח Abuse (התעללות/שימוש לרעה) מתייחס לתנאי אחסון לקויים (כמו שבירת שרשרת הקירור) שגורמים לעלייה חדה בספירה המיקרוביאלית.`
-            },
-            {
-                question: `אם מודל מיקרוביאלי מראה שחיי המדף הבטוחים של מוצר הם 10 ימים בטמפרטורה של 4 מעלות. מה צפוי לקרות, על פי עקרונות המודל, אם הטמפרטורה תעלה ל-10 מעלות?`,
-                options: [
-                    `חיי המדף יתארכו כי חיידקים אינם שורדים בטמפרטורה זו.`,
-                    `חיי המדף יתקצרו משמעותית עקב קצב גידול מיקרוביאלי מואץ.`,
-                    `לא יהיה שינוי בחיי המדף כל עוד האריזה סגורה.`,
-                    `המוצר יהפוך לסטרילי לחלוטין.`
-                ],
-                correctIndex: 1,
-                explanation: `מודל מיקרוביאלי מנבא שעלייה בטמפרטורה (המהווה תנאי גידול נוח יותר לרוב הפתוגנים) תאיץ את קצב ריבוי החיידקים, ובכך תביא להגעה מהירה יותר לגבול המותר (Shelf life limit), כלומר תקצר את חיי המדף.`
-            },
-            {
-                question: `איזה מהבאים מהווה דוגמה ל"שימוש בחימום סופי לאחר האריזה ולפני האכילה" כגורם המפחית סיכון (עקרון 1)?`,
-                options: [
-                    `נקניק סלמי הנאכל קר ישירות מהאריזה.`,
-                    `ארוחה מוכנה קפואה שהצרכן נדרש לחמם במיקרוגל עד לרתיחה לפני ההגשה.`,
-                    `סלט ירקות טרי הנארז בשקית ניילון.`,
-                    `גלידה המאוחסנת בהקפאה עמוקה.`
-                ],
-                correctIndex: 1,
-                explanation: `ארוחה קפואה המיועדת לחימום משמעותי על ידי הצרכן כוללת שלב השמדה פוטנציאלי (חימום סופי) המפחית את רמת הסיכון, בניגוד למוצרים הנצרכים כפי שהם (Ready-to-eat).`
-            },
-            {
-                question: `חברת ייעוץ חיצונית נשכרת על ידי מפעל מזון כדי לבדוק את יומני הטמפרטורה של החודש האחרון ולוודא שהמפעל פועל כנדרש. איזה עקרון HACCP היא מיישמת בפעולה זו?`,
-                options: [
-                    `עקרון 2 (זיהוי CCP).`,
-                    `עקרון 4 (בדיקת CCP).`,
-                    `עקרון 7 (הקמת מערכת אימות/Verification).`,
-                    `עקרון 1 (אומדן סיכונים).`
-                ],
-                correctIndex: 2,
-                explanation: `בדיקה חיצונית או פנימית שנועדה לאשר שהמערכת פועלת על פי התכנית שהוגדרה היא פעולת אימות (Verification), המוגדרת כעקרון 7.`
-            },
-            {
-                question: `החלטה אם לאשר ייצוא של תוצרת חקלאית למדינה זרה מסתמכת על עמידה בתקנים. איזה תקן מבטיח עמידה בסטנדרט בינלאומי לניהול בטיחות מזון המקל על ייצוא למדינות מחמירות?`,
-                options: [
-                    `תקן ישראלי מקומי בלבד.`,
-                    `ISO 9001 בלבד.`,
-                    `ISO 22000.`,
-                    `אישור של משרד החקלאות הישראלי בלבד.`
-                ],
-                correctIndex: 2,
-                explanation: `ISO 22000 הוא התקן הבינלאומי הספציפי למזון המעניק דירוג הסמכה גבוה למפעל ומאפשר לייצא תוצרת למדינות עם תקנים מחמירים.`
-            },
-            {
-                question: `מהו ההבדל בין שלב ה"בדיקה" (Monitoring - עקרון 4) לבין שלב ה"אימות" (Verification - עקרון 7)?`,
-                options: [
-                    `אין הבדל, מדובר באותו תהליך בשמות שונים.`,
-                    `בדיקה נעשית בזמן אמת כדי לדעת אם התהליך בשליטה, בעוד אימות נעשה בדיעבד או באופן תקופתי כדי לוודא שכל מערכת ה-HACCP עובדת נכון.`,
-                    `בדיקה נעשית רק על ידי גורם חיצוני, ואימות נעשה רק על ידי עובדי הפס.`,
-                    `בדיקה מתייחסת רק לחיידקים, ואימות מתייחס רק לכימיקלים.`
-                ],
-                correctIndex: 1,
-                explanation: `בדיקה (Monitoring) היא הפעולה השוטפת (כמו מדידת טמפרטורה כל שעה) כדי לשלוט ב-CCP. אימות (Verification) בודק את המערכת כולה (למשל, האם מכשירי המדידה כוילו, האם הנהלים רלוונטיים).`
-            },
-            {
-                question: `בתהליך הערכת הסיכונים, אם מתגלה כי חיידק מסוים גורם למחלה קשה מאוד (חומרה גבוהה) אך הוא כמעט ולא שורד מחוץ למעבדה ולכן צרכנים לא נחשפים אליו לעולם (חשיפה אפסית), מה תהיה רמת הסיכון הכוללת?`,
-                options: [
-                    `גבוהה מאוד, בגלל חומרת המחלה.`,
-                    `אפסית או נמוכה מאוד, מכיוון שהסיכון הוא מכפלה של החשיפה והחומרה.`,
-                    `בינונית, כממוצע של השניים.`,
-                    `בלתי ניתנת לחישוב ללא מודל מיקרוביאלי.`
-                ],
-                correctIndex: 1,
-                explanation: `לפי המשוואה $Risk = F(exposure) \\times F(dose response)$, אם ההסתברות לחשיפה היא אפס (או קרובה לכך), מכפלת הסיכון תהיה אפס, ללא קשר לחומרת המחלה הפוטנציאלית.`
-            },
-            {
-                question: `מדוע נדרש תיאור מדויק של אופן חלוקת המוצר (למשל, האם הוא מופץ בקירור או בטמפרטורת החדר) בשלבים המקדימים של HACCP?`,
-                options: [
-                    `כדי לחשב את עלות הדלק של משאיות החלוקה.`,
-                    `מכיוון שתנאי ההפצה משפיעים ישירות על פוטנציאל הגידול של פתוגנים ועל הסיכונים שיש למנוע.`,
-                    `כדי להחליט באיזה צבע להדפיס את האריזה.`,
-                    `הדבר אינו נדרש, HACCP מסתיים בשער המפעל.`
-                ],
-                correctIndex: 1,
-                explanation: `אופן האחסון והחלוקה הוא קריטי לבטיחות המזון. שבירת שרשרת קירור, למשל, מאפשרת התרבות חיידקים. הבנת תנאים אלו הכרחית לזיהוי סכנות נכון.`
-            },
-            {
-                question: `איזה מהשינויים הבאים בקו הייצור יחייב, בסבירות הגבוהה ביותר, עדכון של תכנית ה-HACCP?`,
-                options: [
-                    `החלפת חברת הניקיון של משרדי ההנהלה.`,
-                    `החלפת ספק חומר הגלם העיקרי למדינה שאין בה רגולציה מחמירה.`,
-                    `שינוי צבע מדי העובדים מכחול לירוק.`,
-                    `הוספת שילוט הכוונה חדש בחניון המפעל.`
-                ],
-                correctIndex: 1,
-                explanation: `החלפת ספק משפיעה ישירות על הסכנות הפוטנציאליות הנכנסות למפעל (למשל, סיכוי גבוה יותר לחומרי הדברה או פתוגנים), ולכן מחייבת ביצוע מחדש של אנליזת סיכונים ועדכון התכנית.`
-            },
-            {
-                question: `בגרף חיי המדף, שלב ה-Holding (המתנה לפני הגשה, למשל במזנון) מראה עלייה בספירת החיידקים. מהי הדרך הטובה ביותר למנוע חצייה של גבול חיי המדף בשלב זה?`,
-                options: [
-                    `הקפאת המזון לטמפרטורה של מינוס 18 מעלות בזמן ההגשה.`,
-                    `שמירה על המזון בטמפרטורה גבוהה מספיק (מעל 60 מעלות) המונעת התרבות חיידקים.`,
-                    `הוספת מים קרים למזון מדי שעה.`,
-                    `אין דרך למנוע זאת, זהו תהליך טבעי ובלתי נמנע.`
-                ],
-                correctIndex: 1,
-                explanation: `בשלב ההחזקה חם (Holding), שמירה על טמפרטורה גבוהה מונעת מפתוגנים להתרבות ומעכבת את העלייה בספירה המיקרוביאלית אל מעבר לגבול המותר.`
-            },
-            {
-                question: `מהי המטרה של פרסום מודלים לאנליזת סיכונים על ידי גופים ממשלתיים כמו ה-USDA (כפי שהוצג עבור אי קולי וסלמונלה)?`,
-                options: [
-                    `לאסור לחלוטין ייצור של מיונז ביתי.`,
-                    `לספק לתעשייה ולציבור כלים מדעיים ונתונים מבוססים כדי לבצע הערכת סיכונים ולקבל החלטות מושכלות.`,
-                    `לפרסם את שמות המפעלים שנסגרו עקב עבירות תברואה.`,
-                    `לשווק מוצרי ניקיון מאושרים על ידי הממשל.`
-                ],
-                correctIndex: 1,
-                explanation: `סוכנויות כמו ה-USDA מפרסמות מודלים של הערכת סיכונים כדי לעזור ליצרנים ולחוקרים להבין את ההסתברויות, לכמת סיכונים, ולקבל החלטות בטיחותיות מבוססות מדע.`
-            }
+            { question: `איזה מהגופים הבאים אחראי בפועל על אכיפת סטנדרטים ותקנות בתעשיית המזון בישראל?`, options: [`מכון התקנים הישראלי`, `משרד הבריאות ומשרד החקלאות`, `ארגון הבריאות העולמי`, `חברות ייעוץ פרטיות המעניקות תקני ISO`], correctIndex: 1, explanation: `מכון התקנים קובע את התקן, אך האכיפה בפועל במדינת ישראל מתבצעת על ידי משרד הבריאות ומשרד החקלאות.` },
+            { question: `מהו ההבדל המהותי ביותר בין תקן GMP לתקן ISO 22000 מבחינת אופן כתיבת הנהלים?`, options: [`GMP נכתב על ידי רגולטור ממשלתי, בעוד ISO נכתב על ידי הנהלת המפעל`, `GMP מתמקד רק בקו הייצור, בעוד ISO מתמקד בכל המפעל`, `GMP נכתב על ידי אנשי המפעל עצמם, בעוד ISO היא תוכנית המוכתבת מגורם חיצוני`, `אין הבדל, שניהם נכתבים על ידי מבקרי איכות בינלאומיים`], correctIndex: 2, explanation: `נוהל GMP נכתב פנימית על ידי אנשי המפעל כדי לשלוט בתנאים, בעוד ISO 22000 הוא סטנדרט בינלאומי שמוכתב ונבחן על ידי גופים חיצוניים לצורך הסמכה.` },
+            { question: `מדוע הסתמכות בלעדית על דגימות של התוצר הסופי נחשבת לשיטה לא מספקת להבטחת בטיחות מזון?`, options: [`כי היא אינה מאפשרת לזהות פגמים פיזיים באריזה`, `כי שכיחות הפתוגנים לרוב נמוכה, ודגימה סטטיסטית עלולה לפספס אותם`, `כי היא דורשת ציוד מעבדה שאינו קיים ברוב המפעלים`, `כי התקן הישראלי אוסר על השמדת תוצרת סופית לצורך בדיקה`], correctIndex: 1, explanation: `שכיחות הפתוגנים במוצר היא לרוב נמוכה, ולכן קל מאוד לפספס אותם כאשר לוקחים דגימה אקראית של התוצר הסופי. זו הסיבה המרכזית למעבר לשיטות מניעה כמו HACCP.` },
+            { question: `באיזה עשור פותחה לראשונה שיטת ה-HACCP ועבור איזו מטרה?`, options: [`בשנות ה-50, עבור תעשיית הבשר באירופה`, `בשנות ה-70, על ידי משרד החקלאות הישראלי`, `בשנות ה-50 וה-60, עבור תוכנית החלל של נאסא`, `בשנות ה-90, כחלק מהקמת האיחוד האירופי`], correctIndex: 2, explanation: `השיטה פותחה לראשונה בשנת 1959 על ידי חברת פילסברי בשיתוף עם נאסא, כדי להבטיח מזון בטוח לחלוטין לאסטרונאוטים.` },
+            { question: `מפעל לייצור סלטים מזהה ששלב שטיפת העלים הוא קריטי לסילוק שאריות חומרי הדברה. איזה עקרון של HACCP מיושם בעצם ההחלטה ששלב זה דורש בקרת חובה?`, options: [`עקרון 1: אומדן הזיהום והסיכון`, `עקרון 2: זיהוי נקודות CCP`, `עקרון 5: קביעת פעולות מתקנות`, `עקרון 7: מערכת לאישור התפעול`], correctIndex: 1, explanation: `ההחלטה ששלב מסוים בתהליך (שטיפת העלים) הוא הנקודה בה ניתן להפעיל בקרה כדי למנוע סיכון, היא בדיוק ההגדרה של זיהוי נקודת בקרה קריטית (CCP).` },
+            { question: `מפעל קבע כי בנקודת הבקרה הקריטית של פסטור חלב, הטמפרטורה חייבת להיות לפחות 72 מעלות צלזיוס למשך 15 שניות. לאיזה עקרון HACCP שייכת פעולה זו?`, options: [`עקרון 2: זיהוי CCP`, `עקרון 3: קביעת חוקים וגבולות`, `עקרון 4: קביעת פרוצדורה לבדיקה`, `עקרון 6: נוהל תיעוד`], correctIndex: 1, explanation: `הגדרת טווחים מספריים מדויקים (טמפרטורה, זמן) שחריגה מהם מהווה סכנה, היא היישום של עקרון 3 - קביעת חוקים וגבולות ל-CCP.` },
+            { question: `במהלך ייצור פסטרמה, התגלה כי התנור פעל בטמפרטורה של 65 מעלות במקום 71 מעלות כנדרש. מנהל המשמרת עצר את הקו והעביר את הבשר לפח השמדה, בהתאם לפרוטוקול מוגדר מראש. איזה עקרון HACCP יושם כאן?`, options: [`עקרון 1: אומדן הסיכון`, `עקרון 3: קביעת גבולות`, `עקרון 5: קביעת דרכי פעולה כאשר ישנם שינויים או פגיעות`, `עקרון 7: הקמת מערכת אימות`], correctIndex: 2, explanation: `ביצוע פעולה מוגדרת מראש (עצירת הקו והשמדה) בתגובה לחריגה מהגבולות הקריטיים, מיישם את עקרון 5 העוסק בפעולות מתקנות.` },
+            { question: `מהי המטרה העיקרית של שימוש במודלים מיקרוביאליים (Microbial Modeling) בתעשיית המזון?`, options: [`לזהות את כל סוגי הפתוגנים הקיימים בחומר הגלם`, `להחליף את הצורך במערכת HACCP`, `לנבא את קצב הגידול של חיידקים בתנאים משתנים ואת חיי המדף של המוצר`, `לשפר את הטעם והמרקם של מזון מעובד`], correctIndex: 2, explanation: `מודלים מיקרוביאליים הם כלים מתמטיים ומדעיים המשמשים לניבוי התנהגות החיידקים לאורך קו הייצור וקביעת חיי המדף תחת תנאי אחסון שונים.` },
+            { question: `במסגרת תהליך הערכת הסיכונים (Risk Assessment), מה מטרת השלב הנקרא Exposure Assessment (הערכת החשיפה)?`, options: [`קביעת סוג החיידק שעלול לגרום למחלה`, `הערכת המספר האמיתי של חיידקים אליו ייחשף הצרכן וכמות האנשים שייחשפו`, `בדיקת חומרת המחלה שתגרם עקב אכילת המוצר`, `החלטה אם להשמיד את המוצר הפגום או למחזר אותו`], correctIndex: 1, explanation: `הערכת החשיפה עוסקת בכימות המפגש של הצרכן עם הסכנה - מהי הכמות (המינון) שהגיעה לצרכן וכמה צרכנים נחשפו.` },
+            { question: `לפי נוסחת הערכת הסיכונים, הסיכון (Risk) מוגדר כהסתברות לתחלואה והוא מכפלה של שני גורמים עיקריים. מהם?`, options: [`חומרת המחלה כפול עלות הטיפול`, `הערכת החשיפה כפול מנת התגובה (Dose response)`, `זמן האחסון כפול טמפרטורת הסביבה`, `שכיחות הגורם כפול יעילות ה-CCP`], correctIndex: 1, explanation: `הנוסחה המקובלת היא שהסיכון שווה לפונקציה של החשיפה (Exposure) כפול הפונקציה של מנת התגובה (Dose Response).` },
+            { question: `לפני שמפעל מתחיל לפתח תוכנית HACCP, עליו לבצע מספר שלבים מקדימים. איזה מהבאים אינו נחשב לאחד השלבים המקדימים הללו?`, options: [`בחירת הצוות שיגבש את התוכנית`, `פרוט אופן החלוקה והאחסון של המוצר`, `קביעת גבולות קריטיים לכל נקודת בקרה`, `שרטוט תרשים זרימה של תהליך הייצור ואישורו בקו`], correctIndex: 2, explanation: `קביעת גבולות קריטיים היא עקרון מספר 3 בתוך תוכנית ה-HACCP עצמה, ולא שלב מקדים. השלבים המקדימים נועדו לאסוף מידע ולהכין את הקרקע לתוכנית.` },
+            { question: `מפעל לייצור גבינות עם תוספות עשבי תיבול מנתח את הסיכונים במוצר. הוא קובע כי הוספת עשבי התיבול לאחר הפסטור מהווה סכנה גבוהה. לאיזה קריטריון באומדן הזיהום והסיכון (עקרון 1) ממצא זה קשור?`, options: [`מזון לבני אדם בסיכון גבוה`, `רמת חשיפת המזון לזיהום חוזר לפני האריזה`, `שימוש בחימום סופי לאחר האריזה`, `רמת חשיפת המוצר לזיהום על ידי הצרכן`], correctIndex: 1, explanation: `הוספת רכיבים (כמו עשבי תיבול) לאחר שלב השמדת החיידקים (פסטור) ולפני האריזה, יוצרת חלון זמן שבו המוצר חשוף לזיהום חוזר.` },
+            { question: `מהי השיטה הרצויה והיעילה ביותר ליישום עקרון 4 של HACCP (פרוצדורה לבדיקת ה-CCP)?`, options: [`שליחת דגימות למעבדה חיצונית פעם בחודש`, `בדיקה ויזואלית של מנהל המשמרת בסוף היום`, `בדיקה רציפה ואוטומטית המשלבת חיישנים לאורך הקו`, `תשאול עובדי הקו לגבי תקלות שאירעו במהלך המשמרת`], correctIndex: 2, explanation: `השיטה הרצויה ביותר לניטור CCP היא בדיקה רציפה (Continuous monitoring), המאפשרת זיהוי מיידי של חריגות ותגובה מהירה, בניגוד לבדיקות מעבדה איטיות.` },
+            { question: `מדוע נדרש אישור של תרשים הזרימה בקו הייצור עצמו (כחלק מהשלבים המקדימים ל-HACCP) ולא מספיק להסתמך על השרטוט ההנדסי?`, options: [`כדי לוודא שהפועלים מבינים את השרטוט`, `מכיוון שתרשימים הנדסיים מוגנים בזכויות יוצרים`, `מפני שלעיתים קרובות ישנם הבדלים בין התכנון התיאורטי למתרחש בפועל ברצפת הייצור`, `כדי לעמוד בדרישות תקן ISO 9001 בלבד`], correctIndex: 2, explanation: `חובה לאמת את תרשים הזרימה בשטח משום ששינויים בלתי מתועדים, מעקפים בצינורות, או הרגלי עבודה של פועלים עלולים ליצור סיכונים שלא מופיעים בשרטוט המקורי.` },
+            { question: `מפעל בשר קבע שטמפרטורת מרכז הקציצה חייבת להגיע ל-145 מעלות פרנהייט למשך 3 דקות. כדי להבטיח זאת, נקבע שטמפרטורת התנור תהיה 150 מעלות, מהירות המסוע תהיה X מטר לשנייה, ועובי הקציצה לא יעלה על Y מילימטר. מה מדגים תיאור זה?`, options: [`את הקושי בזיהוי פתוגנים במוצר הסופי`, `את המעבר מהערכת סיכונים תיאורטית להגדרת גבולות תפעוליים מדידים ב-CCP`, `את חוסר היעילות של תקן GMP`, `את ההבדל בין חשיפה למנת תגובה`], correctIndex: 1, explanation: `זהו יישום קלאסי של עקרון 3 ב-HACCP: תרגום דרישה מיקרוביאלית (הרג פתוגנים) לפרמטרים תפעוליים הניתנים למדידה ושליטה רציפה בקו הייצור.` },
+            { question: `כאשר בוחנים את תרשים זרימת חיי המוצר (Food System) בהקשר של ספירה מיקרוביאלית, מה גורם בדרך כלל לעלייה החדה ביותר בספירת החיידקים, לעיתים אף מעבר לגבול חיי המדף?`, options: [`שלב העיבוד (Processing) במפעל`, `אחסון תקין בקירור (Storage)`, `שלב ה-Abuse (התעללות במוצר, כגון השארתו מחוץ למקרר) והחזקה ממושכת (Holding)`, `הבישול הביתי (Home cooking)`], correctIndex: 2, explanation: `על פי הגרף המוצג בתיאוריה, שלבי ה-Abuse (הפרת שרשרת הקירור) או ה-Holding (החזקה ממושכת לפני הגשה) הם אלו שמובילים לשגשוג מהיר של חיידקים וחציית גבול הבטיחות.` },
+            { question: `באנליזת סיכונים, מהי המשמעות של השלב הנקרא Dose Response Assessment?`, options: [`בדיקת כמות התרופות הנדרשת לטיפול באדם שחלה`, `הערכת כמות החיידקים או הרעלן הנדרשת כדי לגרום למחלה, ובאיזו דרגת חומרה`, `חישוב העלות הכלכלית של תגובת המפעל למשבר`, `מדידת הזמן שלוקח למפעל להגיב לתלונת צרכן`], correctIndex: 1, explanation: `שלב זה בוחן את הקשר בין מנת החשיפה (המינון) לבין התגובה הביולוגית של הגוף (חומרת המחלה והסיכוי לחלות בה).` },
+            { question: `איזה מהגורמים הבאים אינו נכלל בדרך כלל בקטגוריות אומדן הזיהום והסיכון (עקרון 1 של HACCP)?`, options: [`האם המזון מיועד לאוכלוסיות בסיכון גבוה כמו תינוקות`, `האם המוצר מכיל רכיבים רגישים מיקרוביאלית כמו חלב או בשר`, `האם עיצוב האריזה מושך את העין של צרכני היעד`, `האם ישנם שלבי עיבוד המשמידים מיקרואורגניזמים באופן מלא`], correctIndex: 2, explanation: `עיצוב האריזה מבחינה שיווקית אינו רלוונטי לאומדן סיכונים בטיחותיים. שאר האפשרויות הן קריטריונים מובהקים להערכת סיכון מיקרוביאלי.` },
+            { question: `מפעל רוכש מיליון ביצים, וידוע כי 0.1 אחוז מהן נגועות בסלמונלה. מנהל האיכות מחליט להשתמש בביצים לייצור מיונז מפוסטר (חימום המשמיד סלמונלה) ולא למיונז ביתי קר. איזה תהליך ניהולי בא כאן לידי ביטוי?`, options: [`התעלמות מהתקן הישראלי`, `הסתמכות על דגימות של התוצר הסופי`, `קבלת החלטה מבוססת אנליזת סיכונים (Risk Assessment)`, `יישום תקן ISO 9001 למשאבי אנוש`], correctIndex: 2, explanation: `המנהל ביצע אנליזת סיכונים: הוא זיהה את הגורם והחשיפה, והבין ששינוי התהליך (הוספת פסטור) יוריד את מנת התגובה לאפס, ובכך הפך סיכון בלתי קביל לקביל.` },
+            { question: `מדוע חובה לתעד בכתב מראש את כל הפעולות המתקנות (עקרון 5) במסגרת תוכנית HACCP?`, options: [`כדי למנוע פאניקה וקבלת החלטות שגויות בזמן אמת כאשר מתגלה חריגה ב-CCP`, `כדי שהמפעל יוכל לתבוע את ספק חומרי הגלם`, `מפני שזהו תנאי יחיד לקבלת רישיון עסק ממשרד החקלאות`, `כדי לחסוך בעלויות הדרכה של עובדים חדשים`], correctIndex: 0, explanation: `הכנה מראש של נהלים ברורים מבטיחה תגובה מהירה, אחידה ובטוחה ברגע שמתרחשת תקלה קריטית, ללא תלות בשיקול דעת רגעי של עובד זה או אחר.` },
+            { question: `מה מאפיין את תחולת נוהל ה-GMP במפעל מזון?`, options: [`הוא חל אך ורק על אזור הבישול והאריזה`, `הוא מתייחס למכלול האזור של המפעל וסביבתו, ולא רק לקו הייצור`, `הוא תקף רק למוצרים המיועדים לייצוא`, `הוא מיושם רק במפעלים המעסיקים מעל 100 עובדים`], correctIndex: 1, explanation: `נוהל GMP (תנאי ייצור נאותים) נועד לשלוט בתנאים התברואתיים של המפעל כולו, כולל חצר המפעל, שירותים, חדרי הלבשה, ולא מוגבל רק לפס הייצור עצמו.` },
+            { question: `האם מערכת HACCP מתייחסת רק לסיכונים ביולוגיים (כמו חיידקים)?`, options: [`כן, זוהי המטרה הבלעדית של המערכת`, `לא, המערכת כוללת התייחסות גם לסיכונים כימיים ופיזיקליים`, `כן, סיכונים פיזיים מטופלים רק על ידי תקן ISO`, `לא, אך היא מתעלמת מסיכונים כימיים`], correctIndex: 1, explanation: `הגדרת המערכת קובעת במפורש שהיא כוללת את כל סוגי הסיכונים הפוטנציאליים: ביולוגי, כימי (למשל חומרי ניקוי) ופיזיקלי (למשל שברי זכוכית או מתכת).` },
+            { question: `איזה מהגופים הבאים אינו מהווה מקור מידע בינלאומי מקובל להנחיות בטיחות מזון והערכת סיכונים?`, options: [`FDA (ארצות הברית)`, `USDA (ארצות הברית)`, `EFSA (אירופה)`, `NASA (סוכנות החלל)`], correctIndex: 3, explanation: `למרות שנאסא הייתה שותפה לפיתוח המקורי של HACCP בשנות ה-50 וה-60, היא אינה גוף רגולטורי או מקור מידע שוטף לתעשיית המזון כיום, בניגוד ל-FDA, USDA ו-EFSA.` },
+            { question: `מהי המטרה של עקרון 6 ב-HACCP (נוהל תיעוד)?`, options: [`להקל על פיטורי עובדים שגרמו לתקלות`, `לייצר ארכיון היסטורי למטרות מחקר אקדמי`, `לאפשר מעקב, הוכחת תקינות התהליך ותחקור במקרה של הרעלת מזון או תקלה`, `להחליף את הצורך בבדיקות מעבדה לחלוטין`], correctIndex: 2, explanation: `תיעוד מסודר ויומיומי הוא ההוכחה המשפטית והתפעולית לכך שהמפעל אכן עמד בגבולות הקריטיים. בלעדיו, לא ניתן להוכיח שהמוצר יוצר בתנאים בטוחים או לאתר את מקור התקלה.` },
+            { question: `באיזה שלב בשרשרת הייצור (מהשדה לשולחן) מערכת ה-HACCP מפסיקה להיות רלוונטית?`, options: [`לאחר שלב האריזה במפעל`, `בזמן ההפצה והחלוקה לצרכן`, `היא אינה מפסיקה להיות רלוונטית, היא מתייחסת לכל השלבים כולל שימוש על ידי הצרכן`, `בשלב החקלאות בשדה`], correctIndex: 2, explanation: `מערכת HACCP מוגדרת כמתייחסת לכל שלבי הייצור מהשדה אל השולחן, כולל התחשבות באופן השימוש של הצרכן בבית (למשל, הוראות חימום).` },
+            { question: `מהו חסרון בולט של בדיקות מעבדה לזיהוי פתוגנים במוצר הסופי בהשוואה לניטור רציף של CCP?`, options: [`בדיקות מעבדה הן זולות מדי ולכן לא אמינות`, `בדיקות מעבדה בדרך כלל איטיות ולא מספקות תשובה בזמן אמת למניעת שיווק המוצר הפגום`, `בדיקות מעבדה מזהות רק סיכונים פיזיים`, `משרד הבריאות אינו מכיר בבדיקות מעבדה`], correctIndex: 1, explanation: `תרביות מיקרוביאליות לוקחות לרוב 24-48 שעות לפחות. בזמן הזה המוצר כבר עלול להיות ארוז או משווק. ניטור CCP (כמו טמפרטורה) נותן אינדיקציה מיידית לבטיחות.` },
+            { question: `איזה מוצר יוגדר כבעל סיכון גבוה במיוחד בשלב אומדן הסיכון (עקרון 1)?`, options: [`אורז יבש באריזת ואקום`, `פורמולה לתינוקות (תרכובת מזון לתינוקות)`, `שימורי עגבניות שעברו עיקור מלא`, `חטיף תפוחי אדמה מלוח`], correctIndex: 1, explanation: `פורמולה לתינוקות מיועדת לאוכלוסייה בסיכון גבוה (מערכת חיסון חלשה) ולרוב אינה עוברת חימום משמעותי לפני ההאכלה, ולכן מקבלת דירוג סיכון מחמיר ביותר.` },
+            { question: `חברה חיצונית מגיעה למפעל פעם בחודש כדי לבדוק את כיול מדי הטמפרטורה, לעבור על יומני הרישום, ולוודא שהצוות פועל לפי הנהלים. איזה עקרון HACCP מתבצע כאן?`, options: [`עקרון 2: זיהוי CCP`, `עקרון 4: ניטור`, `עקרון 5: פעולות מתקנות`, `עקרון 7: מערכת לאישור התפעול (Verification)`], correctIndex: 3, explanation: `עקרון 7 עוסק באימות ובדיקה שהמערכת כולה אכן מתפקדת כמתוכנן ושהציוד מכויל. פעולה זו מבוצעת לרוב על ידי גורם מקצועי מתוך או מחוץ למפעל, שלא כחלק מהייצור השוטף.` },
+            { question: `כיצד מוגדר Hazard Identification (זיהוי הגורם) בתהליך הערכת הסיכונים?`, options: [`הערכת כמות החיידקים במוצר הסופי`, `שימוש בידע מדעי קיים כדי להעריך אילו גורמים עלולים להיות נוכחים ומהי חומרתם הפוטנציאלית`, `חישוב ההסתברות הסטטיסטית למחלה באוכלוסייה`, `בדיקת טמפרטורת האחסון בסופרמרקט`], correctIndex: 1, explanation: `זהו השלב הראשון בו סוקרים את הספרות והידע המוקדם כדי להבין איזה פתוגן רלוונטי למוצר (למשל, סלמונלה בביצים) ומה טיב המחלה שהוא גורם.` },
+            { question: `מפעל לחיתוך סלטים טריים מזהה כי חיתוך הירקות עלול להכניס חיידקים מהקליפה לתוך הירק. עם זאת, אין שלב בישול בהמשך התהליך. מה תהיה ההשלכה על תוכנית ה-HACCP?`, options: [`לא ניתן לייצר סלטים לפי כללי HACCP`, `שלב השטיפה והחיטוי לפני החיתוך יהפוך לנקודת בקרה קריטית (CCP) מחמירה במיוחד`, `המפעל יסתמך על בדיקות מעבדה של התוצר הסופי בלבד`, `המפעל ישנה את התקן ל-GMP במקום HACCP`], correctIndex: 1, explanation: `בהעדר שלב הרג (כמו בישול) בהמשך הקו, השלב היחיד שיכול להפחית את הסיכון (השטיפה/חיטוי) הופך ל-CCP קריטי שחייב להיות מנוטר בקפדנות עליונה.` },
+            { question: `מה משמעות המונח Risk Characterization בשלבי הערכת הסיכון?`, options: [`הגדרת קהל היעד של המוצר`, `שקלול נתוני החשיפה ונתוני מנת התגובה לכדי הערכה כוללת של ההסתברות והחומרה של הסכנה`, `כתיבת הוראות ההכנה על גבי האריזה`, `בחירת חומרי הניקוי למפעל`], correctIndex: 1, explanation: `זהו השלב המסכם המשלב את כל המידע שנאסף בשלבים הקודמים כדי לספק תמונה ברורה של הסיכון האמיתי לציבור.` },
+            { question: `מדוע הרחבת יישום ה-HACCP לשלב החקלאות (בשנת 2002) נחשבת למהלך קריטי?`, options: [`כי חקלאים דרשו תקנים נוקשים יותר`, `כי זיהום מקורי בחומר הגלם (כמו אדמה או מים מזוהמים) מקשה מאוד על טיהור המוצר בשלבי העיבוד המאוחרים`, `כדי להוזיל את עלויות הייצור של ירקות`, `כדי לבטל את הצורך בפסטור של חלב`], correctIndex: 1, explanation: `מניעת הזיהום במקור (בשדה) יעילה בהרבה מניסיון להשמיד זיהום כבד בתוך המפעל. תפיסת מהשדה לשולחן מכירה בכך שבטיחות מתחילה בחומר הגלם.` },
+            { question: `באילו נסיבות מפעל יידרש לשנות את הגבולות הקריטיים (Critical Limits) שהגדיר בעקרון 3?`, options: [`כאשר מנהל העבודה יוצא לחופשה`, `כאשר מתבצע שינוי בפורמולציה של המוצר או כשמוכנס ציוד ייצור חדש בעל יכולות שונות`, `רק כאשר משרד הבריאות מורה לו לעשות זאת`, `הגבולות הקריטיים חקוקים בסלע ואסור לשנותם לעולם`], correctIndex: 1, explanation: `כל שינוי במוצר (למשל רמת חומציות שונה) או בתהליך (תנור חדש) דורש הערכה מחדש של הגבולות כדי להבטיח שהם עדיין אפקטיביים בהשמדת הפתוגנים.` },
+            { question: `מה ההבדל בין תקן למפעל (כמו ISO 9001) לבין רגולציה ממשלתית?`, options: [`רגולציה היא וולונטרית ותקן הוא חובת חוק`, `אין הבדל, שניהם נאכפים על ידי המשטרה`, `רגולציה היא חוק מדינה מחייב הנאכף על ידי משרדי ממשלה, בעוד תקנים כמו ISO הם לרוב וולונטריים ונועדו להקנות דירוג מסחרי למפעל`, `תקן נכתב על ידי הצרכנים, רגולציה נכתבת על ידי היצרנים`], correctIndex: 2, explanation: `תקנות וסטנדרטים של המדינה הם חוק מחייב (נאכף עלי ידי משרדי הבריאות והחקלאות). תקני ISO הם כלי עסקי וניהולי שמפעלים בוחרים לאמץ כדי לשפר איכות וכושר ייצוא.` },
+            { question: `אם מודל מיקרוביאלי מנבא שחיי המדף של מוצר הם 30 יום בקירור, מה יקרה בסבירות גבוהה אם המוצר יעבור שלב של Temperature Abuse (שהייה בטמפרטורת חדר) למשך מספר שעות?`, options: [`חיי המדף יתארכו עקב התחסנות החיידקים`, `חיי המדף יתקצרו משמעותית עקב קפיצה אקספוננציאלית בספירת החיידקים, שתקרב אותם מהר יותר לגבול המותר`, `לא יהיה שינוי אם המוצר יוחזר מיד לקירור`, `החיידקים יושמדו עקב שינוי הטמפרטורה הפתאומי`], correctIndex: 1, explanation: `פגיעה בשרשרת הקירור מאפשרת לחיידקים להתרבות במהירות. גם אם המוצר חוזר לקירור, הספירה ההתחלתית החדשה גבוהה בהרבה, ולכן הגבול הקריטי ייחצה מוקדם מהצפוי.` },
+            { question: `איזו מהפעולות הבאות היא דוגמה קלאסית לעקרון 4 של HACCP (פרוצדורת ניטור)?`, options: [`הגדרת טמפרטורת הפסטור ל-72 מעלות`, `מדידת רמת ה-pH של כל אצווה לפני האריזה ורישום התוצאה`, `החלטה לזרוק אצווה שהחמיצה`, `קביעה שחיידק הליסטריה מסוכן לנשים בהריון`], correctIndex: 1, explanation: `מדידה בפועל של פרמטר קריטי (pH) באופן שיטתי היא פעולת הניטור (Monitoring) שנועדה לוודא שהתהליך נשאר בתוך הגבולות שהוגדרו.` },
+            { question: `מפעל בונה תרשים זרימה (Flowchart) במסגרת השלבים המקדימים ל-HACCP. איזה מידע חייב להיכלל בתרשים זה?`, options: [`שמות העובדים בכל משמרת`, `תקציב מחלקת האיכות`, `כל שלב בתהליך, החל מקבלת חומרי הגלם, דרך שלבי העיבוד, ועד לאחסון והפצת התוצר הסופי`, `רשימת המתחרים של המפעל בשוק`], correctIndex: 2, explanation: `תרשים הזרימה חייב להיות מיפוי טכני מקיף ומדויק של כל תחנה ותחנה שהמוצר עובר, כדי שניתן יהיה לנתח סיכונים בכל אחת מהן.` },
+            { question: `מהו אחד היתרונות של כתיבת נוהל GMP על ידי אנשי המפעל עצמם, לעומת הכתבתו על ידי גורם חיצוני?`, options: [`זה פוטר את המפעל מביקורות של משרד הבריאות`, `הוא מתאים באופן ספציפי למבנה, לתרבות הארגונית ולתהליכים הייחודיים של אותו מפעל`, `זה מאפשר למפעל להוריד את רמת הבטיחות כדי לחסוך בעלויות`, `זה הופך את הנוהל לסודי ומונע ריגול תעשייתי`], correctIndex: 1, explanation: `כאשר הצוות המקומי כותב את הנוהל, הוא מותאם במדויק למציאות בשטח, לציוד הספציפי ולסיכונים הייחודיים של סביבת העבודה המקומית, מה שמגביר את סיכויי היישום המוצלח.` },
+            { question: `למה משמשים נתונים מארגונים כמו EFSA או ה-FDA בעת בניית תוכנית HACCP במפעל ישראלי?`, options: [`להחלפת התקן הישראלי במלואו`, `כמקור מידע מדעי מוסמך לשלב זיהוי הגורמים (Hazard Identification) וקביעת גבולות קריטיים`, `כדי לקבל מימון ממשלתי אמריקאי או אירופאי`, `הם אינם משמשים כלל, מפעל ישראלי כפוף רק למכון התקנים`], correctIndex: 1, explanation: `ארגונים אלו מספקים מאגרי מידע מדעיים אדירים על התנהגות פתוגנים, מנות תגובה וטכנולוגיות השמדה, המשמשים בסיס מדעי הכרחי לאנליזת סיכונים בכל העולם.` },
+            { question: `בתהליך ייצור של מזון יבש (כמו אבקת מרק), איזה סיכון הופך למרכזי מאוד לאחר שלב הייבוש ולפני האריזה הסופית?`, options: [`התרבות מהירה של חיידקים עקב עודף מים`, `זיהום חוזר (Cross-contamination) מהסביבה או מהעובדים, שכן המוצר כבר לא יעבור חימום נוסף במפעל`, `הפיכת המוצר לרעיל עקב חשיפה לאור`, `ירידה בערך התזונתי`], correctIndex: 1, explanation: `ברגע שהמוצר עבר את שלב ההרג (ייבוש/חימום), כל חשיפה לאוויר הפתוח, לעובדים או לציוד מלוכלך עלולה לגרום לזיהום חוזר שיישאר במוצר עד לצרכן.` }
         ];
 
         const tfData = [
-            {
-                question: `תכנית GMP (תנאי ייצור נאותים) חלה אך ורק על אזור קו הייצור הישיר בו המזון מעובד.`,
-                answer: false,
-                explanation: `הנוהל של GMP מתייחס למכלול האזור של המפעל וסביבתו, ולא לקו הייצור בלבד.`
-            },
-            {
-                question: `מערכת HACCP נועדה להחליף לחלוטין את הצורך בניקיון המפעל, שכן היא מתמקדת בהשמדת חיידקים באמצעות חום.`,
-                answer: false,
-                explanation: `HACCP היא מערכת ניהול בטיחות שעובדת בנוסף ובמשולב עם תכניות תברואה בסיסיות (כמו GMP). היא אינה מחליפה ניקיון.`
-            },
-            {
-                question: `הגישה המרכזית של HACCP היא מניעה של זיהומים מראש, ולא רק גילויים במוצר הסופי.`,
-                answer: true,
-                explanation: `זהו עקרון הליבה של HACCP - מערכת שמטרתה להבטיח ייצור בטיחותי כשהדגש הוא על בקרה לצורך מניעה.`
-            },
-            {
-                question: `ארגון ISO 22000 הוא ארגון ממשלתי ישראלי הכפוף למשרד הבריאות.`,
-                answer: false,
-                explanation: `ISO הוא ארגון בינלאומי שקובע ומנהל סטנדרטים בינלאומיים בתחומים שונים, ולא ארגון ממשלתי ישראלי.`
-            },
-            {
-                question: `על פי עקרון 1 של HACCP, כל המוצרים נחשבים לבעלי רמת סיכון זהה, ללא קשר לקהל היעד שלהם.`,
-                answer: false,
-                explanation: `עקרון 1 קובע כי כל מוצר נבחן לפי קטגוריות, וישנה התייחסות מיוחדת למזון המיועד לאוכלוסיות בסיכון גבוה כגון תינוקות או חולים.`
-            },
-            {
-                question: `נקודת בקרה קריטית (CCP) היא כל נקודה בתהליך הייצור שבה מתבצעת שקילה של חומרי גלם.`,
-                answer: false,
-                explanation: `CCP היא נקודה ספציפית בה ניתן להפעיל בקרה כדי *למנוע או להפחית סיכון בטיחותי*. שקילה רגילה אינה בהכרח CCP אלא אם היא קשורה ישירות לבטיחות (למשל, שקילת חומר משמר מונע בוטוליזם).`
-            },
-            {
-                question: `הגדרת גבולות ל-CCP (עקרון 3) יכולה לכלול מדדים כמו טמפרטורה, זמן ורמת חומציות (pH).`,
-                answer: true,
-                explanation: `אלו הם בדיוק המדדים המדידים והאובייקטיביים הנדרשים כדי לקבוע גבולות ברורים לנקודת בקרה קריטית.`
-            },
-            {
-                question: `שיטת הבדיקה הרצויה ביותר עבור נקודת CCP היא בדיקה אקראית אחת לחודש.`,
-                answer: false,
-                explanation: `השיטה הרצויה ביותר היא בדיקה רציפה (Continuous monitoring), כדי לזהות חריגות מיד עם התרחשותן.`
-            },
-            {
-                question: `עקרון 5 קובע כי במקרה של תקלה ב-CCP, יש לזמן ועדה כדי להחליט כיצד לפעול.`,
-                answer: false,
-                explanation: `עקרון 5 דורש קביעה *מראש* של חוקים ודרכי פעולה מתקנות, כדי למנוע עיכובים ואלתורים בזמן אמת.`
-            },
-            {
-                question: `תיעוד מסודר וחתימה על טפסים (עקרון 6) אינם הכרחיים אם המפעל קטן ומנהל העבודה זוכר את הנתונים בעל פה.`,
-                answer: false,
-                explanation: `תיעוד מסודר הוא דרישת חובה ב-HACCP (עקרון 6) כדי להוכיח שהמערכת פועלת כנדרש וכדי לאפשר תחקור תקלות.`
-            },
-            {
-                question: `מערכת HACCP מתייחסת גם לשלבים המתרחשים לאחר יציאת המוצר מהמפעל, כגון חלוקה ושימוש על ידי הצרכן.`,
-                answer: true,
-                explanation: `המערכת מתייחסת לכל שלבי הייצור מ"השדה אל השולחן".`
-            },
-            {
-                question: `המושג Dose Response Assessment מתייחס לבדיקת מהירות התגובה של עובדי המפעל לאזעקת אש.`,
-                answer: false,
-                explanation: `המושג מתייחס להערכת הכמות של פתוגן שעלולה לגרום למחלה, ובאיזו דרגת חומרה.`
-            },
-            {
-                question: `לפי משוואת הערכת הסיכונים, אם ההסתברות לחשיפה עולה, רמת הסיכון הכוללת תעלה גם היא (בהנחה ששאר המשתנים קבועים).`,
-                answer: true,
-                explanation: `מכיוון שהסיכון הוא מכפלה של החשיפה במנת התגובה, עלייה באחד הגורמים תגדיל את התוצאה הסופית.`
-            },
-            {
-                question: `מודל מיקרוביאלי יכול לסייע בניבוי חיי המדף של מוצר מזון.`,
-                answer: true,
-                explanation: `זוהי אחת המטרות המרכזיות של מודלים מיקרוביאליים - לנבא כיצד חיידקים יתנהגו לאורך זמן ולקבוע חיי מדף בטוחים.`
-            },
-            {
-                question: `ההחלטה אם להשתמש בביצים שיש בהן סיכוי קטן לזיהום בסלמונלה מבוססת אך ורק על תחושת הבטן של מנהל המפעל.`,
-                answer: false,
-                explanation: `החלטות כאלו אמורות להתקבל על בסיס אנליזה של סיכונים (Risk assessment) המשתמשת בנתונים, מודלים והערכות סטטיסטיות.`
-            },
-            {
-                question: `מכון התקנים הישראלי הוא גוף פרטי הפועל למטרות רווח.`,
-                answer: false,
-                explanation: `מכון התקנים מוגדר כמכון ציבורי.`
-            },
-            {
-                question: `תכנית HACCP פותחה לראשונה בשנות ה-90 על ידי האיחוד האירופי.`,
-                answer: false,
-                explanation: `השיטה פותחה כבר ב-1959 על ידי חברת פילסברי ו-NASA בארצות הברית.`
-            },
-            {
-                question: `אחד השלבים המקדימים לבניית תכנית HACCP הוא שרטוט תרשים זרימה של תהליך הייצור.`,
-                answer: true,
-                explanation: `זהו שלב 5 בשלבים המקדימים, והוא חיוני להבנת התהליך ואיתור סכנות.`
-            },
-            {
-                question: `אין צורך לאמת את תרשים הזרימה בקו הייצור עצמו, מספיק שהמהנדס שרטט אותו במשרד.`,
-                answer: false,
-                explanation: `שלב 6 בשלבים המקדימים דורש במפורש "אישור תרשים הזרימה בקו הייצור" כדי לוודא התאמה למציאות.`
-            },
-            {
-                question: `מזון שעובר שלב של עיקור מלא נחשב לבעל סיכון מופחת משמעותית בהשוואה למזון שלא עבר תהליך כזה.`,
-                answer: true,
-                explanation: `עקרון 1 מציין הימצאות שלבי עיבוד המשמידים מיקרואורגניזמים באופן מלא כגורם המשפיע על אומדן הסיכון.`
-            },
-            {
-                question: `סכנות פיזיקליות, כגון שברי זכוכית, אינן מטופלות במסגרת מערכת HACCP.`,
-                answer: false,
-                explanation: `HACCP כוללת את כל סוגי הסיכונים הפוטנציאליים: ביולוגי, כימי ופיזיקלי.`
-            },
-            {
-                question: `הסתמכות בלעדית על בדיקות דגימה של המוצר הסופי היא דרך זולה ומהירה להבטיח בטיחות מזון.`,
-                answer: false,
-                explanation: `ההפך הוא הנכון. השיטה יקרה, איטית, ולא יעילה סטטיסטית בשל שכיחות פתוגנים נמוכה.`
-            },
-            {
-                question: `ה-FDA הוא מנהל המזון והתרופות של ארצות הברית.`,
-                answer: true,
-                explanation: `U.S Food and Drug Administration הוא אכן ה-FDA, ומהווה מקור מידע חשוב.`
-            },
-            {
-                question: `אפיון הסיכון (Risk characterization) הוא השלב הראשון בתהליך הערכת הסיכונים.`,
-                answer: false,
-                explanation: `אפיון הסיכון הוא השלב המסכם (שלב 4), המשלב את נתוני החשיפה ומנת התגובה.`
-            },
-            {
-                question: `המונח "Abuse" בהקשר של בטיחות מזון מתייחס לחריגה מתנאי האחסון הנדרשים, כגון השארת מזון בטמפרטורת החדר.`,
-                answer: true,
-                explanation: `במודל מערכת המזון, Abuse גורם לעלייה חדה בכמות החיידקים עקב תנאי החזקה לקויים.`
-            },
-            {
-                question: `בישול ביתי נוטה להעלות את ספירת החיידקים במזון.`,
-                answer: false,
-                explanation: `בישול ביתי (Home cooking) פועל כשלב השמדה ומוריד את ספירת החיידקים משמעותית.`
-            },
-            {
-                question: `לפי עקרון 2 של HACCP, כל שלב בתהליך הייצור חייב להיות מוגדר כ-CCP.`,
-                answer: false,
-                explanation: `רק נקודות ספציפיות וקריטיות שבהן חובה להפעיל בקרה כדי למנוע סיכון מוגדרות כ-CCP. הגדרת כל שלב כ-CCP תהפוך את המערכת לבלתי ניתנת לניהול.`
-            },
-            {
-                question: `מערכת HACCP דורשת הכנת טפסים למילוי באופן יום-יומי.`,
-                answer: true,
-                explanation: `זהו חלק מעקרון 6 העוסק בנוהל תיעוד.`
-            },
-            {
-                question: `חברות ייעוץ חיצוניות לעיתים קרובות מנהלות עבור המפעל את תוכנית האימות של ה-HACCP.`,
-                answer: true,
-                explanation: `עקרון 7 מזכיר כי קיימות חברות ייעוץ שמנהלות למפעל את תוכנית ה-HACCP ואישורה.`
-            },
-            {
-                question: `משרד החקלאות אינו מעורב באכיפת סטנדרטים ותקנות בתעשיית המזון בישראל.`,
-                answer: false,
-                explanation: `האכיפה בישראל מבוצעת על ידי משרד הבריאות ומשרד החקלאות גם יחד.`
-            }
+            { question: `מכון התקנים הישראלי הוא הגוף המבצע אכיפה יומיומית של תקנות בטיחות המזון במפעלים.`, answer: false, explanation: `מכון התקנים קובע את התקן, אך האכיפה בפועל מבוצעת על ידי משרדי הממשלה (הבריאות והחקלאות).` },
+            { question: `נוהל GMP מתייחס אך ורק לפס הייצור עצמו ומתעלם מאזורים אחרים במפעל כמו מחסנים או חדרי אוכל.`, answer: false, explanation: `נוהל GMP מתייחס למכלול האזור של המפעל וסביבתו, מתוך הבנה שזיהום יכול לעבור בקלות מאזור לאזור.` },
+            { question: `תקן ISO 22000 הוא תוכנית ניהול עבודה הנכתבת ומוכתבת מגורמים בינלאומיים חיצוניים למפעל.`, answer: true, explanation: `בניגוד ל-GMP שנכתב פנימית, מדובר בסטנדרט בינלאומי מחמיר הדורש הסמכה חיצונית.` },
+            { question: `שיטת ה-HACCP פותחה במקור בשנות ה-50 וה-60 עבור תוכנית החלל של ארצות הברית (NASA).`, answer: true, explanation: `השיטה פותחה כדי להבטיח את בטיחות המזון של האסטרונאוטים, שם מחלת מעיים בחלל עלולה להיות קטלנית.` },
+            { question: `החיסרון המרכזי של הסתמכות על בדיקות דגימה של המוצר הסופי הוא ששכיחות הפתוגנים במוצר היא לרוב נמוכה, ולכן קשה לאתר אותם.`, answer: true, explanation: `דגימה סטטיסטית עלולה בקלות לפספס אצווה קטנה ונגועה, ולכן יש צורך בשיטת מניעה רציפה כמו HACCP.` },
+            { question: `מערכת HACCP מתעלמת מסיכונים כימיים ופיזיקליים ומתמקדת אך ורק בחיידקים ווירוסים.`, answer: false, explanation: `המערכת כוללת התייחסות לכל סוגי הסיכונים הפוטנציאליים: ביולוגי, כימי ופיזיקלי.` },
+            { question: `השלב הראשון ביישום בפועל של HACCP (לפני 7 העקרונות) הוא שרטוט תרשים זרימה של קו הייצור.`, answer: false, explanation: `לפני השרטוט ישנם שלבים מקדימים נוספים כמו בחירת צוות, תיאור המוצר והגדרת קהל היעד.` },
+            { question: `חובה לאשר את תרשים הזרימה באופן פיזי בקו הייצור עצמו, ולא להסתמך רק על השרטוט התיאורטי.`, answer: true, explanation: `תמיד ישנם פערים בין התכנון לבין מה שקורה בפועל ברצפת הייצור, ופערים אלו עלולים להכיל סיכונים נסתרים.` },
+            { question: `נקודת בקרה קריטית (CCP) היא כל נקודה במפעל שבה עובד בא במגע עם המזון.`, answer: false, explanation: `CCP היא נקודה ספציפית שבה ניתן להפעיל בקרת מניעה אפקטיבית (למשל, תנור פסטור) שתמנע או תפחית את הסיכון לרמה סבירה.` },
+            { question: `על פי עקרון 3 של HACCP, יש לקבוע חוקים וגבולות מדידים (כמו טמפרטורה וזמן) עבור כל נקודת CCP.`, answer: true, explanation: `גבולות אלו מגדירים בצורה חד משמעית את ההבדל בין מוצר בטוח למוצר מסוכן.` },
+            { question: `השיטה הרצויה ביותר לבדיקת נקודת CCP היא לקיחת דגימה למעבדה פעם ביום.`, answer: false, explanation: `השיטה הרצויה והיעילה ביותר היא בדיקה רציפה (Continuous monitoring), למשל בעזרת חיישני טמפרטורה דיגיטליים המחוברים למערכת התראה.` },
+            { question: `עקרון 5 של HACCP קובע כי יש להמתין להנחיות ממשרד הבריאות בכל פעם שמתגלית חריגה בנקודת ה-CCP.`, answer: false, explanation: `עקרון 5 מחייב קביעה מראש של דרכי פעולה מתקנות, כך שהצוות ידע בדיוק כיצד להגיב מיד ללא צורך בהמתנה להנחיות חיצוניות.` },
+            { question: `ניהול טפסים ותיעוד יומיומי (עקרון 6) נדרש רק במקרים בהם התרחשה תקלה במהלך המשמרת.`, answer: false, explanation: `התיעוד חייב להיות יומיומי ורציף כדי להוכיח שהתהליך התנהל באופן תקין, ולא רק לתעד תקלות.` },
+            { question: `מערכת HACCP אחראית רק על התהליכים המתרחשים בתוך כותלי המפעל, ואינה מתחשבת באופן השימוש של הצרכן בבית.`, answer: false, explanation: `המערכת מתייחסת לכל השלבים מהשדה ועד השולחן, כולל חלוקה, אחסון ואופן השימוש הצפוי על ידי הצרכן בביתו.` },
+            { question: `במסגרת תהליך הערכת סיכונים (Risk Assessment), המונח Hazard Identification מתייחס לשלב שבו מעריכים כמה אנשים ייחשפו למוצר.`, answer: false, explanation: `הערכת כמות האנשים שייחשפו שייכת לשלב ה-Exposure Assessment (הערכת החשיפה). Hazard Identification עוסק בזיהוי הגורם המסוכן עצמו.` },
+            { question: `הסיכון המיקרוביאלי (Risk) מחושב כפונקציה של החשיפה כפול פונקציה של מנת התגובה.`, answer: true, explanation: `זוהי משוואת הסיכון הבסיסית: הסיכוי לחלות תלוי גם בכמות החיידקים שהגיעה לאדם וגם בכמות הנדרשת כדי לעורר מחלה.` },
+            { question: `מודלים מיקרוביאליים משמשים כדי לנבא את חיי המדף של מוצר תחת תנאי אחסון שונים.`, answer: true, explanation: `כלים אלו מאפשרים לחשב כיצד שינויים בטמפרטורה או בהרכב המוצר ישפיעו על קצב גידול החיידקים.` },
+            { question: `מזון המיועד לבתי חולים ולתינוקות דורש אומדן סיכון מחמיר יותר ממזון המיועד לאוכלוסייה הכללית.`, answer: true, explanation: `אוכלוסיות אלו מוגדרות כבעלות סיכון גבוה בשל מערכת חיסונית חלשה, ולכן מנת התגובה (Dose Response) עבורן נמוכה בהרבה.` },
+            { question: `שלב העיבוד (Processing) במפעל הוא בדרך כלל השלב שבו ספירת החיידקים עולה בצורה החדה ביותר.`, answer: false, explanation: `להפך, שלב העיבוד (שכולל לרוב שטיפה, חימום או פסטור) נועד להוריד דרסטית את ספירת החיידקים.` },
+            { question: `מערכת ה-HACCP מניחה כי תקלות יכולות להתרחש גם לאחר שהמוצר יצא משערי המפעל.`, answer: true, explanation: `זו אחת הסיבות לכך שהמערכת כוללת התייחסות לשלבי ההפצה, החלוקה והשימוש הביתי בשרשרת הסיכונים.` },
+            { question: `הגדרת גבולות ל-CCP חייבת לכלול פרמטרים שניתן למדוד באופן אובייקטיבי.`, answer: true, explanation: `גבולות חייבים להיות מדידים (טמפרטורה, זמן, משקל, לחץ) ולא סובייקטיביים, כדי למנוע טעויות פרשנות בבקרת האיכות.` },
+            { question: `תקן ISO 22000 מבטל את הצורך של מפעל לעמוד בדרישות החוק המקומיות של משרד הבריאות.`, answer: false, explanation: `תקנים וולונטריים ובינלאומיים באים בנוסף לדרישות החוק המקומיות, ולעולם אינם מבטלים אותן.` },
+            { question: `הימצאות של פתוגן אחד במוצר בהכרח גורמת לתחלואה אצל כל צרכן שיאכל אותו.`, answer: false, explanation: `התחלואה תלויה במנת התגובה (Dose Response) - ישנו מינון מינימלי הנדרש כדי לעורר מחלה, והוא משתנה בין אדם לאדם ובין פתוגן לפתוגן.` },
+            { question: `עקרון 7 של HACCP (מערכת לאישור התפעול) מבוצע בדרך כלל על ידי פועלי הייצור הפשוטים בסוף כל משמרת.`, answer: false, explanation: `פעולת האימות (Verification) מבוצעת לרוב על ידי גורמי הנהלה, בקרי איכות בכירים או חברות ייעוץ חיצוניות כדי להבטיח אובייקטיביות.` },
+            { question: `שימוש בבדיקות דגימה של המוצר הסופי הופסק לחלוטין בעולם המודרני עקב המעבר לשיטת ה-HACCP.`, answer: false, explanation: `הבדיקות לא הופסקו לחלוטין. הן משמשות ככלי אימות נוסף (Verification) לבדיקת יעילות מערכת ה-HACCP, אך הן כבר לא קו ההגנה הבלעדי.` },
+            { question: `Dose Response Assessment בוחן מהי הכמות של גורם ביולוגי שתגרום למחלה.`, answer: true, explanation: `זהו השלב השלישי בהערכת סיכונים, המגדיר את הקשר בין מינון הגורם המזיק לבין התגובה הבריאותית של הצרכן.` },
+            { question: `תרשים זרימה איכותי צריך לכלול רק את השלבים בהם המזון עובר חימום או קירור.`, answer: false, explanation: `תרשים זרימה חייב לכלול את כל שלבי התהליך, כולל קבלה, אחסון, חיתוך, אריזה ושינוע, שכן זיהום יכול להתרחש בכל אחד מהם.` },
+            { question: `במערכת HACCP, כל נקודה שבה עלול להתרחש זיהום מוגדרת אוטומטית כ-CCP.`, answer: false, explanation: `לא כל נקודת סיכון היא CCP. CCP היא רק נקודה שבה ניתן וצריך להפעיל בקרת מניעה (למשל, תנור). אם לא ניתן לשלוט בסיכון באותה נקודה, היא אינה CCP.` },
+            { question: `מפעל רשאי למנות חברת ייעוץ חיצונית כדי לנהל עבורו את תוכנית ה-HACCP.`, answer: true, explanation: `חברות רבות נעזרות בחברות ייעוץ מקצועיות המנהלות את המערכת, מנטרות את הנתונים ומבצעות את פעולות האימות (עקרון 7).` },
+            { question: `רמת החשיפה לזיהום חוזר (Cross-contamination) גבוהה יותר במוצר גולמי מאשר במוצר שכבר עבר פסטור אך טרם נארז.`, answer: false, explanation: `הסכנה הגדולה ביותר לזיהום חוזר קריטי היא דווקא במוצר שכבר פוסטר, משום שהפלורה הטבעית הושמדה, וכל חיידק פתוגני שיחדור כעת יתרבה ללא תחרות, ואין שלב חימום נוסף שישמיד אותו.` }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -917,6 +519,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -927,6 +536,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -945,6 +555,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
+                triggerMathJax();
             }, 300);
         }
 
@@ -967,6 +578,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -982,20 +594,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1037,6 +646,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1048,8 +658,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1059,6 +667,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1075,20 +684,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1131,6 +737,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1146,6 +753,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

@@ -1,206 +1,330 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>תסיסה לקטית: תהליכים, מיקרואורגניזמים ויישומים בתעשיית המזון</h1>
+        <h1>תסיסה לקטית: מחלב ועד ירקות כבושים</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>התסיסה הלקטית היא תהליך ביוכימי מרכזי המשמש לשימור והשבחת מזון, החל ממוצרי חלב (גבינות, יוגורט) ועד לירקות כבושים (כרוב, זיתים). התהליך מבוסס על פעילותם של חיידקי חומצת חלב (Lactic Acid Bacteria), שהם חיידקים אנאירוביים סובלי חמצן, חסרי ציטוכרומים וקטלאז. למרות שמם, היכולת לבצע תסיסה לקטית אינה מחייבת ניצול של סוכר הלקטוז.</p>
+                
+                <h3>מסלולי תסיסה עיקריים</h3>
+                <p>קיימים שני מסלולים עיקריים לתסיסה לקטית, הנבדלים באנזימים המעורבים ובתוצרי הסיום:</p>
+                <ul>
+                    <li><strong>תסיסה הומופרמנטטיבית:</strong> מבוססת על האנזים אלדולאז (Aldolase). במסלול זה מולקולת גלוקוז מומרת לשתי מולקולות של חומצה לקטית, תוך יצירת רווח נטו של ($2 ATP$). מסלול זה יעיל מאוד בהורדת ה-pH.</li>
+                    <li><strong>תסיסה הטרופרמנטטיבית:</strong> מסלול החסר את האנזים אלדולאז. מולקולת גלוקוז מומרת לחומצה לקטית אחת, אתנול אחד ומולקולת ($CO_2$) אחת, עם רווח נטו של ($1 ATP$). חיידקים אלו מורידים את ה-pH לאט יותר, אך תורמים רבות לפרופיל הטעם על ידי יצירת כוהלים, אלדהידים וחומצה אצטית.</li>
+                </ul>
+
+                <h3>ייצור גבינות וקואגולציה</h3>
+                <p>תהליך הגיבון דורש שקיעה של חלבוני הקזאין. הדבר נעשה לרוב על ידי שימוש באנזימי רנט (Rennet) המופקים מקיבת עגלים, כאשר האנזים המועדף הוא כימוסין (Chymosin). כימוסין הוא פרוטאז אספרטט בעל ספציפיות גבוהה מאוד, החותך את הקזאין בעמדה מדויקת ובכך מונע פירוק יתר של חלבונים (פרוטאוליזה מוגברת) שעלול להוביל לטעם מר בגבינה.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: ספציפיות אנזימטית כמונעת פגמי טעם</strong>
+                    העדפת התעשייה לכימוסין על פני פפסין נובעת מהספציפיות הגבוהה שלו ל-k-casein (חיתוך מדויק בין הפנילאלנין למתיונין בעמדות 105-106). חיתוך ספציפי זה גורם לדה-סטביליזציה של המיצלות ושקיעתן, מבלי לפרק חלבונים אחרים לפפטידים קצרים בעלי טעם מר, תופעה הנפוצה בשימוש בפרוטאזות כלליות יותר.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: שרשרת אקולוגית בכבישת ירקות</strong>
+                    תהליך כבישת כרוב (Sauerkraut) אינו מבוצע על ידי זן חיידקים בודד, אלא מהווה סוקצסיה (רצף אקולוגי). התהליך מתחיל בחיידקים הטרופרמנטטיביים (כגון Leuconostoc) המייצרים חומצה, גז וטעמים, ומורידים את ה-pH. כשהסביבה הופכת חומצית מדי עבורם, הם מפנים את מקומם לחיידקים הומופרמנטטיביים (כגון Lactobacillus plantarum) בעלי עמידות גבוהה יותר לחומצה, המשלימים את תהליך השימור.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: עיכוב פקטינאזות על ידי חומצה</strong>
+                    אחת הבעיות הנפוצות בכבישת ירקות היא התרככות יתר של הרקמה. רקמת הירק נשמרת מוצקה כל עוד אנזימים מפרקי פקטין (פקטינאזות) אינם פעילים. אנזימים אלו מנוטרלים בסביבה חומצית (pH נמוך מ-6). לכן, ירידה מהירה ויעילה של ה-pH על ידי חיידקי התסיסה היא קריטית לא רק לשימור נגד פתוגנים, אלא גם לשמירה על המרקם הפריך של הירק.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -213,7 +337,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -233,11 +356,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -260,8 +381,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -269,101 +389,98 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: `תסיסה לקטית`, definition: `תהליך מטבולי אנאירובי שבו מיקרואורגניזמים מפרקים סוכרים ומייצרים חומצה לקטית כתוצר עיקרי.` },
-            { term: `חיידקים הומופרמנטטיביים`, definition: `חיידקים לקטיים המייצרים כמעט אך ורק חומצה לקטית מפירוק גלוקוז, תוך הפקת 2 מולקולות ($ATP$).` },
-            { term: `חיידקים הטרופרמנטטיביים`, definition: `חיידקים לקטיים המייצרים חומצה לקטית, אתנול ופחמן דו-חמצני מפירוק גלוקוז, עקב חוסר באנזים אלדולאז.` },
-            { term: `Chymosin`, definition: `אנזים פרוטאוליטי המופק מקיבת עגלים יונקים, המבקע באופן ספציפי את חלבון הקזאין-k וגורם לגיבון החלב.` },
-            { term: `Rennet`, definition: `תערובת אנזימים (בעיקר כימוסין ופפסין) המשמשת בתעשיית הגבינות ליצירת הגבן.` },
-            { term: `גלקטוזמיה`, definition: `מחלה גנטית רצסיבית שבה חסר האנזים הדרוש לניצול גלקטוז, מה שמונע מהחולה לצרוך חלב למרות פירוק הלקטוז.` },
-            { term: `מיצלת קזאין`, definition: `מבנה כדורי מורכב של חלבוני קזאין בחלב. גיבון החלב גורם למיצלות אלו להתחבר לצבירים או שרשראות.` },
-            { term: `חיידקי חומצה פרופיונית`, definition: `חיידקים המנצלים חומצה לקטית לייצור חומצה פרופיונית, חומצה אצטית ו- ($CO_2$). אחראים לחורים ולטעם בגבינה שוויצרית.` },
-            { term: `סודיום אזיד`, definition: `רעלן המעכב נשימה תאית על ידי קישור לציטוכרומים. חיידקים לקטיים עמידים אליו כי חסר להם מנגנון זה.` },
-            { term: `תסיסת ABE`, definition: `תהליך תסיסה תעשייתי על ידי חיידקי קלוסטרידיום המייצר אצטון, בוטנול ואתנול.` },
-            { term: `פקטינאזות`, definition: `אנזימים המפרקים פקטין בצמחים. בכבישת ירקות, ירידה מהירה של ה- ($pH$) מעכבת אותם ומונעת התרככות יתר.` },
-            { term: `פרוביוטיקה`, definition: `מיקרואורגניזמים חיים שכאשר הם ניתנים בכמות נאותה, מקנים יתרון בריאותי למאכסן.` },
-            { term: `בקטריוצינים`, definition: `חלבונים או פפטידים אנטימיקרוביאליים המיוצרים על ידי חיידקים כדי לעכב צמיחה של חיידקים מתחרים או פתוגנים.` },
-            { term: `סוקצסיה מיקרוביאלית`, definition: `החלפה הדרגתית של אוכלוסיות מיקרואורגניזמים בסביבה מסוימת לאורך זמן, כפי שקורה בתהליך הכנת כרוב כבוש.` },
-            { term: `התססה מדויקת`, definition: `שימוש במיקרואורגניזמים מהונדסים לייצור מסחרי של חלבונים ספציפיים (כגון כימוסין) ללא שימוש בבעלי חיים.` },
-            { term: `Penicillium roqueforti`, definition: `פטרית עובש המשמשת בתעשיית הגבינות הכחולות וגדלה בתוך חללי הגבן.` },
-            { term: `אנאירובים סובלי חמצן`, definition: `מיקרואורגניזמים שאינם משתמשים בחמצן לייצור אנרגיה, אך מסוגלים לשרוד ולגדול בנוכחותו. מאפיין חיידקים לקטיים.` }
+            { term: `כימוסין (Chymosin)`, definition: `פרוטאז אספרטט המופק מקיבת עגלים, בעל ספציפיות גבוהה לחיתוך k-casein, המשמש לגיבון חלב ללא יצירת טעמי לוואי מרירים.` },
+            { term: `תסיסה הומופרמנטטיבית`, definition: `מסלול תסיסה המשתמש באנזים אלדולאז, בו מולקולת גלוקוז מומרת לשתי מולקולות חומצה לקטית תוך הפקת שתי מולקולות ATP.` },
+            { term: `תסיסה הטרופרמנטטיבית`, definition: `מסלול תסיסה חסר אלדולאז המייצר חומצה לקטית, אתנול ופחמן דו-חמצני, תוך הפקת מולקולת ATP אחת לכל מולקולת גלוקוז.` },
+            { term: `גלקטוזמיה (Galactosemia)`, definition: `מחלה גנטית אוטוזומלית רצסיבית הנגרמת מחוסר באנזים galactose-1-phosphate uridyl transferase, המונעת יכולת לנצל גלקטוז.` },
+            { term: `Propionibacterium`, definition: `חיידקי חומצה פרופיונית המנצלים חומצה לקטית לייצור חומצה פרופיונית, חומצה אצטית ופחמן דו-חמצני (האחראי לחורים בגבינה שוויצרית).` },
+            { term: `סודיום אזיד`, definition: `רעלן מעכב נשימה תאית הקושר קבוצות Heme. חיידקים לקטיים עמידים אליו כיוון שחסרים להם ציטוכרומים.` },
+            { term: `Penicillium roqueforti`, definition: `פטריית עובש המוספת לספורות של גבן ומתפתחת בתוך הגבינה, אופיינית לגבינות כחולות.` },
+            { term: `Penicillium camemberti`, definition: `פטריית עובש המרוססת על פני השטח של הגבינה ומתפתחת בתנאי לחות גבוהים, אופיינית לגבינות קממבר.` },
+            { term: `אלדולאז (Aldolase)`, definition: `אנזים מפתח במסלול הגליקוליזה המבקע פרוקטוז-1,6-ביספוספט. נוכחותו מבדילה בין חיידקים הומופרמנטטיביים להטרופרמנטטיביים.` },
+            { term: `בקטריוצינים`, definition: `חלבונים או פפטידים אנטימיקרוביאליים המיוצרים על ידי חיידקים (כגון חיידקים פרוביוטיים) ומעכבים גדילה של חיידקים מתחרים או פתוגנים.` },
+            { term: `תסיסת ABE`, definition: `תסיסה אנאירובית המבוצעת על ידי חיידקי Clostridium ליצירת אצטון, בוטנול ואתנול.` },
+            { term: `לקטאז`, definition: `אנזים ממשפחת הביטא-גלקטוסידאז המפרק את הדו-סוכר לקטוז לגלוקוז וגלקטוז.` },
+            { term: `פקטינאזות`, definition: `אנזימים המפרקים פקטין וגורמים להתרככות ירקות בכבישה. פעילותם מעוכבת כאשר ה-pH יורד מתחת ל-6.` },
+            { term: `Leuconostoc mesenteroides`, definition: `חיידק הטרופרמנטטיבי המהווה את השלב הראשון בסוקצסיה של התססת כרוב כבוש וזיתים.` },
+            { term: `Lactobacillus plantarum`, definition: `חיידק הומופרמנטטיבי בעל עמידות גבוהה לחומציות, השולט בשלבים המאוחרים של התססת ירקות.` }
         ];
 
         const mcqData = [
-            { question: `מהי הסיבה העיקרית לכך שיצרני גבינה מעדיפים להשתמש באנזים Chymosin על פני Pepsin בתהליך הגיבון?`, options: [`הוא מפרק את כל סוגי הקזאין באופן שווה, מה שמאיץ את תהליך הגיבון.`, `פעילותו הפרוטאוליטית מוגבלת ומדויקת יותר, מה שמונע היווצרות טעמי לוואי מרים.`, `הוא פעיל בטווח רחב יותר של חומציות.`, `הוא דורש נוכחות של חיידקים פרופיוניים כדי לפעול כראוי.`], correctIndex: 1, explanation: `כימוסין מועדף בגלל פעילות פרוטאוליזה מוגבלת, מה שמפחית בעיות של טעם מר כתוצאה מפירוק חלבונים מוגבר.` },
-            { question: `באיזה אתר ספציפי פועל האנזים Chymosin על חלבון הקזאין?`, options: [`הוא מפרק קשרים גליקוזידיים של בטא 1 ל-4 בלקטוז.`, `הוא מבקע את קזאין אלפא בעמדה 105.`, `הוא מבקע במדויק את חלבון קזאין-k בין חומצות האמינו פנילאלנין בעמדה 105 למתיונין בעמדה 106.`, `הוא מפרק קשרי פפטיד אקראיים בחלבוני מי הגבינה.`], correctIndex: 2, explanation: `כימוסין פועל כפרוטאז אספרטט המבקע ספציפית את חלבון קזאין-k בין פנילאלנין 105 למתיונין 106.` },
-            { question: `אדם הסובל מגלקטוזמיה אינו יכול לצרוך חלב. מהו המנגנון הביוכימי הפגום הגורם למחלה זו?`, options: [`חוסר באנזים לקטאז המונע את פירוק הלקטוז במעי.`, `תגובה אימונית מוגזמת לחלבוני מי הגבינה.`, `חוסר באנזים הממיר גלקטוז-1-פוספט לתוצר הבא במסלול המטבולי, עקב מוטציה גנטית רצסיבית.`, `חוסר יכולת לייצר חומצה לקטית במערכת העיכול.`], correctIndex: 2, explanation: `גלקטוזמיה היא מחלה גנטית אוטוזומלית רצסיבית הנובעת מחוסר באנזים פעיל הדרוש לניצול הגלקטוז לאחר פירוק הלקטוז.` },
-            { question: `מהי ההגדרה המדויקת ביותר לחיידקים לקטיים בהקשר של תסיסה?`, options: [`חיידקים המסוגלים לנצל לקטוז כמקור פחמן יחיד.`, `חיידקים המייצרים חומצה לקטית כתוצר עיקרי של התסיסה, ללא קשר ליכולתם לנצל לקטוז.`, `כל חיידק אנאירובי אובליגטורי המצוי בחלב.`, `חיידקים המייצרים חומצה לקטית ואתנול ביחס שווה תמיד.`], correctIndex: 1, explanation: `חיידקים לקטיים מוגדרים ככאלה המייצרים חומצה לקטית, ואין לכך קשר ישיר ליכולתם לנצל דווקא את סוכר הלקטוז.` },
-            { question: `מהו ההבדל המרכזי במאזן האנרגטי בין תסיסה הומופרמנטטיבית לתסיסה הטרופרמנטטיבית עבור כל מולקולת גלוקוז?`, options: [`בתסיסה הומופרמנטטיבית נוצרות 4 מולקולות ($ATP$), ובהטרופרמנטטיבית 2 מולקולות.`, `בתסיסה הומופרמנטטיבית נוצרות 2 מולקולות ($ATP$), ובהטרופרמנטטיבית מולקולה אחת של ($ATP$).`, `בשני המסלולים נוצרות 2 מולקולות ($ATP$), אך התוצרים הסופיים שונים.`, `בתסיסה הטרופרמנטטיבית נוצרות יותר מולקולות ($ATP$) עקב ייצור אתנול.`], correctIndex: 1, explanation: `המסלול ההומופרמנטטיבי מניב 2 מולקולות ($ATP$) נטו לכל מולקולת גלוקוז, בעוד המסלול ההטרופרמנטטיבי מניב רק מולקולת ($ATP$) אחת.` },
-            { question: `איזה אנזים מפתח של תהליך הגליקוליזה חסר בחיידקים הטרופרמנטטיביים, מה שמוביל אותם להשתמש במסלול חלופי?`, options: [`Lactate dehydrogenase`, `Phosphofructokinase`, `Aldolase`, `Pyruvate kinase`], correctIndex: 2, explanation: `חיידקים הטרופרמנטטיביים חסרים את האנזים אלדולאז, ולכן אינם יכולים לפרק פרוקטוז-1,6-ביפוספט במסלול הגליקוליזה הרגיל.` },
-            { question: `מדוע חיידקים לקטיים מפגינים עמידות גבוהה לסודיום אזיד לעומת חיידקים נושמים?`, options: [`סודיום אזיד מתפרק בסביבה החומצית שיוצרים החיידקים הלקטיים.`, `לחיידקים לקטיים יש משאבות פליטה אקטיביות המוציאות את הרעלן מהתא.`, `סודיום אזיד מעכב נשימה תאית על ידי קישור לקבוצת ההם בציטוכרומים, ולחיידקים לקטיים אין ציטוכרומים.`, `סודיום אזיד פוגע באנזים קטלאז, שלחיידקים לקטיים יש בכמות עודפת.`], correctIndex: 2, explanation: `חיידקים לקטיים חסרים ציטוכרומים וחלבוני הם, ולכן סודיום אזיד, שפועל על ידי קישור לקבוצת ההם ועיכוב שרשרת מעבר האלקטרונים, אינו משפיע עליהם.` },
-            { question: `כיצד ניתן לסווג את דרישות החמצן של חיידקים לקטיים, ומהי ההשלכה הפיזיולוגית של סיווג זה?`, options: [`הם אירוביים אובליגטוריים, ולכן דורשים חמצן לייצור אנרגיה אך רגישים למי חמצן.`, `הם אנאירוביים אובליגטוריים, ולכן נוכחות חמצן קוטלת אותם באופן מיידי.`, `הם אנאירוביים סובלי חמצן, כלומר אינם מנצלים חמצן אך יכולים לשרוד בנוכחותו, למרות שחסר להם האנזים קטלאז.`, `הם פקולטטיביים, ויכולים לעבור מנשימה אירובית לתסיסה בהתאם לזמינות החמצן.`], correctIndex: 2, explanation: `חיידקים לקטיים הם אנאירובים סובלי חמצן. הם אינם משתמשים בו כי אין להם שרשרת נשימה, והם רגישים יחסית לנגזרות חמצן כי חסר להם האנזים קטלאז.` },
-            { question: `מהו התפקיד המרכזי של חיידקי החומצה הפרופיונית בתעשיית הגבינות, כדוגמת גבינה שוויצרית?`, options: [`הם מפרקים לקטוז מהר יותר מחיידקים לקטיים ומונעים התפתחות עובש.`, `הם מנצלים חומצה לקטית כסובסטרט, ומייצרים חומצה פרופיונית, חומצה אצטית ופחמן דו חמצני, שתורמים לטעם וליצירת החורים.`, `הם מעלים את חמיצות המוצר על ידי ייצור כמויות אדירות של חומצה לקטית.`, `הם מפרקים חלבוני קזאין ליצירת מרקם נוזלי ורך בגבינות קשות.`], correctIndex: 1, explanation: `חיידקי חומצה פרופיונית משתמשים בחומצה הלקטית שייצרו החיידקים הלקטיים, והופכים אותה לחומצה פרופיונית, חומצה אצטית וגז ($CO_2$), היוצר את החורים האופייניים לגבינה שוויצרית.` },
-            { question: `על סמך ערכי ה-pKa של החומצות המעורבות, כיצד משפיעה פעילותם של חיידקי החומצה הפרופיונית על רמת החמיצות הכללית של הגבינה לעומת מצב בו קיימת רק חומצה לקטית?`, options: [`החמיצות עולה משמעותית מכיוון שנוצרות שתי חומצות חדשות.`, `החמיצות יורדת מכיוון שחומצה לקטית מומרת לחומצות בעלות ערך pKa גבוה יותר, כלומר חומצות חלשות יותר.`, `החמיצות נשארת זהה כי סך כל הפרוטונים במערכת נשמר.`, `החמיצות עולה כי חומצה פרופיונית היא חומצה חזקה מאוד.`], correctIndex: 1, explanation: `ערך ה-pKa של חומצה לקטית נמוך יותר משל חומצה אצטית ופרופיונית. המרת חומצה חזקה יותר לחומצות חלשות יותר גורמת לירידה בחמיצות הכללית (עלייה ב-pH).` },
-            { question: `איזה תהליך תסיסה תעשייתי מזוהה עם החיידק Clostridium acetobutylicum?`, options: [`תסיסה הומופרמנטטיבית של חלב.`, `ייצור חומצה פרופיונית בגבינות.`, `תסיסת ABE המייצרת אצטון, בוטנול ואתנול.`, `כבישת זיתים ירוקים בתמלחת.`], correctIndex: 2, explanation: `חיידק זה משמש בתעשייה לייצור אצטון, בוטנול ואתנול בתהליך הידוע כ-ABE fermentation.` },
-            { question: `מהו הסדר הנכון של השלבים העיקריים בתהליך ייצור גבינה קשה מסורתית?`, options: [`גיבון, פיסטור חלב, חיתוך הגבן, המלחה, הבשלה, הידוק.`, `פיסטור חלב, המלחה, גיבון, חיתוך הגבן, הידוק, הבשלה.`, `פיסטור חלב, גיבון, חיתוך ובישול הגבן, המלחה, הידוק, הבשלה.`, `חיתוך הגבן, גיבון, פיסטור חלב, הידוק, המלחה, הבשלה.`], correctIndex: 2, explanation: `השלבים הם: חלב מפוסטר, גיבון באמצעות רנט או חומצה, חיתוך ובישול הגבן, המלחה, הידוק, ולבסוף הבשלה.` },
-            { question: `בגבינות כחולות כמו רוקפור, מהו המקור העיקרי לטעם האופייני ולמראה הכחול, והיכן הוא מתפתח?`, options: [`הוספת ספורות של Penicillium roqueforti הגדלות בתוך הגבן ולא רק על פני השטח.`, `ריסוס פני השטח של הגבינה ב-Penicillium camemberti.`, `תסיסה נמרצת של חיידקי חומצה פרופיונית בתוך הגבינה.`, `חמצון של חומצה לקטית על ידי אוויר החודר דרך נקבוביות הגבינה.`], correctIndex: 0, explanation: `בגבינות כחולות מוסיפים ספורות של פניציליום רוקפורטי אשר גדלות בתוך הגבן עצמו, בניגוד לקממבר שם העובש גדל רק על פני השטח.` },
-            { question: `בהבשלת גבינת קממבר מתרחשת סוקצסיה מיקרוביאלית. מי מהמיקרואורגניזמים הבאים מופיע בשלב המאוחר של ההבשלה לאחר שהפנציליום הגיע לשיאו?`, options: [`Streptococcus lactis`, `Geotrichum`, `Penicillium camemberti`, `Brevibacterium linens`], correctIndex: 3, explanation: `הסדר בהבשלת קממבר הוא קודם גיאוטריכום, לאחר מכן פנציליום קממברטי שמגיע לשיא, ולאחריו מתפתחת הבקטריה Brevibacterium linens.` },
-            { question: `גבינת קוטג מיוצרת לרוב תוך שימוש בסטרטר המכיל תערובת של חיידקים. איזה מהחיידקים הבאים אופייני לסטרטר של קוטג?`, options: [`Propionibacterium shermanii`, `Penicillium roqueforti`, `Leuconostoc cremoris`, `Lactobacillus bulgaricus`], correctIndex: 2, explanation: `הסטרטר לקוטג כולל חיידקים כמו Leuconostoc cremoris יחד עם מיני סטרפטוקוקוס.` },
-            { question: `מהו התנאי הרגולטורי הבסיסי ביותר לשימוש בחיידקים פרוביוטיים בתעשיית המזון, וכיצד התקן הישראלי מתייחס להצהרות בריאותיות לגביהם?`, options: [`החיידקים חייבים להיות מהונדסים גנטית, ומותר לטעון שהם מרפאים מחלות מעיים.`, `התנאי הוא שהם לא יזיקו לבריאות, אך לפי התקן הישראלי אסור לטעון לפעילות רפואית לגבי מוצרי מזון.`, `עליהם להחליף לחלוטין את הפלורה הטבעית במעי, ויש חובה לציין את השפעתם הרפואית על האריזה.`, `התנאי הוא שהם ייצרו ויטמין B12, והתקן הישראלי מחייב שיווקם כתרופת מרשם.`], correctIndex: 1, explanation: `חיידקים פרוביוטיים מותרים לשימוש בתנאי שאינם מזיקים. התקן הישראלי אוסר באופן מפורש ייחוס סגולות ריפוי רפואיות למוצרי מזון.` },
-            { question: `איזה מהפרמטרים הבאים מהווה גורם משתנה קריטי בקביעת התכונות של מוצרי חלב ניגרים, כגון יוגורט או רוויון?`, options: [`סוג הסטרטר וטמפרטורת הפרמנטציה.`, `כמות האור אליה נחשף החלב בזמן הפיסטור.`, `השימוש בציוד עשוי נחושת בלבד.`, `הוספת סודיום אזיד לעיכוב עובשים.`], correctIndex: 0, explanation: `הפרמטרים המשתנים במוצרי חלב ניגרים כוללים את מקור החלב, אחוז שומן, סוג סטרטר, טמפרטורת פרמנטציה וכמות רנט.` },
-            { question: `בעת כבישת ירקות, לעיתים הירק מתרכך יתר על המידה ונהרס. מהי הסיבה הביוכימית האפשרית לתופעה זו בתהליך לקוי?`, options: [`הוספת כמות גדולה מדי של מלח שממיסה את התאים.`, `ירידה מהירה מדי של ה- ($pH$) מתחת ל-4.`, `חוסר ירידה מספקת של ה- ($pH$), מה שמאפשר לאנזימים מסוג פקטינאזות להישאר פעילים ולפרק את דופן התא.`, `תסיסה הומופרמנטטיבית אינטנסיבית של Lactobacillus plantarum.`], correctIndex: 2, explanation: `ב- ($pH$) נמוך מ-6 פקטינזות אינן פעילות, ולכן אם ה- ($pH$) נשאר גבוה (עקב חוסר תסיסה לקטית), הפקטינזות מפרקות את הפקטין בירק וגורמות להתרככות.` },
-            { question: `מה תהיה התוצאה הסבירה ביותר של הוספת כמות מלח קטנה מדי (חוסר מלח) בתחילת תהליך כבישת ירקות?`, options: [`התפתחות מהירה של חיידקי חומצה פרופיונית שייצרו חורים בירק.`, `עיכוב מוחלט של כל פעילות מיקרוביאלית והתייבשות הירק.`, `התפתחות של אנאירובים בלתי רצויים כמו קוליפורמים וקלוסטרידיום, שייצרו ריחות לוואי וגזים.`, `סוקצסיה מהירה ויעילה יותר של חיידקים לקטיים.`], correctIndex: 2, explanation: `מלח משמש לסלקציה מיקרוביאלית. חוסר מלח יאפשר התפתחות של חיידקים פתוגניים או מקלקלים כמו קוליפורמים וקלוסטרידיום, שיוצרים גזים וריחות לוואי של גופרית.` },
-            { question: `תהליך הכנת כרוב כבוש מאופיין בשרשרת של מיקרואורגניזמים (סוקצסיה). איזה מין חיידק מתחיל בדרך כלל את התהליך, ומהו אופי התסיסה שלו?`, options: [`Lactobacillus plantarum, בתסיסה הומופרמנטטיבית.`, `Leuconostoc mesenteroides, בתסיסה הטרופרמנטטיבית.`, `Pediococcus cerevisiae, בתסיסה הומופרמנטטיבית.`, `Lactobacillus brevis, בתסיסה הטרופרמנטטיבית.`], correctIndex: 1, explanation: `הסוקצסיה מתחילה עם Leuconostoc mesenteroides, שהוא חיידק הטרופרמנטטיבי המייצר חומצה לקטית, חומצה אצטית, אתנול ופחמן דו חמצני, מה שמשנה את הסביבה לבאים אחריו.` },
-            { question: `בהינתן חיידק הטרופרמנטטיבי הגדל על מצע עשיר בגלוקוז, אילו תוצרים נצפה למצוא במצע לאחר תסיסה ממושכת, מלבד חומצה לקטית ו- ($ATP$)?`, options: [`מים ופחמן דו חמצני בלבד.`, `חומצה פרופיונית ואצטון.`, `אתנול ופחמן דו חמצני.`, `חומצה בוטירית וגז מימן.`], correctIndex: 2, explanation: `המסלול ההטרופרמנטטיבי מייצר חומצה לקטית, אתנול ו- ($CO_2$) מגלוקוז.` },
-            { question: `מהי המטרה העיקרית של כיסוי מיכל הכבישה בניילון או אטימתו מפני אוויר בתהליך כבישת ירקות?`, options: [`למנוע בריחה של ויטמינים נדיפים הנוצרים בתהליך התסיסה.`, `להעלות את הלחץ ההידרוסטטי במיכל כדי לזרז את יציאת המים מהירק.`, `למנוע חדירת חמצן, אשר עלול לאפשר שגשוג של פתוגנים, שמרים ועובשים אירוביים על פני הנוזל.`, `לעכב את הפעילות של חיידקים הטרופרמנטטיביים ולעודד הומופרמנטטיביים.`], correctIndex: 2, explanation: `חשיפה לאוויר (חמצן) מאפשרת התפתחות של זיהומים אירוביים כמו עובשים ושמרים על פני השטח, ולכן אוטמים את המערכת.` },
-            { question: `מבחינה תזונתית, כיצד מוגדרים חיידקים לקטיים ומהי המשמעות לגבי סביבת הגידול שלהם?`, options: [`הם אוטוטרופים ויכולים לקבע פחמן דו חמצני מהאוויר.`, `הם בעלי דרישות תזונתיות מורכבות וזקוקים לאספקה חיצונית של חומצות אמינו וויטמינים.`, `הם מסוגלים לקבע חנקן אטמוספרי ולכן גדלים היטב בסביבה דלה בנוטריינטים.`, `הם משתמשים באור כמקור אנרגיה בתנאים אנאירוביים.`], correctIndex: 1, explanation: `חיידקים לקטיים הם בעלי דרישות נוטריציוניות גבוהות, ולכן הם מצויים בסביבות עשירות כמו חלב וצמחים המספקים להם חומצות אמינו וויטמינים.` },
-            { question: `אחת הפעילויות הרצויות של חיידקים פרוביוטיים היא ייצור בקטריוצינים. מהי הפעילות העיקרית של חומרים אלו?`, options: [`פירוק כולסטרול במערכת הדם.`, `עיכוב או קטילה של חיידקים מתחרים, לעיתים קרובות חיידקים פתוגניים.`, `סיוע בפירוק תאית במעי הגס.`, `נטרול רעלנים המיוצרים על ידי פטריות.`], correctIndex: 1, explanation: `בקטריוצינים הם פפטידים אנטימיקרוביאליים המיוצרים על ידי חיידקים כדי לעכב או להרוג זנים מתחרים, ובכך תורמים לפעילות הפרוביוטית.` },
-            { question: `מהו ההבדל המבני העיקרי בארגון מיצלות הקזאין בין יוגורט לגבינה, כפי שמשתקף במיקרוסקופיה?`, options: [`ביוגורט המיצלות מפורקות לחלוטין לחומצות אמינו בודדות, ואילו בגבינה הן שלמות.`, `ביוגורט מיצלות הקזאין יוצרות שרשראות, ואילו בגבן של גבינה הן יוצרות צבירים.`, `ביוגורט המיצלות מסודרות במבנה גבישי קשיח, ובגבינה הן במצב נוזלי.`, `אין שום הבדל במבנה המיצלות בין שני המוצרים.`], correctIndex: 1, explanation: `בתצפיות מיקרוסקופיות, ביוגורט מיצלות הקזאין נוטות להסתדר במבנה של שרשראות, בעוד שבגבן של גבינה הן מתקבצות לצבירים.` },
-            { question: `שבט המסאי בקניה מדגים שימוש היסטורי ותרבותי בתסיסה. מהו בסיס המזון העיקרי שלהם שעובר פרמנטציה?`, options: [`שורשי קסאווה מותססים.`, `דגנים מותססים ליצירת בירה מקומית.`, `תערובת של חלב ודם בקר.`, `כרוב וירקות שורש.`], correctIndex: 2, explanation: `תזונת שבט המסאי מבוססת במידה רבה על חלב ודם בקר שעוברים פרמנטציה, מה שמשמר את המזון בסביבה חמה.` },
-            { question: `חלב גולמי (שלא עבר פיסטור) נחשב למוצר בעל סיכון בריאותי. אילו מהחיידקים הפתוגניים הבאים אופייניים למיקרופלורה הטבעית של בעלי חיים ועלולים להימצא בחלב גולמי?`, options: [`Lactobacillus bulgaricus ו-Streptococcus thermophilus`, `Mycobacterium paratuberculosis ו-Listeria`, `Leuconostoc mesenteroides ו-Penicillium roqueforti`, `Bifidobacterium ו-Geotrichum`], correctIndex: 1, explanation: `חלב גולמי עשוי להכיל פתוגנים מסוכנים שמקורם בבעל החיים, כגון ליסטריה ומיקובקטריום.` },
-            { question: `מהי אחת המטרות החשובות של תסיסת קסאווה בשיטות מסורתיות בברזיל, מעבר לשימור המזון?`, options: [`העשרת השורש בוויטמין C.`, `סילוק רעלנים טבעיים המצויים בשורש באמצעות פעילות המיקרואורגניזמים.`, `יצירת אלכוהול בריכוז גבוה לשימוש מסחרי.`, `צביעת השורש בצבע אדום עז.`], correctIndex: 1, explanation: `קסאווה מכילה תרכובות ציאנוגניות רעילות. התסיסה עוזרת בפירוק וסילוק חומרים טוקסיים אלו, מה שהופך את השורש לבטוח למאכל.` },
-            { question: `המונח Precision Fermentation (התססה מדויקת) מתייחס לרוב ל:`, options: [`כבישת ירקות בבית תוך מדידה מדויקת של ריכוז המלח בגרמים.`, `שימוש במיקרואורגניזמים מהונדסים גנטית בביוריאקטורים לייצור מולקולות ספציפיות ללא צורך בבעלי חיים.`, `תהליך ייצור יין בו מווסתים את הטמפרטורה ברמת העשירית המעלה.`, `שיטה למניעת התפתחות עובש בגבינות כחולות על ידי הזרקת חנקן נוזלי.`], correctIndex: 1, explanation: `התססה מדויקת היא טכנולוגיה מתקדמת המשתמשת במיקרואורגניזמים כיצרנים ביולוגיים של רכיבים ספציפיים, כגון כימוסין או חלבוני חלב.` },
-            { question: `כיצד הירידה ב- ($pH$) הנגרמת על ידי ייצור חומצה לקטית מסייעת בשימור החלב?`, options: [`היא גורמת לאידוי מהיר של המים בחלב, מה שמונע גידול חיידקים.`, `היא מעכבת התפתחות של רוב החיידקים המקלקלים והפתוגניים, שאינם עמידים לסביבה חומצית.`, `היא הורסת את המבנה של לקטוז והופכת אותו לרעלן עבור עובשים.`, `היא מעלה את טמפרטורת הרתיחה של החלב באופן ספונטני.`], correctIndex: 1, explanation: `האפקט העיקרי של חומצה לקטית הוא הורדת ה- ($pH$) לסביבה חומצית שאינה מאפשרת שגשוג של פתוגנים ומיקרואורגניזמים מקלקלים רבים.` },
-            { question: `איזה מבין הבאים אינו נחשב ליתרון של תהליך כבישת ירקות?`, options: [`העשרת המזון בויטמינים ובחומצות אמינו מסוימות.`, `יצירת סביבה בקטריוסטטית באמצעות החמצה.`, `עלייה דרסטית בריכוז הסוכרים הזמינים בירק בסוף התהליך.`, `פירוק חומרים טוקסיים המצויים באופן טבעי בירק.`], correctIndex: 2, explanation: `במהלך הכבישה החיידקים מנצלים את הסוכרים, ולכן ריכוז הסוכר יורד, לא עולה.` },
-            { question: `איזה הרכב סטרטר אופייני לייצור גבינה שוויצרית?`, options: [`Streptococcus lactis, Leuconostoc cremoris`, `Streptococcus helveticus, Lactobacillus bulgaricus, Propionibacterium shermanii`, `Penicillium roqueforti, Lactobacillus plantarum`, `Geotrichum, Brevibacterium linens`], correctIndex: 1, explanation: `ההרכב לגבינה שוויצרית כולל חיידקים תרמופיליים יחד עם חיידקי פרופיוניבקטריום שאחראים לחורים ולטעם.` },
-            { question: `לאיזו משפחת אנזימים שייך האנזים לקטאז, המפרק את סוכר הלקטוז?`, options: [`Proteases`, `Lipases`, `beta-Galactosidases`, `Phosphatases`], correctIndex: 2, explanation: `לקטאז מפרק את הקשר הגליקוזידי מסוג בטא 1 ל-4 בין גלקטוז לגלוקוז, והוא מוגדר כ-beta-Galactosidase.` },
-            { question: `איזו תכונה פיזיולוגית מאפיינת חיידקים הטרופרמנטטיביים בהשוואה להומופרמנטטיביים?`, options: [`קצב גידול מהיר יותר.`, `יכולת הורדת ($pH$) חזקה ומהירה יותר.`, `עמידות יחסית גבוהה לאתנול.`, `תלות מוחלטת באנזים אלדולאז.`], correctIndex: 2, explanation: `חיידקים הטרופרמנטטיביים מאופיינים בקצב גידול איטי יותר, הורדת ($pH$) מתונה יותר, ועמידות יחסית לאתנול שאותו הם מייצרים.` },
-            { question: `אילו השפעות בריאותיות פוטנציאליות מיוחסות לחלב ומרכיביו לפי המחקרים המוזכרים?`, options: [`העלאת לחץ דם והגברת דלקות.`, `השפעות אנטי-מסרטנות, אימונומודולטוריות, ואנטי-היפרטנסיביות.`, `הגדלת רמות הכולסטרול הרע בדם.`, `פגיעה במיקרוביום הטבעי של המעי.`], correctIndex: 1, explanation: `חלב מכיל רכיבים המקושרים להשפעות חיוביות כמו פעילות אנטי-סרטנית, ויסות מערכת החיסון, והורדת לחץ דם.` },
-            { question: `המאכל הרומאי המסורתי Rigatoni con la pajata מבוסס על מעיים של עגל יונק. כיצד נוצר הרוטב דמוי הגבינה במנה זו?`, options: [`על ידי הוספת גבינת ריקוטה למעיים לאחר בישולם.`, `שילוב של החום בזמן הבישול עם אנזים הרנט הנמצא באופן טבעי במעי העגל, אשר מגבן את חלב האם שנותר בתוכם.`, `תסיסה ארוכה של המעיים עם חיידקים הומופרמנטטיביים.`, `הוספת חומץ בן יין לבן שגורם לדנטורציה של חלבוני הבשר.`], correctIndex: 1, explanation: `המאכל משתמש במעיים של עגל שניזון מחלב אם. החום יחד עם אנזים הרנט שנמצא במעיים מגבנים את החלב שנותר בפנים ויוצרים רוטב סמיך.` },
-            { question: `מה מאפיין את השלב הראשון בהכנת קימצי קוריאני מסורתי?`, options: [`בישול הכרוב בטמפרטורה של 100 מעלות למשך שעה.`, `השריית הכרוב בתמיסת סוכר בריכוז גבוה.`, `הדגרה של הכרוב למשך הלילה עם מלח.`, `הוספת תרבית טהורה של פטריות עובש.`], correctIndex: 2, explanation: `הכנת קימצי היא תהליך דו-שלבי שהחל בהדגרה של הכרוב עם מלח למשך הלילה כדי להוציא נוזלים ולהתחיל את הסלקציה המיקרוביאלית.` },
-            { question: `מבחינה ביוכימית קלאסית, מהו התפקיד של פירובט (או נגזרותיו) בתהליך התסיסה הלקטית?`, options: [`הוא משמש כתורם אלקטרונים לשרשרת הנשימה במיטוכונדריה.`, `הוא משמש כמקבל אלקטרונים סופי מ-NADH, על מנת למחזר את ה-NAD+ הדרוש להמשך הגליקוליזה.`, `הוא מתפרק ישירות ליצירת 36 מולקולות ($ATP$).`, `הוא מתחבר ללקטוז ליצירת פולימרים מבניים.`], correctIndex: 1, explanation: `בתסיסה, פירובט מקבל את האלקטרונים מ-NADH, מה שממחזר את ה-NAD+ ומאפשר לתהליך הגליקוליזה להימשך בהיעדר חמצן.` },
-            { question: `כיצד הצליחה הביוטכנולוגיה המודרנית להוזיל ולייעל את ייצור גבינות קשות הדורשות אנזימי גיבון?`, options: [`על ידי הרבעה סלקטיבית של פרות המייצרות חלב שמגבן את עצמו.`, `על ידי שיבוט גן ה-cDNA של אנזים ה-Chymosin מעגלים לתוך שמר האפייה או חיידקים, מה שמאפשר ייצור מסחרי זול וזמין.`, `שימוש בחומצות סינתטיות זולות המחליפות לחלוטין את הצורך באנזימים.`, `מיצוי אנזימים מצמחים טרופיים בלבד.`], correctIndex: 1, explanation: `הנדסה גנטית איפשרה לשבט את הגן המקודד לכימוסין מקיבת העגל לתוך שמרים, וכך לייצר את האנזים בכמויות גדולות ובזול.` },
-            { question: `האם חיידקים לקטיים מוגבלים לניצול פחמימות (כמו גלוקוז ולקטוז) כמקור אנרגיה יחיד בתסיסה?`, options: [`כן, הם יכולים לפרק רק סוכרים פשוטים בעלי שישה פחמנים.`, `לא, הם מסוגלים לנצל רק חלבונים וליפידים.`, `לא, בתנאים מסוימים הם יכולים לנצל גם חומצות אורגניות (כמו ציטראט ומלאט) וחומצות אמינו כמקורות אנרגיה חלופיים.`, `כן, והם דורשים נוכחות של חמצן כדי לפרק סוכרים מורכבים.`], correctIndex: 2, explanation: `מפת המסלולים המטבוליים מראה שחיידקים לקטיים יכולים לנצל מקורות אנרגיה נוספים מלבד סוכרים, כגון חומצות אורגניות וחומצות אמינו מסוימות.` }
+            { question: `יצרן גבינות מבחין כי הגבינה שייצר בעלת טעם מריר וחריף מהרגיל, על אף שהשתמש באותו חלב ואותם תנאי הבשלה. איזה מהגורמים הבאים הוא הסביר ביותר לתופעה זו?`, options: [`שימוש בחיידקים הומופרמנטטיביים במקום הטרופרמנטטיביים.`,`שימוש באנזים פפסין במקום כימוסין בתהליך הגיבון.`,`הוספת מלח בכמות קטנה מדי בשלב המלחת הגבן.`,`הדבקה בפטריית Penicillium camemberti במקום Penicillium roqueforti.`], correctIndex: 1, explanation: `כימוסין הוא פרוטאז ספציפי מאוד שחותך את הקזאין בעמדה אחת וגורם לגיבון. פפסין הוא פרוטאז כללי יותר שגורם לפרוטאוליזה נרחבת של חלבוני החלב, מה שמשחרר פפטידים קצרים הגורמים לטעם מר.` },
+            { question: `איזו מהתכונות הבאות מאפשרת להבדיל במעבדה בין חיידקי חומצת חלב (Lactic Acid Bacteria) לחיידקים אירוביים מובהקים?`, options: [`יכולתם לגדול בנוכחות סודיום אזיד.`,`יכולתם לייצר פחמן דו-חמצני מפירוק גלוקוז.`,`הימצאות האנזים אלדולאז במסלול המטבולי שלהם.`,`היכולת שלהם לפרק לקטוז בעזרת ביטא-גלקטוסידאז.`], correctIndex: 0, explanation: `חיידקים לקטיים חסרים ציטוכרומים וחלבוני Heme, ולכן הם עמידים לסודיום אזיד המעכב נשימה תאית מבוססת ציטוכרומים. חיידקים אירוביים תלויים בציטוכרומים ולכן ימותו.` },
+            { question: `בתהליך ייצור של גבינה שוויצרית, נמצא כי הגבינה דחוסה לחלוטין וחסרת חורים. איזה שלב בתהליך המיקרוביאלי סביר להניח שכשל?`, options: [`המרת הגלוקוז לחומצה לקטית על ידי חיידקי הסטרפטוקוקוס.`,`המרת החומצה הלקטית לחומצה פרופיונית ופחמן דו-חמצני.`,`פעילות האנזים כימוסין על מיצלות הקזאין.`,`פירוק הלקטוז לגלוקוז וגלקטוז על ידי לקטאז.`], correctIndex: 1, explanation: `החורים בגבינה שוויצרית נוצרים מגז הפחמן הדו-חמצני המשתחרר כאשר חיידקי Propionibacterium הופכים חומצה לקטית לחומצה פרופיונית ואצטית.` },
+            { question: `מהו ההבדל המטבולי המרכזי שגורם לחיידקים הטרופרמנטטיביים להפיק פחות אנרגיה (ATP) לכל מולקולת גלוקוז בהשוואה לחיידקים הומופרמנטטיביים?`, options: [`היעדר האנזים אלדולאז, המונע את ביקוע הפרוקטוז-1,6-ביספוספט לשתי מולקולות תלת-פחמניות הממשיכות בגליקוליזה.`,`היעדר האנזים קטלאז, המאלץ אותם להשקיע אנרגיה בנטרול רדיקלים חופשיים של חמצן.`,`הצורך להמיר את החומצה הלקטית לאתנול על מנת להימנע מהרעלת חומציות.`,`חוסר יכולתם לנצל גלקטוז, מה שמגביל את כמות הסובסטרט הזמין להם מתפרק הלקטוז.`], correctIndex: 0, explanation: `חיידקים הטרופרמנטטיביים חסרים אלדולאז, ולכן אינם יכולים להשלים את מסלול הגליקוליזה הקלאסי המניב 2 מולקולות ATP. במקום זאת הם משתמשים במסלול הפנטוז-פוספט המניב רק מולקולת ATP אחת לכל גלוקוז.` },
+            { question: `במפעל לכבישת כרוב התגלה כי משלוח גדול של כרוב כבוש הפך לרך וסמרטוטי, למרות שריכוז המלח היה תקין. בדיקת מעבדה הראתה כי ה-pH של התמיסה נעצר על 6.5. מהו ההסבר המדעי המדויק ביותר לתופעה?`, options: [`ב-pH גבוה מ-6, אנזימי פקטינאז נשארים פעילים ומפרקים את דפנות תאי הירק.`,`חיידקים הומופרמנטטיביים אינם מסוגלים לגדול ב-pH גבוה מ-6 ולכן הכרוב נרקב.`,`ב-pH 6.5 נוצרת חומצה פרופיונית במקום חומצה לקטית, הגורמת להמסת התאית.`,`היעדר חומציות מאפשר לפטריית Penicillium רוקפורטי להתפתח ולפרק את הירק.`], correctIndex: 0, explanation: `התרככות יתר בכבישת ירקות נגרמת לרוב כתוצאה מפעילות של פקטינאזות. אנזימים אלו מנוטרלים רק כאשר ה-pH יורד מתחת ל-6. ירידה בלתי מספקת ב-pH השאירה אותם פעילים.` },
+            { question: `אדם הסובל מגלקטוזמיה (Galactosemia) נמנע ממוצרי חלב. מבחינה ביוכימית, מהי הסיבה המדויקת לכך שחלב מסוכן עבורו?`, options: [`הוא חסר את האנזים לקטאז, ולכן הלקטוז מצטבר במעי וגורם לרעילות סיסטמית.`,`מערכת החיסון שלו מזהה את חלבוני מי הגבן (Whey) כגופים זרים ומייצרת תגובה אלרגית.`,`הוא חסר אנזים המאפשר מטבוליזם של גלקטוז, מה שמוביל להצטברות תוצרי ביניים רעילים בתאים.`,`החומצה הלקטית המיוצרת במעיים שלו אינה יכולה להפוך לחומצה פרופיונית, וגורמת לחמצת דם.`], correctIndex: 2, explanation: `גלקטוזמיה היא מחלה גנטית בה חסר האנזים galactose-1-phosphate uridyl transferase. כתוצאה מכך, הגלקטוז (שנוצר מפירוק הלקטוז) אינו יכול להפוך לגלוקוז, ותוצרי הביניים שלו מצטברים לרמות רעילות.` },
+            { question: `מדוע יצרני כרוב כבוש לא משתמשים בתרבית פתיחה (Starter) המכילה רק חיידקי Lactobacillus plantarum (חיידק הומופרמנטטיבי חזק), אלא נסמכים על התפתחות טבעית של חיידקים שונים?`, options: [`כי L. plantarum רגיש מאוד למלח ואינו יכול לשרוד בתחילת התהליך.`,`כי L. plantarum דורש חמצן בשלבי הגידול הראשונים, והכבישה היא אנאירובית.`,`כי נדרשת פעילות ראשונית של חיידקים הטרופרמנטטיביים כדי לייצר גזים וטעמים מורכבים ולהוריד את ה-pH בהדרגה.`,`כי L. plantarum מייצר אנזימי פקטינאז שירככו את הכרוב אם יפעל לבדו מההתחלה.`], correctIndex: 2, explanation: `התססת כרוב היא תהליך של סוקצסיה. חיידקים הטרופרמנטטיביים (כמו Leuconostoc) מתפתחים ראשונים, מייצרים פחמן דו-חמצני (שדוחק חמצן) ותרכובות טעם. רק לאחר שה-pH יורד, ה-L. plantarum משתלט כדי לסיים את ההחמצה.` },
+            { question: `בניסוי מעבדה בודדו חיידק לקטי מיוגורט. החיידק גודל במצע המכיל גלוקוז. לאחר 24 שעות נמצא כי המצע מכיל כמויות שוות של חומצה לקטית ואתנול, ובועות גז נצפו במבחנה. איזה מהמשפטים הבאים נכון לגבי חיידק זה?`, options: [`החיידק משתמש באנזים אלדולאז לצורך הפקת אנרגיה.`,`החיידק מפיק 2 מולקולות ATP לכל מולקולת גלוקוז שהוא מפרק.`,`החיידק מבצע תסיסה הומופרמנטטיבית.`,`החיידק חסר את האנזים אלדולאז ומבצע תסיסה הטרופרמנטטיבית.`], correctIndex: 3, explanation: `יצירת אתנול וגז (פחמן דו-חמצני) יחד עם חומצה לקטית הם סימני ההיכר של תסיסה הטרופרמנטטיבית. מסלול זה חסר את האנזים אלדולאז.` },
+            { question: `מהי המטרה העיקרית של הוספת מלח (כבישה יבשה או רטובה) בתחילת תהליך התססת ירקות?`, options: [`לספק מקור פחמן אלטרנטיבי לחיידקים הלקטיים כאשר רמת הסוכר בירק נמוכה.`,`לעכב שגשוג של חיידקים אנאירוביים בלתי רצויים (כמו קלוסטרידיום) וקוליפורמים עד שה-pH ירד.`,`לנטרל את החומצה הלקטית הנוצרת על מנת למנוע ירידה דרסטית מדי ב-pH שעלולה להרוג את החיידקים.`,`להפעיל את האנזים כימוסין המצוי באופן טבעי בירקות וגורם למיצוק הרקמה.`], correctIndex: 1, explanation: `המלח יוצר סביבה היפרטונית המעכבת התפתחות של חיידקי קלקול ופתוגנים (כמו קוליפורמים וקלוסטרידיום) בשלבים הראשונים, ומאפשר לחיידקים הלקטיים (שהם סובלניים יותר למלח) להשתלט על הסביבה ולהתחיל לייצר חומצה.` },
+            { question: `בהכנת גבינת קממבר, מהו תפקידה של פטריית Geotrichum הגדלה ב-3-4 הימים הראשונים?`, options: [`היא מפרקת את הלקטוז במקום החיידקים הלקטיים שאינם שורדים בתנאי הקממבר.`,`היא מייצרת חומצה פרופיונית הגורמת להיווצרות החורים האופייניים לגבינה.`,`היא מכינה את פני השטח של הגבינה להתפתחות מאוחרת יותר של פנציליום ובקטריות מסוג Brevibacterium.`,`היא חודרת לתוך הגבן ומייצרת את הגידים הכחולים האופייניים לגבינה.`], correctIndex: 2, explanation: `בגבינות עם הבשלת עובש על פני השטח (כמו קממבר), ישנה סוקצסיה מיקרוביאלית על הקליפה. Geotrichum מתפתחת ראשונה, משנה את תנאי פני השטח (כגון העלאת pH על ידי פירוק חומצה לקטית), ומאפשרת לפנציליום ול-Brevibacterium linens להתפתח אחריה.` },
+            { question: `חיידקים לקטיים מוגדרים כ"אנאירוביים סובלי חמצן". כיצד מתיישבת הגדרה זו עם העובדה שחסר להם האנזים קטלאז?`, options: [`הם אינם נושמים חמצן ולכן אינם מייצרים מי חמצן, אך אם ייחשפו למי חמצן חיצוניים הם יהיו רגישים מאוד.`,`הם משתמשים בציטוכרומים במקום קטלאז כדי לפרק את רדיקלי החמצן.`,`היעדר קטלאז מאפשר להם לנצל חמצן כמקבל אלקטרונים סופי במקום פירובאט.`,`הם מייצרים קטלאז רק כאשר הם עוברים מתסיסה הומופרמנטטיבית להטרופרמנטטיבית.`], correctIndex: 0, explanation: `קטלאז הוא אנזים המפרק מי חמצן (תוצר לוואי של נשימה אירובית). חיידקים לקטיים אינם מבצעים נשימה אירובית, לכן הם סובלים חמצן אך אינם משתמשים בו. חוסר בקטלאז הופך אותם לרגישים מאוד לנוכחות של מי חמצן בסביבה.` },
+            { question: `איזה מהתהליכים הבאים אינו מנגנון שדרכו חיידקים פרוביוטיים תורמים לבריאות האדם?`, options: [`ייצור תחרותי המונע שגשוג של פתוגנים במעי.`,`ייצור בקטריוצינים הפוגעים בחיידקים מתחרים.`,`המרת גלקטוז לגלוקוז בזרם הדם אצל חולי גלקטוזמיה.`,`ייצור חומצות שומן קצרות שרשרת במעי הגס.`], correctIndex: 2, explanation: `חיידקים פרוביוטיים פועלים בחלל המעי (תחרות, עיכול, ייצור בקטריוצינים, חומצות שומן וויטמינים). הם אינם נכנסים לזרם הדם כדי לבצע פעולות מטבוליות סיסטמיות כמו תיקון פגם גנטי של גלקטוזמיה.` },
+            { question: `חברת ביוטכנולוגיה הצליחה לשבט את הגן לכימוסין (cDNA) לתוך שמר האפייה. מהו היתרון התעשייתי המרכזי של מהלך זה?`, options: [`הוא מאפשר לייצר גבינות שוויצריות ללא שימוש בחיידקי חומצה פרופיונית.`,`הוא מוזיל משמעותית את ייצור האנזים ומייתר את הצורך בהפקתו מקיבות של עגלים צעירים.`,`הוא הופך את השמרים לחיידקים לקטיים המסוגלים לבצע תסיסה הומופרמנטטיבית.`,`הוא מונע את התפתחותה של מחלת הגלקטוזמיה בקרב צרכני הגבינה.`], correctIndex: 1, explanation: `ייצור כימוסין רקומביננטי (Precision Fermentation) בשמרים מאפשר ייצור מסחרי זול, טהור, בכמויות גדולות, וללא צורך בשחיטת עגלים, מה שגם מאפשר ייצור גבינות צמחוניות/כשרות בקלות רבה יותר.` },
+            { question: `מהו ההבדל המבני בין הלקטוז המצוי בחלב לבין סוכרוז (סוכר שולחן)?`, options: [`לקטוז מורכב מגלוקוז וגלקטוז בקשר בטא-1,4, בעוד שסוכרוז אינו מכיל גלקטוז.`,`לקטוז הוא חד-סוכר בעוד סוכרוז הוא דו-סוכר.`,`לקטוז מפורק על ידי האנזים אלדולאז, בעוד סוכרוז מפורק על ידי פקטינאז.`,`לקטוז קיים רק בחלב שעבר פיסטור, בעוד סוכרוז קיים בטבע.`], correctIndex: 0, explanation: `לקטוז הוא דו-סוכר המורכב מגלוקוז וגלקטוז המחוברים בקשר גליקוזידי בטא 1 ל-4. סוכרוז מורכב מגלוקוז ופרוקטוז.` },
+            { question: `באיזה שלב של ייצור גבינה נוצרות מיצלות הקזאין כאשכולות (Clusters) להבדיל משרשראות (Chains)?`, options: [`בייצור יוגורט נוצרות שרשראות, בעוד שבייצור גבינה (באמצעות רנט) נוצרים אשכולות.`,`במהלך תהליך הפיסטור של החלב נוצרים אשכולות עקב דנטורציה של חלבוני מי הגבן.`,`אשכולות נוצרים רק כאשר משתמשים בחיידקים הטרופרמנטטיביים, ושרשראות בחיידקים הומופרמנטטיביים.`,`ההבדל נובע ממשך זמן ההבשלה; גבינות מיושנות מאוד מכילות שרשראות.`], correctIndex: 0, explanation: `על פי צילומי המיקרוסקופ האלקטרוני, ביוגורט (החמצה בלבד) מיצלות הקזאין יוצרות מבנה של שרשראות, בעוד שבגבן של גבינה (הנוצר בעזרת אנזימי רנט) המיצלות מתאגדות לאשכולות צפופים יותר.` },
+            { question: `איזו מהחומצות הבאות, הנוצרת במהלך תסיסה של חיידקים מסוימים בתעשיית הגבינות, היא בעלת ה-pKa הגבוה ביותר (הכי פחות חומצית)?`, options: [`חומצה לקטית (Lactic acid)`,`חומצה פרופיונית (Propionic acid)`,`חומצה אצטית (Acetic acid)`,`חומצה הידרוכלורית (HCl)`], correctIndex: 1, explanation: `על פי הנתונים, ה-pKa של חומצה לקטית הוא 3.86, של חומצה אצטית 4.74, ושל חומצה פרופיונית הוא 4.86, מה שהופך אותה להכי פחות חומצית (הכי חלשה בשחרור פרוטון) מבין השלוש.` },
+            { question: `כיצד משפיעה נוכחות של חמצן על תהליך הכבישה של ירקות?`, options: [`היא חיונית בשלבים הראשונים כדי לאפשר לחיידקים הלקטיים להתרבות.`,`היא גורמת לעיכוב מוחלט של אנזימי הפקטינאז ולכן שומרת על הירק פריך.`,`היא מעודדת התפתחות של עובשים ושמרים אירוביים שגורמים לקלקול המוצר.`,`היא מאיצה את הפיכת החומצה הלקטית לאתנול על ידי חיידקי Leuconostoc.`], correctIndex: 2, explanation: `תהליך הכבישה הלקטית דורש תנאים מיקרוארופיליים או אנאירוביים. נוכחות חמצן פתוח מאפשרת שגשוג של מיקרואורגניזמים אירוביים, בעיקר עובשים ושמרים, המקלקלים את הירק (ולכן מכסים את בורות התחמיץ או צנצנות הכבישה).` },
+            { question: `מהו התפקיד של Clostridium acetobutylicum בתעשייה הביוטכנולוגית?`, options: [`ייצור תעשייתי של כימוסין רקומביננטי לגיבון חלב.`,`ביצוע תסיסת ABE לייצור אצטון, בוטנול ואתנול.`,`ייצור חומצה פרופיונית בגבינות שוויצריות.`,`פירוק רעלנים ומי חמצן במעי הגס של האדם.`], correctIndex: 1, explanation: `חיידק זה משמש בתעשייה לביצוע פרמנטציית ABE (Acetone-Butanol-Ethanol), המהווה מסלול מטבולי אנאירובי חלופי לניצול סוכרים.` },
+            { question: `במנת הפסטה המסורתית Rigatoni con la pajata, הרוטב הקרמי נוצר מבישול מעיים של עגל יונק. מהו המנגנון הביוכימי העומד מאחורי יצירת רוטב זה?`, options: [`החום מפרק את התאית שבמעיים והופך אותה לגלוקוז מתוק.`,`אנזימי רנט הנמצאים באופן טבעי במעי העגל גורמים לקואגולציה של חלב האם שנותר בהם.`,`חיידקים הטרופרמנטטיביים במעי מתסיסים את הפסטה ויוצרים חומצה לקטית.`,`נוכחות גבוהה של סודיום אזיד במעי העגל גורמת לשקיעת חלבוני הפסטה.`], correctIndex: 1, explanation: `המעיים של עגל יונק מכילים את החלבון מהאם (Chyme) ואת האנזים רנט (המכיל כימוסין). בשילוב חום הבישול, האנזים מזרז את גיבון החלב שנותר במעיים, ויוצר רוטב דמוי גבינה.` },
+            { question: `מה קובע האם חיידק לקטי ייצר רק חומצה לקטית או גם אתנול ופחמן דו-חמצני?`, options: [`רמת ה-pH ההתחלתית של החלב או הירק.`,`הימצאות או היעדר של חמצן בסביבת הגידול.`,`המסלול הגנטי של החיידק, ובפרט הנוכחות של האנזים אלדולאז.`,`ריכוז המלח בתמיסת הכבישה (מעל או מתחת ל-5%).`], correctIndex: 2, explanation: `ההבדל בין תסיסה הומופרמנטטיבית להטרופרמנטטיבית הוא גנטי-מטבולי, ותלוי במסלול האנזימטי של החיידק, ספציפית בנוכחות או היעדר האנזים אלדולאז המאפשר את השלמת הגליקוליזה.` },
+            { question: `איזה מהחיידקים הבאים אינו נחשב בדרך כלל כחיידק פרוביוטי?`, options: [`Lactobacillus`,`Bifidobacterium`,`Mycobacterium paratuberculosis`,`Enterococcus`], correctIndex: 2, explanation: `לפי המצגת, Mycobacterium paratuberculosis (יחד עם ליסטריה) מוזכר כחיידק פתוגני מזהם הנמצא במיקרופלורה הטבעית של בעלי חיים ומהווה סכנה בתעשיית החלב, לא כחיידק פרוביוטי.` },
+            { question: `בתהליך ייצור יוגורט, מהי הסיבה העיקרית לכך שה-pH יורד?`, options: [`הוספת אנזימי רנט חומציים לחלב.`,`המרת הלקטוז לחומצה לקטית על ידי חיידקי הסטרטר.`,`פירוק חלבוני הקזאין לחומצות אמינו חופשיות.`,`שחרור פחמן דו-חמצני המגיב עם מים ליצירת חומצה פחמתית.`], correctIndex: 1, explanation: `התסיסה הלקטית מוגדרת כייצור חומצה לקטית. חיידקי התסיסה (כגון S. thermophilus ו-L. bulgaricus) מפרקים את הסוכר בחלב (לקטוז) ומייצרים חומצה לקטית, מה שמוריד את ה-pH וגורם לקרישת החלבונים.` },
+            { question: `מהי המטרה של כיסוי בור התחמיץ (Silage) ביריעות פלסטיק?`, options: [`לשמור על טמפרטורה גבוהה שתהרוג את החיידקים הלקטיים.`,`למנוע חדירת חמצן וכך למנוע התפתחות עובשים ושמרים אירוביים הגורמים ריקבון.`,`לאפשר לחמצן לחדור פנימה באיטיות כדי לעודד תסיסה אירובית.`,`למנוע מהחומצה הלקטית להתאדות לאוויר.`], correctIndex: 1, explanation: `תחמיץ נועד להזנת בעלי חיים ונשמר על ידי תסיסה לקטית אנאירובית. כיסוי הפלסטיק אוטם את הבור מחמצן, ובכך מונע צמיחה של מיקרואורגניזמים אירוביים (עובשים) שעלולים לקלקל את המזון.` },
+            { question: `איזו משפחת חיידקים מאופיינת בכך שהם מתגים (Rods) ולא נקדים (Cocci)?`, options: [`Streptococcus`,`Leuconostoc`,`Pediococcus`,`Lactobacillus`], correctIndex: 3, explanation: `על פי הטבלה המבדילה בין סוגי החיידקים הלקטיים, סטרפטוקוקוס, לאוקונוסטוק ופדיוקוקוס הם בעלי צורת מתג (Cocci), בעוד שלקטובצילוס הם בצורת מקלונים/מתגים (Rods).` },
+            { question: `מהו הקשר בין חוסר באנזים קטלאז לבין תנאי הגידול של חיידקים לקטיים?`, options: [`הם אינם מסוגלים לפרק מי חמצן, ולכן רגישים מאוד לנוכחותם.`,`הם דורשים נוכחות של חמצן חופשי כדי לייצר ATP.`,`הם מפרקים פקטין רק כאשר ה-pH יורד מתחת ל-6.`,`הם יכולים לנצל רק גלקטוז כמקור פחמן.`], correctIndex: 0, explanation: `קטלאז הוא האנזים המפרק מי חמצן (H2O2) למים וחמצן. חיידקים לקטיים חסרים אנזים זה, ולכן חשיפה למי חמצן היא רעילה עבורם.` },
+            { question: `מהי התוצאה של פעילות מוגברת של אנזימי פפסין לעומת כימוסין במהלך ייצור גבינה?`, options: [`ייצור מוגבר של חומצה פרופיונית ויצירת חורים גדולים מדי.`,`ירידה מהירה מדי ב-pH המונעת את התגבשות הקזאין.`,`פרוטאוליזה (פירוק חלבונים) מוגברת הגורמת לפגמי טעם (טעם מר).`,`חוסר יכולת לפרק את הלקטוז, מה שמשאיר את הגבינה מתוקה.`], correctIndex: 2, explanation: `פפסין פחות ספציפי מכימוסין וחותך חלבונים במקומות רבים. חיתוך יתר זה (פרוטאוליזה מוגברת) משחרר פפטידים קצרים שמזוהים על ידי קולטני הטעם בלשון כמרירים.` },
+            { question: `החיידק Pediococcus cerevisiae משתתף בשלבים המאוחרים של התססת כרוב. איזה מאפיין סביר שיהיה לו?`, options: [`הוא חיידק אירובי אובליגטורי.`,`הוא חיידק הטרופרמנטטיבי המייצר כמויות גדולות של CO2.`,`הוא מבצע תסיסה הומופרמנטטיבית ועמיד ל-pH נמוך.`,`הוא מייצר את האנזים קטלאז בכמויות גדולות.`], correctIndex: 2, explanation: `בסוקצסיה של כרוב כבוש, השלבים המאוחרים נשלטים על ידי חיידקים הומופרמנטטיביים (כמו Pediococcus ו-Lactobacillus plantarum) שהם עמידים מאוד לחומצה (pH נמוך) ומסיימים את תהליך ההחמצה.` },
+            { question: `מהו הגורם העיקרי המונע מחיידקים לקטיים לנצל את שרשרת מעבר האלקטרונים (נשימה תאית) למרות נוכחות חמצן?`, options: [`חוסר באנזים אלדולאז.`,`חסר בציטוכרומים וחלבוני Heme.`,`רגישות גבוהה לסודיום אזיד.`,`חוסר יכולת לסנתז פקטינאזות.`], correctIndex: 1, explanation: `שרשרת מעבר האלקטרונים דורשת חלבוני ציטוכרום המכילים קבוצות Heme. חיידקים לקטיים חסרים את המסלול הביוסינתטי לייצור חלבונים אלו, ולכן אינם יכולים לבצע נשימה אירובית גם אם יש חמצן.` },
+            { question: `איזה מהמרכיבים הבאים אינו מהווה פרמטר משתנה בהעמדת המערכת לייצור מוצרי חלב ניגרים (כמו יוגורט)?`, options: [`אחוז השומן בחלב.`,`סוג הסטרטר (תרבית החיידקים).`,`טמפרטורת הפרמנטציה.`,`הימצאות קבוצות Heme בחיידקי הסטרטר.`], correctIndex: 3, explanation: `אחוז שומן, סוג סטרטר וטמפרטורה הם פרמטרים נשלטים בתעשייה. הימצאות Heme אינה פרמטר, שכן כל חיידקי החומצה הלקטית חסרים Heme מיסודם.` },
+            { question: `מהו התפקיד העיקרי של הוספת ספורות הפטרייה Penicillium roqueforti לגבן?`, options: [`יצירת מעטה לבן וקטיפתי על פני השטח החיצוניים של הגבינה.`,`פירוק הלקטוז לגלוקוז וגלקטוז.`,`הבשלה פנימית של הגבינה ויצירת הגידים הכחולים והטעם האופייני.`,`הורדת ה-pH לערכים שמתחת ל-3.8.`], correctIndex: 2, explanation: `בניגוד ל-P. camemberti שפועל על פני השטח, P. roqueforti מוחדר אל תוך הגבן, מתפתח לאורך חרירי אוויר פנימיים, ויוצר את העורקים הכחולים והטעם החריף של גבינות כחולות.` },
+            { question: `מדוע חוסר מלח בכבישת ירקות עלול להוביל לריחות לוואי של גופרית מחוזרת?`, options: [`כי המלח מגיב כימית עם הגופרית שבירק ומנטרל אותה.`,`כי חוסר מלח מאפשר התפתחות של חיידקים אנאירוביים בלתי רצויים (כמו קלוסטרידיום) המפרקים חלבונים לתרכובות גופרית.`,`כי בהיעדר מלח, החיידקים הלקטיים עוברים מתסיסה הומופרמנטטיבית לתסיסת ABE.`,`כי המלח נחוץ לפעילות האנזים קטלאז המפרק תרכובות גופרית.`], correctIndex: 1, explanation: `מלח משמש כבורר סביבתי. בריכוז הנכון הוא מעכב חיידקי קלקול. בהיעדרו, חיידקי קלקול אנאירוביים (כגון קוליפורמים וקלוסטרידיום) משגשגים, מפרקים חלבונים, ומייצרים גזים מסריחים כמו מימן גופרתי.` },
+            { question: `אם נשווה את מאזן ה-ATP נטו בין תסיסה הומופרמנטטיבית לתסיסה הטרופרמנטטיבית עבור מולקולת גלוקוז אחת, מה יהיה ההפרש?`, options: [`הפרש של מולקולת ATP אחת לטובת ההומופרמנטטיבית.`,`הפרש של שתי מולקולות ATP לטובת ההטרופרמנטטיבית.`,`הפרש של 34 מולקולות ATP לטובת ההומופרמנטטיבית.`,`אין הפרש, שניהם מפיקים 2 מולקולות ATP.`], correctIndex: 0, explanation: `מסלול הומופרמנטטיבי מפיק 2 ATP. מסלול הטרופרמנטטיבי מפיק 1 ATP. ההפרש הוא בדיוק מולקולת ATP אחת.` },
+            { question: `מהי משמעות המונח "סוקצסיה" בהקשר של התססת כרוב כבוש?`, options: [`הוספה הדרגתית של מלח לאורך תהליך הכבישה.`,`החלפה הדרגתית של אוכלוסיות חיידקים, כאשר כל אוכלוסייה משנה את תנאי הסביבה (כגון pH) ומאפשרת לאוכלוסייה הבאה להשתלט.`,`מעבר של החיידקים מנשימה אירובית לתסיסה אנאירובית עם סיום החמצן במיכל.`,`הפיכת חלבוני הירק לחומצות אמינו חופשיות על ידי פקטינאזות.`], correctIndex: 1, explanation: `סוקצסיה אקולוגית במיקרוביולוגיה של מזון מתארת מצב שבו פעילות של קבוצת מיקרואורגניזמים אחת (למשל הטרופרמנטטיביים שמורידים pH) מכינה את הקרקע לקבוצה אחרת (הומופרמנטטיביים שעמידים לחומצה).` },
+            { question: `אילו תוצרי לוואי מאפיינים תסיסה הטרופרמנטטיבית בנוסף לחומצה לקטית?`, options: [`אצטון ובוטנול.`,`מי חמצן וחמצן חופשי.`,`אתנול ופחמן דו-חמצני.`,`גלקטוז וגלוקוז.`], correctIndex: 2, explanation: `תסיסה הטרופרמנטטיבית מייצרת חומצה לקטית, אך גם אתנול, פחמן דו-חמצני, ולעיתים חומצה אצטית, בשל השימוש במסלול הפנטוז-פוספט במקום גליקוליזה מלאה.` },
+            { question: `מהו תפקידם של חיידקים פרוביוטיים ב"ייצוב pH" במערכת העיכול?`, options: [`הם מפרישים בסיסים חזקים המנטרלים את חומציות הקיבה.`,`הם מייצרים חומצות (כמו חומצה לקטית) השומרות על סביבה חומצית קלה במעי, המעכבת התפתחות פתוגנים.`,`הם מפרקים חומצות שומן קצרות שרשרת כדי למנוע ירידת pH.`,`הם משתמשים באנזים קטלאז כדי להפוך חומצה למים.`], correctIndex: 1, explanation: `החיידקים הפרוביוטיים (שהם לרוב חיידקים לקטיים) מייצרים חומצות אורגניות שמורידות מעט את ה-pH המקומי במעי. סביבה זו עוינת לחיידקים פתוגניים רבים שדורשים pH ניטרלי יותר.` },
+            { question: `באיזה שלב בחיי העגל מיוצר האנזים כימוסין בכמות הגבוהה ביותר?`, options: [`לאחר גמילתו מחלב האם ומעבר לתזונה צמחית.`,`בשבוע הראשון לחייו.`,`כאשר הוא מגיע לבגרות מינית.`,`הכימוסין אינו מיוצר בעגל אלא מוסף לחלב מבחוץ.`], correctIndex: 1, explanation: `כימוסין מיוצר בעיקר בשבוע הראשון לחיי העגל (כדי לגבן את חלב האם שהוא יונק), ולאחר מכן הוא מוחלף בהדרגה על ידי פפסין ככל שהעגל עובר לתזונה מוצקה.` },
+            { question: `מהי מטרת הטיפול התרמי (פיסטור) לפני הוספת הסטרטר בייצור גבינה?`, options: [`להפעיל את אנזימי הפקטינאז המצויים בחלב.`,`לפרק את הלקטוז לחד-סוכרים.`,`לסלק את המיקרופלורה הטבעית והפתוגנים שעלולים להתחרות בסטרטר או לסכן את הצרכן.`,`ליצור חורים בגבינה על ידי אידוי מים מהיר.`], correctIndex: 2, explanation: `החלב הגולמי עשיר במיקרואורגניזמים, כולל פתוגנים (כמו ליסטריה). פיסטור מחסל אותם ומעניק לתרבית הסטרטר המוספת "לוח חלק" להתפתח בו ללא תחרות.` },
+            { question: `איזו מהתרכובות הבאות אינה משמשת מקור אנרגיה חלופי לגלוקוז בתסיסה אנאירובית של חיידקים מסוימים בתעשייה?`, options: [`חומצה לקטית (בייצור פרופיונאט)`,`חומצות אמינו`,`סודיום אזיד`,`פוליסכרידים`], correctIndex: 2, explanation: `סודיום אזיד הוא רעלן (מעכב נשימה) המשמש במעבדה לסלקציה, ולא מקור פחמן או אנרגיה למטבוליזם.` },
+            { question: `באיזה תהליך תעשייתי נעשה שימוש ב-Precision Fermentation (פרמנטציה מדויקת)?`, options: [`כבישת קמצ'י בקוריאה תוך שימוש במלח.`,`ייצור כימוסין רקומביננטי על ידי שמרים מהונדסים גנטית.`,`הכנת תחמיץ להזנת פרות.`,`ייצור גבינת קוטג' בעזרת סטרטר של סטרפטוקוקוס.`], correctIndex: 1, explanation: `פרמנטציה מדויקת מתייחסת לשימוש במיקרואורגניזמים מהונדסים גנטית (כמו שמרים או חיידקים) כמפעלי ייצור למולקולות ספציפיות וטהורות, כגון חלבון הכימוסין.` },
+            { question: `מהו אחד היתרונות התזונתיים של כבישת ירקות מעבר לשימור עצמו?`, options: [`הכבישה ממירה את כל החלבונים בירק לשומן.`,`התהליך מוסיף חומצות אמינו וויטמינים (כגון ויטמיני B) המסונתזים על ידי החיידקים.`,`הכבישה מעלה את רמת ה-pH של הירק והופכת אותו לקל לעיכול.`,`החיידקים הופכים את התאית ללקטוז.`], correctIndex: 1, explanation: `במהלך התסיסה, החיידקים אינם רק צורכים סוכר, אלא גם מסנתזים תרכובות מועילות חדשות, ביניהן ויטמינים מסוימים וחומצות אמינו, ובנוסף מפרקים רעלנים טבעיים (טוקסינים) הקיימים בירק.` }
         ];
 
         const tfData = [
-            { question: `תסיסה לקטית של חלב מחייבת את החיידקים לפרק את סוכר הלקטוז לצורך ייצור החומצה.`, answer: false, explanation: `תסיסה לקטית מוגדרת כיצור חומצה לקטית. אין לכך קשר הכרחי לניצול הלקטוז, אם כי חיידקים הגדלים על חלב חייבים לדעת לנצל אותו.` },
-            { question: `אנזים ה-Chymosin מופק באופן מסורתי מהקיבה הרביעית של עגלים.`, answer: true, explanation: `אנזימי ה-Rennet, ובתוכם הכימוסין, מופקים מהקיבה הרביעית של עגל יונק.` },
-            { question: `חיידקים לקטיים הם אירוביים אובליגטוריים ומתים מיד בהיעדר חמצן.`, answer: false, explanation: `חיידקים לקטיים הם אנאירובים סובלי חמצן; הם אינם משתמשים בו כלל.` },
-            { question: `מחלת הגלקטוזמיה נובעת מתגובה אלרגית לחלבון הקזאין שבחלב.`, answer: false, explanation: `גלקטוזמיה היא מחלה גנטית מטבולית הנובעת מחוסר באנזים המפרק גלקטוז, ולא מאלרגיה לחלבון.` },
-            { question: `המסלול ההטרופרמנטטיבי יעיל יותר אנרגטית מהמסלול ההומופרמנטטיבי ומניב יותר מולקולות ($ATP$).`, answer: false, explanation: `המסלול ההטרופרמנטטיבי מניב רק 1 ($ATP$) לכל מולקולת גלוקוז, לעומת 2 ($ATP$) במסלול ההומופרמנטטיבי.` },
-            { question: `חיידקים לקטיים חסרים את האנזים קטלאז, ולכן הם רגישים יותר למי חמצן.`, answer: true, explanation: `לחיידקים לקטיים אין קטלאז, מה שהופך אותם לרגישים יותר לנזקי חמצון ממי חמצן.` },
-            { question: `סודיום אזיד קוטל ביעילות חיידקים לקטיים על ידי עיכוב הנשימה התאית שלהם.`, answer: false, explanation: `חיידקים לקטיים עמידים לסודיום אזיד מכיוון שאין להם ציטוכרומים וחלבוני הם שאליהם הרעלן נקשר.` },
-            { question: `חיידקי חומצה פרופיונית גורמים להורדת חמיצות הגבינה מכיוון שהם צורכים חומצה לקטית חזקה ומייצרים חומצות חלשות יותר.`, answer: true, explanation: `ערך ה-pKa של חומצה לקטית נמוך משל פרופיונית ואצטית. המרתה מעלה את ה- ($pH$) ומורידה את החמיצות הכללית.` },
-            { question: `החורים האופייניים בגבינה שוויצרית נוצרים כתוצאה משחרור גז חמצן על ידי פטריות עובש.`, answer: false, explanation: `החורים נוצרים כתוצאה משחרור גז פחמן דו-חמצני על ידי חיידקי החומצה הפרופיונית.` },
-            { question: `בשלבים הראשונים של ייצור גבינה, חימום החלב (פיסטור) הוא שלב נפוץ כדי להרוג מיקרופלורה טבעית לא רצויה.`, answer: true, explanation: `השלב הראשון ביצור גבינה מודרנית הוא לרוב שימוש בחלב מפוסטר.` },
-            { question: `גבינת קממבר ורוקפור משתמשות באותו זן בדיוק של פטריית פניציליום להבשלה.`, answer: false, explanation: `קממבר משתמשת ב-Penicillium camemberti הגדל על פני השטח, בעוד רוקפור משתמשת ב-Penicillium roqueforti הגדל בתוך הגבן.` },
-            { question: `חיידקים פרוביוטיים מוגדרים כיצורים חיים שכאשר ניתנים בכמות מספקת, מקנים יתרון בריאותי למאכסן.`, answer: true, explanation: `זוהי ההגדרה המקובלת בעולם לחיידקים פרוביוטיים.` },
-            { question: `לפי התקן הישראלי, חברות מזון רשאיות לפרסם שיוגורט פרוביוטי מרפא מחלות מעיים דלקתיות.`, answer: false, explanation: `לפי התקן הישראלי לא ניתן לטעון לפעילות רפואית לגבי מוצרי מזון.` },
-            { question: `אחת הפעילויות הרצויות של חיידקים פרוביוטיים היא ייצור חומצות שומן קצרות שרשרת במעי הגס.`, answer: true, explanation: `ייצור חומצות שומן חשובות במעי הגס הוא אחת הפעילויות הפרוביוטיות הרצויות.` },
-            { question: `הוספת כמות גדולה של מלח בתחילת כבישת ירקות מזרזת את צמיחת חיידקי הקלוסטרידיום.`, answer: false, explanation: `המלח נועד לעכב חיידקים לא רצויים כמו קלוסטרידיום ולעודד צמיחת חיידקים לקטיים עמידים למלח.` },
-            { question: `ריכוך יתר של ירקות כבושים נגרם לרוב כתוצאה מפעילות יתר של אנזימי פקטינאז כאשר ה- ($pH$) אינו יורד מספיק.`, answer: true, explanation: `ב- ($pH$) נמוך מ-6 פקטינזות אינן פעילות. אם ה- ($pH$) נשאר גבוה, הן מפרקות את הירק.` },
-            { question: `בסוקצסיה של כרוב כבוש, החיידק הראשון שמתפתח הוא לרוב הומופרמנטטיבי אובליגטורי.`, answer: false, explanation: `החיידק הראשון הוא לרוב Leuconostoc mesenteroides, שהוא הטרופרמנטטיבי.` },
-            { question: `מיצלות הקזאין ביוגורט מתארגנות במבנה של שרשראות, בניגוד לצבירים המאפיינים גבינה קשה.`, answer: true, explanation: `מיקרוסקופיה מראה שרשראות ביוגורט וצבירים בגבן הגבינה.` },
-            { question: `תהליך הכנת קימצי קוריאני כולל בדרך כלל שלב של השריית הכרוב במלח למשך הלילה ושטיפתו לפני הוספת התבלינים.`, answer: true, explanation: `זהו תהליך דו-שלבי הכולל הדגרה עם מלח, שטיפה, והתחלת תסיסה חדשה עם תבלינים.` },
-            { question: `חיידקים לקטיים יכולים לסנתז בעצמם את כל חומצות האמינו והוויטמינים שהם צריכים מחומרים אנאורגניים.`, answer: false, explanation: `חיידקים לקטיים הם בעלי דרישה גבוהה לנוטריינטים וזקוקים לאספקה חיצונית של חומצות אמינו וויטמינים.` },
-            { question: `האנזים אלדולאז קיים בחיידקים הומופרמנטטיביים אך חסר בחיידקים הטרופרמנטטיביים.`, answer: true, explanation: `זהו ההבדל האנזימטי המרכזי המנתב את מסלולי התסיסה השונים.` },
-            { question: `כבישת ירקות גורמת לירידה בריכוז הסוכר הזמין בירק מכיוון שהחיידקים מנצלים אותו לאנרגיה.`, answer: true, explanation: `החיידקים מתסיסים את הסוכר לחומצה לקטית, ולכן ריכוז הסוכר יורד.` },
-            { question: `ליסטריה היא דוגמה לחיידק פרוביוטי מועיל הנמצא באופן טבעי בחלב גולמי.`, answer: false, explanation: `ליסטריה היא חיידק פתוגני מסוכן העלול להימצא בחלב גולמי.` },
-            { question: `ההבדל בין גבינת צדר לגבינה שוויצרית נובע אך ורק מזמן ההבשלה, ולא מסוג הסטרטר.`, answer: false, explanation: `לכל גבינה יש סטרטר מיקרוביאלי ספציפי (למשל, הוספת חיידקים פרופיוניים בשוויצרית).` },
-            { question: `חומצה אצטית נחשבת לחומצה חלשה יותר מחומצה לקטית מבחינת ערך ה-pKa שלה.`, answer: true, explanation: `ה-pKa של חומצה אצטית הוא 4.74, ואילו של לקטית הוא 3.86. pKa גבוה יותר משמעותו חומצה חלשה יותר.` },
-            { question: `תסיסת קסאווה נועדה אך ורק לשיפור הטעם, והשורש בטוח לאכילה גם ללא תסיסה.`, answer: false, explanation: `שורש הקסאווה מכיל רעלנים שהתסיסה עשויה לעזור לפרק.` },
-            { question: `חיידק ה-Clostridium acetobutylicum משמש בתעשייה לייצור אצטון, בוטנול ואתנול.`, answer: true, explanation: `תהליך זה נקרא תסיסת ABE ומשמש בתעשייה.` },
-            { question: `פפסין מחליף את הכימוסין בקיבת העגל ככל שהוא מתבגר ונגמל מחלב.`, answer: true, explanation: `כימוסין מיוצר בעיקר בשבוע הראשון לחיי העגל ולאחר מכן מוחלף על ידי פפסין.` },
-            { question: `תסיסה הטרופרמנטטיבית מורידה את ה- ($pH$) של המצע חזק ומהר יותר מאשר תסיסה הומופרמנטטיבית.`, answer: false, explanation: `חיידקים הטרופרמנטטיביים מורידים את ה- ($pH$) פחות טוב מחיידקים הומופרמנטטיביים.` },
-            { question: `ריחות לוואי של גופרית בכבישת ירקות מעידים בדרך כלל על תהליך תקין ורצוי.`, answer: false, explanation: `ריחות גופרית מעידים על זיהום של אנאירובים בלתי רצויים, לרוב עקב חוסר במלח.` }
+            { question: `כל חיידקי החומצה הלקטית תלויים בניצול סוכר הלקטוז לצורך קיומם.`, answer: false, explanation: `על פי הגדרת התסיסה הלקטית, היכולת לייצר חומצה לקטית אינה קשורה בהכרח לניצול הלקטוז. חיידקים לקטיים רבים מנצלים סוכרים אחרים (כמו גלוקוז או פרוקטוז בירקות).` },
+            { question: `תסיסה הומופרמנטטיבית יעילה יותר מתסיסה הטרופרמנטטיבית מבחינת הפקת אנרגיה (ATP) לתא.`, answer: true, explanation: `מסלול הומופרמנטטיבי מפיק 2 מולקולות ATP לכל מולקולת גלוקוז, בעוד שהמסלול ההטרופרמנטטיבי מפיק רק מולקולת ATP אחת.` },
+            { question: `החורים בגבינה שוויצרית נוצרים כתוצאה מפליטת גז חמצן על ידי חיידקי Propionibacterium.`, answer: false, explanation: `החורים נוצרים כתוצאה מפליטת גז פחמן דו-חמצני (CO2) במהלך המרת החומצה הלקטית לחומצה פרופיונית ואצטית.` },
+            { question: `חיידקים לקטיים עמידים לחשיפה למי חמצן מכיוון שהם מכילים רמות גבוהות של האנזים קטלאז.`, answer: false, explanation: `ההפך הוא הנכון. חיידקים לקטיים חסרים את האנזים קטלאז, ולכן הם רגישים מאוד לנוכחות של מי חמצן.` },
+            { question: `הוספת מלח לכרוב במהלך הכנת כרוב כבוש נועדה לעודד באופן סלקטיבי את גידולם של קוליפורמים.`, answer: false, explanation: `המלח נועד לעכב חיידקי קלקול כמו קוליפורמים וקלוסטרידיום, ולאפשר לחיידקים הלקטיים (שהם סובלני מלח) להשתלט על התהליך.` },
+            { question: `האנזים כימוסין חותך את חלבון ה-k-casein במיקום ספציפי בין חומצות האמינו פנילאלנין (105) ומתיונין (106).`, answer: true, explanation: `זוהי בדיוק הספציפיות הגבוהה של כימוסין המונעת פירוק יתר של החלבון ליצירת טעמים מרירים.` },
+            { question: `מחלת הגלקטוזמיה נגרמת מאלרגיה חיסונית לחלבוני מי הגבן (Whey).`, answer: false, explanation: `גלקטוזמיה היא מחלה גנטית מטבולית הנגרמת מחוסר באנזים הדרוש לפירוק גלקטוז, ואינה קשורה לתגובה חיסונית (אלרגיה) לחלבוני חלב.` },
+            { question: `חיידקים הטרופרמנטטיביים תורמים יותר לפרופיל הטעם של מזון מותסס מאשר חיידקים הומופרמנטטיביים, הודות לייצור כוהלים ואלדהידים.`, answer: true, explanation: `בניגוד לחיידקים הומופרמנטטיביים שמייצרים כמעט אך ורק חומצה לקטית, הטרופרמנטטיביים מייצרים מגוון רחב של תרכובות טעם וריח נלוות.` },
+            { question: `בשלבים המוקדמים של התססת כרוב, ה-pH עולה מעל 7 עקב פעילות החיידקים.`, answer: false, explanation: `תהליך ההתססה מתאפיין בייצור חומצה (לקטית ואצטית), מה שגורם לירידה הדרגתית של ה-pH, ולא לעלייתו.` },
+            { question: `כיסוי של בור תחמיץ נועד למנוע כניסת חמצן ובכך למנוע התפתחות של עובשים ושמרים אירוביים.`, answer: true, explanation: `תסיסה לקטית טובה מתרחשת בתנאים אנאירוביים. כניסת חמצן מאפשרת למיקרואורגניזמים אירוביים לשגשג ולקלקל את התחמיץ.` },
+            { question: `אנזימי פקטינאז המצויים בירקות הופכים לבלתי פעילים לחלוטין כאשר ה-pH יורד מתחת ל-6.`, answer: true, explanation: `זוהי הסיבה מדוע החמצה מהירה (ירידת pH) הכרחית לשמירה על מרקם פריך של ירקות כבושים ומניעת התרככותם.` },
+            { question: `ניתן לזהות חיידקים לקטיים במעבדה על ידי כך שהם מתים בנוכחות סודיום אזיד.`, answer: false, explanation: `חיידקים לקטיים חסרים ציטוכרומים, ולכן סודיום אזיד (הפוגע בציטוכרומים) אינו פוגע בהם, והם יכולים לגדול בנוכחותו.` },
+            { question: `האנזים פפסין מחליף באופן טבעי את הכימוסין בקיבת העגל ככל שהוא מתבגר ועובר לתזונה צמחית.`, answer: true, explanation: `כימוסין מיוצר בעיקר בשבוע הראשון לחיי העגל לצורך עיכול חלב אם. לאחר מכן, ייצורו פוחת ומוחלף בפפסין, שהוא פרוטאז כללי יותר.` },
+            { question: `התססת ABE מתבצעת על ידי חיידקי סטרפטוקוקוס ומשמשת לייצור אצטון.`, answer: false, explanation: `תסיסת ABE (אצטון-בוטנול-אתנול) מתבצעת על ידי חיידקים מהסוג Clostridium (כגון Clostridium acetobutylicum), ולא סטרפטוקוקוס.` },
+            { question: `בייצור גבינות עם עובש כחול (כדוגמת רוקפור), הפטרייה גדלה על פני השטח החיצוניים של הגבינה בלבד.`, answer: false, explanation: `בגבינות כחולות (Penicillium roqueforti), העובש מוחדר וגדל בתוך הגבן עצמו. בגבינות כמו קממבר (Penicillium camemberti), העובש גדל על פני השטח.` },
+            { question: `חיידקים פרוביוטיים מסוגלים לייצר חומרים אנטימיקרוביאליים הנקראים בקטריוצינים.`, answer: true, explanation: `ייצור בקטריוצינים הוא אחד ממנגנוני הפעולה העיקריים של חיידקים פרוביוטיים לדיכוי פתוגנים במעי.` },
+            { question: `החיידק Lactobacillus plantarum נחשב לחיידק הטרופרמנטטיבי השולט בתחילת תהליך הכבישה של זיתים.`, answer: false, explanation: `L. plantarum הוא חיידק הומופרמנטטיבי השולט בשלבים המאוחרים של הכבישה, לאחר שהחיידקים ההטרופרמנטטיביים (כמו Leuconostoc) כבר הורידו את ה-pH.` },
+            { question: `מיצלות הקזאין ביוגורט מסודרות במבנה של שרשראות, בעוד שבגבן של גבינה הן יוצרות אשכולות.`, answer: true, explanation: `ההבדל במבנה המיקרוסקופי נובע מאופן הקואגולציה (החמצה בלבד ביוגורט לעומת שימוש ברנט בגבינה).` },
+            { question: `כל הגבינות המיוצרות כיום משתמשות בכימוסין שהופק ישירות מקיבות של עגלים.`, answer: false, explanation: `כיום, חלק ניכר מהתעשייה משתמש בכימוסין רקומביננטי שיוצר על ידי שמרים או חיידקים מהונדסים גנטית (Precision Fermentation).` },
+            { question: `הלקטוז הוא דו-סוכר המורכב משתי מולקולות גלוקוז הקשורות בקשר אלפא.`, answer: false, explanation: `לקטוז מורכב מגלוקוז וגלקטוז, הקשורים בקשר גליקוזידי בטא-1,4.` },
+            { question: `בתהליך הכנת קימצ'י, קיימים שני שלבים עיקריים: השריה ראשונית במלח, שטיפה, ולאחר מכן תסיסה עם תבלינים.`, answer: true, explanation: `זהו התהליך המסורתי. ההשריה הראשונית במלח מוציאה נוזלים ומכינה את הירק, ולאחר מכן מתבצעת התסיסה הלקטית העיקרית.` },
+            { question: `ה-pKa של חומצה לקטית גבוה מזה של חומצה פרופיונית.`, answer: false, explanation: `לפי הנתונים, ה-pKa של חומצה לקטית הוא 3.86, בעוד של חומצה פרופיונית הוא 4.86. לכן חומצה לקטית היא חומצה חזקה יותר (pKa נמוך יותר).` },
+            { question: `בגבינת צדר (Cheddar), תרבית הסטרטר כוללת בדרך כלל חיידקי סטרפטוקוקוס ולקטובצילוס.`, answer: true, explanation: `סטרטרים נפוצים לצדר כוללים Streptococcus lactis, Streptococcus cremoris ומינים של Lactobacillus.` },
+            { question: `נוכחות עודפת של חמצן במהלך כבישת ירקות תעודד תסיסה הומופרמנטטיבית מהירה.`, answer: false, explanation: `נוכחות חמצן מעודדת גדילה של מיקרואורגניזמים אירוביים (עובשים, שמרים) שמובילים לקלקול, ולא תסיסה לקטית שהיא תהליך אנאירובי/מיקרוארופילי.` },
+            { question: `לפי התקן הישראלי, מותר לסמן על אריזת יוגורט כי החיידקים הפרוביוטיים שבו מרפאים מחלות מעי.`, answer: false, explanation: `לפי התקן הישראלי, לא ניתן לטעון לפעילות רפואית מפורשת לגבי מוצרי מזון פרוביוטיים.` },
+            { question: `חיידקים מהסוג Bifidobacterium נפוצים כחיידקים פרוביוטיים בתעשיית החלב.`, answer: true, explanation: `יחד עם לקטובצילוס וסטרפטוקוקוס, ביפידובקטריום הם מהסוגים העיקריים המשמשים כפרוביוטיקה במזון.` },
+            { question: `החיידק Geotrichum משמש ליצירת טעם מר וחריף בגבינות קשות כמו פרמזן.`, answer: false, explanation: `Geotrichum היא פטרייה המעורבת בשלבים הראשונים של הבשלת גבינות קליפה עובשית (כמו קממבר), ומכינה את התנאים לפנציליום.` },
+            { question: `מקור המזון המסורתי של שבט המסאי בקניה מבוסס בחלקו על פרמנטציה של חלב ודם בקר.`, answer: true, explanation: `פרמנטציה לקטית משמשת באופן מסורתי שבטים שונים בעולם, כולל שבט המסאי, לשימור מזון מן החי בתנאים ללא קירור.` },
+            { question: `החיידק Leuconostoc הוא חיידק הומופרמנטטיבי האחראי ליצירת חורים בגבינה.`, answer: false, explanation: `Leuconostoc הוא חיידק הטרופרמנטטיבי (לא הומופרמנטטיבי). החיידק האחראי ליצירת החורים האופייניים בגבינה שוויצרית הוא Propionibacterium.` },
+            { question: `בתעשיית החלב המודרנית, חלב גולמי עובר טיפול תרמי (פיסטור) כדי להשמיד פתוגנים כמו ליסטריה לפני הוספת תרבית הסטרטר.`, answer: true, explanation: `חלב גולמי מכיל מיקרופלורה טבעית שעשויה להכיל פתוגנים (Listeria, Mycobacterium). הפיסטור מבטיח בטיחות ומאפשר שליטה בתהליך התסיסה באמצעות הסטרטר.` }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -400,6 +517,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -410,7 +534,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            if (window.MathJax) MathJax.typesetPromise([flashcardContent]);
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -429,7 +553,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                if (window.MathJax) MathJax.typesetPromise([flashcardContent]);
+                triggerMathJax();
             }, 300);
         }
 
@@ -452,7 +576,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            if (window.MathJax) MathJax.typesetPromise([mcqQuestion, mcqOptions]);
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -468,21 +592,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            if (window.MathJax) MathJax.typesetPromise([explanationEl]);
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -524,7 +644,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            if (window.MathJax) MathJax.typesetPromise([mcqAllQuestionsContainer]);
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -536,8 +656,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -547,7 +665,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            if (window.MathJax) MathJax.typesetPromise([tfQuestion]);
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -564,21 +682,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             if (window.MathJax) MathJax.typesetPromise([explanationEl]);
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -621,7 +735,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             if (window.MathJax) MathJax.typesetPromise([tfAllQuestionsContainer]);
+             triggerMathJax();
         }
 
         function initialize() {
@@ -637,6 +751,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

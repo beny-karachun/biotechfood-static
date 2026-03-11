@@ -1,206 +1,339 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>מיקרוביולוגיה תעשייתית: תהליכים ומטבוליזם תאי</h1>
+        <h1>מיקרוביולוגיה תעשייתית: תהליכים, מטבוליזם ותרביות</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>מיקרוביולוגיה תעשייתית עוסקת בניצול מיקרואורגניזמים לייצור מוצרים בעלי ערך כלכלי. התהליך התעשייתי מורכב משלושה שלבים עיקריים: בחירת התרבית ותנאי השימוש בה, העמדת המערכת והפעלתה הנדסית, ולבסוף השבת המוצר.</p>
+                
+                <h3>בחירת התרבית ושיפור הזן</h3>
+                <p>השלב הראשון דורש הגדרת מטרה, סריקה לאיתור המיקרואורגניזם המתאים ביותר ולימוד תכונותיו. כדי למקסם את יעילות הייצור, מבצעים שיפור של הזן באמצעות שיטות כגון:</p>
+                <ul>
+                    <li><strong>סלקציה קלאסית:</strong> בחירת הפרטים הטובים ביותר בתרבית.</li>
+                    <li><strong>מוטגנזה אקראית:</strong> חשיפה לגורמים מוטגניים וסלקציה של מוטנטים בעלי תכונות עדיפות.</li>
+                    <li><strong>שינויים גנטיים מושכלים:</strong> הנדסה גנטית ממוקדת של המיקרואורגניזם.</li>
+                </ul>
+
+                <h3>תחזוקת תרביות</h3>
+                <p>ניהול נכון של תרביות הוא קריטי. מבחינים בין <strong>תרבית אם</strong> (הקו המקורי והנקי שהתחיל ממושבה בודדת) לבין <strong>תרבית לשימוש שוטף</strong> (תרבית עבודה). יש לחזור לתרבית האם מדי פעם כדי למנוע זיהומים והתפתחות מוטנטים לא רצויים. שמירת תרבית האם נעשית בסלנטים, בהקפאה עמוקה או בליופיליזציה (ייבוש בהקפאה).</p>
+
+                <h3>דרישות חמצן ומטבוליזם</h3>
+                <p>מיקרואורגניזמים מסווגים לפי יחסם לחמצן:</p>
+                <ul>
+                    <li><strong>אירוביים אובליגטוריים:</strong> חייבים חמצן לגידול.</li>
+                    <li><strong>אנאירוביים אובליגטוריים:</strong> מתים בנוכחות חמצן.</li>
+                    <li><strong>אירוביים פקולטטיביים:</strong> גדלים בנוכחות חמצן, אך מסוגלים לגדול גם בהעדרו.</li>
+                    <li><strong>אנאירוביים סובלי חמצן:</strong> גדלים בנוכחות חמצן אך אינם מנצלים אותו.</li>
+                    <li><strong>מיקרוארופיליים:</strong> דורשים ריכוז חמצן נמוך לגידול.</li>
+                </ul>
+
+                <h3>מסלולים מטבוליים וניצול מצעים</h3>
+                <p>המסלול המרכזי לפירוק סוכרים הוא הגליקוליזה (מסלול Embden-Meyerhof), בו גלוקוז מתפרק לפירובט תוך יצירת מולקולות ATP ו-NADH. בתנאים אנאירוביים, הפירובט מנותב למסלולי תסיסה (כגון תסיסה כוהלית המייצרת אתנול ופחמן דו-חמצני, או תסיסה לקטית המייצרת חומצה לקטית) כדי למחזר את ה-NAD+. בתנאים אירוביים, התהליך ממשיך לנשימה תאית המפיקה אנרגיה רבה יותר (36 ATP).</p>
+                <p>בנוסף לסוכרים, מיקרואורגניזמים יכולים לנצל חומצות אמינו (מהן נוצרים כוהלים גבוהים כמו איזובוטנול מואלין) וחומצות שומן (המתפרקות בתהליך בטא-אוקסידציה ליצירת אצטיל קו-אנזים A).</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: ספציפיות אנזימטית בפירוק סוכרים</strong>
+                    היכולת של מיקרואורגניזם לנצל סוכר תלויה לא רק בהרכב המונוסכרידים שלו, אלא בסוג הקשר הכימי ביניהם. לדוגמה, לקטוז ומליביוז מורכבים שניהם מגלוקוז וגלקטוז. עם זאת, בלקטוז הקשר הוא בטא 1-4, ואילו במליביוז הקשר הוא אלפא 1-6. חיידק עשוי להיות מסוגל לפרק אחד מהם אך לא את השני, עקב היעדר האנזים הספציפי החותך את הקשר המרחבי המסוים.
+                </div>
+                <div class="insight-box">
+                    <strong>תובנת מפתח: חשיבות החזרה לתרבית האם</strong>
+                    בתהליכים תעשייתיים מתמשכים, מיקרואורגניזמים עוברים דורות רבים של חלוקה. לחץ אבולוציוני טבעי בתוך הביוריאקטור עלול להוביל להשתלטות של מוטנטים שגדלים מהר יותר אך מייצרים פחות מהמוצר הרצוי. החזרה המחזורית לתרבית האם (השמורה בתנאים שעוצרים חלוקה, כמו הקפאה עמוקה) מאפסת את השעון הגנטי ומבטיחה את יציבות תפוקת הייצור.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -213,7 +346,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -233,11 +365,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -260,8 +390,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -269,621 +398,99 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "תרבית אם", definition: "הקו המקורי והנקי של המיקרואורגניזם, שהתחיל ממושבה בודדת על מצע אגר, ומשמש כבסיס לכל תהליכי הייצור." },
-            { term: "ליופיליזציה", definition: "תהליך של ייבוש בהקפאה, המשמש כאחת השיטות המרכזיות לשמירה לטווח ארוך של תרבית אם." },
+            { term: "תרבית אם", definition: "הקו המיקרוביאלי המקורי והנקי שהתחיל ממושבה בודדת על מצע אגר, המשמש כנקודת ייחוס לשימור תכונות הזן." },
+            { term: "תרבית עבודה", definition: "התרבית המשמשת בפועל באופן שוטף בתהליך הייצור התעשייתי, אותה מכינים מתוך תרבית האם." },
+            { term: "ליופיליזציה", definition: "תהליך של ייבוש בהקפאה המשמש לשימור תרבית האם לאורך זמן תוך שמירה על חיות המיקרואורגניזמים." },
             { term: "אירובי אובליגטורי", definition: "מיקרואורגניזם שחייב נוכחות של חמצן בסביבתו על מנת לגדול ולהתקיים." },
-            { term: "אנאירובי אובליגטורי", definition: "מיקרואורגניזם שאינו מסוגל לשרוד בסביבה המכילה חמצן ומת בנוכחותו." },
-            { term: "אירובי פקולטטיבי", definition: "מיקרואורגניזם שיכול לגדול בנוכחות חמצן, אך מסוגל להמשיך לגדול גם בהיעדרו." },
-            { term: "אנאירובי סובלי חמצן", definition: "מיקרואורגניזם שגדל בנוכחות חמצן אך אינו מסוגל לנצל אותו לתהליכי הפקת אנרגיה." },
-            { term: "מיקרוארופילי", definition: "מיקרואורגניזם הזקוק לריכוז חמצן נמוך מהריכוז האטמוספרי הרגיל על מנת לגדול." },
-            { term: "מסלול Embden-Meyerhof", definition: "המסלול המטבולי המוכר כגליקוליזה, בו גלוקוז מפורק לפירובט." },
-            { term: "חמצון בטא", definition: "תהליך הפירוק של חומצות שומן, בסופו נוצר אצטיל קו-איי." },
+            { term: "אנאירובי אובליגטורי", definition: "מיקרואורגניזם שאינו מסוגל להתקיים בנוכחות חמצן ומת בסביבה אירובית." },
+            { term: "אירובי פקולטטיבי", definition: "מיקרואורגניזם המסוגל לגדול בנוכחות חמצן, אך יכול להתאים את עצמו ולגדול גם בהיעדרו." },
+            { term: "אנאירובי סובל חמצן", definition: "מיקרואורגניזם שיכול לגדול בסביבה המכילה חמצן, אך אינו מסוגל לנצל את החמצן להפקת אנרגיה." },
+            { term: "מיקרוארופילי", definition: "מיקרואורגניזם הזקוק לריכוזים נמוכים של חמצן כדי לגדול, ואינו שורד בריכוזי חמצן אטמוספריים רגילים." },
+            { term: "גליקוליזה (מסלול EMP)", definition: "מסלול מטבולי מרכזי בו מולקולת גלוקוז מפורקת לשתי מולקולות פירובט, תוך יצירת נטו של 2 מולקולות ATP ו-2 מולקולות NADH." },
+            { term: "תסיסה כוהלית", definition: "תהליך אנאירובי בו פירובט הופך לאצטלדהיד (תוך שחרור פחמן דו חמצני) ולאחר מכן לאתנול, תוך מחזור מולקולות NAD+." },
+            { term: "תסיסה לקטית", definition: "תהליך אנאירובי בו פירובט מחוזר ישירות לחומצה לקטית על ידי האנזים לקטט דהידרוגנז, לשם מחזור NAD+." },
+            { term: "בטא-אוקסידציה", definition: "תהליך פירוק של חומצות שומן המתרחש תוך חיתוך שרשרת הפחמנים וייצור מולקולות אצטיל קו-אנזים A, NADH ו-FADH2." },
             { term: "מלטוז", definition: "דו-סוכר המורכב משתי מולקולות של גלוקוז." },
-            { term: "סוכרוז", definition: "דו-סוכר המורכב ממולקולת פרוקטוז ומולקולת גלוקוז." },
-            { term: "לקטוז", definition: "דו-סוכר המורכב מגלקטוז וגלוקוז, המחוברים בקשר גליקוזידי בטא 1 ל-4." },
-            { term: "מליביוז", definition: "דו-סוכר המורכב מגלקטוז וגלוקוז, המחוברים בקשר גליקוזידי אלפא 1 ל-6." },
-            { term: "Isobutanol", definition: "כוהל גבוה הנוצר כתוצאה מניצול ופירוק של חומצת האמינו ואלין." },
-            { term: "2-Phenethanol", definition: "כוהל גבוה הנוצר כתוצאה מניצול ופירוק של חומצת האמינו פנילאלנין." },
-            { term: "מוטגנזה אקראית", definition: "שיטה לשיפור זן תעשייתי הכוללת יצירת שינויים גנטיים לא מכוונים ובחירת המוטנטים בעלי התכונות העדיפות." },
-            { term: "Alcohol dehydrogenase", definition: "האנזים האחראי על המרת אצטאלדהיד לאתנול בתהליך תסיסה כוהלית." }
+            { term: "סוכרוז", definition: "דו-סוכר המורכב ממולקולת גלוקוז ומולקולת פרוקטוז." },
+            { term: "לקטוז", definition: "דו-סוכר המורכב מגלקטוז וגלוקוז המחוברים בקשר גליקוזידי בטא 1-4." },
+            { term: "מליביוז", definition: "דו-סוכר המורכב מגלקטוז וגלוקוז המחוברים בקשר גליקוזידי אלפא 1-6." }
         ];
 
         const mcqData = [
-            {
-                question: "בתהליך תעשייתי, מהי המטרה העיקרית של חזרה תקופתית לתרבית האם במקום שימוש רציף בתרבית העבודה?",
-                options: [
-                    "הגברת קצב ייצור האנזים המטבולי הראשי",
-                    "מניעת זיהומים והתפתחות מוטנטים לא רצויים",
-                    "הפחתת עלויות של חומרי גלם בתהליך הפרמנטציה",
-                    "האצת תהליך החמצון של חומצות שומן"
-                ],
-                correctIndex: 1,
-                explanation: "חזרה מידי פעם לתרבית האם הכרחית כדי למנוע זיהום של התרבית וכדי למנוע התפתחות של מוטנטים שעלולים לפגוע ביעילות התהליך."
-            },
-            {
-                question: "מפעל מעוניין לשפר את זן החיידקים שלו כך שייצר כמות כפולה של חלבון מטרה. המהנדסים מחליטים להשתמש בשיטת הסלקציה הקלאסית. מה משמעות הדבר?",
-                options: [
-                    "הם יבצעו שינויים גנטיים מושכלים וממוקדים ברצף ה-DNA",
-                    "הם יחשפו את התרבית לקרינה כדי לייצר מוטציות אקראיות",
-                    "הם יבצעו סלקציה בתרבית על בסיס תכונות קיימות ללא התערבות גנטית יזומה",
-                    "הם יבודדו את תרבית האם ויקפיאו אותה עמוקות"
-                ],
-                correctIndex: 2,
-                explanation: "שיפור זן בשיטה הקלאסית מבוסס על סלקציה טבעית בתרבית, להבדיל ממוטגנזה אקראית או שינויים גנטיים מושכלים (הנדסה גנטית)."
-            },
-            {
-                question: "איזה מהשלבים הבאים אינו נחשב לאחד משלושת המהלכים המרכזיים במיקרוביולוגיה תעשייתית?",
-                options: [
-                    "השבת המוצר מתוך המערכת",
-                    "העמדת המערכת והפעלתה מבחינה הנדסית",
-                    "בחירת התרבית ותנאי השימוש בה",
-                    "סינתזה כימית של חומרי הגלם לפני ההזנה"
-                ],
-                correctIndex: 3,
-                explanation: "סינתזה כימית של חומרי גלם אינה חלק מהמהלכים שתוארו. המהלכים הם: בחירת התרבית, העמדת המערכת הנדסית, והשבת המוצר."
-            },
-            {
-                question: "חיידק מסוים הוכנס לביוריאקטור. נצפה כי החיידק גדל ומתרבה היטב למרות שאין הזרקת חמצן למערכת, אך כאשר מזריקים חמצן, החיידק ממשיך לגדול אך אינו משתמש בחמצן להפקת אנרגיה. כיצד יוגדר חיידק זה?",
-                options: [
-                    "אנאירובי אובליגטורי",
-                    "אירובי פקולטטיבי",
-                    "אנאירובי סובלי חמצן",
-                    "מיקרוארופילי"
-                ],
-                correctIndex: 2,
-                explanation: "אנאירובי סובלי חמצן גדל בנוכחות חמצן אך אינו מסוגל לנצל אותו. לעומתו, אירובי פקולטטיבי היה מנצל את החמצן לו היה קיים."
-            },
-            {
-                question: "במעבדה התגלה חיידק שמת באופן מיידי עם חשיפתו לאוויר הפתוח. לאיזו קבוצה הוא ככל הנראה שייך?",
-                options: [
-                    "אירובי אובליגטורי",
-                    "מיקרוארופילי",
-                    "אנאירובי אובליגטורי",
-                    "אנאירובי סובלי חמצן"
-                ],
-                correctIndex: 2,
-                explanation: "אנאירובי אובליגטורי מת בנוכחות חמצן, ולכן חשיפה לאוויר (המכיל חמצן) תגרום למותו."
-            },
-            {
-                question: "מהו ההבדל המהותי בין מיקרואורגניזם אירובי פקולטטיבי לבין מיקרוארופילי?",
-                options: [
-                    "פקולטטיבי חייב חמצן כדי לשרוד, בעוד מיקרוארופילי יכול לשרוד ללא חמצן כלל",
-                    "פקולטטיבי יכול לגדול ללא חמצן, בעוד מיקרוארופילי זקוק לריכוז חמצן נמוך כדי לגדול",
-                    "פקולטטיבי מת בריכוזי חמצן גבוהים, בעוד מיקרוארופילי משגשג בהם",
-                    "אין הבדל, שני המונחים מתארים את אותה דרישה מטבולית"
-                ],
-                correctIndex: 1,
-                explanation: "אירובי פקולטטיבי מסוגל לגדול גם בהיעדר מוחלט של חמצן. מיקרוארופילי חייב חמצן, אך בריכוז נמוך מהרגיל."
-            },
-            {
-                question: "במסלול Embden-Meyerhof, מהו התוצר המרכזי שנוצר מפירוק מולקולת גלוקוז לפני פיצול המסלולים לנשימה או תסיסה?",
-                options: [
-                    "לקטט",
-                    "אתנול",
-                    "פירובט",
-                    "אצטיל קו-איי"
-                ],
-                correctIndex: 2,
-                explanation: "מסלול הגליקוליזה (Embden-Meyerhof) מפרק גלוקוז לפירובט, אשר לאחר מכן יכול להמשיך למסלולי תסיסה או נשימה תאית."
-            },
-            {
-                question: "בתהליך של תסיסה כוהלית אנאירובית, מהו המאזן האנרגטי נטו (במולקולות ATP) עבור כל מולקולת גלוקוז המנוצלת?",
-                options: [
-                    "36 ATP",
-                    "2 ATP",
-                    "4 ATP",
-                    "0 ATP"
-                ],
-                correctIndex: 1,
-                explanation: "התוצאה נטו של התהליך האנאירובי (גליקוליזה ותסיסה) היא ייצור של 2 מולקולות ATP לכל מולקולת גלוקוז."
-            },
-            {
-                question: "איזה גז נפלט כתוצר לוואי בתהליך ההמרה של פירובט לאתנול?",
-                options: [
-                    "חמצן ($O_2$)",
-                    "פחמן דו-חמצני ($CO_2$)",
-                    "מימן ($H_2$)",
-                    "חנקן ($N_2$)"
-                ],
-                correctIndex: 1,
-                explanation: "בתהליך התסיסה הכוהלית, פירובט הופך לאצטאלדהיד תוך שחרור של פחמן דו-חמצני, ולאחר מכן לאתנול."
-            },
-            {
-                question: "מהי המשמעות ההנדסית של תהליך הנשימה התאית (Respiration) לעומת תסיסה, מבחינת תפוקת אנרגיה לחיידק?",
-                options: [
-                    "נשימה תאית מפיקה משמעותית פחות אנרגיה (2 ATP לעומת 36 ATP)",
-                    "שני התהליכים מפיקים כמות זהה של אנרגיה",
-                    "נשימה תאית מפיקה משמעותית יותר אנרגיה (36 ATP לעומת 2 ATP)",
-                    "נשימה תאית אינה מפיקה ATP כלל, אלא רק מים ופחמן דו-חמצני"
-                ],
-                correctIndex: 2,
-                explanation: "המשוואה מראה שנשימה אירובית מפיקה 36 ATP מגלוקוז, לעומת 2 ATP בלבד בתהליך התסיסה האנאירובית."
-            },
-            {
-                question: "בתהליך התסיסה הלקטית, האנזים Lactate dehydrogenase מזרז תגובה. מהי התגובה?",
-                options: [
-                    "המרת גלוקוז לפירובט",
-                    "המרת פירובט ללקטט תוך ניצול NADH",
-                    "המרת לקטט לפירובט תוך יצירת ATP",
-                    "המרת אצטאלדהיד לאתנול"
-                ],
-                correctIndex: 1,
-                explanation: "האנזים לקטט דהידרוגנאז ממיר פירובט ללקטט, תהליך שבו NADH מתחמצן חזרה ל-NAD+ כדי לאפשר לגליקוליזה להמשיך."
-            },
-            {
-                question: "חוקר מבחין כי בתרבית שלו מצטבר Isoamylalcohol. איזה חומר גלם סביר להניח שהמיקרואורגניזם מנצל כדי לייצר תוצר זה?",
-                options: [
-                    "גלוקוז",
-                    "חומצת האמינו ואלין",
-                    "חומצת האמינו לאוצין",
-                    "חומצת האמינו פנילאלנין"
-                ],
-                correctIndex: 2,
-                explanation: "על פי המסלולים המטבוליים, ניצול של חומצת האמינו לאוצין מוביל ליצירת Isoamylalcohol."
-            },
-            {
-                question: "אם תרבית חיידקים מפרקת פנילאלנין, איזה כוהל גבוה צפוי להיווצר כתוצאה מכך?",
-                options: [
-                    "Isobutanol",
-                    "Isoamylalcohol",
-                    "2-Phenethanol",
-                    "Ethanol"
-                ],
-                correctIndex: 2,
-                explanation: "פירוק פנילאלנין מוביל ליצירת 2-Phenethanol."
-            },
-            {
-                question: "איזה תוצר ביניים הכרחי נוצר במהלך הפיכת פירובט לאתנול, לפני פעולת האנזים Alcohol dehydrogenase?",
-                options: [
-                    "לקטט",
-                    "אצטיל קו-איי",
-                    "אצטאלדהיד",
-                    "מלטוז"
-                ],
-                correctIndex: 2,
-                explanation: "פירובט מאבד פחמן דו-חמצני והופך לאצטאלדהיד, אשר לאחר מכן מחוזר לאתנול על ידי אלכוהול דהידרוגנאז."
-            },
-            {
-                question: "בתהליך של ניצול חומצות שומן על ידי מיקרואורגניזמים, מהו התוצר המרכזי של תהליך חמצון בטא (Beta-oxidation)?",
-                options: [
-                    "פירובט",
-                    "גלוקוז",
-                    "אצטיל קו-איי",
-                    "לקטט"
-                ],
-                correctIndex: 2,
-                explanation: "תהליך חמצון בטא חותך את שרשרת חומצת השומן ומייצר מולקולות של אצטיל קו-איי (Acetyl CoA)."
-            },
-            {
-                question: "מהו ההבדל המבני בין הדו-סוכר לקטוז לדו-סוכר מליביוז?",
-                options: [
-                    "לקטוז מורכב מגלוקוז ופרוקטוז, ואילו מליביוז מורכב מגלוקוז וגלקטוז",
-                    "שניהם מורכבים מגלוקוז וגלקטוז, אך בלקטוז הקשר הוא בטא 1 ל-4 ובמליביוז הקשר הוא אלפא 1 ל-6",
-                    "לקטוז הוא פוליסכריד ואילו מליביוז הוא מונוסכריד",
-                    "בלקטוז יש שתי מולקולות גלוקוז ובמליביוז שתי מולקולות גלקטוז"
-                ],
-                correctIndex: 1,
-                explanation: "גם לקטוז וגם מליביוז מורכבים מגלקטוז וגלוקוז. ההבדל הוא בסוג הקשר הגליקוזידי: בלקטוז הוא בטא (1-4) ובמליביוז הוא אלפא (1-6)."
-            },
-            {
-                question: "איזה מהסוכרים הבאים מוגדר כמונוסכריד (חד-סוכר)?",
-                options: [
-                    "מלטוז",
-                    "סוכרוז",
-                    "פרוקטוז",
-                    "לקטוז"
-                ],
-                correctIndex: 2,
-                explanation: "פרוקטוז הוא חד-סוכר. מלטוז, סוכרוז ולקטוז הם דו-סוכרים."
-            },
-            {
-                question: "מיקרואורגניזם ניזון ממצע המכיל מלטוז בלבד. אילו יחידות סוכר בסיסיות יתקבלו לאחר פירוק הדו-סוכר?",
-                options: [
-                    "פרוקטוז וגלוקוז",
-                    "גלוקוז וגלוקוז",
-                    "גלקטוז וגלוקוז",
-                    "פנטוז וגלוקוז"
-                ],
-                correctIndex: 1,
-                explanation: "מלטוז הוא דו-סוכר המורכב משתי מולקולות של גלוקוז."
-            },
-            {
-                question: "מדוע חשוב לציין ולעקוב אחר 'מספר ההעתקה' כאשר משתמשים בתרבית עבודה בתעשייה?",
-                options: [
-                    "כדי לדעת כמה בקבוקים נמכרו ללקוח",
-                    "כדי לעקוב אחר קצב ייצור ה-ATP בנשימה תאית",
-                    "כדי לבקר את גיל התרבית ולמנוע הצטברות מוטציות עקב חלוקות רבות",
-                    "כדי לחשב את כמות הפחמן הדו-חמצני שנפלט למערכת"
-                ],
-                correctIndex: 2,
-                explanation: "מעקב אחר מספר ההעתקות (passages) עוזר למנוע התפתחות מוטנטים והתרחקות מתכונותיה המקוריות של תרבית האם."
-            },
-            {
-                question: "אילו מהשיטות הבאות אינה משמשת לשמירה לטווח ארוך של תרבית אם?",
-                options: [
-                    "שמירה בסלנטים",
-                    "הקפאה עמוקה",
-                    "יבוש בליופיליזציה",
-                    "הדגרה רציפה בביוריאקטור בטמפרטורת החדר"
-                ],
-                correctIndex: 3,
-                explanation: "הדגרה רציפה מעודדת חלוקה ומוטציות ואינה שיטת שימור. סלנטים, הקפאה עמוקה וליופיליזציה הן שיטות שימור מוכרות."
-            },
-            {
-                question: "בתהליך סריקה (Screening) לבחירת מיקרואורגניזם, מהי המטרה המרכזית?",
-                options: [
-                    "למצוא את המיקרואורגניזם, או חברת המיקרואורגניזמים, המתאימים ביותר לייצור המטרה",
-                    "לסנן החוצה את כל החיידקים האירוביים מהמערכת",
-                    "לבודד את חומצות השומן מתוך חומרי הגלם",
-                    "לייצר מוטציות אקראיות באמצעות קרינה"
-                ],
-                correctIndex: 0,
-                explanation: "סריקה נועדה לאתר את הזן או קבוצת הזנים האופטימליים ביותר להשגת מטרת הייצור בתנאים המוגדרים."
-            },
-            {
-                question: "מה נדרש להגדיר בשלב 'בחירת המטרה ולימודה' לפני שמתחילים לחפש את המיקרואורגניזם המתאים?",
-                options: [
-                    "את סוג הקשר הגליקוזידי של התוצר הסופי בלבד",
-                    "את חומרי הגלם, המטרה אליה מעוניינים להגיע, התנאים והמגבלות",
-                    "את רצף ה-DNA המדויק של תרבית האם",
-                    "את מספר ה-ATP שיופק בתהליך התסיסה"
-                ],
-                correctIndex: 1,
-                explanation: "לפני הסריקה, יש להגדיר את המטרה, חומרי הגלם הזמינים, תנאי התהליך והמגבלות ההנדסיות והכלכליות."
-            },
-            {
-                question: "מפעל מייצר חומצה לקטית באמצעות חיידקים. עקב תקלה, הוזרם חמצן לביוריאקטור. החיידקים המשיכו לייצר חומצה לקטית באותו קצב ולא עברו לנשימה אירובית, למרות שהם המשיכו לשגשג. מה ניתן להסיק על החיידקים?",
-                options: [
-                    "הם אירוביים אובליגטוריים",
-                    "הם אנאירוביים אובליגטוריים",
-                    "הם אנאירוביים סובלי חמצן",
-                    "הם אירוביים פקולטטיביים"
-                ],
-                correctIndex: 2,
-                explanation: "מכיוון שהם לא מתו מהחמצן, הם אינם אנאירוביים אובליגטוריים. מכיוון שלא ניצלו את החמצן לשינוי מטבולי (המשך תסיסה לקטית), הם סובלי חמצן."
-            },
-            {
-                question: "איזו קבוצת סוכרים כוללת את הסוכרוז?",
-                options: [
-                    "מונוסכרידים",
-                    "דוסוכרידים",
-                    "פוליסכרידים",
-                    "פנטוזות"
-                ],
-                correctIndex: 1,
-                explanation: "סוכרוז הוא דו-סוכר (דוסוכריד) המורכב מגלוקוז ופרוקטוז."
-            },
-            {
-                question: "כאשר חומצת האמינו ואלין מנוצלת על ידי המיקרואורגניזם, מהו התוצר הסופי במסלול המטבולי המתואר?",
-                options: [
-                    "Isobutanol",
-                    "Isoamylalcohol",
-                    "2-Phenethanol",
-                    "Acetyl CoA"
-                ],
-                correctIndex: 0,
-                explanation: "על פי הדוגמאות למסלולי ניצול חומצות אמינו, ואלין הופכת לאיזובוטנול."
-            },
-            {
-                question: "מהו התנאי הבסיסי להגדרת 'תרבית אם' כנקייה ואמינה?",
-                options: [
-                    "היא חייבת להיות מורכבת ממספר זנים שונים כדי להבטיח שרידות",
-                    "היא חייבת להתחיל ממושבה בודדת על מצע אגר",
-                    "היא חייבת להיות מסוגלת לייצר 36 ATP",
-                    "היא חייבת לעבור לפחות 10 העתקות לפני השימוש"
-                ],
-                correctIndex: 1,
-                explanation: "תרבית אם מוגדרת כקו המקורי הנקי שהתחיל ממושבה בודדת על אגר, מה שמבטיח זהות גנטית אחידה."
-            },
-            {
-                question: "מפעל ביוטכנולוגי רוצה להנדס חיידק כך שייצר פלסטיק מתכלה. הם מחליטים להכניס גן ספציפי מחיידק אחר לתוך הגנום שלו. איזו שיטת שיפור זן זו?",
-                options: [
-                    "קלאסית - סלקציה בתרבית",
-                    "מוטגנזה אקראית",
-                    "שינויים גנטיים מושכלים",
-                    "ליופיליזציה"
-                ],
-                correctIndex: 2,
-                explanation: "הכנסת גן ספציפי ומכוון היא פעולה של הנדסה גנטית, המוגדרת כשינוי גנטי מושכל, בניגוד למוטגנזה אקראית."
-            },
-            {
-                question: "מה משותף לתהליך הגליקוליזה ולתהליך חמצון בטא של חומצות שומן?",
-                options: [
-                    "שניהם מתרחשים רק בהיעדר מוחלט של חמצן",
-                    "שניהם מייצרים בסופו של דבר אתנול",
-                    "שניהם תהליכי פירוק קטבוליים המייצרים חומרי ביניים להמשך הפקת אנרגיה",
-                    "שניהם מתחילים מפירוק של דו-סוכרים"
-                ],
-                correctIndex: 2,
-                explanation: "שני התהליכים מפרקים מולקולות גדולות (גלוקוז או חומצות שומן) למולקולות קטנות יותר (פירובט או אצטיל קו-איי) המשמשות להפקת אנרגיה."
-            },
-            {
-                question: "אם חיידק חסר את האנזים המפרק קשר גליקוזידי אלפא 1 ל-6, איזה סוכר הוא לא יוכל לנצל כמקור פחמן?",
-                options: [
-                    "לקטוז",
-                    "מלטוז",
-                    "סוכרוז",
-                    "מליביוז"
-                ],
-                correctIndex: 3,
-                explanation: "מליביוז הוא הדו-סוכר המאופיין בקשר גליקוזידי אלפא (1-6)."
-            },
-            {
-                question: "בתהליך תסיסה (פרמנטציה), מהי ההגדרה הכללית למצב זה מבחינת נוכחות אוויר?",
-                options: [
-                    "חיים בסביבה עשירה בחמצן",
-                    "חיים ללא אוויר (חמצן)",
-                    "חיים הדורשים ריכוז משתנה של חמצן",
-                    "חיים המבוססים על קיבוע חנקן"
-                ],
-                correctIndex: 1,
-                explanation: "פרמנטציה מוגדרת בבסיסה כ'חיים ללא אוויר', תהליך אנאירובי להפקת אנרגיה."
-            },
-            {
-                question: "מדוע יבול הביומסה (כמות התאים) של חיידק אירובי פקולטטיבי יהיה לרוב גבוה יותר כאשר הוא גדל בנוכחות חמצן לעומת היעדרו?",
-                options: [
-                    "כי ללא חמצן הוא הופך לאנאירובי אובליגטורי ומת",
-                    "כי בנוכחות חמצן הוא מבצע נשימה תאית המפיקה 36 ATP, לעומת 2 ATP בתסיסה",
-                    "כי החמצן מונע התפתחות מוטנטים בתרבית",
-                    "כי החמצן מפרק את הקשרים הגליקוזידיים של הסוכרים מהר יותר"
-                ],
-                correctIndex: 1,
-                explanation: "חיידק פקולטטיבי יעדיף לנשום חמצן אם הוא קיים, כיוון שהנשימה מפיקה הרבה יותר אנרגיה (36 ATP) המאפשרת חלוקה וגדילה רבה יותר מאשר תסיסה (2 ATP)."
-            },
-            {
-                question: "חוקר משתמש בחומר כימי הגורם לשברים ב-DNA של תרבית החיידקים, ולאחר מכן בורר את החיידקים ששרדו ומראים ייצור מוגבר של התוצר. באיזו שיטה הוא משתמש?",
-                options: [
-                    "סלקציה קלאסית טבעית",
-                    "שינוי גנטי מושכל",
-                    "מוטגנזה אקראית וסלקציה",
-                    "השבת המוצר"
-                ],
-                correctIndex: 2,
-                explanation: "שימוש בחומר כימי לגרימת נזק ל-DNA יוצר מוטציות אקראיות, והחוקר מבצע סלקציה למוטנטים בעלי העדיפות."
-            },
-            {
-                question: "מהו היחס בין מולקולות הגלוקוז הנכנסות לגליקוליזה לבין מולקולות הפירובט הנוצרות?",
-                options: [
-                    "מולקולת גלוקוז אחת מייצרת מולקולת פירובט אחת",
-                    "מולקולת גלוקוז אחת מייצרת שתי מולקולות פירובט",
-                    "שתי מולקולות גלוקוז מייצרות מולקולת פירובט אחת",
-                    "גלוקוז אינו הופך לפירובט בגליקוליזה"
-                ],
-                correctIndex: 1,
-                explanation: "על פי נוסחת הגליקוליזה, מולקולת גלוקוז אחת (בעלת 6 פחמנים) מתפרקת ל-2 מולקולות פירובט (בעלות 3 פחמנים כל אחת)."
-            },
-            {
-                question: "באיזה שלב של המהלכים במיקרוביולוגיה תעשייתית נדרש ידע בתכנון ביוריאקטורים, מערכות ערבול ובקרת טמפרטורה?",
-                options: [
-                    "בחירת התרבית",
-                    "שיפור הזן במוטגנזה",
-                    "העמדת המערכת והפעלתה מבחינה הנדסית",
-                    "שמירה על תרבית האם"
-                ],
-                correctIndex: 2,
-                explanation: "העמדת המערכת מבחינה הנדסית כוללת את כל ההיבטים הפיזיים והטכניים של הפעלת התהליך בקנה מידה תעשייתי."
-            },
-            {
-                question: "איזה מבין הבאים אינו נחשב לדו-סוכר?",
-                options: [
-                    "מלטוז",
-                    "פנטוז",
-                    "סוכרוז",
-                    "לקטוז"
-                ],
-                correctIndex: 1,
-                explanation: "פנטוז הוא קבוצה של חד-סוכרים (מונוסכרידים) בעלי 5 פחמנים. השאר הם דו-סוכרים."
-            },
-            {
-                question: "מה קורה למולקולת ה-NADH בתהליך הפיכת פירובט ללקטט?",
-                options: [
-                    "היא מתפרקת לפחמן דו-חמצני",
-                    "היא הופכת ל-ATP",
-                    "היא מחמצנת ומעבירה מימנים לפירובט, והופכת חזרה ל-NAD+",
-                    "היא מתחברת לאצטיל קו-איי"
-                ],
-                correctIndex: 2,
-                explanation: "בתגובת הלקטט דהידרוגנאז, NADH מתחמצן ל-NAD+ תוך כדי חיזור הפירובט ללקטט, מה שמאפשר את המשך תהליך הגליקוליזה."
-            },
-            {
-                question: "אם נרצה לייצר באופן תעשייתי אתנול, איזו תכונה מטבולית נחפש במיקרואורגניזם?",
-                options: [
-                    "נוכחות של האנזים לקטט דהידרוגנאז בלבד",
-                    "יכולת לבצע חמצון בטא של חומצות שומן ביעילות גבוהה",
-                    "נוכחות של האנזים אלכוהול דהידרוגנאז ויכולת תסיסה",
-                    "דרישה לאירוביות אובליגטורית"
-                ],
-                correctIndex: 2,
-                explanation: "ייצור אתנול דורש את מסלול התסיסה הכוהלית, שהאנזים המפתח בו בסוף התהליך הוא אלכוהול דהידרוגנאז."
-            },
-            {
-                question: "האם חיידק מיקרוארופילי יצליח לגדול בביוריאקטור שבו מוזרם חמצן טהור בלחץ גבוה?",
-                options: [
-                    "כן, כיוון שהוא זקוק לחמצן",
-                    "כן, החמצן יאיץ את קצב הגידול שלו",
-                    "לא, כיוון שהוא זקוק לריכוז חמצן נמוך וריכוז גבוה עלול לפגוע בו",
-                    "לא, כי הוא אנאירובי לחלוטין"
-                ],
-                correctIndex: 2,
-                explanation: "מיקרוארופילים דורשים חמצן, אך רק בריכוזים נמוכים. ריכוז אטמוספרי או גבוה יותר יהיה רעיל עבורם וימנע גדילה."
-            },
-            {
-                question: "באיזה מצב צבירה נשמרת בדרך כלל תרבית האם כאשר משתמשים בשיטת הליופיליזציה?",
-                options: [
-                    "נוזל בטמפרטורת החדר",
-                    "אבקה יבשה (מיובשת בהקפאה)",
-                    "גז דחוס",
-                    "תרחיף שומני"
-                ],
-                correctIndex: 1,
-                explanation: "ליופיליזציה היא ייבוש בהקפאה, תהליך המוציא את המים מהתרבית ומשאיר אותה כאבקה יבשה ויציבה לזמן רב."
-            },
-            {
-                question: "מהו התוצר של תגובת הנשימה המלאה (Respiration) של מולקולת גלוקוז אחת, מלבד 36 ATP?",
-                options: [
-                    "2 מולקולות אתנול ו-2 מולקולות פחמן דו-חמצני",
-                    "2 מולקולות לקטט",
-                    "6 מולקולות פחמן דו-חמצני ו-6 מולקולות מים",
-                    "מולקולת אצטיל קו-איי אחת"
-                ],
-                correctIndex: 2,
-                explanation: "משוואת הנשימה המלאה מראה שגלוקוז וחמצן הופכים ל-6 מולקולות פחמן דו חמצני ($CO_2$) ו-6 מולקולות מים ($H_2O$), בתוספת אנרגיה."
-            }
+            { question: "מהי הסיבה העיקרית לכך שמפעלים תעשייתיים מקפידים לחזור לתרבית האם באופן מחזורי ולא משתמשים באותה תרבית עבודה ברצף אינסופי?", options: ["כדי לרענן את חומרי המזון במצע הגידול של הביוריאקטור.", "כדי לאפשר למיקרואורגניזמים להסתגל מחדש לטמפרטורת החדר.", "כדי למנוע הצטברות של מוטציות שעלולות לפגוע בתפוקת המוצר הרצוי.", "כדי להגביר את קצב צריכת החמצן של התרבית הפעילה."], correctIndex: 2, explanation: "במהלך חלוקות תא רבות, עלולות להיווצר מוטציות. מוטנטים שגדלים מהר יותר אך מייצרים פחות מהמוצר הרצוי עלולים להשתלט על התרבית. חזרה לתרבית האם מונעת היסחפות גנטית זו." },
+            { question: "בתהליך של שיפור זנים, איזו מבין השיטות הבאות מסתמכת על יצירת שונות גנטית לא מכוונת מראש מתוך מטרה לברור את התוצר הטוב ביותר?", options: ["הנדסה גנטית ממוקדת באמצעות פלסמידים.", "מוטגנזה אקראית באמצעות קרינה או כימיקלים.", "סלקציה קלאסית של זני הבר הקיימים בטבע.", "החדרת גן ספציפי לייצור אנזים רצוי."], correctIndex: 1, explanation: "מוטגנזה אקראית יוצרת שינויים אקראיים ב-DNA. לאחר מכן מבצעים סלקציה כדי למצוא מבין כלל המוטנטים את זה שקיבל במקרה תכונה עדיפה לייצור." },
+            { question: "חיידק מסוים מסוגל לגדול היטב במבחנה פתוחה לאוויר, אך כאשר אוטמים את המבחנה ומסלקים את החמצן, הוא ממשיך לגדול בקצב מעט איטי יותר. כיצד יוגדר חיידק זה?", options: ["אנאירובי סובל חמצן.", "אירובי אובליגטורי.", "מיקרוארופילי.", "אירובי פקולטטיבי."], correctIndex: 3, explanation: "אירובי פקולטטיבי יכול לנצל חמצן כשזה קיים (ולכן גדל היטב), אך מסוגל לעבור למסלולים אנאירוביים (כמו תסיסה) בהיעדר חמצן ולהמשיך לגדול." },
+            { question: "חוקר בודק חיידק שגדל בנוכחות חמצן, אך בבדיקה מטבולית מתגלה כי החיידק אינו מפיק מולקולות מים כתוצר לוואי של נשימה, ואינו משתמש בחמצן כקולט אלקטרונים סופי. לאיזו קבוצה שייך החיידק?", options: ["אירובי אובליגטורי.", "אנאירובי סובל חמצן.", "אירובי פקולטטיבי.", "אנאירובי אובליגטורי."], correctIndex: 1, explanation: "אנאירובי סובל חמצן יכול להתקיים בסביבה מחמצנת, אך הוא אינו משתמש בחמצן במסלול המטבולי שלו (אינו מבצע נשימה אירובית)." },
+            { question: "במסלול הגליקוליזה (Embden-Meyerhof), מהו המאזן נטו של ייצור מולקולות עתירות אנרגיה מפירוק של מולקולת גלוקוז אחת?", options: ["4 מולקולות ATP ו-2 מולקולות NADH.", "2 מולקולות ATP ו-2 מולקולות NADH.", "2 מולקולות ATP ו-4 מולקולות NADH.", "36 מולקולות ATP."], correctIndex: 1, explanation: "בגליקוליזה מושקעות 2 מולקולות ATP בשלב הראשון, ומופקות 4 בשלב השני, כך שהרווח נטו הוא 2 מולקולות ATP, בנוסף ל-2 מולקולות NADH." },
+            { question: "בתהליך התסיסה הכוהלית, הפירובט אינו הופך ישירות לאתנול. מהו תוצר הביניים בתהליך זה, ואיזה גז משתחרר במהלכו?", options: ["חומצה לקטית, ומשתחרר פחמן דו חמצני.", "אצטיל קו-אנזים A, ומשתחרר חמצן.", "אצטלדהיד, ומשתחרר פחמן דו חמצני.", "אצטלדהיד, ומשתחרר מימן."], correctIndex: 2, explanation: "פירובט מאבד פחמן דו חמצני והופך לאצטלדהיד, אשר לאחר מכן מחוזר לאתנול על ידי האנזים אלכוהול דהידרוגנז." },
+            { question: "מהי המטרה המטבולית המרכזית של תהליך התסיסה (לקטית או כוהלית) עבור התא החיידקי בתנאים אנאירוביים?", options: ["הפקת מולקולות ATP נוספות מעבר לאלו שנוצרו בגליקוליזה.", "חיזור מולקולות NAD+ ל-NADH כדי לאפשר את המשך מעגל קרבס.", "חמצון מולקולות NADH חזרה ל-NAD+ כדי לאפשר לגליקוליזה להימשך.", "פירוק מוחלט של שלד הפחמן ליצירת מקסימום פחמן דו חמצני."], correctIndex: 2, explanation: "ללא חמצן, שרשרת מעבר האלקטרונים נעצרת. התא חייב למחזר את ה-NADH שנוצר בגליקוליזה בחזרה ל-NAD+ כדי שהגליקוליזה (שהיא המקור היחיד ל-ATP במצב זה) לא תיעצר." },
+            { question: "חיידק מהונדס גנטית איבד את היכולת לייצר את האנזים אלכוהול דהידרוגנז. מה תהיה ההשפעה המיידית על גידול החיידק בתנאים אנאירוביים מחמירים, בהנחה שזהו מסלול התסיסה היחיד שלו?", options: ["החיידק ייצר עודף של אתנול כדי לפצות על חוסר האנזים.", "הגליקוליזה תיעצר עקב מחסור ב-NAD+ והחיידק ימות או יפסיק לגדול.", "החיידק יעבור באופן אוטומטי לבצע נשימה אירובית ללא חמצן.", "החיידק יפיק יותר ATP מכל מולקולת גלוקוז."], correctIndex: 1, explanation: "ללא אלכוהול דהידרוגנז, החיידק לא יכול לסיים את התסיסה הכוהלית ולמחזר NAD+. ללא NAD+, הגליקוליזה תיעצר ולא תופק אנרגיה." },
+            { question: "בתהליך של ניצול חומצות אמינו על ידי שמרים, חומצת האמינו ואלין (Valine) עוברת פירוק. מהו התוצר האלכוהולי הגבוה שנוצר כתוצאה ממסלול זה?", options: ["אתנול.", "איזואמיל אלכוהול.", "2-פנאתנול.", "איזובוטנול."], correctIndex: 3, explanation: "ואלין מפורקת במסלול המייצר איזובוטנול. לאוצין מייצרת איזואמיל אלכוהול, ופנילאלנין מייצרת 2-פנאתנול." },
+            { question: "תהליך הבטא-אוקסידציה משמש מיקרואורגניזמים להפקת אנרגיה ממקור מסוים. מהו חומר הגלם העיקרי הנכנס לתהליך זה, ומהו התוצר המרכזי הנחתך ממנו בכל מחזור?", options: ["חומצות אמינו; התוצר הוא אמוניה.", "סוכרים מורכבים; התוצר הוא גלוקוז.", "חומצות שומן; התוצר הוא אצטיל קו-אנזים A.", "חומצות גרעין; התוצר הוא ATP."], correctIndex: 2, explanation: "בטא-אוקסידציה הוא מסלול הפירוק של חומצות שומן. בכל מחזור של התהליך נחתך זוג פחמנים ונוצרת מולקולת אצטיל קו-אנזים A." },
+            { question: "שני חיידקים, א' ו-ב', גדלים על מצע המכיל דו-סוכרים. חיידק א' מסוגל לפרק קשרים מסוג בטא 1-4 בלבד, וחיידק ב' מסוגל לפרק קשרים מסוג אלפא 1-6 בלבד. אילו סוכרים יוכל כל חיידק לנצל כמקור פחמן?", options: ["א' ינצל מליביוז, ב' ינצל לקטוז.", "א' ינצל לקטוז, ב' ינצל מליביוז.", "שניהם ינצלו את שני הסוכרים כי שניהם מורכבים מגלוקוז וגלקטוז.", "א' ינצל סוכרוז, ב' ינצל מלטוז."], correctIndex: 1, explanation: "לקטוז מורכב מגלוקוז וגלקטוז בקשר בטא 1-4 (מתאים לחיידק א'). מליביוז מורכב מאותם מונוסכרידים אך בקשר אלפא 1-6 (מתאים לחיידק ב')." },
+            { question: "מה ההבדל העיקרי בין תרבית אם לתרבית עבודה בתעשייה הביוטכנולוגית?", options: ["תרבית האם נמצאת בביוריאקטור הענק, ותרבית העבודה נשמרת במקרר במעבדה.", "תרבית עבודה משמשת רק למחקר בסיסי, ותרבית אם משמשת לייצור מסחרי.", "תרבית האם היא המקור השמור והנקי שממנו מכינים את תרביות העבודה המיועדות לתהליך הייצור השוטף.", "אין הבדל, אלו שני מונחים נרדפים לאותו שלב בתהליך."], correctIndex: 2, explanation: "תרבית האם מוחזקת בתנאי שימור מחמירים כדי למנוע שינויים גנטיים. ממנה לוקחים דגימות קטנות כדי לגדל את תרביות העבודה שישמשו בפועל בייצור." },
+            { question: "חברה מעוניינת לייצר חומצה לקטית בכמויות גדולות באמצעות חיידקים. איזה תנאי סביבתי יהיה הקריטי ביותר כדי להבטיח שהחיידק ינתב את הפירובט לייצור חומצה לקטית ולא למסלול של נשימה תאית?", options: ["אספקה רציפה של עודף חמצן לביוריאקטור.", "היעדר מוחלט של חמצן או תנאים אנאירוביים.", "הוספת אתנול למצע הגידול.", "העלאת טמפרטורת הביוריאקטור מעל 50 מעלות צלזיוס."], correctIndex: 1, explanation: "כדי שהפירובט ינותב למסלול התסיסה הלקטית, יש למנוע את כניסתו למעגל קרבס ולשרשרת מעבר האלקטרונים, תהליכים הדורשים חמצן." },
+            { question: "איזו מבין הפעולות הבאות אינה נחשבת לחלק מהשלב של 'העמדת המערכת והפעלתה מבחינה הנדסית' בתהליך תעשייתי?", options: ["בקרת טמפרטורה ו-pH בביוריאקטור.", "תכנון מערך הערבול לאספקת חמצן מספקת.", "הפרדת התוצר הסופי מנוזל הגידול באמצעות צנטריפוגה.", "הזרמת חומרי גלם בקצב מבוקר למכל הגידול."], correctIndex: 2, explanation: "הפרדת התוצר הסופי שייכת לשלב השלישי בתהליך התעשייתי: 'השבת המוצר' (Downstream processing). השאר הם חלק מהתפעול ההנדסי של הגידול עצמו." },
+            { question: "מהי המשמעות המעשית של שמירת תרבית אם בשיטת הליופיליזציה?", options: ["החיידקים מתרבים בקצב איטי מאוד בתוך צינוריות זכוכית.", "החיידקים מיובשים בהקפאה למצב של תרדמת, המאפשר שימור ארוך טווח ללא שינוי גנטי.", "החיידקים גדלים על מצע אגר נטוי (סלנט) ומועברים כל שבוע למצע חדש.", "החיידקים עוברים מוטגנזה מכוונת כדי לשפר את עמידותם לקור."], correctIndex: 1, explanation: "ליופיליזציה היא ייבוש בהקפאה. הוצאת המים וההקפאה עוצרות לחלוטין את המטבוליזם והחלוקה, ובכך מונעות היווצרות מוטציות ושומרות על יציבות הזן." },
+            { question: "אם נשווה את מאזן האנרגיה בין נשימה אירובית לגליקוליזה ותסיסה (עבור מולקולת גלוקוז אחת), מהו היחס המשוער בכמות ה-ATP המופקת?", options: ["התסיסה מפיקה פי 2 יותר ATP מהנשימה.", "הנשימה מפיקה פי 18 יותר ATP מהתסיסה.", "שני התהליכים מפיקים כמות זהה של ATP.", "הגליקוליזה לבדה מפיקה יותר ATP מנשימה אירובית מלאה."], correctIndex: 1, explanation: "נשימה אירובית מפיקה כ-36 מולקולות ATP מכל מולקולת גלוקוז, בעוד שגליקוליזה ותסיסה מפיקות רק 2 מולקולות ATP נטו. 36 חלקי 2 שווה 18." },
+            { question: "במסגרת תהליך בטא-אוקסידציה, מלבד אצטיל קו-אנזים A, אילו מולקולות נוספות נוצרות ונושאות אלקטרונים שיכולים לשמש להפקת אנרגיה בהמשך?", options: ["ATP ו-GTP בלבד.", "NADH ו-FADH2.", "פחמן דו חמצני ומים.", "NAD+ ו-FAD."], correctIndex: 1, explanation: "במהלך החיתוך של שרשרת חומצת השומן בבטא-אוקסידציה, מתבצע חמצון המייצר מולקולות מחוזרות של NADH ו-FADH2, אשר יכולות להעביר אלקטרונים לשרשרת הנשימה." },
+            { question: "חיידק נחשף לכימיקל הגורם למוטציות אקראיות ב-DNA. לאחר מכן, החוקרים מגדלים את החיידקים על מצע שמכיל רק מליביוז כמקור פחמן. מהי המטרה של שלב הגידול על המליביוז?", options: ["לגרום למוטציות נוספות באמצעות הסוכר.", "להרוג את כל החיידקים שאינם מסוגלים לבצע בטא-אוקסידציה.", "לבצע סלקציה ולבודד רק את המוטנטים שרכשו או שיפרו את היכולת לפרק מליביוז.", "לבדוק אם החיידקים הפכו לאנאירוביים אובליגטוריים."], correctIndex: 2, explanation: "זהו תהליך קלאסי של מוטגנזה ולאחריה סלקציה. המצע הספציפי מהווה לחץ סלקטיבי שמאפשר רק למוטנטים הרצויים (אלו שמנצלים מליביוז) לשרוד ולשגשג." },
+            { question: "איזה צמד סוכרים מורכב אך ורק ממולקולות של גלוקוז?", options: ["סוכרוז ולקטוז.", "מלטוז וסוכרוז.", "מלטוז בלבד מבין הדו-סוכרים המוזכרים.", "לקטוז ומליביוז."], correctIndex: 2, explanation: "מלטוז הוא הדו-סוכר היחיד ברשימה שמורכב משתי מולקולות גלוקוז. סוכרוז מכיל פרוקטוז, ולקטוז ומליביוז מכילים גלקטוז." },
+            { question: "כאשר מייצרים בירה, השמרים משתמשים בסוכרים כדי לייצר אתנול. מדוע חשוב לאטום את מיכלי התסיסה לכניסת חמצן בשלב הייצור המרכזי?", options: ["מפני ששמרים הם אנאירוביים אובליגטוריים וימותו בנוכחות חמצן.", "כדי למנוע מהשמרים להשתמש בחמצן לביצוע נשימה אירובית, מה שיפחית משמעותית את ייצור האתנול.", "כדי שהחמצן לא יגיב כימית עם האתנול ויהפוך אותו לגלוקוז.", "מפני שחמצן מעכב את תהליך הבטא-אוקסידציה של חומצות שומן."], correctIndex: 1, explanation: "שמרים הם אירוביים פקולטטיביים. אם יהיה להם חמצן, הם יעדיפו לבצע נשימה אירובית (שמפיקה יותר אנרגיה) והפירובט לא יהפוך לאתנול. מניעת חמצן מאלצת אותם לבצע תסיסה כוהלית." },
+            { question: "איזה מהאנזימים הבאים חיוני לחיידק שמבצע תסיסה לקטית אך אינו נדרש לחיידק שמבצע נשימה אירובית מלאה בלבד?", options: ["הקסוקינאז (אנזים בגליקוליזה).", "לקטט דהידרוגנז.", "אלכוהול דהידרוגנז.", "אנזימי מעגל קרבס."], correctIndex: 1, explanation: "לקטט דהידרוגנז הוא האנזים המקטלז את הפיכת הפירובט לחומצה לקטית בשלב התסיסה. בחיידק המבצע נשימה אירובית בלבד, הפירובט ממשיך למעגל קרבס ואין צורך באנזים זה." },
+            { question: "במהלך תכנון תהליך תעשייתי, המהנדסים בחרו להשתמש במיקרואורגניזם שהוא מיקרוארופילי. איזו דרישה הנדסית תהיה ייחודית למערכת זו לעומת גידול של חיידק אירובי אובליגטורי?", options: ["המערכת תדרוש אטימה מוחלטת ושאיבת כל החמצן החוצה.", "המערכת תדרוש הזרמת אוויר בקצב המקסימלי האפשרי.", "המערכת תדרוש בקרת חמצן מדויקת כדי לשמור על ריכוז חמצן נמוך אך לא אפסי.", "המערכת לא תדרוש כל בקרה על רמות החמצן."], correctIndex: 2, explanation: "מיקרוארופילים זקוקים לחמצן, אך בריכוזים נמוכים מהריכוז האטמוספרי. ריכוז גבוה מדי יפגע בהם, והיעדר חמצן ימנע את גידולם." },
+            { question: "אם נספק לחיידק תערובת של מלטוז וסוכרוז, אילו מונוסכרידים יתקבלו לאחר פירוק מלא של שני הדו-סוכרים הללו על ידי אנזימי החיידק?", options: ["גלוקוז בלבד.", "גלוקוז וגלקטוז.", "גלוקוז ופרוקטוז.", "פרוקטוז וגלקטוז."], correctIndex: 2, explanation: "מלטוז יתפרק לשתי מולקולות גלוקוז. סוכרוז יתפרק למולקולת גלוקוז ומולקולת פרוקטוז. לכן התערובת הסופית תכיל גלוקוז ופרוקטוז." },
+            { question: "חומצת האמינו לאוצין (Leucine) מוספת למצע תסיסה של שמרים. איזה חומר טעם/ריח אלכוהולי צפוי להיווצר כתוצאה מפירוקה?", options: ["אתנול.", "איזובוטנול.", "2-פנאתנול.", "איזואמיל אלכוהול."], correctIndex: 3, explanation: "על פי מסלולי ניצול חומצות האמינו, לאוצין עוברת התמרה ליצירת איזואמיל אלכוהול." },
+            { question: "מה ההבדל המבני בין לקטוז למליביוז, המשפיע על היכולת של חיידקים שונים לפרק אותם?", options: ["הם מורכבים ממונוסכרידים שונים לחלוטין.", "בלקטוז יש פרוקטוז ובמליביוז יש גלקטוז.", "המונוסכרידים זהים, אך בלקטוז הקשר הוא בטא 1-4 ובמליביוז הוא אלפא 1-6.", "לקטוז הוא דו-סוכר ומליביוז הוא פוליסכריד."], correctIndex: 2, explanation: "שניהם מורכבים מגלוקוז וגלקטוז, אך סוג הקשר הגליקוזידי ביניהם שונה, מה שדורש אנזימי פירוק שונים." },
+            { question: "באיזה שלב של הגליקוליזה מושקעת אנרגיה (ATP) כדי להתחיל את התהליך?", options: ["בשלב הפיכת הפירובט לאתנול.", "בשלבים הראשונים של פירוק הגלוקוז לפני יצירת תוצרי הביניים בעלי 3 פחמנים.", "בשלב יצירת הפחמן הדו-חמצני.", "הגליקוליזה אינה דורשת השקעת ATP כלל, היא רק מפיקה אנרגיה."], correctIndex: 1, explanation: "בשלב הראשון של מסלול EMP, ישנה השקעה של 2 מולקולות ATP כדי לזרחן את הגלוקוז ולהכין אותו לביקוע." },
+            { question: "מהי המשמעות של המונח סלקציה קלאסית בתהליך שיפור זנים?", options: ["החדרת גנים מחיידק אחד לאחר באמצעות נגיפים.", "שימוש בקרינת UV ליצירת מוטציות.", "העברה הנדסית של פלסמידים.", "גידול תרבית ובחירת המושבות המראות באופן טבעי את הביצועים הטובים ביותר."], correctIndex: 3, explanation: "סלקציה קלאסית אינה מערבת הנדסה גנטית או יצירת מוטציות באופן יזום, אלא מסתמכת על השונות הטבעית הקיימת באוכלוסייה ובחירת הפרטים המצטיינים." },
+            { question: "מדוע הצטברות של חומצה לקטית בתרבית עלולה בסופו של דבר לעכב את המשך הגידול של החיידק שמייצר אותה?", options: ["מפני שהחומצה הלקטית צורכת את כל החמצן בסביבה.", "מפני שהיא מעלה את רמת ה-pH לרמה בסיסית מדי.", "מפני שהיא מורידה את רמת ה-pH בסביבה לרמה חומצית שעלולה לפגוע בפעילות האנזימטית של החיידק עצמו.", "מפני שהחומצה הלקטית הופכת מיד לאתנול רעיל."], correctIndex: 2, explanation: "חומצה לקטית, כשמה כן היא, חומצית. הצטברותה מורידה את ה-pH של מצע הגידול. ללא בקרת pH (באמצעות בופרים או הוספת בסיס), הסביבה תהפוך לעוינת ותעכב את גידול החיידק." },
+            { question: "איזה מבין המשפטים הבאים מתאר נכונה את תפקיד מולקולת ה-NAD+ בגליקוליזה?", options: ["היא משמשת כמקור אנרגיה ישיר במקום ATP.", "היא מתפקדת כאנזים החותך את הגלוקוז לשניים.", "היא משמשת כקולט אלקטרונים ופרוטונים במהלך חמצון תוצרי הביניים של הסוכר.", "היא משחררת פחמן דו חמצני מהמערכת."], correctIndex: 2, explanation: "NAD+ מחמצן את תוצרי הביניים של הגליקוליזה, קולט מהם אלקטרונים ופרוטונים, והופך ל-NADH." },
+            { question: "חיידק מבצע פירוק של חומצת שומן בעלת 16 פחמנים באמצעות בטא-אוקסידציה. כמה מולקולות של אצטיל קו-אנזים A (בעלות 2 פחמנים כל אחת) ייווצרו בסיום הפירוק המלא?", options: ["2", "4", "8", "16"], correctIndex: 2, explanation: "בכל מחזור של בטא-אוקסידציה נחתכים שני פחמנים ונוצרת מולקולת אצטיל קו-אנזים A אחת. לכן מחומצת שומן של 16 פחמנים ייווצרו 8 מולקולות (16 חלקי 2)." },
+            { question: "מהי המגבלה העיקרית של שימוש במוטגנזה אקראית לשיפור זנים בהשוואה לשינויים גנטיים מושכלים?", options: ["מוטגנזה אקראית דורשת ציוד הנדסה גנטית יקר בהרבה.", "במוטגנזה אקראית אי אפשר לשלוט באילו גנים ייפגעו, ולכן נדרשת עבודת סריקה (Screening) עצומה כדי למצוא מוטנט חיובי.", "מוטגנזה אקראית עובדת רק על חיידקים אנאירוביים.", "מוטגנזה אקראית תמיד גורמת למוות של כל התרבית."], correctIndex: 1, explanation: "מכיוון שהשינויים אקראיים, רוב המוטציות יהיו מזיקות או חסרות השפעה. מציאת המוטנט הנדיר בעל התכונה המשופרת דורשת סריקה של אלפי או מיליוני מושבות." },
+            { question: "בתהליך הייצור התעשייתי, באיזה שלב יתבצע ניקוי וריכוז של החומר הפעיל מתוך נוזל התסיסה?", options: ["בחירת התרבית.", "העמדת המערכת ההנדסית.", "השבת המוצר (Downstream).", "בשלב הליופיליזציה של תרבית האם."], correctIndex: 2, explanation: "השבת המוצר (Product recovery) הוא השלב האחרון, הכולל את כל תהליכי ההפרדה, הניקוי והריכוז של התוצר המבוקש מנוזל הגידול." },
+            { question: "איזה תוצר לוואי גזי אופייני לתסיסה כוהלית אך אינו נוצר בתסיסה לקטית פשוטה?", options: ["חמצן.", "מימן.", "מתאן.", "פחמן דו-חמצני."], correctIndex: 3, explanation: "בתסיסה כוהלית, הפירובט (3 פחמנים) הופך לאצטלדהיד (2 פחמנים) תוך שחרור מולקולת CO2. בתסיסה לקטית הפירובט הופך ישירות לחומצה לקטית (3 פחמנים) ללא שחרור גז." },
+            { question: "מהו התפקיד של הקו-אנזים FAD בתהליך הבטא-אוקסידציה?", options: ["הוא מזרחן את חומצת השומן.", "הוא חותך את הקשר הפפטידי.", "הוא משמש כנשא אלקטרונים, בדומה ל-NAD+, העוזר בחמצון שרשרת הפחמנים.", "הוא הופך את חומצת השומן לסוכר."], correctIndex: 2, explanation: "במהלך הבטא-אוקסידציה מתבצעים שלבי חמצון. FAD קולט אלקטרונים ופרוטונים והופך ל-FADH2, בדומה לתפקידו של NAD+ שהופך ל-NADH." },
+            { question: "אם נרצה לייצר 2-פנאתנול (חומר ריח בעל ניחוח ורדים) באמצעות שמרים, איזו חומצת אמינו נצטרך להוסיף למצע הגידול כחומר גלם?", options: ["ואלין.", "לאוצין.", "פנילאלנין.", "גלוטמט."], correctIndex: 2, explanation: "על פי מסלולי ניצול חומצות האמינו, פנילאלנין היא חומר המוצא ליצירת 2-פנאתנול." },
+            { question: "מדוע חיידקים אנאירוביים אובליגטוריים מתים בנוכחות חמצן?", options: ["מפני שהחמצן מפרק להם את הדופן החיצונית באופן מכני.", "מפני שהם חסרים אנזימים מגינים (כמו קטלאז או סופראוקסיד דיסמוטאז) המנטרלים רדיקלים חופשיים ונגזרות רעילות של חמצן.", "מפני שהחמצן גורם להם לבצע תסיסה בקצב מהיר מדי שמרעיל אותם.", "מפני שהחמצן מתחרה עם הגלוקוז על הכניסה לתא."], correctIndex: 1, explanation: "חמצן בסביבה מימית נוטה ליצור רדיקלים חופשיים (כמו סופראוקסיד ומי חמצן). אורגניזמים אירוביים מחזיקים אנזימים שמפרקים רעלים אלו, בעוד שאנאירוביים אובליגטוריים חסרים אותם ולכן ניזוקים ומתים." },
+            { question: "במיקרוביולוגיה תעשייתית, מהי המשמעות של סלנט (Slant)?", options: ["סוג של ביוריאקטור הבנוי בזווית כדי לשפר את הערבול.", "מבחנה המכילה מצע אגר שהוקרש באלכסון, המשמשת לשמירה וגידול של תרביות אם או עבודה.", "תהליך כימי של הפרדת התוצר באמצעות שיפוע ריכוזים.", "סוג של מוטציה הגורמת לחיידק לגדול בצורה אסימטרית."], correctIndex: 1, explanation: "סלנט הוא אגר אלכסוני. צורה זו מגדילה את שטח הפנים במבחנה קטנה ומשמשת כשיטה נפוצה לתחזוקה ושמירה של תרביות לאורך זמן קצר-בינוני." },
+            { question: "חיידק מפרק מולקולת גלוקוז בתנאים אירוביים מלאים עד לקבלת פחמן דו חמצני ומים. מהי התגובה הכוללת (נטו) של תהליך זה מבחינת חומרים ומוצרים עיקריים?", options: ["גלוקוז + 6 חמצן -> 6 פחמן דו חמצני + 6 מים + 36 ATP.", "גלוקוז -> 2 אתנול + 2 פחמן דו חמצני + 2 ATP.", "גלוקוז -> 2 חומצה לקטית + 2 ATP.", "גלוקוז + 2 מים -> 2 פירובט + 2 חמצן."], correctIndex: 0, explanation: "זוהי המשוואה הכוללת של הנשימה האירובית כפי שמוצגת בחומר: $C_6H_{12}O_6 + 6O_2 \\rightarrow 6CO_2 + 6H_2O + 36ATP$." },
+            { question: "מה מהווה את השלב המחבר בין הגליקוליזה לבין תהליכי התסיסה (כוהלית או לקטית)?", options: ["מולקולת הגלוקוז עצמה.", "מולקולת הפירובט.", "מולקולת האתנול.", "מולקולת ה-ATP."], correctIndex: 1, explanation: "הגליקוליזה מסתיימת בייצור פירובט. הפירובט הוא צומת הדרכים המטבולי שממנו התא ממשיך לתסיסה (בהיעדר חמצן) או לנשימה (בנוכחות חמצן)." },
+            { question: "אם מפעל מעוניין לייצר ביו-פלסטיק מחומצות שומן באמצעות חיידקים, איזה מסלול מטבולי של החיידק יהיה המעורב ביותר בפירוק חומר הגלם?", options: ["גליקוליזה.", "תסיסה כוהלית.", "בטא-אוקסידציה.", "סינתזת לקטוז."], correctIndex: 2, explanation: "בטא-אוקסידציה הוא המסלול האחראי על פירוק וניצול חומצות שומן." }
         ];
 
         const tfData = [
-            {
-                question: "תרבית עבודה (לשימוש שוטף) היא התרבית שאותה שומרים בהקפאה עמוקה לשנים רבות ללא שימוש יומיומי.",
-                answer: false,
-                explanation: "תרבית האם היא זו שנשמרת לטווח ארוך (בהקפאה או ליופיליזציה). תרבית העבודה משמשת באופן שוטף בתהליך הייצור."
-            },
-            {
-                question: "מיקרואורגניזם אנאירובי אובליגטורי ימות אם ייחשף לסביבה המכילה חמצן.",
-                answer: true,
-                explanation: "חיידקים אנאירוביים אובליגטוריים חסרים את המנגנונים להתמודד עם רעילות החמצן, ולכן מתים בנוכחותו."
-            },
-            {
-                question: "השלב הראשון במיקרוביולוגיה תעשייתית הוא תמיד השבת המוצר מתוך המערכת.",
-                answer: false,
-                explanation: "השבת המוצר היא השלב האחרון. השלב הראשון הוא בחירת התרבית ותנאי השימוש בה."
-            },
-            {
-                question: "מוטגנזה אקראית היא שיטה שבה מכניסים גן ספציפי וידוע מראש לתוך ה-DNA של החיידק.",
-                answer: false,
-                explanation: "הכנסת גן ספציפי היא שינוי גנטי מושכל. מוטגנזה אקראית גורמת לשינויים לא ידועים מראש, מתוכם בוררים את הרצויים."
-            },
-            {
-                question: "חיידק אירובי פקולטטיבי יעדיף לבצע תסיסה גם אם יש חמצן זמין, כי תסיסה מפיקה יותר אנרגיה.",
-                answer: false,
-                explanation: "נשימה אירובית מפיקה הרבה יותר אנרגיה (36 ATP) לעומת תסיסה (2 ATP), ולכן החיידק יעדיף לנשום חמצן אם הוא זמין."
-            },
-            {
-                question: "גליקוליזה, המוכרת גם כמסלול Embden-Meyerhof, מפרקת גלוקוז לפירובט.",
-                answer: true,
-                explanation: "זהו המסלול המטבולי הבסיסי להפקת אנרגיה ראשונית מגלוקוז."
-            },
-            {
-                question: "בתהליך התסיסה הלקטית משתחרר פחמן דו-חמצני כתוצר לוואי.",
-                answer: false,
-                explanation: "תסיסה כוהלית משחררת פחמן דו-חמצני. תסיסה לקטית ממירה פירובט ללקטט ללא שחרור גז זה."
-            },
-            {
-                question: "פירוק של חומצת האמינו לאוצין על ידי מיקרואורגניזמים מוביל ליצירת Isoamylalcohol.",
-                answer: true,
-                explanation: "זהו אחד המסלולים הספציפיים לניצול חומצות אמינו המייצר כהלים גבוהים."
-            },
-            {
-                question: "תהליך חמצון בטא משמש לפירוק סוכרים מורכבים.",
-                answer: false,
-                explanation: "חמצון בטא הוא המסלול המטבולי לפירוק חומצות שומן, לא סוכרים."
-            },
-            {
-                question: "הסוכר סוכרוז מורכב משתי מולקולות של גלוקוז.",
-                answer: false,
-                explanation: "סוכרוז מורכב מגלוקוז ופרוקטוז. מלטוז הוא זה המורכב משתי מולקולות גלוקוז."
-            },
-            {
-                question: "הקשר הגליקוזידי בלקטוז הוא מסוג בטא 1 ל-4.",
-                answer: true,
-                explanation: "לקטוז מורכב מגלקטוז וגלוקוז המחוברים בקשר בטא 1 ל-4."
-            },
-            {
-                question: "חיידק אנאירובי סובלי חמצן מסוגל לנצל את החמצן להפקת 36 מולקולות ATP.",
-                answer: false,
-                explanation: "סובלי חמצן גדלים בנוכחות חמצן אך אינם מסוגלים לנצל אותו להפקת אנרגיה. הם ממשיכים לבצע תסיסה."
-            },
-            {
-                question: "סלנטים (Slants) הם אחת השיטות המקובלות לשמירה על תרבית אם.",
-                answer: true,
-                explanation: "סלנטים (מבחנות אגר משופעות) משמשים לשימור תרביות, לצד הקפאה עמוקה וליופיליזציה."
-            },
-            {
-                question: "מעקב אחר מספר ההעתקות של תרבית חשוב כדי למנוע התפתחות של זיהומים ומוטנטים.",
-                answer: true,
-                explanation: "ככל שמעתיקים את התרבית יותר פעמים, עולה הסיכוי למוטציות שישנו את תכונות הייצור."
-            },
-            {
-                question: "האנזים Alcohol dehydrogenase הופך פירובט ישירות לאתנול בשלב אחד.",
-                answer: false,
-                explanation: "התהליך דורש שני שלבים: פירובט הופך תחילה לאצטאלדהיד, ורק אז האנזים הופך את האצטאלדהיד לאתנול."
-            },
-            {
-                question: "פנטוזות הן קבוצה של דו-סוכרים הנמצאים בשימוש תעשייתי.",
-                answer: false,
-                explanation: "פנטוזות הן חד-סוכרים (מונוסכרידים) בעלי 5 פחמנים."
-            },
-            {
-                question: "מליביוז ולקטוז מורכבים מאותם חד-סוכרים, אך נבדלים בסוג הקשר ביניהם.",
-                answer: true,
-                explanation: "שניהם מורכבים מגלקטוז וגלוקוז. בלקטוז הקשר הוא בטא (1-4) ובמליביוז הוא אלפא (1-6)."
-            },
-            {
-                question: "השבת המוצר היא תהליך הנדסי שמתבצע לפני בחירת התרבית.",
-                answer: false,
-                explanation: "השבת המוצר היא השלב הסופי בתהליך, לאחר שהתרבית נבחרה, גדלה וייצרה את החומר הרצוי."
-            },
-            {
-                question: "התרבית המקורית והנקייה ביותר, שמתחילה ממושבה בודדת, נקראת תרבית עבודה.",
-                answer: false,
-                explanation: "היא נקראת תרבית אם. תרבית עבודה נוצרת ממנה לשימוש היומיומי."
-            },
-            {
-                question: "פירוק של חומצת האמינו פנילאלנין מוביל ליצירת 2-Phenethanol.",
-                answer: true,
-                explanation: "זהו התוצר של ניצול פנילאלנין המופיע במסלול המטבולי להיווצרות כהלים גבוהים."
-            },
-            {
-                question: "חיידק מיקרוארופילי ימות בהיעדר מוחלט של חמצן.",
-                answer: true,
-                explanation: "מיקרוארופילים זקוקים לחמצן (בריכוז נמוך) כדי לגדול. ללא חמצן כלל, הם לא יוכלו לגדול."
-            },
-            {
-                question: "התוצר הסופי של חמצון בטא של חומצות שומן הוא פירובט.",
-                answer: false,
-                explanation: "התוצר הסופי של חמצון בטא הוא אצטיל קו-איי (Acetyl CoA)."
-            },
-            {
-                question: "בתהליך גליקוליזה אנאירובית, נוצרות 2 מולקולות ATP נטו מכל מולקולת גלוקוז.",
-                answer: true,
-                explanation: "המאזן האנרגטי של תסיסה (גליקוליזה ללא נשימה) הוא 2 ATP נטו."
-            },
-            {
-                question: "הכנסת גן חדש לחיידק לצורך שיפור תכונותיו נחשבת לשיטה קלאסית של סלקציה בתרבית.",
-                answer: false,
-                explanation: "זוהי שיטה של שינויים גנטיים מושכלים (הנדסה גנטית), ולא סלקציה קלאסית."
-            },
-            {
-                question: "שלב ה'סריקה' בתעשייה נועד למצוא את המיקרואורגניזם המתאים ביותר למטרה שהוגדרה.",
-                answer: true,
-                explanation: "זהו בדיוק תפקיד הסריקה - איתור הזן האופטימלי מתוך מגוון אפשרויות."
-            },
-            {
-                question: "ייבוש בהקפאה (ליופיליזציה) היא שיטה יעילה להשמדת מוטנטים בתרבית העבודה.",
-                answer: false,
-                explanation: "ליופיליזציה היא שיטה לשימור תרבית האם לטווח ארוך, ולא שיטה להשמדת מוטנטים פעילים."
-            },
-            {
-                question: "בתהליך התסיסה, גלוקוז מומר ישירות לאתנול ללא יצירת תוצרי ביניים.",
-                answer: false,
-                explanation: "גלוקוז עובר תהליך רב-שלבי: תחילה הופך לפירובט, לאחר מכן לאצטאלדהיד, ורק אז לאתנול."
-            },
-            {
-                question: "חיידקים אירוביים אובליגטוריים יכולים לבצע נשימה תאית המפיקה 36 ATP.",
-                answer: true,
-                explanation: "נוכחות החמצן מאפשרת להם לבצע נשימה אירובית מלאה המפיקה כמות אנרגיה גבוהה זו."
-            },
-            {
-                question: "כל המיקרואורגניזמים בתעשייה מסוגלים לנצל את כל סוגי הדו-סוכרים באותה יעילות.",
-                answer: false,
-                explanation: "מיקרואורגניזמים נבדלים זה מזה ביכולתם לנצל סוכרים שונים, בהתאם לאנזימים הספציפיים שהם מייצרים."
-            },
-            {
-                question: "פרוקטוז הוא דוגמה לחד-סוכר (מונוסכריד).",
-                answer: true,
-                explanation: "פרוקטוז, יחד עם גלוקוז ופנטוזות, מוגדר כמונוסכריד."
-            }
+            { question: "תרבית האם משמשת ישירות כסטרטר (מתנע) בתוך הביוריאקטור התעשייתי הענק לייצור שוטף.", answer: false, explanation: "תרבית האם נשמרת בתנאים מחמירים ואינה משמשת ישירות בביוריאקטור. ממנה מכינים את תרביות העבודה, והן אלו שמוגדלות בהדרגה ומוכנסות לביוריאקטור." },
+            { question: "שלב 'השבת המוצר' מתייחס לטיהור והפרדת התוצר הרצוי מתוך נוזל הגידול שבביוריאקטור.", answer: true, explanation: "זהו השלב השלישי והאחרון בייצור תעשייתי, הידוע גם כ-Downstream processing." },
+            { question: "מוטגנזה אקראית היא שיטה שבה המדען בוחר בדיוק איזה גן ב-DNA החיידקי ישתנה.", answer: false, explanation: "מוטגנזה אקראית גורמת לשינויים מקריים בכל רחבי הגנום. הנדסה גנטית (שינויים מושכלים) היא השיטה המאפשרת שינוי ממוקד של גן ספציפי." },
+            { question: "ליופיליזציה היא תהליך של הרתחת התרבית כדי להרוג וירוסים לפני השימור.", answer: false, explanation: "ליופיליזציה היא ייבוש בהקפאה (Freeze-drying), תהליך המשמש לשימור תרביות אם במצב של תרדמת מבלי להרוג את המיקרואורגניזמים." },
+            { question: "מיקרואורגניזמים אנאירוביים אובליגטוריים מסוגלים לשרוד בנוכחות חמצן אך פשוט לא משתמשים בו.", answer: false, explanation: "אנאירוביים אובליגטוריים מתים בנוכחות חמצן. אלו ששורדים אך לא משתמשים בו נקראים 'אנאירוביים סובלי חמצן'." },
+            { question: "מיקרוארופילים זקוקים לריכוזים גבוהים מאוד של חמצן, מעבר לריכוז החמצן באוויר הרגיל.", answer: false, explanation: "להפך, מיקרוארופילים זקוקים לריכוז חמצן נמוך מהריכוז האטמוספרי הרגיל." },
+            { question: "אירובי פקולטטיבי יעדיף להשתמש בחמצן כשהוא זמין, מכיוון שנשימה אירובית מפיקה יותר אנרגיה מתסיסה.", answer: true, explanation: "נשימה אירובית מפיקה כ-36 מולקולות ATP מגלוקוז, לעומת 2 בלבד בתסיסה. לכן, אם יש חמצן, האורגניזם הפקולטטיבי ינצל אותו למקסום הפקת האנרגיה." },
+            { question: "הרווח האנרגטי נטו של מסלול הגליקוליזה (ממולקולת גלוקוז אחת) הוא 2 מולקולות ATP ו-2 מולקולות NADH.", answer: true, explanation: "למרות שנוצרות 4 מולקולות ATP, יש השקעה של 2 מולקולות בתחילת התהליך, ולכן הרווח נטו הוא 2." },
+            { question: "בתסיסה לקטית, משתחרר פחמן דו-חמצני כחלק מהפיכת הפירובט לחומצה לקטית.", answer: false, explanation: "בתסיסה לקטית אין שחרור של פחמן דו-חמצני. הפירובט מחוזר ישירות לחומצה לקטית. שחרור CO2 מתרחש בתסיסה כוהלית." },
+            { question: "המטרה העיקרית של התסיסה בתנאים אנאירוביים היא למחזר מולקולות NAD+ כדי שהגליקוליזה תוכל להימשך.", answer: true, explanation: "ללא מחזור ה-NAD+, מלאי ה-NAD+ בתא יאזל, הגליקוליזה תיעצר, והתא לא יוכל להפיק ATP כלל." },
+            { question: "האנזים אלכוהול דהידרוגנז משתתף בשלב האחרון של התסיסה הכוהלית, בו אצטלדהיד הופך לאתנול.", answer: true, explanation: "זהו האנזים המזרז את תגובת החיזור של אצטלדהיד לאתנול, תוך חמצון NADH ל-NAD+." },
+            { question: "פירוק של חומצת האמינו ואלין (Valine) במיקרואורגניזמים מוביל ליצירת 2-פנאתנול.", answer: false, explanation: "פירוק ואלין מוביל ליצירת איזובוטנול. 2-פנאתנול נוצר מפירוק של פנילאלנין." },
+            { question: "בטא-אוקסידציה הוא תהליך פירוק של חומצות שומן המייצר מולקולות של אצטיל קו-אנזים A.", answer: true, explanation: "זהו המסלול המרכזי לניצול חומצות שומן, בו השרשרת הפחמנית נחתכת לזוגות פחמנים בצורת אצטיל CoA." },
+            { question: "סוכרוז הוא דו-סוכר המורכב משתי מולקולות של גלוקוז.", answer: false, explanation: "סוכרוז מורכב מגלוקוז ופרוקטוז. הדו-סוכר המורכב משתי מולקולות גלוקוז הוא מלטוז." },
+            { question: "לקטוז ומליביוז מורכבים מאותם סוגי מונוסכרידים (גלוקוז וגלקטוז), אך נבדלים בסוג הקשר הגליקוזידי שביניהם.", answer: true, explanation: "בלקטוז הקשר הוא בטא 1-4, ואילו במליביוז הקשר הוא אלפא 1-6." },
+            { question: "חזרה תקופתית לתרבית האם מגבירה את הסיכוי לזיהומים בתהליך התעשייתי.", answer: false, explanation: "להפך, החזרה לתרבית האם (שהיא נקייה ושמורה היטב) נועדה בין היתר למנוע שימוש בתרביות עבודה שהזדהמו או עברו מוטציה." },
+            { question: "אנאירוביים סובלי חמצן מפיקים אנרגיה באמצעות שרשרת מעבר אלקטרונים המשתמשת בחמצן כקולט אלקטרונים סופי.", answer: false, explanation: "הם סובלים את קיומו של החמצן אך אינם משתמשים בו. הם מפיקים אנרגיה רק באמצעות תסיסה או נשימה אנאירובית." },
+            { question: "במהלך הגליקוליזה, מולקולת גלוקוז בעלת 6 פחמנים מפורקת לשתי מולקולות פירובט, שלכל אחת מהן 3 פחמנים.", answer: true, explanation: "זהו הפיצול הבסיסי של שלד הפחמן במסלול EMP." },
+            { question: "תהליך בטא-אוקסידציה אינו דורש נשאי אלקטרונים כמו NAD+ או FAD.", answer: false, explanation: "התהליך כולל שלבי חמצון המחייבים נוכחות של NAD+ ו-FAD כדי לקלוט את האלקטרונים (ולהפוך ל-NADH ו-FADH2)." },
+            { question: "הפרדת התוצר (Product recovery) נחשבת לחלק מההפעלה ההנדסית של הביוריאקטור עצמו.", answer: false, explanation: "הפרדת התוצר היא שלב נפרד המתרחש לאחר סיום תהליך הגידול בביוריאקטור, וכוללת שיטות כמו סינון, צנטריפוגציה ומיצוי." },
+            { question: "מוטגנזה אקראית היא תמיד תהליך שלילי שיש להימנע ממנו בתעשייה.", answer: false, explanation: "אמנם רוב המוטציות מזיקות, אך בתעשייה משתמשים במוטגנזה אקראית באופן יזום כדי ליצור שונות, מתוכה בוררים מוטנטים נדירים בעלי תכונות ייצור משופרות." },
+            { question: "שמירת תרבית אם בהקפאה עמוקה מאפשרת לחיידקים להמשיך להתרבות בקצב איטי מאוד.", answer: false, explanation: "הקפאה עמוקה עוצרת לחלוטין את המטבוליזם ואת החלוקה התאית, ובכך מקבעת את המצב הגנטי של התרבית." },
+            { question: "האנזים לקטט דהידרוגנז אחראי על חמצון ה-NADH בחזרה ל-NAD+ בתהליך התסיסה הלקטית.", answer: true, explanation: "תוך כדי הפיכת פירובט לחומצה לקטית, האנזים מעביר את האלקטרונים מה-NADH אל הפירובט, ובכך ממחזר את ה-NAD+." },
+            { question: "פירוק חומצת האמינו לאוצין (Leucine) מייצר איזואמיל אלכוהול.", answer: true, explanation: "זהו המסלול הספציפי של לאוצין, התורם לפרופיל הטעם והריח בתסיסות של שמרים." },
+            { question: "חיידק שמסוגל לפרק קשר בטא 1-4 יוכל בהכרח לפרק גם קשר אלפא 1-6.", answer: false, explanation: "אנזימים הם ספציפיים מאוד למבנה המרחבי של הקשר. אנזים החותך קשר בטא 1-4 בדרך כלל לא יזהה ויחתוך קשר אלפא 1-6." },
+            { question: "מלטוז הוא תוצר הפירוק של עמילן ומורכב משתי מולקולות גלוקוז.", answer: true, explanation: "מלטוז הוא אכן דו-סוכר המורכב משתי יחידות גלוקוז." },
+            { question: "תהליך הגליקוליזה יכול להתרחש גם בנוכחות חמצן וגם בהיעדרו.", answer: true, explanation: "הגליקוליזה עצמה אינה דורשת חמצן והיא השלב הראשון המשותף גם לנשימה אירובית וגם לתסיסה אנאירובית." },
+            { question: "אירוביים אובליגטוריים משתמשים בתסיסה כוהלית כדי להפיק אנרגיה רבה יותר.", answer: false, explanation: "אירוביים אובליגטוריים משתמשים בנשימה אירובית, המפיקה הרבה יותר אנרגיה מתסיסה. הם אינם שורדים באמצעות תסיסה." },
+            { question: "ביוריאקטור (פרמנטור) משמש תמיד רק לתהליכים אנאירוביים ללא חמצן.", answer: false, explanation: "המונח 'פרמנטציה' בתעשייה מתייחס לעיתים לכל גידול של מיקרואורגניזמים במכל, כולל תהליכים אירוביים לחלוטין הדורשים הזרמת אוויר אינטנסיבית." },
+            { question: "הפיכת אצטלדהיד לאתנול היא שלב חיזור שבו NADH מוסר אלקטרונים.", answer: true, explanation: "NADH מוסר אלקטרונים לאצטלדהיד (שמחוזר לאתנול) והופך בחזרה ל-NAD+ המחומצן." }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -920,6 +527,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -930,7 +544,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            if (window.MathJax) MathJax.typesetPromise([flashcardContent]);
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -949,7 +563,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                if (window.MathJax) MathJax.typesetPromise([flashcardContent]);
+                triggerMathJax();
             }, 300);
         }
 
@@ -972,7 +586,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            if (window.MathJax) MathJax.typesetPromise([mcqQuestion, mcqOptions]);
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -988,21 +602,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            if (window.MathJax) MathJax.typesetPromise([explanationEl]);
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1044,7 +654,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            if (window.MathJax) MathJax.typesetPromise([mcqAllQuestionsContainer]);
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1056,8 +666,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1067,7 +675,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            if (window.MathJax) MathJax.typesetPromise([tfQuestion]);
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1084,21 +692,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             if (window.MathJax) MathJax.typesetPromise([explanationEl]);
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1141,7 +745,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             if (window.MathJax) MathJax.typesetPromise([tfAllQuestionsContainer]);
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1157,6 +761,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

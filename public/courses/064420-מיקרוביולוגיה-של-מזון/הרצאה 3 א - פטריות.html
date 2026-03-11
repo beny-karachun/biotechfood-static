@@ -1,207 +1,322 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <!-- MathJax for rendering math equations -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>ביולוגיה של פטריות - מיקולוגיה</h1>
+        <h1>מיקולוגיה: ביולוגיה של פטריות ותפקידן</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>המיקולוגיה (Mycology) היא ענף בביולוגיה העוסק בחקר הפטריות. פטריות הן מיקרואורגניזמים אאוקריוטיים, הנבדלים מהותית מחיידקים בממדיהם (גדולים יותר משמעותית), במבנה התא הכולל אברונים, ובמורכבות מחזור החיים שלהם. בניגוד לצמחים, פטריות הן הטרוטרופיות (Heterotrophs), כלומר אינן מסוגלות לבצע פוטוסינתזה ולקבע פחמן, ולכן הן תלויות בחומר אורגני חיצוני כמקור הזנה. עולם הפטריות מחולק באופן כללי לשמרים (Yeasts) שהם לרוב חד-תאיים, עובשים (Molds) שהם רב-תאיים פילמנטיים, ופטריות כובע בשרניות (Mushrooms).</p>
+                
+                <p>מבנה הפטרייה מותאם לשרידות גבוהה. דופן התא הפטרייתי מזכיר במבנהו דופן תא צמחי, אך שונה לחלוטין בהרכבו הכימי, כאשר הוא מורכב בעיקר מכיטין (Chitin) - פולימר של N-Acetylglucosamine. עובשים בנויים מקורים (Hyphae) היוצרים יחד תפטיר (Mycelium). קורים אלו יכולים להיות מחולקים על ידי מחיצות (Septa) או להיות חסרי מחיצות (Coenocytic). הפטריות מתרבות באופן אל-מיני (באמצעות מיטוזה ויצירת נבגים זהים גנטית או על ידי הנצה בשמרים) ובאופן מיני (באמצעות מיוזה ויצירת נבגים הפלואידיים).</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: עמידות קיצונית בסביבות עוינות</strong>
+                    אחד היתרונות האבולוציוניים המרכזיים של פטריות (ובמיוחד עובשים) הוא עמידותן לתנאים שחיידקים אינם שורדים בהם. פטריות מסוגלות לשגשג בטווחי ($pH$) רחבים מאוד, ובעיקר בסביבות חומציות, וכן תחת לחץ אוסמוטי גבוה ולחות נמוכה. זו הסיבה שעובשים הם הגורם העיקרי לקלקול של מזונות עתירי סוכר (כמו ריבות) או מזונות יבשים, סביבות המעכבות התפתחות חיידקית.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: רציפות ציטופלזמית למרות חלוקה תאית</strong>
+                    בפטריות פילמנטיות בעלות קורים מחולקים (Septate hyphae), המחיצות בין התאים אינן אטומות לחלוטין. קיימת זרימה של ציטופלזמה, ולעיתים אף מעבר של אברונים, בין התאים הסמוכים בקור. תכונה זו מאפשרת לתפטיר הפטרייה לתפקד כרשת תקשורת והזנה יעילה ורציפה, בדומה לאורגניזם-על, ולא כאוסף של תאים מבודדים לחלוטין.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: חסינות כימית בפני אנזימי עיכול</strong>
+                    הכיטין, המרכיב עד 90 אחוזים מהפוליסוכרים בדופן תא הפטרייה, אינו מפורק על ידי אנזימים אנושיים. עובדה זו מעניקה לפטריות הגנה מבנית משמעותית והופכת את הדופן שלהן למטרה ייחודית לפיתוח תרופות אנטי-פטרייתיות, שכן פגיעה בסינתזת הכיטין תפגע בפטרייה מבלי להשפיע על תאי המאכסן (האדם) שאינם מכילים חומר זה.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -214,7 +329,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -234,11 +348,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -261,8 +373,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -270,621 +381,621 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "מיקולוגיה (Mycology)", definition: "חקר הפטריות, ענף בביולוגיה העוסק באורגניזמים אלו." },
-            { term: "הטרוטרוף (Heterotroph)", definition: "אורגניזם הדורש חומר אורגני לגידול ואינו מסוגל לקבע פחמן בעצמו, כמו פטריות." },
-            { term: "כיטין (Chitin)", definition: "פולימר של N-Acetylglucosamine המרכיב העיקרי של דופן התא בפטריות, אשר אינו מפורק על ידי אנזימים אנושיים." },
-            { term: "שמרים (Yeasts)", definition: "פטריות בדרך כלל חד תאיות, בעלות מבנה מעגלי או אליפטי, המתרבות לרוב על ידי הנצה או חלוקה." },
-            { term: "עובשים (Molds)", definition: "פטריות פילמנטיות רב תאיות, אירוביות, הגדלות לרוב על פני נוזלים או מזון." },
-            { term: "קורים (Hyphae)", definition: "פילמנטים של תאים המחוברים יחד ומהווים את יחידת המבנה הבסיסית של עובשים." },
-            { term: "תפטיר (Mycelium)", definition: "גודש של קורים (Hyphae) המחוברים יחד וניתנים לראייה בעין בלתי מזוינת." },
-            { term: "Septa", definition: "דפנות ממברנליות המפרידות בין התאים לאורך הקורים בפטריות מסוימות, דרכן יש מעבר של ציטופלסמה." },
-            { term: "Coenocytic hyphae", definition: "קורים ללא דפנות מפרידות (Septa) בין התאים, כך שהציטופלסמה רציפה." },
-            { term: "רבייה אסקסואלית בפטריות", definition: "תהליך המבוסס על מיטוזה בלבד, בו נוצרים תאי בת או ספורות הזהים גנטית לתא האם." },
-            { term: "רבייה סקסואלית בפטריות", definition: "תהליך הכולל מיוזה ויצירת ספורות הפלואידיות, המאפשר גיוון גנטי." },
-            { term: "Ascomycota", definition: "מערכה של פטריות המייצרות ספורות מיניות הנקראות אסקוספורות בתוך מבנה דמוי שק (אסקוס), וספורות אל-מיניות מסוג קונידיה." },
-            { term: "Zygomycota", definition: "מערכה של פטריות (כמו עובש הלחם) המייצרות זיגוספורות ברבייה מינית וספורנגיוספורות ברבייה אל-מינית." },
-            { term: "Fungi imperfecti", definition: "קבוצת פטריות שלא נמצאה להן רבייה מינית, מה שמקשה על שיוכן לקבוצה פילוגנטית ברורה." },
-            { term: "Saccharomyces", definition: "סוג של שמרים החשובים ביותר בתעשיית המזון (לחם, בירה, יין) ובמחקר." },
-            { term: "פסיכופילים", definition: "אורגניזמים (כולל סוגים מסוימים של עובשים) המסוגלים לגדול ולהתפתח בטמפרטורות נמוכות." },
-            { term: "פיטופטורה אינפסטנס (Phytophthora infestans)", definition: "פטרייה פתוגנית לצמחים שגרמה לכימשון תפוחי האדמה והובילה לרעב הגדול באירלנד במאה ה-19." }
+            { term: `Mycology`, definition: `ענף המדע העוסק בחקר הפטריות.` },
+            { term: `Heterotroph`, definition: `אורגניזם הדורש חומר אורגני לגידול ואינו מסוגל לקבע פחמן בעצמו.` },
+            { term: `Chitin`, definition: `פולימר של N-Acetylglucosamine המהווה את המרכיב העיקרי בדופן תא הפטרייה.` },
+            { term: `Yeasts (שמרים)`, definition: `פטריות לרוב חד-תאיות (10-50 מיקרומטר), מתרבות לרוב על ידי הנצה או חלוקה.` },
+            { term: `Molds (עובשים)`, definition: `פטריות פילמנטיות רב-תאיות, לרוב אירוביות, הגדלות לרוב על פני נוזל או משטח מוצק.` },
+            { term: `Hyphae (קורים)`, definition: `פילמנטים של תאי פטרייה המחוברים יחד ומהווים את יחידת המבנה הבסיסית של העובש.` },
+            { term: `Mycelium (תפטיר)`, definition: `מסה או גודש של קורים (hyphae) שניתן לראות בעין בלתי מזוינת.` },
+            { term: `Septa`, definition: `מחיצות ממברנליות המפרידות בין התאים לאורך קורי הפטרייה.` },
+            { term: `Coenocytic hyphae`, definition: `קורים חסרי מחיצות (ללא דפנות בין התאים), היוצרים מבנה רב-גרעיני רציף.` },
+            { term: `Pseudo hyphae`, definition: `שרשרת קצרה של תאים הנוצרת מהנצה של שמרים שלא התנתקו לחלוטין זה מזה.` },
+            { term: `Zygospores`, definition: `נבגי רבייה מינית האופייניים למערכת ה-Zygomycota, נוצרים ממיזוג של שני תאים.` },
+            { term: `Ascospores`, definition: `נבגי רבייה מינית במערכת ה-Ascomycota, המסודרים לרוב בקבוצות של שמונה או ארבעה בתוך מבנה דמוי שק.` },
+            { term: `Basidiospores`, definition: `נבגי רבייה מינית במערכת ה-Basidiomycota, הנוצרים על גבי מבנה דמוי אלה (בסידיום).` },
+            { term: `Conidia`, definition: `נבגי רבייה אל-מינית החשופים בקצה הקור, אופייניים למשל ל-Ascomycota.` },
+            { term: `Fungi imperfecti`, definition: `קבוצת פטריות שלא נצפתה בהן רבייה מינית, מה שמקשה על סיווגן הפילוגנטי.` },
+            { term: `Phytophthora infestans`, definition: `הפטריה הפתוגנית שגרמה לכימשון תפוחי האדמה והובילה לרעב הגדול באירלנד.` },
+            { term: `Saccharomyces`, definition: `סוג השמר החשוב והנפוץ ביותר בתעשיית המזון (לחם, בירה, יין).` },
+            { term: `Dikaryotic stage`, definition: `שלב במחזור החיים הפטרייתי בו התא מכיל שני גרעינים הפלואידיים שונים מבלי שהתמזגו (n+n).` }
         ];
 
         const mcqData = [
             {
-                question: "חוקר בודד אורגניזם חדש תחת המיקרוסקופ. הוא מבחין בתאים בעלי גרעין מוגדר, חסרי כלורופיל, שאינם מסוגלים לקבע פחמן מהאוויר. לאיזו קבוצה סביר ביותר שהאורגניזם שייך?",
+                question: `חוקר מבודד מיקרואורגניזם ממזון מקולקל. בבדיקה מיקרוסקופית מתגלה כי גודל התא הוא 15 מיקרומטר ויש לו אברונים פנימיים. לאיזו קבוצה סביר ביותר שהמיקרואורגניזם שייך?`,
                 options: [
-                    "אצות ירוקות",
-                    "חיידקים",
-                    "פטריות",
-                    "וירוסים"
+                    `חיידקים, מכיוון שזהו גודל אופייני לתא פרוקריוטי.`,
+                    `וירוסים, מכיוון שהם גורמים לקלקול מזון.`,
+                    `שמרים, מכיוון שהם אאוקריוטים בגודל של 10-50 מיקרומטר.`,
+                    `עובשים פילמנטיים, מכיוון שרק הם מכילים אברונים פנימיים.`
                 ],
                 correctIndex: 2,
-                explanation: "האורגניזם הוא אאוקריוטי (בעל גרעין), חסר כלורופיל והטרוטרוף (לא מקבע פחמן), תכונות המאפיינות פטריות."
+                explanation: `תאים אאוקריוטים (בעלי אברונים) בגודל של 10-50 מיקרומטר הם אופייניים לשמרים. חיידקים קטנים בהרבה (0.5-6 מיקרומטר) ווירוסים קטנים עוד יותר ואינם תאים.`
             },
             {
-                question: "מהי הסיבה העיקרית לכך שפטריות אינן יכולות לבצע פוטוסינתיזה?",
+                question: `מהי הסיבה המרכזית לכך שפטריות מוגדרות כהטרוטרופיות (Heterotrophs)?`,
                 options: [
-                    "הן גדלות רק בחושך",
-                    "חסר להן כלורופיל",
-                    "דופן התא שלהן חוסמת אור",
-                    "הן מנצלות רק חנקן ולא פחמן"
+                    `הן אינן מסוגלות לקבע פחמן מחמצן וזקוקות לחומר אורגני מוכן.`,
+                    `הן מסוגלות לבצע פוטוסינתזה רק בנוכחות פיגמנטים מיוחדים.`,
+                    `הן מייצרות אנרגיה ללא נוכחות חמצן בלבד.`,
+                    `הן ניזונות אך ורק מחומרים אנאורגניים המומסים במים.`
+                ],
+                correctIndex: 0,
+                explanation: `הטרוטרופיות משמעותה חוסר יכולת לקבע פחמן אנאורגני (כמו בצמחים), ולכן הפטרייה חייבת לצרוך חומר אורגני מהסביבה למטרות גידול ואנרגיה.`
+            },
+            {
+                question: `תרופה חדשה פותחה במטרה לפגוע באופן ספציפי בסינתזה של הפולימר N-Acetylglucosamine. באיזה חלק של תא הפטרייה תפגע התרופה?`,
+                options: [
+                    `בממברנת התא, שתאבד את גמישותה.`,
+                    `בדופן התא, המורכבת מכיטין.`,
+                    `בגרעין התא, ותמנע שכפול DNA.`,
+                    `במיטוכונדריה, ותעצור את הנשימה התאית.`
                 ],
                 correctIndex: 1,
-                explanation: "פטריות מוגדרות כחסרות כלורופיל, הפיגמנט ההכרחי לתהליך הפוטוסינתיזה וקליטת אנרגיית השמש."
+                explanation: `N-Acetylglucosamine הוא המונומר המרכיב את פולימר הכיטין, שהוא המרכיב המרכזי והייחודי של דופן תא הפטרייה.`
             },
             {
-                question: "באיזה אופן מסייעים הפיגמנטים הקיימים בפטריות להישרדותן?",
+                question: `מדוע כיטין פטרייתי אינו מתעכל במערכת העיכול האנושית?`,
                 options: [
-                    "הם קולטים אור ליצירת אנרגיה חלופית",
-                    "הם מספקים הגנה בפני קרינת על סגול ורדיקלים חופשיים",
-                    "הם ממיסים את דופן התא של צמחים פונדקאים",
-                    "הם מושכים חרקים המסייעים בהפצת נבגים בלבד"
+                    `מכיוון שהוא פוליסוכר המכיל רדיקלים חופשיים רעילים.`,
+                    `משום שבני אדם אינם מייצרים אנזימים המסוגלים לפרק את הקשרים הכימיים שלו.`,
+                    `מכיוון שהוא מוקף בשכבת כלורופיל המגינה עליו מפירוק.`,
+                    `משום שהוא נספג ישירות לדם לפני שהוא מגיע לקיבה.`
                 ],
                 correctIndex: 1,
-                explanation: "למרות שאינן מבצעות פוטוסינתיזה, פטריות מכילות פיגמנטים שתפקידם להגן על התא מפני קרינת אולטרה סגול ורדיקלים חופשיים."
+                explanation: `כיטין אינו מפורק על ידי אנזימים אנושיים, בדומה לתאית בצמחים, ולכן הוא עובר במערכת העיכול מבלי להתעכל.`
             },
             {
-                question: "אדם אכל פטרייה המכילה כמות גדולה של כיטין. מה צפוי לקרות לכיטין במערכת העיכול שלו?",
+                question: `איזה מהתנאים הבאים מסביר בצורה הטובה ביותר מדוע עובשים מצליחים לגדול על ריבה מרוכזת, בעוד חיידקים אינם מצליחים?`,
                 options: [
-                    "הוא יפורק במהירות לסוכרים פשוטים ויספק אנרגיה רבה",
-                    "הוא לא יפורק מכיוון שאנזימים אנושיים אינם מסוגלים לפרק כיטין",
-                    "הוא יומר לחומצות אמינו חיוניות",
-                    "הוא יספג בשלמותו למחזור הדם"
+                    `לעובשים יש עמידות גבוהה ללחץ אוסמוטי ולחות נמוכה.`,
+                    `עובשים מסוגלים לבצע פוטוסינתזה בסביבה עתירת סוכר.`,
+                    `חיידקים אינם יכולים לנצל פחמימות מורכבות כלל.`,
+                    `הריבה מכילה פיגמנטים המגנים על הפטריות בלבד.`
                 ],
-                correctIndex: 1,
-                explanation: "כיטין הוא הפולימר העיקרי המרכיב את דופן תא הפטרייה, והוא אינו מפורק על ידי אנזימים אנושיים."
+                correctIndex: 0,
+                explanation: `פטריות (ועובשים בפרט) עמידות לתנאי קיצון כמו לחץ אוסמוטי גבוה (הנוצר מריכוז סוכר גבוה בריבה) ולחות נמוכה, תנאים המונעים התפתחות חיידקית.`
             },
             {
-                question: "במעבדה נמדדו תאים של שני מיקרואורגניזמים שונים. אורגניזם א נמדד בגודל של 25 מיקרומטר ואורגניזם ב נמדד בגודל של 2 מיקרומטר. בהתבסס על גודלם בלבד, מהי ההשערה הסבירה ביותר?",
+                question: `בצפייה במיקרוסקופ נראים קורי פטרייה (Hyphae) שבהם הציטופלזמה זורמת בחופשיות ללא מחיצות כלל לאורך הקור. כיצד נקרא מבנה זה?`,
                 options: [
-                    "אורגניזם א הוא חיידק ואורגניזם ב הוא שמר",
-                    "אורגניזם א הוא שמר ואורגניזם ב הוא חיידק",
-                    "שני האורגניזמים הם וירוסים",
-                    "שני האורגניזמים הם פטריות פילמנטיות"
-                ],
-                correctIndex: 1,
-                explanation: "שמרים הם תאים אאוקריוטים שגודלם נע לרוב בין 10 ל-50 מיקרומטר, בעוד שחיידקים קטנים בהרבה וגודלם נע בין 0.5 ל-6 מיקרומטר."
-            },
-            {
-                question: "כיצד תוגדר פטרייה שאינה מסוגלת לשרוד ללא נוכחות חמצן כלל?",
-                options: [
-                    "אנאירובית אובליגטורית",
-                    "אירובית",
-                    "אירובית פקולטטיבית",
-                    "פסיכופילת"
-                ],
-                correctIndex: 1,
-                explanation: "פטריות הן ברובן אירוביות או אירוביות-פקולטטיביות. פטרייה שחייבת חמצן היא אירובית."
-            },
-            {
-                question: "מהו ההבדל המרכזי בין דופן התא של צמח לדופן התא של פטרייה?",
-                options: [
-                    "לפטריות אין דופן תא אלא רק ממברנה",
-                    "דופן צמחית מורכבת בעיקר מכיטין ודופן פטרייה מתאית",
-                    "הדפנות דומות מבנית, אך דופן הפטרייה מכילה בעיקר פולימר של אן אצטיל גלוקוזאמין",
-                    "דופן הפטרייה אינה מכילה פוליסוכרים כלל"
+                    `Septate hyphae`,
+                    `Pseudo hyphae`,
+                    `Coenocytic hyphae`,
+                    `Mycelium`
                 ],
                 correctIndex: 2,
-                explanation: "דופן התא הפטרייתית דומה מבנית לזו של צמחים אך שונה כימית, שכן היא מורכבת מכיטין (פולימר של אן אצטיל גלוקוזאמין) ולא מתאית."
+                explanation: `קורים חסרי מחיצות (דפנות) בין התאים נקראים Coenocytic hyphae.`
             },
             {
-                question: "חוקר בוחן תרבית פטריות ורואה שהיא גדלה על פני הנוזל, בעלת מבנה רב תאי וסיבי. באיזה סוג פטרייה מדובר ככל הנראה?",
+                question: `מהו ההבדל המהותי בין רבייה אל-מינית לרבייה מינית בפטריות?`,
                 options: [
-                    "שמר",
-                    "וירוס",
-                    "עובש",
-                    "חיידק"
+                    `רבייה אל-מינית כוללת מיוזה, בעוד רבייה מינית מבוססת על מיטוזה.`,
+                    `ברבייה אל-מינית נוצרים נבגים זהים גנטית לתא האם באמצעות מיטוזה.`,
+                    `רבייה מינית מתרחשת רק בשמרים, ורבייה אל-מינית מתרחשת רק בעובשים.`,
+                    `ברבייה אל-מינית נוצרת זיגוטה דיפלואידית שאינה מתחלקת.`
+                ],
+                correctIndex: 1,
+                explanation: `רבייה אל-מינית (Asexual) מבוססת על מיטוזה ולכן הצאצאים/הנבגים זהים גנטית. רבייה מינית כוללת מיוזה ויצירת מגוון גנטי.`
+            },
+            {
+                question: `מה מאפיין את קצב הגידול של רוב הפטריות הפילמנטיות (עובשים)?`,
+                options: [
+                    `גידול לוגריתמי מהיר מכל חלקי התפטיר במקביל.`,
+                    `גידול לינארי המתרחש בעיקר מקצוות הקורים.`,
+                    `התכווצות והתרחבות מחזורית של הקורים.`,
+                    `גידול אקספוננציאלי המתרחש רק בנוכחות אור שמש.`
+                ],
+                correctIndex: 1,
+                explanation: `ברוב הפטריות, הגידול הוא לינארי ומתרחש מקצוות הקורים, בניגוד לגידול הלוגריתמי האופייני לחיידקים או שמרים בתרבית.`
+            },
+            {
+                question: `במהלך מחזור חיים מיני של פטרייה, נוצר מצב בו התא מכיל שני גרעינים שונים (n+n) טרם התמזגותם. כיצד נקרא מצב זה?`,
+                options: [
+                    `Haploid stage`,
+                    `Diploid stage`,
+                    `Dikaryotic stage`,
+                    `Polyploid stage`
                 ],
                 correctIndex: 2,
-                explanation: "עובשים הם פטריות רב תאיות, פילמנטיות (מורכבות מסיבים/קורים), אירוביות הגדלות בדרך כלל על פני הנוזל."
+                explanation: `מצב של n+n, בו יש שני גרעינים הפלואידיים נפרדים באותו תא (לאחר Plasmogamy ולפני Karyogamy), נקרא שלב דיקריוטי (Dikaryotic).`
             },
             {
-                question: "מה תהיה ההשפעה של פגיעה במבנה המחיצות (Septa) בקורים של פטרייה?",
+                question: `איזה מהבאים אינו נחשב לנבג רבייה אל-מיני (Asexual spore)?`,
                 options: [
-                    "הפטרייה תהפוך לשמר חד תאי",
-                    "תנועת הציטופלסמה בין התאים עלולה להיפגע או להשתנות",
-                    "הפטרייה תתחיל לבצע פוטוסינתיזה",
-                    "דופן התא החיצונית תתפרק לחלוטין"
-                ],
-                correctIndex: 1,
-                explanation: "המחיצות (Septa) מפרידות בין התאים בקורים, אך מאפשרות מעבר של ציטופלסמה. פגיעה בהן תשפיע על מעבר החומרים התוך-תאי."
-            },
-            {
-                question: "במה שונים קורים מסוג Coenocytic hyphae מקורים רגילים בעלי Septa?",
-                options: [
-                    "הם אינם מכילים ציטופלסמה",
-                    "אין להם דפנות ממברנליות המפרידות בין התאים",
-                    "הם קיימים רק בשמרים ולא בעובשים",
-                    "הם מורכבים מחלבונים בלבד ללא סוכרים"
-                ],
-                correctIndex: 1,
-                explanation: "קורים מסוג Coenocytic הם קורים רציפים ללא מחיצות (Septa) המפרידות בין התאים."
-            },
-            {
-                question: "מדוע גידול של פטריות פילמנטיות אינו נראה לרוב כבעל קצב גידול לוגריתמי קלאסי?",
-                options: [
-                    "מפני שהן מתחלקות רק פעם בשנה",
-                    "מפני שהגידול שלהן הוא לינארי ומתרחש מקצות הקורים",
-                    "מפני שהן מנצלות פחמן מהאוויר בקצב איטי",
-                    "מפני שאין להן מנגנוני רבייה אל-מינית"
-                ],
-                correctIndex: 1,
-                explanation: "ברוב הפטריות, הגידול של הקורים הוא לינארי ומתבצע מהקצוות, בניגוד לחיידקים ושמרים המראים גידול לוגריתמי בחלוקת תאים."
-            },
-            {
-                question: "מה מאפיין את תהליך ההנצה (Budding) בשמרים?",
-                options: [
-                    "זהו תהליך של רבייה מינית הדורש שני שמרים",
-                    "זהו תהליך של רבייה אל-מינית בו תא אם יוצר תא בת קטן יותר",
-                    "זהו תהליך בו נוצרות אסקוספורות",
-                    "זהו תהליך של התמזגות ציטופלסמה ללא חלוקת גרעין"
-                ],
-                correctIndex: 1,
-                explanation: "הנצה היא צורה של רבייה אל-מינית הנפוצה בשמרים, בה תא אם מפתח בליטה שהופכת לתא חדש (זהה גנטית)."
-            },
-            {
-                question: "בתהליך זיווג (Mating) של שמרים, מהו השלב המתרחש מיד לאחר התמזגות שני תאים?",
-                options: [
-                    "יצירת ספורות אל-מיניות",
-                    "יצירת זיגוטה דיפלואידית",
-                    "חלוקת מיטוזה מהירה",
-                    "הרס של דופן התא המשותף"
-                ],
-                correctIndex: 1,
-                explanation: "ברבייה מינית של שמרים, שני תאים הפלואידים מתמזגים ליצירת זיגוטה דיפלואידית, שלאחר מכן תעבור מיוזה."
-            },
-            {
-                question: "מהו מחזור חיים המשלב גם שלב הפלואידי וגם שלב דיפלואידי באותו אורגניזם מאפיין?",
-                options: [
-                    "רק חיידקים",
-                    "וירוסים של צמחים",
-                    "חלק מהפטריות, המקיימות רבייה סקסואלית",
-                    "אף אורגניזם אינו יכול להכיל את שני השלבים"
+                    `Conidiospores`,
+                    `Sporangiospores`,
+                    `Ascospores`,
+                    `Blastospores`
                 ],
                 correctIndex: 2,
-                explanation: "לפטריות רבות יש מחזור חיים מורכב הכולל גם שלב הפלואידי (עותק אחד של כרומוזומים) וגם שלב דיפלואידי (שני עותקים), במיוחד סביב תהליכי הרבייה המינית."
+                explanation: `Ascospores הם נבגים הנוצרים כתוצאה ממיוזה ולכן הם נבגי רבייה מינית (במערכת Ascomycota). שאר האפשרויות הן נבגים אל-מיניים.`
             },
             {
-                question: "פטרייה המייצרת את נבגיה המיניים בתוך מבנה דמוי שק המכיל שמונה נבגים, שייכת קרוב לוודאי למערכת ה:",
+                question: `איזה סוג פטרייה אחראי היסטורית לרעב הגדול באירלנד בשנים 1846-1849?`,
                 options: [
-                    "Zygomycota",
-                    "Basidiomycota",
-                    "Ascomycota",
-                    "Fungi imperfecti"
+                    `Saccharomyces cerevisiae`,
+                    `Phytophthora infestans`,
+                    `Aspergillus niger`,
+                    `Cryphonectria parasitica`
+                ],
+                correctIndex: 1,
+                explanation: `Phytophthora infestans הוא הפתוגן שגרם לכימשון תפוחי האדמה והוביל לרעב הגדול באירלנד.`
+            },
+            {
+                question: `כיצד מוגדרות פטריות השייכות לקבוצת ה-Fungi imperfecti?`,
+                options: [
+                    `פטריות חסרות דופן תא לחלוטין.`,
+                    `פטריות שאינן מסוגלות לנצל פחמימות מורכבות.`,
+                    `פטריות שלא נצפתה בהן רבייה מינית.`,
+                    `פטריות פתוגניות לבני אדם בלבד.`
                 ],
                 correctIndex: 2,
-                explanation: "מערכת ה-Ascomycota (פטריות השק) מתאפיינת ביצירת אסקוספורות (לרוב 4 או 8) בתוך מבנה הנקרא אסקוס."
+                explanation: `Fungi imperfecti הוא מונח היסטורי המתאר פטריות ששלב הרבייה המינית שלהן אינו ידוע או לא נצפה, מה שמקשה על סיווגן.`
             },
             {
-                question: "איזה סוג של נבגים אל-מיניים מייצרות פטריות ממערכת ה-Ascomycota?",
+                question: `מהו תפקידם של הפיגמנטים המצויים בפטריות?`,
                 options: [
-                    "Zygospores",
-                    "Basidiospores",
-                    "Conidia",
-                    "Sporangiospores"
+                    `ביצוע פוטוסינתיזה בסביבות דלות אור.`,
+                    `קיבוע פחמן דו-חמצני מהאוויר.`,
+                    `הגנה מפני קרינת UV ורדיקלים חופשיים.`,
+                    `משיכת חרקים לצורך האבקה.`
                 ],
                 correctIndex: 2,
-                explanation: "פטריות Ascomycota מייצרות נבגים אל-מיניים הנקראים קונידיה (Conidia) בקצות קורים מיוחדים."
+                explanation: `מכיוון שפטריות חסרות כלורופיל ואינן מבצעות פוטוסינתזה, הפיגמנטים שלהן משמשים בעיקר להגנה מפני נזקי קרינה (UV) ורדיקלים חופשיים בסביבה.`
             },
             {
-                question: "מהו המאפיין הייחודי של פטריות המוגדרות כ-Fungi imperfecti?",
+                question: `חוקר רוצה לבצע אבחנה ראשונית בין סוגים (Genera) שונים של עובשים שבודדו ממזון. איזו שיטה תהיה היעילה והמהירה ביותר לשם כך?`,
                 options: [
-                    "הן חסרות דופן תא לחלוטין",
-                    "לא נמצאה להן צורה של רבייה מינית",
-                    "הן אינן מסוגלות לנצל פחמימות",
-                    "הן מבצעות פוטוסינתיזה חלקית"
+                    `בדיקת הרכב הכיטין בדופן התא.`,
+                    `בחינה מיקרוסקופית של מבנה הקורים והנבגים.`,
+                    `מדידת קצב הגידול הלוגריתמי בתמיסה נוזלית.`,
+                    `בדיקת יכולת הפוטוסינתזה של העובש.`
                 ],
                 correctIndex: 1,
-                explanation: "Fungi imperfecti היא קבוצה של פטריות שטרם זוהה אצלן שלב של רבייה מינית במחזור החיים, ולכן קשה לשייכן פילוגנטית."
+                explanation: `הבחנה ראשונית בין עובשים ברמת ה-genus נעשית לרוב על ידי בחינה מיקרוסקופית של המורפולוגיה שלהם (מבנה הקורים, גופי הפרי והנבגים).`
             },
             {
-                question: "חקלאי מזהה ריקבון שחור על בצלים בחלקה שלו. בבדיקת מעבדה זוהתה פטרייה ממערכת ה-Ascomycota. מי מהבאים הוא החשוד העיקרי?",
+                question: `איזה מהמאפיינים הבאים נכון לגבי שמרים מסוג Saccharomyces?`,
                 options: [
-                    "Saccharomyces",
-                    "Aspergillus flavus או Aspergillus niger",
-                    "Rhizopus",
-                    "Phytophthora infestans"
+                    `הם פטריות רב-תאיות פילמנטיות אובליגטוריות.`,
+                    `הם בעלי חשיבות עצומה בתעשיית המזון (לחם, בירה, יין).`,
+                    `הם מתרבים אך ורק באמצעות רבייה מינית ויצירת זיגוטות.`,
+                    `הם פתוגנים קטלניים לצמחים ממשפחת הסולניים.`
                 ],
                 correctIndex: 1,
-                explanation: "אספרגילוס (כמו ניגר או פלאבוס) הן פטריות מקבוצת Ascomycota הידועות כגורמות למחלות לאחר הקטיף (Postharvest Diseases) בצמחים כמו בצל."
+                explanation: `Saccharomyces הוא סוג השמר המרכזי בתעשיית המזון, המשמש להתססה בייצור לחם ומשקאות אלכוהוליים.`
             },
             {
-                question: "עובש הלחם הנפוץ, Rhizopus, שייך לאיזו מערכה פילוגנטית?",
+                question: `מה המשמעות של היות רוב הפטריות "אירוביות או אירוביות-פקולטטיביות"?`,
                 options: [
-                    "Ascomycota",
-                    "Zygomycota",
-                    "Basidiomycota",
-                    "Oomycetes"
+                    `הן יכולות לשרוד רק ללא נוכחות חמצן.`,
+                    `הן דורשות חמצן לגידול, אך חלקן יכולות לשרוד ולהפיק אנרגיה גם בהיעדרו.`,
+                    `הן משתמשות בחמצן כדי לקבע פחמן אנאורגני.`,
+                    `הן מייצרות חמצן כתוצר לוואי של מנגנון התזונה שלהן.`
                 ],
                 correctIndex: 1,
-                explanation: "ריזופוס הוא דוגמה קלאסית לפטרייה ממערכת ה-Zygomycota."
+                explanation: `אירובי פקולטטיבי (Facultative anaerobe) משמעו שהאורגניזם מעדיף חמצן (לנשימה תאית יעילה), אך יכול לעבור לתסיסה או נשימה אנאירובית בהיעדר חמצן (כמו שמרים בתעשיית היין).`
             },
             {
-                question: "כיצד נקראים הנבגים האל-מיניים של עובש הלחם (Rhizopus)?",
+                question: `מהו ההבדל המרכזי בין דופן התא של פטרייה לדופן התא של צמח?`,
                 options: [
-                    "Ascospores",
-                    "Conidia",
-                    "Sporangiospores",
-                    "Zygospores"
+                    `דופן הצמח מורכב מכיטין ודופן הפטרייה מתאית.`,
+                    `דופן הפטרייה מכיל בעיקר כיטין ופוליסוכרים אחרים, בעוד דופן הצמח מכיל תאית (צלולוז).`,
+                    `לפטריות אין דופן תא כלל, אלא רק ממברנה ציטופלזמית.`,
+                    `דופן הפטרייה מורכב מפפטידוגליקן בדומה לחיידקים.`
+                ],
+                correctIndex: 1,
+                explanation: `מבחינה מבנית הדפנות דומות (מעניקות קשיחות), אך כימית דופן הפטרייה מבוססת על כיטין (פולימר של N-Acetylglucosamine), בניגוד לתאית בצמחים.`
+            },
+            {
+                question: `אם פטרייה יוצרת נבגים מיניים המסודרים ברביעיות או שמיניות בתוך מבנה דמוי שק, לאיזו מערכה היא שייכת?`,
+                options: [
+                    `Zygomycota`,
+                    `Basidiomycota`,
+                    `Ascomycota`,
+                    `Chytridiomycota`
                 ],
                 correctIndex: 2,
-                explanation: "במערכת ה-Zygomycota, הנבגים האל-מיניים נוצרים בתוך מבנה סגור הנקרא ספורנגיום ונקראים Sporangiospores."
+                explanation: `מערכת ה-Ascomycota (Sac fungi) מאופיינת ביצירת נבגים מיניים (Ascospores) בתוך נאדית (Ascus), לרוב בכפולות של 4 או 8.`
             },
             {
-                question: "מה מציין המונח 'שלב דיקריוטי' במחזור החיים של פטריות מסוימות?",
+                question: `מה קורה בתהליך ה-Plasmogamy במחזור החיים המיני של פטריות?`,
                 options: [
-                    "תא ללא גרעין כלל",
-                    "תא בעל שני גרעינים הפלואידים נפרדים ($n+n$)",
-                    "תא שבו התרחשה מיוזה לפני מיטוזה",
-                    "תא המכיל כלורופלסטים כפולים"
-                ],
-                correctIndex: 1,
-                explanation: "שלב דיקריוטי ($n+n$) הוא מצב בו שני תאים התמזגו (פלזמוגמיה) אך הגרעינים שלהם טרם התמזגו (קריוגמיה), כך שהתא מכיל שני גרעינים נפרדים."
-            },
-            {
-                question: "איזו מהמחלות הבאות נגרמה על ידי פטרייה (או אורגניזם דמוי פטרייה) והובילה לאסון היסטורי משמעותי באירלנד?",
-                options: [
-                    "הרס עצי הערמון",
-                    "כימשון תפוחי האדמה",
-                    "מגפת החיטה השחורה",
-                    "ריקבון הבצל האדום"
-                ],
-                correctIndex: 1,
-                explanation: "הפטרייה Phytophthora infestans גרמה לכימשון תפוחי האדמה באירלנד בין השנים 1846-1849, אירוע שהוביל לרעב הגדול."
-            },
-            {
-                question: "איזו פטרייה גרמה להרס נרחב של עצי ערמונים במזרח ארצות הברית בתחילת המאה ה-20?",
-                options: [
-                    "Phytophthora infestans",
-                    "Cryphonectria parasitica",
-                    "Aspergillus niger",
-                    "Saccharomyces cerevisiae"
-                ],
-                correctIndex: 1,
-                explanation: "הפטרייה Cryphonectria parasitica אחראית למחלה שהשמידה את עצי הערמון במזרח ארהב בשנת 1904."
-            },
-            {
-                question: "מה משמעות המונח 'פסיכופילים' בהקשר של עובשים?",
-                options: [
-                    "עובשים המייצרים רעלנים הפוגעים במערכת העצבים",
-                    "עובשים המסוגלים לשרוד ולגדול בטמפרטורות נמוכות",
-                    "עובשים הגדלים רק בתנאי חומציות קיצוניים",
-                    "עובשים התוקפים חרקים בלבד"
-                ],
-                correctIndex: 1,
-                explanation: "פסיכופילים הם אורגניזמים, כולל סוגים מסוימים של עובשים, המותאמים לחיים בטמפרטורות קרות."
-            },
-            {
-                question: "אילו מהתנאים הבאים אינו נחשב לתנאי קיצון שפטריות רבות מסוגלות להיות עמידות אליו?",
-                options: [
-                    "חומציות גבוהה (pH נמוך)",
-                    "לחץ אוסמוטי גבוה",
-                    "חשיפה ממושכת לוואקום מוחלט בחלל",
-                    "יובש ולחות נמוכה"
+                    `התמזגות של שני גרעינים הפלואידיים ליצירת גרעין דיפלואידי.`,
+                    `חלוקת הפחתה (מיוזה) ליצירת נבגים.`,
+                    `התמזגות הציטופלזמה של שני תאים הפלואידיים, מבלי שהגרעינים מתמזגים מיד.`,
+                    `יצירת מחיצות (Septa) חדשות לאורך הקור.`
                 ],
                 correctIndex: 2,
-                explanation: "החומר הנלמד מציין שפטריות עמידות לתנאי קיצון כמו חומציות גבוהה, יובש, ולחץ אוסמוטי, אך לא מוזכרת עמידות לוואקום."
+                explanation: `Plasmogamy הוא השלב בו הציטופלזמה של שני תאים מתמזגת. הגרעינים נשארים נפרדים (n+n) עד לשלב ה-Karyogamy בו הם מתמזגים.`
             },
             {
-                question: "איזו השפעה יש לפטריות על תעשיית המזון, כפי שמשתקף במאפייניהן?",
+                question: `מדוע פטריות נחשבות למפרקות (Decomposers) מצוינות בטבע?`,
                 options: [
-                    "הן משמשות רק לקלקול מזון ואין להן שימוש תעשייתי",
-                    "הן משמשות לייצור מזון (לחם, בירה, גבינות) אך גם גורמות לקלקול מזון",
-                    "הן משמשות רק כחומרי צבע טבעיים למזון בשל הפיגמנטים שלהן",
-                    "הן אינן מסוגלות לגדול על מזון בשל הלחץ האוסמוטי הגבוה שלו"
+                    `בגלל יכולתן לבצע פוטוסינתזה מואצת.`,
+                    `בגלל יכולתן לנצל פחמימות מורכבות ולשרוד בתנאי חומציות ויובש.`,
+                    `בגלל שהן נעות במהירות בין צמחים מתים.`,
+                    `בגלל שהן מקבעות חנקן אטמוספרי ישירות לקרקע.`
                 ],
                 correctIndex: 1,
-                explanation: "לפטריות תפקיד כפול: הן חיוניות בתעשיית המזון (שמרים ללחם ובירה, עובשים לגבינות) אך הן גם גורם מרכזי לקלקול מזון עקב יכולתן לנצל פחמימות מורכבות."
+                explanation: `היכולת של פטריות להפריש אנזימים המפרקים פחמימות מורכבות (כמו תאית וליגנין) ולשגשג בתנאים שחיידקים מתקשים בהם, הופכת אותן למפרקות מרכזיות.`
             },
             {
-                question: "מהו התפקיד האקולוגי/טפילי הנפוץ ביותר של פטריות על פי החומר הנלמד?",
+                question: `איזו מהפטריות הבאות מוכרת כגורם מחלה (פתוגן) משמעותי בחקלאות, שגרם להרס יערות הערמונים בארה"ב בתחילת המאה ה-20?`,
                 options: [
-                    "רוב הפטריות הטפיליות פוגעות ביונקים ימיים",
-                    "רוב הפטריות הטפיליות הן פתוגניות לצמחים",
-                    "רוב הפטריות הן פתוגניות לבעלי חיים ובני אדם",
-                    "פטריות אינן מקיימות יחסי טפילות כלל"
-                ],
-                correctIndex: 1,
-                explanation: "מבחינת פרזיטיות, רוב הפטריות הטפיליות הן פתוגניות לצמחים, ורק בודדות פתוגניות לבעלי חיים."
-            },
-            {
-                question: "אם תא של פטרייה עובר מיטוזה בלבד, מה תהיה התוצאה הגנטית של נבגיו?",
-                options: [
-                    "הנבגים יהיו שונים גנטית מתא האם עקב שחלוף",
-                    "הנבגים יהיו זהים גנטית לחלוטין לתא האם",
-                    "הנבגים יכילו מחצית מכמות הכרומוזומים של תא האם",
-                    "הנבגים יכילו רק חומר גנטי מיטוכונדריאלי"
-                ],
-                correctIndex: 1,
-                explanation: "רבייה אסקסואלית (אל-מינית) מבוססת על מיטוזה, תהליך שבו תא האם מתחלק לתאי בת או נבגים בעלי זהות גנטית מלאה למקור."
-            },
-            {
-                question: "מהו ההבדל העיקרי בין Spores ברבייה מינית ל-Spores ברבייה אל-מינית בפטריות?",
-                options: [
-                    "נבגים מיניים נוצרים תמיד מחוץ לתא, ואל-מיניים בתוכו",
-                    "נבגים מיניים נוצרים בתהליך מיוזה והם הפלואידים, בעוד שאל-מיניים נוצרים במיטוזה",
-                    "נבגים אל-מיניים מסוגלים לשרוד רק במים",
-                    "אין הבדל, שניהם נוצרים בדיוק באותו מנגנון תאי"
-                ],
-                correctIndex: 1,
-                explanation: "רבייה סקסואלית מערבת מיוזה ויצירת ספורות הפלואידיות, בעוד רבייה אסקסואלית מערבת מיטוזה ליצירת ספורות זהות גנטית."
-            },
-            {
-                question: "באיזה תהליך תעשייתי נעשה שימוש בפטריות אכילות הגדלות על מצע מוצק?",
-                options: [
-                    "זיקוק נפט",
-                    "Solid-state fermentation",
-                    "פוטוסינתיזה מלאכותית",
-                    "הפקת פלסטיק מכיטין"
-                ],
-                correctIndex: 1,
-                explanation: "השקופית על פטריות בתעשייה מציינת פטריות אכילות ותהליכי תסיסה במצע מוצק (Solid-state fermentation)."
-            },
-            {
-                question: "מה מייצג המונח Thallus בהקשר של עובשים?",
-                options: [
-                    "הנבג המיני של הפטרייה",
-                    "גוף הפטרייה המורכב מפילמנטים (קורים)",
-                    "האנזים המפרק את דופן התא",
-                    "האברון האחראי על אגירת הפיגמנטים"
-                ],
-                correctIndex: 1,
-                explanation: "המונחים Thallus או Hyphae מתייחסים לפילמנטים של תאים המחוברים יחד ומהווים את גוף העובש."
-            },
-            {
-                question: "מה מאפיין את קבוצת ה-Basidiomycota מבחינת רבייה?",
-                options: [
-                    "הם מתרבים אך ורק ברבייה אל-מינית",
-                    "הם מייצרים נבגים מיניים הנקראים Basidiospores על גבי מבנה מיוחד",
-                    "הם מייצרים אסקוספורות בתוך שק מוגן",
-                    "הם חסרי יכולת לייצר נבגים כלל"
-                ],
-                correctIndex: 1,
-                explanation: "פטריות מקבוצת Basidiomycota (כמו פטריות כובע) מייצרות נבגים מיניים הנקראים Basidiospores."
-            },
-            {
-                question: "חוקר מעוניין לעכב גידול של פטריות מבלי לפגוע בחיידקים. איזה מנגנון מבין הבאים יהווה את המטרה הטובה ביותר לתרופה?",
-                options: [
-                    "עיכוב סינתזת חלבונים בריבוזום של חיידקים",
-                    "פגיעה במנגנון הפוטוסינתיזה",
-                    "עיכוב יצירת כיטין בדופן התא",
-                    "פירוק שכבת הפפטידוגליקן"
+                    `Aspergillus niger`,
+                    `Rhizopus`,
+                    `Cryphonectria parasitica`,
+                    `Saccharomyces`
                 ],
                 correctIndex: 2,
-                explanation: "כיטין הוא מרכיב ייחודי לדופן התא של פטריות ואינו קיים בחיידקים, ולכן פגיעה בו תעכב פטריות באופן ספציפי."
+                explanation: `Cryphonectria parasitica היא הפטרייה שגרמה למחלת כימשון הערמונים (Chestnut blight) והרסה את עצי הערמון במזרח ארה"ב.`
             },
             {
-                question: "כיצד פטריות משיגות את הפחמן הדרוש להן למחיה?",
+                question: `מה מאפיין את המבנה המכונה Pseudo hyphae?`,
                 options: [
-                    "מקיבוע פחמן דו-חמצני מהאוויר",
-                    "על ידי סינתזה של אור השמש",
-                    "דרך קליטת חומר אורגני מהסביבה",
-                    "מפירוק מים לחמצן ומימן"
+                    `קורים אמיתיים ורב-תאיים שאין ביניהם מחיצות כלל.`,
+                    `שרשרת של תאי שמר שנוצרו בהנצה אך נותרו מחוברים זה לזה.`,
+                    `שורשים אמיתיים המשמשים את הפטרייה לספיגת מים מהקרקע.`,
+                    `גופי פרי גדולים ובשרניים המכילים נבגים מיניים.`
+                ],
+                correctIndex: 1,
+                explanation: `Pseudo hyphae (קורים מדומים) נוצרים כאשר שמרים מתרבים בהנצה (Budding) אך תאי הבת אינם מתנתקים לחלוטין מתא האם, ויוצרים שרשרת.`
+            },
+            {
+                question: `כיצד נקרא גוף פטרייה המורכב ממסה של קורים (Hyphae) שניתן לראותו בעין בלתי מזוינת?`,
+                options: [
+                    `Thallus`,
+                    `Spore`,
+                    `Mycelium`,
+                    `Basidium`
                 ],
                 correctIndex: 2,
-                explanation: "פטריות הן הטרוטרופיות, כלומר הן חייבות לקלוט חומר אורגני מוכן מהסביבה ואינן מסוגלות לקבע פחמן בעצמן."
+                explanation: `Mycelium (תפטיר) הוא המונח המתאר את הגודש או הרשת של קורי הפטרייה כשהם מצטברים יחד למסה נראית לעין.`
             },
             {
-                question: "מדוע ישנם מינים של פטריות המוגדרים כטוקסיים לאדם?",
+                question: `באיזה מצב פטרייה פילמנטית תעדיף לייצר נבגים מיניים (Sexual spores) על פני נבגים אל-מיניים?`,
                 options: [
-                    "כי הם מתרבים בתוך זרם הדם וגורמים לחנק",
-                    "כי הם מייצרים חומרים (טוקסינים) העלולים להיות רעילים בעת בליעה או חשיפה",
-                    "כי דופן התא שלהם חותכת את רקמות המעי",
-                    "כי הם שואבים את כל החמצן מהריאות"
+                    `כאשר התנאים הסביבתיים אופטימליים ויציבים והפטרייה רוצה להתרבות במהירות.`,
+                    `כאשר הפטרייה נחשפת לתנאי עקה (Stress) ויש יתרון ליצירת מגוון גנטי.`,
+                    `כאשר הפטרייה מאבדת את היכולת לייצר כיטין.`,
+                    `פטריות פילמנטיות אינן מסוגלות לייצר נבגים מיניים כלל.`
                 ],
                 correctIndex: 1,
-                explanation: "חלק מהעובשים והפטריות מייצרים חומרים משניים (מעכבי גידול או טוקסינים) שיכולים להיות רעילים לאדם."
+                explanation: `רבייה מינית בפטריות מתרחשת לעיתים קרובות בתגובה לתנאי עקה סביבתית. יצירת מגוון גנטי (דרך מיוזה) מגדילה את הסיכוי שחלק מהצאצאים ישרדו בתנאים המשתנים.`
             },
             {
-                question: "מהי הצורה המורפולוגית האופיינית של השמר Saccharomyces?",
+                question: `מהי המשמעות של הימצאות מחיצות (Septa) בקורי הפטרייה?`,
                 options: [
-                    "חוטים ארוכים ומסועפים ללא מחיצות",
-                    "תא מעגלי או אליפטי, לרוב חד תאי",
-                    "מבנה דמוי כובע ובסיס בשרני",
-                    "צבר של נבגים שחורים הנישאים ברוח"
+                    `המחיצות אוטמות לחלוטין כל תא ומונעות מעבר חומרים ביניהם.`,
+                    `המחיצות מחלקות את הקור לתאים, אך לרוב מאפשרות מעבר של ציטופלזמה דרך נקבוביות.`,
+                    `המחיצות קיימות רק בפטריות חד-תאיות כמו שמרים.`,
+                    `המחיצות הן המקום בו הפטרייה מבצעת פוטוסינתיזה.`
                 ],
                 correctIndex: 1,
-                explanation: "שמרים, ובתוכם סקרומיצס, הם בדרך כלל חד תאיים בעלי צורה מעגלית או אליפטית."
+                explanation: `אפילו בפטריות בעלות קורים מופרדים (Septate), המחיצות אינן אטומות לחלוטין ויש מעבר של ציטופלזמה ולעיתים אברונים בין התאים.`
             },
             {
-                question: "באיזו רמת סיווג טקסונומית ניתן לבצע הבחנה ראשונית בין סוגי עובשים שונים באמצעות הסתכלות מיקרוסקופית?",
+                question: `איזה מהבאים הוא דוגמה אופיינית לנבג רבייה אל-מיני מסוג Conidia?`,
                 options: [
-                    "ברמת הממלכה (Kingdom)",
-                    "ברמת המערכה (Phylum)",
-                    "ברמת הסוג (Genus)",
-                    "ברמת המין הספציפי (Species) בלבד"
+                    `נבגים הנוצרים בתוך שקית סגורה הנקראת Sporangium.`,
+                    `נבגים החשופים בקצות הקורים, כפי שנראה בפטריות מהסוג Aspergillus.`,
+                    `נבגים הנוצרים ממיזוג של שני קורים שונים.`,
+                    `נבגים הנוצרים בתוך נאדית (Ascus) לאחר מיוזה.`
+                ],
+                correctIndex: 1,
+                explanation: `Conidia (או Conidiospores) הם נבגים אל-מיניים שאינם סגורים בתוך שק (בניגוד ל-Sporangiospores), אלא נישאים על גבי מבנים פתוחים בקצה הקור.`
+            },
+            {
+                question: `חוקר מגלה פטרייה חדשה שיוצרת נבגים מיניים על גבי מבנה דמוי אלה (Pedestal). לאיזו מערכה פטרייה זו שייכת?`,
+                options: [
+                    `Ascomycota`,
+                    `Zygomycota`,
+                    `Basidiomycota`,
+                    `Chytridiomycota`
                 ],
                 correctIndex: 2,
-                explanation: "על פי החומר, הבחנה ראשונית בין עובשים ברמת הסוג (Genus) ניתנת לביצוע מיקרוסקופית."
+                explanation: `פטריות במערכת ה-Basidiomycota (הכוללת את רוב פטריות הכובע) מייצרות נבגים מיניים (Basidiospores) על גבי מבנה תאי הנקרא Basidium.`
             },
             {
-                question: "מה יקרה אם נחשוף פטרייה לריכוז גבוה של מלחים או סוכרים (לחץ אוסמוטי גבוה)?",
+                question: `איזו קבוצת אורגניזמים מהווה את עיקר הפתוגנים של צמחים בטבע?`,
                 options: [
-                    "הפטרייה תתפוצץ מיד בגלל חדירת מים אלימה",
-                    "זנים רבים של פטריות ישרדו וימשיכו לגדול, שכן הם עמידים ללחץ אוסמוטי גבוה",
-                    "הפטרייה תהפוך לחיידק פסיכופיל",
-                    "דופן הכיטין תתמוסס לחלוטין"
+                    `וירוסים`,
+                    `חיידקים`,
+                    `פטריות (בעיקר עובשים)`,
+                    `פרוטוזואה`
                 ],
-                correctIndex: 1,
-                explanation: "מאפיין בולט של פטריות הוא עמידותן לתנאי קיצון, כולל לחץ אוסמוטי גבוה, מה שמאפשר להן לקלקל מזון משומר בסוכר או מלח."
+                correctIndex: 2,
+                explanation: `רוב הפטריות הפרזיטיות הן פתוגניות לצמחים (לעומת מיעוט שפתוגני לבעלי חיים). הן מהוות גורם נזק מרכזי בחקלאות העולמית.`
             },
             {
-                question: "מהי המשמעות של Pseudo hyphae בשמרים?",
+                question: `מבחינה אקולוגית, מדוע תהליך ה-Solid-state fermentation באמצעות פטריות הוא בעל ערך?`,
                 options: [
-                    "קורים אמיתיים לחלוטין המשמשים לרבייה מינית",
-                    "מצב בו התאים המנצים נשארים מחוברים ויוצרים שרשרת דמוית קור",
-                    "קורים שנוצרים רק כאשר הפטרייה נמצאת בחושך מוחלט",
-                    "אברוני תנועה המשמשים את השמר לשחייה בנוזל"
+                    `מכיוון שהוא מאפשר ייצור פלסטיק מנבגי פטריות.`,
+                    `מכיוון שהפטריות מנצלות מצעים מוצקים (כמו פסולת חקלאית) לייצור מזון או אנזימים.`,
+                    `מכיוון שהוא התהליך היחיד להפקת חנקן נוזלי בטבע.`,
+                    `מכיוון שזהו תהליך המונע לחלוטין התפתחות של מוטציות גנטיות.`
                 ],
                 correctIndex: 1,
-                explanation: "במצבים מסוימים (כמו הנצה בשמרים), התאים החדשים לא ניתקים מתא האם ונוצרת שרשרת תאים המדמה קור, הנקראת קור מדומה (Pseudo hyphae)."
+                explanation: `פטריות אכילות ותהליכי תסיסה על מצע מוצק (Solid-state fermentation) מאפשרים ניצול של פחמימות מורכבות ממקורות צמחיים לייצור תוצרי ערך (כמו תחליפי בשר).`
             },
             {
-                question: "איזה מהמשפטים הבאים מתאר בצורה הנכונה ביותר את היחס בין פטריות לוירוסים מנקודת מבט ביולוגית?",
+                question: `מה קובע בעיקר את עמידותן של פטריות ללחץ אוסמוטי גבוה (למשל בסביבה מלוחה או מתוקה מאוד)?`,
                 options: [
-                    "שניהם אורגניזמים פרוקריוטים חסרי גרעין",
-                    "פטריות הן תאים אאוקריוטים המסוגלים להתרבות בעצמם, בעוד וירוסים אינם תאים ודורשים פונדקאי",
-                    "וירוסים הם סוג של פטריות טפיליות זעירות",
-                    "שניהם מכילים כיטין במעטפת החיצונית שלהם"
+                    `הימצאות כלורופיל המאזן את ריכוז המומסים.`,
+                    `מבנה דופן התא החזק המורכב מכיטין ופוליסוכרים, המונע קריסה או התפוצצות של התא.`,
+                    `יכולתן לשאוב מים מהאוויר ישירות לגרעין.`,
+                    `העובדה שהן חסרות ממברנה ציטופלזמית לחלוטין.`
                 ],
                 correctIndex: 1,
-                explanation: "פטריות הן אורגניזמים אאוקריוטים בעלי מבנה תאי מלא. וירוסים אינם תאים וזקוקים למערכות הפונדקאי כדי להתרבות."
+                explanation: `דופן התא הקשיחה (הבנויה כיטין) מספקת תמיכה מכנית אדירה המאפשרת לתא הפטרייתי לשמור על שלמותו גם תחת לחצים אוסמוטיים קיצוניים.`
+            },
+            {
+                question: `איזה מהמשפטים הבאים מתאר נכונה את המושג Thallus במיקולוגיה?`,
+                options: [
+                    `שלב הרבייה המינית של שמרים.`,
+                    `הגוף הווגטטיבי של הפטרייה, המורכב משרשראות פילמנטיות (קורים).`,
+                    `האנזים המפרק כיטין במערכת העיכול של חרקים.`,
+                    `הפיגמנט המעניק לעובש את צבעו השחור.`
+                ],
+                correctIndex: 1,
+                explanation: `Thallus (או Hyphae) הוא המונח המתאר את גוף הפטרייה, המורכב מפילמנטים של תאים המחוברים יחד.`
+            },
+            {
+                question: `עובש הלחם המוכר (Rhizopus) שייך למערכת ה-Zygomycota. איזה סוג של מבנה רבייה אל-מיני מאפיין אותו?`,
+                options: [
+                    `Conidia חשופים.`,
+                    `Basidia.`,
+                    `Sporangium (שק המכיל נבגים).`,
+                    `Ascus.`
+                ],
+                correctIndex: 2,
+                explanation: `עובש הלחם (Rhizopus) מייצר נבגים אל-מיניים (Sporangiospores) בתוך מבנה סגור הנקרא Sporangium.`
+            },
+            {
+                question: `באיזה שלב במחזור החיים נוצרת זיגוטה דיפלואידית (2n) בפטריות?`,
+                options: [
+                    `לאחר תהליך ה-Karyogamy (מיזוג הגרעינים).`,
+                    `מיד לאחר תהליך ה-Plasmogamy (מיזוג הציטופלזמה).`,
+                    `בזמן יצירת ה-Pseudo hyphae.`,
+                    `במהלך חלוקת המיטוזה של נבגים אל-מיניים.`
+                ],
+                correctIndex: 0,
+                explanation: `הזיגוטה הדיפלואידית נוצרת רק כאשר שני הגרעינים ההפלואידיים מתמזגים בתהליך הנקרא Karyogamy.`
+            },
+            {
+                question: `מדוע פטריות רבות נחשבות לפסיכופוריות (Psychrophiles) או סובלניות לקור?`,
+                options: [
+                    `מכיוון שהן יכולות להתפתח ולגדול גם בטמפרטורות נמוכות, כמו במקרר.`,
+                    `מכיוון שהן מתות מיד בטמפרטורת החדר.`,
+                    `מכיוון שהן זקוקות לקרח כדי לבצע רבייה מינית.`,
+                    `מכיוון שהדופן שלהן מורכבת ממים קפואים.`
+                ],
+                correctIndex: 0,
+                explanation: `חלק מהעובשים הם פסיכופילים, כלומר מסוגלים לגדול בטמפרטורות נמוכות, מה שמסביר מדוע מזון במקרר עדיין יכול להעלות עובש לאורך זמן.`
+            },
+            {
+                question: `איזה מהבאים אינו נחשב לשימוש תעשייתי נפוץ של פטריות?`,
+                options: [
+                    `ייצור תרופות כמו אנטיביוטיקה.`,
+                    `ייצור משקאות אלכוהוליים כמו בירה ויין.`,
+                    `ייצור דלק ביולוגי (Bio-fuel).`,
+                    `ייצור פלדה אל-חלד.`
+                ],
+                correctIndex: 3,
+                explanation: `פטריות משמשות בתעשיית המזון, התרופות (למשל פניצילין) והדלקים הביולוגיים, אך אין להן קשר לתעשיית המתכות והפלדה.`
+            },
+            {
+                question: `מהו המאפיין הייחודי של פטריות הכובע (Mushrooms) לעומת שמרים?`,
+                options: [
+                    `פטריות כובע הן פרוקריוטיות ושמרים הם אאוקריוטיים.`,
+                    `פטריות כובע יוצרות גופי פרי בשרניים גדולים המורכבים מתפטיר צפוף, בעוד שמרים הם לרוב חד-תאיים.`,
+                    `פטריות כובע מבצעות פוטוסינתיזה.`,
+                    `שמרים אינם מכילים כיטין בדופן התא שלהם.`
+                ],
+                correctIndex: 1,
+                explanation: `פטריות כובע (Mushrooms) הן פטריות פילמנטיות היוצרות מבני רבייה גדולים ובשרניים (גופי פרי), בניגוד לשמרים שהם מיקרוסקופיים ולרוב חד-תאיים.`
+            },
+            {
+                question: `מהו ההבדל בין מחזור החיים המיני של פטריות למחזור החיים של בעלי חיים?`,
+                options: [
+                    `בפטריות השלב הדיפלואידי (2n) הוא לרוב קצר מאוד ומיד עובר מיוזה, בעוד בבעלי חיים השלב הדיפלואידי הוא העיקרי.`,
+                    `בפטריות אין שלב הפלואידי (n) כלל.`,
+                    `פטריות אינן מייצרות זיגוטה בשום שלב.`,
+                    `בבעלי חיים יש שלב דיקריוטי (n+n) ארוך מאוד.`
+                ],
+                correctIndex: 0,
+                explanation: `ברוב הפטריות, המצב ההפלואידי הוא הדומיננטי. הזיגוטה הדיפלואידית (2n) עוברת לרוב מיוזה מיד לאחר יצירתה כדי לייצר נבגים הפלואידיים.`
+            },
+            {
+                question: `איזה סוג נבג אל-מיני מאופיין בכך שהוא נוצר על ידי עיבוי של תא בתוך הקור (Hyphae) עצמו, ובעל דופן עבה במיוחד לשרידות?`,
+                options: [
+                    `Arthrospores`,
+                    `Chlamydospores`,
+                    `Blastospores`,
+                    `Sporangiospores`
+                ],
+                correctIndex: 1,
+                explanation: `Chlamydospores הם נבגים אל-מיניים הנוצרים בתוך הקור עצמו, בעלי דופן עבה, ונועדו לרוב לשרידות בתנאים קשים.`
+            },
+            {
+                question: `הפטרייה Aspergillus flavus מוכרת כגורם למחלות פוסט-אסיף (Postharvest). איזה נזק נוסף היא עלולה לגרום מלבד קלקול המזון?`,
+                options: [
+                    `היא הופכת את המזון לרדיואקטיבי.`,
+                    `חלק מהזנים מייצרים טוקסינים (רעלנים) המסוכנים לאדם.`,
+                    `היא מעלה את ה-pH של המזון לרמות בסיסיות קיצוניות.`,
+                    `היא משמידה לחלוטין את החיידקים הטובים במעי האדם רק על ידי מגע.`
+                ],
+                correctIndex: 1,
+                explanation: `עובשים רבים, ובפרט ממינים כמו Aspergillus, עלולים לייצר מיקוטוקסינים (כמו אפלטוקסין במקרה של A. flavus) שהם רעילים מאוד לאדם ולבעלי חיים.`
+            },
+            {
+                question: `כיצד מתרבים שמרים מסוג Fission yeasts בניגוד ל-Budding yeasts?`,
+                options: [
+                    `הם מתרבים על ידי חלוקת התא לשני חצאים שווים (חלוקה בינארית).`,
+                    `הם מייצרים גוף פרי ענק.`,
+                    `הם מתרבים על ידי יצירת שלוחה קטנה (ניצן) שגדלה ומתנתקת.`,
+                    `הם אינם מתרבים כלל באופן אל-מיני.`
+                ],
+                correctIndex: 0,
+                explanation: `שמרי חלוקה (Fission yeasts) מתרבים על ידי חלוקת התא באמצע לשני תאי בת שווים, בניגוד לשמרי הנצה (Budding yeasts) בהם תא קטן "צומח" מתוך תא האם.`
             }
         ];
 
         const tfData = [
             {
-                question: "פטריות הן אורגניזמים פרוקריוטים, בדומה לחיידקים.",
+                question: `כל הפטריות מבצעות פוטוסינתזה ברמה נמוכה כדי להשלים את תזונתן ההטרוטרופית.`,
                 answer: false,
-                explanation: "פטריות הן אורגניזמים אאוקריוטים, כלומר התאים שלהן מכילים גרעין מוגדר ואברונים, בניגוד לחיידקים שהם פרוקריוטים."
+                explanation: `פטריות חסרות כלורופיל לחלוטין ואינן מבצעות פוטוסינתזה כלל. הן הטרוטרופיות מוחלטות.`
             },
             {
-                question: "כל הפטריות מסוגלות לבצע פוטוסינתיזה כאשר הן נחשפות לאור שמש מספיק.",
+                question: `חיידקים גדולים יותר בממוצע משמרים.`,
                 answer: false,
-                explanation: "פטריות חסרות כלורופיל ולכן אינן מסוגלות לבצע פוטוסינתיזה בשום תנאי. הן הטרוטרופיות."
+                explanation: `ההיפך הוא הנכון. שמרים הם תאים אאוקריוטים (10-50 מיקרומטר) והם גדולים משמעותית מחיידקים פרוקריוטים (0.5-6 מיקרומטר).`
             },
             {
-                question: "המרכיב העיקרי בדופן התא של פטריות הוא כיטין.",
+                question: `הכיטין המצוי בדופן הפטרייה הוא פולימר של הסוכר N-Acetylglucosamine.`,
                 answer: true,
-                explanation: "דופן התא הפטרייתית מכילה עד 90 אחוז פוליסוכרים, כאשר ברוב המקרים המרכיב העיקרי הוא הפולימר כיטין."
+                explanation: `נכון. כיטין הוא פוליסוכר מבני חזק המורכב מיחידות חוזרות של N-Acetylglucosamine.`
             },
             {
-                question: "אנזימי העיכול באדם מסוגלים לפרק בקלות את דופן התא הפטרייתית המורכבת מכיטין.",
+                question: `פטריות רגישות במיוחד לנגיפים מסוג פאג'ים (Bacteriophages) התוקפים את דופן התא שלהן.`,
                 answer: false,
-                explanation: "כיטין אינו מפורק על ידי אנזימים אנושיים."
+                explanation: `פאג'ים הם וירוסים התוקפים חיידקים בלבד. פטריות אינן רגישות לבקטריופאג'ים.`
             },
             {
-                question: "שמרים הם בדרך כלל פטריות חד-תאיות.",
+                question: `רוב הפטריות הפרזיטיות בטבע הן פתוגניות לצמחים ולא לבעלי חיים.`,
                 answer: true,
-                explanation: "בניגוד לעובשים שהם רב-תאיים ופילמנטיים, שמרים הם לרוב אורגניזמים חד-תאיים מעגליים או אליפטיים."
+                explanation: `נכון. בעוד שישנן פטריות התוקפות בעלי חיים ובני אדם, הרוב המכריע של הפטריות הפתוגניות גורמות למחלות בצמחים.`
             },
             {
-                question: "קורים (Hyphae) המוגדרים כ-Coenocytic מכילים מחיצות (Septa) ברורות בין כל תא ותא.",
+                question: `קורים מסוג Coenocytic hyphae מאופיינים בהימצאות מחיצות (Septa) אטומות לחלוטין בין התאים.`,
                 answer: false,
-                explanation: "קורים מסוג Coenocytic הם קורים חסרי מחיצות (ללא דפנות) בין התאים."
+                explanation: `Coenocytic hyphae הם קורים חסרי מחיצות לחלוטין. קורים בעלי מחיצות נקראים Septate hyphae.`
             },
             {
-                question: "גם בקורים בעלי מחיצות (Septa), מתאפשר מעבר של ציטופלסמה בין התאים.",
+                question: `גם בקורים בעלי מחיצות (Septa), מתקיים מעבר של ציטופלזמה בין התאים.`,
                 answer: true,
-                explanation: "המחיצות אינן אטומות לחלוטין ויש דרכן מעבר של ציטופלסמה לאורך הקור."
+                explanation: `נכון. המחיצות אינן אטומות ויש בהן נקבוביות המאפשרות מעבר נוזלים, חומרי הזנה ולעיתים אף אברונים.`
             },
             {
-                question: "פטריות יכולות לשרוד רק בסביבות בעלות רמת חומציות ניטרלית ונוכחות מים גבוהה.",
+                question: `תפטיר (Mycelium) הוא מבנה מיקרוסקופי שאינו ניתן לראייה בעין בלתי מזוינת.`,
                 answer: false,
-                explanation: "זנים רבים של פטריות עמידים לתנאי קיצון, כולל חומציות גבוהה, יובש ולחץ אוסמוטי גבוה."
+                explanation: `תפטיר הוא גודש של קורים (Hyphae) שהצטבר למסה גדולה מספיק כך שניתן לראותה בעין (כמו העובש על לחם).`
             },
             {
-                question: "רבייה מינית בפטריות כוללת שלב של מיוזה ליצירת נבגים הפלואידים.",
+                question: `פטריות מסוגלות לגדול בסביבות בעלות חומציות גבוהה (pH נמוך) טוב יותר מרוב החיידקים.`,
                 answer: true,
-                explanation: "רבייה סקסואלית (מינית) מערבת מיוזה המייצרת ספורות הפלואידיות."
+                explanation: `נכון. לפטריות טווח עמידות רחב ל-pH והן משגשגות בסביבות חומציות בהן חיידקים מתקשים לגדול.`
             },
             {
-                question: "הפטרייה Phytophthora infestans אחראית למחלת כימשון תפוחי האדמה שהובילה לרעב באירלנד.",
+                question: `המושג Fungi imperfecti מתייחס לפטריות שחסר להן דופן תא.`,
+                answer: false,
+                explanation: `המושג מתייחס לפטריות שלא נצפתה בהן רבייה מינית (Sexual reproduction), ולכן קשה לסווגן.`
+            },
+            {
+                question: `רבייה אל-מינית בפטריות מבוססת תמיד על תהליך המיוזה.`,
+                answer: false,
+                explanation: `רבייה אל-מינית מבוססת על מיטוזה (חלוקה שווה וזהה גנטית). מיוזה קורית רק ברבייה מינית.`
+            },
+            {
+                question: `במחזור החיים של פטרייה, שלב ה-Plasmogamy קודם לשלב ה-Karyogamy.`,
                 answer: true,
-                explanation: "זוהי דוגמה היסטורית מרכזית לנזק שפטריות פתוגניות לצמחים יכולות לגרום בחקלאות."
+                explanation: `נכון. קודם מתמזגת הציטופלזמה (Plasmogamy) ונוצר תא עם שני גרעינים, ורק מאוחר יותר מתמזגים הגרעינים (Karyogamy).`
             },
             {
-                question: "פטריות מקבוצת Ascomycota מייצרות נבגים מיניים הנקראים Zygospores.",
+                question: `נבגים מסוג Ascospores הם תוצר של רבייה אל-מינית.`,
                 answer: false,
-                explanation: "פטריות Ascomycota מייצרות Ascospores. נבגי Zygospores מיוצרים על ידי קבוצת ה-Zygomycota."
+                explanation: `Ascospores הם נבגי רבייה מינית הנוצרים לאחר מיוזה בתוך מבנה הנקרא Ascus.`
             },
             {
-                question: "הפיגמנטים בפטריות נועדו בעיקר למשוך חרקים מאביקים.",
-                answer: false,
-                explanation: "תפקיד הפיגמנטים בפטריות הוא לספק הגנה בפני קרינת אולטרה סגול ורדיקלים חופשיים."
-            },
-            {
-                question: "תפטיר (Mycelium) הוא למעשה צבר של קורים שניתן לראות בעין בלתי מזוינת.",
+                question: `שמרים מהסוג Saccharomyces הם אירוביים פקולטטיביים.`,
                 answer: true,
-                explanation: "התפטיר הוא הגוף הווגטטיבי הגדול של הפטרייה המורכב מרשת של קורים."
+                explanation: `נכון. הם יכולים לנשום בנוכחות חמצן, אך גם לבצע תסיסה בהיעדר חמצן (מה שמאפשר ייצור אלכוהול).`
             },
             {
-                question: "רבייה על ידי הנצה (Budding) אופיינית בעיקר לפטריות הכובע (Mushrooms).",
+                question: `הפיגמנטים בפטריות משמשים בעיקר לקליטת אור לשם ייצור אנרגיה.`,
                 answer: false,
-                explanation: "הנצה היא צורת רבייה אל-מינית הנפוצה בעיקר בשמרים."
+                explanation: `מכיוון שאין פוטוסינתזה, הפיגמנטים בפטריות משמשים בעיקר להגנה מפני קרינת UV ורדיקלים חופשיים.`
             },
             {
-                question: "לרוב הפטריות יש קצב גידול לוגריתמי מהיר, בדומה לחיידקים.",
-                answer: false,
-                explanation: "ברוב הפטריות הגידול הוא לינארי מהקצוות של הקורים, ולכן לא נראה קצב גידול לוגריתמי קלאסי."
-            },
-            {
-                question: "הקבוצה Fungi imperfecti כוללת פטריות המתרבות ברבייה מינית בלבד.",
-                answer: false,
-                explanation: "ההפך הוא הנכון. קבוצה זו כוללת פטריות שלא נמצאה אצלן צורת רבייה מינית כלל."
-            },
-            {
-                question: "Saccharomyces הוא סוג של עובש מסוכן הגורם למחלות בדרכי הנשימה.",
-                answer: false,
-                explanation: "Saccharomyces הוא סוג של שמר החשוב ביותר בתעשיית המזון (לחם, בירה, יין) ונחשב בטוח ושימושי."
-            },
-            {
-                question: "רוב הפטריות הטפיליות בטבע הן פתוגניות לצמחים ולא לבעלי חיים.",
+                question: `קצב הגידול של קורי פטרייה (Hyphae) הוא לרוב לינארי ומתרחש בקצוות הקור.`,
                 answer: true,
-                explanation: "רוב הפטריות הפרזיטיות תוקפות צמחים, ורק מיעוטן פתוגניות לבעלי חיים או לבני אדם."
+                explanation: `נכון. הגידול מתרחש בקצה האפיקלי של הקור בצורה לינארית, ולא במעריכית מכל חלקי התא.`
             },
             {
-                question: "דופן התא של הפטרייה זהה לחלוטין מבחינה כימית לדופן התא של צמחים.",
+                question: `עובשים זקוקים לסביבה בעלת לחות גבוהה מאוד ואינם שורדים ביובש.`,
                 answer: false,
-                explanation: "הן דומות מבחינה מבנית, אך שונות כימית. דופן פטרייה מכילה כיטין, בעוד דופן צמחית מכילה תאית."
+                explanation: `עובשים עמידים ללחות נמוכה בהרבה מזו שחיידקים דורשים, מה שמאפשר להם לקלקל מזון יבש יחסית.`
             },
             {
-                question: "שלב הפלזמוגמיה (Plasmogamy) ברבייה מינית משמעותו התמזגות הציטופלסמה של שני התאים.",
+                question: `המחלה ההיסטורית "כימשון תפוחי האדמה" באירלנד נגרמה על ידי וירוס.`,
+                answer: false,
+                explanation: `המחלה נגרמה על ידי הפתוגן הפטרייתי (או דמוי-פטרייה) Phytophthora infestans.`
+            },
+            {
+                question: `נבגים מסוג Conidia נוצרים בתוך שק סגור המגן עליהם.`,
+                answer: false,
+                explanation: `Conidia הם נבגים אל-מיניים החשופים בקצה הקור (Conidiophore). נבגים בתוך שק נקראים Sporangiospores.`
+            },
+            {
+                question: `תא פטרייה במצב הדיקריוטי (Dikaryotic) מכיל שני גרעינים הפלואידיים נפרדים.`,
                 answer: true,
-                explanation: "במחזור החיים המיני, פלזמוגמיה היא איחוד הציטופלסמות, מה שלעיתים מוביל לשלב דיקריוטי לפני איחוד הגרעינים (קריוגמיה)."
+                explanation: `נכון. המצב מסומן כ- (n+n), כלומר שני גרעינים שטרם התמזגו לגרעין דיפלואידי אחד.`
             },
             {
-                question: "קונידיה (Conidia) הם סוג של נבגים מיניים הנוצרים בתוך פטריות הבסיסה.",
-                answer: false,
-                explanation: "קונידיה הם נבגים אל-מיניים (Asexual spores), האופייניים למשל לפטריות מקבוצת Ascomycota."
-            },
-            {
-                question: "פטריות מוגדרות כאורגניזמים אוטוטרופיים.",
-                answer: false,
-                explanation: "פטריות מוגדרות כאורגניזמים הטרוטרופיים, כלומר הן צורכות תרכובות אורגניות מוכנות ואינן מקבעות פחמן."
-            },
-            {
-                question: "הפטרייה Cryphonectria parasitica אחראית להכחדה כמעט מוחלטת של עצי הערמון במזרח ארהב.",
+                question: `מערכת ה-Basidiomycota כוללת את רוב פטריות הכובע הבשרניות.`,
                 answer: true,
-                explanation: "זהו פתוגן צמחי הרסני שגרם לנזק אקולוגי וכלכלי עצום בתחילת המאה ה-20."
+                explanation: `נכון. פטריות כובע (Mushrooms) שייכות ברובן למערכת ה-Basidiomycota ומייצרות Basidiospores.`
             },
             {
-                question: "עובשים אינם מסוגלים לפרק פחמימות מורכבות, ולכן הם גדלים רק על סוכרים פשוטים.",
+                question: `אנזימי מערכת העיכול של האדם מסוגלים לפרק ביעילות את דופן תא הפטרייה.`,
                 answer: false,
-                explanation: "עובשים מסוגלים בהחלט לנצל ולפרק פחמימות מורכבות, מה שהופך אותם לגורם מרכזי בקלקול מזון."
+                explanation: `אנזימים אנושיים אינם מסוגלים לפרק כיטין, שהוא המרכיב המרכזי בדופן תא הפטרייה.`
             },
             {
-                question: "כל הפטריות זקוקות לטמפרטורת חדר חמימה כדי לגדול, ואף פטרייה אינה יכולה לשרוד בקירור.",
-                answer: false,
-                explanation: "חלק מהפטריות (במיוחד עובשים מסוימים) הן פסיכופילות, כלומר מסוגלות לגדול בטמפרטורות נמוכות."
-            },
-            {
-                question: "בפטריות פילמנטיות, המונח Thallus הוא מילה נרדפת למבנה הקורים (Hyphae).",
+                question: `פטריות מסוגלות לנצל פחמימות מורכבות כמקור פחמן.`,
                 answer: true,
-                explanation: "המונחים Thallus או Hyphae משמשים לתיאור הפילמנטים המרכיבים את הפטרייה."
+                explanation: `נכון. פטריות מפרישות אנזימים חוץ-תאיים המפרקים פחמימות מורכבות (כמו תאית) לסוכרים פשוטים הנספגים לתא.`
             },
             {
-                question: "ריזופוס (Rhizopus) הוא עובש נפוץ המוכר לנו כעובש הלחם.",
-                answer: true,
-                explanation: "ריזופוס הוא אכן עובש הלחם הקלאסי, השייך למערכת ה-Zygomycota."
-            },
-            {
-                question: "פטריות הן מיקרואורגניזמים השייכים לקבוצת הפרוטוזואה.",
+                question: `רבייה באמצעות הנצה (Budding) אופיינית בעיקר לפטריות פילמנטיות גדולות.`,
                 answer: false,
-                explanation: "פטריות מהוות ממלכה נפרדת (Fungi) ואינן שייכות לפרוטוזואה (שהם טפילים חד-תאיים אחרים)."
+                explanation: `הנצה היא צורת רבייה אל-מינית האופיינית בעיקר לשמרים (פטריות חד-תאיות).`
             },
             {
-                question: "אספרגילוס ניגר (Aspergillus niger) מתרבה אל-מינית על ידי ייצור קונידיה.",
+                question: `זיגוספורות (Zygospores) הן נבגי רבייה מינית עמידים בעלי דופן עבה.`,
                 answer: true,
-                explanation: "אספרגילוס שייך ל-Ascomycota ומייצר נבגים אל-מיניים מסוג קונידיה הנישאים על קונידיופור."
+                explanation: `נכון. הן נוצרות ממיזוג של שני קורים במערכת ה-Zygomycota ומשמשות לשרידות בתנאים קשים.`
             },
             {
-                question: "השלב הדיקריוטי ($n+n$) מתקיים רק כאשר הפטרייה נמצאת במצב של עקה קיצונית ללא מזון.",
+                question: `פטריות אינן מכילות אברונים מוקפים בממברנה, בדומה לחיידקים.`,
                 answer: false,
-                explanation: "השלב הדיקריוטי הוא חלק טבעי ממחזור החיים המיני של פטריות מסוימות, לאחר התמזגות התאים ולפני התמזגות הגרעינים."
+                explanation: `פטריות הן אאוקריוטיות, ולכן התאים שלהן מכילים אברונים מוקפים ממברנה (גרעין, מיטוכונדריה וכו').`
+            },
+            {
+                question: `עובש מסוג Rhizopus (עובש הלחם) מתרבה אך ורק ברבייה אל-מינית.`,
+                answer: false,
+                explanation: `Rhizopus מסוגל להתרבות גם ברבייה אל-מינית (Sporangiospores) וגם ברבייה מינית (Zygospores).`
+            },
+            {
+                question: `קבוצת ה-Ascomycota היא המערכה הגדולה ביותר של פטריות.`,
+                answer: true,
+                explanation: `נכון. Ascomycota (פטריות שק) היא המערכה הגדולה ביותר וכוללת עובשים רבים, שמרים ופטריות כובע מסוימות.`
+            },
+            {
+                question: `פטריות מהוות חלק שולי בלבד בתעשיית הביוטכנולוגיה המודרנית.`,
+                answer: false,
+                explanation: `פטריות הן קריטיות בתעשייה לייצור תרופות, אנזימים, דלק ביולוגי ומזון.`
+            },
+            {
+                question: `בפטריות, השלב הדיפלואידי (2n) מתקיים בדרך כלל לאורך זמן רב יותר מהשלב ההפלואידי (n).`,
+                answer: false,
+                explanation: `ברוב הפטריות המצב הפוך - השלב ההפלואידי (n) או הדיקריוטי (n+n) הוא הדומיננטי, והזיגוטה הדיפלואידית עוברת מיוזה מהר מאוד.`
             }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -921,6 +1032,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -931,11 +1049,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([flashcardContent]);
-            }
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -954,11 +1068,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                
-                // Re-render MathJax if present
-                if (window.MathJax) {
-                    MathJax.typesetPromise([flashcardContent]);
-                }
+                triggerMathJax();
             }, 300);
         }
 
@@ -981,11 +1091,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -1001,25 +1107,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1061,11 +1159,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1077,8 +1171,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1088,11 +1180,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            
-            // Re-render MathJax if present
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1109,25 +1197,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             
-             // Re-render MathJax if present
-             if (window.MathJax) {
-                 MathJax.typesetPromise([explanationEl]);
-             }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1170,11 +1250,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             
-             // Re-render MathJax if present
-             if (window.MathJax) {
-                 MathJax.typesetPromise([tfAllQuestionsContainer]);
-             }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1190,6 +1266,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

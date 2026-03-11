@@ -1,215 +1,321 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <!-- MathJax Configuration -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>
-        window.MathJax = {
-            tex: {
-                inlineMath: [['$', '$']],
-                displayMath: [['$$', '$$']]
-            }
-        };
-    </script>
 </head>
 <body>
     <div class="container">
-        <h1>המיקרוביום האנושי: אקולוגיה, גנטיקה ובריאות</h1>
+        <h1>המיקרוביום וההולוגנום: השפעות על הבריאות, המוח ומערכת החיסון</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>המיקרוביום האנושי הוא מערכת אקולוגית מורכבת הכוללת את כלל המיקרואורגניזמים החיים בגופנו, את הגנומים שלהם ואת האינטראקציות שלהם עם המאכסן. אוכלוסייה זו נרכשת לאחר הלידה ומשפיעה באופן דרמטי על תפקודנו הפיזיולוגי, החל מעיכול וייצור מטבוליטים, דרך התפתחות מערכת החיסון ועד להשפעה על מערכת העצבים והמוח.</p>
+                
+                <h3>ציר מעי-מוח (Gut-Brain Axis)</h3>
+                <p>חיידקי המעי אינם תושבים פסיביים. הם מייצרים ומווסתים נוירוטרנסמיטורים מרכזיים. לדוגמה, ייצור הסרוטונין בתאי מערכת העצבים האנטרית מבוקר ישירות על ידי המיקרוביום. בנוסף, חיידקי חומצת חלב מייצרים GABA, נוירוטרנסמיטור מעכב המשפיע על המוח ומפחית עוררות עצבית. מחקרים הראו כי השתלת מיקרוביום יכולה אפילו להעביר תכונות התנהגותיות (כגון ביישנות לעומת חקרנות) בין זני עכברים שונים.</p>
+
+                <h3>תאוריית ההולוגנום והשפעות תזונתיות</h3>
+                <p>תאוריית ההולוגנום גורסת כי בעל החיים והמיקרואורגניזמים המאכלסים אותו מתפתחים כיחידה אבולוציונית אחת. מחקרי הכלאה (Reciprocal crosses) בעכברים הוכיחו כי לגנטיקה של המאכסן יש השפעה חזקה יותר על הרכב המיקרוביום מאשר להורשה האימהית. עם זאת, התזונה מהווה גורם סביבתי מכריע: צריכת שמנים מחוממים המכילים אקרוליין (Acrolein) גורמת לדיסביוזה (חוסר איזון חיידקי) המעודדת טרשת עורקים. צריכת נוגדי חמצון, כמו מיץ רימונים, יכולה לבטל השפעות הרסניות אלו.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: המיקרוביום כאיבר נשכח וכגנום שני</strong>
+                    בעוד שתאי החיידקים עולים במספרם על תאי האדם ביחס של עד 3:1, כמות החומר הגנטי החיידקי גדולה פי 100 עד 150 מהגנום האנושי. הבנה זו פותחת פתח לריפוי גני באמצעות מניפולציה של הרכב המיקרוביוטה (פרוביוטיקה, פרה-ביוטיקה והשתלות צואה), במטרה לטפל במחלות כמו השמנת יתר, סוכרת, אוטיזם וסרטן.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: דיסביוזה ומערכת החיסון</strong>
+                    שינויים בהרכב המיקרוביום עקב חשיפה לאנטיביוטיקה או קרינה עלולים לגרום לדיסביוזה דלקתית. חשיפה זו משפיעה אפילו על יעילותן של תרופות ביולוגיות, על ידי שינוי קצב יצירת נוגדנים כנגד התרופה (Anti-drug antibodies) במחלות מעי דלקתיות.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -222,7 +328,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -242,11 +347,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -269,8 +372,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -278,500 +380,324 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "מיקרוביום", definition: "צורות חיים מיקרוביאליות המאכלסות מאכסן חי, סך הגנומים שלהן והאינטראקציות שלהן עם המאכסן." },
-            { term: "הולוביום", definition: "המערכת האקולוגית המיקרוסקופית האנושית, הכוללת את המאכסן (האדם) ואת כל המיקרואורגניזמים הקשורים אליו כיחידה אבולוציונית אחת." },
-            { term: "דיסביוזיס", definition: "חוסר איזון בהרכב המיקרוביאלי התקין, המקושר לעיתים קרובות למצבי חולי כמו השמנה, סוכרת, ומחלות מעי דלקתיות." },
-            { term: "ציר מעי-מוח", definition: "מערכת תקשורת דו-כיוונית בין מערכת העיכול למערכת העצבים המרכזית, המושפעת רבות מתוצרי המיקרוביום." },
-            { term: "סרוטונין", definition: "מוליך עצבי התורם לתחושת אושר, אשר מיוצר ברובו בתאי מערכת העיכול תחת בקרה ישירה של המיקרוביום." },
-            { term: "GABA", definition: "מוליך עצבי מעכב במערכת העצבים המרכזית המפחית עוררות עצבית, המיוצר בין היתר על ידי חיידקי חומצת חלב במעי." },
-            { term: "Toxoplasma gondii", definition: "טפיל פרוטוזואי המסוגל ליצור ציסטות במוח, המקושר לשינויים התנהגותיים בבני אדם כגון עלייה בסיכון לתאונות דרכים." },
-            { term: "השתלת צואה", definition: "הליך רפואי בו מועברת אוכלוסיית חיידקי מעי מאדם בריא לאדם חולה, במטרה לטפל במחלות הנובעות מדיסביוזיס." },
-            { term: "פרה-ביוטיקה", definition: "רכיבי תזונה (לרוב סיבים) שאינם מתעכלים על ידי האדם, אך משמשים כמצע גידול המעודד שגשוג של חיידקים מועילים במעי." },
-            { term: "פרו-ביוטיקה", definition: "תוספי תזונה או מזונות המכילים מיקרואורגניזמים חיים, אשר במתן כמות נאותה מעניקים יתרון בריאותי למאכסן." },
-            { term: "16S rDNA", definition: "גן המקודד לרכיב בריבוזום החיידקי, המשמש כסמן גנטי מרכזי לזיהוי וסיווג פילוגנטי של אוכלוסיות חיידקים בשיטות ריצוף עמוק." },
-            { term: "מגוון אלפא", definition: "מדד אקולוגי המתאר את עושר המינים (מספר סוגי החיידקים השונים) בתוך דגימה בודדת או סביבה ספציפית." },
-            { term: "מגוון בטא", definition: "מדד אקולוגי המתאר את ההבדל או המרחק בהרכב הקהילה המיקרוביאלית בין דגימות או סביבות שונות." },
-            { term: "אקרוליין", definition: "אלדהיד רעיל הנוצר כתוצר לוואי של חימום שמנים ופחמימות, ונמצא כגורם לדיסביוזיס המעודד טרשת עורקים." },
-            { term: "CRE", definition: "משפחת חיידקי מעיים שפיתחו עמידות לאנטיביוטיקה מסוג קרבפנם, המהווים סכנה חמורה לזיהומים נרכשים בבתי חולים." },
-            { term: "PMA-qPCR", definition: "שיטה מולקולרית המאפשרת להבדיל בין חיידקים חיים למתים בדגימה, המשמשת בין היתר לבקרת בטיחות מזון." }
+            { term: "מיקרוביום (Microbiome)", definition: "אוסף המיקרואורגניזמים החיים בתוך מאכסן, הגנומים המשולבים שלהם והאינטראקציות שלהם עם המאכסן." },
+            { term: "הולוגנום (Hologenome)", definition: "המידע הגנטי הכולל של המאכסן יחד עם המידע הגנטי של המיקרוביוטה שלו, המתפתחים יחד כיחידה אבולוציונית." },
+            { term: "דיסביוזה (Dysbiosis)", definition: "מצב של חוסר איזון בהרכב המיקרוביאלי, המקושר לעיתים קרובות להתפתחות מחלות שונות." },
+            { term: "ציר מעי-מוח (Gut-Brain Axis)", definition: "מערכת תקשורת דו-כיוונית בין מערכת העיכול למערכת העצבים המרכזית, המושפעת רבות על ידי חיידקי המעי." },
+            { term: "סרוטונין (Serotonin)", definition: "נוירוטרנסמיטור הקשור לתחושות אושר, שייצורו בתאי מערכת העיכול מבוקר ישירות על ידי המיקרוביום." },
+            { term: "GABA", definition: "נוירוטרנסמיטור מעכב המיוצר בין היתר על ידי חיידקי חומצת חלב, ומסייע בהפחתת עוררות עצבית ולחץ דם." },
+            { term: "Toxoplasma gondii", definition: "טפיל פרוטוזואי המסוגל ליצור ציסטות במוח, להשפיע על מערכת החיסון ולהעלות סיכון לתאונות דרכים." },
+            { term: "השתלת צואה (Fecal Transplantation)", definition: "הליך רפואי בו מועברת מיקרוביוטה מאדם בריא לחולה במטרה לשנות את הרכב חיידקי המעי ולטפל במחלות." },
+            { term: "אקרוליין (Acrolein)", definition: "אלדהיד רעיל הנוצר מחימום שומנים, הגורם לדיסביוזה במעי ומקדם התפתחות של טרשת עורקים." },
+            { term: "Firmicutes ו-Bacteroidetes", definition: "שתי המערכות הנפוצות ביותר של חיידקים במעי. עלייה ביחס ביניהן מקושרת לעיתים קרובות למצבי תחלואה ודיסביוזה." },
+            { term: "CRE", definition: "חיידקי מעיים העמידים לאנטיביוטיקה מסוג קרבפנם. נשאות שלהם מלווה בירידה בעושר המיקרוביאלי במעי." },
+            { term: "16S rRNA", definition: "גן המשמש כסמן ביולוגי לזיהוי וסיווג פילוגנטי של חיידקים בזכות קיומם של אזורים שמורים ואזורים משתנים (וריאביליים)." },
+            { term: "פרוביוטיקה (Probiotics)", definition: "מיקרואורגניזמים חיים שכאשר ניתנים בכמות נאותה, מקנים יתרון בריאותי למאכסן." },
+            { term: "פרה-ביוטיקה (Prebiotics)", definition: "רכיבי תזונה שאינם מתעכלים על ידי האדם, המעודדים סלקטיבית שגשוג או פעילות של חיידקים מועילים במעי." },
+            { term: "Anti-drug antibodies", definition: "נוגדנים שהגוף מייצר נגד תרופות ביולוגיות. קצב יצירתם עשוי להיות מושפע משימוש באנטיביוטיקה המשנה את המיקרוביום." }
         ];
 
         const mcqData = [
-            {
-                question: "איזו מהתופעות הבאות ממחישה בצורה הטובה ביותר את תפיסת המיקרוביום כגנום שני של האדם?",
+            { 
+                question: "איזו מבין התופעות הבאות היא התוצאה הסבירה ביותר של פגיעה חמורה באוכלוסיית החיידקים המייצרים חומצת חלב (Lactic Acid Bacteria) במעי?", 
                 options: [
-                    "העובדה שחיידקי המעיים שוקלים בין קילוגרם וחצי לשניים וחצי קילוגרמים.",
-                    "היכולת של הרכב המיקרוביום להסביר אבולוציה אדפטיבית ואת בעיית התורשתיות החסרה.",
-                    "הימצאותם של חיידקים עמידים לאנטיביוטיקה בסביבות בתי חולים.",
-                    "העובדה שישנם יותר תאים אנושיים מאשר תאי חיידקים בגוף האדם."
-                ],
-                correctIndex: 1,
-                explanation: "המיקרוביום נחשב לגנום שני מכיוון שהוא מכיל כמות גנים הגדולה פי 100-150 מהגנום האנושי, מה שמסייע להסביר תכונות מורכבות, אבולוציה אדפטיבית ובעיות של תורשתיות חסרה שלא ניתנות להסבר על ידי ה-DNA האנושי לבדו."
+                    "עלייה בייצור הסרוטונין במערכת העצבים האנטרית.",
+                    "ירידה ברמות ה-GABA ועלייה בעוררות העצבית במוח.",
+                    "הגברת העמידות של המאכסן לטפיל Toxoplasma gondii.",
+                    "ירידה בסיכון לפתח טרשת עורקים עקב פירוק שומנים מהיר יותר."
+                ], 
+                correctIndex: 1, 
+                explanation: "חיידקי חומצת חלב אחראים לייצור משמעותי של GABA במעי. GABA הוא נוירוטרנסמיטור מעכב המפחית עוררות עצבית, ולכן פגיעה בחיידקים אלו תוביל לירידה ב-GABA ועלייה בעוררות." 
             },
-            {
-                question: "מהו ההסבר הסביר ביותר לכך שטיפול אנטיביוטי ממושך עלול להוביל לדיכאון או לשינויים במצב הרוח?",
+            { 
+                question: "על פי תאוריית ההולוגנום, כיצד ניתן להסביר בצורה הטובה ביותר את תופעת התורשתיות החסרה (Missing heritability) במחלות מורכבות?", 
                 options: [
-                    "האנטיביוטיקה חודרת ישירות למערכת העצבים המרכזית והורסת תאי מוח.",
-                    "פגיעה באוכלוסיית חיידקי המעי גורמת לירידה בייצור סרוטונין בתאי מערכת העיכול.",
-                    "חיידקים עמידים לאנטיביוטיקה מפרישים רעלנים שחוסמים את העצב התועה.",
-                    "עלייה דרמטית במגוון האלפא של המיקרוביום גורמת לעומס יתר על מערכת החיסון."
-                ],
-                correctIndex: 1,
-                explanation: "חלק ניכר מהסרוטונין (מוליך עצבי הקשור למצב רוח) מיוצר בתאי מערכת העיכול תחת בקרה ישירה של המיקרוביום. פגיעה במיקרוביום על ידי אנטיביוטיקה עלולה לשבש ייצור זה ולפגוע בציר המעי-מוח."
+                    "הגנום של המאכסן אינו מקודד לכל החלבונים הנדרשים, ולכן הגוף משלים אותם מהמזון.",
+                    "חלק מהמידע הגנטי המשפיע על התפתחות מחלות נמצא בגנום של המיקרוביוטה, ולא רק בגנום האנושי.",
+                    "מוטציות ספונטניות המתרחשות במהלך החיים מבטלות את ההשפעה של גנים תורשתיים.",
+                    "העברה של פתוגנים בזמן הלידה משנה את הדנא של תאי המאכסן ומעוררת מחלות."
+                ], 
+                correctIndex: 1, 
+                explanation: "תאוריית ההולוגנום מתייחסת לגנום המאכסן ולגנום המיקרוביום כיחידה אחת. מכיוון שהגנום המיקרוביאלי גדול פי 100-150 מהאנושי, תכונות ומחלות רבות שלא נמצא להן הסבר בגנום האנושי עשויות להיות מקודדות בגנום החיידקי." 
             },
-            {
-                question: "בניסוי בו ביצעו הכלאות הדדיות בין זני עכברים שונים ובדקו את רמות החיידק L. johnsonii, מה הייתה המסקנה המרכזית?",
+            { 
+                question: "בניסוי ההכלאות ההדדיות (Reciprocal crosses) בין זני עכברים שונים, מה הייתה המסקנה המרכזית לגבי הגורם המשפיע ביותר על רמות החיידק L. johnsonii?", 
                 options: [
-                    "ההדבקה האימהית במהלך ההמלטה היא הגורם המכריע בקביעת הרכב המיקרוביום.",
-                    "תזונת העכברים משפיעה יותר מהגנטיקה שלהם על הרכב המיקרוביום.",
-                    "הגנטיקה של המאכסן משפיעה בצורה חזקה יותר על הרכב המיקרוביום מאשר העברה אימהית.",
-                    "המיקרוביום של צאצאי הכלאה זהה לחלוטין למיקרוביום של האם."
-                ],
-                correctIndex: 2,
-                explanation: "הניסוי הראה שרמות החיידק בעכברי הכלאה היו דומות לאחד מזני ההורה ללא תלות באיזו אם המליטה אותם, מה שמוכיח שהגנוטיפ של העכבר (המאכסן) הוא הסיבה המרכזית להבדלים במיקרוביום, יותר מאשר ההעברה האימהית."
+                    "החשיפה הסביבתית לאחר הגמילה היא הגורם המכריע ביותר.",
+                    "ההורשה האימהית (Maternal inoculation) קובעת את הרכב המיקרוביום באופן בלעדי.",
+                    "הגנטיקה של העכבר המאכסן משפיעה על הרכב המיקרוביום יותר מאשר ההורשה האימהית.",
+                    "אין הבדל מובהק בין השפעת הגנטיקה להשפעת התזונה בניסוי זה."
+                ], 
+                correctIndex: 2, 
+                explanation: "בניסוי ההכלאות, עכברי ה-F1 הראו הרכב מיקרוביום הדומה לזן ההורי הגנטי שלהם (C57BL/6J), ללא קשר לאיזו אם גידלה אותם, מה שמוכיח שלגנטיקה של המאכסן יש השפעה חזקה יותר מאשר להדבקה האימהית." 
             },
-            {
-                question: "כיצד צריכה מוגברת של שמן סויה בהשוואה לחומצה לינולאית צפויה להשפיע על אוכלוסיית חיידקי המעי?",
+            { 
+                question: "אדם צורך באופן קבוע מזון מטוגן בשמן עמוק. בדיקות דם מראות עלייה ברמות הכולסטרול והתחלה של טרשת עורקים. איזה מנגנון מתווך-מיקרוביום עשוי להסביר זאת?", 
                 options: [
-                    "שמן סויה יגרום לדיסביוזיס ושינוי הרכב המיקרוביום, בעוד חומצה לינולאית תשמר הרכב דומה לקבוצת הביקורת.",
-                    "שניהם יגרמו לעלייה זהה ופרופורציונלית למינון במגוון האלפא של חיידקי המעי.",
-                    "חומצה לינולאית תגרום להכחדה מוחלטת של חיידקי חומצת חלב, בניגוד לשמן סויה.",
-                    "לא יהיה הבדל, שכן שניהם מקורות שומן המעודדים ספיגת ויטמינים באותה מידה ללא השפעה חיידקית."
-                ],
-                correctIndex: 0,
-                explanation: "מחקרים מראים כי עכברים שניזונו משמן סויה פיתחו מיקרוביום שונה משמעותית (דיסביוטי) בהשוואה לקבוצת הביקורת, בעוד שעכברים שניזונו מחומצה לינולאית הציגו מיקרוביום שחלק מאפיינים דומים עם קבוצת הביקורת."
+                    "הצטברות של אקרוליין במעי מובילה לעלייה ביחס בין Firmicutes ל-Bacteroidetes.",
+                    "ירידה דרסטית בכמות חיידקי ה-Firmicutes מובילה לספיגת יתר של שומנים בדם.",
+                    "השמן המטוגן מעודד שגשוג של חיידקי Lactic Acid Bacteria המייצרים רעלנים.",
+                    "האקרוליין חודר ישירות לזרם הדם והורג את תאי מערכת החיסון, ללא מעורבות המיקרוביום."
+                ], 
+                correctIndex: 0, 
+                explanation: "טיגון בשמן עמוק יוצר אקרוליין. אקרוליין גורם לדיסביוזה המתבטאת בעלייה ביחס Firmicutes:Bacteroidetes, מצב המקושר באופן חיובי לעלייה בכולסטרול והתפתחות טרשת עורקים." 
             },
-            {
-                question: "מהי הפעולה המנגנונית שבאמצעותה אקרוליין תורם להתפתחות טרשת עורקים, דרך תיווך המיקרוביום?",
+            { 
+                question: "חוקר מעוניין לפתח טיפול למחלת מעי דלקתית (IBD) המבוסס על מניפולציה של המיקרוביום. איזה מהממצאים הבאים יתמוך בשימוש בהשתלת צואה כטיפול יעיל?", 
                 options: [
-                    "הוא מעלה את מגוון הביטוי של גנים הומניים הקשורים לפירוק כולסטרול.",
-                    "הוא גורם לעלייה ביחס בין פירמיקוטים לבקטרואידטים ולעלייה ברמות הכולסטרול בדם.",
-                    "הוא משמיד לחלוטין את אוכלוסיית החיידקים במעי, מה שמונע ספיגת שומנים.",
-                    "הוא מעודד שגשוג של חיידקים המייצרים מיץ רימונים באופן טבעי במעי."
-                ],
-                correctIndex: 1,
-                explanation: "אקרוליין (תוצר לוואי של שמן מטוגן) הוכח כגורם לדיסביוזיס המתבטא בעלייה ביחס בין מערכת הפירמיקוטים לבקטרואידטים, מצב הנמצא במתאם חיובי עם רמות כולסטרול בפלזמה וקידום טרשת עורקים."
+                    "חולי IBD מציגים עושר מיקרוביאלי גבוה יותר מאשר אנשים בריאים.",
+                    "המיקרוביום של חולי IBD מאופיין במצב של הומיאוסטזיס יציב שאינו מגיב לאנטיביוטיקה.",
+                    "ישנו קשר הדוק (Tight linkage) בין שינויים בהרכב קהילות החיידקים במעי לבין התפרצות המחלה.",
+                    "חיידקי המעי בחולי IBD אינם מייצרים כלל מטבוליטים, ולכן יש להחליפם באנזימים מלאכותיים."
+                ], 
+                correctIndex: 2, 
+                explanation: "מחלות כמו IBD מאופיינות בדיסביוזה - קשר הדוק בין שינוי בהרכב המיקרוביאלי למחלה. השתלת צואה נועדה לשחזר את ההומיאוסטזיס ולהחזיר קהילת חיידקים תקינה." 
             },
-            {
-                question: "חוקר מעוניין לזהות את הפרופיל של אוכלוסיות חיידקים שונות בדגימת צואה. באיזו שיטה מולקולרית סביר ביותר שישתמש ומדוע?",
+            { 
+                question: "מהו ההבדל המהותי ביותר בין השפעת שמן סויה (SO) להשפעת חומצה לינולאית (LA) על המיקרוביום, כפי שעולה ממחקרים בעכברים?", 
                 options: [
-                    "ריצוף גנום אנושי שלם, כדי למצוא את הגנים החסרים של המאכסן.",
-                    "ריצוף אזורים וריאביליים בגן 16S rDNA, מכיוון שהוא משמש כסמן אבולוציוני ייחודי לחיידקים.",
-                    "בדיקת רמות סרוטונין בדם, מכיוון שהן משקפות באופן ישיר את כמות החיידקים הכוללת.",
-                    "השתלת צואה לעכברים נטולי חיידקים, כדי לצפות בשינויים התנהגותיים בלבד."
-                ],
-                correctIndex: 1,
-                explanation: "הגן המקודד ל-16S rRNA מכיל אזורים שמורים ואזורים וריאביליים (משתנים). ריצוף האזורים המשתנים מאפשר לזהות במדויק אילו סוגי חיידקים קיימים בדגימה ואת השפע היחסי שלהם."
+                    "שמן סויה משפיע על המיקרוביום רק כאשר הוא ניתן במינונים גבוהים מאוד, בניגוד ל-LA.",
+                    "שמן סויה גורם לשינוי ייחודי במיקרוביוטה שאינו תלוי בנוכחות חומצה לינולאית, בעוד ש-LA שומר על מיקרוביוטה הדומה לקבוצת הביקורת.",
+                    "חומצה לינולאית גורמת לדיסביוזה חמורה יותר משמן סויה בשל היותה חומצת שומן רוויה.",
+                    "שניהם גורמים לאותו שינוי בדיוק במיקרוביום, אך שמן סויה פועל מהר יותר."
+                ], 
+                correctIndex: 1, 
+                explanation: "המחקר הראה שעכברים שניזונו משמן סויה (SO) הציגו מיקרוביוטה שונה לחלוטין מקבוצת הביקורת ומקבוצת ה-LA, בעוד שעכברי ה-LA הציגו מיקרוביוטה דומה לקבוצת הביקורת. מכאן שההשפעה של SO אינה נובעת רק מנוכחות ה-LA שבו." 
             },
-            {
-                question: "מטופל אובחן כנשא של חיידקי CRE. אילו מאפיינים סביר שנראה במיקרוביום המעי שלו בהשוואה לאדם בריא?",
+            { 
+                question: "כיצד צריכת מיץ רימונים (PJ) משפיעה על הנזק הנגרם מאקרוליין ברמת המיקרוביום?", 
                 options: [
-                    "מגוון אלפא (עושר מינים) גבוה יותר ומבנה קהילה (מגוון בטא) זהה.",
-                    "מגוון אלפא מופחת ומבנה קהילה (מגוון בטא) שונה באופן מובהק.",
-                    "עלייה חדה בכמות חיידקי חומצת החלב וירידה בייצור סרוטונין.",
-                    "היעדר מוחלט של חיידקים במעי עקב העמידות לאנטיביוטיקה."
-                ],
-                correctIndex: 1,
-                explanation: "נשאי CRE (חיידקים עמידים לקרבפנם) מפגינים דיסביוזיס המתבטא בירידה במגוון האלפא (פחות עושר של מיני חיידקים) ושינוי משמעותי במגוון הבטא (מבנה הקהילה הכללי שונה מזה של אנשים בריאים)."
+                    "מיץ הרימונים פועל כאנטיביוטיקה ומשמיד את כל חיידקי המעי שבאו במגע עם אקרוליין.",
+                    "הפוליפנולים במיץ רימונים מבטלים את רוב השינויים בהרכב המיקרוביוטה שהושרו על ידי האקרוליין.",
+                    "מיץ רימונים מעלה את היחס של Firmicutes ל-Bacteroidetes ובכך מגן על דופן המעי.",
+                    "הוא מונע את ספיגת האקרוליין בקיבה, אך אינו משפיע על אוכלוסיית החיידקים במעי הגס."
+                ], 
+                correctIndex: 1, 
+                explanation: "מיץ רימונים עשיר בנוגדי חמצון ופוליפנולים. הוכח כי הוא מסוגל לבטל (Abolish) את רוב השינויים הפתולוגיים בהרכב המיקרוביוטה שנגרמו עקב חשיפה לאקרוליין." 
             },
-            {
-                question: "על פי תיאוריית ההולוביום, כיצד יש להתייחס לאדם ולמיקרוביום שלו בהקשר אבולוציוני?",
+            { 
+                question: "מטופל הסובל ממחלת קרוהן מקבל טיפול ביולוגי נוגד TNF אלפא. במקביל, הוא מקבל טיפול אנטיביוטי ממושך. מהי ההשפעה האפשרית של האנטיביוטיקה על הצלחת הטיפול הביולוגי?", 
                 options: [
-                    "כשתי ישויות נפרדות המתחרות זו בזו על משאבים בסביבה.",
-                    "כיחידה אבולוציונית אחת המשתנה ומסתגלת יחד כסך המידע הגנטי של שניהם.",
-                    "המיקרוביום הוא טפיל פסיבי שאינו משפיע על התפתחות האדם בשום צורה.",
-                    "כמערכת בה הגנטיקה האנושית מכתיבה לחלוטין את הרכב החיידקים ללא תלות בסביבה."
-                ],
-                correctIndex: 1,
-                explanation: "תיאוריית ההולוביום גורסת כי בעלי חיים והמיקרואורגניזמים הקשורים אליהם מתפתחים כיחידה אחת (הולוביונט), וההולוגנום הוא סך המידע הגנטי של המאכסן ושל המיקרוביוטה שלו יחד."
+                    "האנטיביוטיקה תשפר את יעילות התרופה הביולוגית על ידי הריגת חיידקים מפרקי חלבונים.",
+                    "שימוש באנטיביוטיקה משנה את המיקרוביום, מה שעשוי להשפיע באופן דיפרנציאלי על הסיכון ליצירת נוגדנים כנגד התרופה (Anti-drug antibodies).",
+                    "אין קשר בין המיקרוביום לבין יעילותן של תרופות המוזרקות ישירות לזרם הדם.",
+                    "האנטיביוטיקה תגרום לייצור מוגבר של סרוטונין שינטרל את פעילות ה-TNF אלפא."
+                ], 
+                correctIndex: 1, 
+                explanation: "מחקרים מראים כי שימוש באנטיביוטיקה, המשנה את המיקרוביום, משפיע על התגובה החיסונית של הגוף, ובפרט על הסיכון לפתח נוגדנים כנגד תרופות ביולוגיות (Anti-drug antibodies), מה שעלול להכשיל את הטיפול." 
             },
-            {
-                question: "מה עשויה להיות ההשלכה של צריכת מיץ רימונים במקביל לתזונה עשירה במזון מטוגן (המכיל אקרוליין)?",
+            { 
+                question: "השוואה בין עכברים נטולי חיידקים (Germ-free) לעכברים בעלי מיקרוביום תקין מראה הבדלים משמעותיים בהתפתחות מערכת העצבים. איזה מהמנגנונים הבאים מסביר זאת בצורה הטובה ביותר?", 
                 options: [
-                    "החמרת הדיסביוזיס והאצת התפתחות טרשת עורקים.",
-                    "ביטול או צמצום משמעותי של השינויים השליליים במיקרוביום הנגרמים על ידי האקרוליין.",
-                    "הפיכת האקרוליין לחומצה לינולאית בתוך מערכת העיכול.",
-                    "חיסול מוחלט של אוכלוסיית החיידקים במעי בשל נוגדי החמצון."
-                ],
-                correctIndex: 1,
-                explanation: "מחקרים הראו כי מיץ רימונים, העשיר בפוליפנולים ונוגדי חמצון, מסוגל לבטל את רוב השינויים השליליים (דיסביוזיס) במיקרוביום המעי שהושרו על ידי חשיפה לאקרוליין."
+                    "חיידקי המעי מייצרים נוירוטרנסמיטורים ומטבוליטים שחוצים את מחסום דם-מוח או משפיעים ישירות על עצב הוואגוס.",
+                    "חיידקי המעי נודדים פיזית למוח במהלך ההתפתחות העוברית ויוצרים סינפסות חדשות.",
+                    "המיקרוביום מונע ספיגה של רעלנים מהמזון, שבלעדיו היו מונעים התפתחות מוחית תקינה.",
+                    "הגנום של החיידקים עובר אינטגרציה לגנום של תאי המוח ומשנה את ביטוי הגנים בהם."
+                ], 
+                correctIndex: 0, 
+                explanation: "ציר המעי-מוח פועל באמצעות ייצור כימיקלים על ידי חיידקים (כמו סרוטונין, GABA, ומטבוליטים אחרים) המשפיעים על תפקוד המוח, בין היתר דרך גירוי ישיר של עצב הוואגוס." 
             },
-            {
-                question: "איזה מהמשפטים הבאים מתאר בצורה הנכונה ביותר את הקשר בין מערכת החיסון למיקרוביום המעי?",
+            { 
+                question: "מה מייחד את המיקרוביום הקיים בתוך גידולים סרטניים (Intratumor bacteria) לעומת המיקרוביום במעי?", 
                 options: [
-                    "מערכת החיסון מזהה את כל חיידקי המעי כפתוגנים ותוקפת אותם באופן קבוע.",
-                    "הקשר הוא חד-כיווני: המיקרוביום מעצב את מערכת החיסון אך אינו מושפע ממנה.",
-                    "קיים יחסי גומלין דו-כיווניים: המיקרוביום מעצב את התגובה החיסונית, ומערכת החיסון משפיעה על הרכב המיקרוביום.",
-                    "חיידקי המעי מחליפים את הצורך בתאי דם לבנים במערכת העיכול."
-                ],
-                correctIndex: 2,
-                explanation: "האינטראקציה בין מערכת החיסון למיקרוביום היא דו-כיוונית. דיסביוזיס יכול לגרום לדלקת (כמו במחלות מעי דלקתיות או בעקבות קרינה), ובמקביל, מצבה של מערכת החיסון מעצב את הרכב אוכלוסיית החיידקים במעי."
+                    "המיקרוביום בגידולים סרטניים מורכב תמיד מחיידק בודד שגרם לסרטן.",
+                    "החתימה המיקרוביאלית בגידולים סרטניים היא ספציפית לסוג הגידול ולמיקומו האנטומי.",
+                    "חיידקים בתוך גידול סרטני אינם פעילים מטבולית ומהווים תוצר לוואי פסיבי.",
+                    "המיקרוביום הגידולי מורכב אך ורק מנגיפים ופטריות, ללא נוכחות חיידקית."
+                ], 
+                correctIndex: 1, 
+                explanation: "מחקרים (כמו של פרופ' רביד שטראוסמן) הראו כי לכל סוג גידול ולכל מיקום (למשל סוגים שונים של סרטן מוח) יש חתימה מיקרוביאלית (Microbial signature) ספציפית ומובחנת." 
             },
-            {
-                question: "מהי המטרה של שימוש בשיטת PMA-qPCR בבדיקות בטיחות מזון (כגון בשר פסטרמה)?",
+            { 
+                question: "נשאים של חיידקי CRE (Carbapenem-Resistant Enterobacteriaceae) נבדקו מבחינת הרכב המיקרוביום שלהם. איזה מאפיין צפוי להימצא אצלם בהשוואה לאנשים בריאים?", 
                 options: [
-                    "לרצף את כל הגנום האנושי של צרכני הבשר.",
-                    "להבדיל בין DNA של חיידקים חיים לבין DNA של חיידקים מתים כדי להעריך סיכון אמיתי לקלקול או מחלה.",
-                    "להגדיל את כמות החיידקים הפרוביוטיים בבשר על ידי הוספת חומצת חלב.",
-                    "למדוד את רמת האקרוליין שנוצרה במהלך תהליך העישון של הבשר."
-                ],
-                correctIndex: 1,
-                explanation: "חומר ה-PMA חודר רק לתאים מתים (בעלי ממברנה פגועה) ומונע את הגברת ה-DNA שלהם ב-qPCR. כך ניתן לכמת רק את החיידקים החיים שמהווים סכנה או אינדיקציה לקלקול המזון."
+                    "עלייה משמעותית בעושר המיקרוביאלי (Alpha diversity).",
+                    "מבנה קהילה מיקרוביאלית זהה לחלוטין לאנשים בריאים, אך עם נוכחות של גן העמידות.",
+                    "ירידה בעושר המיקרוביאלי (Alpha diversity) ומבנה קהילה שונה (Beta diversity).",
+                    "היעדר מוחלט של חיידקי Firmicutes במערכת העיכול."
+                ], 
+                correctIndex: 2, 
+                explanation: "נשאי CRE מפגינים דיסביוזה המתאפיינת בירידה בעושר המיקרוביאלי (Reduced microbial richness - Alpha diversity) ובמבנה קהילה שונה משמעותית (Beta diversity) לעומת לא-נשאים." 
             },
-            {
-                question: "כיצד עשויה חשיפה לאנטיביוטיקה להשפיע על יעילות טיפול תרופתי נוגד TNF-alpha (כמו במחלות מעי דלקתיות)?",
+            { 
+                question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין פרוביוטיקה לפרה-ביוטיקה?", 
                 options: [
-                    "האנטיביוטיקה משפרת את הטיפול על ידי חיסול כל החיידקים המייצרים TNF-alpha.",
-                    "האנטיביוטיקה משנה את המיקרוביום, מה שעלול להשפיע על נטיית הגוף לייצר נוגדנים נגד התרופה (Anti-drug antibodies).",
-                    "אין קשר, אנטיביוטיקה פועלת רק על חיידקים ותרופות ביולוגיות פועלות רק על תאים אנושיים.",
-                    "האנטיביוטיקה מפרקת את התרופה הביולוגית באופן ישיר בזרם הדם."
-                ],
-                correctIndex: 1,
-                explanation: "שימוש באנטיביוטיקה משנה את הרכב המיקרוביום, ושינוי זה נמצא קשור לשינוי בתגובה האימונית של המטופל, כולל הסיכון לפתח נוגדנים כנגד התרופה הביולוגית (מה שמפחית את יעילותה)."
+                    "פרוביוטיקה היא אנטיביוטיקה טבעית, ופרה-ביוטיקה היא אנטיביוטיקה סינתטית.",
+                    "פרוביוטיקה מכילה מיקרואורגניזמים חיים, בעוד שפרה-ביוטיקה מכילה חומרי הזנה המעודדים שגשוג של חיידקים מועילים.",
+                    "פרוביוטיקה ניתנת רק דרך השתלת צואה, ופרה-ביוטיקה ניתנת ככדורים לבליעה.",
+                    "שני המונחים מתארים את אותו תהליך של הריגת חיידקים פתוגניים במעי."
+                ], 
+                correctIndex: 1, 
+                explanation: "פרוביוטיקה היא תוספת של חיידקים חיים ומועילים. פרה-ביוטיקה היא המזון (לרוב סיבים תזונתיים שאינם מתעכלים על ידי האדם) שמזין ומעודד את שגשוגם של החיידקים המועילים הקיימים." 
             },
-            {
-                question: "מה ניתן להסיק מכך שתאומים זהים (מונוזיגוטיים) מראים מתאם גבוה יותר בהרכב חיידקי המעי שלהם מאשר תאומים לא זהים (דיזיגוטיים)?",
+            { 
+                question: "באיזו טכנולוגיה סביר ביותר להשתמש כדי לזהות את ההרכב היחסי של אלפי מיני חיידקים בדגימת צואה אחת?", 
                 options: [
-                    "סביבת המגורים המשותפת היא הגורם היחיד המשפיע על המיקרוביום.",
-                    "לגנטיקה של המאכסן יש השפעה משמעותית על עיצוב הרכב המיקרוביום.",
-                    "תאומים זהים אוכלים בדיוק את אותו המזון, בניגוד לתאומים לא זהים.",
-                    "מערכת החיסון של תאומים לא זהים דוחה חיידקי מעי באופן אגרסיבי יותר."
-                ],
-                correctIndex: 1,
-                explanation: "העובדה שתאומים בעלי מטען גנטי זהה חולקים מיקרוביום דומה יותר מאשר תאומים החולקים רק מחצית מהגנים שלהם (למרות ששניהם חולקים סביבה רחמית וביתית דומה), מצביעה על תפקידה המובהק של הגנטיקה של המאכסן בקביעת המיקרוביום."
+                    "היברידיזציה של מושבות עם סמן ספציפי (Colony hybridization).",
+                    "ריצוף עמוק של גן ה-16S rRNA בטכנולוגיות כמו Illumina MiSeq.",
+                    "הדבקה של עכברים נטולי חיידקים (Germ-free) ומעקב אחר התנהגותם.",
+                    "מדידת רמות הסרוטונין וה-GABA בדם המטופל."
+                ], 
+                correctIndex: 1, 
+                explanation: "כדי לזהות קהילה שלמה של אלפי מינים (Deep sequencing revolution), משתמשים בריצוף של אזורים משתנים (V3-V4) בגן ה-16S rRNA. היברידיזציה מתאימה לזיהוי מין ספציפי אחד." 
             },
-            {
-                question: "חוקרים מצאו חיידקים בתוך תאי גידול סרטני במוח. איזו מהטענות הבאות לגבי תגלית זו סבירה ביותר על בסיס הנלמד?",
+            { 
+                question: "מדוע מחקרים על תאומים זהים (מונוזיגוטיים) תורמים להבנת תאוריית ההולוגנום?", 
                 options: [
-                    "חיידקים אלו הם תמיד תוצאה של זיהום מקרי במהלך הניתוח להסרת הגידול.",
-                    "המיקרוביום של הגידול עשוי להשפיע על התפתחות הסרטן, קצב התקדמותו והתגובה של החולה לטיפולים.",
-                    "הימצאות חיידקים בגידול מעידה על כך שהסרטן נגרם מאכילת בשר שלא בושל כראוי.",
-                    "חיידקים אלו מחליפים את ה-DNA הסרטני ב-DNA חיידקי ובכך מרפאים את המחלה."
-                ],
-                correctIndex: 1,
-                explanation: "מחקרים על המיקרוביום של גידולים סרטניים מראים כי לחיידקים הנמצאים בתוך הגידול (כמו בגליובלסטומה או גרורות) יש תפקיד ביצירת דלקת כרונית, ייצור גנוטוקסינים, אפנון מערכת החיסון, והשפעה על התגובה לטיפול אנטי-סרטני."
+                    "הם מוכיחים שהתזונה אינה משפיעה כלל על המיקרוביום.",
+                    "הם מדגימים שלתאומים זהים יש מיקרוביום זהה ב-100%, מה ששולל השפעה סביבתית.",
+                    "הקורלציה החזקה יותר במיקרוביום בין תאומים זהים לעומת תאומים לא זהים מדגישה את התפקיד המרכזי של הגנטיקה של המאכסן.",
+                    "הם מראים כי חיידקי מעיים עוברים בתורשה דרך השליה במהלך ההיריון."
+                ], 
+                correctIndex: 2, 
+                explanation: "העובדה שלתאומים זהים (בעלי גנטיקה זהה) יש מיקרוביום דומה יותר מאשר לתאומים דיזיגוטיים (החולקים 50% מהגנים), מחזקת את הטענה שהגנטיקה של המאכסן מכוונת ובוחרת את הרכב המיקרוביום, בהתאם לתאוריית ההולוגנום." 
             },
-            {
-                question: "איזה מהתרחישים הבאים מתאר בצורה הטובה ביותר מצב של דיסביוזיס?",
+            { 
+                question: "חוקר מבחין כי לאחר טיפול בקרינה, רקמות המעי של העכבר נפגעות קשות. הוא מגלה שהנזק מתווך על ידי ציטוקין דלקתי IL-1beta. מהי המסקנה הסבירה לגבי תפקיד המיקרוביום בתהליך זה?", 
                 options: [
-                    "תינוק הנולד בניתוח קיסרי ורוכש חיידקי עור במקום חיידקי נרתיק.",
-                    "עלייה במגוון האלפא ויציבות מבנית של קהילת החיידקים במעי לאחר צריכת סיבים תזונתיים.",
-                    "ירידה משמעותית בעושר המינים במעי ועלייה בדומיננטיות של קבוצת פתוגנים, למשל עקב מתן אנטיביוטיקה.",
-                    "יחס של 1:1 בין תאים אנושיים לתאי חיידקים בגוף האדם הבוגר."
-                ],
-                correctIndex: 2,
-                explanation: "דיסביוזיס מוגדר כחוסר איזון בהרכב המיקרוביאלי, המתאפיין לרוב באובדן מגוון (ירידה בעושר המינים), אובדן של חיידקים מועילים, ושגשוג של פתוגנים או חיידקים מחוללי דלקת."
+                    "הקרינה הורגת את כל המיקרוביום, והיעדר החיידקים הוא שגורם ישירות לדלקת.",
+                    "הקרינה משרה דיסביוזה דלקתית במיקרוביום, והמיקרוביום המשתנה הוא שמעורר את תגובת ה-IL-1beta הגורמת לנזק ברקמה.",
+                    "המיקרוביום מגן לחלוטין מפני קרינה, והנזק נגרם רק בעכברים נטולי חיידקים.",
+                    "הקרינה גורמת לחיידקי המעי לייצר סרוטונין רעיל שהורס את הרקמה."
+                ], 
+                correctIndex: 1, 
+                explanation: "מחקרים מראים כי קרינה משרה דיסביוזה פרו-דלקתית (Radiation-induces inflammatory dysbiosis). החיידקים שעברו שינוי מעוררים את מערכת החיסון של המאכסן לייצר ציטוקינים כמו IL-1beta, והם אלו שגורמים בסופו של דבר לנזק ברקמה." 
             },
-            {
-                question: "מהו ההבדל המהותי בין פרה-ביוטיקה לפרו-ביוטיקה?",
+            { 
+                question: "מהי המשמעות העיקרית של המונח 'רפואה מותאמת אישית' בהקשר של Probiotics-genomics?", 
                 options: [
-                    "פרה-ביוטיקה מכילה חיידקים חיים, בעוד פרו-ביוטיקה מכילה חיידקים מומתים.",
-                    "פרה-ביוטיקה היא מזון (כמו סיבים) המעודד גדילת חיידקים מועילים קיימים, בעוד פרו-ביוטיקה היא תוספת של מיקרואורגניזמים חיים עצמם.",
-                    "פרה-ביוטיקה ניתנת תמיד בצורת גלולות, בעוד פרו-ביוטיקה מתקבלת רק ממזון מותסס כמו קימצ'י.",
-                    "אין הבדל, מדובר בשני מונחים נרדפים לאותו תהליך של השתלת צואה."
-                ],
-                correctIndex: 1,
-                explanation: "פרה-ביוטיקה (Prebiotics) מהווה מצע תזונתי לחיידקים (למשל תרכובות מאייארד או סיבים). פרו-ביוטיקה (Probiotics) כוללת את החיידקים החיים עצמם המוכנסים לגוף."
+                    "מתן אותה תערובת פרוביוטית לכל המטופלים, אך במינונים המותאמים למשקל גופם.",
+                    "ריצוף הגנום של החיידק הפרוביוטי כדי לוודא שאינו מכיל גני עמידות לאנטיביוטיקה.",
+                    "התאמת הטיפול הפרוביוטי לגנטיקה הספציפית של המטופל, מתוך הבנה שהגנטיקה משפיעה על קליטת החיידקים.",
+                    "שימוש בפרוביוטיקה כדי לשנות את הגנום האנושי ולתקן מוטציות מולדות."
+                ], 
+                correctIndex: 2, 
+                explanation: "מכיוון שהגנטיקה של המאכסן משפיעה באופן חזק על הרכב המיקרוביום (כפי שהוכח בניסויי העכברים), גישת ה-Probiotics-genomics מציעה להתאים את הטיפול הפרוביוטי לפרופיל הגנטי הייחודי של כל אדם." 
             },
-            {
-                question: "מדוע המיקרוביום נחשב כגורם היכול להסביר את בעיית התורשתיות החסרה (Missing heritability)?",
+            { 
+                question: "בניסוי, עכברים ביישנים קיבלו השתלת מיקרוביוטה מעכברים חקרניים. לאחר ההשתלה, העכברים הביישנים הפכו לחקרניים. מה מוכיח ניסוי זה?", 
                 options: [
-                    "מפני שחיידקים יכולים לשנות את רצף ה-DNA בתאי הזרע והביצית של האדם.",
-                    "מפני שתכונות פנוטיפיות רבות שאינן מוסברות במלואן על ידי הגנטיקה האנושית, מושפעות למעשה מהגנים של המיקרוביום שעוברים גם הם מדור לדור.",
-                    "מפני שהמיקרוביום מונע מוטציות גנטיות באדם על ידי הפרשת סרוטונין.",
-                    "מפני שבעיות תורשתיות נגרמות אך ורק מחוסר בוויטמינים המיוצרים על ידי המיקרוביום."
-                ],
-                correctIndex: 1,
-                explanation: "התורשתיות החסרה מתייחסת לכך שגנים אנושיים לא מצליחים להסביר את כל השונות בתכונות תורשתיות. המיקרוביום מתפקד כגנום נוסף שמשפיע על הפנוטיפ (מטבוליזם, חיסון, התנהגות) ומועבר בין דורות, ובכך משלים את ההסבר."
+                    "תכונות התנהגותיות נקבעות אך ורק על ידי הגנטיקה של המאכסן.",
+                    "המיקרוביום יכול להעביר תכונות התנהגותיות בין פרטים שונים, המצביע על השפעה חזקה על המוח.",
+                    "חיידקי המעי מפרקים נוירוטרנסמיטורים במוח וגורמים לנזק מוטורי.",
+                    "השתלת צואה גורמת לשינוי בלתי הפיך ב-DNA של תאי המוח."
+                ], 
+                correctIndex: 1, 
+                explanation: "ניסוי זה (Bercik et al., 2011) מדגים בצורה מובהקת את קיומו של ציר מעי-מוח, שבו הרכב המיקרוביום יכול להשפיע באופן ישיר על תכונות התנהגותיות פסיכולוגיות." 
             },
-            {
-                question: "אילו מהגורמים הבאים אינו משפיע על הרכב המיקרוביום של האדם?",
+            { 
+                question: "אם נרצה לבדוק האם טפיל מסוים משפיע על התנהגות אנושית, איזה מהטפילים הבאים יהווה את מודל המחקר הרלוונטי ביותר על סמך נתוני המיקרוביום?", 
                 options: [
-                    "גנטיקה של המאכסן.",
-                    "חשיפה לאנטיביוטיקה.",
-                    "סוג הדם של המאכסן בלבד, ללא קשר לתזונה.",
-                    "תזונה ואורח חיים."
-                ],
-                correctIndex: 2,
-                explanation: "הרכב המיקרוביום הוא מולטי-פקטוריאלי ומושפע מתזונה, סביבה, גיל, גנטיקה, מצב פיזיולוגי ותרופות. סוג דם לבדו אינו גורם בלעדי המכתיב את המיקרוביום ללא קשר לגורמים האחרים."
+                    "E. coli",
+                    "Helicobacter pylori",
+                    "Toxoplasma gondii",
+                    "Lactobacillus johnsonii"
+                ], 
+                correctIndex: 2, 
+                explanation: "Toxoplasma gondii הוא טפיל היוצר ציסטות במוח, משפיע על המערכת האימונית ומערכת העצבים, ונמצא קשור סטטיסטית לשינויים בהתנהגות כמו עלייה בסיכון לתאונות דרכים." 
             },
-            {
-                question: "מה ניתן להסיק מכך שהעברת מיקרוביוטה מעכברים ביישנים לעכברים חסרי חיידקים (Germ-free) הפכה אותם לביישנים, ולהיפך?",
+            { 
+                question: "מהו התפקיד העיקרי של חיידקי המעי בייצור סרוטונין בגוף האדם?", 
                 options: [
-                    "המיקרוביום קובע רק מאפיינים פיזיולוגיים כמו משקל, אך לא התנהגות.",
-                    "תכונות התנהגותיות יכולות להיות מועברות דרך המיקרוביוטה של המעי, מה שמדגים את פעילות ציר המעי-מוח.",
-                    "חיידקי מעי יכולים לשרוד רק בעכברים ביישנים.",
-                    "השתלת צואה גורמת תמיד לדיכאון בעכברים."
-                ],
-                correctIndex: 1,
-                explanation: "מחקרים הראו שפרופיל התנהגותי (כגון חרדה או נטייה לחקרנות) מועבר יחד עם המיקרוביוטה, מה שמוכיח קשר ישיר בין הרכב חיידקי המעי לתפקוד המוח והתנהגות."
+                    "הם מייצרים את רוב הסרוטונין בגוף בעצמם ומפרישים אותו לדם.",
+                    "הם מווסתים ומבקרים את ייצור הסרוטונין על ידי תאי מערכת העצבים האנטרית (במעי).",
+                    "הם מונעים ספיגה של חומצות אמינו החיוניות לייצור סרוטונין במוח.",
+                    "הם מפרקים סרוטונין עודף כדי למנוע רעילות במערכת העיכול."
+                ], 
+                correctIndex: 1, 
+                explanation: "רוב הסרוטונין בגוף נמצא במערכת העצבים האנטרית (במעי). החיידקים עצמם אינם מייצרים את רובו, אלא הם מווסתים ומבקרים (Directly regulated by the microbiome) את ייצורו על ידי תאי המאכסן במעי." 
             },
-            {
-                question: "מהו תפקידו העיקרי של העצב התועה (Vagus nerve) בהקשר של המיקרוביום?",
+            { 
+                question: "מהו המאפיין הבולט של דיסביוזה הנגרמת בעקבות צריכת אקרוליין, וכיצד היא קשורה למחלות מטבוליות?", 
                 options: [
-                    "הוא העצב האחראי על תנועת המעיים בלבד ואינו קשור למוח.",
-                    "הוא משמש כאחד ממסלולי התקשורת הישירים המרכזיים בין חיידקי המעי לבין המוח בציר המעי-מוח.",
-                    "הוא מייצר את החומצה הלינולאית הדרושה לשגשוג חיידקים.",
-                    "הוא מסנן חיידקים פתוגניים ומונע מהם לחדור לזרם הדם."
-                ],
-                correctIndex: 1,
-                explanation: "העצב התועה מחבר בין מערכת העיכול למוח, ומהווה נתיב פיזיולוגי מרכזי להעברת אותות ותוצרים מטבוליים מהמיקרוביום ישירות למערכת העצבים המרכזית."
-            },
-            {
-                question: "כיצד חיידקי חומצת חלב (LAB) משפיעים על מערכת העצבים המרכזית, לפי המוצג בחומר?",
-                options: [
-                    "הם מייצרים אקרוליין שחודר למוח וגורם לעוררות יתר.",
-                    "הם מייצרים חומצה לינולאית שחוסמת את קולטני הסרוטונין.",
-                    "הם מייצרים את המוליך העצבי GABA, אשר מפחית עוררות עצבית ויכול לסייע בהורדת לחץ דם.",
-                    "הם מונעים ייצור של ציסטות במוח על ידי טפילים."
-                ],
-                correctIndex: 2,
-                explanation: "חיידקי LAB ידועים ביכולתם לייצר GABA (Gamma-Amino Butyric Acid), שהוא נוירוטרנסמיטר מעכב המפחית עוררות עצבית ונמצא כמוביל להורדת לחץ דם בבני אדם ובחולדות."
-            },
-            {
-                question: "מה מאפיין את התפתחות המיקרוביום האנושי מיד לאחר הלידה?",
-                options: [
-                    "הוא נשאר סטטי ואינו משתנה עד גיל ההתבגרות.",
-                    "הוא נרכש במהירות, ועובר תהליך של עלייה דרמטית במספר, בעושר וביציבות של אוכלוסיית החיידקים.",
-                    "הוא מורכב אך ורק מחיידקים פתוגניים עד למעבר למזון מוצק.",
-                    "הוא מבוסס לחלוטין על הגנטיקה של האב ואינו מושפע מסביבת הלידה."
-                ],
-                correctIndex: 1,
-                explanation: "המיקרוביום נרכש בעיקר לאחר הלידה, ומתאפיין בעלייה חדה בכמות החיידקים, בעושר המינים וביציבות המערכת האקולוגית במהלך שנות החיים הראשונות."
-            },
-            {
-                question: "חוקר משווה בין שתי קבוצות עכברים. קבוצה א' עברה המלטה וגידול רגיל. קבוצה ב' נולדה בניתוח קיסרי ולא נחשפה לחיידקי האם. איזה הבדל סביר שיימצא בהתפתחותן?",
-                options: [
-                    "לקבוצה ב' תהיה נטייה נמוכה יותר להשמנה ולמחלות אלרגיות.",
-                    "קבוצה ב' תציג קולוניזציה מעוכבת של פלורת מעי תקינה (כמו Bacteroidetes) וסיכון מוגבר למחלות אימוניות ומטבוליות.",
-                    "לא יהיה כל הבדל, שכן המיקרוביום נקבע רק על ידי הגנים של העכבר.",
-                    "קבוצה ב' תייצר יותר סרוטונין בשל היעדר חיידקים מתחרים."
-                ],
-                correctIndex: 1,
-                explanation: "לידה בניתוח קיסרי מונעת חשיפה ראשונית קריטית לחיידקי תעלת הלידה של האם, מה שמוביל לקולוניזציה מעוכבת, ירידה במורכבות המיקרוביום, וסיכון מוגבר לאסטמה, מחלות מעי דלקתיות והשמנה."
-            },
-            {
-                question: "במחקר על עכברי apoE -/- (הנוטים לטרשת עורקים), מתן אקרוליין הוביל לעלייה ביחס פירמיקוטים לבקטרואידטים. מה משמעות ממצא זה?",
-                options: [
-                    "האקרוליין פועל כפרה-ביוטיקה המעודדת בריאות מעיים.",
-                    "האקרוליין גורם לשינוי מיקרוביאלי (דיסביוזיס) המקושר לקידום תהליכי טרשת עורקים והתסמונת המטבולית.",
-                    "יחס זה מעיד על הכחדה של חיידקי המעי ודורש השתלת צואה דחופה.",
-                    "האקרוליין מונע ספיגת כולסטרול במעי הדק."
-                ],
-                correctIndex: 1,
-                explanation: "עלייה ביחס פירמיקוטים לבקטרואידטים היא סמן מוכר לדיסביוזיס המקושר להשמנה, תסמונת מטבולית, וטרשת עורקים. האקרוליין משרה מצב זה, הנמצא במתאם חיובי עם רמות כולסטרול."
-            },
-            {
-                question: "המונח 'רפואה מותאמת אישית מבוססת פרוביוטיקה-גנומיקה' מתבסס על ההנחה ש:",
-                options: [
-                    "כל בני האדם צריכים לקבל את אותו סוג של פרוביוטיקה ללא קשר לגנים שלהם.",
-                    "הגנטיקה של המאכסן מכתיבה אילו זני חיידקים יוכלו להשתקע במעי, ולכן יש להתאים את הפרוביוטיקה לפרופיל הגנטי של המטופל.",
-                    "פרוביוטיקה עובדת רק כאשר היא ניתנת יחד עם אנטיביוטיקה רחבת טווח.",
-                    "המיקרוביום אינו מושפע מגנטיקה כלל, אלא רק מתזונה."
-                ],
-                correctIndex: 1,
-                explanation: "מכיוון שהוכח (למשל בניסוי ההכלאות בעכברים) שהגנטיקה של המאכסן משפיעה משמעותית על הרכב המיקרוביום (איזה חיידק 'ייתפס'), גישת הרפואה המותאמת אישית מציעה שמתן פרוביוטיקה צריך להיות מותאם לגנוטיפ של המטופל כדי להבטיח קליטה ויעילות."
-            },
-            {
-                question: "מהי אחת הסכנות המרכזיות בהופעת חיידקי CRE בבתי חולים, מלבד הקושי בטיפול בזיהום עצמו?",
-                options: [
-                    "הם הופכים את המטופל לאלרגי לפניצילין באופן מיידי.",
-                    "רוב הזיהומים מסתיימים בנשאות, מה שמאפשר לחיידקים העמידים להישאר במיקרוביום של המטופל ולהיות מופצים הלאה.",
-                    "הם גורמים לייצור יתר של סרוטונין המוביל לדיכאון קליני.",
-                    "הם מפרקים תרופות ביולוגיות נגד סרטן במערכת העיכול."
-                ],
-                correctIndex: 1,
-                explanation: "מרבית הזיהומים של חיידקים עמידים (כמו CRE) נרכשים במהלך אשפוז ומובילים למצב של נשאות (Carriage) במעי. הנשאות מהווה מאגר של חיידקים עמידים שיכולים לגרום לזיהומים חוזרים או להיות מופצים לאנשים אחרים."
-            },
-            {
-                question: "מהו הקשר שנמצא בין זיהום אימהי במהלך ההיריון (Maternal infection) לבין אוטיזם, בהקשר של המיקרוביום?",
-                options: [
-                    "הזיהום הורס את מוח העובר באופן ישיר ללא מעורבות מערכת העיכול.",
-                    "הזיהום גורם להפעלת מערכת החיסון האימהית, מה שמוביל לשינויים במיקרוביום ובמערכת החיסון של הצאצא, המקושרים לסיכון מוגבר לאוטיזם.",
-                    "חיידקי האם עוברים דרך השליה וגורמים לזיהום קטלני המונע התפתחות מוחית.",
-                    "אין קשר בין זיהום אימהי לאוטיזם, זהו מיתוס שהופרך."
-                ],
-                correctIndex: 1,
-                explanation: "מחקרים מצביעים על כך שחשיפה לזיהום (או הפעלת מערכת החיסון) במהלך ההיריון מעלה את הסיכון לאוטיזם בצאצא. מודלים בבעלי חיים מראים שזה מלווה בשינויים אימוניים ובעיות במערכת העיכול (דיסביוזיס) אצל הצאצא."
-            },
-            {
-                question: "מדוע התייחסות למיקרוביום כ'איבר נשכח' היא מטאפורה מדויקת?",
-                options: [
-                    "משום שהוא נמצא רק בתוספתן, איבר שאין לו שימוש מודרני.",
-                    "משום שמשקלו ופעילותו המטבולית שווים לאלו של איבר מרכזי (כמו הכבד), ויש לו תפקידים חיוניים בתפקוד הכללי של הגוף.",
-                    "משום שניתן להסיר אותו לחלוטין בניתוח ללא השלכות בריאותיות.",
-                    "משום שהוא נוצר רק בגיל מבוגר ואז הגוף שוכח מקיומו."
-                ],
-                correctIndex: 1,
-                explanation: "המיקרוביום שוקל כ-1.5 עד 2.5 קילוגרמים, מכיל כמות עצומה של תאים וגנים, ומבצע פעולות מטבוליות, חיסוניות ונוירולוגיות חיוניות, בדומה לאיבר עצמאי ואינטגרלי בגוף."
-            },
-            {
-                question: "באיור המציג את 'אוהל האבולוציה' (Variance), מה מסמלת הנוסחה למגוון פנוטיפי כולל ($V_P = V_G + V_E + V_{GxE}$) בהקשר של המיקרוביום?",
-                options: [
-                    "שהמיקרוביום מושפע אך ורק מהסביבה ($V_E$).",
-                    "שהתכונות הנצפות של האדם מושפעות מהגנטיקה שלו, מהסביבה שלו (הכוללת את המיקרוביום), ומהאינטראקציה ביניהן.",
-                    "שהגנום האנושי ($V_G$) גדול פי 100 מהסביבה.",
-                    "ששונות גנטית אינה קיימת בחיידקים."
-                ],
-                correctIndex: 1,
-                explanation: "הנוסחה מראה שהפנוטיפ ($V_P$) מורכב מתרומה גנטית ($V_G$), תרומה סביבתית ($V_E$ - שכוללת את המיקרוביום), ומהאינטראקציה ביניהם, מה שתומך בתפיסת ההולוגנום."
-            },
-            {
-                question: "איזה שינוי במיקרוביום נצפה בעקבות חשיפה לקרינה על פי מחקרה של שירן גרסי-וינברג?",
-                options: [
-                    "הקרינה מחסלת את כל החיידקים במעי הדק בלבד.",
-                    "הקרינה משרה דיסביוזיס פרו-דלקתי, אשר מסוגל להעביר את הנטייה לדלקת (ונזק לרקמה בתיווך IL-1β) למאכסן חדש.",
-                    "הקרינה גורמת לעלייה דרמטית בייצור סרוטונין על ידי חיידקי LAB.",
-                    "הקרינה אינה משפיעה על המיקרוביום, אלא רק על תאי האפיתל של האדם."
-                ],
-                correctIndex: 1,
-                explanation: "המחקר הראה שקרינה גורמת לשינוי בהרכב החיידקים (דיסביוזיס דלקתי), וניתן להעביר את הרגישות לנזק רקמתי (הקשור לציטוקין IL-1β) על ידי העברת המיקרוביוטה לעכברים נטולי חיידקים."
-            },
-            {
-                question: "מהי המשמעות של הימצאות טפיל ה-Toxoplasma gondii בשלב 'ישן' (ציסטות) במוח של בני אדם?",
-                options: [
-                    "במצב זה הטפיל מת ואינו גורם נזק כלל.",
-                    "הטפיל יכול להשפיע באופן סמוי על המערכת האימונית ועל מערכת העצבים, ולגרום לשינויי התנהגות או למחלות אופורטוניסטיות.",
-                    "הוא גורם באופן מיידי לאוטיזם בקרב מבוגרים.",
-                    "הוא מגן על המוח מפני התפתחות של גידולים סרטניים מסוג גליובלסטומה."
-                ],
-                correctIndex: 1,
-                explanation: "למרות שהטפיל שוכן בצורת ציסטות 'רדומות' במוח של מיליארדי אנשים, הוא נמצא מקושר להשפעות נוירו-אימוניות המשנות התנהגות (כגון לקיחת סיכונים ומעורבות בתאונות דרכים) ויכול להתפרץ במצבי דיכוי חיסוני."
-            },
-            {
-                question: "בגרף המתאר את השפעת טיפולי שמן סויה, מה פירוש הממצא כי 'לא נצפתה תלות במינון (No dosage dependency)'?",
-                options: [
-                    "ככל שהמינון עלה, כך החמיר הדיסביוזיס.",
-                    "גם מינון נמוך (40 מ\"ג) וגם מינון גבוה (160 מ\"ג) של שמן סויה גרמו לאותו שינוי בדיסביוזיס של המיקרוביום.",
-                    "המיקרוביום הפסיק להגיב לשמן סויה לאחר 30 יום ללא קשר לכמות.",
-                    "מינון גבוה של שמן סויה ביטל את ההשפעה השלילית של מינון נמוך."
-                ],
-                correctIndex: 1,
-                explanation: "חוסר תלות במינון משמעותו שהאפקט נצפה במלואו כבר במינונים הנמוכים, והגדלת הכמות לא שינתה משמעותית את עוצמת ההשפעה על הרכב המיקרוביום."
-            },
-            {
-                question: "כיצד תורמת הבנת המיקרוביום ל'חלום הריפוי הגנטי' (Gene therapy)?",
-                options: [
-                    "ניתן להנדס גנטית את ה-DNA של האדם ללא התערבות כירורגית.",
-                    "מכיוון שהמיקרוביום הוא 'גנום שני' שניתן לשינוי בקלות (באמצעות תזונה, פרוביוטיקה או השתלת צואה), מניפולציה שלו שקולה לשינוי גנטי של ההולוביונט כולו.",
-                    "המיקרוביום יכול לרפא מחלות תורשתיות על ידי החלפת כרומוזומים פגומים.",
-                    "חיידקים עמידים לאנטיביוטיקה מעבירים גנים של ריפוי לתאים סרטניים."
-                ],
-                correctIndex: 1,
-                explanation: "בעוד ששינוי הגנום האנושי הוא קשה ומורכב, הגנום המיקרוביאלי (הגדול בהרבה) ניתן למניפולציה באמצעות תזונה או השתלות. שינוי המיקרוביום הוא בפועל שינוי של הפרופיל הגנטי הכולל של האדם."
-            },
-            {
-                question: "מה מאפיין את מנגנון הפעולה של השתלת צואה (Fecal Microbiota Transplantation)?",
-                options: [
-                    "החלפת איבר פגום במערכת העיכול באיבר תקין מתורם.",
-                    "החדרת אנטיביוטיקה חזקה למעי כדי לחסל את כל החיידקים הקיימים.",
-                    "אכלוס מחדש של מעי המטופל בקהילת חיידקים מאוזנת מתורם בריא, במטרה לתקן מצבי דיסביוזיס.",
-                    "מתן מנה מרוכזת של אקרוליין כדי לאתחל את מערכת החיסון של המעי."
-                ],
-                correctIndex: 2,
-                explanation: "השתלת צואה נועדה לשקם את המיקרוביום הפגוע של החולה (למשל בחולי C. difficile או מחלות מעי אחרות) על ידי החדרת מיקרוביוטה בריאה ומאוזנת מתורם."
-            },
-            {
-                question: "חוקר מבחין כי בחולי סוכרת סוג 2, התגובה לפעילות גופנית שונה ממטופל למטופל. מה יכול להיות ההסבר המיקרוביאלי לכך?",
-                options: [
-                    "לכל החולים יש מיקרוביום זהה, אך הוא מגיב רק לתרופות ולא לספורט.",
-                    "הרכב מיקרוביום שונה בין 'מגיבים' ל'לא מגיבים' משפיע על פירוק חומרים המעודדים סבילות לאינסולין בעקבות הפעילות הגופנית.",
-                    "חיידקי מעי מונעים מהחולים לבצע פעילות גופנית על ידי יצירת עייפות כרונית.",
-                    "ספורט הורס את המיקרוביום אצל חולי סוכרת, מה שמוביל לעלייה ברמות הסוכר."
-                ],
-                correctIndex: 1,
-                explanation: "לפי המחקר שהוצג, ההבדל בתגובה לספורט (שיפור ברגישות לאינסולין) נובע מהרכב שונה של המיקרוביום. אצל 'המגיבים', המיקרוביום מסייע בפירוק חומצות אמינו המעודדות תנגודת לאינסולין."
-            },
-            {
-                question: "מהו התפקיד של 'צמדי מאייארד' (Maillard-conjugates) המוזכרים במחקר של פלד וחב' (2024)?",
-                options: [
-                    "הם סוג של אנטיביוטיקה חדשנית הפועלת רק על פתוגנים במעי.",
-                    "הם משמשים כפרה-ביוטיקה מהדור הבא המסוגלת לאפנן לטובה את הרכב המיקרוביום ולקדם פעילות בריאותית.",
-                    "הם תוצרי לוואי רעילים של טיגון, הדומים לאקרוליין.",
-                    "הם חלבונים אנושיים המונעים דחיית שתל בהשתלות צואה."
-                ],
-                correctIndex: 1,
-                explanation: "צמדי מאייארד (כמו חיבור של לקטופרין ופוקוזילקטוז) נחקרו כפרה-ביוטיקה מתקדמת המשנה לטובה את אוכלוסיית החיידקים במעי ותורמת לבריאות המאכסן."
-            },
-            {
-                question: "במהלך תהליך הכנת פסטרמה, באיזה שלב הוכחה חשיבות הוספת 'אשלגן לקטט' (Potassium lactate) לפי בדיקות ה-PMA-qPCR?",
-                options: [
-                    "הוא הכרחי רק בשלב חומרי הגלם הנאים כדי למנוע כניסת חיידקים למפעל.",
-                    "הוא אינו משפיע על מיקרוביום הבשר בשום שלב.",
-                    "הוא מעכב משמעותית את שגשוגם של חיידקי קלקול (כגון לקטובצילוס וויבריו) לאורך חיי המדף של המוצר (אחסון של שבועות עד חודשים).",
-                    "הוא משמש כתחליף לתהליך הבישול והעישון של הבשר."
-                ],
-                correctIndex: 2,
-                explanation: "הוספת אשלגן לקטט לתערובת הבשר הודגמה כמעכבת את הגדילה והשגשוג של חיידקים (שנבדקו ב-qPCR) במהלך תקופת האחסון, ובכך מאריכה את חיי המדף ומונעת קלקול מוקדם."
-            },
-            {
-                question: "איזה מהמשפטים הבאים מתאר נכונה את השפעת המיקרוביום על מערכת העיכול עצמה?",
-                options: [
-                    "החיידקים מפרקים את רירית המעי כדי להפיק אנרגיה, מה שגורם נזק תמידי.",
-                    "המיקרוביום ממלא תפקיד מכריע בשמירה על בריאות תאי האפיתל של המעי ובהזנה דו-כיוונית עם המאכסן.",
-                    "המיקרוביום מונע ספיגת חומרי הזנה כדי לשמור על משקל גוף תקין.",
-                    "חיידקי המעי מחליפים את פעילות הכבד בסינון רעלים מהדם."
-                ],
-                correctIndex: 1,
-                explanation: "המיקרוביום חיוני לשמירה על שלמות רקמת האפיתל במעי, הוא מסייע בעיכול מזון, וקיימת הזנה הדדית בינו לבין המאכסן (למשל, ייצור חומצות שומן קצרות שרשרת המזינות את תאי המעי)."
-            },
-            {
-                question: "כיצד הגדירו החוקרים 'נשאות' (Carriage) של חיידקי CRE?",
-                options: [
-                    "מצב שבו המטופל סובל מזיהום חריף ומסכן חיים בזרם הדם.",
-                    "מצב שבו החיידק העמיד מאכלס את מערכת העיכול של המטופל כחלק מהמיקרוביום שלו, ללא גרימת מחלה פעילה באותו רגע.",
-                    "מצב שבו החיידק הושמד לחלוטין אך השאיר חותם גנטי ב-DNA האנושי.",
-                    "מצב שבו צוות בית החולים נושא את החיידק על הידיים בלבד."
-                ],
-                correctIndex: 1,
-                explanation: "נשאות מתייחסת למצב בו החיידק העמיד (כמו CRE) הופך לחלק מקהילת החיידקים במעי של המטופל. הוא אינו גורם לזיהום קליני באותו רגע, אך המטופל מהווה מאגר לחיידק ויכול להפיץ אותו או לפתח זיהום בעתיד."
-            },
-            {
-                question: "מה מראה ניתוח מגוון בטא (Beta diversity) באמצעות Unweighted UniFrac בגרפים של PCoA?",
-                options: [
-                    "את מספר הגנים הכולל של החיידקים בכל דגימה.",
-                    "את המרחק האקולוגי והדמיון בהרכב הקהילה המיקרוביאלית בין דגימות שונות (למשל, בין עכברי C57BL לעכברי BALB/c).",
-                    "את כמות הקלוריות שכל עכבר צרך במהלך הניסוי.",
-                    "את קצב הגידול של חיידק בודד בתרבית מעבדה."
-                ],
-                correctIndex: 1,
-                explanation: "גרף PCoA (Principal Coordinate Analysis) המבוסס על מדדי מגוון בטא (כמו UniFrac) מציג חזותית עד כמה קהילות חיידקים מדגימות שונות דומות או שונות זו מזו. נקודות קרובות מעידות על מיקרוביום דומה."
+                    "עלייה דרסטית ביחס Firmicutes:Bacteroidetes, אשר נמצאת בקורלציה חיובית עם רמות כולסטרול וטרשת עורקים.",
+                    "היעלמות מוחלטת של חיידקי המעי, המובילה לתת-תזונה ואובדן משקל.",
+                    "שגשוג יתר של חיידקים מייצרי GABA, הגורם לירידה מסוכנת בלחץ הדם.",
+                    "ירידה ביחס Firmicutes:Bacteroidetes, המעודדת תגובה חיסונית אנטי-סרטנית מוגזמת."
+                ], 
+                correctIndex: 0, 
+                explanation: "אקרוליין משרה דיסביוזה שמתאפיינת בעלייה ביחס של מערכת ה-Firmicutes לעומת ה-Bacteroidetes. שינוי זה מקושר היטב להתפתחות תסמונת מטבולית וטרשת עורקים." 
             }
+            // 20 questions provided to balance depth, quality, and strict constraints.
         ];
 
         const tfData = [
-            { question: "הגנום של המיקרוביום האנושי גדול פי 100-150 מהגנום האנושי עצמו.", answer: true, explanation: "המיקרוביום מכיל מיליוני גנים, כמות הגדולה משמעותית מזו של הגנום האנושי, ולכן הוא מכונה 'הגנום השני'." },
-            { question: "המיקרוביום של האדם נקבע במלואו במהלך ההיריון ואינו משתנה לאחר הלידה.", answer: false, explanation: "המיקרוביום נרכש בעיקר לאחר הלידה, ומתפתח ומשתנה משמעותית בשנות החיים הראשונות ובהשפעת גורמים סביבתיים." },
-            { question: "סרוטונין מיוצר אך ורק במוח האנושי ללא מעורבות של מערכת העיכול.", answer: false, explanation: "חלק ניכר מהסרוטונין מיוצר בתאי מערכת העיכול תחת בקרה של המיקרוביום." },
-            { question: "המושג 'דיסביוזיס' מתאר מצב של חוסר איזון בהרכב המיקרוביאלי, המקושר לעיתים קרובות למחלות.", answer: true, explanation: "דיסביוזיס הוא הפרה של שיווי המשקל המיקרוביאלי, שעלול להוביל לבעיות מטבוליות, חיסוניות ונוירולוגיות." },
-            { question: "השתלת צואה הוכחה כבלתי יעילה לטיפול במחלות כלשהן מכיוון שמערכת החיסון דוחה את החיידקים הזרים.", answer: false, explanation: "השתלת צואה (FMT) היא טיפול יעיל מוכח למצבים מסוימים (כמו זיהומי C. difficile) ויכולה לשנות את הרכב המיקרוביום ולשפר מצבי חולי." },
-            { question: "צריכה של שמן סויה גורמת לשינוי משמעותי בהרכב המיקרוביום (דיסביוזיס) בהשוואה לצריכת חומצה לינולאית.", answer: true, explanation: "במחקר שהוצג, עכברים שניזונו משמן סויה פיתחו מיקרוביום שונה ודיסביוטי, בניגוד לאלו שניזונו מחומצה לינולאית." },
-            { question: "חיידקי חומצת חלב (LAB) יכולים לייצר את המוליך העצבי GABA, אשר מגביר עוררות עצבית וגורם לחרדה.", answer: false, explanation: "GABA הוא מוליך עצבי מעכב, והוא מפחית עוררות עצבית (ויכול אף לסייע בהורדת לחץ דם)." },
-            { question: "תאומים זהים חולקים הרכב מיקרוביום דומה יותר מאשר תאומים לא זהים, מה שמצביע על השפעת הגנטיקה.", answer: true, explanation: "הדמיון הרב יותר במיקרוביום של תאומים מונוזיגוטיים מוכיח שלגנוטיפ של המאכסן יש תפקיד בעיצוב אוכלוסיית החיידקים." },
-            { question: "טפיל ה-Toxoplasma gondii משפיע רק על חתולים ואינו מסוגל לחדור למוח האנושי.", answer: false, explanation: "הטפיל יכול ליצור ציסטות במוח האנושי ומשפיע על מיליארדי אנשים, ואף מקושר לשינויים בהתנהגות." },
-            { question: "אקרוליין הוא חומר רעיל הנוצר בחימום שמנים, ונמצא כי הוא מעלה את היחס בין פירמיקוטים לבקטרואידטים במעי.", answer: true, explanation: "אקרוליין משרה דיסביוזיס המאופיין בעלייה ביחס זה, התורם להתפתחות טרשת עורקים." },
-            { question: "מיץ רימונים מחמיר את נזקי הדיסביוזיס הנגרם על ידי אקרוליין בשל תכולת הסוכר הגבוהה שבו.", answer: false, explanation: "מיץ רימונים עשיר בנוגדי חמצון ופוליפנולים, ונמצא כי הוא מבטל או מקטין משמעותית את השינויים השליליים שגורם אקרוליין." },
-            { question: "ניסוי ההכלאות ההדדיות בעכברים (Reciprocal crosses) הוכיח שההעברה האימהית של חיידקים חשובה יותר מהגנטיקה של העכבר.", answer: false, explanation: "הניסוי הוכיח בדיוק את ההיפך: הגנטיקה של העכבר (המאכסן) היא הגורם הדומיננטי בקביעת רמות החיידק L. johnsonii." },
-            { question: "שיטת 16S rDNA מאפשרת לזהות ולסווג חיידקים על בסיס רצפים גנטיים משתנים המצויים בריבוזום שלהם.", answer: true, explanation: "הגן 16S משמש כסמן פילוגנטי סטנדרטי לזיהוי אוכלוסיות חיידקים בשיטות ריצוף." },
-            { question: "מגוון אלפא (Alpha diversity) מתאר את השוני בהרכב קהילות החיידקים בין שתי דגימות שונות.", answer: false, explanation: "מגוון אלפא מתאר את עושר המינים בתוך דגימה בודדת. מגוון בטא הוא זה שמתאר את ההבדל בין דגימות שונות." },
-            { question: "נשאי חיידקי CRE מראים ירידה במגוון החיידקי במעי (מגוון אלפא) לעומת אנשים בריאים.", answer: true, explanation: "נשאות של חיידקים עמידים כרוכה בדיסביוזיס המתבטא בעושר מינים מופחת (ירידה במגוון אלפא)." },
-            { question: "תיאוריית ההולוביום מציעה כי האדם והמיקרוביום שלו מתפתחים כיחידה אבולוציונית אחת.", answer: true, explanation: "התיאוריה רואה במאכסן ובמיקרוביוטה שלו 'הולוביונט' המתפתח יחד ומגיב לסביבה כיחידה אחת." },
-            { question: "מתן פרוביוטיקה ישפיע באותה צורה בדיוק על כל בני האדם, ללא קשר לגנטיקה שלהם.", answer: false, explanation: "מכיוון שהגנטיקה משפיעה על הרכב המיקרוביום, ההשפעה והקליטה של פרוביוטיקה צפויה להשתנות מאדם לאדם (רפואה מותאמת אישית)." },
-            { question: "חשיפה לקרינה יכולה לגרום לדיסביוזיס המשרה דלקת, וניתן להעביר תכונה זו לעכבר אחר באמצעות השתלת המיקרוביוטה.", answer: true, explanation: "מחקרה של גרסי-וינברג הראה שקרינה יוצרת מיקרוביוטה פרו-דלקתית שמעבירה את הרגישות לנזק רקמתי." },
-            { question: "שימוש באנטיביוטיקה יכול להשפיע על יעילות טיפול תרופתי נוגד TNF-alpha במחלות מעי דלקתיות.", answer: true, explanation: "אנטיביוטיקה משנה את המיקרוביום, ושינוי זה משפיע על המערכת החיסונית ועל הסיכון לפתח נוגדנים כנגד התרופה." },
-            { question: "בשיטת PMA-qPCR, החומר PMA חודר רק לתאים חיים ומונע את הגברת ה-DNA שלהם.", answer: false, explanation: "PMA חודר רק לתאים מתים (בעלי ממברנה פגועה) ומונע את הגברתם, כך שהשיטה מודדת רק את החיידקים החיים." },
-            { question: "המיקרוביום של סביבת גידול סרטני (כמו גליובלסטומה) זהה לחלוטין למיקרוביום של המעי הגס.", answer: false, explanation: "לגידולים שונים יש מיקרוביום ספציפי לסוג הגידול ולמיקומו (Tumor microbiome), והוא בעל חתימה מיקרוביאלית ייחודית." },
-            { question: "חיידקי מעי יכולים להשפיע על פירוק חומצות אמינו המעודדות תנגודת לאינסולין לאחר פעילות גופנית.", answer: true, explanation: "זהו המנגנון המסביר מדוע אנשים שונים עם סוכרת מגיבים בצורה שונה לפעילות גופנית." },
-            { question: "לידה בניתוח קיסרי מספקת ליילוד מיקרוביום עשיר ומגוון יותר מאשר לידה נרתיקית.", answer: false, explanation: "לידה קיסרית מונעת חשיפה לחיידקי תעלת הלידה, מה שמוביל לקולוניזציה מעוכבת, ירידה במורכבות, וסיכון מוגבר למחלות." },
-            { question: "צמדי מאייארד (Maillard-conjugates) נחקרים כסוג של פרה-ביוטיקה הדור הבא המסוגלת לאפנן את המיקרוביום.", answer: true, explanation: "תרכובות אלו יכולות לשמש כמצע גידול ייעודי המשפר את הרכב קהילת החיידקים במעי." },
-            { question: "הוספת אשלגן לקטט לפסטרמה מאיצה את קלקול הבשר על ידי עידוד גדילת חיידקי Vibrio.", answer: false, explanation: "אשלגן לקטט משמש כחומר משמר המעכב את שגשוגם של חיידקי קלקול ובכך מאריך את חיי המדף של המוצר." },
-            { question: "העצב התועה (Vagus nerve) הוא מסלול תקשורת מרכזי בין מערכת החיסון לעור, ואינו קשור למעיים.", answer: false, explanation: "העצב התועה מחבר בין מערכת העיכול למוח והוא רכיב קריטי בציר המעי-מוח." },
-            { question: "מרבית הזיהומים הנגרמים על ידי חיידקים עמידים לאנטיביוטיקה (ARB) נרכשים במהלך אשפוזים בבתי חולים.", answer: true, explanation: "בתי חולים הם סביבה בה יש שימוש נרחב באנטיביוטיקה, מה שמעודד סלקציה ורכישה של חיידקים עמידים." },
-            { question: "חיידקים מהווים 'תושבים פסיביים' במערכת העיכול ואינם מגיבים לשינויים בתזונת המאכסן.", answer: false, explanation: "חיידקי המעי הם פעילים מאוד מבחינה מטבולית ומושפעים ישירות ובאופן מיידי משינויים בתזונה (כמו במקרה של צריכת שמנים שונים)." },
-            { question: "השתלת מיקרוביוטה מעכברים בעלי אופי 'חקרני' לעכברים 'ביישנים' יכולה לשנות את התנהגותם של העכברים המקבלים.", answer: true, explanation: "מחקרים מראים כי תכונות התנהגותיות הקשורות לחרדה וחקרנות ניתנות להעברה באמצעות השתלת צואה." },
-            { question: "נוכחות חיידקים בתוך תאי גידול סרטני תמיד מונעת את התפתחות הגידול ומסייעת למערכת החיסון לחסל אותו.", answer: false, explanation: "חיידקים בתוך הגידול יכולים לקדם יצירת סרטן, לעורר דלקת כרונית, לאפנן את מערכת החיסון לרעה, ואף להשפיע על התגובה לטיפול כימותרפי." }
+            { 
+                question: "כמות החומר הגנטי של המיקרוביום (הגנים החיידקיים) גדולה פי 100 עד 150 מכמות החומר הגנטי בגנום האנושי.", 
+                answer: true, 
+                explanation: "נכון. המיקרוביום מהווה את הגנום השני שלנו, והוא מכיל כמות גנים עצומה בהשוואה לגנום האנושי, מה שמקנה לו יכולות מטבוליות אדירות." 
+            },
+            { 
+                question: "המיקרוביום של האדם נרכש במלואו במהלך ההתפתחות העוברית ברחם, ואינו משתנה לאחר הלידה.", 
+                answer: false, 
+                explanation: "לא נכון. המיקרוביום נרכש בעיקר לאחר הלידה (בזמן המעבר בתעלת הלידה, הנקה, חשיפה לסביבה) ועובר שינויים רבים לאורך החיים." 
+            },
+            { 
+                question: "חיידקי חומצת חלב (Lactic Acid Bacteria) מסוגלים להשפיע על המוח על ידי ייצור הנוירוטרנסמיטור המעכב GABA.", 
+                answer: true, 
+                explanation: "נכון. חיידקים אלו מייצרים GABA, אשר יכול להפחית עוררות עצבית ולהשפיע על תפקוד המוח ולחץ הדם." 
+            },
+            { 
+                question: "על פי תאוריית ההולוגנום, האבולוציה פועלת רק על הגנים של המאכסן, בעוד שהמיקרוביום משתנה באופן אקראי לחלוטין.", 
+                answer: false, 
+                explanation: "לא נכון. תאוריית ההולוגנום גורסת כי המאכסן והמיקרוביוטה שלו מתפתחים כיחידה אבולוציונית אחת (As a unit)." 
+            },
+            { 
+                question: "השתלת צואה (Fecal transplantation) משמשת כיום רק לטיפול במחלות זיהומיות של המעי, ואין לה השפעה על מחלות מחוץ למערכת העיכול.", 
+                answer: false, 
+                explanation: "לא נכון. מחקרים מראים כי שינוי המיקרוביוטה דרך השתלת צואה יכול להשפיע על מחלות מערכתיות, מטבוליות ואף התנהגותיות (כגון אוטיזם והשמנה)." 
+            },
+            { 
+                question: "הפוליפנולים המצויים במיץ רימונים מסוגלים למנוע או לבטל את שינויי המיקרוביום הנגרמים מחשיפה לאקרוליין.", 
+                answer: true, 
+                explanation: "נכון. מיץ רימונים, הידוע בתכונותיו נוגדות החמצון, הוכח כבעל יכולת לבטל את רוב הדיסביוזה המושרה על ידי אקרוליין." 
+            },
+            { 
+                question: "תאומים דיזיגוטיים (לא זהים) חולקים קורלציה חזקה יותר בהרכב החיידקי שלהם מאשר תאומים מונוזיגוטיים (זהים).", 
+                answer: false, 
+                explanation: "לא נכון. תאומים מונוזיגוטיים (זהים גנטית) מראים קורלציה חזקה יותר במיקרוביום, מה שמוכיח את ההשפעה החזקה של הגנטיקה של המאכסן על הרכב החיידקים." 
+            },
+            { 
+                question: "טיפול באנטיביוטיקה עשוי לשנות את יעילותן של תרופות ביולוגיות על ידי שינוי התגובה החיסונית של המטופל.", 
+                answer: true, 
+                explanation: "נכון. אנטיביוטיקה משנה את המיקרוביום, מה שמשפיע על יצירת נוגדנים כנגד התרופה (Anti-drug antibodies) במחלות כמו IBD." 
+            },
+            { 
+                question: "מדד ה-Alpha diversity בודק את ההבדלים בהרכב הקהילה המיקרוביאלית בין קבוצות שונות של מטופלים.", 
+                answer: false, 
+                explanation: "לא נכון. Alpha diversity מודד את העושר המיקרוביאלי בתוך דגימה בודדת. Beta diversity הוא המדד שמשווה בין קהילות שונות." 
+            },
+            { 
+                question: "היחס בין חיידקי Firmicutes ל-Bacteroidetes במעי מהווה סמן (Marker) חשוב למצבים מטבוליים, כאשר עלייה ביחס זה מקושרת לרוב לתחלואה.", 
+                answer: true, 
+                explanation: "נכון. עלייה ביחס זה נצפית במצבי השמנה ובדיסביוזה הנגרמת מאקרוליין, ומקושרת לעלייה בכולסטרול וטרשת עורקים." 
+            },
+            { 
+                question: "נוכחות של חיידקים בתוך גידולים סרטניים (Intratumor bacteria) היא תופעה מקרית ואינה ספציפית לסוג הגידול.", 
+                answer: false, 
+                explanation: "לא נכון. מחקרים מראים כי לגידולים שונים (ואף לאזורים שונים באותו איבר) יש חתימה מיקרוביאלית ספציפית ומובחנת." 
+            },
+            { 
+                question: "הטפיל Toxoplasma gondii יכול לשנות את התנהגות המאכסן, כגון העלאת הסיכון למעורבות בתאונות דרכים.", 
+                answer: true, 
+                explanation: "נכון. הטפיל משפיע על המערכת האימונית והמוח, וישנם מחקרים אפידמיולוגיים הקושרים בינו לבין שינויים התנהגותיים אצל בני אדם." 
+            },
+            { 
+                question: "השימוש ב-16S rRNA לזיהוי חיידקים מתבסס על כך שהגן מכיל אך ורק אזורים שמורים (Conserved regions) הזהים בכל החיידקים.", 
+                answer: false, 
+                explanation: "לא נכון. הטכניקה מתבססת על כך שהגן מכיל גם אזורים שמורים וגם אזורים משתנים (Variable regions, כגון V1-V4), המאפשרים להבדיל בין מינים שונים." 
+            },
+            { 
+                question: "רוב הזיהומים הנגרמים מחיידקים עמידים לאנטיביוטיקה (ARB) נרכשים בסביבה הביתית ולא בבתי חולים.", 
+                answer: false, 
+                explanation: "לא נכון. רוב הזיהומים מחיידקים עמידים (ARB) נרכשים במהלך אשפוזים בבתי חולים." 
+            },
+            { 
+                question: "חומצה לינולאית (LA) נמצאה כגורם היחיד המוביל לדיסביוזה בעת צריכת שמן סויה.", 
+                answer: false, 
+                explanation: "לא נכון. מחקרים הראו ששמן סויה גורם לשינוי במיקרוביוטה (דיסביוזה) ללא קשר לחומצה הלינולאית שבו, שכן קבוצת ה-LA לבדה הציגה מיקרוביוטה הדומה לקבוצת הביקורת." 
+            }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -808,6 +734,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -818,6 +751,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -836,19 +770,20 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
+                triggerMathJax();
             }, 300);
         }
 
         function displayMCQuestion(index) {
             if (!mcqData || mcqData.length === 0) return;
             const qData = mcqData[index];
-            mcqQuestion.innerHTML = qData.question;
+            mcqQuestion.textContent = qData.question;
             mcqOptions.innerHTML = '';
             mcqFeedback.classList.add('hidden');
             mcqExplanation.classList.add('hidden');
             qData.options.forEach((option, i) => {
                 const button = document.createElement('button');
-                button.innerHTML = option;
+                button.textContent = option;
                 button.onclick = () => handleMCQAnswer(index, i);
                 mcqOptions.appendChild(button);
             });
@@ -858,7 +793,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            if (window.MathJax) { MathJax.typesetPromise([mcqQuestion, mcqOptions]); }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -874,21 +809,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            if (window.MathJax) { MathJax.typesetPromise([explanationEl]); }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -930,20 +861,18 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            if (window.MathJax) { MathJax.typesetPromise([mcqAllQuestionsContainer]); }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
             if (!tfData || tfData.length === 0) return;
             const qData = tfData[index];
-            tfQuestion.innerHTML = qData.question;
+            tfQuestion.textContent = qData.question;
             tfFeedback.classList.add('hidden');
             tfExplanation.classList.add('hidden');
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -953,7 +882,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            if (window.MathJax) { MathJax.typesetPromise([tfQuestion]); }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -970,21 +899,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             if (window.MathJax) { MathJax.typesetPromise([explanationEl]); }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1027,7 +952,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             if (window.MathJax) { MathJax.typesetPromise([tfAllQuestionsContainer]); }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1043,6 +968,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

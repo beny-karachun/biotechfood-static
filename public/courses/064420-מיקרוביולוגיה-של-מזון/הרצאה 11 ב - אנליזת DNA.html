@@ -1,207 +1,324 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <!-- MathJax Configuration -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>אנליזת דנא וזיהוי מיקרואורגניזמים</h1>
+        <h1>שיטות גנומיות לזיהוי מיקרואורגניזמים ואנליזת דנא</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>זיהוי מיקרואורגניזמים מהווה נדבך קריטי במיקרוביולוגיה, בטיחות מזון ורפואה. בעוד ששיטות קלאסיות נשענות על מורפולוגיה, צביעות ומבחנים ביוכימיים, העידן המודרני נשען ברובו על <strong>מבחנים גנומיים המבוססים על אנליזת דנא</strong>. שיטות אלו מאפשרות זיהוי מהיר, ספציפי ורגיש במיוחד.</p>
+                
+                <h3>שיטות מבוססות PCR</h3>
+                <p>תגובת שרשרת של פולימראז המוכרת כ-PCR, מאפשרת הכפלה אנזימטית ספציפית של מקטעי דנא. יתרונותיה הבולטים כוללים יכולת זיהוי של חיידקים שקשה לגדל בתרבית, רגישות גבוהה המאפשרת זיהוי מחיידקים בודדים, וקבלת תשובה מהירה משמעותית משיטות קונבנציונליות. עם זאת, השיטה רגישה לזיהומים, דורשת ידע מוקדם על רצף המטרה לצורך תכנון פריימרים, ואינה מבדילה בין חיידק חי למת מכיוון שדנא נשאר יציב גם לאחר מוות תאי.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: התגברות על מגבלת החי מת</strong>
+                    שימוש ב-RT-PCR אשר מתבסס על שעתוק לאחור של רנא לדנא, פותר את בעיית ההבחנה בין תא חי לתא מת. מולקולות רנא מתפרקות במהירות כאשר התא מת, ולכן זיהוי שלהן מעיד בסבירות גבוהה על נוכחות מיקרואורגניזם חי ופעיל מטבולית, מה שחוסך זמן יקר בשלבי העשרה.
+                </div>
+
+                <h3>שימוש ב-16S rRNA לזיהוי פילוגנטי</h3>
+                <p>הגן המקודד ל-($16S$) rRNA הוא כלי מרכזי לזיהוי חיידקים ברמת המין. גן זה שמור מאוד מבחינה אבולוציונית בשל תפקידו הקריטי בריבוזום, אך הוא מכיל אזורים משתנים בין מינים שונים. השוואת רצפים אלו מאפשרת סיווג מדויק. במערכות מתקדמות, משתמשים בפריימרים אוניברסליים לאזורים השמורים, ופריימרים ספציפיים לאזורים המשתנים כדי להבדיל בין סוגים ומינים, כפי שמבוצע בזיהוי ליסטריה מונוציטוגנס לעומת מיני ליסטריה אחרים.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: בקרות פנימיות למניעת תוצאות שליליות שגויות</strong>
+                    דגימות מורכבות כמו מזון עלולות להכיל חומרים המעכבים את פעילות הפולימראז ב-PCR. כדי לוודא שתוצאה שלילית היא אכן היעדר החיידק ולא כשל טכני, משלבים בקרות פנימיות. לדוגמה, בבדיקת פטריות במזון צמחי, מוסיפים פריימרים המגבירים דנא צמחי. אם הדנא הצמחי לא הוגבר, סימן שיש עיכוב בריאקציה והתוצאה השלילית עבור הפטרייה אינה אמינה.
+                </div>
+
+                <h3>אוטומציה ושיטות מתקדמות</h3>
+                <p>המעבר ל-Real Time PCR שיפר דרמטית את יעילות האנליזה. שימוש בסמנים פלואורסצנטיים כמו SYBR Green המאיר בקישור לדנא דו גדילי, או גשושיות ספציפיות כמו TaqMan, מאפשר מעקב אונליין אחר יצירת התוצר ללא צורך בהרצת גל אגרוז. שיטות נוספות כמו LAMP מאפשרות הגברה בתנאים איזותרמיים ללא צורך במחזור טמפרטורות, וטכנולוגיות מיקרופלואידיקה משמשות לריכוז מקדים של חיידקים להעלאת הרגישות.</p>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -214,7 +331,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -234,11 +350,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -261,8 +375,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -270,619 +383,618 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "Polymerase Chain Reaction", definition: "שיטה להכפלה אנזימטית ספציפית של דנא המאפשרת זיהוי חיידקים גם בכמויות התחלתיות מזעריות." },
-            { term: "Reverse Transcriptase PCR", definition: "שיטה המשתמשת ברנא כחומר מוצא, הופכת אותו לדנא, ומאפשרת הבחנה בין תאים חיים למתים." },
-            { term: "16S rRNA", definition: "גן שמור אבולוציונית המופיע במספר עותקים בגנום ומכיל אזורים משתנים המאפשרים זיהוי חיידקים ברמת המין." },
-            { term: "SYBR Green", definition: "צבע פלואורסצנטי הנקשר לכל דנא דו-גדילי ומשמש לכימות תוצרי הגברה בזמן אמת." },
-            { term: "TaqMan", definition: "שיטה המשתמשת בגישושית פלואורסצנטית ספציפית הנחתכת במהלך ההגברה, מה שמעלה את רמת הספציפיות של הבדיקה." },
-            { term: "LAMP", definition: "טכנולוגיית הגברת דנא איזותרמית המבוססת על אנזים פולימראז הדוחק גדילים ללא צורך במחזורי חום." },
-            { term: "Dielectrophoresis", definition: "טכנולוגיה המשולבת בשבבים מיקרופלואידיים לריכוז מקדים ומהיר של חיידקים במטרה להגדיל את רגישות הגילוי." },
-            { term: "RFLP", definition: "שיטה לאפיון גנומי המבוססת על חיתוך דנא באנזימי הגבלה ובחינת אורכי המקטעים השונים שנוצרו." },
-            { term: "Spacer Region", definition: "אזור חוצץ בין גנים באופרון הריבוזומלי המשמש יעד לתחלים באבחון מולקולרי בשל השונות הרבה שלו בין מינים." },
-            { term: "פריימרים לבקרת צמח", definition: "תחלים המשמשים כבקרת תקינות פנימית במזון כדי לוודא שמרכיבי המזון לא עכבו את הריאקציה האנזימטית." },
-            { term: "דלקת עטין תת-קלינית", definition: "מחלה בבקר הנגרמת לרוב מנוכחות חיידקים ברקמת העטין וניתנת לזיהוי מהיר באמצעות מבחנים גנומיים בחלב." },
-            { term: "אזורים פולימורפיים", definition: "מקטעי דנא בעלי שונות רצפית גבוהה בין אורגניזמים, המשמשים לסיווג מינים וזני חיידקים." },
-            { term: "Multiplex PCR", definition: "ביצוע מספר ריאקציות הגברה באותה מבחנה בו זמנית באמצעות מספר זוגות תחלים, המייצרים מקטעים באורכים שונים." },
-            { term: "False Positive בזיהום מזון", definition: "תוצאה חיובית שגויה שעלולה לנבוע מרגישות יתר של המערכת המולקולרית המזהה גם שאריות דנא מחיידקים מתים." },
-            { term: "MPN בשילוב PCR", definition: "גישה המשלבת דילולים עוקבים והגברה מולקולרית לצורך זיהוי וכימות מספרי של חיידקים בדגימה." }
+            { term: "PCR", definition: "שיטה להכפלה אנזימטית ספציפית של מקטעי דנא, המאפשרת זיהוי רגיש ומהיר של מיקרואורגניזמים." },
+            { term: "RT-PCR", definition: "תגובת שרשרת של פולימראז הכוללת שלב מקדים של שעתוק לאחור מרנא לדנא. מאפשרת הבחנה בין תאים חיים למתים." },
+            { term: "16S rRNA", definition: "גן שמור אבולוציונית המצוי בריבוזום החיידקי. מכיל אזורים משתנים המשמשים כטביעת אצבע לזיהוי ברמת המין." },
+            { term: "RFLP", definition: "שיטה המבוססת על חיתוך דנא באמצעות אנזימי הגבלה לקבלת מקטעים באורכים שונים, המשמשת לסיווג וזיהוי פולימורפיזם." },
+            { term: "Real Time PCR", definition: "שיטת הגברה המאפשרת מעקב כמותי רציף אחר קצב יצירת התוצר בזמן אמת, ללא צורך בהרצת ג'ל." },
+            { term: "SYBR Green", definition: "מולקולה פלואורסצנטית הנקשרת ספציפית לדנא דו-גדילי ומשמשת כסמן למדידת כמות התוצר ב-Real Time PCR." },
+            { term: "TaqMan", definition: "גשושית פלואורסצנטית ספציפית הנחתכת במהלך ההגברה ב-PCR ופולטת אור, משמשת לזיהוי מדויק וכמותי." },
+            { term: "LAMP", definition: "שיטת הגברת דנא איזותרמית המשתמשת בפולימראז בעל יכולת פרימת גדילים, ללא צורך במחזור טמפרטורות." },
+            { term: "בקרה פנימית", definition: "הוספת פריימרים המכוונים לדנא רקע כדי לוודא שאין חומרים מעכבים בריאקציה, למניעת תוצאה שלילית שגויה." },
+            { term: "MPN בשילוב PCR", definition: "שילוב של שיטה סטטיסטית להערכת כמות חיידקים מול שיטת הגברה מולקולרית, לקבלת מידע כמותי וספציפי." },
+            { term: "Bovine Mastitis", definition: "דלקת העטין בבקר. ניתן לזהות את הגורם החיידקי באמצעות PCR תוך שימוש בדנא של הפרה כבקרה פנימית." },
+            { term: "Spacer Region", definition: "אזורים לא מקודדים בין גנים באופרון הריבוזומלי, המשמשים מטרה מצוינת לפיתוח פריימרים ספציפיים למין." },
+            { term: "Dielectrophoresis (DEP)", definition: "שיטה פיזיקלית המשמשת בשבבים מיקרופלואידיים לריכוז מהיר של חיידקים לפני אנליזה, להעלאת הרגישות." },
+            { term: "Multiplex PCR", definition: "ריאקציית הגברה המכילה מספר זוגות של פריימרים, המאפשרת זיהוי של מספר מטרות גנטיות בו זמנית באותה מבחנה." },
+            { term: "Listeria monocytogenes", definition: "חיידק פתוגני המזוהה באמצעות PCR מרובה מטרות שמבדיל בינו לבין מיני ליסטריה אחרים שאינם פתוגניים." }
         ];
 
         const mcqData = [
-            {
-                question: "חוקר מנסה לזהות זיהום חיידקי במוצר מזון שעבר תהליך פיסטור מחמיר. בבדיקת הגברת דנא רגילה התקבלה תשובה חיובית חזקה, אך בתרבית לא נצפתה גדילה כלל. מהו ההסבר המדעי הסביר ביותר לתופעה זו?",
+            { 
+                question: "בבדיקת בטיחות מזון נדרש לזהות נוכחות של חיידק פתוגני, אך קריטי לדעת האם החיידק חי ועלול לגרום להרעלה, או שמדובר בשאריות של תאים מתים שעברו פיסטור. איזו גישה תספק את המענה המדויק ביותר?", 
                 options: [
-                    "החומרים המשמרים במזון גרמו לעיכוב של אנזים הפולימראז ולכן התקבלה תוצאה חיובית שגויה.",
-                    "שיטת ההגברה אינה מבדילה בין חיידקים חיים למתים, ולכן היא מזהה חומצות גרעין של חיידקים שהושמדו בפיסטור.",
-                    "התחלים בהם השתמש החוקר לא היו ספציפיים מספיק ונקשרו לדנא של המזון עצמו במקום לחיידק.",
-                    "רגישות השיטה נמוכה מדי ולכן היא מזהה רק חיידקים הנמצאים בשלב גידול לוגריתמי."
-                ],
-                correctIndex: 1,
-                explanation: "אחד החסרונות המרכזיים של הגברת דנא סטנדרטית הוא חוסר היכולת להבחין בין תאים חיים למתים, שכן מולקולת הדנא נשארת יציבה גם לאחר מות התא."
+                    "ביצוע PCR סטנדרטי המכוון לגן הרעלן של החיידק.", 
+                    "שימוש בשיטת RFLP על כלל הגנום החיידקי בדגימה.", 
+                    "ביצוע RT-PCR המכוון למולקולות ה-mRNA של החיידק.", 
+                    "קביעת אחוז ה-G/C של דנא המופק מהדגימה."
+                ], 
+                correctIndex: 2, 
+                explanation: "מולקולות רנא הן בעלות זמן מחצית חיים קצר ומתפרקות במהירות לאחר מוות התא. לכן, זיהוי שלהן באמצעות RT-PCR מעיד בסבירות גבוהה מאוד על תא חי ופעיל, בניגוד לדנא שנשאר יציב גם לאחר מוות." 
             },
-            {
-                question: "בפיתוח בדיקה מולקולרית לזיהוי פטריות במזון, החליטו המפתחים להוסיף למבחנה גם תחלים המזהים דנא צמחי. מהי המטרה המערכתית של הוספת תחלים אלו?",
+            { 
+                question: "מעבדה פיתחה בדיקת PCR לזיהוי פטריית Alternaria ברוטב עגבניות. בבדיקה התקבלה תוצאה שלילית לפטרייה. עם זאת, מנהל המעבדה דורש להוסיף למבחנה פריימרים המגבירים דנא של עגבנייה. מהי המטרה העיקרית של דרישה זו?", 
                 options: [
-                    "למנוע תחרות על משאבי האנזים בין הדנא הפטרייתי לדנא הצמחי.",
-                    "לוודא שאין שאריות של חומרי הדברה כימיים על הצמח שמונעים את זיהוי הפטרייה.",
-                    "לשמש כבקרה פנימית המוכיחה שחומרים במזון לא עכבו את הריאקציה האנזימטית עצמה.",
-                    "להגביר את רגישות הבדיקה לפטרייה על ידי יצירת ריכוז גבוה יותר של תוצרי לוואי."
-                ],
-                correctIndex: 2,
-                explanation: "הדנא הצמחי משמש כבקרה חיובית פנימית. אם התחלים של הצמח מצליחים לייצר תוצר, הדבר מוכיח שאין במזון חומרים המעכבים את ריאקציית ההגברה, ולכן תוצאה שלילית עבור הפטרייה תהיה אמינה."
+                    "לוודא שהפטרייה לא שילבה את הדנא שלה בגנום העגבנייה.", 
+                    "לשמש כבקרה פנימית חיובית השוללת קיום מעכבי PCR במזון.", 
+                    "להגביר את רגישות הבדיקה על ידי יצירת תחרות בין הפולימראזות.", 
+                    "למנוע הגברה ספונטנית של פריימרים דימריים במבחנה."
+                ], 
+                correctIndex: 1, 
+                explanation: "מזון עלול להכיל חומרים המעכבים את אנזים הפולימראז. אם ה-PCR לא הצליח להגביר אפילו את דנא העגבנייה שנמצא בשפע, הדבר מעיד על עיכוב בריאקציה, ולכן לא ניתן לסמוך על התוצאה השלילית עבור הפטרייה (False Negative)." 
             },
-            {
-                question: "מהו היתרון הפיזיולוגי המרכזי בשימוש בהגברת רנא באמצעות מתעתק הפוך לעומת הגברת דנא גנומי, כאשר המטרה היא זיהוי רגיש של זיהום פעיל?",
+            { 
+                question: "מדוע הגן המקודד ל-($16S$) rRNA נחשב לאתר מטרה אידיאלי לזיהוי טקסונומי של חיידקים עד לרמת המין?", 
                 options: [
-                    "מולקולות הרנא יציבות יותר בסביבה החיצונית ולכן קלות יותר להפקה מהדגימה.",
-                    "מולקולת רנא ספציפית עשויה להימצא במספר עותקים רב מאוד בתא חי, מה שמגדיל דרמטית את רגישות הגילוי.",
-                    "האנזים מתעתק הפוך עמיד יותר למעכבים המצויים במזון מאשר אנזים פולימראז רגיל.",
-                    "רנא אינו עובר מוטציות ולכן הזיהוי שלו אמין יותר מבחינה אבולוציונית."
-                ],
-                correctIndex: 1,
-                explanation: "בתא פעיל עשויים להיות עותקים רבים של רנא שליח עבור גן מסוים (לעומת עותק אחד או בודדים של הגן בדנא), מה שמאפשר הגדלה משמעותית של רגישות הבדיקה, בנוסף ליכולת להעיד על תא חי."
+                    "משום שהוא עובר מוטציות בקצב מהיר מאוד המאפשר להבדיל אפילו בין חיידקים מאותו זן.", 
+                    "משום שהוא מכיל אזורים שמורים לאורכו המאפשרים תכנון פריימרים אוניברסליים, לצד אזורים משתנים הייחודיים לכל מין.", 
+                    "משום שהוא הגן הארוך ביותר בגנום החיידקי, ולכן קל ביותר לבודד אותו בדגימות מזון מורכבות.", 
+                    "משום שהוא הגן היחיד המקודד לחלבון שאינו מושפע מתנאי הסביבה ולכן מתבטא באופן קבוע."
+                ], 
+                correctIndex: 1, 
+                explanation: "הגן ל-($16S$) rRNA הוא פסיפס של אזורים שמורים אבולוציונית ואזורים משתנים (כמו V1, V2). האזורים השמורים משמשים לעוגן לפריימרים, והמשתנים מאפשרים הבחנה ספציפית בין המינים." 
             },
-            {
-                question: "מדוע בחרו חוקרים בגן המקודד לרנא ריבוזומלי כיעד מועדף לאנליזה מולקולרית של אוכלוסיות חיידקים מגוונות?",
+            { 
+                question: "חוקר מבצע Multiplex PCR לזיהוי Listeria. הוא משתמש בסט פריימרים אוניברסלי לכלל החיידקים, סט ספציפי לסוג Listeria, וסט ספציפי למין L. monocytogenes. לאחר הרצה על ג'ל התקבל רק פס אחד באורך 700 בסיסים המתאים לפריימרים האוניברסליים. מה משמעות התוצאה?", 
                 options: [
-                    "משום שהוא הגן היחיד בחיידקים שאינו מכיל אזורים משתנים כלל.",
-                    "משום שהוא מקודד לחלבון המעטפת העיקרי המאפשר תנועה במדיום גידול.",
-                    "משום שהוא מכיל שילוב של אזורים שמורים אבולוציונית המאפשרים שימוש בתחלים אוניברסליים, לצד אזורים משתנים המאפשרים זיהוי ספציפי למין.",
-                    "משום שהוא הגן הקצר ביותר בגנום החיידקי, מה שמאפשר הגברה מהירה במיוחד ללא צורך בציוד מתקדם."
-                ],
-                correctIndex: 2,
-                explanation: "הגן הריבוזומלי אידיאלי כי הוא חיוני לתא ולכן מכיל אזורים שמורים זהים בהרבה חיידקים (לקישור תחלים כלליים), אך גם אזורים משתנים בין מינים שונים המאפשרים הבחנה ספציפית."
+                    "הדגימה מכילה את החיידק L. monocytogenes בלבד.", 
+                    "הדגימה מכילה מין של Listeria שאינו monocytogenes.", 
+                    "הדגימה מכילה חיידקים, אך אף אחד מהם אינו שייך לסוג Listeria.", 
+                    "הריאקציה נכשלה ויש מעכבי PCR בדגימה."
+                ], 
+                correctIndex: 2, 
+                explanation: "הופעת הפס האוניברסלי מאשרת שיש חיידקים והריאקציה עבדה. היעדר הפס של סוג הליסטריה (400 בסיסים) והמין הספציפי (287 בסיסים) מעיד שהחיידקים הקיימים אינם שייכים לסוג זה." 
             },
-            {
-                question: "בשיטת הגברה איזותרמית המתווכת על ידי לולאות, מהו המאפיין הטכני המאפשר את התרחשות התהליך ללא צורך בשינויי טמפרטורה מחזוריים?",
+            { 
+                question: "אחת החסרונות של שיטת ה-PCR הקונבנציונלית היא 'עודף רגישות'. באיזה תרחיש חיסרון זה עלול להוות בעיה משמעותית בתעשיית המזון?", 
                 options: [
-                    "שימוש באנזים פולימראז בעל יכולת לדחוק את הגדיל המשלים ולפתוח את הסליל הכפול באופן עצמאי.",
-                    "שימוש בפריימרים קצרים במיוחד המסוגלים לחדור מבעד לסליל הכפול ללא צורך בהפרדתו.",
-                    "הוספת כימיקלים ממיסים המונעים את התחברות הגדילים לאורך כל הריאקציה.",
-                    "שימוש באנזים רסטריקציה החותך את הדנא למקטעים קצרים שאינם דורשים הפרדה תרמית."
-                ],
-                correctIndex: 0,
-                explanation: "שיטה זו משתמשת בפולימראז ייחודי בעל פעילות של דחיקת גדיל, המאפשרת סינתזה של גדיל חדש תוך כדי פתיחת הסליל הקיים, ללא צורך בחימום להפרדת הגדילים."
+                    "כאשר מחפשים פתוגנים שקשה מאוד לגדל בתרבית מעבדה.", 
+                    "כאשר ישנה דרישה רגולטורית לאפס סובלנות לפתוגן מסוים במזון.", 
+                    "כאשר הדגימה מזוהמת בכמות אפסית של פתוגן מהסביבה שאינה מהווה סכנה בריאותית, אך גורמת לפסילת המוצר.", 
+                    "כאשר יש צורך להבדיל בין חיידקים גראם חיוביים לגראם שליליים."
+                ], 
+                correctIndex: 2, 
+                explanation: "בשל יכולת ההגברה האקספוננציאלית, PCR יכול לזהות מולקולות דנא בודדות. זיהום צולב קל במעבדה או נוכחות שארית דנא חסרת משמעות קלינית עלולים להוביל לתוצאה חיובית שתוביל לפסילת אצווה שלמה שלא לצורך." 
             },
-            {
-                question: "במערכת זמן אמת המבוססת על צבע פלואורסצנטי הנקשר לדנא דו-גדילי, נצפתה עלייה באות הפלואורסצנטי גם במבחנת הביקורת השלילית. מהי הסיבה ההגיונית ביותר לכך, בהנחה שלא הייתה זליגת דנא מהדגימות?",
+            { 
+                question: "שיטת Real Time PCR המבוססת על SYBR Green הופעלה לזיהוי חיידק מסוים. בסוף התהליך נצפתה פלואורסצנציה גבוהה במבחנת הדגימה, אך גם במבחנת הביקורת השלילית (NTC) נצפתה עלייה מתונה בפלואורסצנציה. מהו ההסבר הסביר ביותר לתופעה במבחנת הביקורת?", 
                 options: [
-                    "הצבע הפלואורסצנטי עבר פירוק ספונטני עקב הטמפרטורות הגבוהות ופלט אור.",
-                    "נוצרו דימרים של פריימרים שהם למעשה מולקולות דנא דו-גדיליות קצרות, והצבע נקשר אליהן.",
-                    "האנזים פולימראז החל לסנתז רנא במקום דנא, והצבע נקשר לתוצרי הרנא.",
-                    "החיישן האופטי של המכשיר יצא מכיול ולכן מזהה את מבחנת הפלסטיק כחומר פלואורסצנטי."
-                ],
-                correctIndex: 1,
-                explanation: "צבעים אלו נקשרים לכל דנא דו-גדילי. אם הפריימרים נקשרים זה לזה ומוגברים (דימרים של פריימרים), נוצר דנא דו-גדילי גם ללא נוכחות דנא מטרה, מה שיוצר אות שגוי."
+                    "פירוק של הגשושית הפלואורסצנטית על ידי הפולימראז ללא קשר להגברה.", 
+                    "היווצרות דימרים של פריימרים (Primer dimers) שיצרו דנא דו-גדילי אליו נקשר הצבע.", 
+                    "הצבע נקשר למולקולות רנא חד גדיליות שהיו במים של הביקורת.", 
+                    "הפולימראז איבד את היכולת להבחין בין נוקלאוטידים ויצר שרשרת אקראית."
+                ], 
+                correctIndex: 1, 
+                explanation: "SYBR Green נקשר לכל דנא דו-גדילי. במבחנה ללא דנא מטרה, הפריימרים עלולים להיקשר זה לזה וליצור דימרים קצרים המוגברים על ידי הפולימראז. הצבע ייקשר לדימרים אלו וייצר אות חיובי כוזב חלש." 
             },
-            {
-                question: "כיצד פותרת שימוש בגישושית ייעודית במערכת זמן אמת את בעיית הספציפיות הקיימת בשימוש בצבעים הנקשרים לכל דנא דו-גדילי?",
+            { 
+                question: "מהו ההבדל המהותי בין שימוש בגשושיות TaqMan לבין שימוש ב-SYBR Green בשיטות Real Time PCR?", 
                 options: [
-                    "הגישושית מונעת פיזית יצירת דימרים של פריימרים על ידי חסימת קצוות השרשרת.",
-                    "הגישושית פולטת אור רק כאשר היא נחתכת על ידי האנזים במהלך הגברה של רצף המטרה המדויק בלבד.",
-                    "הגישושית משנה את ה-pH של התמיסה כך שרק תוצרי המטרה יכולים להישאר יציבים.",
-                    "הגישושית נקשרת ישירות לאנזים ומגבירה את מהירות הפעולה שלו רק בנוכחות רצף המטרה."
-                ],
-                correctIndex: 1,
-                explanation: "הגישושית מכילה חומר פלואורסצנטי ומשתיק. רק כאשר האנזים בונה גדיל חדש על רצף המטרה הספציפי שאליו נקשרה הגישושית, הוא חותך אותה, מפריד את החומר הפלואורסצנטי מהמשתיק, ומתקבל אות."
+                    "TaqMan דורש מחזור טמפרטורות ואילו SYBR Green פועל באופן איזותרמי.", 
+                    "SYBR Green נקשר באופן ספציפי לרצף המטרה בלבד, בעוד TaqMan נקשר לכל דנא דו-גדילי.", 
+                    "TaqMan מספק ספציפיות כפולה (פריימרים וגשושית) בעוד SYBR Green נקשר לכל תוצר דו-גדילי שנוצר.", 
+                    "TaqMan מאפשר הבחנה בין חי למת בעוד SYBR Green מזהה רק דנא מת."
+                ], 
+                correctIndex: 2, 
+                explanation: "TaqMan משתמש בגשושית המתוכננת להיקשר ספציפית לרצף המטרה בין שני הפריימרים, מה שמוסיף שכבת ספציפיות. SYBR Green הוא צבע שנקשר לכל דנא דו-גדילי, כולל תוצרי לוואי לא ספציפיים או דימרים של פריימרים." 
             },
-            {
-                question: "בניסוי לזיהוי חיידק ספציפי, החוקר תכנן תחלים המכוונים לאזור השמור ביותר בגן הריבוזומלי. מה תהיה התוצאה הסבירה של החלטה תכנונית זו?",
+            { 
+                question: "בשיטת LAMP (Loop-mediated isothermal amplification), מהו המאפיין של אנזים הפולימראז המאפשר את ביצוע הריאקציה בטמפרטורה קבועה?", 
                 options: [
-                    "הבדיקה לא תעבוד כלל מכיוון שאזורים שמורים אינם ניתנים להגברה אנזימטית.",
-                    "הבדיקה תזהה את החיידק הספציפי ברגישות גבוהה מאוד וללא הפרעות.",
-                    "הבדיקה תייצר תוצאות חיוביות עבור מגוון רחב של חיידקים שונים ולא תאפשר זיהוי ספציפי של חיידק המטרה.",
-                    "הבדיקה תזהה רק חיידקים שמתו לאחרונה ולא חיידקים פעילים."
-                ],
-                correctIndex: 2,
-                explanation: "אזורים שמורים משותפים למינים רבים של חיידקים. שימוש בתחלים המכוונים רק לאזורים אלו יגרום להגברה של דנא מכל חיידק שקיים בדגימה, ולא יאפשר הבחנה ספציפית למין המבוקש."
+                    "הוא עמיד לטמפרטורות קיצוניות של מעל 95 מעלות צלזיוס לאורך זמן.", 
+                    "הוא בעל יכולת פרימת גדילים (Strand-displacing) המייתרת את הצורך בדנטורציה בחום.", 
+                    "הוא משתמש ברנא כתבנית ולכן אינו זקוק להפרדת גדילי הדנא.", 
+                    "הוא מתפקד גם כאנזים הגבלה החותך את הדנא כדי לאפשר כניסת פריימרים."
+                ], 
+                correctIndex: 1, 
+                explanation: "ב-PCR רגיל נדרש חום כדי להפריד את גדילי הדנא (דנטורציה). ב-LAMP, הפולימראז הייעודי מסוגל להפריד את הגדיל הקיים תוך כדי סנתוז הגדיל החדש (Strand displacement), מה שמאפשר תהליך בטמפרטורה קבועה." 
             },
-            {
-                question: "מהו האתגר המרכזי בשימוש בהגברת רנא שליח לצורך קביעת סטטוס נוכחות של חיידק פתוגני בתנאי סביבה משתנים?",
+            { 
+                question: "במעבדה מנסים לזהות נוכחות של נגיף (וירוס) מסוים במזון. ידוע שהנגיף הוא בעל גנום מבוסס רנא. איזו מתודולוגיה הכרחית כדי להשתמש בשיטות מבוססות PCR לזיהויו?", 
                 options: [
-                    "מולקולות רנא שליח זהות לחלוטין בכל החיידקים ולכן לא ניתן להבחין בין פתוגנים לחיידקים רגילים.",
-                    "רמות הביטוי של גנים משתנות באופן דרסטי כתלות במצב הפיזיולוגי ובתנאי הסביבה, מה שעלול להוביל לתוצאה שלילית שגויה אם הגן אינו מתבטא באותו רגע.",
-                    "רנא שליח חודר דרך ממברנות של תאים אנושיים וגורם להגברה של רצפים הומניים במקום חיידקיים.",
-                    "האנזים הנדרש להגברת רנא פועל רק בטמפרטורות קיצוניות ההורסות את הדגימה המקורית."
-                ],
-                correctIndex: 1,
-                explanation: "ביטוי גנים (יצירת רנא שליח) הוא תהליך דינמי. חיידק חי עשוי שלא לבטא גן מסוים בתנאי סביבה ספציפיים, ולכן אי זיהוי הרנא לא בהכרח מעיד על היעדר החיידק."
+                    "הוספת אנזים רסטריקציה לחיתוך מעטפת הנגיף לפני ה-PCR.", 
+                    "ביצוע שלב מקדים של Reverse Transcription ליצירת cDNA לפני ההגברה.", 
+                    "שימוש בפריימרים העשויים מרנא במקום מדנא במהלך הריאקציה.", 
+                    "העלאת טמפרטורת הדנטורציה ל-100 מעלות כדי להפריד את הרנא הכפול."
+                ], 
+                correctIndex: 1, 
+                explanation: "אנזים ה-Taq Polymerase המשמש ב-PCR דורש תבנית של דנא. מכיוון שגנום הנגיף הוא רנא, חובה להמיר אותו תחילה לדנא משלים (cDNA) באמצעות אנזים Reverse Transcriptase לפני שניתן יהיה להגביר אותו." 
             },
-            {
-                question: "בבדיקת חלב לאיתור גורמי דלקת עטין, הורצו תוצרי ההגברה על ג'ל. התקבל פס באורך ($389bp$) בכל הדגימות, ופס נוסף באורך ($120bp$) רק בחלקן. מה משמעות הפס הארוך?",
+            { 
+                question: "חוקר משווה בין רצפי ה-($16S$) rRNA של שני חיידקים. הוא מגלה זהות של 99% באזורים השמורים, אך שונות של 15% באזור ה-V2. מה המסקנה הסבירה ביותר?", 
                 options: [
-                    "הוא מצביע על זיהום צולב בין מבחנות הניסוי.",
-                    "הוא מעיד על נוכחות החיידק הפתוגני ברמת אלימות גבוהה.",
-                    "הוא מהווה ביקורת פנימית חיובית של חומצת גרעין מהבקר, המאשרת שהריאקציה פעלה כראוי.",
-                    "הוא תוצר לוואי של פירוק החלבונים בחלב ואין לו משמעות אבחנתית."
-                ],
-                correctIndex: 2,
-                explanation: "במבחנים מסוג זה נהוג להשתמש בפריימרים המזהים דנא של המארח (בקר) כביקורת פנימית. הופעת הפס מאשרת שהמערכת עובדת ואין עיכוב, בעוד הפס הקצר מעיד על נוכחות החיידק הספציפי."
+                    "החיידקים שייכים לאותו המין בדיוק ואין ביניהם הבדל פנוטיפי.", 
+                    "החיידקים שייכים לאותה משפחה או סוג, אך סביר להניח שהם מינים שונים.", 
+                    "אחד החיידקים עבר מוטציה קטלנית שפגעה בתפקוד הריבוזום שלו.", 
+                    "החיידקים שייכים לממלכות שונות לחלוטין (למשל חיידק מול פטרייה)."
+                ], 
+                correctIndex: 1, 
+                explanation: "האזורים השמורים מראים קרבה פילוגנטית כללית (אותו סוג/משפחה). השונות הגבוהה באזורים המשתנים (Hypervariable regions כמו V1, V2) היא זו שמאפשרת להבדיל בין מינים שונים בתוך אותו סוג." 
             },
-            {
-                question: "כאשר משתמשים בטכנולוגיית הגברה מרובה כדי לזהות בו-זמנית נוכחות של סוג חיידק כללי ושל מין ספציפי מאותו סוג, מהו התנאי ההכרחי לתכנון המערכת?",
+            { 
+                question: "מהו היתרון המרכזי בשילוב של שבב מיקרופלואידי המבוסס על Dielectrophoresis (DEP) לפני ביצוע אנליזת PCR?", 
                 options: [
-                    "התחלים של הסוג והמין חייבים להיות בעלי רצף זהה לחלוטין.",
-                    "הריאקציות חייבות להתבצע בשתי מבחנות נפרדות לחלוטין המרוחקות זו מזו.",
-                    "התחלים חייבים להיות מתוכננים כך שייצרו מקטעי מטרה באורכים שונים משמעותית כדי שניתן יהיה להבחין ביניהם באנליזה.",
-                    "יש להשתמש באנזימי הגבלה שונים עבור כל אחד מהמקטעים לפני תחילת ההגברה."
-                ],
-                correctIndex: 2,
-                explanation: "כדי להבחין בין התוצרים השונים המיוצרים באותה מבחנה (למשל, פס שמייצג את כלל חיידקי הליסטריה ופס שמייצג רק ליסטריה מונוציטוגנס), הם חייבים להיות באורכים שונים כדי שיופרדו בג'ל."
+                    "השבב מבצע את מחזורי הטמפרטורה מהר יותר ממכשיר PCR רגיל.", 
+                    "השבב מפריד בין דנא לרנא ובכך חוסך את הצורך באנזים RT.", 
+                    "השבב מאפשר ריכוז מקדים של חיידקים מנפח גדול לנפח קטן, מה שמעלה דרמטית את רגישות הגילוי.", 
+                    "השבב מזהה אוטומטית את אחוז ה-G/C וקובע את זהות החיידק ללא צורך בפריימרים."
+                ], 
+                correctIndex: 2, 
+                explanation: "שיטת ה-DEP מנצלת שדות חשמליים כדי ללכוד ולרכז תאים חיידקיים חיים מתוך נוזל. ריכוז זה מאפשר לזהות נוכחות של חיידקים גם כאשר ריכוזם ההתחלתי בדגימה היה נמוך מאוד, מתחת לסף הגילוי הרגיל של ה-PCR." 
             },
-            {
-                question: "שבב מיקרופלואידי המבוסס על אלקטרופורזה דיאלקטרית משמש כשלב מקדים באנליזת מזון. איזה שלב בתהליך המסורתי טכנולוגיה זו נועדה להחליף או לקצר משמעותית?",
+            { 
+                question: "בעת פיתוח בדיקת PCR לגילוי פתוגן במזון, התגלה כי רכיבים מסוימים במזון מעכבים את פעילות האנזים. איזה מהפתרונות הבאים הוא הפחות יעיל להתמודדות עם בעיה זו?", 
                 options: [
-                    "את שלב מיצוי חומצות הגרעין מהתאים.",
-                    "את שלב ההעשרה התרבותית (גידול החיידקים במדיום) שאורך שעות או ימים.",
-                    "את שלב קריאת התוצאות הפלואורסצנטיות בסיום ההגברה.",
-                    "את שלב תכנון התחלים הספציפיים למין החיידק."
-                ],
-                correctIndex: 1,
-                explanation: "הטכנולוגיה נועדה לרכז פיזית את החיידקים מהדגימה במהירות, ובכך לעקוף את הצורך לגדל אותם במדיום העשרה במשך ימים כדי להגיע לריכוז הניתן לגילוי."
+                    "ביצוע מיצוי וניקוי קפדני של הדנא לפני הריאקציה להרחקת המעכבים.", 
+                    "מיהול הדגימה המקורית במים כדי להוריד את ריכוז המעכבים.", 
+                    "הוספת כמות גדולה יותר של דנא המטרה למבחנה לפני תחילת הריאקציה.", 
+                    "שימוש בפולימראזות מהונדסות העמידות יותר לעיכוב על ידי חומרי מזון."
+                ], 
+                correctIndex: 2, 
+                explanation: "אם המטרה היא לגלות אם יש פתוגן בדגימה, הוספת דנא המטרה באופן מלאכותי תהרוס את מטרת הבדיקה (היא תמיד תצא חיובית). מיהול, ניקוי או שימוש באנזימים עמידים הן אסטרטגיות מקובלות לדילול או עקיפת המעכבים." 
             },
-            {
-                question: "מהי המשמעות המעשית של שילוב הגברת דנא עם שיטת המספר הסביר ביותר במעבדת מזון?",
+            { 
+                question: "שיטת RFLP מבוססת על חיתוך דנא מוגבר באנזימי הגבלה. שני זנים של אותו חיידק נבדקו בשיטה זו, והתקבלו תבניות פסים שונות על הג'ל. מה ניתן להסיק מכך בוודאות?", 
                 options: [
-                    "השילוב מאפשר לדעת מאיזה מקור גיאוגרפי הגיע הזיהום.",
-                    "השילוב מספק הערכה כמותית של מספר החיידקים בדגימה המקורית, ולא רק תשובה איכותית של נוכחות או היעדר.",
-                    "השילוב מונע לחלוטין את הסיכוי לתוצאות חיוביות שגויות כתוצאה מזיהום במעבדה.",
-                    "השילוב מאפשר זיהוי של חיידקים ללא צורך בהפקת חומצות גרעין כלל."
-                ],
-                correctIndex: 1,
-                explanation: "שיטת ההגברה הרגילה מראה אם החיידק קיים או לא. שילובה עם דילולים עוקבים (המספר הסביר ביותר) מאפשרת לכמת סטטיסטית את העומס החיידקי ההתחלתי."
+                    "לשני הזנים יש כמות כוללת שונה של דנא בתא.", 
+                    "קיים הבדל ברצף הבסיסים בין הזנים שגרם להופעה או היעלמות של אתר חיתוך לאנזים.", 
+                    "אחד הזנים מכיל פלסמיד עמידות לאנטיביוטיקה והשני לא.", 
+                    "הפולימראז עשה שגיאות רבות במהלך ההגברה של אחד הזנים."
+                ], 
+                correctIndex: 1, 
+                explanation: "אנזימי הגבלה חותכים דנא ברצפים ספציפיים מאוד. שינוי בתבנית הפסים (Polymorphism) מעיד על שינוי ברצף הבסיסים (מוטציה) שביטל אתר חיתוך קיים או יצר אתר חיתוך חדש." 
             },
-            {
-                question: "בהשוואת רצפי גן ריבוזומלי בין שני מיני ליסטריה, נמצא הבדל של בסיס בודד באזור המטרה של פריימר ספציפי. מה תהיה ההשפעה של עובדה זו על תכנון מערכת האבחון?",
+            { 
+                question: "חוקר מבצע PCR לזיהוי גן רעלן של חיידק. לאחר 30 מחזורים, הוא מריץ את התוצרים על ג'ל אגרוז ורואה פס חזק באורך המתאים. איזה מידע לא ניתן להסיק מתוצאה זו?", 
                 options: [
-                    "לא תהיה לכך השפעה, שכן הבדל של בסיס בודד אינו מספיק כדי למנוע קישור של פריימר.",
-                    "ההבדל יחייב שימוש בטמפרטורת התכה נמוכה יותר כדי לאפשר קישור לא ספציפי.",
-                    "ניתן לנצל הבדל זה כדי לתכנן פריימר שהקצה שלו יושב בדיוק על הבסיס השונה, וכך למנוע הגברה במין הלא רצוי.",
-                    "ההבדל מעיד על כך שהחיידקים אינם שייכים לאותו סוג ולכן יש להשתמש בשיטות ביוכימיות בלבד."
-                ],
-                correctIndex: 2,
-                explanation: "ספציפיות ב-PCR יכולה להיות מושגת גם על סמך הבדל של בסיס אחד, במיוחד אם ממקמים את קצה ה-3' של הפריימר בדיוק על הבסיס השונה, מה שמונע מהאנזים להתחיל את הסינתזה במקרה של חוסר התאמה."
+                    "הגן לרעלן אכן נמצא בדנא שהופק מהדגימה.", 
+                    "הפריימרים שתוכננו הצליחו להיקשר ולהגביר את המטרה.", 
+                    "החיידק ייצר והפריש את הרעלן אל תוך המזון לפני שנלקחה הדגימה.", 
+                    "לא היה עיכוב מוחלט של אנזים הפולימראז במהלך הריאקציה."
+                ], 
+                correctIndex: 2, 
+                explanation: "זיהוי גן (דנא) מעיד על הפוטנציאל הגנטי של החיידק, אך אינו מעיד על ביטוי הגן. ייתכן שהחיידק מכיל את הגן אך לא שעתק אותו ל-mRNA ולא תרגם אותו לחלבון הרעלן בפועל תנאי הסביבה הספציפיים." 
             },
-            {
-                question: "חוקר מעוניין לזהות זן אלים במיוחד של חיידק, אשר נבדל מזנים לא אלימים מאותו מין רק בנוכחות של פלסמיד מסוים. האם שימוש באנליזה של הגן הריבוזומלי תהיה יעילה במקרה זה?",
+            { 
+                question: "בגרף תוצאות של Real Time PCR, מוגדר ערך ה-Ct (Threshold Cycle). מה משמעות ערך זה ביחס לכמות ההתחלתית של הדנא בדגימה?", 
                 options: [
-                    "כן, מכיוון שהגן הריבוזומלי משתנה בהתאם לאלימות החיידק.",
-                    "לא, מכיוון שהגן הריבוזומלי נמצא בכרומוזום המרכזי ויהיה זהה בשני הזנים, ולכן אינו יכול להעיד על נוכחות הפלסמיד.",
-                    "כן, מכיוון שהפלסמיד תמיד משתלב לתוך הגן הריבוזומלי ומשנה את אורכו.",
-                    "לא, מכיוון ששיטות גנומיות אינן מסוגלות לזהות פלסמידים כלל."
-                ],
-                correctIndex: 1,
-                explanation: "הגן הריבוזומלי משמש לזיהוי ברמת המין והסוג. כדי להבחין בין זנים הנבדלים בגורמי אלימות ספציפיים (כמו פלסמידים), יש לכוון את ההגברה לגנים הספציפיים לאלימות, ולא לגן משמר."
+                    "ככל שה-Ct גבוה יותר, כך הכמות ההתחלתית של הדנא הייתה גדולה יותר.", 
+                    "ככל שה-Ct נמוך יותר, כך הכמות ההתחלתית של הדנא הייתה גדולה יותר.", 
+                    "ערך ה-Ct מעיד על אורך התוצר הסופי ואינו קשור לכמות ההתחלתית.", 
+                    "ערך ה-Ct מציין את הטמפרטורה בה התרחשה הדנטורציה המקסימלית."
+                ], 
+                correctIndex: 1, 
+                explanation: "ערך ה-Ct הוא מספר המחזור שבו האות הפלואורסצנטי חוצה את קו הסף. אם התחלנו עם כמות גדולה של דנא, נגיע לקו הסף מהר יותר (במחזור מוקדם יותר), ולכן ערך ה-Ct יהיה נמוך יותר." 
             },
-            {
-                question: "מדוע עודף רגישות בבדיקות מולקולריות מהווה חסרון משמעותי במפעל לייצור מזון?",
+            { 
+                question: "איזו בעיה טכנית עלולה לגרום לתוצאת False Positive (חיובי שגוי) בבדיקת PCR רגילה?", 
                 options: [
-                    "כי הוא מחייב רכישת ציוד יקר יותר שלא לצורך.",
-                    "כי הוא עלול להוביל לפסילת קווי ייצור שלמים עקב זיהוי של כמויות מזעריות או חומר גנטי מת של חיידקים שאינם מהווים סכנה תברואתית בפועל.",
-                    "כי רגישות יתר גורמת לפירוק מהיר של חומצות הגרעין במהלך הבדיקה.",
-                    "כי הוא מאריך את זמן הבדיקה למספר שבועות עקב עומס נתונים."
-                ],
-                correctIndex: 1,
-                explanation: "היכולת לזהות עותקים בודדים של דנא פירושה שגם זיהום סביבתי קל או שאריות מחיידקים שהושמדו יתנו תוצאה חיובית, מה שעלול להוביל להשמדת תוצרת בטוחה למאכל."
+                    "נוכחות של חומרים מעכבי פולימראז בדגימת המזון.", 
+                    "שימוש בפריימרים שתוכננו לאזור שמור מדי שקיים גם בחיידקים אחרים.", 
+                    "מוטציה באתר הקישור של הפריימר בגנום של חיידק המטרה.", 
+                    "פירוק של הדנא בדגימה עקב אחסון לקוי לפני הבדיקה."
+                ], 
+                correctIndex: 1, 
+                explanation: "אם הפריימרים אינם ספציפיים מספיק ונקשרים לאזור שמור הקיים בחיידקים שאינם המטרה, תתקבל הגברה גם כשהפתוגן אינו נוכח, מה שיוביל לתוצאה חיובית שגויה. שאר האפשרויות יובילו לתוצאה שלילית שגויה." 
             },
-            {
-                question: "איזו מהפעולות הבאות נדרשת כשלב מקדים הכרחי לפני פיתוח מבחן הגברה מולקולרי לזיהוי פתוגן חדש שטרם אופיין?",
+            { 
+                question: "מדוע שיטת RT-PCR מציגה וריאביליות גבוהה יותר בתוצאות לעומת PCR רגיל המבוסס על דנא?", 
                 options: [
-                    "גידול הפתוגן בתרבית תאים אנושית למשך חודש.",
-                    "ביצוע מחקר מקדים לריצוף הגנום ומציאת גנים ייחודיים ספציפיים שאינם קיימים באורגניזמים אחרים.",
-                    "הזרקת הפתוגן לחיות מעבדה כדי לאשר את רמת האלימות שלו.",
-                    "הפקת כלל החלבונים של התא והרצתם בשדה חשמלי דו-מימדי."
-                ],
-                correctIndex: 1,
-                explanation: "כדי לתכנן פריימרים ספציפיים, חייבים לדעת את רצף הדנא של המטרה ולוודא שהוא אכן ייחודי לאותו פתוגן ולא ייקשר בטעות לדנא של אורגניזמים אחרים."
+                    "מכיוון שאנזים ה-Reverse Transcriptase נוטה לעשות שגיאות רבות ומשנה את אורך המקטע.", 
+                    "מכיוון שכמות ה-mRNA בתא משתנה דרמטית כתלות במצב הפיזיולוגי ובתנאי הסביבה של החיידק.", 
+                    "מכיוון שרנא הוא מולקולה דו-גדילית שקשה מאוד להפריד אותה בשלב הדנטורציה.", 
+                    "מכיוון שהפריימרים מתקשים להיקשר לרנא בגלל נוכחות הבסיס אורציל (U)."
+                ], 
+                correctIndex: 1, 
+                explanation: "הדנא בתא נשאר קבוע יחסית, אך רמת הביטוי של גנים (כמות הרנא) משתנה מאוד בתגובה לסטרס, שלב גידול או נוטריאנטים. לכן, כמות הרנא ההתחלתית משתנה, מה שגורם לווריאביליות באות המתקבל ב-RT-PCR." 
             },
-            {
-                question: "בגרף כימות של הגברה בזמן אמת, מה מציינת הנקודה בה העקומה מתחילה לעלות בחדות מעל קו הרקע?",
+            { 
+                question: "איזה סוג של מידע מספקת קביעת אחוז ה-G/C בגנום של חיידק לא מוכר?", 
                 options: [
-                    "הנקודה בה האנזים פולימראז מפסיק לעבוד עקב חוסר בנוקלאוטידים.",
-                    "הנקודה בה כמות תוצרי ההגברה עוברת את סף הרגישות של הגלאי האופטי, והיא מעידה על הכמות ההתחלתית של המטרה בדגימה.",
-                    "הנקודה בה מתרחש פירוק של כלל חומצות הגרעין בדגימה.",
-                    "הנקודה בה הטמפרטורה במכשיר הגיעה למקסימום האפשרי."
-                ],
-                correctIndex: 1,
-                explanation: "נקודה זו קשורה ביחס הפוך לכמות ההתחלתית. ככל שיש יותר חומר התחלתי, העקומה תחצה את סף הרקע מוקדם יותר במחזורי ההגברה."
+                    "זיהוי ודאי ומוחלט של זן החיידק הספציפי.", 
+                    "מידע כללי על שיוך קבוצתי, שכן מינים קרובים נוטים להיות בעלי אחוז G/C דומה.", 
+                    "הוכחה לכך שהחיידק עמיד לאנטיביוטיקה מסוג פניצילין.", 
+                    "הבחנה בין חיידקים חיים לחיידקים מתים בדגימה."
+                ], 
+                correctIndex: 1, 
+                explanation: "אחוז ה-G/C (גואנין/ציטוזין) הוא מאפיין גנומי רחב. חיידקים מאותו סוג או משפחה חולקים לרוב אחוז G/C דומה. זהו כלי טקסונומי בסיסי, אך אינו מספיק לזיהוי ספציפי של זן." 
             },
-            {
-                question: "מהי המטרה של שימוש באזורי ספייסר במסגרת אבחון מולקולרי של פטריות?",
+            { 
+                question: "בשיטת זיהוי מבוססת PCR עבור פטריית Alternaria במזון, תוכננו פריימרים לאזורי ה-ITS. מה מייחד אזורים אלו שהופך אותם למטרה טובה?", 
                 options: [
-                    "לשמש כאזורי בקרה לבלימת הריאקציה בסיומה.",
-                    "לספק מטרה להגברה מכיוון שאזורים אלו נוטים להיות בעלי שונות גבוהה בין מינים קרובים, מה שמאפשר תכנון תחלים ספציפיים.",
-                    "למנוע מהדנא להתקפל למבנים תלת-מימדיים מורכבים.",
-                    "לשמש כאתר קישור לאנזימים מפרקי חלבונים המצויים בדגימה."
-                ],
-                correctIndex: 1,
-                explanation: "האזורים המקודדים עצמם לרוב שמורים מאוד, בעוד שאזורי המרווח אינם מקודדים ולכן נתונים לפחות לחץ אבולוציוני, מה שיוצר שונות רבה המאפשרת זיהוי ספציפי."
+                    "הם מקודדים לרעלנים החזקים ביותר של הפטרייה.", 
+                    "הם אזורים לא מקודדים בין הגנים הרבוזומליים, ולכן מצטברות בהם מוטציות המאפשרות הבחנה בין מינים קרובים.", 
+                    "הם האזורים השמורים ביותר בגנום, ולכן רצף שלהם זהה לחלוטין בכל הפטריות.", 
+                    "הם אזורים הקיימים רק בפטריות מתות ולא בחיות."
+                ], 
+                correctIndex: 1, 
+                explanation: "אזורי ה-ITS (Internal Transcribed Spacer) ממוקמים בין הגנים המקודדים ל-rRNA. מכיוון שהם אינם מקודדים לחלבון, הלחץ האבולוציוני עליהם נמוך, מה שמאפשר להם להשתנות מהר יותר ולשמש כסמן ספציפי למינים." 
             },
-            {
-                question: "כיצד הבדלים במבנה הדופן של חיידקים שונים עשויים להשפיע על יעילות שיטות מולקולריות המבוססות על אנליזת חומצות גרעין?",
+            { 
+                question: "כיצד מתמודדת שיטת ה-Multiplex PCR עם הצורך לזהות מספר פתוגנים במקביל?", 
                 options: [
-                    "הם אינם משפיעים כלל, שכן חומצות גרעין נמצאות מחוץ לתא.",
-                    "הם משפיעים על סוג הצבע הפלואורסצנטי שניתן להשתמש בו בסוף התהליך.",
-                    "הם עלולים להקשות על שלב מיצוי הדנא המקדים, מה שידרוש פרוטוקולים שונים לשבירת התא לפני ההגברה.",
-                    "הם משנים את רצף הדנא עצמו במהלך חדירת התחלים לתא."
-                ],
-                correctIndex: 2,
-                explanation: "כדי להגביר דנא, חייבים קודם לשחרר אותו מהתא. חיידקים עם דופן עבה או קשיחה במיוחד דורשים תהליכי מיצוי ושבירה אגרסיביים יותר, אחרת הבדיקה תיתן תוצאה שלילית שגויה."
+                    "על ידי שימוש במספר אנזימי פולימראז שונים באותה מבחנה.", 
+                    "על ידי שינוי מחזורי הטמפרטורה כך שיתאימו לפתוגן שונה בכל מחזור.", 
+                    "על ידי הכללת מספר זוגות שונים של פריימרים באותה ריאקציה, שכל זוג מכוון למטרה אחרת ומייצר תוצר באורך שונה.", 
+                    "על ידי חיתוך הדנא למקטעים קטנים וריצוף מלא של כל המקטעים במקביל."
+                ], 
+                correctIndex: 2, 
+                explanation: "ב-Multiplex PCR מוסיפים למבחנה אחת מספר סטים של פריימרים. כל סט מתוכנן כך שיזהה גן של פתוגן אחר וייצר מקטע דנא באורך ייחודי. הרצה על ג'ל תציג פסים באורכים שונים בהתאם לפתוגנים שנמצאו." 
             },
-            {
-                question: "בהנחה שיעילות ההגברה היא מושלמת, כמה עותקים של רצף המטרה יווצרו ממולקולת דנא אחת לאחר 10 מחזורי הגברה?",
+            { 
+                question: "חוקר מעוניין לפתח ערכה מסחרית מהירה (Rapid test) לזיהוי חיידק בשטח, ללא ציוד מעבדה מורכב. מדוע שיטת LAMP עשויה להיות עדיפה על PCR קונבנציונלי למטרה זו?", 
                 options: [
-                    "עשרה עותקים.",
-                    "עשרים עותקים.",
-                    "קצת יותר מאלף עותקים.",
-                    "קצת יותר ממיליון עותקים."
-                ],
-                correctIndex: 2,
-                explanation: "ההכפלה היא מעריכית על פי הנוסחה ($2^n$). לאחר עשרה מחזורים יווצרו ($2^{10}$) עותקים, שהם 1024."
+                    "LAMP אינה דורשת מיצוי דנא כלל.", 
+                    "LAMP מתבצעת בטמפרטורה קבועה, מה שמייתר את הצורך במכשיר טרמוסייקלר (Thermocycler) יקר ומורכב.", 
+                    "LAMP משתמשת רק בפריימר אחד, מה שמוזיל את עלות הערכה.", 
+                    "LAMP רגישה פחות מ-PCR ולכן מונעת תוצאות חיוביות שגויות בשטח."
+                ], 
+                correctIndex: 1, 
+                explanation: "היתרון הגדול של LAMP הוא היותה ריאקציה איזותרמית. ניתן לבצע אותה באמצעות מקור חום פשוט (כמו אמבט מים בטמפרטורה קבועה), ואין צורך במכשיר שמחליף טמפרטורות במהירות כמו ב-PCR." 
             },
-            {
-                question: "איזה מהרכיבים הבאים אינו הכרחי לביצוע הגברת דנא קלאסית במבחנה?",
+            { 
+                question: "מהו התפקיד של 'בקרת פנימית' (Internal Control) במבחן PCR שגרתי לאיתור פתוגנים?", 
                 options: [
-                    "אנזים פולימראז עמיד לחום.",
-                    "תחלים ספציפיים לרצף המטרה.",
-                    "אנזים מתעתק הפוך.",
-                    "אבני בניין חופשיים של חומצות גרעין."
-                ],
-                correctIndex: 2,
-                explanation: "אנזים מתעתק הפוך נדרש רק כאשר חומר המוצא הוא רנא. בהגברת דנא רגילה אין בו צורך."
+                    "לוודא שהחיידק המזוהה הוא פתוגני ולא חיידק סביבתי בלתי מזיק.", 
+                    "להעיד על כך ששלב מיצוי הדנא וריאקציית ה-PCR עצמה פעלו כראוי ואינם מעוכבים.", 
+                    "לספק סולם גדלים (Marker) להערכת אורך התוצר על הג'ל.", 
+                    "למנוע היקשרות לא ספציפית של הפריימרים לגנום האנושי."
+                ], 
+                correctIndex: 1, 
+                explanation: "בקרה פנימית היא רצף דנא ידוע (למשל דנא של המאכסן או דנא צמחי) שמוגבר באותה מבחנה. אם הרצף הזה לא הוגבר, זה סימן שהריאקציה נכשלה טכנית, ולא ניתן להסיק שהדגימה נקייה מהפתוגן." 
             },
-            {
-                question: "מהו התפקיד של חום גבוה בשלב הראשון של כל מחזור במערכת הגברת דנא קלאסית?",
+            { 
+                question: "אם משווים את שיטת ה-PCR לשיטות גידול קונבנציונליות על צלחות פטרי, מהו היתרון המובהק ביותר של ה-PCR בהקשר של בטיחות מזון תעשייתי?", 
                 options: [
-                    "להרוס את כל האנזימים המעכבים הנמצאים בדגימה.",
-                    "לשבור את קשרי המימן בין שני גדילי הדנא כדי לאפשר גישה לתחלים.",
-                    "לזרז את יצירת הקשרים הפוספודיאסטריים על ידי האנזים.",
-                    "לגרום לחיבור סופי וקבוע של התחלים לרצף המטרה."
-                ],
-                correctIndex: 1,
-                explanation: "החום הגבוה גורם לדנטורציה של הדנא הדו-גדילי, כלומר הפרדתו לשני גדילים בודדים, מה שמאפשר לפריימרים להיקשר אליהם בשלב הבא."
+                    "היכולת להבדיל בקלות בין תאים חיים למתים.", 
+                    "העלות האפסית של החומרים הנדרשים.", 
+                    "קיצור משמעותי של זמן קבלת התשובה (ממספר ימים למספר שעות).", 
+                    "היכולת לבודד את החיידק הפיזי ולהשתמש בו למחקר המשך."
+                ], 
+                correctIndex: 2, 
+                explanation: "בתעשיית המזון, עיכוב בשחרור סחורה עולה כסף רב. שיטות קונבנציונליות דורשות ימי העשרה וגידול (5-7 ימים). שיטות מבוססות PCR יכולות לספק תשובה תוך 24 שעות (כולל העשרה קצרה)." 
             },
-            {
-                question: "כאשר משווים בין שיטות תרבותיות קלאסיות לשיטות המבוססות על אנליזת חומצות גרעין, באיזה מתאר השיטות המולקולריות מספקות את היתרון הקריטי ביותר?",
+            { 
+                question: "בזיהוי דלקת עטין בבקר (Bovine Mastitis) באמצעות PCR, נעשה שימוש בפריימרים המזהים את החיידק Streptococcus agalactiae. איזה פס נוסף מצופה לראות על הג'ל בדגימת חלב תקינה (ללא דלקת)?", 
                 options: [
-                    "כאשר רוצים לבדוק את עמידות החיידק לאנטיביוטיקה בפועל.",
-                    "כאשר מנסים לזהות חיידקים שקשה מאוד או בלתי אפשרי לגדל אותם בתנאי מעבדה סטנדרטיים.",
-                    "כאשר המטרה היא לקבוע את צורת החיידק תחת מיקרוסקופ אור.",
-                    "כאשר נדרש לבדוק את יכולת התנועה של החיידק במדיום נוזלי."
-                ],
-                correctIndex: 1,
-                explanation: "שיטות מולקולריות אינן דורשות גדילה של החיידק בתרבית, ולכן הן אידיאליות לאורגניזמים שאינם גדלים היטב במעבדה או שזמן הגידול שלהם ארוך מאוד."
+                    "לא מצופה לראות שום פס בדגימה תקינה.", 
+                    "מצופה לראות פס חלש של החיידק עקב זיהום טבעי של החלב.", 
+                    "מצופה לראות פס המייצג אמפליפיקציה של דנא פרה (בקר) המשמש כבקרה פנימית.", 
+                    "מצופה לראות פס של חיידקי חומצת חלב (Lactobacillus) הנמצאים באופן טבעי."
+                ], 
+                correctIndex: 2, 
+                explanation: "בדגימת חלב יש תאים סומטיים של הפרה. שימוש בפריימרים המזהים דנא של פרה מבטיח שה-PCR עבד. בדגימה תקינה נראה רק את פס הפרה. בדגימה נגועה נראה את פס הפרה וגם את פס החיידק." 
             },
-            {
-                question: "בבדיקת מערכת מסחרית אוטומטית לזיהוי פתוגנים, מודגש כי המערכת פועלת בסביבה סגורה ללא פתיחת מבחנות לאחר ההגברה. איזו בעיה נפוצה מנסה גישה זו לפתור?",
+            { 
+                question: "חוקר משתמש בשיטת MPN (Most Probable Number) משולבת עם PCR. מהי מטרת השילוב הזה?", 
                 options: [
-                    "חשיפה לאור שעלולה להרוס את חומצות הגרעין.",
-                    "זיהום סביבת המעבדה במיליארדי עותקי דנא שנוצרו, אשר עלולים לזהם דגימות עתידיות ולגרום לתוצאות חיוביות שגויות.",
-                    "אידוי של נוזל הריאקציה שפוגע בדיוק התוצאות הכמותיות.",
-                    "כניסת חמצן המעכב את פעולת האנזימים הפלואורסצנטיים."
-                ],
-                correctIndex: 1,
-                explanation: "פתיחת מבחנות המכילות תוצרי הגברה משחררת תרסיס זעיר של דנא לסביבה. מכיוון שהשיטה כה רגישה, דנא זה עלול לזהם בדיקות הבאות ולגרום לתוצאות חיוביות כוזבות. מערכות סגורות מונעות זאת."
+                    "לקצר את זמן הריאקציה של ה-PCR למספר דקות.", 
+                    "למנוע את הצורך במיצוי דנא מהדגימה.", 
+                    "לקבל הערכה כמותית של מספר החיידקים בדגימה, תוך ניצול הספציפיות של ה-PCR.", 
+                    "להגביר את רגישות ה-PCR כך שיזהה חצי תא חיידקי."
+                ], 
+                correctIndex: 2, 
+                explanation: "PCR קונבנציונלי נותן תשובה איכותית (יש/אין). MPN היא שיטה סטטיסטית המבוססת על מיהולים עשרוניים. שילוב של PCR ככלי הגילוי בתוך מבחנות ה-MPN מאפשר לקבל הערכה כמותית מדויקת וספציפית." 
             },
-            {
-                question: "חוקר משתמש באנליזת פולימורפיזם של אורך מקטעי הגבלה כדי להבחין בין שני זני חיידקים. מהו התנאי ההכרחי להצלחת ההבחנה בשיטה זו?",
+            { 
+                question: "איזו מהשיטות הבאות אינה דורשת פתיחה של המבחנה והרצה על ג'ל לאחר סיום ההגברה, ובכך מקטינה דרמטית את הסיכון לזיהום המעבדה בתוצרי PCR (אמפליקונים)?", 
                 options: [
-                    "שני הזנים חייבים להיות בעלי תוכן גואנין וציטוזין זהה לחלוטין.",
-                    "חייבת להיות לפחות מוטציה אחת ברצף הדנא של אחד הזנים שמשנה את אתר החיתוך של האנזים, כך שיווצרו מקטעים באורכים שונים.",
-                    "האנזים חייב לחתוך את הדנא למקטעים שווים בדיוק באורכם בשני הזנים.",
-                    "החיידקים חייבים להיות מסוגלים להעביר פלסמידים זה לזה במהלך הניסוי."
-                ],
-                correctIndex: 1,
-                explanation: "שיטת RFLP מבוססת על כך ששינויים קטנים ברצף הדנא יוצרים או מבטלים אתרי חיתוך לאנזימי הגבלה, מה שמוביל לתבנית שונה של אורכי מקטעים המופרדים בג'ל."
+                    "PCR קונבנציונלי (End-point PCR)", 
+                    "Multiplex PCR", 
+                    "Real Time PCR", 
+                    "PCR-RFLP"
+                ], 
+                correctIndex: 2, 
+                explanation: "ב-Real Time PCR, הקריאה נעשית באופן פלואורסצנטי דרך דופן המבחנה הסגורה בזמן אמת. אין צורך לפתוח אותה להרצת ג'ל, מה שמונע פיזור של מיליארדי עותקי דנא באוויר המעבדה." 
             },
-            {
-                question: "בשיטת זיהוי המבוססת על צבע פלואורסצנטי הנקשר לסליל כפול, כיצד ניתן לאמת שהאות נובע מרצף המטרה הספציפי ולא מדימרים של פריימרים?",
+            { 
+                question: "מדוע זיהוי מיקרואורגניזמים על בסיס צביעה דיפרנציאלית (כמו צביעת גראם) ומורפולוגיה נחשב לנחות בהשוואה לאנליזת דנא?", 
                 options: [
-                    "על ידי הוספת צבע נוסף בצבע שונה.",
-                    "על ידי ביצוע עקומת התכה בסוף הריאקציה, שכן לתוצר הספציפי ולדימרים תהיה טמפרטורת התכה שונה המאפשרת להבחין ביניהם.",
-                    "על ידי קירור מהיר של המבחנה לטמפרטורת קיפאון ומדידת האור הנפלט.",
-                    "לא ניתן להבחין ביניהם בשיטה זו, יש להשתמש תמיד בגישושיות ייעודיות."
-                ],
-                correctIndex: 1,
-                explanation: "עקומת התכה מעלה את הטמפרטורה בהדרגה ומודדת מתי ניתקים הגדילים (הצבע משתחרר והאור דועך). דימרים של פריימרים הם קצרים ולכן ניתכים בטמפרטורה נמוכה יותר מאשר תוצר המטרה האמיתי."
+                    "מכיוון שצביעת גראם הורסת את התא ולא מאפשרת הסתכלות במיקרוסקופ.", 
+                    "מכיוון שחיידקים רבים ושונים זה מזה חולקים את אותה מורפולוגיה ואותה תגובה לצביעה.", 
+                    "מכיוון שצביעות עובדות רק על חיידקים מתים.", 
+                    "מכיוון שאנליזת דנא זולה יותר משימוש בצבעים כימיים."
+                ], 
+                correctIndex: 1, 
+                explanation: "ישנם אלפי מיני חיידקים שהם 'מתגים גראם-שליליים'. מורפולוגיה וצביעה מספקות סיווג ראשוני רחב מאוד, אך אינן יכולות להבדיל בין מינים קרובים, בניגוד לריצוף דנא שהוא ייחודי." 
             },
-            {
-                question: "מה הופך את שיטת ההגברה האיזותרמית למתאימה במיוחד לאבחון מהיר בשטח או במרפאות קטנות?",
+            { 
+                question: "מהו ההסבר המולקולרי לכך שרצף ה-($16S$) rRNA שמור מאוד בין חיידקים שונים לאורך האבולוציה?", 
                 options: [
-                    "היא השיטה היחידה שאינה דורשת שימוש בחשמל כלל.",
-                    "היא אינה דורשת מכשור יקר ומורכב לשינויי טמפרטורה מחזוריים, וניתן לבצעה באמבט מים חמים פשוט.",
-                    "היא מזהה באופן אוטומטי את סוג האנטיביוטיקה הנדרש לטיפול.",
-                    "היא אינה דורשת שימוש בתחלים ולכן חוסכת עלויות עיצוב."
-                ],
-                correctIndex: 1,
-                explanation: "מכיוון שהתהליך מתבצע בטמפרטורה אחת קבועה לאורך כל הזמן, אין צורך במכשיר תרמוסייקלר יקר, מה שהופך את השיטה לנגישה וזולה יותר ליישום בתנאי שטח."
+                    "הוא אינו עובר תהליך של שעתוק ולכן אינו חשוף למוטגנים.", 
+                    "הוא מקודד לחלבון מבני בדופן התא שכל שינוי בו גורם לפיצוץ התא.", 
+                    "הוא מהווה חלק מרכזי ביחידה הקטנה של הריבוזום, ותפקודו קריטי לתהליך התרגום של כלל החלבונים בתא.", 
+                    "הוא מוגן על ידי חלבונים מיוחדים המונעים מאנזימי רסטריקציה לחתוך אותו."
+                ], 
+                correctIndex: 2, 
+                explanation: "ה-16S rRNA הוא רנא ריבוזומלי. הריבוזום הוא מכונת ייצור החלבונים של התא. כל מוטציה באזורים הקריטיים של ה-16S תפגע ביכולת התא לייצר חלבונים ותגרום למותו, ולכן האזורים הללו נשמרים באדיקות (שמורים אבולוציונית)." 
             },
-            {
-                question: "מדוע חשוב למקם את התחלים באזורים משתנים כאשר המטרה היא סיווג חיידקים ברמת המין על בסיס הגן הריבוזומלי?",
+            { 
+                question: "בבדיקת RT-PCR, מהו תפקידו של האנזים Reverse Transcriptase?", 
                 options: [
-                    "מכיוון שאזורים אלו הם היחידים שמקודדים לחלבונים פעילים.",
-                    "מכיוון שרק באזורים אלו יש מספיק בסיסים מסוג אדנין ותימין המאפשרים קשירה חזקה.",
-                    "מכיוון שהשונות ברצף באזורים אלו מאפשרת לתחלים להיקשר באופן בלעדי לדנא של המין הספציפי ולא למינים אחרים.",
-                    "מכיוון שאזורים אלו עמידים יותר בפני פירוק על ידי אנזימים תאיים."
-                ],
-                correctIndex: 2,
-                explanation: "האזורים המשתנים מכילים רצפים ייחודיים לכל מין. תכנון תחלים המקבילים לרצפים אלו מבטיח שההגברה תתרחש רק אם אותו מין ספציפי נוכח בדגימה."
+                    "לפרק את הדנא הכפול לגדילים בודדים ללא צורך בחימום.", 
+                    "לסנתז גדיל דנא משלים (cDNA) על בסיס תבנית של רנא.", 
+                    "להוסיף סמנים פלואורסצנטיים לקצוות של מולקולת הדנא המוגברת.", 
+                    "לשעתק מולקולות רנא חדשות מתוך תבנית הדנא המקורית."
+                ], 
+                correctIndex: 1, 
+                explanation: "Reverse Transcriptase (משעתק לאחור) מבצע את התהליך ההפוך מהרגיל: הוא לוקח מולקולת רנא (כמו mRNA מבוטא) ובונה על פיה מולקולת דנא (cDNA), שאותה ניתן להגביר בהמשך בעזרת פולימראז רגיל." 
             },
-            {
-                question: "בניתוח תוצאות של זיהוי מולקולרי של ליסטריה במזון, התקבלו שני פסים על הג'ל במבחנת הדגימה, ולעומת זאת שלושה פסים במבחנת הביקורת החיובית. בהנחה שהבדיקה תקינה, מהי המסקנה הברורה?",
+            { 
+                question: "חוקר מבצע בדיקת PCR לאיתור הנגיף. הוא שוכח להוסיף את אנזים ה-Reverse Transcriptase למבחנה המכילה את דגימת הנגיף (שגנומו מבוסס רנא) ואת שאר מרכיבי ה-PCR. מה תהיה התוצאה?", 
                 options: [
-                    "הדגימה מזוהמת בחיידק ליסטריה ממין שאינו מונוציטוגנס.",
-                    "הדגימה תקינה לחלוטין ואינה מכילה חיידקי ליסטריה כלל.",
-                    "הדגימה מכילה רמות מסוכנות של חיידק ליסטריה מונוציטוגנס.",
-                    "הריאקציה נכשלה עקב נוכחות מעכבי מזון ויש לחזור עליה."
-                ],
-                correctIndex: 0,
-                explanation: "מערכת זו משתמשת בשלושה פסים: אוניברסלי, סוג ליסטריה, ומין מונוציטוגנס. אם התקבלו רק שני פסים, הדגימה מכילה חיידק (אוניברסלי) שהוא מסוג ליסטריה, אך הוא אינו המין הספציפי מונוציטוגנס (הפס השלישי חסר)."
+                    "הריאקציה תתעכב אך בסופו של דבר תיווצר הגברה חלשה.", 
+                    "ייווצרו עותקים מרובים של רנא במקום דנא.", 
+                    "לא תתרחש שום הגברה, ותתקבל תוצאה שלילית שגויה (False negative).", 
+                    "הפריימרים יתחברו זה לזה וייצרו תוצאה חיובית שגויה (False positive)."
+                ], 
+                correctIndex: 2, 
+                explanation: "ללא המרת הרנא הנגיפי לדנא באמצעות RT, לאנזים ה-Taq Polymerase אין תבנית דנא לעבוד עליה. לכן לא תהיה הגברה כלל, והחוקר יחשוב בטעות שהנגיף אינו נוכח." 
             },
-            {
-                question: "איזה מנגנון ביולוגי מנוצל בשיטת אפיון באמצעות בקטריופאגמים?",
+            { 
+                question: "איזה מבין הבאים נחשב לחיסרון של שימוש ב-RT-PCR לעומת PCR רגיל בתעשיית המזון?", 
                 options: [
-                    "היכולת של נגיפים תוקפי חיידקים להדביק ולפרק זנים ספציפיים מאוד של חיידקים המבטאים קולטנים מתאימים על פני השטח שלהם.",
-                    "היכולת של נגיפים לייצר אור כאשר הם באים במגע עם חומצות גרעין של חיידקים.",
-                    "היכולת של חיידקים לבלוע נגיפים ולהשתמש בהם כמקור אנרגיה חלופי.",
-                    "השונות בגודל הפיזי של נגיפים שונים המאפשרת סינון מכני של החיידקים."
-                ],
-                correctIndex: 0,
-                explanation: "בקטריופאגמים הם וירוסים של חיידקים בעלי ספציפיות גבוהה מאוד. הם ידביקו ויהרגו (ייצרו אזור צלול בצלחת) רק זנים מסוימים המכילים את הקולטן המתאים, מה שמאפשר סיווג מדויק."
+                    "RT-PCR אינו מסוגל להבדיל בין חי למת.", 
+                    "RT-PCR דורש זמן ריאקציה ארוך בחודש ימים לעומת PCR.", 
+                    "RT-PCR מצריך מיומנות עבודה גבוהה יותר ורגיש יותר לפירוק על ידי אנזימי RNase.", 
+                    "RT-PCR מתאים רק לחיידקים גראם-חיוביים."
+                ], 
+                correctIndex: 2, 
+                explanation: "מולקולות רנא הן רגישות מאוד ומתפרקות בקלות על ידי אנזימי RNase הנמצאים בכל מקום (כולל על עור הידיים). לכן, העבודה עם רנא ב-RT-PCR דורשת תנאים סטריליים מחמירים ומיומנות גבוהה יותר." 
             },
-            {
-                question: "מהו ההבדל המהותי בין שיטות זיהוי פנוטיפיות (כמו צביעה ומבחנים ביוכימיים) לשיטות זיהוי גנומיות?",
+            { 
+                question: "מערכת ה-BAX System מתוארת כמערכת אוטומטית המבוססת על טכנולוגיית PCR. מהו היתרון המרכזי של מערכות מסחריות סגורות כאלו לתעשייה?", 
                 options: [
-                    "שיטות פנוטיפיות מתמקדות בבחינת הרצף הגנטי, בעוד שיטות גנומיות מתמקדות בתוצרים החלבוניים.",
-                    "שיטות פנוטיפיות תלויות בביטוי בפועל של תכונות המושפעות מתנאי הסביבה, בעוד שיטות גנומיות בוחנות את פוטנציאל המידע הבסיסי שאינו תלוי בתנאי הגידול.",
-                    "שיטות פנוטיפיות דורשות ציוד יקר ומורכב הרבה יותר מאשר שיטות גנומיות.",
-                    "אין הבדל מהותי, שתיהן מספקות בדיוק את אותה רמת רגישות וספציפיות ברוב המקרים."
-                ],
-                correctIndex: 1,
-                explanation: "פנוטיפ הוא המופע החיצוני והתפקודי התלוי בסביבה. זיהוי גנומי מסתכל ישירות על הדנא, שהוא קבוע ולא משתנה גם אם החיידק נמצא בתנאי עקה ולא מבטא תכונה מסוימת כרגע."
+                    "הן מאפשרות לחוקר לשנות את רצף הפריימרים בכל בדיקה.", 
+                    "הן מורידות את הצורך בכוח אדם מיומן במיוחד ומספקות תוצאות מהירות ואחידות.", 
+                    "הן מבטלות לחלוטין את הצורך בשלב העשרה של המזון.", 
+                    "הן משתמשות באנזימים שאינם דורשים נוקלאוטידים לשם בניית דנא."
+                ], 
+                correctIndex: 1, 
+                explanation: "מערכות כמו BAX הופכות את תהליך ה-PCR לנגיש יותר לתעשיות שאין להן מעבדות מולקולריות מתקדמות. הן מגיעות עם ריאגנטים מוכנים מראש, תוכנה מובנית, ודורשות מינימום התערבות ידנית." 
             },
-            {
-                question: "במערכת מבוססת שבב לריכוז חיידקים, מדוע יש חשיבות מכרעת לשלב זה לפני ביצוע האנליזה המולקולרית?",
+            { 
+                question: "בגרף המציג תוצאות של זיהוי Vibrio cholerae מבוסס על הגן הפתוגני (ctx), נראית עקומה עולה (חיובית) רק עבור הזן O1 Inaba. שאר הזנים (E. coli, Vibrio mimicus) נשארו כקו שטוח בתחתית. מה זה מוכיח לגבי הפריימרים?", 
                 options: [
-                    "מכיוון שהשבב הורס את כל החומרים המעכבים במזון באמצעות קרינה אולטרה-סגולה.",
-                    "מכיוון שהוא מאפשר העלאה של ריכוז תאי החיידקים בנפח קטן של נוזל, ובכך מגדיל את ההסתברות שהאנזים יפגוש את דנא המטרה.",
-                    "מכיוון שהשבב מחליף את פעולת האנזים פולימראז ומבצע את ההגברה בעצמו.",
-                    "מכיוון שהוא מסמן את החיידקים בצבע פלואורסצנטי המייתר את הצורך בשימוש בתחלים."
-                ],
-                correctIndex: 1,
-                explanation: "בדגימות מזון או מים, החיידקים עשויים להיות מפוזרים בנפח גדול מאוד. ריכוזם לנפח מיקרוסקופי מעלה את הריכוז האפקטיבי שלהם ומאפשר זיהוי מהיר ללא צורך בהמתנה להתרבותם."
+                    "שהפריימרים מזהים כל דנא חיידקי אך מוגברים רק בנוכחות רעלן.", 
+                    "שהפריימרים ספציפיים לגן הרעלן (ctx) הקיים רק בזן הפתוגני של הכולרה.", 
+                    "שהפריימרים עברו דנטורציה מוקדמת בשאר המבחנות.", 
+                    "שהפריימרים מזהים את ה-($16S$) rRNA האוניברסלי של V. cholerae."
+                ], 
+                correctIndex: 1, 
+                explanation: "העובדה שרק הזן הפתוגני (ctx+) הניב אות פלואורסצנטי עולה, בעוד שחיידקים קרובים (כמו זן כולרה שאינו פתוגני ctx-) לא הניבו אות, מעידה על ספציפיות גבוהה של הפריימרים לגן הרעלן עצמו." 
             },
-            {
-                question: "מהי התרומה העיקרית של שימוש בגישושית המכילה משתיק פלואורסצנטי לאמינות של כימות מולקולרי?",
+            { 
+                question: "מהי המשמעות של 'אופרון' בהקשר של ה-rRNA בחיידקים?", 
                 options: [
-                    "היא מבטיחה שכל מולקולות הדנא במבחנה יזרחו באותו צבע בדיוק.",
-                    "היא מבטיחה שאות פלואורסצנטי ייווצר אך ורק כאשר הגישושית נקשרת לרצף המטרה הספציפי ונחתכת ממנו, מה שמונע קריאת רקע שגויה.",
-                    "היא מאפשרת להאריך את חיי המדף של חומרי הריאקציה למספר שנים.",
-                    "היא מורידה את הטמפרטורה הנדרשת לפעילות האנזים וחוסכת באנרגיה."
-                ],
-                correctIndex: 1,
-                explanation: "המשתיק בולע את האור מהסמן כל עוד הגישושית שלמה. רק פירוק הגישושית בעקבות התאמה ספציפית למטרה מרחיק את המשתיק ומאפשר פליטת אור, מה שמבטיח שרק הגברה ספציפית נמדדת."
+                    "חלבון המבקר את קצב הריבוי של החיידק.", 
+                    "יחידה גנטית הכוללת מספר גנים המקודדים ל-rRNA ($16S$, $23S$, $5S$) שמשועתקים יחד כיחידה אחת.", 
+                    "אנזים החותך את הדנא באזורים ספציפיים.", 
+                    "מקטע דנא המקודד לעמידות לאנטיביוטיקה."
+                ], 
+                correctIndex: 1, 
+                explanation: "בחיידקים, הגנים המקודדים למרכיבי הריבוזום מאורגנים באופרון - יחידת שעתוק אחת. האופרון כולל את הגנים $16S$, $23S$ ו-$5S$, וביניהם ישנם אזורי רווח (Spacer regions)." 
             },
-            {
-                question: "בניתוח אבולוציוני של חיידקים, מדוע משווים דווקא את הגן הריבוזומלי ולא גנים המקודדים לאנזימי עיכול למשל?",
+            { 
+                question: "כיצד תורמת טכנולוגיית מיקרופלואידיקה המשלבת כוחות דיאלקטרופורטיים (DEP) לשיפור מהירות הזיהוי של פתוגנים במזון?", 
                 options: [
-                    "כי אנזימי עיכול קיימים רק בחיידקים פתוגניים.",
-                    "כי הגן הריבוזומלי חיוני לחיים ולכן קיים בכל החיידקים, וקצב השינוי שלו לאורך האבולוציה איטי ויציב מספיק כדי לשמש כשעון מולקולרי.",
-                    "כי הגן הריבוזומלי עובר מוטציות בקצב מהיר יותר מכל גן אחר בגנום.",
-                    "כי גנים המקודדים לאנזימים אינם ניתנים להגברה בשיטות מולקולריות סטנדרטיות."
-                ],
-                correctIndex: 1,
-                explanation: "הגן הריבוזומלי הוא אוניברסלי ושמור מאוד בגלל תפקידו הקריטי. זה מאפשר להשוות בין אורגניזמים רחוקים מאוד אבולוציונית, בניגוד לגנים פריפריאליים שעשויים להיעלם או להשתנות מהר."
+                    "היא מחליפה את שלב מיצוי הדנא הכימי.", 
+                    "היא מאפשרת ללכוד ולרכז חיידקים מנפח נוזל גדול בזמן קצר, ובכך חוסכת את הצורך בהעשרה ממושכת באינקובטור.", 
+                    "היא מבצעת את ההגברה האנזימטית בקצב מהיר פי עשרה מ-PCR רגיל.", 
+                    "היא משמידה חיידקי רקע שאינם פתוגניים כדי למנוע תחרות."
+                ], 
+                correctIndex: 1, 
+                explanation: "האתגר המרכזי בזיהוי הוא ריכוז נמוך של הפתוגן. העשרה מסורתית לוקחת ימים. שימוש בשבב DEP מושך ומרכז את החיידקים פיזית אל אזור הבדיקה תוך דקות או שעות ספורות, ומאפשר להגיע לסף הגילוי של ה-PCR מהר יותר." 
             },
-            {
-                question: "מהו האתגר באבחון דלקת עטין בבקר בשיטות תרבותיות קלאסיות, אשר נפתר באמצעות זיהוי מולקולרי?",
+            { 
+                question: "בניסוי זיהוי פטריית Alternaria, נעשה שימוש בפריימרים המכוונים לאזור ה-ITS. איזה פולימראז משמש להגברת אזור זה בתגובת ה-PCR?", 
                 options: [
-                    "החלב מכיל אנזימים ההורסים את צלחות הפטרי באופן מיידי.",
-                    "חיידקים מסוימים הגורמים למחלה נמצאים לעיתים במצב שאינו מאפשר להם לגדול על מצעי גידול מלאכותיים, אך חומצות הגרעין שלהם עדיין ניתנות לזיהוי.",
-                    "החיידקים משנים את צורתם המורפולוגית בחלב כך שלא ניתן לזהותם במיקרוסקופ.",
-                    "עלויות מצעי הגידול גבוהות משמעותית מעלויות הריאגנטים המולקולריים."
-                ],
-                correctIndex: 1,
-                explanation: "חיידקים במצבי עקה (כמו בתוך עטין מודלק או בנוכחות תאי מערכת החיסון) נכנסים לעיתים למצב בו הם חיים אך אינם ניתנים לגידול בתרבית, מצב המזוהה בקלות על ידי טכנולוגיות מולקולריות."
+                    "RNA Polymerase", 
+                    "Reverse Transcriptase", 
+                    "Taq DNA Polymerase", 
+                    "Ligase"
+                ], 
+                correctIndex: 2, 
+                explanation: "אזור ה-ITS הוא אזור בדנא הגנומי. לכן, לשם הגברתו ב-PCR רגיל משתמשים באנזים המרכזי של השיטה - Taq DNA Polymerase העמיד לחום." 
             },
-            {
-                question: "מהי הסיבה לכך ששימוש בטכנולוגיית הגברה בזמן אמת מייתרת את הצורך בהרצת התוצרים על ג'ל אלקטרופורזה?",
+            { 
+                question: "איזה מבין הרצפים הבאים צפוי להראות את השונות הגדולה ביותר כאשר משווים בין שני מינים שונים של חיידקים מאותו סוג (Genus)?", 
                 options: [
-                    "מכיוון שהשיטה משמידה את תוצרי ההגברה מיד לאחר היווצרותם.",
-                    "מכיוון שהמכשיר מודד את כמות התוצר באופן רציף במהלך הריאקציה עצמה באמצעות ניטור פלואורסצנטי, המספק נתונים כמותיים ואיכותיים באופן מיידי.",
-                    "מכיוון שהתוצרים הנוצרים בשיטה זו אינם נושאים מטען חשמלי ולכן אינם נעים בשדה חשמלי.",
-                    "מכיוון שהג'ל עצמו מכיל חומרים המעכבים את הצבעים הפלואורסצנטיים."
-                ],
-                correctIndex: 1,
-                explanation: "המערכת האופטית קוראת את האות תוך כדי התהליך (בזמן אמת), ולכן אין צורך לפתוח את המבחנות ולהפריד את התוצרים בסיום התהליך כדי לדעת אם התרחשה הגברה וכמה."
+                    "האזור השמור ביותר בגן ה-($16S$) rRNA.", 
+                    "אזור ה-Spacer שבין הגן ל-($16S$) לגן ה-($23S$).", 
+                    "גן המקודד לאנזים מטבולי בסיסי החיוני לחיים.", 
+                    "רצף הבקר הפנימי המשמש במערכת."
+                ], 
+                correctIndex: 1, 
+                explanation: "אזורי ה-Spacer (הרווח) אינם מקודדים לחלבון ולכן אינם תחת לחץ סלקטיבי חזק. הם צוברים מוטציות בקצב גבוה בהרבה מאזורים מקודדים או שמורים, ולכן הם אידיאליים להבחנה בין מינים קרובים מאוד." 
             },
-            {
-                question: "חוקר בוחן דגימת מים למציאת חיידק כולרה פתוגני באמצעות מבחן גנומי המכוון לגן הרעלן. התקבלה תוצאה שלילית. האם ניתן להסיק בוודאות שאין חיידקי כולרה במים?",
+            { 
+                question: "מדוע זיהוי על בסיס אנליזת חלבונים נחשב בחלק מהמקרים פחות יציב מזיהוי מבוסס דנא?", 
                 options: [
-                    "כן, מכיוון שכל חיידקי הכולרה מכילים את גן הרעלן.",
-                    "לא, ייתכן שישנם חיידקי כולרה שאינם אלימים ואינם נושאים את גן הרעלן, אך הם עדיין שייכים לאותו מין.",
-                    "כן, מכיוון שהבדיקה המולקולרית רגישה מספיק כדי לזהות כל חיידק במים.",
-                    "לא, מכיוון שחיידקי כולרה חיים רק בתוך מארחים אנושיים ולא במים חופשיים."
-                ],
-                correctIndex: 1,
-                explanation: "הבדיקה כוונה ספציפית לגן האלימות (הרעלן). זנים לא אלימים של אותו חיידק לא יזוהו בבדיקה זו, למרות שהם עשויים להיות נוכחים בדגימה."
+                    "מכיוון שחלבונים זהים בכל סוגי החיידקים.", 
+                    "מכיוון שחלבונים אינם קיימים בחיידקים חיים.", 
+                    "מכיוון שפרופיל ביטוי החלבונים משתנה משמעותית כתלות בתנאי הסביבה ובשלב הגידול של החיידק.", 
+                    "מכיוון שאי אפשר להפריד חלבונים במעבדה."
+                ], 
+                correctIndex: 2, 
+                explanation: "הגנום (דנא) קבוע ואינו משתנה בהתאם לסביבה. לעומת זאת, הפרוטאום (סך החלבונים) הוא דינמי; חיידק עשוי לבטא חלבונים שונים בקור, בחום, או בנוכחות מזון שונה, מה שמקשה על זיהוי עקבי." 
             },
-            {
-                question: "באיזה שלב של תהליך האבחון המולקולרי עלולה להתרחש פגיעה משמעותית עקב נוכחות של ריכוז גבוה של מלחים וליפידים במזון הנבדק?",
+            { 
+                question: "חוקר מבצע PCR ובטעות מכוון את טמפרטורת החיבור (Annealing) ל-70 מעלות צלזיוס במקום ל-55 מעלות. מה תהיה התוצאה הסבירה ביותר?", 
                 options: [
-                    "בשלב תכנון התחלים במחשב.",
-                    "בשלב ההפרדה החשמלית בג'ל בלבד.",
-                    "בשלב פעילות האנזים פולימראז, שכן חומרים אלו עלולים לשנות את המבנה המרחבי שלו או למנוע את קישורו לדנא.",
-                    "בשלב קריאת התוצאות, שכן הם תמיד זורחים באור פלואורסצנטי זהה לזה של הגישושיות."
-                ],
-                correctIndex: 2,
-                explanation: "חומרים אורגניים ואנאורגניים רבים במזון פועלים כמעכבי הגברה (Inhibitors). הם יכולים להיקשר לאנזים, לפרק אותו, או להפריע לקישור בין התחלים למטרה."
+                    "הפריימרים ייקשרו למקומות אקראיים וייצרו פסים מרובים על הג'ל.", 
+                    "הפריימרים לא יצליחו להיקשר לתבנית הדנא, ולא תתקבל הגברה.", 
+                    "הפולימראז יתפרק ולא יעבוד.", 
+                    "הדנא הכפול לא יצליח להיפרד לשני גדילים."
+                ], 
+                correctIndex: 1, 
+                explanation: "טמפרטורת ה-Annealing צריכה להיות מותאמת לטמפרטורת ההתכה (Tm) של הפריימרים. טמפרטורה גבוהה מדי (70 מעלות) תמנע מהפריימרים ליצור קשרי מימן יציבים עם תבנית הדנא, והריאקציה תיכשל." 
             },
-            {
-                question: "כיצד תורמת העובדה שהגן הריבוזומלי מופיע במספר עותקים בגנום החיידקי לשיפור יכולות האבחון?",
+            { 
+                question: "איזו בעיה ייחודית מאפיינת את השימוש ב-SYBR Green ב-Multiplex PCR?", 
                 options: [
-                    "היא מאפשרת לחיידק לשרוד טמפרטורות גבוהות במהלך האבחון.",
-                    "היא מגדילה את מספר מטרות המקור הזמינות להגברה מכל תא בודד, מה שמעלה את רגישות הבדיקה ומאפשר גילוי של כמות תאים קטנה יותר.",
-                    "היא גורמת ליצירת תוצרי הגברה באורכים שונים המאפשרים יצירת פרופיל ייחודי ללא אנזימי חיתוך.",
-                    "היא מונעת מהאנזים לבצע טעויות במהלך סינתזת הגדיל החדש."
-                ],
-                correctIndex: 1,
-                explanation: "אם יש בגנום 5 עותקים של הגן במקום אחד, הרי שתא בודד מספק 5 מטרות התחלתיות להגברה, מה שמגדיל את הסיכוי להצלחת הריאקציה כשכמות החיידקים מזערית."
+                    "הוא יקר פי עשרה משימוש בגשושיות TaqMan.", 
+                    "הוא אינו מסוגל להבחין בין התוצרים השונים שנוצרו באותה מבחנה, שכן הוא פולט את אותו צבע עבור כל דנא דו-גדילי.", 
+                    "הוא הורס את הפולימראז כאשר יש יותר משני זוגות פריימרים.", 
+                    "הוא אינו חודר למבחנות פלסטיק סטנדרטיות."
+                ], 
+                correctIndex: 1, 
+                explanation: "SYBR Green נקשר לכל דנא דו-גדילי ופולט אור באותו אורך גל. אם יש מספר מטרות שונות (Multiplex), לא ניתן לדעת איזה מהתוצרים גרם לפלואורסצנציה. לשם כך יש להשתמש בגשושיות שונות (כמו TaqMan) בצבעים שונים." 
             }
         ];
 
         const tfData = [
-            {
-                question: "שיטות הגברה מולקולריות מסוגלות להבחין בקלות בין מוצר מזון שהזדהם לאחר הפיסטור לבין מוצר שהכיל חיידקים שהושמדו כליל בתהליך הפיסטור.",
-                answer: false,
-                explanation: "שיטות הגברת דנא סטנדרטיות מזהות חומצות גרעין ללא קשר לשאלה אם התא חי או מת. לכן, הן יזהו גם חיידקים שהושמדו בפיסטור, מה שעלול להוביל לתוצאה חיובית שגויה בהקשר של בטיחות מזון."
+            { 
+                question: "שיטת PCR מסוגלת לזהות חיידקים גם אם הם נמצאים במצב פיזיולוגי שאינו מאפשר להם לגדול על צלחות פטרי (VBNC).", 
+                answer: true, 
+                explanation: "PCR מתבסס על נוכחות דנא בלבד ואינו דורש שהחיידק יהיה מסוגל להתרבות בתרבית מעבדה, ולכן הוא יעיל בזיהוי חיידקים קשי-גידול." 
             },
-            {
-                question: "הגן המקודד לרנא הריבוזומלי משמש לזיהוי מיני חיידקים משום שהוא מכיל אזורים המשתנים בקצב מהיר ביותר לאורך האבולוציה, ללא כל אזורים שמורים.",
-                answer: false,
-                explanation: "הגן מכיל שילוב של אזורים שמורים מאוד (המאפשרים עיצוב תחלים אוניברסליים) ואזורים משתנים (המאפשרים הבחנה ספציפית בין מינים). אם כולו היה משתנה, אי אפשר היה למצוא נקודות עוגן להגברה."
+            { 
+                question: "כדי להבדיל בין חיידק חי לחיידק מת באמצעות אנליזה מולקולרית, עדיף להשתמש ב-PCR המכוון לדנא גנומי.", 
+                answer: false, 
+                explanation: "דנא גנומי יציב מאוד ונשאר גם לאחר מות התא. כדי להבדיל בין חי למת עדיף להשתמש ב-RT-PCR המכוון לרנא, שמתפרק מהר בתאים מתים." 
             },
-            {
-                question: "אחד החסרונות של שימוש בהגברת רנא מבוססת מתעתק הפוך הוא השונות הגדולה ברמות ביטוי הגנים כתלות בתנאי הסביבה של החיידק.",
-                answer: true,
-                explanation: "כמות הרנא השליח של גן מסוים משתנה מאוד בהתאם למה שהחיידק חווה. אם הגן אינו מתבטא בתנאים מסוימים, הבדיקה תיתן תוצאה שלילית גם אם החיידק קיים וחי."
+            { 
+                question: "אחד החסרונות של PCR הוא הרגישות הגבוהה שלו, שעלולה להוביל לתוצאות חיוביות עקב זיהום מינימלי במעבדה.", 
+                answer: true, 
+                explanation: "בשל יכולת ההגברה האקספוננציאלית, אפילו מולקולת דנא אחת ממקור חיצוני יכולה להוביל לתוצאה חיובית שגויה (False Positive)." 
             },
-            {
-                question: "במבחני אבחון במזון, הוספת פריימרים המכוונים לדנא של הצמח עצמו נועדה להוכיח שהחיידק הפתוגני אינו מסוגל להדביק רקמות צמחיות.",
-                answer: false,
-                explanation: "פריימרים של צמח במזון צמחי משמשים כבקרה פנימית חיובית. מטרתם להוכיח שריאקציית ההגברה עצמה תקינה ולא עוכבה על ידי רכיבי המזון, כדי להבטיח שתוצאה שלילית עבור הפתוגן היא אמינה."
+            { 
+                question: "שיטת RFLP דורשת ידע מוקדם על רצף הדנא המדויק של החיידק כדי לתכנן את אנזימי ההגבלה.", 
+                answer: false, 
+                explanation: "אנזימי הגבלה חותכים רצפים ספציפיים (לרוב 4-6 בסיסים). אין צורך לדעת את כל הרצף הגנומי, אלא רק לנתח את תבנית החיתוך (הפסים) שנוצרת." 
             },
-            {
-                question: "טכנולוגיית הגברה מתווכת לולאות דורשת שימוש במכשיר חימום מחזורי מתוחכם כדי להפריד את גדילי הדנא בכל מחזור.",
-                answer: false,
-                explanation: "זוהי שיטה איזותרמית, כלומר היא מתבצעת בטמפרטורה קבועה אחת. היא משתמשת באנזים פולימראז המסוגל לפתוח את הסליל הכפול בעצמו, ללא צורך בהפרדה תרמית מחזורית."
+            { 
+                question: "הגן המקודד ל-($16S$) rRNA הוא ייחודי לחלוטין לכל מין של חיידק ואין בו אזורים הדומים לחיידקים אחרים.", 
+                answer: false, 
+                explanation: "הגן מכיל אזורים שמורים מאוד שזהים כמעט בין כל החיידקים, לצד אזורים משתנים (Hypervariable) שהם אלו המאפשרים את ההבחנה בין המינים." 
             },
-            {
-                question: "צבעים פלואורסצנטיים הנקשרים לדנא דו-גדילי במערכות זמן אמת מספקים רמת ספציפיות גבוהה יותר מאשר שימוש בגישושיות מבוססות רצף.",
-                answer: false,
-                explanation: "ההפך הוא הנכון. צבעים אלו נקשרים לכל דנא דו-גדילי שנוצר (כולל תוצרי לוואי ודימרים של תחלים), בעוד גישושיות פולטות אור רק אם רצף המטרה הספציפי הוגבר."
+            { 
+                question: "בשיטת Multiplex PCR נעשה שימוש בפריימר אחד בלבד המסוגל להיקשר למספר מטרות שונות בגנום.", 
+                answer: false, 
+                explanation: "ב-Multiplex PCR משתמשים במספר זוגות שונים של פריימרים באותה מבחנה, כאשר כל זוג מתוכנן ספציפית למטרה אחרת (למשל, סוג מול מין ספציפי)." 
             },
-            {
-                question: "ריכוז חיידקים מקדים באמצעות אלקטרופורזה דיאלקטרית על שבב מאפשר לעקוף את הצורך בהמתנה ארוכה לשלב העשרה תרבותית של החיידק.",
-                answer: true,
-                explanation: "הטכנולוגיה מאפשרת לאסוף ולרכז תאים חיידקיים מתוך נפח גדול של דגימה באופן פיזיקלי ומהיר, ובכך מספקת מספיק חומר התחלתי לאבחון מולקולרי ללא ימי המתנה לגידול התרבית."
+            { 
+                question: "בבדיקת PCR לגילוי פטריית Alternaria במזון, הוספת פריימרים לדנא צמחי משמשת כבקרה פנימית לשלילת עיכוב הריאקציה.", 
+                answer: true, 
+                explanation: "אם ה-PCR מצליח להגביר את הדנא הצמחי (שנמצא במזון), זה מוכיח שאין מעכבים בריאקציה. אם תתקבל תוצאה שלילית לפטרייה, היא תהיה אמינה." 
             },
-            {
-                question: "מערכות אבחון מסחריות סגורות מקטינות את הסיכוי לתוצאות חיוביות שגויות הנגרמות כתוצאה מזיהום המעבדה בתוצרי הגברה מניסויים קודמים.",
-                answer: true,
-                explanation: "במערכות אלו הריאקציה וקריאת התוצאות מתבצעות באותה מבחנה סגורה, ללא צורך בפתיחתה להרצה על ג'ל, מה שמונע פיזור של מיליארדי עותקי דנא לחלל המעבדה."
+            { 
+                question: "אזור ה-Spacer שבין הגנים ל-rRNA שמור אבולוציונית יותר מאשר הגן ל-($16S$) עצמו.", 
+                answer: false, 
+                explanation: "ההיפך הוא הנכון. אזור ה-Spacer אינו מקודד לחלבון או לרנא פונקציונלי, ולכן הוא צובר מוטציות מהר יותר ומהווה אזור משתנה מאוד המתאים להבחנה ברמת המין והזן." 
             },
-            {
-                question: "במבחן רגישות המשלב הגברה מולקולרית ודילולים עוקבים, לא ניתן לקבל מידע כמותי על מספר החיידקים בדגימה, אלא רק מידע איכותי על נוכחותם.",
-                answer: false,
-                explanation: "השילוב של המבחן המולקולרי עם שיטת הדילולים העוקבים (MPN) מאפשר ביצוע הערכה סטטיסטית כמותית של העומס החיידקי בדגימה המקורית."
+            { 
+                question: "בבדיקת Real Time PCR המשתמשת ב-SYBR Green, ניתן לזהות נוכחות של מספר פתוגנים שונים באותה מבחנה על סמך צבעים שונים.", 
+                answer: false, 
+                explanation: "SYBR Green פולט פלואורסצנציה זהה מכל דנא דו-גדילי שאליו הוא נקשר. כדי להבחין בין מטרות באותה מבחנה יש להשתמש בגשושיות בעלות צבעים שונים (כמו TaqMan)." 
             },
-            {
-                question: "כאשר משתמשים במספר זוגות תחלים באותה מבחנה לזיהוי מספר מטרות במקביל, חובה לוודא שתוצרי ההגברה שלהם יהיו בעלי אורך זהה לחלוטין.",
-                answer: false,
-                explanation: "ההפך הוא הנכון. כאשר מריצים את התוצרים על ג'ל, חובה שהם יהיו באורכים שונים כדי שניתן יהיה להבחין ביניהם חזותית ולקבוע אילו מהמטרות הוגברו."
+            { 
+                question: "שיטת LAMP (Loop-mediated isothermal amplification) דורשת מכשיר טרמוסייקלר יקר כדי לשנות את הטמפרטורות במהירות.", 
+                answer: false, 
+                explanation: "LAMP היא שיטה איזותרמית, כלומר מתבצעת בטמפרטורה קבועה אחת. היא אינה דורשת שינויי טמפרטורה ולכן ניתן לבצעה בציוד פשוט וזול." 
             },
-            {
-                question: "שיטות גנומיות יעילות פחות משיטות פנוטיפיות בזיהוי חיידקים הנמצאים במצב פיזיולוגי של עקה ואינם מתרבים.",
-                answer: false,
-                explanation: "שיטות גנומיות אינן דורשות שהחיידק יהיה במצב של התרבות פעילה או שיבטא תכונות פנוטיפיות מסוימות, ולכן הן יעילות יותר בזיהוי חיידקים במצב עקה שאינם ניתנים לגידול."
+            { 
+                question: "חומרי מזון שונים עלולים להכיל רכיבים המעכבים את פעילות אנזים הפולימראז ב-PCR.", 
+                answer: true, 
+                explanation: "חומרים כמו שומנים, מלחים מסוימים, ופוליסכרידים המצויים במזון יכולים לעכב את ה-Taq Polymerase, ולכן נדרש מיצוי דנא יעיל לפני הבדיקה." 
             },
-            {
-                question: "אזורי המרווח בין הגנים באופרון הריבוזומלי משמשים מטרה טובה לתחלים ספציפיים משום שהם נוטים להיות שמורים וזהים בין כל מיני החיידקים.",
-                answer: false,
-                explanation: "אזורי המרווח (Spacer regions) הם אזורים לא מקודדים ולכן נתונים לפחות לחץ אבולוציוני. הם נוטים להציג שונות גבוהה בין מינים, מה שהופך אותם למטרה מצוינת להבחנה ספציפית."
+            { 
+                question: "זיהוי חיידקים על סמך אנליזת דנא מהיר יותר באופן משמעותי מזיהוי על סמך שיטות תרבית קונבנציונליות.", 
+                answer: true, 
+                explanation: "שיטות תרבית דורשות ימי גידול והעשרה (לרוב 5-7 ימים), בעוד ששיטות מבוססות PCR יכולות לספק תוצאות תוך 24 שעות." 
             },
-            {
-                question: "אחת המגבלות של שיטות אבחון מולקולריות במזון היא שחומרים שונים המצויים במזון עלולים לעכב את פעילות האנזים פולימראז ולגרום לתוצאה שלילית כוזבת.",
-                answer: true,
-                explanation: "חומרים כמו שומנים, חלבונים מסוימים, ופוליסכרידים במזון יכולים לעכב את הריאקציה האנזימטית, ולכן נדרשים תהליכי מיצוי איכותיים ובקרות פנימיות."
+            { 
+                question: "האנזים Reverse Transcriptase משמש ב-PCR רגיל כדי להפריד את גדילי הדנא במקום להשתמש בחום.", 
+                answer: false, 
+                explanation: "האנזים משמש לשעתוק לאחור של רנא ל-cDNA. הפרדת גדילי דנא ב-PCR רגיל נעשית תמיד באמצעות חום (דנטורציה)." 
             },
-            {
-                question: "בניתוח תוצאות RFLP, ההבחנה בין זנים מתאפשרת מכיוון שהאנזים חותך את הדנא למקטעים אקראיים לחלוטין בכל פעם מחדש.",
-                answer: false,
-                explanation: "אנזימי הגבלה חותכים את הדנא ברצפי הכרה ספציפיים ומדויקים. ההבחנה נובעת מכך שמוטציות נקודתיות בין הזנים משנות את רצפי ההכרה הללו, מה שמוביל לתבנית אורכים קבועה אך שונה בין זן לזן."
+            { 
+                question: "כאשר ערך ה-Ct (Threshold Cycle) ב-Real Time PCR נמוך יותר, משמעות הדבר היא שכמות הדנא ההתחלתית בדגימה הייתה קטנה יותר.", 
+                answer: false, 
+                explanation: "ההיפך הוא הנכון. ככל שיש יותר דנא התחלתי, כך לוקח פחות מחזורים (Ct נמוך יותר) כדי להגיע לסף הזיהוי הפלואורסצנטי." 
             },
-            {
-                question: "זיהוי באמצעות נגיפים תוקפי חיידקים מבוסס על היכולת של הנגיף להחדיר דנא פלואורסצנטי לתוך החיידק ולגרום לו לזרוח.",
-                answer: false,
-                explanation: "זיהוי באמצעות פאגמים מבוסס על ספציפיות ההדבקה. הפאג מדביק והורג רק זנים ספציפיים בעלי קולטנים מתאימים, והזיהוי מתבצע על ידי צפייה באזורי תמותה (פלאקים) על מצע הגידול."
+            { 
+                question: "שימוש בשבב Dielectrophoresis (DEP) מאפשר לרכז חיידקים מדגימה נוזלית ובכך להעלות את הרגישות של בדיקת ה-PCR העוקבת.", 
+                answer: true, 
+                explanation: "השבב משתמש בשדות חשמליים כדי למשוך ולרכז חיידקים מנפח גדול, מה שמגדיל את הסיכוי לזהות אותם גם אם ריכוזם ההתחלתי היה נמוך מאוד." 
             },
-            {
-                question: "הופעה של מספר עותקים של הגן הריבוזומלי בגנום החיידק מקטינה את רגישות הבדיקה המולקולרית מכיוון שהיא מדללת את ריכוז התחלים.",
-                answer: false,
-                explanation: "מספר עותקים מגדיל את רגישות הבדיקה מכיוון שכל תא מספק מספר רב יותר של מטרות התחלתיות להגברה, מה שמקל על זיהוי נוכחות החיידק גם בריכוזים נמוכים."
+            { 
+                question: "במבחן רגישות לזיהוי Listeria monocytogenes, הפס של 700bp המייצג חיידקים אוניברסליים הופיע בכל המיהולים, מה שמוכיח שהריאקציה לא עוכבה.", 
+                answer: true, 
+                explanation: "הפס האוניברסלי (הבקרה הפנימית) מאשר שהתנאים במבחנה התאימו להגברה. אם הוא מופיע, תוצאה שלילית לפס הספציפי היא אמינה." 
             },
-            {
-                question: "בגרף של מערכת זמן אמת, ככל שהעקומה הפלואורסצנטית מתחילה לעלות בשלב מאוחר יותר של מחזורי ההגברה, הדבר מעיד על כמות התחלתית גדולה יותר של רצף המטרה.",
-                answer: false,
-                explanation: "היחס הוא הפוך. כמות התחלתית גדולה תגיע לסף הגילוי הפלואורסצנטי במספר קטן יותר של מחזורים (מוקדם יותר)."
+            { 
+                question: "אחוז ה-G/C בגנום החיידקי משתנה מיום ליום בהתאם לתזונת החיידק.", 
+                answer: false, 
+                explanation: "אחוז ה-G/C (גואנין וציטוזין) הוא מאפיין גנטי קבוע של החיידק ואינו משתנה בתגובה לתנאי סביבה." 
             },
-            {
-                question: "פריימר המתוכנן כך שקצהו יתיישב בדיוק על בסיס בודד השונה בין שני מיני חיידקים, יכול למנוע הגברה של המין הלא רצוי.",
-                answer: true,
-                explanation: "חוסר התאמה בקצה ה-3' של הפריימר מונע מהאנזים פולימראז להתחיל את סינתזת הגדיל החדש, ובכך מאפשר הבחנה ספציפית אפילו על בסיס מוטציה נקודתית אחת."
+            { 
+                question: "גשושית TaqMan פולטת אור רק כאשר אנזים הפולימראז מפרק אותה במהלך סנתוז הגדיל החדש.", 
+                answer: true, 
+                explanation: "הגשושית מכילה סמן פלואורסצנטי וחומר בולע (Quencher). כשהפולימראז מפרק אותה (פעילות אקסונוקלאז), הסמן משתחרר ופולט אור." 
             },
-            {
-                question: "הגברת דנא בסיסית דורשת מידע מקדים על רצף המטרה כדי שניתן יהיה לתכנן עבורו תחלים מתאימים.",
-                answer: true,
-                explanation: "ללא ידיעת הרצף הספציפי שאותו רוצים להגביר, לא ניתן לתכנן ולסנתז את התחלים שיתחמו את האזור הנדרש ויאפשרו לאנזים לפעול."
+            { 
+                question: "שיטת RT-PCR מאפשרת לזהות באופן ודאי האם החיידק ייצר רעלן פעיל שגרם למחלה.", 
+                answer: false, 
+                explanation: "RT-PCR מזהה נוכחות של mRNA (שעתוק). זה מעיד שהגן מבוטא, אך אינו מוכיח שהחלבון (הרעלן) תורגם, התקפל כראוי והפך לפעיל." 
             },
-            {
-                question: "דלקת עטין בבקר ניתנת לזיהוי מהיר באמצעות מבחנים גנומיים המכוונים לזיהוי דנא של בקר בלבד.",
-                answer: false,
-                explanation: "המבחנים הגנומיים מכוונים לזיהוי הדנא של החיידק הגורם למחלה, הדנא של הבקר משמש בדרך כלל רק כבקרה פנימית לתקינות הריאקציה."
+            { 
+                question: "זיהוי פנוטיפי (כמו מבחנים ביוכימיים) נחשב ליציב ואמין יותר מזיהוי גנוטיפי (מבוסס דנא).", 
+                answer: false, 
+                explanation: "זיהוי פנוטיפי תלוי בביטוי גנים ויכול להשתנות תחת תנאי סטרס או סביבה. זיהוי גנוטיפי בודק את הרצף הגנטי עצמו, שהוא קבוע ויציב." 
             },
-            {
-                question: "שימוש בשיטות מולקולריות מייתר לחלוטין את הצורך בביצוע בדיקות פנוטיפיות במעבדה קלינית מודרנית.",
-                answer: false,
-                explanation: "למרות יתרונותיהן, שיטות מולקולריות לא תמיד מספקות מידע על תכונות פנוטיפיות חיוניות, כמו עמידות בפועל לאנטיביוטיקה, ולכן עדיין יש צורך בשילוב שיטות."
+            { 
+                question: "במערכות מסחריות כמו BAX System, יש צורך להריץ את כל הדגימות על ג'ל אגרוז בסוף התהליך כדי לפרש את התוצאות.", 
+                answer: false, 
+                explanation: "מערכות אלו מבוססות לרוב על זיהוי פלואורסצנטי בזמן אמת (Real Time) והתוכנה מנתחת את התוצאות אוטומטית ללא צורך בג'ל." 
             },
-            {
-                question: "בתהליך הגברת דנא קלאסי, שלב הארכת הגדיל מתבצע בטמפרטורה אופטימלית לפעילות האנזים המופק מחיידקים תרמופיליים.",
-                answer: true,
-                explanation: "האנזים בו משתמשים מופק מחיידקים החיים במעיינות חמים, ולכן הטמפרטורה האופטימלית לפעילותו (בניית הגדיל) היא גבוהה יחסית לאנזימים אנושיים."
+            { 
+                question: "שיטת MPN (Most Probable Number) מספקת מידע כמותי סטטיסטי, ושילובה עם PCR מוסיף לה את מימד הספציפיות הגבוהה.", 
+                answer: true, 
+                explanation: "השילוב מאפשר לא רק לדעת כמה חיידקים בערך יש (MPN), אלא גם לוודא ברמת דיוק מולקולרית שאלו אכן החיידקים שאנו מחפשים (PCR)." 
             },
-            {
-                question: "עקומת התכה בסיום ריאקציית זמן אמת מאפשרת להבחין בין תוצר ההגברה הרצוי לבין דימרים של פריימרים על סמך הבדלים במטען החשמלי שלהם.",
-                answer: false,
-                explanation: "ההבחנה מתבצעת על סמך טמפרטורת ההתכה שלהם, הנגזרת מאורכם ומהרכב הבסיסים שלהם, ולא על סמך מטען חשמלי."
+            { 
+                question: "פריימרים שתוכננו לזהות את אזור ה-V1 של הגן ל-($16S$) יהיו בהכרח זהים לחלוטין בכל החיידקים בטבע.", 
+                answer: false, 
+                explanation: "אזור ה-V1 (Variable region 1) הוא אזור משתנה. הפריימרים שיזהו אותו יהיו ספציפיים למין או לקבוצה מסוימת, ולא זהים בכל החיידקים." 
             },
-            {
-                question: "זיהוי מולקולרי מסוגל לספק תשובה מהירה משמעותית מזיהוי תרבותי קלאסי, שלעיתים אורך מספר ימים.",
-                answer: true,
-                explanation: "מבחן מולקולרי יכול להסתיים בתוך שעות בודדות, בעוד שגידול חיידקים על צלחות פטרי וביצוע מבחנים ביוכימיים אורך לרוב בין יומיים לשבוע."
+            { 
+                question: "נוכחות של דנא של פרה (בקר) בדגימת חלב פוסלת את האפשרות להשתמש ב-PCR לזיהוי חיידקי דלקת עטין.", 
+                answer: false, 
+                explanation: "להיפך, הדנא של הפרה מנוצל כיתרון ומשמש כבקרה פנימית מצוינת שמוכיחה שריאקציית ה-PCR עבדה בהצלחה." 
             },
-            {
-                question: "חיידקים בעלי דופן תא עבה במיוחד מקלים על תהליך המיצוי של חומצות הגרעין לקראת אנליזה מולקולרית.",
-                answer: false,
-                explanation: "דופן עבה וקשיחה מקשה על שבירת התא ושחרור הדנא, מה שמחייב שימוש בשיטות מיצוי אגרסיביות יותר כדי למנוע תוצאות שליליות שגויות."
+            { 
+                question: "החיסרון בשימוש ברנא כמטרה לזיהוי הוא הוריאביליות הגבוהה בביטוי הגנים כתלות בסביבה.", 
+                answer: true, 
+                explanation: "כמות ה-mRNA של גן מסוים יכולה לעלות או לרדת דרמטית בתגובה לשינויים בסביבה, מה שמקשה על פיתוח מבחן סטנדרטי וכמותי." 
             },
-            {
-                question: "בשיטת זיהוי באמצעות גישושיות נחתכות, האות הפלואורסצנטי מתקבל רק כאשר הגישושית נשארת שלמה וקשורה לדנא באופן קבוע.",
-                answer: false,
-                explanation: "האות מתקבל דווקא כאשר האנזים הפולימראז חותך ומפרק את הגישושית במהלך בניית הגדיל, מה שמפריד את הסמן הזורח מהמולקולה המשתיקה אותו."
+            { 
+                question: "ב-PCR, שלב ה-Extension (הארכה) מתבצע בדרך כלל בטמפרטורה של 72 מעלות צלזיוס, שהיא הטמפרטורה האופטימלית ל-Taq Polymerase.", 
+                answer: true, 
+                explanation: "Taq Polymerase מופק מחיידק תרמופילי, והפעילות האנזימטית האופטימלית שלו מתרחשת סביב 72 מעלות." 
             },
-            {
-                question: "בדיקת הגברת דנא עלולה להיכשל אם הדגימה מכילה רמות גבוהות מדי של דנא רקע שאינו קשור למטרה.",
-                answer: true,
-                explanation: "עודף משמעותי של דנא זר עלול לגרום לקשירה לא ספציפית של התחלים או להתחרות על משאבי הריאקציה, מה שיוריד את היעילות ויפגע באמינות התוצאה."
+            { 
+                question: "אם נבצע PCR לאיתור חיידק בדגימת מזון שעברה הרתחה ממושכת ועיקור, סביר להניח שנקבל תוצאה שלילית למרות שהחיידק היה שם.", 
+                answer: false, 
+                explanation: "דנא הוא מולקולה יציבה יחסית ויכול לשרוד תהליכי חימום (אפילו אם התא מת). לכן, PCR רגיל עלול לתת תוצאה חיובית גם בדגימה מעוקרת." 
             },
-            {
-                question: "האזור המשתנה הראשון בגן הריבוזומלי משמש לעיתים קרובות כאזור מטרה להבחנה בין מינים שונים של חיידקי סטרפטוקוקוס.",
-                answer: true,
-                explanation: "אזורים משתנים ספציפיים מספקים את השונות הרצפית הנדרשת כדי לתכנן תחלים שיבדילו בין מינים קרובים מאוד מאותו סוג."
+            { 
+                question: "הגברת דנא בשיטת PCR היא ליניארית, כלומר בכל מחזור נוסף עותק אחד של דנא בלבד.", 
+                answer: false, 
+                explanation: "ההגברה היא אקספוננציאלית (מעריכית). בכל מחזור כמות הדנא מוכפלת פי שניים ($2^n$)." 
             },
-            {
-                question: "הגברת דנא נחשבת לשיטה בעלת ספציפיות נמוכה מאוד, ולכן היא משמשת רק כבדיקת סקר ראשונית ולא כבדיקה מאבחנת.",
-                answer: false,
-                explanation: "אם התחלים מתוכננים כראוי, השיטה נחשבת לבעלת ספציפיות גבוהה ביותר ומסוגלת להבחין בין זנים קרובים, ולכן היא משמשת כבדיקה מאבחנת סופית במקרים רבים."
+            { 
+                question: "בבדיקת Multiplex PCR המזהה Listeria monocytogenes, חיידק מסוג E. coli לא יניב שום פס על הג'ל, גם לא את הפס האוניברסלי.", 
+                answer: false, 
+                explanation: "E. coli הוא חיידק, ולכן הוא יוגבר על ידי הפריימרים האוניברסליים לחיידקים (פס 700bp), אך לא על ידי הפריימרים הספציפיים לליסטריה." 
             },
-            {
-                question: "אחד היתרונות של שיטות זיהוי גנומיות מודרניות הוא היכולת לבצע הערכה כמותית של העומס החיידקי בזמן אמת ללא צורך בהרצת ג'ל.",
-                answer: true,
-                explanation: "מערכות אלו קוראות את עוצמת האות הפלואורסצנטי במהלך הריאקציה, מה שמאפשר חישוב מדויק של הכמות ההתחלתית ללא צורך בשלבי עיבוד נוספים בסיום ההגברה."
+            { 
+                question: "שיטות גנומיות מחליפות לחלוטין את הצורך בהבנה מיקרוביולוגית קלאסית של תנאי גידול ומטבוליזם של חיידקים.", 
+                answer: false, 
+                explanation: "שיטות גנומיות הן כלי עוצמתי, אך עדיין נדרשת הבנה מיקרוביולוגית לפיתוח שיטות העשרה, הבנת משמעות התוצאות (חי/מת) והתאמת הבדיקה למטרה הקלינית או התעשייתית." 
             }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -919,6 +1031,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -929,6 +1048,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -947,19 +1067,20 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
+                triggerMathJax();
             }, 300);
         }
 
         function displayMCQuestion(index) {
             if (!mcqData || mcqData.length === 0) return;
             const qData = mcqData[index];
-            mcqQuestion.innerHTML = qData.question;
+            mcqQuestion.textContent = qData.question;
             mcqOptions.innerHTML = '';
             mcqFeedback.classList.add('hidden');
             mcqExplanation.classList.add('hidden');
             qData.options.forEach((option, i) => {
                 const button = document.createElement('button');
-                button.innerHTML = option;
+                button.textContent = option;
                 button.onclick = () => handleMCQAnswer(index, i);
                 mcqOptions.appendChild(button);
             });
@@ -969,9 +1090,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -987,23 +1106,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1045,22 +1158,18 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
             if (!tfData || tfData.length === 0) return;
             const qData = tfData[index];
-            tfQuestion.innerHTML = qData.question;
+            tfQuestion.textContent = qData.question;
             tfFeedback.classList.add('hidden');
             tfExplanation.classList.add('hidden');
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1070,9 +1179,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1089,23 +1196,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.innerHTML = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1148,9 +1249,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             if (window.MathJax) {
-                MathJax.typesetPromise([tfAllQuestionsContainer]);
-            }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1166,6 +1265,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

@@ -1,206 +1,322 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>מחלות פריונים: ספגת המוח של הבקר והאדם</h1>
+        <h1>מחלת הפרה המשוגעת (BSE) ופריונים</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>מחלת הפרה המשוגעת, או בשמה המדעי <strong>Bovine Spongiform Encephalopathy (BSE)</strong>, היא מחלה ניוונית של מערכת העצבים המרכזית הנגרמת על ידי חלקיקים חלבוניים זיהומיים הנקראים <strong>פריונים (Prions)</strong>. גילוי הפריונים על ידי סטנלי פרוזינר (שזכה על כך בפרס נובל בשנת 1998) חולל מהפכה בהבנה הביולוגית, שכן הוא הוכיח שניתן להעביר מידע זיהומי באמצעות חלבון בלבד, ללא מעורבות של חומצות גרעין (DNA או RNA).</p>
+                
+                <h3>מנגנון המחלה והעברתה</h3>
+                <p>המחלה מתרחשת כאשר חלבון תקין המצוי בגוף ($PrP^C$) עובר שינוי מבני והופך לתצורה פתולוגית, עמידה לפירוק אנזימטי ($PrP^{Sc}$). תצורה זו מצטברת במערכת העצבים המרכזית וגורמת להרס רקמת המוח, המקבלת מראה ספוגי (Spongiform) המאופיין בוואקואולות (חללים) בתוך התאים. הדבקה בבקר נגרמה היסטורית עקב האכלת פרות בקמח בשר ועצמות שהכיל שאריות של חיות נגועות.</p>
+                <p>הדבקה בבני אדם, שהובילה להופעת מחלת <strong>vCJD</strong> בשנת 1996, מתרחשת בעקבות אכילת בשר בקר נגוע. מסלול ההדבקה מתחיל במערכת העיכול (Gut), עובר דרך רקמות לימפטיות הקשורות למעי, ומשם נודד למערכת העצבים המרכזית. מנה קטנה מאוד (מיליגרם אחד של מוח נגוע) מספיקה כדי לגרום להדבקה בבקר.</p>
+
+                <h3>מניעה וטיפול</h3>
+                <p>כיום אין תרופה יעילה למחלות פריונים. מניעת ההדבקה מסתמכת על צעדים רגולטוריים מחמירים: השמדת חיות נגועות, איסור אכילת מוחות ואיברים פנימיים, ואיסור על האכלת חיות בפגרי חיות דומות. חשוב לציין כי אמצעי עיקור שגרתיים, כגון בישול עמוק או חיטוי מחטים סטנדרטי, <strong>אינם יעילים</strong> נגד פריונים בשל עמידותם החריגה המבנית. כיווני מחקר מודרניים מתמקדים בשיטות השתקת גנים (כגון ASO ו-RNAi) שמטרתן לפרק את ה-mRNA של הגן PRNP, ובכך למנוע מראש את ייצור החלבון התקין ($PrP^C$) שעלול להפוך לפתולוגי.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: שבירת הדוגמה המרכזית של הביולוגיה המולקולרית</strong>
+                    גילוי הפריונים הוכיח כי חלבון פגום מסוגל להשרות את שינוי המבנה של חלבונים תקינים סביבו, ובכך "לשכפל" את עצמו ולהעביר מחלה ללא כל מעורבות של חומר תורשתי (DNA או RNA). זוהי סטייה מוחלטת מהתפיסה הקלאסית לפיה מידע ביולוגי זורם רק מחומצות גרעין לחלבונים.
+                </div>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: כישלון מחסום המינים (Species Barrier)</strong>
+                    הופעת מחלת vCJD בבני אדם הוכיחה כי מחסום המינים אינו מספק הגנה מוחלטת מפני פריונים. חלבון פריוני ממקור בקר הצליח לעבור אינטראקציה עם חלבונים אנושיים, להמיר את המבנה שלהם, ולעורר מגפה ציבורית, מה שמדגיש את הסכנה האוניברסלית במנגנון הפריוני.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -213,7 +329,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -233,11 +348,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -260,8 +373,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -269,622 +381,498 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "Prion", definition: "חלקיק חלבוני זיהומי המעביר מידע וגורם למחלה ללא מעורבות של חומצת גרעין, בניגוד לדוגמה המרכזית בביולוגיה." },
-            { term: "BSE", definition: "ספגת המוח של הבקר, הידועה גם כמחלת הפרה המשוגעת. מחלת פריונים הפוגעת בבקר." },
-            { term: "Scrapie", definition: "מחלת פריונים המופיעה באופן טבעי ואנדמי בכבשים ועיזים, מוכרת למעלה מ-200 שנה." },
-            { term: "vCJD", definition: "וריאנט של מחלת קרויצפלד-יעקב. מחלת פריונים אנושית חדשה שהופיעה ב-1996 בעקבות מגיפת ה-BSE בבקר." },
-            { term: "Central Dogma", definition: "הכלל הביולוגי לפיו מידע עובר מ-DNA ל-RNA ולחלבון. פריונים מפרים כלל זה מכיוון שהם מעבירים מידע באמצעות חלבון בלבד." },
-            { term: "Meat-and-bone meal", definition: "תערובת בשר ועצמות ששימשה כמקור חלבון במזון בקר, ונחשבת לגורם המרכזי בהפצת מחלת ה-BSE." },
-            { term: "Spongiform Pathology", definition: "ממצא היסטולוגי אופייני למחלות פריונים, בו מופיעות חללים (וואקואולות) ברקמת המוח המכילות שברי ממברנות." },
-            { term: "$PrP^C$", definition: "חלבון הפריון התקין של המארח. חלבון זה רגיש לפירוק על ידי אנזימים מסוג פרוטאזות." },
-            { term: "$PrP^{Sc}$", definition: "הצורה הפתולוגית של חלבון הפריון. מקופל בצורה לא תקינה, עמיד לפרוטאזות ומצטבר במערכת העצבים המרכזית." },
-            { term: "Proteinase K", definition: "אנזים מפרק חלבונים המשמש במעבדה. חלבון פריון תקין יפורק על ידו, בעוד שהצורה הפתולוגית תישאר עמידה וניתנת לזיהוי." },
-            { term: "Gut-associated lymphoid tissue", definition: "רקמת הלימפה המקושרת למעי. מהווה תחנת מעבר לפריון לאחר הדבקה אוראלית, לפני הגעתו למערכת העצבים המרכזית." },
-            { term: "Kuru", definition: "מחלת פריונים שהתגלתה בקרב בני אדם בשבטים בפפואה גינאה החדשה." },
-            { term: "Species Barrier", definition: "מחסום ביולוגי בין מינים שונים. הופעת ה-vCJD הוכיחה שמחסום זה אינו מספיק כדי להגן על בני אדם מפריונים של בקר." },
-            { term: "ASO", definition: "אוליגонуקלאוטידים אנטי-סנס. כלי ריפוי גני הנקשר ל-mRNA של הפריון וגורם לפירוקו על ידי RNase H." },
-            { term: "RNAi / siRNA", definition: "מנגנון השתקת גנים המשתמש ב-RNA דו-גדילי קצר כדי לגרום לחיתוך ה-mRNA של הפריון באמצעות קומפלקס RISC." },
-            { term: "Incubation time", definition: "זמן הדגירה של מחלות פריונים הוא ארוך מאוד, מה שגרם לחרדה בקרב מיליוני אנשים שנחשפו למזון נגוע." },
-            { term: "Transgenic mice", definition: "עכברים המבטאים חלבון פריון אנושי, ומשמשים במחקרי מעבדה לבדיקת פוטנציאל ההדבקה הבין-מינית של פריונים." },
-            { term: "Neurodegenerative diseases", definition: "קבוצת מחלות הכוללת את מחלות הפריונים, המאופיינות בהצטברות חלבונים ושקיעתם, ולרובן אין כיום תרופה יעילה." }
+            { term: "Prions", definition: "חלקיקים חלבוניים זיהומיים נטולי חומצת גרעין, האחראים להעברת מחלות ניווניות של המוח." },
+            { term: "BSE", definition: "Bovine Spongiform Encephalopathy - מחלת הפרה המשוגעת הפוגעת בבקר." },
+            { term: "Scrapie", definition: "מחלת פריונים המופיעה באופן טבעי ואנדמי בכבשים ובעיזים, מוכרת למעלה מ-200 שנה." },
+            { term: "$PrP^C$", definition: "התצורה התקינה והרגישה לפרוטאזות של חלבון הפריון המצוי באופן טבעי בתאי המאכסן." },
+            { term: "$PrP^{Sc}$", definition: "התצורה הפתולוגית, המקופלת באופן חריג ועמידה לפרוטאזות, של חלבון הפריון המצטברת במוח." },
+            { term: "vCJD", definition: "Variant Creutzfeldt-Jakob disease - מחלת פריונים בבני אדם שהופיעה בעקבות מגפת ה-BSE בבקר." },
+            { term: "Kuru", definition: "מחלת פריונים שהתגלתה בשבטים בפפואה גינאה החדשה, הועברה באמצעות קניבליזם טקסי." },
+            { term: "Spongiform Pathology", definition: "מראה פתולוגי של רקמת המוח המאופיין בחללים (וואקואולות) תוך-תאיים המכילים שברי ממברנות, המקנים למוח מראה ספוגי." },
+            { term: "Proteinase K", definition: "אנזים המפרק חלבונים. בבדיקות מעבדה, הוא מפרק את החלבון התקין אך משאיר את הליבה של החלבון הפריוני הפתולוגי." },
+            { term: "Meat-and-bone meal", definition: "קמח בשר ועצמות ששימש כמקור חלבון במזון לבקר, והיווה את וקטור ההעברה העיקרי של מחלת ה-BSE." },
+            { term: "Species Barrier", definition: "מחסום המינים - הקושי של מחלה לעבור ממין ביולוגי אחד לאחר. במקרה של BSE ל-vCJD, מחסום זה נפרץ." },
+            { term: "Gut-Brain Axis (Prions)", definition: "המסלול שבו פריונים הנצרכים במזון חודרים דרך המעי, עוברים לרקמה הלימפטית, ומשם נודדים למערכת העצבים המרכזית." },
+            { term: "ASO", definition: "Antisense Oligonucleotides - מולקולות סינתטיות קצרות הנקשרות ל-mRNA של הגן PRNP ומעודדות את פירוקו כדי למנוע ייצור פריונים." },
+            { term: "RNAi", definition: "RNA interference - מנגנון השתקת גנים המשתמש ב-siRNA כדי לפרק באופן ממוקד את ה-mRNA המקודד לחלבון הפריון." },
+            { term: "Stanley Prusiner", definition: "המדען שגילה את מנגנון הפריונים וזכה על כך בפרס נובל לרפואה בשנת 1998." }
         ];
 
         const mcqData = [
-            {
-                question: "מהי הסיבה המרכזית לכך שגילוי הפריונים זיכה את סטנלי פרוזינר בפרס נובל?",
+            { 
+                question: "מהי הסיבה המרכזית לכך שגילוי הפריונים נחשב למהפכני ועמד בניגוד ל'דוגמה המרכזית' של הביולוגיה?", 
                 options: [
-                    "הוא גילה נגיף חדש העמיד לחלוטין בפני אנטיביוטיקה",
-                    "הוא הוכיח שניתן להעביר אינפורמציה ביולוגית וזיהומית באמצעות חלבון בלבד, בניגוד לדוגמה המרכזית",
-                    "הוא פיתח חיסון מבוסס RNA למניעת מחלת הפרה המשוגעת בבקר",
-                    "הוא זיהה את הרצף הגנטי של ה-DNA האחראי למחלת קרויצפלד-יעקב"
-                ],
-                correctIndex: 1,
-                explanation: "הפריונים מפרים את הדוגמה המרכזית של הביולוגיה מכיוון שהם חלקיקים חלבוניים זיהומיים ללא חומצת גרעין המעבירים אינפורמציה."
+                    "הם מסוגלים להשתכפל מחוץ לתא המאכסן ללא צורך בריבוזומים.",
+                    "הם מעבירים מידע זיהומי וגורמים למחלה ללא מעורבות של חומצות גרעין (DNA או RNA).",
+                    "הם משנים את ה-DNA של המאכסן ישירות ללא שימוש באנזים Reverse Transcriptase.",
+                    "הם החיידקים הראשונים שהתגלו כחסרי דופן תא לחלוטין."
+                ], 
+                correctIndex: 1, 
+                explanation: "הדוגמה המרכזית גורסת שמידע עובר מ-DNA ל-RNA ומשם לחלבון. פריונים הם חלבונים בלבד המשנים מבנה של חלבונים אחרים, ובכך מעבירים מידע זיהומי ללא חומצת גרעין." 
             },
-            {
-                question: "כיצד תרם השימוש במזון המבוסס על קמח בשר ועצמות להתפשטות מחלת ה-BSE?",
+            { 
+                question: "כיצד בדיוק פועל מנגנון הפתוגנזה ברמה המולקולרית במחלות פריונים?", 
                 options: [
-                    "המזון הכיל רעלנים כימיים שפגעו במערכת העצבים של הבקר",
-                    "המזון הכיל שאריות של חיות נגועות בפריונים, מה שיצר מעגל הדבקה אוראלי בקרב הבקר",
-                    "המזון גרם למוטציה גנטית ספונטנית ב-DNA של הבקר שניזון ממנו",
-                    "המזון החליש את מערכת החיסון של הבקר וחשף אותו לחיידקי מעיים"
-                ],
-                correctIndex: 1,
-                explanation: "הפרקטיקה של האכלת בקר בחלבון שמקורו בשאריות של חיות אחרות (כולל חיות נגועות) היא המנגנון העיקרי להפצת מחלת ה-BSE."
+                    "החלבון הפתולוגי חודר לגרעין התא ומעכב שעתוק של גנים חיוניים.",
+                    "החלבון הפתולוגי מפרק את החלבונים התקינים באמצעות פעילות פרוטאוליטית עצמאית.",
+                    "החלבון התקין עובר שינוי מבני לתצורה חריגה עמידה לפרוטאזות, המצטברת במערכת העצבים.",
+                    "מערכת החיסון תוקפת את החלבון התקין בעקבות זיהוי שגוי של נוגדנים."
+                ], 
+                correctIndex: 2, 
+                explanation: "המחלה נגרמת מהמרה (Conversion) של החלבון הרגיש לפרוטאזות למבנה חריג ועמיד המצטבר וגורם לנזק." 
             },
-            {
-                question: "מה ניתן להסיק מהופעת מחלת ה-vCJD בבני אדם בשנת 1996?",
+            { 
+                question: "בבדיקת מעבדה (Western Blot) לזיהוי הדבקה בפריונים, משתמשים באנזים Proteinase K. מה תהיה התוצאה בדגימה שנלקחה מחיה חולה לעומת חיה בריאה?", 
                 options: [
-                    "שמחלות פריונים בבני אדם נגרמות אך ורק ממוטציות תורשתיות",
-                    "שמחסום המינים אינו מספק הגנה מוחלטת מפני הדבקה בפריונים ממקור חיה",
-                    "שמחלת ה-Scrapie של כבשים עברה ישירות לבני אדם ללא תיווך של בקר",
-                    "שבישול בטמפרטורות גבוהות מצליח לנטרל פריונים רק בחלק מהמקרים"
-                ],
-                correctIndex: 1,
-                explanation: "הופעת ה-vCJD בעקבות מגיפת ה-BSE בבקר סיפקה עדות חותכת להעברה בין-מינית, והוכיחה שמחסום המינים אינו מגן על בני אדם."
+                    "בחיה החולה האנזים יפרק את כל החלבונים, בעוד שבחיה הבריאה החלבון יישאר שלם.",
+                    "בשתי החיות החלבון יפורק לחלוטין, אך בחיה החולה יופיעו שרידי RNA.",
+                    "בחיה הבריאה החלבון יפורק לחלוטין, ואילו בחיה החולה תישאר ליבה חלבונית עמידה של הפריון הפתולוגי.",
+                    "האנזים יקשור את הפריון הפתולוגי וישנה את צבעו, ללא קשר לפירוק."
+                ], 
+                correctIndex: 2, 
+                explanation: "החלבון התקין רגיש לפרוטאזות ויפורק, בעוד שהחלבון הפתולוגי עמיד חלקית, ולכן תישאר ליבה הניתנת לזיהוי." 
             },
-            {
-                question: "בבדיקת מעבדה להמצאות פריונים, דוגמת חלבון מטופלת באנזים פרוטאינז K. לאחר הטיפול, מזוהה חלבון באמצעות נוגדן. מה מעידה נוכחות החלבון לאחר הטיפול באנזים?",
+            { 
+                question: "איזו מהתופעות הבאות מהווה את העדות החזקה ביותר לכך שמחסום המינים (Species Barrier) אינו מספק הגנה מוחלטת מפני מחלות פריונים?", 
                 options: [
-                    "הדוגמה מכילה רק את חלבון הפריון התקין",
-                    "האנזים לא פעל כראוי עקב טמפרטורה נמוכה",
-                    "הדוגמה מכילה את חלבון הפריון הפתולוגי, העמיד לפירוק אנזימטי",
-                    "הדוגמה נלקחה מרקמת מעי ולא מרקמת מוח"
-                ],
-                correctIndex: 2,
-                explanation: "החלבון התקין רגיש לפרוטאזות ומתפרק, בעוד שהחלבון הפתולוגי מקופל בצורה שמקנה לו עמידות לפרוטאינז K, ולכן זיהויו לאחר הטיפול מעיד על נוכחות מחלה."
+                    "העובדה שמחלת Scrapie קיימת בכבשים כבר למעלה מ-200 שנה.",
+                    "הופעת מחלת vCJD בבני אדם בעקבות מגפת ה-BSE בבקר.",
+                    "היכולת של פריונים לשרוד בישול בטמפרטורות גבוהות.",
+                    "העברת מחלת Kuru באמצעות קניבליזם בין בני אדם."
+                ], 
+                correctIndex: 1, 
+                explanation: "הופעת vCJD באדם כתוצאה מאכילת בקר נגוע ב-BSE מדגימה חצייה של מחסום המינים מחיה לאדם." 
             },
-            {
-                question: "איזה מהתהליכים הבאים מתאר נכונה את מסלול ההדבקה האוראלית של BSE בבקר?",
+            { 
+                question: "מהו המסלול האנטומי המקובל שדרכו פריונים ממקור תזונתי מגיעים למוח וגורמים למחלה?", 
                 options: [
-                    "ספיגה בקיבה, מעבר למחזור הדם, והגעה ישירה למוח",
-                    "הדבקה במעי, מעבר לרקמת לימפה מקושרת מעי, ומשם התפשטות למערכת העצבים המרכזית",
-                    "הדבקה בחלל הפה, מעבר לעצב הריח, ומשם לאונות הקדמיות במוח",
-                    "ספיגה במעי הדק, אגירה בכבד, ושחרור איטי לחוט השדרה"
-                ],
-                correctIndex: 1,
-                explanation: "ההבנה הנוכחית היא שהזיהום מתחיל במעי, עובר לרקמת הלימפה המקושרת למעי, ומשם מוצא את דרכו למערכת העצבים המרכזית."
+                    "ספיגה במעי, מעבר לזרם הדם, חציית מחסום דם-מוח (BBB) ישירות לנוירונים.",
+                    "שאיפה לריאות, מעבר לעצב הריח (Olfactory nerve) ומשם למוח.",
+                    "הדבקה במעי, מעבר לרקמה הלימפטית הקשורה למעי, ומשם נדידה דרך מערכת העצבים הפריפרית למערכת המרכזית.",
+                    "חדירה ישירה דרך רירית הפה ומשם לעצבי הגולגולת (Cranial nerves)."
+                ], 
+                correctIndex: 2, 
+                explanation: "ההבנה הנוכחית היא שההדבקה מתחילה במעי, עוברת לרקמה הלימפטית (GALT), ומשם מתפשטת לאורך העצבים אל מערכת העצבים המרכזית." 
             },
-            {
-                question: "מדוע הופעת מחלת ה-BSE הובילה לחרדה ציבורית כה רחבה באירופה, למרות שמספר החולים ההתחלתי היה נמוך?",
+            { 
+                question: "אילו מהצעדים הבאים אינו יעיל במניעת התפשטות מחלת הפרה המשוגעת?", 
                 options: [
-                    "מפני שהמחלה פגעה באופן מיידי באוכלוסיית הילדים",
-                    "בגלל זמן הדגירה הממושך, שיצר חשש שמיליוני צרכנים שכבר נחשפו למזון נגוע יפתחו את המחלה בעתיד",
-                    "מכיוון שהמחלה עברה בקלות מאדם לאדם באוויר",
-                    "משום שהמחלה גרמה למוות מיידי של כל בקר שנחשף אליה תוך ימים ספורים"
-                ],
-                correctIndex: 1,
-                explanation: "מחלות פריונים מתאפיינות בזמן דגירה ארוך מאוד. ההערכה שמעל מיליון פרות נגועות נכנסו לשרשרת המזון יצרה פחד מהתפרצות עתידית המונית."
+                    "איסור על ייבוא בשר ממדינות שבהן התגלו פרות נגועות.",
+                    "בישול עמוק של בשר הבקר בטמפרטורות גבוהות לפני צריכתו.",
+                    "איסור על שימוש בקמח עצמות ובשר בתערובות מזון לבקר.",
+                    "השמדה שיטתית של עדרים שבהם התגלו פרות נגועות."
+                ], 
+                correctIndex: 1, 
+                explanation: "פריונים עמידים במיוחד לחום. בישול עמוק אינו יעיל בהשמדתם ואינו מונע הדבקה." 
             },
-            {
-                question: "בביופסיית מוח של חולה קרויצפלד-יעקב ספורדי, איזה ממצא היסטולוגי יהיה המובהק ביותר?",
+            { 
+                question: "בגישות ריפוי גני חדשניות למחלות פריונים, כגון שימוש ב-ASO או RNAi, מהי המטרה המולקולרית הישירה של הטיפול?", 
                 options: [
-                    "הסננה מסיבית של תאי דם לבנים לרקמת המוח",
-                    "נוכחות של חיידקים תוך-תאיים בתוך נוירונים",
-                    "וואקואולות תוך-ציטופלזמיות המכילות שברי ממברנות, המקנות מראה ספוגי",
-                    "התעבות של קרומי המוח החיצוניים ללא פגיעה ברקמה הפנימית"
-                ],
-                correctIndex: 2,
-                explanation: "הפתולוגיה האופיינית למחלות פריונים היא צורה ספוגית המאופיינת בוואקואולות ציטופלזמיות המכילות שברי ולולאות ממברנות."
+                    "פירוק ישיר של המבנה המרחבי של החלבון הפתולוגי במוח.",
+                    "מניעת שעתוק הגן PRNP ברמת ה-DNA בגרעין התא.",
+                    "פירוק מולקולות ה-mRNA המקודדות לחלבון הפריון, כדי למנוע את תרגומו לחלבון תקין.",
+                    "הגברת ייצור חלבונים מלווים (Chaperones) שיתקנו את הקיפול השגוי."
+                ], 
+                correctIndex: 2, 
+                explanation: "טכנולוגיות השתקת גנים אלו פועלות על ידי קישור ל-mRNA של הגן PRNP וגרימה לפירוקו (על ידי RNase H או RISC), מה שמונע את ייצור חלבון הבסיס שעליו פועל הזיהום." 
             },
-            {
-                question: "מהו ההבדל המבני המרכזי בין חלבון הפריון התקין לחלבון הפריון גורם המחלה?",
+            { 
+                question: "מהו המאפיין ההיסטולוגי (ברמת הרקמה) הבולט ביותר במוח של חולה ב-Creutzfeldt-Jakob disease?", 
                 options: [
-                    "לחלבון הפתולוגי חסרות 50 חומצות אמינו בקצה החלבוני",
-                    "החלבון התקין מכיל חומצת גרעין מסוג RNA בעוד הפתולוגי אינו מכיל",
-                    "ההבדל טמון אך ורק בקיפול המרחבי של החלבון",
-                    "החלבון הפתולוגי מיוצר על ידי ריבוזומים שונים מאלו המייצרים את החלבון התקין"
-                ],
-                correctIndex: 2,
-                explanation: "ההמרה של החלבון התקין לחלבון הפתולוגי היא שינוי קונפורמטיבי (מבני) בלבד, ללא שינוי ברצף חומצות האמינו."
+                    "הצטברות של תאי דם לבנים ודלקת חריפה בקרומי המוח.",
+                    "היווצרות חללים (וואקואולות) תוך-תאיים המכילים שברי ממברנות, המעניקים מראה ספוגי.",
+                    "התעבות חריגה של שכבת המיאלין סביב האקסונים.",
+                    "דימומים מיקרוסקופיים נרחבים ברקמת המוח הקדמי."
+                ], 
+                correctIndex: 1, 
+                explanation: "המחלה נקראת Spongiform Encephalopathy בדיוק בגלל המראה הספוגי שנוצר מהוואקואולות המצטברות בתאים." 
             },
-            {
-                question: "רופא משפחה נשאל על ידי מטופל כיצד ניתן למנוע הדבקה בפריונים מבשר בקר. איזו מן התשובות הבאות היא המדויקת ביותר בהתבסס על אמצעי המניעה הידועים?",
+            { 
+                question: "חקלאי מחליט לחטא את המחטים הווטרינריות שלו באמצעות חומרי חיטוי סטנדרטיים לאחר טיפול בפרה החשודה כחולה ב-BSE. מדוע פעולה זו מסוכנת?", 
                 options: [
-                    "בישול עמוק של הבשר בטמפרטורה גבוהה מספיק כדי להרוס את הפריונים",
-                    "הימנעות מוחלטת מאכילת בשר של חיות מבוגרות בלבד",
-                    "מניעת כניסת בשר נגוע לשרשרת המזון באמצעות פיקוח וטרינרי והשמדת חיות נגועות",
-                    "חיטוי הבשר באמצעות אלכוהול טרם הבישול"
-                ],
-                correctIndex: 2,
-                explanation: "בישול עמוק אינו יעיל נגד פריונים. המניעה היחידה היא זיהוי, השמדת חיות נגועות, ואיסור צריכת איברים מסוימים (כמו מוח) ואכיפת רגולציה וטרינרית."
+                    "מכיוון שהמחלה מועברת רק באוויר, ולכן חיטוי מחטים אינו רלוונטי.",
+                    "מכיוון שחומרי החיטוי מגיבים עם הפריונים ויוצרים רעלן קטלני יותר.",
+                    "מכיוון שחיטוי סטנדרטי של מחטים אינו יעיל נגד פריונים, והמחט תישאר מדבקת.",
+                    "מכיוון שהפריונים נמצאים רק במערכת העיכול ולא יכולים לעבור בדם."
+                ], 
+                correctIndex: 2, 
+                explanation: "פריונים שורדים תהליכי עיקור וחיטוי סטנדרטיים (Disinfection of needles is not effective), ולכן שימוש חוזר במחט מהווה סכנת הדבקה חמורה." 
             },
-            {
-                question: "מהי המטרה של שימוש בעכברים טרנסגניים המבטאים חלבון פריון אנושי במחקרי מחלות פריונים?",
+            { 
+                question: "איזו אוכלוסייה של בעלי חיים חווה את מחלת הפריונים באופן טבעי ואנדמי כבר מאות שנים, מבלי שהדבר יצר מגפה עולמית בבני אדם באותו אופן כמו BSE?", 
                 options: [
-                    "לפתח חיסון פעיל עבור בני אדם על ידי הפקת נוגדנים מהעכברים",
-                    "לבדוק את פוטנציאל ההדבקה של פריונים ממינים אחרים ישירות על מודל המחקה בני אדם",
-                    "ליצור מודל לחקר מחלת ה-Scrapie בכבשים",
-                    "לזהות את המוטציה הגנטית הגורמת למחלת ה-BSE בבקר"
-                ],
-                correctIndex: 1,
-                explanation: "עכברים טרנסגניים המבטאים את החלבון האנושי מאפשרים לחוקרים לבדוק האם זני פריונים של חיות אחרות מסוגלים להתגבר על מחסום המינים ולהדביק בני אדם."
+                    "כבשים ועיזים (מחלת Scrapie).",
+                    "קופים ופרימטים (מחלת Kuru).",
+                    "חזירים (מחלת PSE).",
+                    "עופות (מחלת Avian Spongiform)."
+                ], 
+                correctIndex: 0, 
+                explanation: "מחלת הסקרייפי (Scrapie) מוכרת למעלה מ-200 שנה בכבשים ועיזים ומוגדרת כאנדמית, אך לא נקשרה למגפות בבני אדם כמו ה-BSE." 
             },
-            {
-                question: "בניסיון לפתח טיפול גני למחלות פריונים, הוצעו שיטות כגון ASO ו-RNAi. מהו מנגנון הפעולה המשותף לשיטות אלו?",
+            { 
+                question: "בהנחה שפריון פתולוגי חודר לגוף שבו יש מוטציה המונעת לחלוטין את ייצור החלבון התקין ($PrP^C$), מה תהיה התוצאה הסבירה ביותר?", 
                 options: [
-                    "הן נקשרות ישירות לחלבון הפריון הפתולוגי ומפרקות אותו",
-                    "הן מתקנות את המוטציה ב-DNA ברמת הכרומוזום",
-                    "הן מכוונות לפירוק מולקולות ה-mRNA של גן הפריון, ובכך מונעות את תרגום החלבון",
-                    "הן מפעילות את מערכת החיסון כדי לייצר נוגדנים נגד הפריון"
-                ],
-                correctIndex: 2,
-                explanation: "שיטות השתקת גנים אלו מכוונות ל-mRNA של הגן המקודד לפריון, וגורמות לפירוקו (על ידי RNase H או קומפלקס RISC), מה שמונע את ייצור החלבון התקין שיכול להפוך לפתולוגי."
+                    "הפריון הפתולוגי ישתכפל במהירות רבה יותר עקב היעדר תחרות.",
+                    "הפריון הפתולוגי יתקוף חלבונים אחרים ממשפחות שונות כדי לשרוד.",
+                    "לא תתרחש הדבקה ולא תתפתח מחלה, שכן אין חלבון מטרה שניתן לשנות את המבנה שלו.",
+                    "הגוף ייצר נוגדנים באופן מיידי ויחסל את הפריון הפתולוגי."
+                ], 
+                correctIndex: 2, 
+                explanation: "הפריון זקוק לחלבון התקין כדי להמיר את המבנה שלו ולייצר עוד פריונים פתולוגיים. ללא החלבון התקין (כמו בעכברי נוק-אאוט), המחלה לא יכולה להתפתח." 
             },
-            {
-                question: "מה ניתן להסיק מכך שמנת הדבקה אוראלית של 1 מיליגרם מוח נגוע ב-BSE מספיקה כדי להדביק בקר?",
+            { 
+                question: "מהו ההסבר לכך שמיליוני אנשים באירופה נחשפו לבשר נגוע ב-BSE, אך רק מספר קטן יחסית פיתח את מחלת ה-vCJD?", 
                 options: [
-                    "שהבקר עמיד מאוד למחלה ודורש חשיפה לחומר מרוכז",
-                    "שמערכת העיכול של הבקר מפרקת פריונים ביעילות גבוהה",
-                    "שרגישות הבקר להדבקה ב-BSE דרך המזון היא גבוהה ביותר",
-                    "שאין סכנה בהעברת המחלה דרך ציוד רפואי מזוהם"
-                ],
-                correctIndex: 2,
-                explanation: "העובדה שכמות זעירה כזו (1 מ\"ג) מספיקה להדבקה מעידה על רגישות גבוהה מאוד של הבקר להדבקה אוראלית בפריון ה-BSE."
+                    "הפריונים נהרסים לחלוטין בחומציות הקיבה של רוב בני האדם.",
+                    "רק אנשים שצרכו את רקמת השריר נדבקו, בעוד שצרכני המוח היו מוגנים.",
+                    "זמן הדגירה של מחלות פריונים הוא ארוך מאוד (Prolonged incubation time), ולכן ייתכן שרבים טרם פיתחו תסמינים, או שישנם גורמים גנטיים נוספים המגנים על רוב האוכלוסייה.",
+                    "מערכת החיסון האנושית מפתחת נוגדנים יעילים נגד פריונים באופן טבעי."
+                ], 
+                correctIndex: 2, 
+                explanation: "למחלות פריונים יש זמן דגירה ארוך מאוד, וזהו גורם מרכזי לחרדה הציבורית, שכן אנשים רבים נחשפו וייתכן שהמחלה מתפתחת לאט או תלויה בפקטורים גנטיים ספציפיים." 
             },
-            {
-                question: "אילו מהצעדים הבאים אינו נחשב כאמצעי מניעה יעיל כנגד הפצת מחלות פריונים?",
+            { 
+                question: "באיזה אופן השפיעה הפרקטיקה החקלאית המודרנית על התפרצות מגפת מחלת הפרה המשוגעת?", 
                 options: [
-                    "איסור על האכלת חיות בפגרים של חיות מאותו סוג",
-                    "חיטוי סטנדרטי של מחטים וציוד רפואי במרפאות",
-                    "השמדת בעלי חיים שאובחנו כנגועים",
-                    "איסור על אכילת מוח וחלקי פנים למשך תקופות מסוימות"
-                ],
-                correctIndex: 1,
-                explanation: "חיטוי רגיל של מחטים ובישול עמוק אינם יעילים נגד פריונים עקב עמידותם החריגה."
+                    "שימוש מוגבר באנטיביוטיקה החליש את מערכת החיסון של הבקר.",
+                    "האכלת בקר (שהוא צמחוני מטבעו) בתוספי חלבון שהופקו מפגרי חיות אחרות אפשרה את העברת הפריונים.",
+                    "צפיפות גבוהה ברפתות גרמה להעברה טיפתית של המחלה דרך האוויר.",
+                    "שימוש בהורמוני גדילה גרם למוטציות ספונטניות ב-DNA של הפרות."
+                ], 
+                correctIndex: 1, 
+                explanation: "המחלה הופצה בעיקר בגלל הפרקטיקה של שימוש בקמח בשר ועצמות (Meat-and-bone meal) ממקור חיות נגועות כמקור חלבון במזון הבקר." 
             },
-            {
-                question: "מהו השלב הסופי בתהליך שינוי המבנה של חלבונים במחלות ניוון עצבי הכוללות שקיעת פריונים?",
+            { 
+                question: "מה המשותף למחלת קורו (Kuru), מחלת קרויצפלד-יעקב ו-BSE?", 
                 options: [
-                    "פירוק מוחלט על ידי הפרוטאזום",
-                    "יצירת מונומרים מסיסים בציטופלזמה",
-                    "יצירת פיברילים (סיבים) ארוכים ושוקעים",
-                    "הפיכה לחומצת גרעין פעילה"
-                ],
-                correctIndex: 2,
-                explanation: "התהליך מתחיל בחלבון תקין, עובר למונומר מקופל שלא כהלכה, משם לאוליגומר, ולבסוף נוצרים פיברילים (סיבים) ששוקעים ומצטברים."
+                    "כולן נגרמות על ידי אותו נגיף ממשפחת הרטרו-וירוסים.",
+                    "כולן ניתנות לריפוי באמצעות אנטיביוטיקה רחבת טווח.",
+                    "כולן מחלות ניווניות של מערכת העצבים הנגרמות עקב הצטברות חלבונים פתולוגיים (פריונים).",
+                    "כולן מועברות אך ורק באמצעות תורשה גנטית."
+                ], 
+                correctIndex: 2, 
+                explanation: "כל המחלות הללו הן מחלות פריונים (TSEs) המתאפיינות בפגיעה מוחית ספוגית והצטברות חלבון שגוי." 
             },
-            {
-                question: "מחלת ה-Scrapie ידועה למעלה מ-200 שנה. מדוע היא לא עוררה משבר בריאות עולמי כפי שעוררה מחלת ה-BSE?",
+            { 
+                question: "מדוע מחלות ניווניות של מערכת העצבים הקשורות להצטברות חלבונים (כמו פריונים) הן מאתגרות במיוחד לפיתוח תרופות?", 
                 options: [
-                    "בגלל ש-Scrapie פוגעת רק בכבשים זכרים",
-                    "מכיוון של-Scrapie יש זמן דגירה של מספר ימים בלבד, מה שמאפשר בידוד מהיר",
-                    "משום שאין עדות לכך ש-Scrapie מסוגלת להדביק בני אדם דרך שרשרת המזון, בניגוד ל-BSE",
-                    "מפני ש-Scrapie ניתנת לריפוי בקלות באמצעות אנטיביוטיקה"
-                ],
-                correctIndex: 2,
-                explanation: "Scrapie היא אנדמית ומוכרת שנים רבות אך לא הוכחה כעוברת לבני אדם. ה-BSE לעומת זאת, שברה את מחסום המינים וגרמה ל-vCJD באדם, מה שיצר את המשבר."
+                    "החלבונים הפתולוגיים משתנים גנטית (עוברים מוטציות) בקצב מהיר יותר מוירוסים.",
+                    "החלבונים המעורבים הם גרסאות של חלבונים טבעיים של הגוף, ולכן מערכת החיסון אינה מזהה אותם כגוף זר וקשה למקד טיפול שלא יפגע בחלבון התקין.",
+                    "החלבונים מצטברים אך ורק מחוץ למוח, באזורים שאין אליהם גישה כירורגית.",
+                    "הם מופרשים בשתן במהירות רבה מדי מכדי שהתרופה תספיק לפעול עליהם."
+                ], 
+                correctIndex: 1, 
+                explanation: "האתגר המרכזי הוא שהפריון הוא חלבון עצמי (Self-protein) שעבר קיפול שגוי, ולכן אין תגובה חיסונית קלאסית וקשה לייצר תרופה סלקטיבית." 
             },
-            {
-                question: "חוקר מבצע ניסוי בו הוא חושף תרבית תאים לחלבון פריון פתולוגי. התאים חסרים לחלוטין את הגן המקודד לחלבון הפריון התקין. מה תהיה תוצאת הניסוי בסבירות הגבוהה ביותר?",
+            { 
+                question: "בניסוי מעבדה, חוקר מנסה להדביק תרבית תאים בפריונים. הוא מקרין את הדגימה הזיהומית בקרינת UV חזקה שהורסת לחלוטין DNA ו-RNA. האם התרבית תודבק?", 
                 options: [
-                    "התאים ייצרו כמות אדירה של חלבון פתולוגי חדש",
-                    "הפריון הפתולוגי יחדור לגרעין וישנה את ה-DNA של התא",
-                    "לא תתרחש הצטברות של פריונים פתולוגיים חדשים בתא",
-                    "התאים יהפכו לתאים סרטניים בעקבות החשיפה"
-                ],
-                correctIndex: 2,
-                explanation: "החלבון הפתולוגי גורם למחלה על ידי המרת החלבון התקין של המארח לצורה הפתולוגית. ללא נוכחות חלבון תקין כמצע, הפריון אינו יכול להשתכפל או להצטבר."
+                    "לא, מכיוון שהקרינה הרסה את החומר התורשתי הנדרש לשכפול.",
+                    "כן, מכיוון שקרינת UV פועלת רק על וירוסים ולא על חיידקים.",
+                    "כן, מכיוון שגורם המחלה הוא חלבון ואינו מסתמך על חומצות גרעין כדי להדביק.",
+                    "לא, מכיוון שקרינת UV מפרקת את כל הקשרים הפפטידיים בחלבון באופן מיידי."
+                ], 
+                correctIndex: 2, 
+                explanation: "זהו אחד הניסויים הקלאסיים שהוכיחו את תיאוריית הפריונים: הגורם המדבק עמיד לטיפולים שהורסים חומצות גרעין, כי הוא עשוי רק מחלבון." 
             },
-            {
-                question: "איזה מנגנון תאי מוזכר ככזה שאמור לטפל בחלבונים מקופלים שלא כהלכה, אך כנראה כושל במחלות פריונים?",
+            { 
+                question: "מה תפקידו של קומפלקס RISC בטיפול ניסיוני מסוג RNAi למחלות פריונים?", 
                 options: [
-                    "הריבוזום",
-                    "פולימראז ה-DNA",
-                    "אוטופאגיה ופרוטאזום",
-                    "מיטוכונדריה"
-                ],
-                correctIndex: 2,
-                explanation: "פרוטאזום ואוטופאגיה הם מנגנונים תאיים המיועדים לפירוק וסילוק חלבונים פגומים, אך הפריונים הפתולוגיים חומקים מהם ומצטברים ליצירת גופיפי הסגר (inclusion bodies)."
+                    "הוא מתחבר לחלבון הפריון הפתולוגי ומסמן אותו לפירוק בפרוטאוזום.",
+                    "הוא מתחבר למולקולת ה-siRNA ומתווך את הפירוק של ה-mRNA של גן המטרה (PRNP).",
+                    "הוא מעודד את הקיפול מחדש של החלבון הפתולוגי לתצורה התקינה שלו.",
+                    "הוא חוסם את הקולטנים במעי ובכך מונע את ספיגת הפריונים מהמזון."
+                ], 
+                correctIndex: 1, 
+                explanation: "במנגנון RNAi, ה-siRNA חובר לקומפלקס RISC (RNA-induced silencing complex) אשר מפרק את ה-mRNA המשלים לו." 
             },
-            {
-                question: "מחלת ה-Kuru בפפואה גינאה החדשה קשורה קשר הדוק לאיזה מאפיין התנהגותי?",
+            { 
+                question: "איזו מהמחלות הבאות אינה קשורה לקבוצת המחלות הפריוניות (Spongiform encephalopathies)?", 
                 options: [
-                    "אכילת בשר בקר לא מבושל",
-                    "הדבקה דרך עקיצות יתושים באזורים טרופיים",
-                    "העברה מאדם לאדם, ככל הנראה באמצעות קניבליזם טקסי (המשתמע מהקשר המחלה)",
-                    "חשיפה למי שתייה מזוהמים בפסולת תעשייתית"
-                ],
-                correctIndex: 2,
-                explanation: "Kuru היא מחלת פריונים אנושית שהועברה בקרב שבטים בפפואה גינאה החדשה, וההקשר המקובל (וגם הופעתה המקומית מאוד) קשור להעברה ישירה בין בני אדם, היסטורית דרך קניבליזם."
+                    "Scrapie",
+                    "Creutzfeldt-Jakob disease",
+                    "Kuru",
+                    "Avian Influenza (שפעת העופות)"
+                ], 
+                correctIndex: 3, 
+                explanation: "שפעת העופות היא מחלה ויראלית (נגרמת על ידי נגיף השפעת), בעוד ששאר האפשרויות הן מחלות פריונים." 
             },
-            {
-                question: "בעת פיתוח אסטרטגיית טיפול מבוססת ASO, לאיזה חלק של התא חייבת מולקולת התרופה להגיע כדי להיות פעילה?",
+            { 
+                question: "מה משמעות המונח 'Endemic' בהקשר של מחלת הסקרייפי (Scrapie)?", 
                 options: [
-                    "אל קרום התא החיצוני בלבד",
-                    "אל המיטוכונדריה",
-                    "אל אתרי הקישור של ה-mRNA בתא (ציטופלזמה או גרעין)",
-                    "אל הוואקואולות במערכת העיכול"
-                ],
-                correctIndex: 2,
-                explanation: "ASO פועל על ידי יצירת קומפלקס עם ה-mRNA, תהליך שמתרחש באזורים בהם ה-mRNA נמצא לפני או במהלך התרגום לחלבון."
+                    "המחלה קטלנית ב-100% מהמקרים תוך ימים ספורים.",
+                    "המחלה נוכחת באופן קבוע וטבעי באוכלוסיות מסוימות של כבשים באזורים שונים בעולם.",
+                    "המחלה יכולה לעבור רק בין פרטים מאותו המין ביחסי מין.",
+                    "המחלה נוצרה במעבדה וברחה אל הטבע לאחרונה."
+                ], 
+                correctIndex: 1, 
+                explanation: "מחלה אנדמית היא מחלה ששכיחותה נשארת יציבה וקיימת באופן קבוע באוכלוסייה או באזור גיאוגרפי מסוים." 
             },
-            {
-                question: "מהי המשמעות העיקרית של המונח 'חלבונים שוקעים' בהקשר של מחלת הפרה המשוגעת?",
+            { 
+                question: "באיזה אופן העברת אינפורמציה על ידי פריון סותרת את הדוגמה המרכזית (Central Dogma)?", 
                 options: [
-                    "חלבונים השוקעים לקרקעית צינורות הדם וגורמים לחסימתם",
-                    "חלבונים המאבדים את מסיסותם עקב שינוי מבני ומצטברים כמשקעים ברקמת המוח",
-                    "חלבונים השוקעים במעי הדק ומונעים ספיגת חומרי מזון",
-                    "חלבונים המיוצרים במוח ושוקעים אל חוט השדרה עקב כוח המשיכה"
-                ],
-                correctIndex: 1,
-                explanation: "המונח מתייחס לחלבון הפריון שמשנה את המבנה המרחבי שלו, מאבד את מסיסותו, ומצטבר כאגרגטים (משקעים או פיברילים) ברקמת העצבים."
+                    "המידע זורם מחלבון לחלבון ללא תיווך של שעתוק ותרגום.",
+                    "המידע זורם מ-RNA ישירות ל-DNA.",
+                    "החלבון מתורגם ישירות מ-DNA ללא צורך ב-mRNA.",
+                    "החלבון משכפל את עצמו על ידי יצירת קשרים פוספודיאסטריים."
+                ], 
+                correctIndex: 0, 
+                explanation: "הדוגמה המרכזית מתארת זרימת מידע מחומצת גרעין לחלבון. פריונים 'מעבירים מידע' (את המבנה הפתולוגי) ישירות לחלבון אחר." 
             },
-            {
-                question: "האם קיים כיום טיפול יעיל או תרופה המרפאת מחלות ניוון עצבי הנגרמות מפריונים?",
+            { 
+                question: "מהי כמות המוח הנגוע הנדרשת כדי לגרום להדבקה של פרה ב-BSE דרך מערכת העיכול?", 
                 options: [
-                    "כן, באמצעות עירוי של נוגדנים מחיות מחוסנות",
-                    "כן, טיפולי ASO מאושרים ומרפאים את המחלה לחלוטין",
-                    "לא, לכל מחלות הניוון העצבי מסוג זה אין כיום תרופה יעילה",
-                    "כן, על ידי מתן מינונים גבוהים של פרוטאינז K ישירות למוח"
-                ],
-                correctIndex: 2,
-                explanation: "מצוין במפורש שכל מחלות הניוון העצבי (הקשורות להצטברות פריונים) אינן בעלות תרופה יעילה כיום."
+                    "לפחות 1 קילוגרם של רקמת מוח.",
+                    "כמות עצומה של כ-10 קילוגרמים ביום.",
+                    "מינון נמוך מאוד של כ-1 מיליגרם בלבד.",
+                    "הדבקה דרך מערכת העיכול אינה אפשרית בבקר, רק בהזרקה."
+                ], 
+                correctIndex: 2, 
+                explanation: "ההדבקה יעילה להחריד, ומינון נמוך מאוד של 1 מ\"ג מוח נגוע מספיק להעברה פומית (Oral transmission)." 
             },
-            {
-                question: "מדוע העברת אינפורמציה על ידי חלבון נחשבה לבלתי אפשרית לפני תגליתו של פרוזינר?",
+            { 
+                question: "כיצד תרמה מחלת Kuru להבנת מחלות הפריונים באדם?", 
                 options: [
-                    "מפני שחלבונים תמיד מתפרקים בקיבה ולא יכולים לחדור לתאים",
-                    "מכיוון שהדוגמה המרכזית קבעה שרק חומצות גרעין (DNA/RNA) יכולות לקודד ולהעביר מידע מורש או זיהומי",
-                    "משום שחלבונים אינם מכילים חנקן, שהוא חיוני להעברת מידע",
-                    "בגלל שחלבונים זהים לחלוטין בכל בעלי החיים"
-                ],
-                correctIndex: 1,
-                explanation: "הדוגמה המרכזית גרסה שמידע ביולוגי חייב להיות מקודד ב-DNA או RNA. גילוי הפריון הראה שחלבון יכול לשמש כתבנית להמרת חלבונים אחרים ללא חומצת גרעין."
+                    "היא הוכיחה שפריונים מועברים דרך עקיצות יתושים באזורים טרופיים.",
+                    "היא סיפקה עדות היסטורית להעברת מחלת מוח ניוונית באמצעות אכילת בשר אדם (קניבליזם), בדומה למנגנון ההדבקה של BSE.",
+                    "היא הראתה שרק גברים חולים במחלות פריונים.",
+                    "היא הוכיחה שבישול בשר אדם מונע את המחלה לחלוטין."
+                ], 
+                correctIndex: 1, 
+                explanation: "קורו הועברה דרך טקסי קניבליזם בפפואה גינאה החדשה, מה שחיזק את ההבנה שTSEs יכולות לעבור בהזנה מרקמות נגועות." 
             },
-            {
-                question: "אם פרה ניזונה ממזון המכיל פריונים, באיזו מערכת בגופה צפוי להתחיל תהליך הזיהום לפני הגעתו למוח?",
+            { 
+                question: "מה ההבדל העיקרי בין Creutzfeldt-Jakob disease (CJD) ספורדית לבין variant CJD (vCJD)?", 
                 options: [
-                    "במערכת הנשימה, בריאות",
-                    "במערכת הלב וכלי הדם",
-                    "במערכת העיכול וברקמות הלימפה המקושרות אליה",
-                    "במערכת השתן והכליות"
-                ],
-                correctIndex: 2,
-                explanation: "ההבנה הנוכחית היא שהזיהום בהעברה אוראלית מתחיל במעי ועובר לרקמות הלימפה המקושרות אליו (Gut-associated lymphoid tissue)."
+                    "CJD ספורדית מועברת על ידי חיידק, בעוד vCJD מועברת על ידי וירוס.",
+                    "CJD ספורדית מופיעה באופן אקראי ולרוב בגיל מבוגר, בעוד vCJD מקושרת היסטורית לאכילת בשר בקר נגוע ב-BSE.",
+                    "CJD ספורדית ניתנת לריפוי באמצעות אנטיביוטיקה, בעוד vCJD חשוכת מרפא.",
+                    "אין הבדל, אלו שני שמות לאותה מחלה בדיוק."
+                ], 
+                correctIndex: 1, 
+                explanation: "vCJD היא הצורה ה'חדשה' שהופיעה בעקבות מגפת ה-BSE (מעבר בין מינים), בעוד ש-CJD הקלאסית מופיעה באופן ספורדי (אקראי) או גנטי ללא קשר לבקר." 
             },
-            {
-                question: "כיצד תורמת שיטת ה-Western blot לזיהוי מחלות פריונים במעבדה?",
+            { 
+                question: "באיזה אזור בגוף מתחילה לרוב ההדבקה ב-BSE לאחר צריכת מזון נגוע?", 
                 options: [
-                    "היא מאפשרת לזהות את רצף ה-DNA הפגום הגורם למחלה",
-                    "היא מאפשרת להבחין בין החלבון התקין לפתולוגי על בסיס עמידות החלבון הפתולוגי לעיכול אנזימטי",
-                    "היא מגדילה את כמות ה-RNA בתא כדי שיהיה ניתן לזהותו",
-                    "היא צובעת את הוואקואולות ברקמת המוח בצבע סגול"
-                ],
-                correctIndex: 1,
-                explanation: "ב-Western blot משתמשים בפרוטאינז K שמפרק את החלבון התקין. אם נשאר חלבון המזוהה על ידי נוגדנים, זהו החלבון הפתולוגי העמיד, וכך מזהים את המחלה."
+                    "בריאות (Lungs).",
+                    "בכליות (Kidneys).",
+                    "במעי (Gut).",
+                    "בעור (Skin)."
+                ], 
+                correctIndex: 2, 
+                explanation: "ההבנה הנוכחית היא שההדבקה מתחילה במעי, ומשם עוברת לרקמה הלימפטית הקשורה למעי." 
             },
-            {
-                question: "מהו ההסבר הסביר ביותר לכך שחיטוי מחטים סטנדרטי אינו יעיל במניעת הדבקה בפריונים?",
+            { 
+                question: "מהי המשמעות של היות החלבון הפתולוגי 'Protease-resistant'?", 
                 options: [
-                    "הפריונים הם חיידקים היוצרים נבגים עמידים לחום",
-                    "הפריונים קטנים מדי ואינם נדבקים למתכת של המחט",
-                    "הפריונים הם חלבונים בעלי מבנה יציב במיוחד ועמידים לטמפרטורות גבוהות וחומרי חיטוי רגילים",
-                    "הפריונים מפרישים חומר כימי המנטרל את חומרי החיטוי"
-                ],
-                correctIndex: 2,
-                explanation: "החלבון הפתולוגי מקופל בצורה המקנה לו עמידות קיצונית לתנאים סביבתיים, כולל חום גבוה וכימיקלים המשמשים לחיטוי רגיל."
+                    "הוא מסוגל לפרק חלבונים אחרים במהירות רבה.",
+                    "הוא עמיד לפירוק על ידי אנזימים תאיים שתפקידם לפרק חלבונים פגומים, מה שמוביל להצטברותו.",
+                    "הוא עמיד בפני קרינת רנטגן.",
+                    "הוא חוסם את ייצור הפרוטאזות בקיבה."
+                ], 
+                correctIndex: 1, 
+                explanation: "עמידות לפרוטאזות מונעת מהתא לנקות את החלבון הפגום, מה שגורם לו להצטבר ליצור פלאקים ומשקעים רעילים במוח." 
             },
-            {
-                question: "מה מייצג המונח L-BSE המוזכר בהקשר של מחלות פריונים?",
+            { 
+                question: "איזה מהמשפטים הבאים מתאר נכונה את מבנה ה-ASO (Antisense Oligonucleotides)?", 
                 options: [
-                    "השלב האחרון והסופני של מחלת ה-BSE",
-                    "צורה לא טיפוסית (Atypical) של BSE שעשויה להיות בעלת פוטנציאל להדביק בני אדם",
-                    "החלבון התקין הנמצא במוח של בקר בריא",
-                    "תרופה ניסיונית המבוססת על השתקת גנים"
-                ],
-                correctIndex: 1,
-                explanation: "L-BSE היא צורה אטיפית של המחלה, ולפי ניסויי העברה, יש לה פוטנציאל להדביק בני אדם."
+                    "מולקולות חלבון גדולות הנקשרות לממברנת התא.",
+                    "רצפים קצרים וסינתטיים של חומצות גרעין (חד-גדיליים) המתוכננים להיקשר ל-mRNA ספציפי באמצעות זיווג בסיסים.",
+                    "אנזימים טבעיים המופקים ממוח של כבשים.",
+                    "וירוסים מוחלשים המשמשים כחיסון."
+                ], 
+                correctIndex: 1, 
+                explanation: "ASOs הם אוליגонуקלאוטידים סינתטיים קצרים שתוכננו להיקשר באופן ספציפי (Watson-Crick base pairing) ל-mRNA המטרה." 
             },
-            {
-                question: "איזה סוג של מולקולה מגייס האוליגונוקלאוטיד ASO על מנת להרוס את מטרתו בתא?",
+            { 
+                question: "אילו חיות מודל שימשו בניסויי העברה (Transmission experiments) כדי להוכיח את הפוטנציאל של פריונים ממינים אחרים להדביק בני אדם?", 
                 options: [
-                    "אנזים מסוג פרוטאינז K",
-                    "אנזים מסוג RNase H התוקף את ההטרו-דופלקס של ASO ו-mRNA",
-                    "קומפלקס חלבוני מסוג RISC",
-                    "נוגדנים של מערכת החיסון"
-                ],
-                correctIndex: 1,
-                explanation: "לפי מנגנון הפעולה שתואר, ה-ASO יוצר מבנה משותף (הטרו-דופלקס) עם ה-mRNA, אשר מגייס את האנזים RNase H שחותך והורס את ה-mRNA."
+                    "זבובי פירות (Drosophila).",
+                    "עכברים טרנסגניים המבטאים את חלבון הפריון האנושי (Human PrP).",
+                    "דגי זברה.",
+                    "חולדות נטולות מערכת חיסון (Nude rats)."
+                ], 
+                correctIndex: 1, 
+                explanation: "כדי לבדוק הדבקה באדם ללא ניסוי בבני אדם, השתמשו בעכברים שהונדסו גנטית לייצר את החלבון האנושי, מה שהוכיח סכנת הדבקה מזנים מסוימים." 
             },
-            {
-                question: "באיזה מנגנון פועל ה-siRNA ככלי להשתקת גנים של פריונים?",
+            { 
+                question: "מהו התפקיד של RNase H בטיפול מבוסס ASO?", 
                 options: [
-                    "הוא מגייס את קומפלקס ה-RISC שחותך את ה-mRNA של הפריון",
-                    "הוא נקשר ישירות ל-DNA ומונע את שעתוק הגן",
-                    "הוא מפרק את חלבון הפריון לאחר שהוא נוצר בריבוזום",
-                    "הוא מחליף את ה-mRNA הפגום ב-mRNA תקין"
-                ],
-                correctIndex: 0,
-                explanation: "מולקולת ה-siRNA (חלק ממנגנון ה-RNAi) יוצרת קומפלקס עם RISC, אשר מתווך את החיתוך וההרס של מולקולת ה-mRNA המטרה."
+                    "הוא מסנתז גדיל RNA חדש.",
+                    "הוא מזהה את הקומפלקס ההיברידי של ASO-mRNA ומבקע (מפרק) את ה-mRNA, ובכך מונע תרגום.",
+                    "הוא מגן על ה-mRNA מפני פירוק ציטופלזמטי.",
+                    "הוא מוביל את ה-ASO אל תוך הגרעין."
+                ], 
+                correctIndex: 1, 
+                explanation: "RNase H הוא אנזים תאי המפרק את גדיל ה-RNA כאשר הוא נמצא בצמד היברידי עם DNA (או ASO דמוי DNA)." 
             },
-            {
-                question: "איזו סכנה ייחודית הציבה מחלת ה-BSE לעומת מחלת ה-Scrapie מבחינת בריאות הציבור?",
+            { 
+                question: "האם מחלות פריונים הן המחלות הניווניות היחידות של מערכת העצבים המאופיינות בהצטברות חלבונים?", 
                 options: [
-                    "BSE התפשטה מהר יותר באוויר לעומת Scrapie",
-                    "BSE הצליחה לחצות את מחסום המינים ולהדביק בני אדם (vCJD), בעוד ש-Scrapie לא הראתה יכולת זו",
-                    "BSE פוגעת בבקר צעיר בלבד, בעוד Scrapie פוגעת רק בכבשים זקנות",
-                    "ל-BSE אין זמן דגירה כלל, מה שגרם למוות מיידי של צרכנים"
-                ],
-                correctIndex: 1,
-                explanation: "הסכנה המרכזית ומהות משבר ה-BSE הייתה ההוכחה שהמחלה עוברת לבני אדם וגורמת ל-vCJD, בניגוד ל-Scrapie שהייתה אנדמית תקופה ארוכה ללא עדות להדבקת בני אדם."
+                    "כן, זוהי תופעה ייחודית אך ורק לפריונים.",
+                    "לא, אגרגציה (הצטברות) של חלבונים היא מאפיין משותף לרשימה ארוכה של מחלות ניווניות של מערכת העצבים (כגון אלצהיימר ופרקינסון).",
+                    "כן, אך רק בבעלי חיים ולא בבני אדם.",
+                    "לא, מחלות פריונים כלל אינן קשורות להצטברות חלבונים אלא לחוסר בחלבונים."
+                ], 
+                correctIndex: 1, 
+                explanation: "אגרגציה של חלבונים (Prion aggregation) היא חלק מקבוצה גדולה של מחלות נוירודגנרטיביות המאופיינות במשקעים חלבוניים." 
             },
-            {
-                question: "מה היה קורה אילו הדוגמה המרכזית בביולוגיה הייתה חלה באופן מוחלט וללא יוצאים מן הכלל?",
+            { 
+                question: "על פי המודל של שינוי מבני בחלבונים ניווניים, מהו השלב הסופי בתהליך ההצטברות?", 
                 options: [
-                    "מחלת ה-BSE הייתה מתפשטת מהר יותר",
-                    "הפריונים לא היו מסוגלים לגרום למחלה זיהומית, שכן הם חסרי חומצת גרעין",
-                    "חלבון הפריון התקין לא היה מיוצר בגוף לעולם",
-                    "טיפולי השתקת גנים היו הופכים לבלתי אפשריים"
-                ],
-                correctIndex: 1,
-                explanation: "הדוגמה המרכזית קובעת שמידע זיהומי/תורשתי דורש חומצת גרעין. אם היא הייתה מוחלטת, חלבון בלבד לא היה יכול לשמש כגורם זיהומי מעביר אינפורמציה."
+                    "Monomer",
+                    "Oligomer",
+                    "Fibril (Inclusion body)",
+                    "Proteasome"
+                ], 
+                correctIndex: 2, 
+                explanation: "התהליך מתחיל במונומר שעובר קיפול שגוי, מתחבר לאוליגומרים, ולבסוף יוצר סיבים (Fibrils) וגופיפי הסגר (Inclusion bodies)." 
             },
-            {
-                question: "מבחינה היסטופתולוגית, מה גורם למראה ה'ספוגי' במוח של חולי קרויצפלד-יעקב?",
+            { 
+                question: "מדוע הופעת ה-vCJD עוררה משבר בריאות ציבורי כה חמור באירופה בשנות ה-90?", 
                 options: [
-                    "התרחבות של כלי דם במוח עקב דלקת חריפה",
-                    "היווצרות של וואקואולות תוך-ציטופלזמיות המכילות חלקי ממברנות",
-                    "הצטברות של נוזל שדרה בתוך הגרעין של תאי העצב",
-                    "היעלמות מוחלטת של חומר לבן במוח"
-                ],
-                correctIndex: 1,
-                explanation: "המראה הספוגי (Spongiform) נוצר עקב הופעת וואקואולות (חללים) בתוך התאים המכילות שברים ולולאות של ממברנות."
+                    "בשל החשש שמיליוני צרכנים נחשפו לבשר נגוע וזמן הדגירה הארוך מונע לדעת מי נדבק.",
+                    "מפני שהמחלה פגעה אך ורק בילדים קטנים.",
+                    "בגלל שהמחלה הועברה דרך מי השתייה המרכזיים.",
+                    "משום שהיא גרמה לתמותה מיידית של כל חיות המחמד ביבשת."
+                ], 
+                correctIndex: 0, 
+                explanation: "ההערכה שמעל מיליון פרות נגועות נכנסו לשרשרת המזון האנושית, יחד עם זמן דגירה ארוך, יצרה פחד מהמוני נדבקים סמויים." 
             },
-            {
-                question: "איזו מסקנה נובעת מכך שחלבון הפריון הפתולוגי עמיד לפרוטאזות בעוד החלבון התקין רגיש להן?",
+            { 
+                question: "איזה מהמשפטים הבאים מתאר נכון את היחס בין מחלות פריונים תורשתיות לספורדיות?", 
                 options: [
-                    "שהחלבון הפתולוגי מורכב מחומצות אמינו שאינן קיימות בטבע",
-                    "שהשינוי המבני (הקונפורמציה) של החלבון הפתולוגי מסתיר את אתרי החיתוך של האנזימים",
-                    "שהחלבון התקין אינו חלבון אמיתי אלא פחמימה",
-                    "שהפרוטאזות במוח אינן פעילות אצל חולי BSE"
-                ],
-                correctIndex: 1,
-                explanation: "מכיוון שרצף חומצות האמינו זהה, ההבדל בעמידות לאנזימים נובע משינוי במבנה המרחבי שמגן על החלבון הפתולוגי מפני פירוק."
+                    "כל מחלות הפריונים הן תורשתיות.",
+                    "מחלות פריונים יכולות להיות ספורדיות (אקראיות), נרכשות (הדבקה) או תורשתיות (גנטיות).",
+                    "מחלות תורשתיות פוגעות רק בבעלי חיים, ואילו ספורדיות רק בבני אדם.",
+                    "מחלות ספורדיות נגרמות ממוטציה ב-RNA, ואילו תורשתיות ממוטציה ב-DNA."
+                ], 
+                correctIndex: 1, 
+                explanation: "למחלות פריונים יש שלוש תצורות הופעה: ספורדי (ספונטני), תורשתי (מוטציה בגן PRNP), או נרכש (הדבקה מחיצוני)." 
             },
-            {
-                question: "מהו התפקיד של 'קמח בשר ועצמות' בהקשר של מחלת ה-BSE?",
+            { 
+                question: "מהו התפקיד של רקמה לימפטית (Lymphoid tissue) בפתוגנזה של ה-BSE?", 
                 options: [
-                    "תרופה שניתנה לבקר כדי לחזק את העצמות",
-                    "חומר דישון שגרם לזיהום סביבתי של שטחי המרעה",
-                    "מקור חלבון שניתן כמזון לבקר והיווה את וקטור ההדבקה העיקרי של המחלה",
-                    "תוצר הלוואי של תעשיית החלב ששימש להאכלת בני אדם"
-                ],
-                correctIndex: 2,
-                explanation: "קמח בשר ועצמות (Meat-and-bone meal) שימש כמקור חלבון במזון בקר, ודרכו הועברו פריונים מחיות נגועות לחיות בריאות."
+                    "היא המייצרת את החלבון הפתולוגי הראשוני.",
+                    "היא מפרקת את הפריונים ומונעת מהם להגיע למוח.",
+                    "היא משמשת כתחנת מעבר שבה הפריונים מצטברים ומשתכפלים בדרכם מהמעי למערכת העצבים המרכזית.",
+                    "אין לה שום תפקיד במחלות פריונים."
+                ], 
+                correctIndex: 2, 
+                explanation: "הפריונים עוברים מהמעי לרקמה הלימפטית הקשורה למעי, משתכפלים שם, ומשם חודרים לעצבים." 
             },
-            {
-                question: "מדוע מחלות פריונים מאופיינות כ'מחלות ניוון עצבי' (Neurodegenerative)?",
+            { 
+                question: "מהו ההבדל המרכזי בין שיטת ההשתקה ASO לשיטת RNAi בטיפול בפריונים?", 
                 options: [
-                    "כי הן גורמות לדלקת קרום המוח חיידקית",
-                    "כי הן מאופיינות בהצטברות של חלבונים פתולוגיים הגורמים למוות של תאי עצב ולהידרדרות תפקודית",
-                    "כי הן פוגעות בעצבים ההיקפיים בלבד וגורמות לשיתוק גפיים",
-                    "כי הן מופיעות רק אצל אנשים מבוגרים כתוצאה מהזדקנות טבעית"
-                ],
-                correctIndex: 1,
-                explanation: "בדומה למחלות ניוון עצבי אחרות, מחלות פריונים כוללות שינוי מבני בחלבון, הצטברות שלו (אגרגציה), ומוות של נוירונים המוביל להידרדרות."
+                    "ASO מפרק חלבונים, RNAi מפרק DNA.",
+                    "ASO משתמש באוליגонуקלאוטידים חד-גדיליים המגייסים RNase H, בעוד RNAi משתמש ב-siRNA דו-גדילי המגייס את קומפלקס RISC.",
+                    "ASO מיועד לחולים אנושיים בלבד, בעוד RNAi עובד רק בבקר.",
+                    "אין הבדל במנגנון, אלו שתי חברות שונות המייצרות את אותה התרופה."
+                ], 
+                correctIndex: 1, 
+                explanation: "זהו ההבדל המנגנוני המדויק כפי שמוצג באיור הטיפולים הגנטיים: ASO הוא חד-גדילי ופועל דרך RNase H, ו-RNAi פועל דרך RISC." 
             },
-            {
-                question: "מהי המשמעות של זמן הדגירה הארוך במחלות פריונים עבור ניהול סיכונים בבריאות הציבור?",
+            { 
+                question: "אם חלבון תקין ($PrP^C$) הוא 'Protease-sensitive', מה יקרה לו בסביבה התאית הרגילה לאחר שיסיים את תפקידו?", 
                 options: [
-                    "זה מאפשר מתן תרופה מונעת יעילה לכל מי שנחשף",
-                    "זה מקשה מאוד על איתור מקור ההדבקה ויוצר חוסר ודאות לגבי מספר האנשים שעלולים לחלות בעתיד",
-                    "זה מבטיח שהמחלה תעלם מעצמה לפני שיופיעו תסמינים",
-                    "זה מאפשר לחסן את האוכלוסייה בחיסון חי מוחלש"
-                ],
-                correctIndex: 1,
-                explanation: "זמן דגירה ארוך (שנים עד עשורים) אומר שאנשים שנחשפו למזון נגוע עלולים לפתח את המחלה שנים רבות מאוחר יותר, מה שמקשה על הערכת היקף המגיפה וניהולה."
+                    "הוא יצטבר וייצור פלאקים.",
+                    "הוא יעבור שינוי מבני ספונטני לפריון.",
+                    "הוא יפורק באופן טבעי על ידי מערכות הפירוק התאיות (כגון הפרוטאוזום).",
+                    "הוא יופרש בשלמותו אל מחוץ לתא וישרוד לנצח."
+                ], 
+                correctIndex: 2, 
+                explanation: "חלבונים רגישים לפרוטאזות עוברים מחזור שגרתי בתא ומפורקים כשהם לא נדרשים יותר או פגומים קלות." 
             },
-            {
-                question: "איזה מהמשפטים הבאים מתאר נכונה את יעילות מנגנוני הפירוק התאיים (כגון פרוטאזום) כלפי פריונים?",
+            { 
+                question: "מדוע איסור האכלת חיות משק ב'קמח בשר ועצמות' (Meat-and-bone meal) של חיות דומות נחשב לצעד המניעה החשוב ביותר נגד BSE?", 
                 options: [
-                    "הפרוטאזום מפרק ביעילות גבוהה את הפריון הפתולוגי ומונע מחלה ברוב המקרים",
-                    "מנגנונים אלו מפרקים חלבונים פגומים, אך במקרה של פריונים הם כושלים והחלבון מצטבר כגופיפי הסגר",
-                    "הפרוטאזום הוא המקור לייצור הפריון הפתולוגי בתא",
-                    "מנגנונים אלו אינם פעילים כלל בתאי עצב"
-                ],
-                correctIndex: 1,
-                explanation: "אף על פי שיש לתא מנגנונים לפירוק חלבונים פגומים (פרוטאזום, אוטופאגיה), הם אינם מצליחים להתמודד עם הפריונים שממשיכים להצטבר ליצירת פיברילים וגופיפי הסגר."
+                    "מפני שקמח עצמות גורם לפרות לחוסר סידן חמור.",
+                    "מכיוון שזה קטע את מעגל ההדבקה שבו פריונים מחיות מתות חזרו לשרשרת המזון של חיות בריאות.",
+                    "מפני שקמח בשר מעלה את טמפרטורת הגוף של הפרה ומזרז את המחלה.",
+                    "מכיוון שהקמח הכיל חיידקים שיצרו את הפריונים בתוך הקיבה."
+                ], 
+                correctIndex: 1, 
+                explanation: "המחלה הפכה למגפה כי חיות נגועות עובדו למזון שהוזן לחיות בריאות, וכך ההדבקה הוכפלה. עצירת הנוהג הזה עצרה את המגפה." 
             },
-            {
-                question: "כיצד תוכנית ההדברה של BSE באירופה טיפלה בפרות שנחשדו כנגועות?",
+            { 
+                question: "מה ניתן ללמוד מהעובדה שמחלת קורו (Kuru) נעלמה כמעט לחלוטין לאחר הפסקת מנהגי הקניבליזם בפפואה גינאה החדשה?", 
                 options: [
-                    "מתן טיפול אנטיביוטי מונע לכל העדר",
-                    "בישול עמוק של בשרן לפני שיווקו לציבור",
-                    "זיהוי, השמדה (Extermination) וסילוק הפגרים כדי למנוע כניסתם לשרשרת המזון",
-                    "שליחתן למדינות עולם שלישי בהן המחלה אינה קיימת"
-                ],
-                correctIndex: 2,
-                explanation: "המניעה היחידה והיעילה הייתה זיהוי, השמדה של חיות נגועות, ואיסור על שימוש בפגריהן."
+                    "שהמחלה הייתה ויראלית והחיסון הטבעי עבד.",
+                    "שגנטיקה היא הגורם היחיד למחלה.",
+                    "שהמחלה הייתה תלויה לחלוטין במסלול העברה של אכילת רקמות נגועות, וללא חשיפה זו המחלה אינה מתפשטת ספונטנית באוכלוסייה.",
+                    "שהפריונים התפתחו לזן שאינו פוגע בבני אדם."
+                ], 
+                correctIndex: 2, 
+                explanation: "היעלמות המחלה עם הפסקת החשיפה לרקמות נגועות מוכיחה את מנגנון ההעברה הנרכש (Infectious/Acquired) של המחלה." 
             },
-            {
-                question: "מה מטרת השימוש ב-ASO או siRNA כטיפול אפשרי למחלות פריונים?",
+            { 
+                question: "באיזה אופן משפיעים פריונים על הדוגמה של 'צורה קובעת תפקוד' (Structure dictates function) בביולוגיה של התא?", 
                 options: [
-                    "לחתוך את הפריון הפתולוגי שכבר נוצר במוח",
-                    "למנוע את שעתוק ה-DNA של הגן המקודד לפריון בגרעין התא",
-                    "לפרק את מולקולת ה-mRNA של הפריון ובכך להפחית את כמות חלבון הפריון התקין שעלול להפוך לפתולוגי",
-                    "ליצור מוטציה מכוונת ב-DNA שתשפר את עמידות החלבון"
-                ],
-                correctIndex: 2,
-                explanation: "הטיפולים מכוונים ל-mRNA של הגן המקודד לפריון. פירוק ה-mRNA מונע את ייצור החלבון התקין, מה שמסיר את התשתית להיווצרות החלבון הפתולוגי."
+                    "הם מראים שצורה אינה חשובה כלל לתפקוד החלבון.",
+                    "הם מדגימים כיצד לאותו רצף חומצות אמינו (אותו גן) יכולות להיות שתי צורות מרחביות שונות: אחת תקינה ואחת הרסנית ומדבקת.",
+                    "הם מוכיחים שחלבונים יכולים לתפקד רק כשהם בצורת סליל אלפא.",
+                    "הם מראים שרק חומצות גרעין בעלות מבנה תלת-ממדי."
+                ], 
+                correctIndex: 1, 
+                explanation: "הפריון והחלבון התקין הם בעלי אותו רצף אמינו בדיוק (מקודדים מאותו גן), אך שינוי הקיפול (הצורה) משנה לחלוטין את התכונות והתפקוד שלהם (מעבר ממצב תקין למצב פתולוגי)." 
             },
-            {
-                question: "בהקשר של יחסי הגומלין בין גוף המארח לפריון, מדוע מערכת החיסון אינה מגיבה ביעילות נגד פריונים?",
+            { 
+                question: "מהי המשמעות המעשית של גילוי L-BSE (Atypical BSE)?", 
                 options: [
-                    "מכיוון שהפריונים הורסים ישירות את תאי הדם הלבנים",
-                    "בגלל שהפריון הפתולוגי מורכב מאותו רצף חומצות אמינו כמו החלבון התקין של המארח, ולכן אינו מזוהה כגוף זר",
-                    "משום שהפריונים מתחבאים אך ורק בתוך המעי ואינם חודרים לדם",
-                    "מפני שמערכת החיסון אינה מסוגלת לזהות חלבונים, אלא רק חיידקים"
-                ],
-                correctIndex: 1,
-                explanation: "הפריון הפתולוגי נוצר מחלבון עצמי של המארח (רק בקיפול שונה), ולכן מערכת החיסון אינה מייצרת נגדו תגובה דלקתית או נוגדנים כי הוא נתפס כחלבון עצמי."
+                    "זוהי צורה שאינה מדבקת כלל ולכן בטוחה למאכל.",
+                    "זהו זן של פריונים הפוגע רק בצמחים.",
+                    "ישנה אינדיקציה ברורה שזנים אטיפיים אלו עשויים להיות בעלי פוטנציאל להדביק בני אדם, מה שמחייב המשך ניטור קפדני.",
+                    "זהו זן שנוצר אך ורק כתוצאה מטיפול תרופתי כושל."
+                ], 
+                correctIndex: 2, 
+                explanation: "ניסויי העברה הראו שזנים אטיפיים כמו L-BSE בעלי פוטנציאל להדביק בני אדם, ולכן למרות ירידת מגפת ה-BSE הקלאסית, הסכנה קיימת." 
             },
-            {
-                question: "מהי המשמעות המעשית של העובדה שחיטוי מחטים אינו יעיל כנגד פריונים?",
+            { 
+                question: "אם חוקר מזהה במיקרוסקופ הצטברות של Fibrils (סיבים חלבוניים) בתא עצב, על מה הדבר מעיד בהקשר של מחלות ניווניות?", 
                 options: [
-                    "שאין צורך לחטות מחטים כלל בבתי חולים",
-                    "שנדרשים אמצעי זהירות חריגים, ולעיתים שימוש בציוד חד-פעמי והשמדתו, כאשר מטפלים בחולים החשודים במחלת פריונים",
-                    "שמחלות פריונים עוברות רק דרך האוויר ולא דרך הדם",
-                    "שאפשר להשתמש באותן מחטים רק לאחר קירורן לטמפרטורת הקפאה"
-                ],
-                correctIndex: 1,
-                explanation: "עקב עמידות הפריונים לחיטוי רגיל, פרוצדורות כירורגיות בחולים חשודים דורשות פרוטוקולים מחמירים ביותר ולעיתים קרובות השמדה של הציוד הכירורגי במקום חיטויו."
+                    "התא נמצא בתהליך חלוקה תקין.",
+                    "התא סובל ממחסור בוויטמינים.",
+                    "התרחש כשל במערכות הפירוק התאיות (כמו Autophagy או Proteasome) שהוביל להצטברות החלבון המקופל באופן שגוי.",
+                    "התא הותקף על ידי נגיף קורונה."
+                ], 
+                correctIndex: 2, 
+                explanation: "סיבים וגופיפי הסגר נוצרים כאשר מנגנוני הניקוי התאיים (פרוטאוזום, אוטופאגיה) אינם מצליחים להתמודד עם קצב ההצטברות של החלבונים הפגומים." 
             }
         ];
 
         const tfData = [
-            {
-                question: "חלבון הפריון התקין מיוצר על ידי תאי המארח ואינו מהווה סכנה כשלעצמו כל עוד לא עבר שינוי מבני.",
-                answer: true,
-                explanation: "החלבון התקין חיוני ונמצא באופן טבעי בתאים. המחלה מתחילה רק כאשר הוא משנה את הקונפורמציה שלו לצורה הפתולוגית."
-            },
-            {
-                question: "פריונים מכילים כמות זעירה של RNA המאפשרת להם לשכפל את עצמם בתוך תא המארח.",
-                answer: false,
-                explanation: "המאפיין הייחודי של פריונים הוא היותם חלקיקים חלבוניים זיהומיים ללא כל חומצת גרעין (לא DNA ולא RNA)."
-            },
-            {
-                question: "מחלת ה-Scrapie היא מחלה חדשה שהופיעה רק במאה ה-20 בעקבות תיעוש החקלאות.",
-                answer: false,
-                explanation: "מחלת ה-Scrapie בכבשים ועיזים מוכרת למעלה מ-200 שנה והיא אנדמית באזורים רבים."
-            },
-            {
-                question: "הופעת ה-vCJD בבני אדם סיפקה עדות חותכת לכך שמחסום המינים אינו מגן לחלוטין מפני הדבקה בפריונים.",
-                answer: true,
-                explanation: "המעבר של המחלה מבקר (BSE) לבני אדם (vCJD) הוכיח שפריונים מסוימים יכולים לעבור בין מינים שונים."
-            },
-            {
-                question: "בישול בשר בקר בטמפרטורה גבוהה מאוד (Deep cooking) מבטיח את הריסת הפריונים ומניעת הדבקה.",
-                answer: false,
-                explanation: "מוזכר במפורש שבישול עמוק אינו יעיל בהשמדת פריונים עקב עמידותם החריגה."
-            },
-            {
-                question: "הדוגמה המרכזית בביולוגיה גורסת שאינפורמציה ביולוגית יכולה לעבור חזרה מחלבון ל-DNA.",
-                answer: false,
-                explanation: "הדוגמה המרכזית קובעת שמידע עובר מ-DNA ל-RNA ולחלבון. הפריונים מפרים זאת כי הם מעבירים מידע מחלבון לחלבון."
-            },
-            {
-                question: "מחלות פריונים מתאפיינות בזמן דגירה קצר מאוד של מספר ימים ממועד ההדבקה ועד להופעת התסמינים.",
-                answer: false,
-                explanation: "למחלות פריונים יש זמן דגירה ממושך מאוד (Prolonged incubation time), מה שגרם לחרדה גדולה עקב חשיפה המונית ללא ידיעה."
-            },
-            {
-                question: "עכברים טרנסגניים המבטאים חלבון פריון אנושי משמשים מודל מחקרי לבדיקת פוטנציאל ההדבקה הבין-מינית.",
-                answer: true,
-                explanation: "השימוש בעכברים אלו מאפשר לבחון האם זני פריונים של בעלי חיים יכולים להדביק רקמה המבטאת את החלבון האנושי."
-            },
-            {
-                question: "הדבקה אוראלית ב-BSE בבקר דורשת אכילה של כמויות בשר גדולות, לפחות מספר קילוגרמים של בשר נגוע.",
-                answer: false,
-                explanation: "מצוין במפורש שדי במנה זעירה של 1 מיליגרם מוח נגוע כדי להדביק בקר דרך הפה."
-            },
-            {
-                question: "תהליך ההדבקה לאחר אכילת בשר נגוע מתחיל במערכת העיכול וברקמות הלימפה המקושרות אליה לפני שהוא מגיע למוח.",
-                answer: true,
-                explanation: "הזיהום מתחיל במעי (Gut), עובר לרקמות הלימפה של המעי, ומשם מוצא את דרכו למערכת העצבים המרכזית."
-            },
-            {
-                question: "חיטוי סטנדרטי של מחטים רפואיות מספיק כדי למנוע העברת מחלות פריונים ממטופל למטופל.",
-                answer: false,
-                explanation: "חיטוי רגיל של מחטים אינו יעיל כנגד פריונים."
-            },
-            {
-                question: "האנזים פרוטאינז K מפרק לחלוטין את החלבון הפתולוגי, ולכן משתמשים בו כתרופה למחלה.",
-                answer: false,
-                explanation: "החלבון הפתולוגי עמיד לפרוטאינז K. האנזים אינו משמש כתרופה אלא ככלי אבחוני במעבדה להבדיל בין החלבון התקין לפתולוגי."
-            },
-            {
-                question: "שיטות השתקת גנים כגון ASO ו-siRNA פועלות על ידי חיתוך ופירוק החלבון הפתולוגי עצמו.",
-                answer: false,
-                explanation: "שיטות אלו פועלות ברמת ה-mRNA, גורמות לפירוקו, ובכך מונעות את תרגום החלבון מלכתחילה, ולא פועלות על החלבון עצמו."
-            },
-            {
-                question: "הממצא ההיסטולוגי האופייני במוח של חולי קרויצפלד-יעקב הוא הופעת חללים (וואקואולות) המקנים למוח מראה ספוגי.",
-                answer: true,
-                explanation: "זוהי הפתולוגיה המרכזית (Spongiform pathology) שנתנה למשפחת המחלות את שמה (TSE)."
-            },
-            {
-                question: "הפצת מחלת ה-BSE בקרב בקר נבעה בעיקר מהדבקה באוויר בין פרות ברפתות צפופות.",
-                answer: false,
-                explanation: "המחלה התפשטה בעיקר דרך תזונה - האכלת בקר בקמח בשר ועצמות שהכיל חומר נגוע."
-            },
-            {
-                question: "מחלת ה-Kuru היא מחלת פריונים שהתגלתה בבקר באזור דרום אמריקה.",
-                answer: false,
-                explanation: "Kuru היא מחלת פריונים אנושית שהתגלתה בקרב שבטים בפפואה גינאה החדשה."
-            },
-            {
-                question: "ההבדל היחיד בין חלבון פריון תקין לחלבון פתולוגי הוא השינוי המבני (הקונפורמטיבי) שלו.",
-                answer: true,
-                explanation: "רצף חומצות האמינו זהה; השינוי הוא בקיפול המרחבי שגורם לחלבון להפוך לעמיד ולשקוע."
-            },
-            {
-                question: "כל מחלות הניוון העצבי, כולל אלו הנגרמות מפריונים, ניתנות כיום לריפוי באמצעות אנטיביוטיקה ייעודית.",
-                answer: false,
-                explanation: "אין כיום תרופה יעילה למחלות ניוון עצבי, ואנטיביוטיקה פועלת נגד חיידקים, לא נגד חלבונים פגומים."
-            },
-            {
-                question: "זנים לא טיפוסיים של המחלה, כגון L-BSE או CWD, הראו פוטנציאל להדביק בני אדם בניסויי מעבדה.",
-                answer: true,
-                explanation: "ניסויים בפרימטים ובעכברים טרנסגניים הראו שלזנים אלו יש פוטנציאל להדבקה אנושית."
-            },
-            {
-                question: "האסטרטגיה המרכזית למניעת מחלת הפרה המשוגעת כללה זיהוי והשמדה של חיות נגועות ואיסור על שימוש באיברים מסוימים למאכל.",
-                answer: true,
-                explanation: "זהו הבסיס לתוכנית המניעה המוצלחת שהופעלה באירופה."
-            },
-            {
-                question: "חלבון הפריון הפתולוגי מסיס מאוד במים, מה שמאפשר לו לנוע בקלות בזרם הדם.",
-                answer: false,
-                explanation: "החלבון הפתולוגי מאבד את מסיסותו, מצטבר כשוקע (אגרגטים ופיברילים) ואינו מסיס."
-            },
-            {
-                question: "מערכות הפירוק של התא, כגון פרוטאזום ואוטופאגיה, מצליחות לסלק את הפריונים הפתולוגיים ולמנוע את המחלה באנשים בריאים.",
-                answer: false,
-                explanation: "למרות שמערכות אלו קיימות, במקרה של פריונים פתולוגיים הן כושלות והחלבונים ממשיכים להצטבר לגופיפי הסגר."
-            },
-            {
-                question: "האנזים RNase H מעורב במנגנון הפעולה של תרופות מבוססות ASO על ידי חיתוך מולקולת ה-DNA של המארח.",
-                answer: false,
-                explanation: "האנזים מתערב על ידי חיתוך ה-mRNA (ההטרו-דופלקס של ASO ו-mRNA), ולא את ה-DNA."
-            },
-            {
-                question: "המונח 'העברת אינפורמציה על ידי חלבון' סותר את ההבנה הקלאסית שגורמי מחלה זיהומיים חייבים להכיל חומר תורשתי.",
-                answer: true,
-                explanation: "זו הסיבה המרכזית לכך שגילוי הפריונים היה מהפכני וזיכה את פרוזינר בפרס נובל."
-            },
-            {
-                question: "הופעת ה-vCJD באדם התרחשה במקביל למגיפת ה-BSE בבקר, ללא קשר סיבתי ביניהן.",
-                answer: false,
-                explanation: "מחלת ה-vCJD באדם הופיעה בעקבות ולנוכח מגיפת ה-BSE בבקר, ויש ביניהן קשר סיבתי ישיר של העברה בין-מינית."
-            },
-            {
-                question: "מחלת קרויצפלד-יעקב יכולה להופיע גם באופן ספורדי וגם כתורשתית גנטית, בנוסף להדבקה חיצונית.",
-                answer: true,
-                explanation: "מוזכרות מחלות פריונים גנטיות תורשתיות וכן הופעה ספורדית של קרויצפלד-יעקב."
-            },
-            {
-                question: "חוקרים משתמשים בנוגדנים בשיטת Western blot כדי לזהות נוכחות של חומצות גרעין של פריונים.",
-                answer: false,
-                explanation: "הנוגדנים ב-Western blot משמשים לזיהוי חלבון הפריון עצמו (לאחר טיפול בפרוטאינז), ולא חומצות גרעין, שאינן קיימות בפריון."
-            },
-            {
-                question: "מניעת אכילת מוחות ואיברים פנימיים של בקר הייתה אחת הדרכים היעילות לעצירת התפשטות המחלה לבני אדם.",
-                answer: true,
-                explanation: "איסור זה היה חלק קריטי באסטרטגיית המניעה, שכן הפריונים מצטברים בעיקר במערכת העצבים המרכזית."
-            },
-            {
-                question: "במהלך הצטברות הפריונים, המונומרים המקופלים שלא כהלכה הופכים ישירות לתא סרטני.",
-                answer: false,
-                explanation: "המונומרים מתחברים לאוליגומרים ואז לפיברילים ששוקעים, מה שמוביל למוות תאי וניוון עצבי, לא לסרטן."
-            },
-            {
-                question: "מחסום המינים (Species barrier) התברר כהגנה מוחלטת שמנעה לחלוטין העברת פריונים מחיות לאדם.",
-                answer: false,
-                explanation: "הופעת ה-vCJD הוכיחה שמחסום המינים אינו הגנה מוחלטת והוא נפרץ על ידי פריון ה-BSE."
-            }
+            { question: "מחלת ה-BSE (מחלת הפרה המשוגעת) נגרמת על ידי וירוס איטי הפוגע במערכת העצבים.", answer: false, explanation: "המחלה אינה נגרמת על ידי וירוס, אלא על ידי פריון - חלקיק חלבוני זיהומי נטול חומצת גרעין." },
+            { question: "החלבון הפתולוגי ($PrP^{Sc}$) עמיד יותר לפירוק אנזימטי בהשוואה לחלבון התקין ($PrP^C$).", answer: true, explanation: "זהו אחד המאפיינים המרכזיים של הפריון הפתולוגי; הוא Protease-resistant, מה שגורם להצטברותו במוח." },
+            { question: "בישול בשר בקר בטמפרטורות גבוהות מאוד מבטיח את השמדת הפריונים ומונע הדבקה ב-vCJD.", answer: false, explanation: "פריונים עמידים במיוחד לחום. בישול עמוק (Deep cooking) אינו יעיל בהשמדתם." },
+            { question: "מחלת Scrapie פוגעת בכבשים ועיזים ומוכרת למדע כבר למעלה מ-200 שנה.", answer: true, explanation: "סקרייפי היא מחלה אנדמית עתיקה בצאן, בניגוד ל-BSE שהתפרצה כמגפה חדשה יחסית בבקר." },
+            { question: "הופעת מחלת ה-vCJD באדם הוכיחה שמחסום המינים (Species barrier) מונע לחלוטין מעבר של מחלות פריונים מחיה לאדם.", answer: false, explanation: "ההפך הוא הנכון. הופעת vCJD הוכיחה שמחסום המינים נפרץ ושפריונים מבקר יכולים להדביק בני אדם." },
+            { question: "גילוי הפריונים זיכה את החוקר סטנלי פרוזינר בפרס נובל לרפואה בשנת 1998.", answer: true, explanation: "פרוזינר קיבל את פרס הנובל על כך שגילה מנגנון הדבקה חדש לחלוטין המבוסס על חלבונים בלבד." },
+            { question: "מסלול ההדבקה הנפוץ ביותר של BSE בבקר הוא דרך מערכת הנשימה (הדבקה טיפתית).", answer: false, explanation: "ההדבקה העיקרית התרחשה דרך מערכת העיכול (Oral transmission) עקב אכילת קמח בשר ועצמות נגוע." },
+            { question: "מנה קטנה מאוד של 1 מיליגרם ממוח נגוע מספיקה כדי להדביק פרה ב-BSE דרך הפה.", answer: true, explanation: "רגישות הבקר להדבקה פומית היא גבוהה מאוד, ומינון מזערי מספיק להעברת המחלה." },
+            { question: "חיטוי סטנדרטי של מחטים רפואיות מספיק כדי למנוע העברת פריונים מאדם לאדם.", answer: false, explanation: "חיטוי מחטים סטנדרטי (Disinfection of needles) אינו יעיל נגד פריונים עקב עמידותם המבנית החריגה." },
+            { question: "מחלת קורו (Kuru) הועברה בין בני אדם באמצעות טקסי קניבליזם.", answer: true, explanation: "המחלה התגלתה בשבטים בפפואה גינאה החדשה והועברה עקב אכילת מוחות של מתים שחלו במחלה." },
+            { question: "קומפלקס RISC מעורב בטיפול גנטי מסוג ASO למחלות פריונים.", answer: false, explanation: "קומפלקס RISC מעורב בשיטת RNAi. שיטת ASO משתמשת באנזים RNase H." },
+            { question: "המונח Spongiform מתייחס למראה הספוגי של רקמת המוח המלאה בוואקואולות (חללים) עקב המחלה.", answer: true, explanation: "הפגיעה התאית גורמת להיווצרות חללים תוך-תאיים המעניקים למוח מראה של ספוג תחת המיקרוסקופ." },
+            { question: "לכל המחלות הניווניות של מערכת העצבים הקשורות להצטברות חלבונים יש כיום תרופה יעילה.", answer: false, explanation: "נכון להיום, לכל המחלות הנוירודגנרטיביות הללו (כולל אלצהיימר ופריונים) אין תרופה יעילה (No effective cure)." },
+            { question: "בשיטת Western Blot, שימוש באנזים Proteinase K מפרק לחלוטין את החלבון התקין, אך משאיר את החלבון הפריוני הפתולוגי (או את ליבתו).", answer: true, explanation: "זוהי שיטת האבחון המרכזית, המסתמכת על ההבדל בעמידות האנזימטית בין שתי תצורות החלבון." },
+            { question: "הגן PRNP בגוף האדם מקודד לייצור של החלבון הפריוני הפתולוגי ($PrP^{Sc}$) באופן ישיר.", answer: false, explanation: "הגן PRNP מקודד לחלבון התקין ($PrP^C$). החלבון הפתולוגי נוצר רק בעקבות שינוי מבני של החלבון התקין לאחר ייצורו." },
+            { question: "הדבקה בפריונים במערכת העיכול נודדת ישירות לזרם הדם ומשם למוח, ללא מעורבות של מערכת הלימפה.", answer: false, explanation: "ההדבקה עוברת דרך הרקמה הלימפטית הקשורה למעי (Gut associated lymphoid tissue) לפני המעבר למערכת העצבים." },
+            { question: "ניסויי העברה בעכברים טרנסגניים הוכיחו שלזנים אטיפיים של BSE (כמו L-BSE) יש פוטנציאל להדביק בני אדם.", answer: true, explanation: "עכברים שביטאו חלבון פריון אנושי הודבקו בהצלחה, מה שמעיד על סכנה פוטנציאלית לאדם." },
+            { question: "מחלות פריונים יכולות להיות רק נרכשות (דרך הדבקה) ואינן יכולות לעבור בתורשה גנטית.", answer: false, explanation: "ישנן מחלות פריונים תורשתיות (Genetic inherited prion diseases) הנגרמות ממוטציות בגן PRNP, בנוסף למחלות נרכשות וספורדיות." },
+            { question: "טיפולי השתקת גנים (כמו RNAi) מתמקדים בפגיעה ישירה במבנה התלת-ממדי של הפריון המקופל שגוי.", answer: false, explanation: "טיפולים אלו מתמקדים בפירוק ה-mRNA כדי למנוע את ייצור חלבון הבסיס התקין, ולא פועלים ישירות על החלבון המקופל." },
+            { question: "מנגנון הפעולה של פריונים סותר את הדוגמה המרכזית של הביולוגיה המולקולרית.", answer: true, explanation: "הדוגמה המרכזית קובעת שמידע עובר מחומצת גרעין לחלבון. פריונים מעבירים מידע זיהומי (מבנה) מחלבון לחלבון ללא חומצת גרעין." },
+            { question: "מחלת קרויצפלד-יעקב ספורדית (Sporadic CJD) נגרמת כתוצאה מאכילת בשר בקר נגוע.", answer: false, explanation: "הצורה הספורדית מופיעה באופן אקראי וללא קשר לאכילת בקר. ה-variant CJD (vCJD) היא זו שקשורה לבקר נגוע." },
+            { question: "זמן הדגירה של מחלות פריונים באדם הוא קצר מאוד, ולרוב התסמינים מופיעים תוך ימים ספורים מההדבקה.", answer: false, explanation: "זמן הדגירה הוא ארוך מאוד (Prolonged incubation time), ויכול להימשך שנים ואף עשרות שנים." },
+            { question: "הפסקת האכלת בקר בקמח בשר ועצמות הייתה צעד קריטי בבלימת מגפת ה-BSE.", answer: true, explanation: "צעד זה קטע את מעגל ההדבקה החוזרת שבו רקמות נגועות הוזנו חזרה לעדרים בריאים." },
+            { question: "החלבון התקין ($PrP^C$) נמצא באופן טבעי בגוף ואינו גורם למחלה כשהוא במבנה הרגיל שלו.", answer: true, explanation: "החלבון התקין מבוטא בתאים (בעיקר במערכת העצבים) ויש לו תפקידים פיזיולוגיים. המחלה נגרמת רק כשהוא משנה את המבנה שלו." },
+            { question: "במהלך מחלות פריונים, נוצרים גופיפי הסגר (Inclusion bodies) בעקבות הצטברות סיבים חלבוניים.", answer: true, explanation: "כאשר מערכות הניקוי התאיות (פרוטאוזום, אוטופאגיה) קורסות, החלבונים המקופלים שגוי מצטברים לסיבים ולגופיפי הסגר." },
+            { question: "כל מקרי ה-BSE בעולם הוכחדו לחלוטין ואין כיום שום סכנה להדבקה.", answer: false, explanation: "אמנם המגפה נבלמה משמעותית, אך עדיין מתגלים מקרים אטיפיים (L-BSE, H-BSE) ויש צורך בניטור מתמיד." },
+            { question: "בטיפול מסוג RNAi, נעשה שימוש במולקולות siRNA קצרות ודו-גדיליות.", answer: true, explanation: "siRNA (small interfering RNA) הוא דו-גדילי בבסיסו ומוביל לפירוק ה-mRNA המטרה דרך מערכת ה-RISC." },
+            { question: "פריונים הם היצורים החיים הקטנים ביותר המוכרים למדע.", answer: false, explanation: "פריונים אינם נחשבים ל'יצורים חיים' כלל, שכן אין להם חילוף חומרים, תאים או חומר תורשתי. הם מולקולות חלבון בלבד." },
+            { question: "איתור מוקדם של מחלת הפרה המשוגעת בעדר מוביל להשמדת החיות הנגועות על מנת למנוע התפשטות.", answer: true, explanation: "השמדה (Extermination) של חיות נגועות היא צעד רגולטורי מרכזי למניעת התפשטות המחלה בשרשרת המזון." },
+            { question: "החלבון הפתולוגי מסוגל להשרות שינוי מבני בחלבון תקין רק בנוכחות אנזים ספציפי המופרש מהכבד.", answer: false, explanation: "החלבון הפתולוגי משרה את השינוי בחלבון התקין באופן ישיר, ללא צורך באנזים מתווך מהכבד." }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -921,6 +909,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -931,11 +926,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
-            
-            // Re-render MathJax
-            if (window.MathJax) {
-                MathJax.typesetPromise([flashcardContent]);
-            }
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -954,11 +945,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
-                
-                // Re-render MathJax
-                if (window.MathJax) {
-                    MathJax.typesetPromise([flashcardContent]);
-                }
+                triggerMathJax();
             }, 300);
         }
 
@@ -981,11 +968,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
-            
-            // Re-render MathJax
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqQuestion, mcqOptions]);
-            }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -1001,24 +984,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
-            
-            if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1060,9 +1036,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
-            if (window.MathJax) {
-                MathJax.typesetPromise([mcqAllQuestionsContainer]);
-            }
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1074,8 +1048,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1085,9 +1057,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
-            if (window.MathJax) {
-                MathJax.typesetPromise([tfQuestion]);
-            }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1104,23 +1074,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
-             if (window.MathJax) {
-                MathJax.typesetPromise([explanationEl]);
-            }
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1163,9 +1127,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
-             if (window.MathJax) {
-                MathJax.typesetPromise([tfAllQuestionsContainer]);
-            }
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1181,6 +1143,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();

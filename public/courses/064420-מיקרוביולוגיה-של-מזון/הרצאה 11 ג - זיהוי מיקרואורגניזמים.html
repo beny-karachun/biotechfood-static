@@ -1,204 +1,327 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Study Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
-        /* --- Root Variables for Consistent Theming --- */
+        /* --- Root Variables for Theme --- */
         :root {
-            --primary-bg: #333333;
-            --secondary-bg: #666666;
-            --accent-color: #3D90D7;
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+            
             --text-color: #E0E0E0;
-            --correct-color: #4CAF50;
-            --incorrect-color: #F44336;
-            --card-bg: #5a5a5a;
+            --text-muted: #9ca3af;
+            
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+            
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
         }
 
-        /* --- Global Styles --- */
+        /* --- Global Styles & Glow Effects --- */
         body {
             background-color: var(--primary-bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
             color: var(--text-color);
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
         }
 
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
         .container {
-            width: 90%; /* As per prompt */
+            width: 90%;
+            max-width: 1000px;
             margin: 20px auto;
-            padding: 20px;
-            background-color: var(--secondary-bg);
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 30px;
         }
 
         h1, h2 {
-            color: var(--accent-color);
             text-align: center;
-            border-bottom: 1px solid var(--accent-color);
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
         }
 
         .section {
-            background-color: var(--primary-bg);
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
             border-radius: 8px;
         }
 
-        /* --- Study Cards Styling (Fade Animation) --- */
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
         .flashcard-container {
             height: 250px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
+            perspective: 1000px;
         }
 
         #flashcard-content {
             width: 100%;
             height: 100%;
-            background-color: var(--card-bg);
-            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             box-sizing: border-box;
-            transition: opacity 0.3s ease-in-out; /* Fade transition */
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
         }
         
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
         .flashcard-front-style {
-             font-size: 1.5em;
-             font-weight: bold;
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
         }
         
         .flashcard-back-style {
-             font-size: 1.1em;
+             font-size: 1.2em;
+             color: var(--text-color);
         }
 
         /* --- Questions Styling (MCQ & T/F) --- */
          .question-container-single, .question-container-all {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid var(--secondary-bg);
-            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 20px;
          }
 
         .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
-        .options button, .tf-options button {
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
             display: block;
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: var(--accent-color);
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
             color: var(--text-color);
-            border: none;
-            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
             cursor: pointer;
             text-align: right;
-            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
         }
 
-        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled) {
-            background-color: #357ab8;
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        .options button:disabled, .tf-options button:disabled {
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
             cursor: not-allowed;
-            opacity: 0.7;
+            opacity: 0.5;
+            transform: none;
         }
         
-        /* Specific styling to override disabled opacity for correct/incorrect answers */
-        .options button.correct, .tf-options button.correct { opacity: 1; }
-        .options button.incorrect, .tf-options button.incorrect { opacity: 1; }
-
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct { 
+            background: var(--correct-color); 
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1; 
+        }
+        .options button.incorrect, .tf-options button.incorrect { 
+            background: var(--incorrect-color); 
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1; 
+        }
 
         .feedback {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
         }
 
         .feedback.correct {
-            background-color: var(--correct-color);
-            color: #fff;
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
         }
 
         .feedback.incorrect {
-            background-color: var(--incorrect-color);
-            color: #fff;
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
         }
 
         .explanation {
-            margin-top: 10px;
+            margin-top: 15px;
             font-style: italic;
-            font-size: 0.9em;
-            padding: 8px;
-            background-color: var(--secondary-bg);
-            border-radius: 4px;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
         }
 
-        /* --- Navigation & Utility Styling --- */
+        /* --- Navigation & Utility --- */
         .navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 15px;
-            margin-bottom: 10px;
-        }
-
-        .nav-button, .view-all-button {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .nav-button:disabled {
-             opacity: 0.5;
-             cursor: not-allowed;
+            margin-top: 20px;
         }
 
         .counter {
             font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
         }
 
         .view-all-container {
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none !important; }
 
-        #mcq-all-questions .question-container-all,
-        #tf-all-questions .question-container-all {
-            margin-bottom: 20px;
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>זיהוי מיקרואורגניזמים: שיטות סיווג מבוססות גנום</h1>
+        <h1>זיהוי מיקרואורגניזמים ושיטות סיווג מבוססות גנום</h1>
 
-        <!-- Study Cards Section -->
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <p>הבסיס לזיהוי וסיווג מיקרואורגניזמים עבר מהפכה עם התפתחות שיטות האנליזה המבוססות על ה-DNA. בעוד שבעבר הסתמכו על תכונות פנוטיפיות, כיום הדגש הוא על שיטות גנומיות המאפשרות רזולוציה גבוהה, החל מרמת המין הביולוגי (Species) ועד לרמת תת-המין או הזן הספציפי (Subspecies/Strain).</p>
+                
+                <h3>רמות סיווג גנומיות</h3>
+                <ul>
+                    <li><strong>רמת המין (Species):</strong> מתבצעת לרוב באמצעות Ribotyping, המבוסס על חיתוך וריצוף של גנים ריבוזומליים, כגון רצף ה-$16S$.</li>
+                    <li><strong>רמת תת-המין (Subspecies):</strong> נדרשת רזולוציה גבוהה יותר כדי להבדיל בין זנים קרובים. שיטות אלו כוללות את ה-PFGE (שהיה בעבר תקן הזהב אך הוא איטי וקשה להשוואה בין מעבדות), MLST (המבוסס על ריצוף גני משק בית), ו-MLVA (המבוסס על אנליזה של מספר חזרות טנדמיות).</li>
+                </ul>
+
+                <h3>הברקוד החיידקי: SSR ו-MLVA</h3>
+                <p>רצפים חוזרניים פשוטים (SSR - Simple Sequence Repeats), הידועים גם כמיקרוסטלייטים או MNR (Mono Nucleotide Repeats), הם רצפי DNA קצרים החוזרים על עצמם ראש-לזנב. הם נפוצים מאוד בגנום החיידקי ומפוזרים בו באופן אחיד. השונות העצומה במספר החזרות בין זנים שונים מאפשרת ליצור פרופיל גנטי ייחודי - מעין ברקוד. על ידי בחינה של מספר אתרי SSR במקביל, ניתן להקצות מספר מזהה (ID) לכל זן חיידקי, מה שמאפשר מעקב אפידמיולוגי וזיהוי מקורות זיהום ברמת דיוק פורנזית.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: הפרדוקס של רצפי ה-SSR</strong>
+                    רצפי ה-SSR נחשבים לאזורים דינמיים מאוד בגנום החיידקי בקנה מידה אבולוציוני, מה שמייצר את השונות הגדולה בין זנים. עם זאת, הם יציבים לחלוטין ברמת הזן הבודד (Strain level). תכונה דואלית זו - שונות גבוהה באוכלוסיה הכללית אך יציבות מוחלטת בתוך קו יוחסין ספציפי - היא זו שהופכת אותם לסמן אידיאלי למעקב אפידמיולוגי ולזיהוי מקור התפרצויות מחלה.
+                </div>
+
+                <h3>טכנולוגיות אבחון מודרניות</h3>
+                <p>הדרישות ממערכות אבחון מיקרוביאליות מודרניות כוללות רגישות גבוהה (זיהוי מספר קטן של תאים), מהירות (שעות במקום ימים), אוטומציה, עלות נמוכה, ספציפיות גבוהה, והדירות. טכנולוגיות מתקדמות, כגון שימוש במערכים מבוססי סיבים אופטיים וגלאי ASO (Allele Specific Oligonucleotide), מאפשרות לסרוק מספר רב של אתרי SSR בו זמנית, תוך פיתוח מערכות זיהוי אוטומטיות ומהירות ישירות מדגימות מזון, מים או דגימות קליניות.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח: המעבר מאורך מקטע לרצף גנטי</strong>
+                    המעבר משיטות מבוססות גודל מקטע (כמו PFGE) לשיטות מבוססות רצף (כמו MLST ו-MLVA) אינו רק שיפור טכני. הוא מאפשר יצירת מסדי נתונים גלובליים ואובייקטיביים. בניגוד לתמונת ג'ל שקשה להשוות בין מעבדות שונות, רצף DNA או מספר חזרות מדויק (כגון $N=5$) הם נתונים בינאריים מוחלטים שניתן לשתף ולנתח ברחבי העולם באופן מיידי.
+                </div>
+            </div>
+        </div>
+
         <div class="section">
             <h2>כרטיסי לימוד</h2>
             <div class="flashcard-container">
@@ -211,7 +334,6 @@
             </div>
         </div>
 
-        <!-- Multiple Choice Questions Section -->
         <div class="section">
             <h2>שאלות רב-ברירה (אמריקאיות)</h2>
             <div id="mcq-single-view">
@@ -231,11 +353,9 @@
                  </div>
             </div>
             <div id="mcq-all-questions" class="hidden">
-                <!-- All MCQs will be dynamically inserted here -->
-            </div>
+                </div>
         </div>
 
-        <!-- True/False Questions Section -->
         <div class="section">
             <h2>שאלות נכון/לא נכון</h2>
              <div id="tf-single-view">
@@ -258,8 +378,7 @@
                  </div>
             </div>
              <div id="tf-all-questions" class="hidden">
-                 <!-- All T/F Questions will be dynamically inserted here -->
-             </div>
+                 </div>
         </div>
     </div>
 
@@ -267,619 +386,298 @@
     document.addEventListener('DOMContentLoaded', function() {
         
         const flashcardData = [
-            { term: "PFGE", definition: "שיטה ישנה לסיווג ברמת תת-המין המבוססת על גודל מקטעי DNA לאחר חיתוך אנזימטי. נחשבה לסטנדרט הזהב אך היא איטית וקשה להשוואה בין מעבדות." },
-            { term: "MLST", definition: "שיטת סיווג המבוססת על ריצוף של מספר גנים בסיסיים לשם זיהוי ברמת תת-המין ויצירת עצי פילוגנזה." },
-            { term: "MLVA", definition: "שיטת סיווג המנתחת את מספר החזרות של רצפים קצרים במספר אתרים שונים בגנום." },
-            { term: "SSR", definition: "רצפים קצרים החוזרים על עצמם בתבנית ראש-לזנב. נפוצים מאוד בגנום החיידקי ומתאפיינים בשונות גבוהה במספר החזרות." },
-            { term: "Ribotyping", definition: "שיטת סיווג ברמת המין המבוססת על פולימורפיזם באורך מקטעי חיתוך של גני הריבוזום." },
-            { term: "Housekeeping genes", definition: "גנים בסיסיים החיוניים לתפקוד התא, משמשים כמטרה לריצוף בשיטת MLST בשל היותם שמורים יחסית אך בעלי שונות מספקת להבחנה בין זנים." },
-            { term: "Bacterial Barcode", definition: "הקצאת מספר זיהוי ייחודי לזן חיידקי על בסיס פרופיל אתרי ה-SSR שלו, המנצל את היותם רבים, משתנים ויציבים ברמת הזן." },
-            { term: "ASO", definition: "אוליגונוקלאוטיד ספציפי לאלל, משמש במערכות שבבים לזיהוי ודאי של אללים שונים המצויים בדגימה." },
-            { term: "MNR", definition: "רצפים חוזרים של נוקלאוטיד בודד. הם דינמיים מאוד בגנום החיידקי אך יציבים מספיק ברמת הזן כדי לשמש לסיווג." },
-            { term: "Dendrogram", definition: "עץ פילוגנטי המציג קשרים גנטיים בין זנים, נבנה על בסיס הבדלים זוגיים בפרופילים אלליים מרובי אתרים." },
-            { term: "Array-Based Binary Analysis", definition: "טכנולוגיה מתקדמת לסיווג חיידקים המשתמשת במערך סיבים אופטיים וחרוזים לזיהוי מהיר, אוטומטי וזול של פרופילים גנטיים." },
-            { term: "Species level typing", definition: "רזולוציית סיווג המבחינה בין מינים שונים של חיידקים, למשל באמצעות ריבוטייפינג של גני 16S." },
-            { term: "Subspecies level typing", definition: "רזולוציית סיווג המבחינה בין זנים שונים בתוך אותו מין, דורשת שיטות רגישות יותר כמו MLST או MLVA." },
-            { term: "Sequence Type", definition: "פרופיל מספרי ייחודי המוקצה לזן חיידקי לאחר חקירת מסד נתונים עם רצפי האללים שלו בשיטת MLST." },
-            { term: "Vibrio vulnificus", definition: "חיידק פתוגני סביבתי שניתן לסווג לביוטיפים שונים ולאתר את מקורותיו האפידמיולוגיים באמצעות ניתוח אתרי SSR." }
+            { term: "Ribotyping", definition: "שיטת סיווג חיידקים ברמת המין (Species) המבוססת על פולימורפיזם בגנים הריבוזומליים, כגון רצף ה-16S." },
+            { term: "PFGE", definition: "אלקטרופורזה בשדה פועם. שיטה לסיווג תת-מינים המבוססת על גודל מקטעי DNA. נחשבה בעבר לתקן הזהב אך היא איטית וקשה להשוואה בין מעבדות." },
+            { term: "MLST", definition: "Multi-Locus Sequence Typing. שיטת סיווג המבוססת על ריצוף של 8 עד 12 גני משק בית (Housekeeping genes) והשוואתם למסד נתונים." },
+            { term: "MLVA", definition: "Multi-Locus VNTR Analysis. שיטת סיווג המבוססת על אנליזה של מספר החזרות הטנדמיות באתרי SSR שונים בגנום." },
+            { term: "SSR", definition: "Simple Sequence Repeats. רצפי DNA קצרים החוזרים על עצמם ראש-לזנב, ידועים גם כמיקרוסטלייטים. מתאפיינים בשונות גבוהה במספר החזרות." },
+            { term: "MNR", definition: "Mono Nucleotide Repeats. סוג של SSR שבו יחידת החזרה היא נוקלאוטיד בודד (למשל רצף של GGGGG)." },
+            { term: "Housekeeping Genes", definition: "גנים חיוניים לתפקוד הבסיסי של התא החיידקי, אשר רצפיהם משמשים כבסיס לשיטת ה-MLST." },
+            { term: "Sequence Type (ST)", definition: "הפרופיל הגנטי או המספר המזהה המתקבל לאחר השוואת רצפי האלילים בשיטת ה-MLST למסד הנתונים." },
+            { term: "Bacterial Barcode", definition: "שימוש במספר רב של אתרי SSR במקביל כדי לייצר מספר מזהה ייחודי לכל זן חיידקי, בדומה לברקוד." },
+            { term: "ASO", definition: "Allele Specific Oligonucleotide. גלאים קצרים וספציפיים המשמשים בשבבי DNA לזיהוי וריאציות גנטיות זעירות, כגון שוני במספר חזרות SSR." },
+            { term: "Dendrogram", definition: "תרשים עץ פילוגנטי המציג קשרים גנטיים בין זנים שונים, לרוב מבוסס על ניתוח אשכולות של פרופילים אלליים." },
+            { term: "Vibrio vulnificus", definition: "חיידק פתוגני סביבתי (נמצא במים ודגים) העלול לגרום לזיהומים קשים. שיטות סיווג גנומיות עזרו לאפיין את אוכלוסייתו." },
+            { term: "Vibrio cholerae O1", definition: "הזן הפתוגני העיקרי הגורם למחלת הכולרה. סיווג גנומי מאפשר להבדיל בינו לבין זנים סביבתיים לא פתוגניים של אותו חיידק." },
+            { term: "יציבות רצפי SSR", definition: "התכונה של רצפי SSR להיות דינמיים מאוד באוכלוסייה הכללית, אך יציבים לחלוטין ברמת הזן הספציפי (Strain level)." },
+            { term: "Modern Diagnostics", definition: "מערכות אבחון מודרניות הנדרשות להיות רגישות, מהירות, אוטומטיות, זולות, ספציפיות והדירות." }
         ];
 
         const mcqData = [
-            {
-                question: "מהי הסיבה העיקרית לכך ששיטת PFGE מוחלפת בהדרגה על ידי שיטות מבוססות ריצוף?",
-                options: [
-                    "היא אינה מסוגלת להבחין בין מינים שונים של חיידקים.",
-                    "היא דורשת עבודה רבה וקשה מאוד להשוות את תוצאותיה בין מעבדות שונות.",
-                    "היא מתבססת על רצפי RNA במקום על רצפי DNA ולכן אינה יציבה.",
-                    "היא מזהה רק רצפים חוזרניים קצרים מסוג SSR."
-                ],
-                correctIndex: 1,
-                explanation: "שיטת PFGE מתבססת על גודל מקטעים שנוצרים מחיתוך אנזימטי. היא דורשת זמן רב, כוח אדם מיומן, והחסרון המרכזי שלה הוא הקושי לכייל ולהשוות תוצאות בין מעבדות שונות."
+            { 
+                question: "איזו מבין השיטות הבאות מתאימה ביותר לסיווג חיידקים ברמת המין (Species level) ולא ברמת תת-המין?", 
+                options: ["Pulsed Field Gel Electrophoresis", "Multi-locus Sequence Typing", "Ribotyping של גני 16S", "Multi-Locus VNTR Analysis"], 
+                correctIndex: 2, 
+                explanation: "ריבוטייפינג, המבוסס על גנים ריבוזומליים השמורים יחסית אבולוציונית, משמש לסיווג ברמת המין. שאר השיטות נועדו לרזולוציה גבוהה יותר של תת-מינים וזנים." 
             },
-            {
-                question: "איזה מהמאפיינים הבאים אינו מתאר נכונה את רצפי ה-SSR בגנום החיידקי?",
-                options: [
-                    "הם נפוצים מאוד לאורך הגנום.",
-                    "הם מפוזרים באופן אחיד יחסית.",
-                    "הם מתאפיינים באורך רב מאוד בהשוואה לגנומים אוקריוטיים.",
-                    "הם מציגים שונות גבוהה במספר החזרות מתא לתא או מזן לזן."
-                ],
-                correctIndex: 2,
-                explanation: "בגנום החיידקי, רצפי ה-SSR הם נפוצים ומפוזרים באופן אחיד, אך הם מתאפיינים באורך קצר יחסית, בניגוד למה שניתן למצוא לעיתים באורגניזמים מורכבים יותר."
+            { 
+                question: "מהו החיסרון המרכזי של שיטת PFGE שהוביל לירידה במעמדה כתקן הזהב?", 
+                options: ["היא אינה מסוגלת להבדיל בין מיני חיידקים שונים", "היא מסתמכת על ריצוף גנומי מלא שהוא יקר מאוד", "היא מבוססת על גודל מקטעים, מה שמקשה מאוד על השוואת תוצאות בין מעבדות שונות", "היא דורשת שימוש בגלאי ASO שאינם יציבים בטמפרטורת החדר"], 
+                correctIndex: 2, 
+                explanation: "שיטת PFGE מבוססת על הרצת מקטעי DNA בג'ל. קריאת הגדלים תלויה מאוד בתנאי ההרצה, מה שהופך יצירת מסד נתונים גלובלי ואחיד לקשה מאוד." 
             },
-            {
-                question: "בשיטת MLST, מהו יעד הריצוף המקובל?",
-                options: [
-                    "הגנום החיידקי השלם.",
-                    "אזורים המקודדים לריבוזום בלבד.",
-                    "מקטעים באורך של כ-450 זוגות בסיסים מתוך 8 עד 12 גנים בסיסיים.",
-                    "רצפים חוזרניים שאינם מקודדים לחלבון."
-                ],
-                correctIndex: 2,
-                explanation: "שיטת MLST מתבססת על ריצוף של מקטעים ספציפיים מתוך מספר מוגדר של גנים בסיסיים כדי לקבוע את הפרופיל האללי של החיידק."
+            { 
+                question: "בשיטת ה-MLST, מהו הבסיס לקביעת הפרופיל הגנטי (Sequence Type) של החיידק?", 
+                options: ["מדידת אורך המקטעים לאחר חיתוך באנזימי הגבלה", "ריצוף של 8 עד 12 גני משק בית והשוואתם למסד הנתונים", "ספירת מספר החזרות ברצפי SSR", "זיהוי נוכחות פלסמידים המקודדים לעמידות לאנטיביוטיקה"], 
+                correctIndex: 1, 
+                explanation: "שיטת MLST קובעת את סוג הרצף על ידי ריצוף ישיר של מקטעים קצרים ממספר גני משק בית (Housekeeping genes) חיוניים." 
             },
-            {
-                question: "כיצד ניתן להסביר את העובדה שרצפי MNR יכולים לשמש לזיהוי זנים, למרות שהם נחשבים לדינמיים מאוד בגנום?",
-                options: [
-                    "הם דינמיים רק בתנאי עקה קיצוניים.",
-                    "הם דינמיים ברמת המין אך יציבים לחלוטין ברמת הסוג.",
-                    "למרות הדינמיות האבולוציונית שלהם, הם נותרים יציבים ברמת הזן הבודד.",
-                    "הם אינם משמשים לזיהוי זנים אלא רק לקביעת מין החיידק."
-                ],
-                correctIndex: 2,
-                explanation: "רצפי MNR משתנים במהירות במהלך האבולוציה החיידקית, אך ברזולוציה של זן ספציפי הם שומרים על יציבות המאפשרת להשתמש בהם כסמן זיהוי אמין."
+            { 
+                question: "מה מייחד רצפי SSR (מיקרוסטלייטים) בגנום החיידקי והופך אותם לכלי אידיאלי ליצירת ברקוד חיידקי?", 
+                options: ["הם נדירים מאוד ולכן קל לאתר אותם", "הם נמצאים רק בפלסמידים ולא בכרומוזום המרכזי", "הם מציגים שונות גבוהה במספר החזרות באוכלוסייה, אך יציבים ברמת הזן הבודד", "הם מקודדים לחלבונים קריטיים שאינם משתנים לעולם"], 
+                correctIndex: 2, 
+                explanation: "הפרדוקס של רצפי SSR הוא שהם דינמיים ומשתנים אבולוציונית (מה שנותן שונות בין זנים), אך ברמת קו היוחסין של זן ספציפי הם שומרים על יציבות, מה שמאפשר זיהוי." 
             },
-            {
-                question: "איזו רמת סיווג מספקת שיטת הריבוטייפינג?",
-                options: [
-                    "רמת הסוג בלבד.",
-                    "רמת המין.",
-                    "רמת תת-המין.",
-                    "רמת הזן הבודד."
-                ],
-                correctIndex: 1,
-                explanation: "ריבוטייפינג, המבוססת על פולימורפיזם באורך מקטעי החיתוך של גני הריבוזום, מתאימה לסיווג חיידקים ברמת המין."
+            { 
+                question: "חוקר מבצע אנליזת MLVA על שני בידודים של חיידק. בבידוד א נספרו 5 חזרות באתר מסוים ($N=5$), ובבידוד ב נספרו 4 חזרות ($N=4$). מה ניתן להסיק?", 
+                options: ["שני הבידודים שייכים לאותו זן בדיוק", "הבידודים שייכים למינים (Species) שונים לחלוטין", "קיימת שונות גנטית בין הבידודים ברמת תת-המין המעידה על כך שהם אינם זהים לחלוטין", "בידוד א עמיד לאנטיביוטיקה בעוד בידוד ב רגיש"], 
+                correctIndex: 2, 
+                explanation: "השונות במספר החזרות (VNTR) היא הבסיס ל-MLVA. הבדל במספר החזרות מעיד על כך שמדובר בזנים או תת-זנים שונים בתוך אותו מין." 
             },
-            {
-                question: "מהו הבסיס המולקולרי לשונות הנצפית בשיטת MLVA?",
-                options: [
-                    "החלפת נוקלאוטיד בודד בתוך גן מקודד.",
-                    "שינוי במספר החזרות של רצפים קצרים עוקבים.",
-                    "נוכחות או היעדר של פלסמידים בתא החיידק.",
-                    "הבדלים במידת המתילציה של ה-DNA."
-                ],
-                correctIndex: 1,
-                explanation: "שיטת MLVA מנתחת את השונות במספר החזרות המאורגנות ראש-לזנב באתרים שונים בגנום."
+            { 
+                question: "מהו הרעיון המרכזי מאחורי המונח ברקוד חיידקי המבוסס על SSR?", 
+                options: ["קידוד גנטי של תאריך הבידוד של החיידק", "שימוש בסדרה של אתרי SSR שונים, שבה כל אתר מתפקד כספרה אחת במספר מזהה ארוך", "צביעה פלואורסצנטית של דופן התא היוצרת תבנית פסים תחת מיקרוסקופ", "יצירת נוגדנים ספציפיים הנקשרים לחלבוני המעטפת של החיידק"], 
+                correctIndex: 1, 
+                explanation: "על ידי קביעת מספר החזרות במספר רב של אתרי SSR, ניתן להרכיב רצף של מספרים (כמו 3-2-2-4) המשמש כתעודת זהות ייחודית לזן." 
             },
-            {
-                question: "מהו התנאי ההכרחי כדי שאתרי SSR יוכלו לשמש כברקוד חיידקי?",
-                options: [
-                    "הם חייבים להיות זהים לחלוטין בכל החיידקים מאותו סוג.",
-                    "הם צריכים להיות מעטים מאוד כדי למנוע בלבול.",
-                    "הם חייבים לקודד לחלבונים חיוניים.",
-                    "הם צריכים להיות רבים, משתנים בין זנים, ויציבים בתוך אותו זן."
-                ],
-                correctIndex: 3,
-                explanation: "כדי ליצור ברקוד ייחודי ואמין, יש צורך במספר רב של אתרים המציגים שונות בין זנים שונים, אך נשארים יציבים כאשר בוחנים את אותו הזן."
+            { 
+                question: "מדוע טכנולוגיית MLST נחשבת עדיפה על PFGE לצורך הקמת רשתות מעקב אפידמיולוגיות גלובליות?", 
+                options: ["כי MLST זולה משמעותית ואינה דורשת ציוד מעבדה", "כי התוצר של MLST הוא רצף אותיות מדויק ודיגיטלי הניתן לשיתוף והשוואה בקלות במסדי נתונים", "כי MLST מזהה רק חיידקים פתוגניים", "כי PFGE דורשת בידוד של RNA במקום DNA"], 
+                correctIndex: 1, 
+                explanation: "היתרון העצום של שיטות מבוססות ריצוף (כמו MLST) הוא שהנתון הוא מוחלט (רצף ACGT), בניגוד לתמונת ג'ל ב-PFGE הנתונה לפרשנות וסטיות טכניות." 
             },
-            {
-                question: "במערכות סיווג מתקדמות המבוססות על מערכים, מהו תפקידו של ה-ASO?",
-                options: [
-                    "להגביר את כמות ה-DNA בדגימה לפני הריצוף.",
-                    "לחתוך את ה-DNA במקומות ספציפיים ליצירת מקטעים.",
-                    "ללכוד ולזהות אלל ספציפי מתוך תערובת מורכבת.",
-                    "לסמן את החיידקים בצבע פלואורסצנטי לבדיקה מיקרוסקופית."
-                ],
-                correctIndex: 2,
-                explanation: "ASO הוא אוליגונוקלאוטיד שתוכנן להיקשר באופן ספציפי לאלל מסוים, ובכך מאפשר זיהוי מדויק של נוכחות האלל בדגימה במערכות שבבים."
+            { 
+                question: "בפיתוח מערך שבבים (Microarray) לזיהוי חיידקים מבוסס SSR, מהו תפקידם של גלאי ה-ASO?", 
+                options: ["להגביר את כמות ה-DNA בדגימה", "לזהות ולהיקשר באופן ספציפי לאלל מסוים (מספר חזרות ספציפי) של רצף המטרה", "לפרק את דופן התא החיידקי לפני האנליזה", "לשמש כסמן פלואורסצנטי אוניברסלי לכל החיידקים בדגימה"], 
+                correctIndex: 1, 
+                explanation: "ASO (Allele Specific Oligonucleotide) הם רצפים קצרים המתוכננים להיקשר רק לווריאנט גנטי אחד ספציפי (אלל), ובכך לזהות איזה גרסה של ה-SSR קיימת בדגימה." 
             },
-            {
-                question: "איזה מהיתרונות הבאים אינו אופייני למערכות סיווג בינאריות מבוססות מערכים?",
-                options: [
-                    "רגישות גבוהה המאפשרת זיהוי של כמות קטנה של תאים.",
-                    "יכולת לבצע אנליזה אוטומטית ומהירה.",
-                    "הסתמכות בלעדית על תצפיות פנוטיפיות למניעת טעויות גנטיות.",
-                    "עלות נמוכה המאפשרת דגימה שגרתית רחבה."
-                ],
-                correctIndex: 2,
-                explanation: "מערכות אלו הן גנוטיפיות מובהקות ומבוססות על זיהוי רצפי DNA, ולא על תצפיות פנוטיפיות."
+            { 
+                question: "מה צפויה להיות התוצאה של שימוש ב-MLST על שני חיידקים בעלי קירבה גנטית רחוקה מאוד (מינים שונים)?", 
+                options: ["הם יציגו את אותו Sequence Type בדיוק", "גני המשק הבית שלהם יהיו שונים לחלוטין, ואף עשויים שלא להיות מזוהים על ידי אותם תחלים (Primers)", "מספר חזרות ה-SSR שלהם יהיה זהה", "לא ניתן יהיה להפיק מהם DNA"], 
+                correctIndex: 1, 
+                explanation: "MLST מתוכנן לרוב עבור זנים בתוך אותו מין. בין מינים שונים, גני משק הבית יהיו שונים מספיק כך שהמערכת לא תעבוד או תראה שונות מוחלטת." 
             },
-            {
-                question: "במקרה הבוחן של חיידקי ויבריו כולרה, כיצד סייע ניתוח אתרי ה-SSR?",
-                options: [
-                    "הוא הוכיח שכל החיידקים הסביבתיים זהים גנטית לחיידקים הקליניים.",
-                    "הוא איפשר להבחין בבירור בין זנים פתוגניים לזנים סביבתיים לא מזיקים.",
-                    "הוא זיהה את הגן המדויק המקודד לרעלן הכולרה.",
-                    "הוא הראה ששיטת MLST אינה יעילה עבור סוג חיידק זה."
-                ],
-                correctIndex: 1,
-                explanation: "ניתוח ה-SSR איפשר ליצור עץ פילוגנטי שהפריד באופן ברור בין קבוצת הזנים הפתוגניים שבודדו מחולים לבין הזנים הסביבתיים."
+            { 
+                question: "מהי המשמעות של היות רצפי SSR פולימורפיים מאוד?", 
+                options: ["שהם מקודדים למספר רב של חלבונים שונים", "שיש להם מספר רב של צורות (אללים) שונות באוכלוסייה, הנובעות ממספר שונה של חזרות", "שהם נמצאים רק בחיידקים פתוגניים", "שהם משנים את המבנה המרחבי של ה-DNA"], 
+                correctIndex: 1, 
+                explanation: "פולימורפיזם בהקשר של SSR מתייחס לקיומם של אללים רבים באוכלוסייה, השונים זה מזה במספר הפעמים שיחידת הבסיס חוזרת על עצמה." 
             },
-            {
-                question: "כיצד נבנים דנדרוגרמות בשיטת MLST?",
-                options: [
-                    "על ידי מדידת קצב הגידול של החיידק במצעים שונים.",
-                    "על ידי חישוב ההבדלים הזוגיים בפרופילים האלליים של האתרים שנבדקו.",
-                    "על ידי השוואת גודל הגנום הכולל של החיידקים.",
-                    "על ידי ניתוח הרכב חומצות האמינו של חלבוני המעטפת."
-                ],
-                correctIndex: 1,
-                explanation: "דנדרוגרמות ב-MLST מתבססות על אלגוריתמים המחשבים את המרחק הגנטי על סמך ההבדלים בפרופיל המספרי של האללים בין הזנים השונים."
+            { 
+                question: "כיצד שימוש בסיבים אופטיים משפר את מערכות האבחון המיקרוביאליות המודרניות?", 
+                options: ["הוא מאפשר גידול מהיר יותר של תרביות חיידקים", "הוא מאפשר יצירת מערכים בצפיפות גבוהה לקריאה מקבילה ומהירה של אלפי גלאים שונים בדגימה אחת", "הוא מונע מוטציות ב-DNA החיידקי במהלך הבדיקה", "הוא מחליף את הצורך בשימוש באנזימי הגבלה"], 
+                correctIndex: 1, 
+                explanation: "סיבים אופטיים מאפשרים יצירת שבבים (Microarrays) זעירים שבהם כל סיב יכול לשאת גלאי שונה, מה שמאפשר סריקה מהירה ומקבילה של סמנים רבים." 
             },
-            {
-                question: "איזה מהמשפטים הבאים מתאר בצורה הטובה ביותר את המושג רגישות בהקשר של אבחון מיקרוביאלי מודרני?",
-                options: [
-                    "היכולת להבדיל בין שני זנים קרובים מאוד גנטית.",
-                    "היכולת לזהות את החיידק גם כאשר קיימים רק תאים בודדים בדגימה.",
-                    "היכולת לספק תוצאות אמינות החוזרות על עצמן במספר בדיקות.",
-                    "היכולת לבצע את הבדיקה בעלות מינימלית."
-                ],
-                correctIndex: 1,
-                explanation: "רגישות מוגדרת כיכולת של המערכת לאתר ולזהות כמות קטנה מאוד של תאי מטרה בדגימה."
+            { 
+                question: "איזו דרישה ממערכת אבחון מודרנית באה לידי ביטוי ביכולת לזהות זן ספציפי של Vibrio cholerae מתוך תערובת של חיידקי מים סביבתיים?", 
+                options: ["רגישות (Sensitivity)", "אוטומציה (Automation)", "ספציפיות (Specificity)", "עלות נמוכה (Low Cost)"], 
+                correctIndex: 2, 
+                explanation: "ספציפיות היא היכולת להבחין בדיוק מירבי במטרה הרצויה (הזן הפתוגני) ללא התראות שווא מגורמי רקע דומים (זנים סביבתיים)." 
             },
-            {
-                question: "מהי המשמעות המעשית של זיהוי חיידקים בעלי רצף DNA זהה באתר ה-SSR?",
-                options: [
-                    "הם בהכרח חיידקים ממינים שונים שעברו אבולוציה מתכנסת.",
-                    "הם בדרך כלל בעלי מקור אבולוציוני משותף וזהים על בסיס מוצא.",
-                    "הם איבדו את היכולת לעבור מוטציות עתידיות.",
-                    "הם הופכים באופן מיידי לפתוגניים יותר."
-                ],
-                correctIndex: 1,
-                explanation: "זנים החולקים רצף DNA זהה באתרים פולימורפיים כמו SSR נחשבים בדרך כלל לבעלי מוצא משותף קרוב."
+            { 
+                question: "אם נמצאו שני חיידקים בעלי פרופיל MLVA זהה לחלוטין ב-20 אתרי SSR שונים, המסקנה הסבירה ביותר היא ש:", 
+                options: ["הם פיתחו עמידות לאותה אנטיביוטיקה במקביל", "הם זהים מבחינה אבולוציונית (Identical by descent) וסביר שיש להם מקור התפרצות משותף", "הם שייכים למינים ביולוגיים שונים", "שיטת ה-MLVA אינה רגישה מספיק"], 
+                correctIndex: 1, 
+                explanation: "בשל השונות הגבוהה של אתרי SSR, התאמה מלאה במספר רב של אתרים מצביעה בסבירות גבוהה מאוד על מוצא משותף וקירבה הדוקה (אותו קו יוחסין)." 
             },
-            {
-                question: "על פי הנתונים שהוצגו, כמה אתרי MNR נדרשו כדי לשחזר את העץ הפילוגנטי של פאנל חיידקי אי קולי?",
-                options: [
-                    "עשרים אתרים שונים.",
-                    "תריסר אתרים.",
-                    "ארבעה אתרים בלבד.",
-                    "מאות אתרים ברחבי הגנום."
-                ],
-                correctIndex: 2,
-                explanation: "הוצג כי באמצעות ניתוח של ארבעה אתרי MNR בלבד, ניתן היה לשחזר בהצלחה את העץ הפילוגנטי של הפאנל הנחקר."
+            { 
+                question: "מדוע גני משק בית (Housekeeping genes) נבחרים כיעד לאנליזת MLST?", 
+                options: ["כי הם משתנים במהירות עצומה ויש להם קצב מוטציות גבוה מאוד", "כי הם חיוניים לקיום התא ולכן קיימים בכל הזנים של המין, אך משתנים בקצב איטי המאפשר מעקב אבולוציוני", "כי הם מקודדים לרעלנים הקובעים את רמת האלימות של החיידק", "כי הם נמצאים תמיד על פלסמידים שניתן לבודד בקלות"], 
+                correctIndex: 1, 
+                explanation: "גני משק בית הם גני ליבה החיוניים לתא. הם עוברים אבולוציה איטית, מה שהופך אותם לאידיאליים לקביעת יחסי קרבה אבולוציוניים יציבים בתוך המין." 
             },
-            {
-                question: "מהו החסרון הפוטנציאלי של הסתמכות על אתר SSR בודד לשם קביעת ברקוד חיידקי?",
-                options: [
-                    "אתר בודד אינו עובר מוטציות לעולם ולכן אינו מספק שונות.",
-                    "אתר בודד אינו מספק מספיק ספרות כדי להבחין בין מספר רב של זנים באוכלוסייה מורכבת.",
-                    "אתר בודד תמיד נמחק מהגנום במהלך חלוקת התא.",
-                    "אתר בודד מקודד תמיד לחלבון רעיל המפריע לריצוף."
-                ],
-                correctIndex: 1,
-                explanation: "מערכת ברקוד אמינה דורשת מספר אתרים כדי ליצור קומבינציות רבות מספיק שיאפשרו הפרדה ברזולוציה גבוהה בין זנים שונים."
+            { 
+                question: "מה מהבאים מתאר נכונה את תכונות רצפי ה-MNR (Mono Nucleotide Repeats) על פי הנלמד?", 
+                options: ["הם ארוכים מאוד ונדירים בגנום", "הם דינמיים מאוד בגנום החיידקי בכללותו, אך נשארים יציבים ברמת הזן הספציפי", "הם קיימים רק בחיידקים גראם-חיוביים", "הם אינם ניתנים להגברה באמצעות PCR"], 
+                correctIndex: 1, 
+                explanation: "MNR, כסוג של SSR, מציגים את התכונה הדואלית של שונות גבוהה באוכלוסייה (דינמיות) אך יציבות בתוך קו היוחסין של זן בודד." 
             },
-            {
-                question: "איזו שיטה נחשבת לשיטת סיווג ברמת תת-המין?",
-                options: [
-                    "צביעת גראם.",
-                    "ריבוטייפינג מבוסס גני 16S.",
-                    "בדיקת אחוז ה-GC בגנום.",
-                    "ניתוח משתנה של מספר חזרות מרובה אתרים."
-                ],
-                correctIndex: 3,
-                explanation: "ניתוח משתנה של מספר חזרות מרובה אתרים היא שיטת MLVA, והיא נועדה לספק רזולוציה גבוהה ברמת תת-המין והזן."
+            { 
+                question: "חוקר מעוניין לסווג חיידק לרמת המין (Species) בלבד, ללא צורך בהבחנה בין תת-זנים. באיזו שיטה עליו לבחור כדי לקבל תוצאה יעילה ומוכרת?", 
+                options: ["MLVA", "Ribotyping של 16S", "PFGE", "MLST של 20 גנים"], 
+                correctIndex: 1, 
+                explanation: "גני ה-16S הריבוזומליים שמורים מאוד ומשמשים כסטנדרט העולמי לסיווג טקסונומי ברמת המין. שאר השיטות מיועדות לרזולוציה גבוהה יותר." 
             },
-            {
-                question: "מה מציין המונח פולימורפיזם בהקשר של סיווג גנטי?",
-                options: [
-                    "היכולת של החיידק לשנות את צורתו החיצונית בהתאם לסביבה.",
-                    "קיומם של מספר וריאנטים או צורות שונות של רצף DNA מסוים באוכלוסייה.",
-                    "תהליך שבו חיידק אחד בולע חיידק אחר.",
-                    "השימוש במספר סוגים של אנזימי חיתוך באותה תגובה."
-                ],
-                correctIndex: 1,
-                explanation: "פולימורפיזם גנטי מתייחס לקיומם של מספר אללים או רצפים שונים באותו לוקוס גנטי בקרב פרטים שונים."
+            { 
+                question: "בהקשר של אבחון חיידקים, מה ההבדל העיקרי בין רגישות (Sensitivity) לספציפיות (Specificity)?", 
+                options: ["רגישות קובעת כמה זמן לוקח המבחן, וספציפיות קובעת כמה הוא עולה", "רגישות היא היכולת לזהות מספר תאים קטן, וספציפיות היא היכולת לזהות בדיוק את הזן הנכון ללא זיהוי שווא", "אין הבדל, אלו מונחים נרדפים", "רגישות מתייחסת לזיהוי DNA, וספציפיות לזיהוי חלבונים"], 
+                correctIndex: 1, 
+                explanation: "רגישות (Sensitivity) עוסקת בסף הגילוי (כמה מעט חומר נדרש). ספציפיות (Specificity) עוסקת בדיוק הזיהוי ובהימנעות מתגובה צולבת עם גורמים אחרים." 
             },
-            {
-                question: "מדוע גנים בסיסיים נבחרים כיעד לשיטת MLST?",
-                options: [
-                    "כי הם הגנים היחידים שניתן להפיק מהם DNA.",
-                    "כי הם משתנים בקצב מהיר מאוד, אפילו בתוך אותו זן.",
-                    "כי הם קיימים בכל הזנים של המין ומציגים קצב איטי ויציב של הצטברות מוטציות.",
-                    "כי הם נמצאים תמיד על פלסמידים שקל לבודד."
-                ],
-                correctIndex: 2,
-                explanation: "גנים בסיסיים חיוניים לתא ולכן הם שמורים מספיק כדי להימצא בכל הזנים, אך הם צוברים מוטציות בקצב המאפשר מעקב אבולוציוני אמין."
+            { 
+                question: "כיצד טכנולוגיית Microarray (שבבים) פותרת את בעיית האיטיות של שיטות האבחון הקלאסיות?", 
+                options: ["היא מאיצה את קצב חלוקת התא החיידקי בתרבית", "היא מאפשרת סריקה פיזית מהירה של המיקרוסקופ על פני צלחת פטרי", "היא מאפשרת זיהוי מקביל ובו-זמני של אלפי סמנים גנטיים ישירות מהדגימה, ללא צורך בהמתנה לגידול תרבית ארוך", "היא משתמשת באנזימים המפרקים את החיידק מהר יותר"], 
+                correctIndex: 2, 
+                explanation: "שבבי DNA מאפשרים היברידיזציה מקבילה של סמנים רבים, מה שחוסך את הצורך בבידוד וגידול תרביות קלאסיות שלוקח ימים." 
             },
-            {
-                question: "במערך הסיבים האופטיים לזיהוי חיידקים, מה נמצא בקצה של כל סיב?",
-                options: [
-                    "מושבת חיידקים שלמה.",
-                    "אנזים חיתוך ספציפי.",
-                    "חרוז הנושא גלאי אוליגונוקלאוטיד ייחודי.",
-                    "מולקולת RNA פולימראז."
-                ],
-                correctIndex: 2,
-                explanation: "המערכת מבוססת על חרוזים הממוקמים בקצות הסיבים האופטיים, כאשר כל חרוז נושא גלאים ספציפיים לזיהוי רצפי המטרה."
+            { 
+                question: "מה משמעות המונח 'Tandem Repeat' בהקשר של SSR?", 
+                options: ["רצפים המפוזרים באופן אקראי על פני כרומוזומים שונים", "רצף של נוקלאוטידים החוזר על עצמו ברצף, זה אחר זה (ראש לזנב), באותו מיקום גנומי", "גנים המקודדים לשני חלבונים זהים", "רצף DNA שמופיע פעם אחת בכרומוזום ופעם אחת בפלסמיד"], 
+                correctIndex: 1, 
+                explanation: "Tandem משמעותו בזה אחר זה. רצפי חזרות טנדמיות הם יחידות קצרות שחוזרות על עצמן ברצף אחת אחרי השנייה באותו לוקוס." 
             },
-            {
-                question: "מהי המשמעות של ספציפיות בדרישות לאבחון מיקרוביאלי מודרני?",
-                options: [
-                    "היכולת לבצע את הבדיקה בזמן קצר מאוד.",
-                    "היכולת לזהות את הזן המדויק ברמת דיוק גבוהה, עד לרמה של זיהוי פלילי.",
-                    "היכולת לזהות מספר קטן מאוד של תאים בדגימה.",
-                    "היכולת להפעיל את המערכת ללא התערבות אדם."
-                ],
-                correctIndex: 1,
-                explanation: "ספציפיות מתייחסת לרמת הדיוק באבחנה, כלומר היכולת להבדיל בין החיידק המבוקש לבין חיידקים אחרים ברזולוציה מקסימלית."
+            { 
+                question: "במקרה של התפרצות מחלת הכולרה, מדוע חשוב להשתמש בשיטות כמו MLST או MLVA ולא להסתפק רק בזיהוי המין Vibrio cholerae?", 
+                options: ["כי הזיהוי של המין אינו אמין מספיק מבחינה מדעית", "כי קיימים זנים סביבתיים של החיידק שאינם פתוגניים, ויש צורך לזהות את תת-הזן הספציפי (כמו O1) הגורם למחלה", "כי החיידק משנה את המין שלו במהלך ההתפרצות", "כי רק שיטות אלו מזהות את החיידק במי ים"], 
+                correctIndex: 1, 
+                explanation: "Vibrio cholerae כולל זנים רבים הנמצאים באופן טבעי בסביבה ואינם גורמים למגפות. זיהוי ברמת הזן (כמו O1) הכרחי להבנה אפידמיולוגית." 
             },
-            {
-                question: "כיצד מתבטאת הדינמיות של רצפי MNR בגנום החיידקי?",
-                options: [
-                    "הם נוטים לעבור למיקומים שונים בגנום בתדירות גבוהה.",
-                    "הם משנים את הרכב הבסיסים שלהם מ-A ל-G לעיתים קרובות.",
-                    "מספר החזרות של הנוקלאוטיד הבודד משתנה בקלות יחסית במהלך האבולוציה.",
-                    "הם הופכים לגנים מקודדים לאחר מספר חלוקות תא."
-                ],
-                correctIndex: 2,
-                explanation: "הדינמיות של MNR באה לידי ביטוי בשינויים תדירים במספר הפעמים שהנוקלאוטיד חוזר על עצמו ברצף."
+            { 
+                question: "איזה מבין הבאים מתאר בצורה הטובה ביותר את תהליך יצירת הברקוד החיידקי?", 
+                options: ["מדידת אורך החיידק תחת מיקרוסקופ אלקטרוני וקידודו למספר", "הגברת מספר אתרי SSR באמצעות PCR, קביעת מספר החזרות בכל אתר, וצירוף המספרים לרצף מזהה אחד", "ריצוף הגנום המלא וחיפוש אחר רצפי 16S", "צביעת החיידק בצבעי פלואורסצנציה שונים וסריקתם בלייזר"], 
+                correctIndex: 1, 
+                explanation: "הברקוד הגנטי נוצר על ידי איסוף נתונים ממספר אתרי SSR שונים. כל אתר מספק מספר (מספר החזרות), ורצף המספרים מהווה את המזהה הייחודי." 
             },
-            {
-                question: "איזה מהמשפטים הבאים מתאר נכונה את ההבדל בין שיטת סיווג ברמת המין לשיטת סיווג ברמת תת-המין?",
-                options: [
-                    "סיווג ברמת המין דורש ציוד יקר יותר.",
-                    "סיווג ברמת תת-המין בוחן אזורים בעלי שונות גנטית גבוהה יותר כדי להבחין בין זנים קרובים.",
-                    "סיווג ברמת המין מתבצע רק על חיידקים פתוגניים.",
-                    "סיווג ברמת תת-המין מבוסס אך ורק על תכונות מורפולוגיות."
-                ],
-                correctIndex: 1,
-                explanation: "כדי להבחין בין זנים בתוך אותו מין, יש צורך בסמנים גנטיים המשתנים בקצב מהיר יותר מאלה המשמשים להבחנה בין מינים שונים."
+            { 
+                question: "מהו היתרון של שימוש ב-ASO על פני ריצוף מלא בזיהוי שינויים קטנים כמו MNR?", 
+                options: ["ASO מבוסס על היברידיזציה מהירה וספציפית לאלל מסוים, מה שמאפשר אבחון מהיר וזול על גבי שבב ללא צורך בריצוף מלא", "ASO מספק מידע על כל הגנום בבדיקה אחת", "ASO אינו דורש DNA כלל", "ASO מזהה שינויים בחלבונים ולא ב-DNA"], 
+                correctIndex: 0, 
+                explanation: "גלאי ASO מאפשרים תשובה מהירה של כן/לא לגבי נוכחות אלל ספציפי באמצעות היברידיזציה, טכנולוגיה שקל ליישם במערכים זולים ומהירים." 
             },
-            {
-                question: "מהו האתגר המרכזי ששיטת MLST נועדה לפתור בהשוואה לשיטות קודמות?",
-                options: [
-                    "את הצורך בגידול תרביות חיידקים במעבדה.",
-                    "את חוסר היכולת להשוות נתונים בצורה דיגיטלית ואמינה בין מעבדות שונות ברחבי העולם.",
-                    "את העלות הגבוהה של הפקת DNA.",
-                    "את הקושי בזיהוי חיידקים מתים."
-                ],
-                correctIndex: 1,
-                explanation: "MLST מספקת נתוני רצף דיגיטליים וחד-משמעיים שניתן לאחסן במסדי נתונים ולהשוות בקלות דרך האינטרנט, בניגוד לפרשנות הסובייקטיבית של גודלי מקטעים בשיטות ישנות."
+            { 
+                question: "בבניית עץ פילוגנטי (Dendrogram) המבוסס על נתוני MLST, על מה מבוססים הענפים המחברים בין הזנים?", 
+                options: ["על הדמיון הפיזיולוגי בין החיידקים (צורה וגודל)", "על מרחקים גיאוגרפיים בין מקומות הבידוד של החיידקים", "על הבדלים זוגיים (Pairwise differences) בפרופילים האלליים של הלוקוסים שנבדקו", "על רמת העמידות של החיידקים לאנטיביוטיקה"], 
+                correctIndex: 2, 
+                explanation: "העץ הפילוגנטי ב-MLST נבנה על ידי אלגוריתמי קיבוץ (Cluster analysis) המחשבים את המרחק הגנטי על סמך ההבדלים בפרופיל האלילים בין כל זוג זנים." 
             },
-            {
-                question: "בניתוח של חיידקי ויבריו וולניפיקוס, מה איפשר השימוש ב-12 אתרי L-SSR?",
-                options: [
-                    "ריפוי מלא של המחלה הנגרמת על ידי החיידק.",
-                    "חלוקה מדויקת של הבידודים לביוטיפים שונים והבנת הקשרים האפידמיולוגיים ביניהם.",
-                    "שינוי רצף ה-DNA של החיידק כדי להפכו ללא מזיק.",
-                    "זיהוי של חיידקים אלו בדגימות אוויר בלבד."
-                ],
-                correctIndex: 1,
-                explanation: "השימוש במספר אתרי SSR איפשר ליצור פרופיל גנטי מפורט שבעזרתו מופו הקשרים הגנטיים והאפידמיולוגיים של החיידקים לבתי חולים ומקורות שונים."
+            { 
+                question: "החיידק Vibrio vulnificus תואר כפתוגן סביבתי. מהי המשמעות האפידמיולוגית של עובדה זו בעת סיווג זנים?", 
+                options: ["שהוא מועבר רק מאדם לאדם", "שהמאגר הטבעי שלו הוא הסביבה (כגון מים ודגים), ולכן יש צורך להשוות בידודים קליניים לבידודים סביבתיים כדי לאתר את מקור ההדבקה", "שלא ניתן להשתמש בשיטות גנומיות לזיהויו", "שהוא פוגע רק בצמחים ולא בבני אדם"], 
+                correctIndex: 1, 
+                explanation: "פתוגן סביבתי חי בסביבה הטבעית. במקרה של תחלואה, כלים כמו SSR-MLST משמשים להשוואת הזן שפגע בחולה לזנים שנמצאו בסביבה (למשל בדגים) כדי להוכיח את מקור הזיהום." 
             },
-            {
-                question: "איזו שיטה מבין הבאות אינה מבוססת על ניתוח DNA?",
-                options: [
-                    "בדיקת אחוז הגואנין והציטוזין.",
-                    "תגובת שרשרת של פולימראז.",
-                    "אפיון מורפולוגי של מושבות על צלחת פטרי.",
-                    "ריצוף גנומי."
-                ],
-                correctIndex: 2,
-                explanation: "אפיון מורפולוגי הוא שיטה פנוטיפית המבוססת על מראה, בעוד ששאר האפשרויות הן קריטריונים מבוססי ניתוח DNA."
+            { 
+                question: "מדוע שיטת PFGE נחשבת ל-Labor intensive (דורשת עבודה רבה)?", 
+                options: ["כי היא דורשת גידול חיידקים בחלל החיצון", "כי הכנת הדגימות והרצת הג'ל בשדה פועם לוקחת זמן רב ומחייבת כוח אדם מיומן מאוד", "כי נדרש לרצף את הגנום עשרות פעמים", "כי היא מחייבת שימוש בחיות מעבדה"], 
+                correctIndex: 1, 
+                explanation: "הכנת פלאגים של DNA, חיתוך זהיר באנזימים והרצה ארוכה בג'ל מחייבים עבודה ידנית רבה ומיומנות טכנית גבוהה." 
             },
-            {
-                question: "מהו היתרון של שימוש ב-ASO במערכות אבחון?",
-                options: [
-                    "הוא מאפשר זיהוי הבדלים זעירים ברצף, לעיתים של נוקלאוטיד בודד, ברמת דיוק גבוהה.",
-                    "הוא מייתר לחלוטין את הצורך בהפקת DNA מהדגימה.",
-                    "הוא מאפשר לחיידק להתרבות מהר יותר בתנאי מעבדה.",
-                    "הוא מחליף את הצורך בשימוש במחשב לצורך פענוח התוצאות."
-                ],
-                correctIndex: 0,
-                explanation: "ASO מתוכנן כך שהוא ייקשר רק לרצף התואם לו בדיוק מושלם, מה שמאפשר הבחנה בין אללים הנבדלים אפילו בבסיס בודד."
+            { 
+                question: "מהו הקשר בין המושג 'Polymorphic sequence typing' לבין סיווג חיידקים?", 
+                options: ["זהו תהליך של שינוי צורת החיידק באמצעות כימיקלים", "זוהי גישה המשתמשת באזורים בעלי שונות גנטית גבוהה (פולימורפיזם) כדי להבחין בין סוגים, מינים ותת-מינים", "זהו מנגנון שבו חיידקים מחליפים DNA עם נגיפים", "זוהי שיטה למדידת רמת ה-pH של התרבית"], 
+                correctIndex: 1, 
+                explanation: "סיווג מבוסס רצפים פולימורפיים נשען על העובדה שאזורים מסוימים בגנום מציגים שונות טבעית, וניתן להשתמש בשונות זו כדי לסווג את האורגניזמים." 
             },
-            {
-                question: "אם זן חיידקי מסוים מציג פרופיל אללי ייחודי בשיטת MLST, כיצד הוא יוגדר במסד הנתונים?",
-                options: [
-                    "כמין חדש לחלוטין למדע.",
-                    "כבעל סוג רצף מספרי חדש.",
-                    "כחיידק שאינו ניתן לזיהוי.",
-                    "כזן שאינו מכיל גנים בסיסיים."
-                ],
-                correctIndex: 1,
-                explanation: "כל קומבינציה ייחודית של אללים באתרים הנבדקים מקבלת מספר זיהוי ייחודי הנקרא סוג רצף."
+            { 
+                question: "איזו בעיה עיקרית נפתרת על ידי שימוש במסדי נתונים לאומיים ובינלאומיים עבור MLST?", 
+                options: ["בעיית העלות של חומרי המעבדה", "הקושי בהשוואת תוצאות בין מעבדות שונות ברחבי העולם, בעיה שהייתה נפוצה בשיטות מבוססות ג'ל", "חוסר היכולת לזהות חיידקים מתים", "הצורך במיקרוסקופים אלקטרוניים יקרים"], 
+                correctIndex: 1, 
+                explanation: "מסדי נתונים של MLST מקבלים רצפי DNA מדויקים, מה שמאפשר מעבדה אחת להשוות את התוצאות שלה ישירות מול מעבדה בצד השני של העולם ללא הטיות כיול." 
             },
-            {
-                question: "מדוע מערכות אבחון מודרניות שואפות להיות ברמת עלות נמוכה?",
-                options: [
-                    "כדי שיהיה אפשר להשתמש בחומרים באיכות ירודה.",
-                    "כדי לאפשר דיגום שגרתי ורחב היקף של מקורות מים ומזון ללא מגבלה תקציבית.",
-                    "כדי להפחית את רמת הרגישות של הבדיקה.",
-                    "כדי למנוע מאנשים פרטיים לבצע את הבדיקות."
-                ],
-                correctIndex: 1,
-                explanation: "עלות נמוכה היא קריטית כדי לאפשר ניטור מתמיד ושגרתי, שהוא חיוני למניעת התפרצויות מחלות ממזון ומים."
+            { 
+                question: "על פי התיאור, מהו היתרון של שימוש ב-SSR על פני גני משק בית לצורך הבחנה בין שני זנים קרובים מאוד של אותו חיידק?", 
+                options: ["SSR הם הרבה יותר ארוכים מגני משק בית", "רצפי SSR משתנים בקצב מהיר יותר מגני משק בית השמורים, ולכן מספקים רזולוציה גבוהה יותר להבדלה בין זנים קרובים", "SSR מקודדים לחלבונים שונים המאפשרים זיהוי ביוכימי", "אין יתרון, גני משק בית תמיד עדיפים"], 
+                correctIndex: 1, 
+                explanation: "גני משק בית (המשמשים ב-MLST) משתנים לאט, מה שטוב לזיהוי יחסי קרבה רחוקים. רצפי SSR (המשמשים ב-MLVA) משתנים מהר יותר, מה שמאפשר הבחנה בין זנים קרובים מאוד שהיו נראים זהים ב-MLST." 
             },
-            {
-                question: "מה ניתן להסיק לגבי שני חיידקים בעלי ברקוד חיידקי זהה לחלוטין המבוסס על אתרי SSR מרובים?",
-                options: [
-                    "הם בהכרח נדבקו באותו וירוס.",
-                    "יש סבירות גבוהה מאוד שהם מאותו זן ובעלי מקור זיהום משותף.",
-                    "הם חייבים להיות ממינים שונים כדי לחלוק את אותו ברקוד.",
-                    "הברקוד מזהה רק את סוג מצע הגידול עליו הם גדלו."
-                ],
-                correctIndex: 1,
-                explanation: "מכיוון שאתרי SSR הם משתנים מאוד בין זנים, התאמה מלאה במספר רב של אתרים מעידה בסבירות גבוהה מאוד על זהות גנטית וקרבה אפידמיולוגית."
+            { 
+                question: "בהנחה שברצונך לפתח מערכת אבחון שגרתית לבדיקת מי שתייה, איזו דרישה תהיה קריטית במיוחד מלבד רגישות וספציפיות?", 
+                options: ["היכולת לבצע את הבדיקה בחלל", "עלות נמוכה (Low Cost) המאפשרת דיגום שגרתי ורחב היקף", "שימוש בציוד אנלוגי בלבד", "יכולת לזהות גם וירוסים צמחיים"], 
+                correctIndex: 1, 
+                explanation: "מערכות אבחון סביבתיות או שגרתיות חייבות להיות זולות כדי לאפשר בדיקות תכופות של דגימות רבות." 
             },
-            {
-                question: "איזה מהרצפים הבאים הוא דוגמה לרצף מסוג MNR?",
-                options: [
-                    "רצף של ATATATAT.",
-                    "רצף של GCG CGC GCG.",
-                    "רצף של TTTTTTTT.",
-                    "רצף של ACGT ACGT."
-                ],
-                correctIndex: 2,
-                explanation: "MNR פירושו חזרות של נוקלאוטיד בודד, ולכן רצף המורכב מחזרות רצופות של אותו בסיס הוא הדוגמה הנכונה."
+            { 
+                question: "מה ניתן ללמוד מנוכחות של חיידקים מתויגים 'בכיסים' על גבי חרקים (כפי שהוצג במחקרי סביבה)?", 
+                options: ["שחרקים הם המקור האבולוציוני של החיידקים", "שחרקים יכולים לשמש כנשאים (Vectors) המעבירים פתוגנים סביבתיים כמו Vibrio cholerae ממקום למקום", "שהחיידקים מעכלים את החרק מבפנים", "שצביעה פלואורסצנטית פוגעת בחרקים"], 
+                correctIndex: 1, 
+                explanation: "הדגמה של חיידקים על חרקים (כמו יתושים או זבובי אמצע) מצביעה על מנגנון הפצה סביבתי של הפתוגן." 
             },
-            {
-                question: "מה הייתה המגבלה ההיסטורית של שיטת Southern blot בחקר אתרי SSR?",
-                options: [
-                    "היא יכלה לזהות רק חלבונים ולא DNA.",
-                    "היא התאימה רק לגנום האנושי ולא לחיידקים.",
-                    "היא דרשה כמויות גדולות של חומר והייתה פחות רגישה ומהירה משיטות מבוססות הגברה מודרניות.",
-                    "היא לא הייתה מסוגלת להבחין בהבדלים באורך המקטעים."
-                ],
-                correctIndex: 2,
-                explanation: "שיטות ישנות כמו תספיג סאות'רן היו מסורבלות ודרשו כמות גדולה של DNA, בניגוד לשיטות מודרניות המבוססות על הגברה ספציפית ומערכים."
+            { 
+                question: "אם אנליזת MLST של שני בידודים הניבה את אותו Sequence Type (ST), אך אנליזת MLVA של אותם בידודים הראתה פרופילים שונים, מה המסקנה?", 
+                options: ["הייתה טעות באחת הבדיקות", "הבידודים שייכים לאותו קו יוחסין כללי (זוהה ב-MLST), אך עברו פיצול אבולוציוני עדכני שניתן לזיהוי רק ברזולוציה הגבוהה של MLVA", "הבידודים שייכים למינים שונים לחלוטין", "MLVA פחות רגישה מ-MLST"], 
+                correctIndex: 1, 
+                explanation: "MLVA מבוססת SSR מספקת רזולוציה גבוהה יותר מ-MLST. שני זנים יכולים להיות זהים בגני הליבה (MLST) אך להציג שונות במספר חזרות ה-SSR עקב קצב המוטציות המהיר יותר שם." 
             },
-            {
-                question: "איזה גורם עלול לסבך את בניית העץ הפילוגנטי בשיטות סיווג מבוססות רצף?",
-                options: [
-                    "קצב מוטציות אפסי בגנום.",
-                    "מעבר גנים אופקי בין חיידקים שונים.",
-                    "היעדר מוחלט של רצפי SSR.",
-                    "שימוש במספר רב מדי של גנים בסיסיים."
-                ],
-                correctIndex: 1,
-                explanation: "מעבר גנים אופקי יכול לגרום לחיידקים ממינים או זנים שונים לחלוק רצפים זהים, מה שמקשה על מעקב אחר שושלת היוחסין האמיתית שלהם."
+            { 
+                question: "מהו האתגר המרכזי ששיטת SSR-MLST באה לפתור באפידמיולוגיה מודרנית?", 
+                options: ["הצורך לזהות חיידקים ללא שימוש ב-DNA", "הצורך בסיווג מדויק ומהיר של זנים ספציפיים כדי לאתר מקורות התפרצות, תוך התגברות על חוסר הרזולוציה של שיטות ישנות", "הצורך בייצור חיסונים חדשים", "הצורך בהפחתת העלות של מיקרוסקופים"], 
+                correctIndex: 1, 
+                explanation: "השילוב של סמנים בעלי שונות גבוהה (SSR) עם פלטפורמות ריצוף וניתוח מדויקות מאפשר מעקב אפידמיולוגי ברזולוציה של תת-זן לאיתור מקור ההתפרצות." 
             },
-            {
-                question: "מהו היתרון של שימוש בחרוזים במערך הסיבים האופטיים?",
-                options: [
-                    "הם מגנים על ה-DNA מפירוק על ידי אנזימים.",
-                    "הם מאפשרים קיבוע של גלאים שונים ויצירת מערך מרובה מטרות לבדיקה בו-זמנית.",
-                    "הם פולטים אור בעצמם ללא צורך בסמן פלואורסצנטי.",
-                    "הם משנים את צבעם בהתאם לטמפרטורת החדר."
-                ],
-                correctIndex: 1,
-                explanation: "כל חרוז נושא גלאי ייחודי, וסידור אקראי שלהם על פני המערך מאפשר לבדוק מספר רב של מטרות שונות באותה דגימה ביעילות."
+            { 
+                question: "מדוע חשוב ששיטת אבחון תהיה הדירה (Reproducible)?", 
+                options: ["כדי שכל טכנאי יקבל תוצאה שונה וייחודית", "כדי להבטיח שאותה דגימה תיבדק פעמיים באותו מחיר", "כדי להבטיח שביצוע חוזר של הבדיקה באותם תנאים, גם במעבדה אחרת, יניב את אותן תוצאות בדיוק", "כדי למנוע מאחרים להעתיק את השיטה"], 
+                correctIndex: 2, 
+                explanation: "הדירות היא עקרון מדעי בסיסי; מבחן אבחוני חייב לתת תוצאות עקביות כדי שניתן יהיה לסמוך עליו בקבלת החלטות קליניות וסביבתיות." 
             },
-            {
-                question: "מה מייצג הצבע השונה באיור של אללי ה-MNR בחיידקי ויבריו כולרה?",
-                options: [
-                    "את רמת הרעילות של החיידק.",
-                    "את שנת הבידוד של החיידק.",
-                    "אללים שונים הנבדלים במספר החזרות של הנוקלאוטיד.",
-                    "את סוג מצע הגידול שבו השתמשו."
-                ],
-                correctIndex: 2,
-                explanation: "לצורך המחשה וניתוח, אללים בעלי אורכים שונים של רצף החזרות צבועים בצבעים שונים כדי להדגיש את הפולימורפיזם."
+            { 
+                question: "בניתוח פילוגנטי של חיידקי Vibrio, התגלה כי זנים קליניים וזנים סביבתיים מאותו אזור התקבצו יחד באותו אשכול (Cluster). מה זה מרמז?", 
+                options: ["שהזנים הקליניים אינם גורמים למחלה", "שישנו קשר אפידמיולוגי ישיר, והסביבה באותו אזור משמשת כמאגר לזנים הגורמים לתחלואה באוכלוסייה המקומית", "שהעץ הפילוגנטי חושב בצורה שגויה", "שהחיידקים עברו מוטציה שהפכה אותם לווירוסים"], 
+                correctIndex: 1, 
+                explanation: "קרבה גנטית בין בידודים קליניים לסביבתיים באותו אזור מצביעה על כך שהחולים נדבקו מהסביבה המקומית (למשל, מאכילת דגים מאותו אזור)." 
             },
-            {
-                question: "כיצד מוגדרת יכולת שחזור באבחון מיקרוביאלי?",
-                options: [
-                    "היכולת לייצר חיידק חדש במעבדה.",
-                    "היכולת של המבחן להפיק תוצאות אמינות ועקביות בחזרות מרובות.",
-                    "היכולת לשחזר את ה-DNA של חיידק מת מתוך מאובן.",
-                    "היכולת להפוך את תוצאות הבדיקה תוך כדי התהליך."
-                ],
-                correctIndex: 1,
-                explanation: "מבחן אמין חייב להיות הדיר, כלומר לספק את אותה התוצאה כאשר הוא מבוצע מספר פעמים על אותה דגימה בתנאים דומים."
+            { 
+                question: "מהו ההבדל המהותי בין אנליזת אורך מקטע (כמו ב-PFGE) לאנליזה בינארית/דיגיטלית המבוססת על מערכים (Arrays)?", 
+                options: ["אנליזת אורך מקטע היא מהירה יותר", "אנליזת אורך מקטע מספקת מידע אנלוגי שקשה לכמת במדויק ולהשוות, בעוד מערכים מבוססי היברידיזציה מספקים פלט ברור של נוכחות/היעדר אלל ספציפי", "מערכים דורשים שימוש בג'ל אלקטרופורזה גדול יותר", "אין הבדל, שתיהן מבוססות על אותו עיקרון בדיוק"], 
+                correctIndex: 1, 
+                explanation: "המעבר ממידע אנלוגי (פסים על ג'ל) למידע דיגיטלי (היברידיזציה של ASO שנותנת אות מוחלט) הוא קריטי לאוטומציה ולהשוואת נתונים גלובלית." 
             },
-            {
-                question: "מדוע חשוב לזהות חיידקים פתוגניים ברמת הזן ולא רק ברמת המין?",
-                options: [
-                    "מכיוון שרק רמת הזן קובעת את צורת החיידק.",
-                    "מפני שמינים שונים אינם גורמים למחלות כלל.",
-                    "מפני שבתוך אותו מין עשויים להיות זנים אלימים מאוד לצד זנים בלתי מזיקים לחלוטין.",
-                    "מפני שרמת המין אינה מוכרת מבחינה מדעית."
-                ],
-                correctIndex: 2,
-                explanation: "לדוגמה, בחיידקי אי קולי או ויבריו כולרה, ישנם זנים סביבתיים תקינים ולצידם זנים הגורמים למחלות קשות, ולכן נדרשת רזולוציה גבוהה להבחנה ביניהם."
+            { 
+                question: "כיצד תורמת תופעת ה-Head to tail tandem repeat ליצירת השונות ברצפי SSR?", 
+                options: ["היא גורמת למחיקה מוחלטת של הגן", "המבנה החוזרני מקל על טעויות של הפולימראז (כגון החלקה) במהלך שכפול ה-DNA, מה שמוביל להוספה או החסרה של יחידות חזרה", "היא מונעת לחלוטין כל שינוי גנטי", "היא גורמת להתחברות של פלסמידים לכרומוזום"], 
+                correctIndex: 1, 
+                explanation: "המנגנון העיקרי ליצירת שונות ב-SSR הוא החלקת פולימראז (Polymerase slippage) במהלך השכפול, הנגרמת בשל המבנה החוזרני של הרצף." 
             },
-            {
-                question: "מהו התהליך הראשוני בשיטת MLST לפני בניית מסד הנתונים?",
-                options: [
-                    "הזרקת החיידק לחיות מעבדה.",
-                    "קביעת הרצף המדויק של מקטעי ה-DNA שנבחרו מתוך גני המטרה.",
-                    "צביעת החיידק בצביעת גראם.",
-                    "בדיקת עמידות לאנטיביוטיקה."
-                ],
-                correctIndex: 1,
-                explanation: "השלב הראשון הוא הפקת ה-DNA וריצוף המקטעים הספציפיים של הגנים הבסיסיים כדי לקבל את המידע הגנטי הדרוש להשוואה."
+            { 
+                question: "מה מייצג הציר האופקי (ציר ה-X) המופיע בתחתית של עץ פילוגנטי (Dendrogram) טיפוסי?", 
+                options: ["את הזמן שלקח לחיידק לגדול בתרבית", "את המרחק הגנטי (Genetic Distance) או רמת השונות בין הזנים השונים", "את מספר החזרות המדויק בכל אתר SSR", "את ריכוז האנטיביוטיקה הנדרש להרוג את החיידק"], 
+                correctIndex: 1, 
+                explanation: "הציר בתחתית הדנדרוגרמה מייצג את קנה המידה של המרחק הגנטי; ככל שהנקודה בה ענפים מתפצלים קרובה יותר לאפס, כך הזנים קרובים יותר גנטית." 
             },
-            {
-                question: "כיצד תורמת האוטומציה למערכות אבחון מודרניות?",
-                options: [
-                    "היא מגדילה את הסיכוי לטעות אנוש.",
-                    "היא מאטה את קצב קבלת התוצאות אך משפרת את הדיוק.",
-                    "היא מאפשרת עיבוד מהיר של מספר רב של דגימות במקביל ללא מגע יד אדם.",
-                    "היא מחייבת שימוש בחומרים מסוכנים יותר."
-                ],
-                correctIndex: 2,
-                explanation: "פיתוח מערכות אוטומטיות הוא דרישת מפתח כדי להתמודד עם נפח גדול של בדיקות, לקצר זמנים ולשפר את ההדירות."
+            { 
+                question: "מדוע מערכת זיהוי המבוססת על אנליזה של גן בודד עשויה להיות בעייתית באפידמיולוגיה של חיידקים?", 
+                options: ["כי גן בודד דורש יותר DNA מאשר אנליזה מרובת גנים", "כי תופעות כמו העברת גנים אופקית (HGT) או מוטציות אקראיות עלולות לתת תמונה מטעה לגבי הקרבה הכללית בין הזנים. נדרש ניתוח מרובה לוקוסים (Multi-Locus)", "כי אי אפשר לרצף גן בודד בטכנולוגיות מודרניות", "כי גן בודד תמיד זהה בכל מיני החיידקים בעולם"], 
+                correctIndex: 1, 
+                explanation: "אנליזה המבוססת על מספר אתרים (Multi-Locus) ממזערת את ההשפעה של אירוע חריג בלוקוס בודד (כמו רקומבינציה או HGT), ומספקת תמונה אמינה יותר של קו היוחסין." 
             },
-            {
-                question: "מהי המשמעות של המונח טנדם בהקשר של רצפי SSR?",
-                options: [
-                    "שהרצפים נמצאים רק בשני קצוות הכרומוזום.",
-                    "שהיחידות החוזרות מופיעות בזו אחר זו ברצף, בסידור של ראש-לזנב.",
-                    "שהרצפים מקודדים תמיד לשני חלבונים שונים.",
-                    "שהרצפים דורשים שני אנזימי חיתוך שונים כדי לזהותם."
-                ],
-                correctIndex: 1,
-                explanation: "חזרות טנדמיות משמעותן שיחידת הרצף הבסיסית חוזרת על עצמה ברצף ישיר, אחת אחרי השנייה באותו כיוון."
+            { 
+                question: "איזו מבין הטענות הבאות לגבי רצפי MNR (Mono Nucleotide Repeats) היא הנכונה ביותר?", 
+                options: ["הם מורכבים מחזרות של קודונים שלמים (3 בסיסים)", "למרות השונות הגבוהה שלהם בין זנים, הם יציבים מספיק כדי לשמש כסמנים אמינים לזיהוי ברמת הזן (Strain level)", "הם חסרי כל ערך אפידמיולוגי בשל קצב המוטציות המהיר שלהם", "הם קיימים רק בגנום האנושי ולא בחיידקים"], 
+                correctIndex: 1, 
+                explanation: "למרות הדינמיות שלהם, מחקרים הראו שרצפי MNR יציבים מספיק בתוך קו יוחסין כדי לשמש כחלק מהברקוד החיידקי לזיהוי זנים." 
             },
-            {
-                question: "איזה סוג של מידע מספק ניתוח בינארי מבוסס מערכים?",
-                options: [
-                    "מידע רציף על כמות החלבון המדויקת בתא.",
-                    "תשובות של כן או לא לגבי נוכחותם של אללים או רצפי מטרה ספציפיים בדגימה.",
-                    "תמונה תלת-ממדית של מבנה ה-DNA.",
-                    "את רצף הגנום השלם של החיידק מראשיתו ועד סופו."
-                ],
-                correctIndex: 1,
-                explanation: "המערך מתוכנן כך שכל גלאי יספק אות חיובי אם אלל המטרה קיים, ואות שלילי אם אינו קיים, מה שיוצר תבנית בינארית של נוכחות או היעדר."
+            { 
+                question: "איזה יתרון מספקת מערכת אבחון מבוססת שבבי סיבים אופטיים בהשוואה לריצוף גנומי מלא למטרות אבחון שגרתי (Point of care)?", 
+                options: ["היא מספקת מידע על גנים לא מוכרים", "היא מאפשרת זיהוי מהיר, אוטומטי וזול של סמנים ידועים מראש בסביבת השטח, ללא צורך בניתוח ביואינפורמטי מורכב", "היא מגבירה את קצב המוטציות בחיידק", "היא דורשת ציוד כבד ויקר יותר ממרצף גנומי"], 
+                correctIndex: 1, 
+                explanation: "שבבי ASO על סיבים אופטיים מתוכננים להיות מהירים, ממוקדים (לסמנים ידועים) וזולים, מה שמתאים לאבחון מהיר בשטח או במרפאה לעומת ריצוף מלא הדורש זמן ומשאבי חישוב." 
             }
         ];
 
         const tfData = [
-            {
-                question: "שיטת PFGE מוגדרת כיום כסטנדרט הזהב הבלעדי והמועדף ביותר לסיווג חיידקים מודרני.",
-                answer: false,
-                explanation: "בעבר היא נחשבה לסטנדרט הזהב, אך כיום היא מוחלפת בשיטות מבוססות ריצוף בשל היותה איטית וקשה להשוואה בין מעבדות."
-            },
-            {
-                question: "ריבוטייפינג מתאימה בעיקר להבחנה בין מינים שונים של חיידקים ולא בין זנים בתוך אותו מין.",
-                answer: true,
-                explanation: "גני הריבוזום שמורים יחסית, ולכן השונות בהם מספיקה בדרך כלל להבחנה ברמת המין אך לא ברזולוציה עדינה יותר של תת-מין או זן."
-            },
-            {
-                question: "רצפי SSR נדירים מאוד בגנום החיידקי ומופיעים בו לעיתים רחוקות.",
-                answer: false,
-                explanation: "רצפי SSR הם נפוצים, מפוזרים באופן אחיד, ונמצאים בשפע בגנומים חיידקיים."
-            },
-            {
-                question: "שיטת MLST מתבססת על ריצוף של הגנום החיידקי השלם כדי לקבוע את סוג הרצף.",
-                answer: false,
-                explanation: "השיטה מתבססת על ריצוף של מקטעים ספציפיים מתוך 8 עד 12 גנים בסיסיים בלבד, ולא של כל הגנום."
-            },
-            {
-                question: "רצפי MNR שומרים על יציבות מספקת ברמת הזן כדי לשמש כסמני זיהוי, למרות הדינמיות הכללית שלהם בגנום.",
-                answer: true,
-                explanation: "אף על פי שהם משתנים מהר במונחים אבולוציוניים, ברמת הזן הספציפי הם יציבים מספיק כדי לאפשר זיהוי אמין."
-            },
-            {
-                question: "בניית דנדרוגרמה בשיטת MLST מסתמכת על השוואת תכונות מורפולוגיות של מושבות החיידקים.",
-                answer: false,
-                explanation: "דנדרוגרמות נבנות על בסיס חישוב ההבדלים בפרופילים האלליים המולקולריים של החיידקים, ולא על מורפולוגיה."
-            },
-            {
-                question: "חיידקים המציגים רצף DNA זהה לחלוטין במספר רב של אתרי SSR הם ככל הנראה בעלי מוצא אבולוציוני שונה לחלוטין.",
-                answer: false,
-                explanation: "התאמה ברצפי DNA משתנים מעידה בסבירות גבוהה על מוצא משותף וקרבה אבולוציונית או אפידמיולוגית."
-            },
-            {
-                question: "אחד היתרונות של מערכות אבחון מבוססות מערכים הוא היכולת לזהות חיידקים תוך מספר שעות במקום ימים.",
-                answer: true,
-                explanation: "מערכות אלו מספקות תוצאות מהירות בהרבה בהשוואה לשיטות תרבית קלאסיות."
-            },
-            {
-                question: "שיטת MLVA בוחנת את השונות המתרחשת במספר החזרות של רצפים טנדמיים.",
-                answer: true,
-                explanation: "זהו בדיוק הבסיס לשיטה: ניתוח המוקדים המרובים של חזרות משתנות במספרן."
-            },
-            {
-                question: "ויבריו וולניפיקוס הוא חיידק המועבר אך ורק ממגע ישיר בין בני אדם.",
-                answer: false,
-                explanation: "זהו פתוגן סביבתי, שלעיתים קרובות גורם לזיהומים בעקבות חשיפה למקורות מים או טיפול בדגים."
-            },
-            {
-                question: "בדיקת אחוז ה-GC היא אחת מהשיטות המבוססות על ניתוח DNA לסיווג מיקרואורגניזמים.",
-                answer: true,
-                explanation: "קביעת יחס הבסיסים היא קריטריון בסיסי וותיק בניתוח DNA של חיידקים."
-            },
-            {
-                question: "המונח מיקרוסטלייטים הוא שם נרדף לרצפי SSR.",
-                answer: true,
-                explanation: "שני המונחים מתארים את אותה תופעה של רצפים קצרים החוזרים על עצמם בטנדם."
-            },
-            {
-                question: "הפולימורפיזם באתרי SSR נובע מהחלפה תדירה של בסיס אחד באחר, ללא שינוי באורך הרצף.",
-                answer: false,
-                explanation: "הפולימורפיזם העיקרי באתרי SSR נובע משינוי במספר החזרות של הרצף, מה שמוביל לשינוי באורך המקטע."
-            },
-            {
-                question: "מערכת ברקוד חיידקי חייבת להתבסס על אתרים גנומיים שאינם משתנים כלל בין זנים שונים.",
-                answer: false,
-                explanation: "מערכת ברקוד זקוקה לאתרים המציגים שונות רבה בין זנים כדי לאפשר הבחנה מדויקת ביניהם."
-            },
-            {
-                question: "אוליגונוקלאוטיד ספציפי לאלל מסוגל להבחין בין שני רצפי מטרה השונים זה מזה אפילו בנוקלאוטיד בודד.",
-                answer: true,
-                explanation: "עיצוב מוקפד של הגלאי מאפשר קישור יציב רק לרצף התואם לחלוטין, ובכך לזהות הבדלים זעירים."
-            },
-            {
-                question: "רגישות באבחון מיקרוביאלי פירושה שהמערכת יקרה מאוד להפעלה.",
-                answer: false,
-                explanation: "רגישות מתייחסת ליכולת לזהות מספר קטן של תאי חיידק בדגימה, ואינה קשורה לעלות המערכת."
-            },
-            {
-                question: "ניתוח של ארבעה אתרי MNR בלבד הספיק כדי לשחזר את העץ הפילוגנטי של פאנל חיידקי אי קולי.",
-                answer: true,
-                explanation: "ההדגמה מראה כי גם מספר קטן של אתרים פולימורפיים ביותר יכול לספק מידע פילוגנטי רב ערך."
-            },
-            {
-                question: "חיידקי ויבריו כולרה שבודדו מהסביבה מציגים תמיד פרופיל גנטי זהה לזה של חיידקים שבודדו מחולים אנושיים.",
-                answer: false,
-                explanation: "ניתוח ה-SSR הראה שניתן להבחין בבירור בין אוכלוסיות פתוגניות קליניות לבין בידודים סביבתיים."
-            },
-            {
-                question: "מערך סיבים אופטיים יכול להכיל עשרות אלפי סיבים בודדים המאפשרים בדיקה של מטרות רבות במקביל.",
-                answer: true,
-                explanation: "המערכים המתקדמים מכילים מספר עצום של סיבים, מה שמאפשר יכולת ריבוי מטרות מרשימה בבדיקה אחת."
-            },
-            {
-                question: "סיווג ברמת המין דורש בחינה של אזורים גנומיים המשתנים בקצב מהיר יותר מאלה המשמשים לסיווג ברמת הזן.",
-                answer: false,
-                explanation: "ההיפך הוא הנכון. סיווג ברמת הזן דורש סמנים המשתנים מהר יותר כדי להבחין בהבדלים עדינים בין פרטים קרובים."
-            },
-            {
-                question: "מספר האתרים המשמשים ליצירת מספר זיהוי לחיידק יכול לנוע ממספר בודד ועד אלפי אתרים.",
-                answer: true,
-                explanation: "בהתאם לרזולוציה הנדרשת ולטכנולוגיה הזמינה, הברקוד יכול להתבסס על מספר משתנה של לוקוסים."
-            },
-            {
-                question: "אחת הדרישות ממערכות אבחון מודרניות היא יכולת שחזור, שמשמעותה קבלת תוצאה אמינה ועקבית בחזרות שונות.",
-                answer: true,
-                explanation: "אמינות ויציבות התוצאות הן קריטיות לאישור ושימוש נרחב בכל מערכת דיאגנוסטית."
-            },
-            {
-                question: "שיטת MLST אינה מייצרת נתונים שניתן לאחסן ולהשוות בקלות במסדי נתונים מקוונים.",
-                answer: false,
-                explanation: "היתרון הגדול של MLST הוא יצירת נתוני רצף דיגיטליים וחד-משמעיים שמושלמים לשיתוף והשוואה במסדי נתונים עולמיים."
-            },
-            {
-                question: "רצפי MNR מקודדים תמיד לחלבוני מבנה חיוניים במעטפת החיידק.",
-                answer: false,
-                explanation: "רוב רצפי ה-MNR וה-SSR אינם מקודדים לחלבון, והם מפוזרים באזורים שונים בגנום."
-            },
-            {
-                question: "הצבעים השונים המשמשים בהצגת נתוני MNR נועדו לסמן אללים בעלי מספר חזרות שונה.",
-                answer: true,
-                explanation: "בניתוח ויזואלי של אללים פולימורפיים, נהוג להשתמש בצבעים כדי להדגיש את ההבדלים באורכי הרצפים."
-            },
-            {
-                question: "מעבר גנים אופקי בין חיידקים שונים הופך את ניתוח הברקוד הגנטי לפשוט וקל יותר לפענוח.",
-                answer: false,
-                explanation: "מעבר גנים מסבך את הניתוח, מכיוון שהוא מפר את ההנחה שדמיון ברצף נובע אך ורק מהורשה אנכית ומוצא משותף."
-            },
-            {
-                question: "שימוש בחרוזים נושאי גלאים בקצות סיבים אופטיים מאפשר יצירת תבנית תגובה בינארית מהירה.",
-                answer: true,
-                explanation: "החרוזים מספקים אות חיובי או שלילי בתגובה לנוכחות המטרה, ויוצרים תבנית קריאה ברורה וניתנת לאוטומציה."
-            },
-            {
-                question: "ספציפיות באבחון מוגדרת כיכולת להבדיל בין זן המטרה לבין זנים או מינים אחרים באופן מוחלט.",
-                answer: true,
-                explanation: "מערכת ספציפית אינה מגיבה בחיוב לחיידקים שאינם קשורים למטרת הבדיקה."
-            },
-            {
-                question: "העלות הנמוכה של מערכות אבחון מבוססות מערכים מונעת מהן לשמש לבדיקות שגרתיות בתעשיית המזון.",
-                answer: false,
-                explanation: "ההיפך הוא הנכון. העלות הנמוכה היא זו שמאפשרת לבצע דיגום שגרתי ונרחב מבלי לחרוג מתקציבי הבקרה."
-            },
-            {
-                question: "שיטת MLST הפכה לשיטה נדירה שכמעט ואינה בשימוש כיום במחקר המיקרוביולוגי.",
-                answer: false,
-                explanation: "השיטה הפכה למובילה ונפוצה מאוד בזכות היכולת להשוות נתונים גלובלית ואמינותה הגבוהה."
-            }
+            { question: "שיטת ה-PFGE מבוססת על קביעת הרצף המדויק של נוקלאוטידים ב-DNA החיידקי.", answer: false, explanation: "שיטת PFGE מבוססת על הפרדת מקטעי DNA בג'ל על בסיס גודלם הפיזי, ולא על ריצוף." },
+            { question: "Ribotyping היא שיטה המשמשת בעיקר לסיווג חיידקים ברמת המין (Species).", answer: true, explanation: "ריבוטייפינג, המבוסס על גנים ריבוזומליים כמו 16S, הוא כלי סטנדרטי לקביעת המין הביולוגי של החיידק." },
+            { question: "בשיטת MLST נהוג לרצף את כל הגנום החיידקי כדי למצוא שונות.", answer: false, explanation: "ב-MLST מרצפים מקטעים ספציפיים (לרוב כ-450 זוגות בסיסים) מתוך 8 עד 12 גני משק בית בלבד." },
+            { question: "רצפי SSR (מיקרוסטלייטים) נדירים מאוד בגנום החיידקי ולכן קשה להשתמש בהם לסיווג.", answer: false, explanation: "ההפך הוא הנכון. רצפי SSR נפוצים מאוד, מפוזרים באופן אחיד בגנום, ומהווים מטרה מצוינת לאנליזה." },
+            { question: "השונות ברצפי SSR נובעת בעיקר מהבדלים במספר הפעמים שרצף הבסיס חוזר על עצמו.", answer: true, explanation: "הפולימורפיזם של SSR מתבטא בשינוי במספר החזרות הטנדמיות (למשל, 4 חזרות לעומת 5 חזרות)." },
+            { question: "רצפי SSR משתנים במהירות כה רבה עד שלא ניתן להשתמש בהם לזיהוי זן ספציפי לאורך זמן.", answer: false, explanation: "למרות שהם דינמיים מבחינה אבולוציונית, הם יציבים מאוד ברמת הזן הספציפי (Strain level), מה שמאפשר מעקב אפידמיולוגי." },
+            { question: "מערכת אבחון בעלת ספציפיות גבוהה תיטה פחות לתת תוצאות חיוביות שגויות (False positives).", answer: true, explanation: "ספציפיות היא היכולת לזהות רק את מטרת הבדיקה ללא תגובה צולבת עם גורמים דומים." },
+            { question: "המושג Sequence Type (ST) מתייחס לתוצאה המתקבלת מאנליזת PFGE.", answer: false, explanation: "ST הוא המזהה הדיגיטלי המתקבל מאנליזת רצפים בשיטת MLST." },
+            { question: "בניית עץ פילוגנטי דורשת השוואה מרובת לוקוסים כדי למנוע הטיות הנובעות משינויים בגן בודד.", answer: true, explanation: "שימוש במספר לוקוסים מחליק רעשים אבולוציוניים (כמו HGT) ומספק תמונה אמינה יותר של יחסי הקרבה." },
+            { question: "טכנולוגיית Microarray מאפשרת לבחון נוכחות של אללים רבים בו זמנית על גבי שבב אחד.", answer: true, explanation: "זוהי המהות של שבבים - סריקה מקבילה (Multiplexing) של מספר רב של מטרות." },
+            { question: "גלאי ASO מתוכננים להיקשר לכל רצף DNA אקראי בדגימה.", answer: false, explanation: "גלאי ASO (Allele Specific Oligonucleotide) מתוכננים להיות ספציפיים ביותר ולהיקשר רק לאלל אחד מוגדר." },
+            { question: "Vibrio vulnificus מועבר בעיקר דרך הדבקה טיפתית מאדם לאדם בבתי חולים.", answer: false, explanation: "זהו פתוגן סביבתי הנמצא במים ודגים, וההדבקה מתרחשת לרוב במגע עם הסביבה או צריכת מזון נגוע." },
+            { question: "המעבר משיטות מבוססות ג'ל לשיטות מבוססות רצף הקל על שיתוף נתונים בין מעבדות ברחבי העולם.", answer: true, explanation: "רצף אותיות או מספר חזרות הוא מידע דיגיטלי חד-משמעי שקל לאחסן ולהשוות במסדי נתונים גלובליים." },
+            { question: "מערכת אבחון נחשבת להדירה (Reproducible) אם היא מסוגלת לזהות חיידקים שונים באותה דגימה.", answer: false, explanation: "הדירות מתייחסת ליכולת לקבל את אותה התוצאה בדיוק כאשר חוזרים על הבדיקה מספר פעמים בתנאים דומים." },
+            { question: "רצף ה-MNR הוא סוג של SSR שבו יחידת החזרה מורכבת מנוקלאוטיד אחד בלבד.", answer: true, explanation: "MNR פירושו Mono Nucleotide Repeat, כלומר חזרה על בסיס בודד (למשל AAAAA)." },
+            { question: "כדי לזהות מקור התפרצות של הרעלת מזון, מספיק לזהות את מין החיידק (למשל E. coli).", answer: false, explanation: "מרבית מיני החיידקים כוללים זנים בלתי מזיקים. חובה לזהות את תת-המין/הזן הספציפי הגורם להתפרצות." },
+            { question: "שיטת ה-MLVA מבוססת על ספירת מספר החזרות באתרים גנומיים שונים.", answer: true, explanation: "MLVA מסתמכת על ניתוח ה-VNTR (Variable Number Tandem Repeats), כלומר השונות במספר החזרות." },
+            { question: "גני משק בית (Housekeeping genes) הם גנים המקודדים תמיד לעמידות לאנטיביוטיקה.", answer: false, explanation: "אלו גנים החיוניים לתפקוד הבסיסי והיומיומי של התא, ללא קשר לעמידות." },
+            { question: "שימוש בסיבים אופטיים במערכי אבחון מאפשר הקטנה משמעותית של המערכת וקריאה מהירה.", answer: true, explanation: "סיבים בקוטר מיקרומטרי מאפשרים לדחוס עשרות אלפי גלאים לשטח קטן ולקרוא אותם אופטית ביעילות." },
+            { question: "ברקוד חיידקי המבוסס על SSR ישתנה לחלוטין בכל פעם שהחיידק יתחלק.", answer: false, explanation: "הברקוד יציב ברמת הזן ונשמר במהלך חלוקות התא, אחרת לא ניתן היה להשתמש בו לזיהוי." },
+            { question: "המושג Point of care medicine מתייחס לבדיקות הנעשות במעבדות מחקר מרכזיות בלבד.", answer: false, explanation: "Point of care מתייחס לבדיקות מהירות שניתן לבצע בסמוך למטופל או בשטח, ללא צורך במעבדה מרכזית." },
+            { question: "דנדרוגרמה (Dendrogram) מציגה קרבה גנטית באמצעות אורך ופיצול הענפים.", answer: true, explanation: "המרחק האופקי עד נקודת הפיצול מייצג את המרחק הגנטי בין הבידודים השונים." },
+            { question: "טכנולוגיית MLST אינה דורשת יצירת מסד נתונים להשוואה.", answer: false, explanation: "כל כוחה של ה-MLST טמון בהשוואת הרצפים למסד נתונים מרכזי כדי לקבל את ה-Sequence Type." },
+            { question: "בדיקה בעלת רגישות גבוהה מסוגלת לזהות זיהום גם כאשר כמות ה-DNA החיידקי בדגימה היא מזערית.", answer: true, explanation: "רגישות מתייחסת לסף הגילוי התחתון של המערכת." },
+            { question: "רצפי SSR נמצאים רק בכרומוזומים של בני אדם ובעלי חיים, ולא בחיידקים.", answer: false, explanation: "רצפי SSR נפוצים מאוד גם בגנומים חיידקיים." },
+            { question: "איתור חיידקי Vibrio cholerae על גבי חרקים מרמז על מנגנון הפצה סביבתי של המחלה.", answer: true, explanation: "הימצאות החיידק על נשאים סביבתיים (Vectors) מעידה על דרכי תפוצתו מעבר להדבקה הישירה במים." },
+            { question: "עלות נמוכה היא דרישה זניחה במערכות אבחון לניטור מים וסביבה.", answer: false, explanation: "ניטור סביבתי דורש דגימות תכופות ורבות, ולכן עלות נמוכה היא דרישה קריטית ליישומו." },
+            { question: "שילוב של סמני SSR יחד עם MLST יכול לשפר את יכולת ההפרדה (Discrimination) בין זנים קרובים.", answer: true, explanation: "שימוש משולב בסמנים שונים מגביר את הרזולוציה ומאפשר להבדיל בין זנים שהיו נראים זהים בשיטה אחת." },
+            { question: "בשיטת PFGE, חיידקים מאותו זן בדיוק עשויים להציג תבניות פסים שונות לחלוטין עקב טמפרטורת החדר.", answer: false, explanation: "אמנם PFGE רגישה לתנאים טכניים, אך תבנית הפסים עצמה מוגדרת על ידי אתרי החיתוך בגנום. וריאציות קלות ייתכנו, אך לא תבניות שונות לחלוטין ללא שינוי גנטי." },
+            { question: "היברידיזציה על מערך (Array) דורשת לרוב סימון של דגימת המטרה (למשל בחומר פלואורסצנטי) כדי לזהות קישור.", answer: true, explanation: "כדי לדעת שה-DNA מהדגימה אכן נקשר לגלאי ה-ASO על השבב, משתמשים בסמנים פלואורסצנטיים הפולטים אור בעת קריאה בלייזר." }
         ];
-
 
         // --- Global State Variables ---
         let currentCardIndex = 0;
@@ -916,6 +714,13 @@
         const tfSingleView = document.getElementById('tf-single-view');
         const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
 
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
         function displayCard(index) {
             if (!flashcardData || flashcardData.length === 0) return;
             const cardData = flashcardData[index];
@@ -926,6 +731,7 @@
             cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
             prevCardBtn.disabled = index === 0;
             nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
         }
 
         function flipCard() {
@@ -944,6 +750,7 @@
                 }
                 flashcardContent.style.opacity = '1';
                 isCardAnimating = false;
+                triggerMathJax();
             }, 300);
         }
 
@@ -966,6 +773,7 @@
             if (mcqAnswers[index] !== null) {
                 highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
             }
+            triggerMathJax();
         }
 
         function handleMCQAnswer(qIndex, selectedIndex) {
@@ -981,20 +789,17 @@
             buttons.forEach((button, i) => {
                 button.disabled = true;
                 if (i === qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--correct-color)';
-                    button.style.color = '#fff';
                     button.classList.add('correct');
                 }
                 if (i === selectedIndex && i !== qData.correctIndex) {
-                    button.style.backgroundColor = 'var(--incorrect-color)';
-                    button.style.color = '#fff';
                     button.classList.add('incorrect');
                 }
             });
             feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
             feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
-            explanationEl.textContent = `הסבר: ${qData.explanation}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
             explanationEl.classList.remove('hidden');
+            triggerMathJax();
         }
 
         function displayAllMCQ() {
@@ -1036,6 +841,7 @@
                  }
             });
             mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
         }
 
         function displayTFQuestion(index) {
@@ -1047,8 +853,6 @@
              const buttons = tfOptionsContainer.querySelectorAll('button');
              buttons.forEach(button => {
                  button.disabled = false;
-                 button.style.backgroundColor = '';
-                 button.style.color = '';
                  button.classList.remove('correct', 'incorrect');
                  button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
              });
@@ -1058,6 +862,7 @@
             if (tfAnswers[index] !== null) {
                 highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
             }
+            triggerMathJax();
         }
         
         function handleTFAnswer(qIndex, selectedAnswer) {
@@ -1074,20 +879,17 @@
                  const buttonAnswer = button.dataset.answer === 'true';
                  button.disabled = true;
                  if (buttonAnswer === qData.answer) {
-                     button.style.backgroundColor = 'var(--correct-color)';
-                     button.style.color = '#fff';
                      button.classList.add('correct');
                  }
                  if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
-                     button.style.backgroundColor = 'var(--incorrect-color)';
-                     button.style.color = '#fff';
                      button.classList.add('incorrect');
                  }
              });
              feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
              feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
-             explanationEl.textContent = `הסבר: ${qData.explanation}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
              explanationEl.classList.remove('hidden');
+             triggerMathJax();
         }
         
         function displayAllTF() {
@@ -1130,6 +932,7 @@
                  }
              });
              tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
         }
 
         function initialize() {
@@ -1145,6 +948,9 @@
             prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
             nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
             viewAllTFBtn.addEventListener('click', displayAllTF);
+            
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
         }
         
         initialize();
