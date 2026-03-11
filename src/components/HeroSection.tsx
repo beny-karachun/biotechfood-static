@@ -82,7 +82,7 @@ export default function HeroSection() {
           {t('hero.subtitle')} <br className="hidden md:block" />
           {t('hero.subtitle_br')}
         </p>
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4" dir="ltr">
           {/* Link triggers the client-side scroll function */}
           <a href="#course-diagram" onClick={scrollToDiagram}>
             <Button className="w-full md:w-auto min-w-[220px] px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
@@ -97,7 +97,7 @@ export default function HeroSection() {
         </div>
 
         {/* Social Links */}
-        <div className="flex justify-center items-center gap-4 mt-6">
+        <div className="flex justify-center items-center gap-4 mt-6" dir="ltr">
           <a
             href="https://www.linkedin.com/in/beny-karachun-5a5188369/"
             target="_blank"

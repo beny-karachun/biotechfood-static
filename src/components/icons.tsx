@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Check, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, LogOut, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, Calculator, Save, Globe } from 'lucide-react'; // Added Globe
+import { AlertCircle, ArrowRight, Check, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, LogOut, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, Calculator, Save, Globe, GraduationCap } from 'lucide-react';
 import React from 'react'; // Import React
 
 // WhatsApp Icon Component
@@ -41,6 +41,7 @@ const Icons = {
   externalLink: ExternalLink,
   file: File,
   globe: Globe,
+  graduationCap: GraduationCap,
   help: HelpCircle,
   home: Home,
   light: Sun,

@@ -116,7 +116,7 @@ export function Header() {
           tabIndex={isEffectivelyExpanded ? 0 : -1}
           className="inline-flex items-center justify-center rounded-full p-2 h-auto min-w-[44px] min-h-[44px] hover:bg-white/20 dark:hover:bg-black/20 hover:text-accent-foreground transition-colors"
         >
-          <Icons.messageSquare className="h-4 w-4" />
+          <Icons.graduationCap className="h-4 w-4" />
         </Link>
       ),
     },
