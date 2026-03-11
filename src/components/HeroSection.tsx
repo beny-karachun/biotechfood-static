@@ -6,11 +6,13 @@ import { Icons } from '@/components/icons';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useLanguage } from '@/lib/i18n';
 
 export default function HeroSection() {
   const [isClient, setIsClient] = useState(false);
   const { resolvedTheme } = useTheme();
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
 
   useEffect(() => {
     setIsClient(true);
@@ -59,6 +61,7 @@ export default function HeroSection() {
       {/* Text content centered on top */}
       <div className="relative z-20 container text-center px-4">
         <h1
+          dir="ltr"
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight"
           style={{
             color: 'white',
@@ -66,7 +69,7 @@ export default function HeroSection() {
             textShadow: '0px 4px 24px rgba(0,0,0,0.5)'
           }}
         >
-          Biotechnology & <br className="hidden md:block" /> Food Engineering
+          {t('hero.title')} <br className="hidden md:block" /> {t('hero.title_br')}
         </h1>
         <p
           className="text-lg sm:text-xl md:text-2xl font-medium max-w-2xl mx-auto mt-4 mb-8 sm:mt-6 sm:mb-10"
@@ -76,19 +79,19 @@ export default function HeroSection() {
             textShadow: '0px 2px 12px rgba(0,0,0,0.5)'
           }}
         >
-          Your Technion B.Sc. course companion. <br className="hidden md:block" />
-          Access all study materials, summaries, and tools in one hub.
+          {t('hero.subtitle')} <br className="hidden md:block" />
+          {t('hero.subtitle_br')}
         </p>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
           {/* Link triggers the client-side scroll function */}
           <a href="#course-diagram" onClick={scrollToDiagram}>
             <Button className="w-full md:w-auto min-w-[220px] px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
-              Explore Courses
+              {t('hero.explore')}
             </Button>
           </a>
           <Link href="/tutoring">
             <Button className="w-full md:w-auto min-w-[220px] px-10 py-6 text-lg rounded-full shadow-xl transition-transform hover:-translate-y-1" variant="secondary">
-              Arrange Tutoring
+              {t('hero.tutoring')}
             </Button>
           </Link>
         </div>

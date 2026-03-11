@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from '@/components/icons';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useLanguage } from '@/lib/i18n';
 
 // Minimal interface needed for rendering
 interface CourseInfo {
@@ -21,6 +22,7 @@ interface CourseInfo {
 
 export default function AnimatedCourseGrid({ courseData }: { courseData: CourseInfo[] }) {
     const isMobile = useIsMobile(); // < 768px
+    const { t } = useLanguage();
 
     // Helper to group courses by semester
     const coursesBySemester = courseData.reduce((acc, course) => {
@@ -57,14 +59,14 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
     };
 
     return (
-        <div className="container mx-auto py-8 px-4" dir="rtl">
+        <div className="container mx-auto py-8 px-4">
             <motion.h1
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 md:mb-12 bg-clip-text text-transparent bg-gradient-to-r from-primary to-orange-400 drop-shadow-sm"
             >
-                לחצו על הקורסים הקיימים כדי להיכנס לעמוד הקורס
+                {t('grid.title')}
             </motion.h1>
 
             <motion.div
@@ -85,7 +87,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                             <h2 className="text-xl font-semibold mb-2 border-b border-border/60 pb-2 w-full text-center flex-shrink-0 text-foreground/90">
-                                {parseInt(semester) === 8 ? 'כלי עזר' : `סמסטר ${semester}`}
+                                {parseInt(semester) === 8 ? t('grid.tools') : `${t('courses.semester')} ${semester}`}
                             </h2>
 
                             <div
@@ -131,10 +133,10 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                             className="text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/card:-translate-y-1"
                                                             style={{ backgroundColor: '#3b82f6', color: '#FFFFFF' }}
                                                         >
-                                                            {parseInt(semester) === 8 ? 'כלי עזר' : 'קיים קורס'}
+                                                            {parseInt(semester) === 8 ? t('grid.tools') : t('grid.course_available')}
                                                         </Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="border-dashed border-border/80 text-muted-foreground bg-background/50 text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 transition-transform duration-300 group-hover/card:-translate-y-1">עדיין לא קיים</Badge>
+                                                        <Badge variant="outline" className="border-dashed border-border/80 text-muted-foreground bg-background/50 text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 transition-transform duration-300 group-hover/card:-translate-y-1">{t('grid.coming_soon')}</Badge>
                                                     )}
                                                 </Link>
                                             ) : (
@@ -148,7 +150,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                         <span className="font-semibold text-xs sm:text-[11px] md:text-xs mb-0.5 shrink-0">{course.number}</span>
                                                         <span className="leading-tight text-xs sm:text-[11px] md:text-xs line-clamp-3 md:line-clamp-2 overflow-hidden px-0.5">{course.name}</span>
                                                     </Button>
-                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0">עדיין לא קיים</Badge>
+                                                    <Badge variant="outline" className="border-dashed text-muted-foreground text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0">{t('grid.coming_soon')}</Badge>
                                                 </div>
                                             )}
                                         </motion.div>
@@ -164,7 +166,7 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                 transition={{ delay: 0.8, duration: 1 }}
                 className="text-center text-muted-foreground mt-8 md:mt-12 text-sm bg-muted/30 py-2 rounded-full max-w-lg mx-auto px-4"
             >
-                הערה: זוהי הצגה סמסטריאלית של הקורסים. קשרי קדם אינם מוצגים ויזואלית.
+                {t('grid.disclaimer')}
             </motion.p>
         </div>
     );
