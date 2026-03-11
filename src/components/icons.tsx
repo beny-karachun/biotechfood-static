@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Check, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, LogOut, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, Calculator, Save, Globe, GraduationCap } from 'lucide-react';
+import { AlertCircle, ArrowRight, BookOpen, Check, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, LogOut, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, Calculator, Save, Globe, GraduationCap } from 'lucide-react';
 import React from 'react'; // Import React
 
 // WhatsApp Icon Component
@@ -25,6 +25,7 @@ const GitHubIcon = (props: React.SVGProps<SVGSVGElement>) => (
 const Icons = {
   alertCircle: AlertCircle, // Added
   arrowRight: ArrowRight,
+  bookOpen: BookOpen,
   calculator: Calculator, // Added
   check: Check,
   chevronDown: ChevronDown,
