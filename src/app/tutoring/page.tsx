@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { useLanguage } from '@/lib/i18n';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 // --- Animation Variants ---
 const containerVariants = {
@@ -56,6 +56,49 @@ const pulseVariants = {
   tap: { scale: 0.95 }
 };
 
+const BackgroundMicroscope = ({ 
+  className = "", 
+  style = {},
+}: { 
+  className?: string; 
+  style?: React.CSSProperties;
+}) => {
+  const ref = useRef<any>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end 0.75"]
+  });
+  
+  const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  return (
+    <div
+      ref={ref}
+      className={`absolute pointer-events-none z-0 ${className}`}
+      style={style}
+    >
+      <motion.svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="100%"
+        height="100%"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-primary"
+      >
+        <motion.path d="M6 18h8" style={{ pathLength }} />
+        <motion.path d="M3 22h18" style={{ pathLength }} />
+        <motion.path d="M14 22a7 7 0 1 0 0-14h-1" style={{ pathLength }} />
+        <motion.path d="M9 14h2" style={{ pathLength }} />
+        <motion.path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z" style={{ pathLength }} />
+        <motion.path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3" style={{ pathLength }} />
+      </motion.svg>
+    </div>
+  );
+};
 
 export default function TutoringPage() {
   const { t, dir } = useLanguage();
@@ -90,6 +133,19 @@ export default function TutoringPage() {
   };
 
   return (
+    <main className="min-h-screen bg-background relative overflow-hidden">
+      {/* Scattered Background SVGs */}
+      <BackgroundMicroscope className="w-24 h-24 opacity-30" style={{ top: '6%', left: '8%', rotate: '15deg' }} />
+      <BackgroundMicroscope className="w-16 h-16 opacity-40" style={{ top: '15%', right: '12%', rotate: '-25deg' }} />
+      <BackgroundMicroscope className="w-32 h-32 opacity-20" style={{ top: '25%', left: '15%', rotate: '45deg' }} />
+      <BackgroundMicroscope className="w-12 h-12 opacity-50" style={{ top: '35%', right: '8%', rotate: '-15deg' }} />
+      <BackgroundMicroscope className="w-48 h-48 opacity-15" style={{ top: '48%', left: '-2%', rotate: '20deg' }} />
+      <BackgroundMicroscope className="w-20 h-20 hidden sm:block opacity-40" style={{ top: '58%', right: '22%', rotate: '-40deg' }} />
+      <BackgroundMicroscope className="w-8 h-8 opacity-60" style={{ top: '65%', left: '10%', rotate: '10deg' }} />
+      <BackgroundMicroscope className="w-64 h-64 opacity-10" style={{ top: '75%', right: '-5%', rotate: '-35deg' }} />
+      <BackgroundMicroscope className="w-16 h-16 hidden sm:block opacity-50" style={{ top: '85%', left: '28%', rotate: '30deg' }} />
+      <BackgroundMicroscope className="w-32 h-32 opacity-30" style={{ top: '92%', right: '15%', rotate: '-10deg' }} />
+
     <motion.div 
       className="container mx-auto pt-24 pb-10 px-4 max-w-4xl" 
       dir={dir}
@@ -260,5 +316,6 @@ export default function TutoringPage() {
           </Card>
       </motion.div>
     </motion.div>
+    </main>
   );
 }
