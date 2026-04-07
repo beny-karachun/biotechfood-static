@@ -82,7 +82,7 @@ const baseCourseData: Omit<CourseInfo, 'exists' | 'hasContent' | 'slug' | 'isInt
   { name: `בחירת קורסי מגמות`, number: "??", semester: 7 },
 
   // Semester 8 (כלי עזר)
-  { name: "טסטר לפייתון", number: "1", semester: 8 }, // Consider adding an icon: icon: 'code' or similar
+  { name: "טסטר לפייתון", number: "1", semester: 8, externalUrl: 'https://pythontester.technionprep.com/' }, // Consider adding an icon: icon: 'code' or similar
   { name: "ספרות משמעותיות", number: "2", semester: 8 }, // Consider adding an icon: icon: 'book' or similar
   { name: "CFU Calculator", number: "3", semester: 8 },
   { name: "שורש (נתוני תזונה ועיצוב תווית)", number: "4", semester: 8, externalUrl: 'https://shoresh.streamlit.app/' },
