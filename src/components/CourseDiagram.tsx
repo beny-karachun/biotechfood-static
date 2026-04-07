@@ -21,6 +21,7 @@ interface CourseInfo {
   hasContent: boolean; // Has actual HTML/PDF files (not just .gitkeep)
   semester: number;
   isInternalLink?: boolean;
+  externalUrl?: string;
   icon?: keyof typeof Icons;
 }
 
@@ -44,7 +45,7 @@ const baseCourseData: Omit<CourseInfo, 'exists' | 'hasContent' | 'slug' | 'isInt
 
   // Semester 3
   { name: `מדר ח`, number: 104131, semester: 3 },
-  { name: `פייתון`, number: 234128, semester: 3 },
+  { name: `פייתון`, number: 234128, semester: 3, externalUrl: 'https://python.technionprep.com' },
   { name: `טכנולוגיה של מזון`, number: "064212", semester: 3 },
   { name: `מבוא לביוט מולקולרית`, number: "064523", semester: 3 },
   { name: `מסלולים מטבוליים`, number: 134113, semester: 3 },
@@ -101,8 +102,15 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
     let slug: string | null = null;
     let isInternalLink = false;
 
+    // Handle courses with external URLs
+    if (course.externalUrl) {
+      exists = true;
+      hasContent = true;
+      slug = course.externalUrl;
+      isInternalLink = false;
+    }
     // Skip placeholders
-    if (course.name !== "בחירת קורסי מגמות" && course.number !== "??") {
+    else if (course.name !== "בחירת קורסי מגמות" && course.number !== "??") {
       const courseDirPath = path.join(publicCoursesDir, expectedFolderName);
       try {
         const files = await fs.promises.readdir(courseDirPath);
@@ -127,6 +135,7 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
       hasContent,
       slug,
       isInternalLink,
+      externalUrl: course.externalUrl,
     };
   }));
 
