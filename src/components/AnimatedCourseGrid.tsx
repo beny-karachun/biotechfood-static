@@ -19,6 +19,7 @@ interface CourseInfo {
     semester: number;
     externalUrl?: string;
     icon?: keyof typeof Icons;
+    specializationSelection?: boolean;
 }
 
 export default function AnimatedCourseGrid({ courseData }: { courseData: CourseInfo[] }) {
@@ -115,14 +116,14 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                     : undefined
                                             }
                                             whileHover={course.exists ? { scale: 1.05, zIndex: 10 } : {}}
-                                            whileTap={course.exists ? { scale: 0.95 } : {}}
+                                            whileTap={course.exists ? { scale: 0.96 } : {}}
                                         >
                                             {course.exists && course.slug ? (
                                                 course.externalUrl ? (
                                                 <a href={course.externalUrl} target="_blank" rel="noopener noreferrer" className="block w-full group/card h-full flex flex-col relative min-h-[90px] md:min-h-0">
                                                     <Button
                                                         variant="default"
-                                                        className={`w-full h-full py-2 px-2 mb-1 whitespace-normal flex flex-col items-center justify-start text-center flex-grow text-white shadow-sm transition-all duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
+                                                        className={`w-full h-full py-2 px-2 mb-1 whitespace-normal flex flex-col items-center justify-start text-center flex-grow text-white shadow-sm transition-[background-color,box-shadow,opacity,transform] duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
                                                     >
                                                         {IconComponent && <IconComponent className="h-4 w-4 mb-0.5" />}
                                                         <span className="font-bold text-xs sm:text-[11px] md:text-xs mb-0.5 tracking-tight shrink-0">{course.number}</span>
@@ -142,13 +143,21 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                     )}
                                                 </a>
                                                 ) : (
-                                                <Link href={course.slug} className="block w-full group/card h-full flex flex-col relative min-h-[90px] md:min-h-0">
+                                                <Link
+                                                    href={course.slug}
+                                                    target={course.specializationSelection ? '_blank' : undefined}
+                                                    rel={course.specializationSelection ? 'noopener noreferrer' : undefined}
+                                                    aria-label={course.specializationSelection ? t('grid.specialization_aria') : undefined}
+                                                    className="block w-full group/card h-full flex flex-col relative min-h-[90px] md:min-h-0"
+                                                >
                                                     <Button
                                                         variant="default"
-                                                        className={`w-full h-full py-2 px-2 mb-1 whitespace-normal flex flex-col items-center justify-start text-center flex-grow text-white shadow-sm transition-all duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
+                                                        className={`w-full h-full py-2 px-2 mb-1 whitespace-normal flex flex-col items-center justify-start text-center flex-grow text-white shadow-sm transition-[background-color,box-shadow,opacity,transform] duration-300 group-hover/card:shadow-orange-500/30 group-hover/card:shadow-lg ${!course.hasContent ? 'opacity-80 bg-orange-500/80 hover:bg-orange-600/90' : 'bg-primary hover:bg-primary/90'}`}
                                                     >
                                                         {IconComponent && <IconComponent className="h-4 w-4 mb-0.5" />}
-                                                        <span className="font-bold text-xs sm:text-[11px] md:text-xs mb-0.5 tracking-tight shrink-0">{course.number}</span>
+                                                        <span className="font-bold text-xs sm:text-[11px] md:text-xs mb-0.5 tracking-tight shrink-0">
+                                                            {course.specializationSelection ? t('grid.specialization_count') : course.number}
+                                                        </span>
                                                         <span className="leading-tight font-medium drop-shadow-sm text-xs sm:text-[11px] md:text-xs line-clamp-3 md:line-clamp-2 overflow-hidden px-0.5">{course.name}</span>
                                                     </Button>
 
@@ -158,7 +167,11 @@ export default function AnimatedCourseGrid({ courseData }: { courseData: CourseI
                                                             className="text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover/card:-translate-y-1"
                                                             style={{ backgroundColor: '#3b82f6', color: '#FFFFFF' }}
                                                         >
-                                                            {parseInt(semester) === 8 ? t('grid.tools') : t('grid.course_available')}
+                                                            {course.specializationSelection
+                                                                ? t('grid.view_specializations')
+                                                                : parseInt(semester) === 8
+                                                                    ? t('grid.tools')
+                                                                    : t('grid.course_available')}
                                                         </Badge>
                                                     ) : (
                                                         <Badge variant="outline" className="border-dashed border-border/80 text-muted-foreground bg-background/50 text-[10px] md:text-xs px-2 py-0.5 self-center flex-shrink-0 transition-transform duration-300 group-hover/card:-translate-y-1">{t('grid.coming_soon')}</Badge>

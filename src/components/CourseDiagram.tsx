@@ -23,6 +23,7 @@ interface CourseInfo {
   isInternalLink?: boolean;
   externalUrl?: string;
   icon?: keyof typeof Icons;
+  specializationSelection?: boolean;
 }
 
 // Define the base course data (exists and slug will be determined server-side)
@@ -73,13 +74,13 @@ const baseCourseData: Omit<CourseInfo, 'exists' | 'hasContent' | 'slug' | 'isInt
   { name: `סטטיסטיקה`, number: "094481", semester: 6 },
   { name: `שיטות נומריות`, number: "064120", semester: 6 },
   { name: `מדע וטכנולוגיה של ביוחומרים`, number: "064250", semester: 6 },
-  { name: `בחירת קורסי מגמות`, number: "??", semester: 6 },
+  { name: `בחירת קורסי מגמות`, number: "??", semester: 6, specializationSelection: true },
 
   // Semester 7
   { name: `מעבדה בהנדסת תהליכים`, number: "064239", semester: 7 },
   { name: `תהליכי יסוד`, number: "064509", semester: 7 },
   { name: `תזונה`, number: "064615", semester: 7 },
-  { name: `בחירת קורסי מגמות`, number: "??", semester: 7 },
+  { name: `בחירת קורסי מגמות`, number: "??", semester: 7, specializationSelection: true },
 
   // Semester 8 (כלי עזר)
   { name: "טסטר לפייתון", number: "1", semester: 8, externalUrl: 'https://pythontester.technionprep.com/' }, // Consider adding an icon: icon: 'code' or similar
@@ -103,15 +104,22 @@ async function getProcessedCourseData(): Promise<CourseInfo[]> {
     let slug: string | null = null;
     let isInternalLink = false;
 
+    // Both specialization-selection cards open the dedicated five-track page.
+    if (course.specializationSelection) {
+      exists = true;
+      hasContent = true;
+      slug = '/specializations';
+      isInternalLink = true;
+    }
     // Handle courses with external URLs
-    if (course.externalUrl) {
+    else if (course.externalUrl) {
       exists = true;
       hasContent = true;
       slug = course.externalUrl;
       isInternalLink = false;
     }
     // Skip placeholders
-    else if (course.name !== "בחירת קורסי מגמות" && course.number !== "??") {
+    else if (course.number !== "??") {
       const courseDirPath = path.join(publicCoursesDir, expectedFolderName);
       try {
         const files = await fs.promises.readdir(courseDirPath);
