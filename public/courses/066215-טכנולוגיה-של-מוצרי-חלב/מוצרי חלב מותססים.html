@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מוצרי חלב מותססים ויוגורט</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct {
+            background: var(--correct-color);
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1;
+        }
+        .options button.incorrect, .tf-options button.incorrect {
+            background: var(--incorrect-color);
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>מוצרי חלב מותססים ויוגורט</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <h3>עקרון התסיסה של חלב</h3>
+                <p>מוצרי חלב מותססים הם משפחה של מוצרים שבהם חיידקים לקטיים מבצעים פרמנטציה. במהלך התהליך הלקטוז הופך לחומצה לקטית, ה-pH יורד והחלב נקרש לג׳ל. ההחמצה היא שיטת שימור עתיקה, אך היא גם בונה את הטעם, הארומה והמרקם האופייניים למוצר.</p>
+                <p>סוג המחמצת קובע אילו תוצרי תסיסה ייווצרו ובאיזו מידה. לצד חומצה לקטית עשויים להיווצר אצטאלדהיד, דיאצטיל, פחמן דו-חמצני, חומצה אצטית ותוצרים נוספים. לכן הרכב החלב, סוג המחמצת ותהליך הייצור פועלים יחד וקובעים את איכות המוצר הסופי.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    ההחמצה אינה רק יצירת טעם חמוץ. ירידת ה-pH מחברת בין המטבוליזם של המחמצת לבין יצירת הג׳ל, ואילו תוצרי תסיסה נוספים קובעים את זהות הארומה של כל מוצר.
+                </div>
+
+                <h3>סוגי מוצרים לפי מיקום ההחמצה והטיפול בג׳ל</h3>
+                <ul>
+                    <li><strong>Set:</strong> ההחמצה והקרישה מתרחשות באריזה עצמה, ולכן הג׳ל מתקבל בגביע.</li>
+                    <li><strong>Stirred:</strong> ההחמצה מתרחשת במכל. לאחריה המוצר נבחש, מקורר ונארז.</li>
+                    <li><strong>מוצר לשתייה:</strong> דומה למוצר בחוש, אך הבחישה לאחר ההחמצה יוצרת מרקם נוזלי.</li>
+                    <li><strong>Frozen:</strong> האינקובציה מתרחשת במכל, ולאחר האריזה המוצר מוקפא בדומה לגלידה.</li>
+                    <li><strong>מוצר מרוכז:</strong> לאחר אינקובציה במכל מבצעים ריכוז וקירור לפני האריזה.</li>
+                </ul>
+                <p>ההבחנה בין Set לבין Stirred אינה מתארת מחמצת שונה בהכרח, אלא בעיקר את מיקום יצירת הג׳ל ואת מידת הטיפול המכני בו לאחר ההחמצה. משום כך התאמת קו הייצור למוצר חיונית לשמירת המרקם.</p>
+
+                <h3>תסיסה מזופילית</h3>
+                <p>מוצרים מזופיליים, כגון לבן ושמנת חמוצה, מכונים גם תוצרת ניגרת. המחמצת עשויה לשלב חיידקים יוצרי חומצה לקטית, כגון Lactococcus lactis subsp. lactis ו-Lactococcus lactis subsp. cremoris, עם חיידקים תוססי ציטרט, כגון Lactococcus lactis biovar diacetylactis. שילוב זה מאפשר לקבל חמיצות לצד ארומת דיאצטיל.</p>
+                <p>בתהליך טיפוסי החלב עובר סטנדרטיזציה, המגון בלחץ 200–250 bar ובטמפרטורה 65–70°C, פסטור ב-90–95°C למשך 5 דקות וקירור ל-25–30°C. לאחר הוספת המחמצת מתבצעת אינקובציה במשך 12–15 שעות עד pH של 4.6–5.0. במוצרים אלה כ-18–20% מהלקטוז מותססים ורמת החומצה היא כ-0.6–0.7%.</p>
+                <p>טמפרטורת האינקובציה משפיעה באופן שונה על מרכיבי האיכות: העלאתה מגבירה את קצב ההחמצה, אך עשויה להאט את קצב יצירת הארומות. לכן קיצור זמן התהליך אינו שקול בהכרח לשיפור האיכות האורגנולפטית.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    בתסיסה מזופילית קיימת פשרה בין מהירות ההחמצה לבין התפתחות הארומה. טמפרטורה גבוהה יותר עשויה לזרז את ירידת ה-pH ובו בזמן להאט יצירת תרכובות ארומטיות.
+                </div>
+
+                <h3>יוגורט ותסיסה תרמופילית</h3>
+                <p>יוגורט הוא מוצר תסיסה תרמופילית בעל טעם חמצמץ, ארומה ומרקם אופייניים. ניתן לייצרו מחלב פרה, כבשים או עיזים, והוא מופיע כמוצר Set, מוצר Stirred, יוגורט לשתייה או מוצר מרוכז כגון לבנה. אפשר להוסיף לו טעמים, מחיות פרי ותוספות אחרות בהתאם לתהליך.</p>
+                <p>שני החיידקים המייחדים את מחמצת היוגורט הם Streptococcus salivarius subsp. thermophilus ו-Lactobacillus delbrueckii subsp. bulgaricus. לאחר סטנדרטיזציה, המגון ופסטור גבוה מקררים את החלב ל-40–45°C. האינקובציה התרמופילית במכל נמשכת בדרך כלל 5–7 שעות, עד pH של 3.7–4.2, ולאחריה מבצעים את פעולות הבחישה, הקירור, הריכוז, הוספת הטעמים או האריזה בהתאם לסוג המוצר.</p>
+
+                <h3>הקשר האסוציאטיבי בין חיידקי היוגורט</h3>
+                <p>בין שני חיידקי היוגורט מתקיים קשר אסוציאטיבי שבו כל אחד תומך בגדילת האחר. Lactobacillus bulgaricus משחרר חומצות אמינו ופפטידים המעודדים את Streptococcus thermophilus. מנגד, חומצה פורמית ופחמן דו-חמצני הנוצרים במהלך התרבות Streptococcus thermophilus תומכים ב-Lactobacillus bulgaricus.</p>
+                <p>טמפרטורת אינקובציה מתאימה מסייעת לשמור על היחס בין האוכלוסיות וכך לקבל pH, טעם, ארומה ומרקם רצויים. היחס השכיח בין Streptococcus thermophilus לבין Lactobacillus bulgaricus הוא 1:1 או 2:1; סטייה מהיחס המתאים עלולה להוביל למוצר חמוץ יותר.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    מחמצת היוגורט פועלת כמערכת שיתופית ולא כאוסף מקרי של שני זנים. שינוי טמפרטורת האינקובציה עשוי לשנות את היחס ביניהם, ולכן הוא משפיע בו-זמנית על קצב ההחמצה, הארומה והמרקם.
+                </div>
+
+                <h3>תוצרי הארומה של יוגורט</h3>
+                <p>תוצרי תסיסת היוגורט כוללים חומצה לקטית ותוצרים קרבוניליים ובהם אצטאלדהיד, אצטון ודיאצטיל. אצטאלדהיד הוא תוצר אופייני במיוחד ליוגורט. הוא מתחיל לבוא לידי ביטוי סביב pH של 5.3 ומגיע לשיא סביב pH של 4.2. ריכוזו האופייני ביוגורט הוא כ-23–40 ppm.</p>
+
+                <h3>יוגורט עשיר בחלבון</h3>
+                <p>אין הגדרה יחידה ומדויקת ליוגורט עתיר חלבון. נהוג להתייחס ל-5.6% חלבון לפחות כרמה גבוהה, ואילו באירופה מוצר מזון יכול להיקרא High Protein כאשר לפחות 20% מהקלוריות שלו מקורן בחלבון.</p>
+                <p>אפשר להעלות את רמת החלבון באמצעות הוספת אבקת חלב, איוד החלב או ריכוזו באמצעות UF. הריכוז יכול להתבצע לפני התסיסה, לאחריה או בשילוב של שני השלבים. כאשר מרכזים לאחר התסיסה מתקבלים יוגורט מרוכז ומי גבינה חומציים; כאשר מרכזים לפני התסיסה מתקבלים חלב מרוכז ופרמיאט חלב.</p>
+
+                <h3>גורמים הקובעים את איכות המוצר</h3>
+                <ul>
+                    <li><strong>איכות החלב:</strong> רצויים ספירה כללית נמוכה, היעדר חומרים מעכבים ורמת חלבון גבוהה.</li>
+                    <li><strong>סטנדרטיזציה:</strong> נדרש חומר יבש של לפחות 8.2%, ואפשר להשתמש באבקת חלב, חלב מרוכז או רטנטט מ-UF. שמירת היחס בין חלבוני מי הגבינה לקזאין כפי שהוא בחלב מפחיתה סינרסיס. אחוז השומן מותאם למוצר ויכול להגיע עד 10%.</li>
+                    <li><strong>פסטור:</strong> טיפול של 90–95°C במשך 5 דקות משפר את החלב כמצע גידול ומפחית הפרדת מי גבינה. דנטורציה של β-lactoglobulin מאפשרת יצירת קשרים דיסולפידיים עם מיצלת הקזאין דרך κ-casein ותורמת למבנה יציב.</li>
+                    <li><strong>המגון:</strong> מפחית הפרדת פאזות, מעלה צמיגות, בונה מרקם חלק ואחיד ומסייע לייצוב מוצרים דלי שומן, במיוחד במוצרי Set.</li>
+                    <li><strong>תוספים:</strong> מייצבים עשויים לשפר מרקם, לצמצם סינרסיס ולבנות גוף, אך אינם נדרשים בכל יוגורט. פירות ומחיות פרי מוסיפים טעם ומרקם. הוספת יותר מ-10% סוכר לפני אינקובציה עלולה לשנות את מהלך הפרמנטציה עקב שינוי בלחץ האוסמוטי.</li>
+                    <li><strong>מחמצת וקו ייצור:</strong> יש להתאים את המחמצת לסוג המוצר ולטעמים הרצויים, לשלוט בזמן, בטמפרטורה, בבחישה ובקירור, ולהפחית חיכוך ולחץ מכני העלולים לשבור את הג׳ל ולגרום לסינרסיס.</li>
+                    <li><strong>היגיינת הקו:</strong> קו המאפשר CIP מלא מצמצם זיהומים משניים. שליטה בטמפרטורת הכנת מחמצת האם ובברזי התהליך היא חלק מבקרת האיכות.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    סינרסיס אינו תלוי בגורם יחיד. הרכב החלב, הפסטור, ההמגון, המייצבים והעומס המכני על הג׳ל משפיעים יחד על יכולת המוצר לשמור מים ועל יציבות המבנה.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const flashcardData = [
+            {
+                term: "מוצר חלב מותסס",
+                definition: "מוצר שעבר פרמנטציה באמצעות חיידקים לקטיים, תוך הפיכת לקטוז לחומצה לקטית, ירידת pH והיווצרות ג׳ל."
+            },
+            {
+                term: "Set",
+                definition: "מוצר שבו ההחמצה והקרישה מתרחשות באריזה, ולכן הג׳ל נוצר בגביע."
+            },
+            {
+                term: "Stirred",
+                definition: "מוצר שמוחמץ במכל ולאחר ההחמצה עובר בחישה, קירור ואריזה."
+            },
+            {
+                term: "מוצר מותסס לשתייה",
+                definition: "מוצר הדומה ל-Stirred, אך הבחישה לאחר ההחמצה יוצרת מרקם נוזלי."
+            },
+            {
+                term: "מוצר מותסס מרוכז",
+                definition: "מוצר שעובר אינקובציה במכל ולאחריה ריכוז וקירור לפני האריזה."
+            },
+            {
+                term: "תסיסה מזופילית",
+                definition: "תסיסה אופיינית ללבן ולשמנת חמוצה, המתבצעת בדרך כלל ב-25–30°C."
+            },
+            {
+                term: "תנאי אינקובציה מזופילית",
+                definition: "25–30°C למשך 12–15 שעות, עד pH של 4.6–5.0."
+            },
+            {
+                term: "מחמצת מזופילית משולבת",
+                definition: "שילוב של חיידקים יוצרי חומצה לקטית עם תוססי ציטרט, לקבלת חמיצות וארומת דיאצטיל."
+            },
+            {
+                term: "יוגורט",
+                definition: "מוצר תסיסה תרמופילית בעל חמיצות, ארומה ומרקם אופייניים."
+            },
+            {
+                term: "חיידקי היוגורט",
+                definition: "Streptococcus salivarius subsp. thermophilus ו-Lactobacillus delbrueckii subsp. bulgaricus."
+            },
+            {
+                term: "הקשר האסוציאטיבי ביוגורט",
+                definition: "יחסי תמיכה הדדית בין שני חיידקי היוגורט באמצעות תוצרי מטבוליזם המעודדים את גדילת האחר."
+            },
+            {
+                term: "תמיכת Lactobacillus bulgaricus",
+                definition: "שחרור חומצות אמינו ופפטידים המעודדים את גדילת Streptococcus thermophilus."
+            },
+            {
+                term: "תמיכת Streptococcus thermophilus",
+                definition: "יצירת חומצה פורמית ופחמן דו-חמצני התומכים ב-Lactobacillus bulgaricus."
+            },
+            {
+                term: "תנאי אינקובציה תרמופילית",
+                definition: "40–45°C למשך 5–7 שעות, עד pH של 3.7–4.2."
+            },
+            {
+                term: "אצטאלדהיד ביוגורט",
+                definition: "תוצר ארומה אופייני המופיע סביב pH 5.3, מגיע לשיא סביב pH 4.2 ונמצא בריכוז של כ-23–40 ppm."
+            },
+            {
+                term: "יוגורט עתיר חלבון",
+                definition: "נהוג לראות ב-5.6% חלבון לפחות רמה גבוהה; באירופה נדרש שלפחות 20% מהקלוריות יגיעו מחלבון."
+            },
+            {
+                term: "UF בהכנת יוגורט",
+                definition: "אמצעי לריכוז החלב ולהעלאת רמת החלבון לפני התסיסה או כחלק מתהליך ריכוז משולב."
+            },
+            {
+                term: "סינרסיס",
+                definition: "הפרדת מי גבינה מן הג׳ל, תופעה המושפעת מהרכב החלב, הטיפול התרמי, ההמגון, המייצבים והעומס המכני."
+            },
+            {
+                term: "פסטור גבוה ליוגורט",
+                definition: "טיפול של 90–95°C במשך 5 דקות, המשפר את החלב כמצע גידול ותורם למבנה יציב ולהפחתת סינרסיס."
+            },
+            {
+                term: "המגון",
+                definition: "טיפול המפחית הפרדת פאזות, מעלה צמיגות ותורם למרקם חלק, אחיד ויציב."
+            }
+        ];
+
+        const mcqData = [
+            {
+                question: "מהו הרצף המתאר בצורה המדויקת ביותר את מנגנון ההחמצה במוצר חלב מותסס?",
+                options: ["הפיכת חומצה לקטית ללקטוז, עליית pH ופירוק הג׳ל", "פירוק שומן לפחמן דו-חמצני ללא שינוי ב-pH", "הפיכת לקטוז לחומצה לקטית, ירידת pH והקרשת החלב לג׳ל", "העלאת ריכוז הלקטוז עד להיווצרות ג׳ל"],
+                correctIndex: 2,
+                explanation: "חיידקים לקטיים הופכים לקטוז לחומצה לקטית. הצטברות החומצה מורידה את ה-pH ומובילה להקרשת החלב, בעוד שהמסלולים האחרים הופכים את כיוון התהליך או מייחסים אותו לשומן."
+            },
+            {
+                question: "איזה מאפיין מבדיל מוצר Set ממוצר Stirred?",
+                options: ["ב-Set ההחמצה והקרישה מתרחשות באריזה", "ב-Set לא מתרחשת החמצה חומצית", "ב-Stirred המוצר מוקפא מיד לאחר האינקובציה", "ב-Stirred הג׳ל נוצר תמיד בתוך הגביע"],
+                correctIndex: 0,
+                explanation: "במוצר Set הג׳ל נבנה באריזה עצמה. במוצר Stirred ההחמצה מתרחשת במכל, ולאחריה הג׳ל עובר בחישה לפני האריזה."
+            },
+            {
+                question: "איזה רצף פעולות אופייני לייצור מוצר Stirred לאחר ההחמצה?",
+                options: ["הקפאה, ריכוז והחמצה נוספת", "אריזה, אינקובציה בגביע ובחישה", "ריכוז, הפרדת מי גבינה והקפאה", "בחישה, קירור ואריזה"],
+                correctIndex: 3,
+                explanation: "מוצר Stirred מיוצר ומוחמץ במכל, ואז נבחש, מקורר ונארז. אינקובציה בתוך הגביע מאפיינת מוצר Set ולא מוצר בחוש."
+            },
+            {
+                question: "כיצד מתקבל המרקם הנוזלי של מוצר חלב מותסס לשתייה?",
+                options: ["באמצעות יצירת הג׳ל בתוך האריזה ללא הפרעה", "באמצעות בחישה לאחר ההחמצה עד לקבלת מרקם נוזלי", "באמצעות הקפאת המוצר מיד לאחר ההחמצה", "באמצעות הימנעות מוחלטת מפעילות המחמצת"],
+                correctIndex: 1,
+                explanation: "מוצר לשתייה דומה בעיקרון למוצר Stirred, אך הטיפול לאחר ההחמצה יוצר מרקם נוזלי. יצירת ג׳ל ללא הפרעה מתאימה דווקא למוצר Set."
+            },
+            {
+                question: "מדוע משלבים בתסיסה מזופילית חיידקים יוצרי חומצה לקטית עם תוססי ציטרט?",
+                options: ["כדי למנוע לחלוטין ירידה ב-pH", "כדי לשלב חמיצות עם ארומת דיאצטיל", "כדי להפוך את המוצר לתרמופילי", "כדי להקפיא את המוצר ללא קירור"],
+                correctIndex: 1,
+                explanation: "יוצרי החומצה מספקים את החמיצות, ותוססי הציטרט תורמים בין היתר לארומת דיאצטיל. השילוב נועד לבנות פרופיל אורגנולפטי מורכב ולא למנוע החמצה."
+            },
+            {
+                question: "בייצור מזופילי הועלתה טמפרטורת האינקובציה. מהי התוצאה הצפויה?",
+                options: ["קצב ההחמצה וקצב יצירת הארומות ייעצרו", "קצב ההחמצה יואט וקצב הארומות יגבר בהכרח", "לא יחול שינוי בתוצרים או בקצב", "קצב ההחמצה יגבר, אך קצב יצירת הארומות עשוי להאט"],
+                correctIndex: 3,
+                explanation: "קצב ההחמצה תלוי בטמפרטורה ועולה באינקובציה חמה יותר, אך יצירת הארומות עשויה דווקא להאט. לכן אין להסיק שקיצור התהליך משפר גם את הארומה."
+            },
+            {
+                question: "איזה צירוף תנאים מתאים לאינקובציה מזופילית טיפוסית במכל?",
+                options: ["25–30°C למשך 12–15 שעות עד pH של 4.6–5.0", "40–45°C למשך 5–7 שעות עד pH של 3.7–4.2", "65–70°C למשך 5 דקות עד pH של 5.3", "90–95°C למשך 12–15 שעות עד pH של 4.2"],
+                correctIndex: 0,
+                explanation: "התהליך המזופילי מתבצע ב-25–30°C ונמשך בדרך כלל 12–15 שעות עד pH של 4.6–5.0. התנאים של 40–45°C ו-5–7 שעות שייכים לתסיסת יוגורט תרמופילית."
+            },
+            {
+                question: "איזה צירוף תנאים מתאים לאינקובציה תרמופילית של יוגורט במכל?",
+                options: ["25–30°C למשך 12–15 שעות עד pH של 4.6–5.0", "90–95°C למשך 5 דקות עד pH של 5.0", "40–45°C למשך 5–7 שעות עד pH של 3.7–4.2", "65–70°C בלחץ 200–250 bar עד pH של 4.2"],
+                correctIndex: 2,
+                explanation: "לאחר קירור החלב לטמפרטורת המחמצת, יוגורט עובר אינקובציה ב-40–45°C למשך 5–7 שעות עד pH של 3.7–4.2. הטיפול ב-90–95°C הוא פסטור מוקדם ואינו שלב האינקובציה."
+            },
+            {
+                question: "איזה זוג חיידקים מייחד את מחמצת היוגורט?",
+                options: ["Lactococcus lactis subsp. lactis ו-Lactococcus lactis subsp. cremoris בלבד", "Lactococcus lactis biovar diacetylactis ו-Lactobacillus bulgaricus", "Streptococcus thermophilus ו-Lactococcus cremoris", "Streptococcus salivarius subsp. thermophilus ו-Lactobacillus delbrueckii subsp. bulgaricus"],
+                correctIndex: 3,
+                explanation: "שני החיידקים המייחדים יוגורט הם Streptococcus thermophilus ו-Lactobacillus bulgaricus בשמותיהם המלאים. זני Lactococcus מאפיינים את הדוגמאות למחמצות המזופיליות."
+            },
+            {
+                question: "כיצד Lactobacillus bulgaricus תומך ב-Streptococcus thermophilus במחמצת יוגורט?",
+                options: ["הוא משחרר חומצות אמינו ופפטידים המעודדים את גדילתו", "הוא מעלה את ה-pH ומפסיק את התסיסה", "הוא מסלק מן החלב את כל הלקטוז לפני גדילת הסטרפטוקוקוס", "הוא מונע היווצרות חומצה לקטית"],
+                correctIndex: 0,
+                explanation: "Lactobacillus bulgaricus משחרר חומצות אמינו ופפטידים המסייעים ל-Streptococcus thermophilus לגדול. התמיכה אינה מבוססת על עצירת ההחמצה או על סילוק מלא של הלקטוז."
+            },
+            {
+                question: "אילו תוצרים של Streptococcus thermophilus תומכים ב-Lactobacillus bulgaricus?",
+                options: ["אבקת חלב ורטנטט", "דיאצטיל ואצטון בלבד", "חומצה פורמית ופחמן דו-חמצני", "חלבוני מי גבינה וקזאין"],
+                correctIndex: 2,
+                explanation: "חומצה פורמית ופחמן דו-חמצני הנוצרים במהלך התרבות Streptococcus thermophilus תומכים ב-Lactobacillus bulgaricus. חלבוני החלב הם מרכיבי חומר הגלם ואינם התוצרים האסוציאטיביים המתוארים."
+            },
+            {
+                question: "איזה יחס שכיח בין Streptococcus thermophilus לבין Lactobacillus bulgaricus מסייע לקבלת יוגורט מאוזן?",
+                options: ["רק 10:1", "1:1 או 2:1", "רק 1:10", "כל יחס אפשרי ללא השפעה על החמיצות"],
+                correctIndex: 1,
+                explanation: "היחסים השכיחים הם 1:1 או 2:1 בין תרמופילוס לבולגריקוס. סטייה מן האיזון המתאים עשויה לגרום למוצר חמוץ יותר."
+            },
+            {
+                question: "באיזה תחום pH מתואר המעבר של אצטאלדהיד מתוצר שמתחיל לבוא לידי ביטוי אל רמת השיא שלו?",
+                options: ["הוא מתחיל לבוא לידי ביטוי סביב pH 5.3 ומגיע לשיא סביב pH 4.2", "הוא מתחיל רק ב-pH 3.0 ומגיע לשיא ב-pH 7.0", "הוא מגיע לשיא ב-pH 5.3 ונעלם לחלוטין ב-pH 4.2", "ריכוזו אינו קשור כלל לירידת ה-pH"],
+                correctIndex: 0,
+                explanation: "אצטאלדהיד מתחיל לבוא לידי ביטוי סביב pH 5.3 ומגיע לשיא סביב pH 4.2. היפוך בין שתי נקודות אלה אינו תואם את התפתחות הארומה במהלך ההחמצה."
+            },
+            {
+                question: "מהו תחום הריכוז האופייני של אצטאלדהיד ביוגורט?",
+                options: ["0.6–0.7 ppm", "200–250 ppm", "3.7–4.2 ppm", "23–40 ppm"],
+                correctIndex: 3,
+                explanation: "ריכוז האצטאלדהיד המתואר ביוגורט הוא כ-23–40 ppm. המספרים האחרים מתייחסים לפרמטרים שונים כגון חומציות, pH או לחץ המגון."
+            },
+            {
+                question: "איזה רצף שלבי הכנה בסיסי משותף לתרשימי הייצור המזופילי והתרמופילי לפני הוספת המחמצת?",
+                options: ["הקפאה, ריכוז, אריזה ופסטור", "סטנדרטיזציה, המגון, פסטור וקירור לטמפרטורת המחמצת", "אינקובציה, אריזה, המגון וסטנדרטיזציה", "בחישה, הוספת פרי, פסטור והקפאה"],
+                correctIndex: 1,
+                explanation: "בשני התהליכים מתחילים בסטנדרטיזציה, המגון ופסטור, ולאחר מכן מקררים לטמפרטורה המתאימה למחמצת. ההבדל המרכזי הוא בטמפרטורת הקירור והאינקובציה."
+            },
+            {
+                question: "כיצד יש לייצר מוצר Set כדי לשמור על ג׳ל הנוצר בגביע?",
+                options: ["להחמיץ במכל, לרכז ולהקפיא לפני האריזה", "להחמיץ במכל ולבחוש בעוצמה לפני כל קירור", "להוסיף מחמצת, לארוז בגביע ולבצע את האינקובציה באריזה", "לבצע אינקובציה ללא אריזה ואז להפריד מי גבינה"],
+                correctIndex: 2,
+                explanation: "ב-Set המוצר נארז לאחר הוספת המחמצת והג׳ל נבנה במהלך האינקובציה בגביע. החמצה ובחישה במכל היו הופכות את התהליך למסלול Stirred."
+            },
+            {
+                question: "איזה טיפול לאחר אינקובציה מאפיין מוצר מותסס מרוכז?",
+                options: ["אריזה מידית ללא שינוי במוצקים", "הקפאה בלבד בדומה לגלידה", "בחישה, ריכוז וקירור", "העלאת pH והוספת לקטוז"],
+                correctIndex: 2,
+                explanation: "במוצר מרוכז מבצעים לאחר האינקובציה בחישה, ריכוז וקירור לפני האחסון. הקפאה מאפיינת Frozen, ואילו אריזה ללא ריכוז אינה יוצרת מוצר מרוכז."
+            },
+            {
+                question: "מהו ההבדל המרכזי בין תסיסה מזופילית של לבן לבין תסיסה תרמופילית של יוגורט?",
+                options: ["רק התסיסה המזופילית משתמשת בחיידקים", "הן משתמשות במחמצות ובטמפרטורות אינקובציה שונות", "רק ביוגורט מתרחשת ירידת pH", "בתסיסה תרמופילית אין יצירת ארומה"],
+                correctIndex: 1,
+                explanation: "לבן מזופילי ויוגורט תרמופילי נבדלים בסוגי המחמצות ובטמפרטורות האינקובציה. בשניהם חיידקים מבצעים החמצה ונוצרים טעמים וארומות."
+            },
+            {
+                question: "איזו פעולה אינה שיטה נתמכת להעלאת אחוז החלבון ביוגורט?",
+                options: ["הוספת אבקת חלב", "איוד החלב לפני הכנת היוגורט", "ריכוז החלב באמצעות UF", "הפחתת ריכוז המוצקים בחלב"],
+                correctIndex: 3,
+                explanation: "העלאת החלבון נעשית באמצעות תוספת אבקת חלב, איוד או ריכוז ב-UF. הפחתת המוצקים פועלת בכיוון ההפוך ואינה מעלה את ריכוז החלבון."
+            },
+            {
+                question: "מהו התנאי האירופי המתואר לשימוש בכינוי High Protein במוצר מזון?",
+                options: ["לפחות 20% מהקלוריות של המוצר מקורן בחלבון", "לפחות 20% ממשקל המוצר הוא חלבון", "המוצר חייב להכיל בדיוק 5.6% שומן", "כל הקלוריות חייבות להגיע מחלבון"],
+                correctIndex: 0,
+                explanation: "הקריטריון מתייחס לכך שלפחות 20% מהקלוריות מקורן בחלבון, ולא לכך שחלבון הוא 20% ממשקל המוצר. זהו מדד אנרגטי ולא אחוז מסה."
+            },
+            {
+                question: "איזו רמת חלבון נהוג לראות כמינימום ליוגורט בעל אחוז חלבון גבוה, אף שאין הגדרה יחידה ומדויקת?",
+                options: ["3.5%", "5.6%", "8.2%", "20%"],
+                correctIndex: 1,
+                explanation: "נהוג להתייחס ל-5.6% חלבון לפחות כרמה גבוהה. 20% מתייחס לשיעור הקלוריות מחלבון בקריטריון האירופי ולא בהכרח לאחוז החלבון במוצר."
+            },
+            {
+                question: "בתרשים ריכוז של 1000 ק״ג חלב רזה לייצור יוגורט עם 8% חלבון, איזו חלוקת מסות מוצגת כאשר הריכוז מתבצע כולו לאחר התסיסה?",
+                options: ["438 ק״ג יוגורט ו-562 ק״ג מי גבינה חומציים", "700 ק״ג יוגורט ו-300 ק״ג פרמיאט", "562 ק״ג יוגורט ו-438 ק״ג חלב", "1000 ק״ג יוגורט ללא תוצר לוואי"],
+                correctIndex: 0,
+                explanation: "כאשר הריכוז נעשה לאחר התסיסה, התרשים מציג 438 ק״ג יוגורט ברמת 8% חלבון ו-562 ק״ג מי גבינה חומציים. פרמיאט מתקבל כאשר הריכוז נעשה לפני התסיסה."
+            },
+            {
+                question: "איזה צירוף כולל את ארבע קבוצות הגורמים המרכזיות המשפיעות על איכות מוצר חלב מותסס?",
+                options: ["רק טמפרטורת האחסון, צבע האריזה, שם המוצר והמחיר", "רק אחוז השומן, ה-pH, זמן האריזה וצורת הגביע", "חלב גולמי, תהליכי ייצור, סוג המחמצת וחומרים מוספים", "מחמצת, הקפאה, פרסום וגודל המפעל"],
+                correctIndex: 2,
+                explanation: "איכות המוצר תלויה בחומר הגלם, בתהליכי הייצור, במחמצת ובחומרים המוספים. התמקדות בפרמטר יחיד מתעלמת מהאינטראקציה בין הגורמים."
+            },
+            {
+                question: "איזו פעולת סטנדרטיזציה צפויה להפחית סינרסיס?",
+                options: ["הורדת החומר היבש מתחת ל-8.2%", "הסרת כל חלבוני מי הגבינה", "שינוי אקראי של יחס חלבוני מי הגבינה לקזאין", "הבטחת לפחות 8.2% חומר יבש ושמירת יחס חלבוני מי הגבינה לקזאין כפי שהוא בחלב"],
+                correctIndex: 3,
+                explanation: "חומר יבש של לפחות 8.2% ושמירת יחס החלבונים תומכים באחיזת המים ומפחיתים סינרסיס. הסרת חלבוני מי הגבינה או הפחתת המוצקים מחלישות את העקרונות המתוארים."
+            },
+            {
+                question: "כיצד פסטור ב-90–95°C למשך 5 דקות תורם להפחתת סינרסיס?",
+                options: ["הוא מפרק את כל הקזאין ומונע יצירת ג׳ל", "הוא מעלה את ה-pH ומבטל את פעולת המחמצת", "הוא מונע כל אינטראקציה בין חלבוני החלב", "הוא גורם לדנטורציה של β-lactoglobulin וליצירת קשרים עם מיצלת הקזאין דרך κ-casein"],
+                correctIndex: 3,
+                explanation: "הפסטור הגבוה גורם לדנטורציה של חלבוני מי הגבינה, ובהם β-lactoglobulin, ומאפשר קשרים דיסולפידיים עם מיצלת הקזאין דרך κ-casein. רשת זו תורמת לגוף יציב ולהפחתת הפרדת מי גבינה."
+            },
+            {
+                question: "איזו השפעה אופיינית להמגון במוצרי חלב מותססים?",
+                options: ["הפחתת הצמיגות והגברת הפרדת הפאזות", "מניעת כל צורך בהחמצה", "העלאת צמיגות, יצירת מרקם חלק והפחתת הפרדת פאזות", "הפיכת כל מוצר Stirred למוצר Frozen"],
+                correctIndex: 2,
+                explanation: "המגון תורם לאחידות, למרקם חלק ולצמיגות גבוהה יותר, ומפחית הפרדת פאזות. הוא אינו מחליף את שלב ההחמצה ואינו קובע לבדו את סוג המוצר."
+            },
+            {
+                question: "מפעל מוסיף 12% סוכר לחלב לפני האינקובציה. איזה סיכון תהליכי יש להביא בחשבון?",
+                options: ["שינוי במהלך הפרמנטציה עקב שינוי בלחצים האוסמוטיים", "יצירת ג׳ל ללא צורך במחמצת", "הפיכת המחמצת המזופילית לתרמופילית", "דנטורציה מידית של כל הקזאין"],
+                correctIndex: 0,
+                explanation: "הוספה של יותר מ-10% סוכר לפני האינקובציה עשויה להשפיע על הפרמנטציה בגלל שינוי בלחץ האוסמוטי. הסוכר אינו מחליף את המחמצת ואינו משנה את זהות החיידקים."
+            },
+            {
+                question: "מהו תפקידם המרכזי של מייצבים ביוגורט כאשר בוחרים להשתמש בהם?",
+                options: ["להעלות את טמפרטורת האינקובציה", "לשפר מרקם, לצמצם סינרסיס ולבנות גוף", "להחליף את שני חיידקי היוגורט", "לפרק את הג׳ל לפני האריזה"],
+                correctIndex: 1,
+                explanation: "מייצבים נועדו לשפר את המרקם, להפחית הופעת מי גבינה ולבנות גוף. הם אינם מחליפים מחמצת, וגם לא מוסיפים אותם בהכרח לכל סוגי היוגורט."
+            },
+            {
+                question: "מדוע המגון חשוב במיוחד במוצר מותסס דל שומן?",
+                options: ["מפני שהוא מעלה את כמות השומן מעל 10%", "מפני שהוא מבטל את הצורך בקירור", "מפני שהוא מסייע לייצב את המוצר וליצור מרקם אחיד וחלק", "מפני שהוא מפסיק יצירת חומצה לקטית"],
+                correctIndex: 2,
+                explanation: "המגון מסייע לייצב מוצר דל שומן ותורם למרקם חלק ואחיד. הוא אינו מוסיף שומן ואינו מחליף קירור או בקרה על התסיסה."
+            },
+            {
+                question: "איזה ליקוי בקו הייצור עלול להגביר שבירת מרקם וסינרסיס?",
+                options: ["שליטה בטמפרטורה ובזמני הקירור", "שימוש בבוחש בעל מהירות נשלטת", "הפחתת חיכוך בזמן הזרמת המוצר", "הפעלת לחץ מכני גבוה וחיכוך מיותר על המוצר"],
+                correctIndex: 3,
+                explanation: "לחץ מכני וחיכוך עלולים לשבור את רשת הג׳ל ולהוביל להפרדה ולסינרסיס. בוחשים נשלטים והפחתת חיכוך נועדו למנוע את הנזק הזה."
+            },
+            {
+                question: "מהי המטרה המרכזית של תכנון קו המאפשר CIP מלא?",
+                options: ["להעלות את ריכוז האצטאלדהיד", "למנוע זיהומים משניים באמצעות ניקוי הקו במקום", "להפוך מוצר Set למוצר Stirred", "להחליף את הפסטור הגבוה"],
+                correctIndex: 1,
+                explanation: "CIP מלא מאפשר ניקוי של קו הייצור ומסייע במניעת זיהומים משניים. הוא אינו מחליף את הפסטור ואינו קובע את סוג הג׳ל."
+            },
+            {
+                question: "מה עשוי לקרות לצמיגות המוצר לאחר אריזתו כאשר קו הייצור מתוכנן כראוי?",
+                options: ["הצמיגות עשויה לעלות בגביע לאחר האריזה", "הצמיגות חייבת לרדת לאפס", "המוצר חייב להיפרד מיד למי גבינה וג׳ל", "הצמיגות אינה יכולה להשתנות לאחר האריזה"],
+                correctIndex: 0,
+                explanation: "בתכנון קו נכון צמיגות המוצר עשויה לעלות בגביע לאחר האריזה. לכן אין להסיק שמבנה המוצר קבוע לחלוטין ברגע המילוי."
+            },
+            {
+                question: "איזו תכונה רצויה בחלב הגולמי המיועד למוצר מותסס?",
+                options: ["היעדר חומרים מעכבים לצד ספירה כללית נמוכה", "נוכחות חומרים המעכבים את המחמצת", "רמת חלבון נמוכה ככל האפשר", "ספירה כללית גבוהה כדי להאיץ את התסיסה"],
+                correctIndex: 0,
+                explanation: "חלב מתאים מאופיין בספירה כללית נמוכה ובהיעדר חומרים מעכבים, כדי לא להפריע למחמצת. ספירה גבוהה או חומרים מעכבים פוגעים בשליטה בתהליך ובאיכות."
+            },
+            {
+                question: "כיצד יש לבחור מחמצת אם למוצר חלב מותסס?",
+                options: ["לפי לחץ ההמגון בלבד", "באופן זהה לכל מוצר ללא קשר לטעם", "בהתאם לסוג המוצר ולטעמים הנדרשים במוצר הסופי", "רק לפי צבע האריזה"],
+                correctIndex: 2,
+                explanation: "המחמצת צריכה להתאים לסוג המוצר ולפרופיל הטעם הרצוי. שימוש באותה מחמצת ללא קשר למטרה מתעלם מהשפעת הזנים על החומציות והארומה."
+            },
+            {
+                question: "איזה חומר נחשב תוצר ארומה מאפיין במיוחד של יוגורט?",
+                options: ["לקטוז", "κ-casein", "רטנטט", "אצטאלדהיד"],
+                correctIndex: 3,
+                explanation: "אצטאלדהיד הוא תוצר קרבונילי מאפיין של ארומת יוגורט. לקטוז הוא מצע התסיסה, ואילו κ-casein ורטנטט אינם תוצרי ארומה."
+            },
+            {
+                question: "איזה צירוף מתאר את היקף התסיסה והחומציות במוצר מזופילי טיפוסי?",
+                options: ["כל הלקטוז מותסס ורמת החומצה 10%", "כ-18–20% מהלקטוז מותססים ורמת החומצה כ-0.6–0.7%", "כ-0.6% מהלקטוז מותסס ורמת החומצה 18–20%", "אין תסיסת לקטוז אך נוצרת חומצה"],
+                correctIndex: 1,
+                explanation: "בתסיסה המזופילית המתוארת כ-18–20% מהלקטוז מותססים ורמת החומצה היא כ-0.6–0.7%. החלפת הנתונים ביניהם יוצרת תיאור שאינו תואם את התהליך."
+            },
+            {
+                question: "איזה רצף מתאר מוצר Frozen מותסס?",
+                options: ["הקרשה באריזה ללא קירור", "אינקובציה במכל, אריזה והקפאה בדומה לגלידה", "ריכוז לפני כל החמצה ללא אריזה", "בחישה בלבד עד קבלת משקה"],
+                correctIndex: 1,
+                explanation: "ב-Frozen האינקובציה מתרחשת במכל, ולאחר מכן המוצר נארז ומוקפא בדומה לגלידה. הבחישה ליצירת נוזל מאפיינת מוצר לשתייה."
+            },
+            {
+                question: "מהו ההבדל התהליכי בין מוצר מרוכז לבין מוצר לשתייה לאחר ההחמצה?",
+                options: ["במוצר לשתייה מבצעים תמיד הקפאה", "במוצר מרוכז אין כלל בחישה", "במוצר לשתייה מפרידים תמיד מי גבינה חומציים", "במוצר מרוכז מתווסף שלב ריכוז, ואילו במוצר לשתייה מכוונים למרקם נוזלי"],
+                correctIndex: 3,
+                explanation: "המסלול המרוכז כולל ריכוז לאחר ההחמצה, בעוד שבמוצר לשתייה הבחישה והטיפול מכוונים למרקם נוזלי. הקפאה אינה מגדירה אף אחד משני המסלולים האלה."
+            },
+            {
+                question: "מוצר שאמור להיות Set הגיע למרקם שבור לאחר שנבחַש במכל בתום ההחמצה. מהי האבחנה המדויקת ביותר?",
+                options: ["הטיפול המכני אינו מתאים ל-Set, משום שהג׳ל אמור להיווצר בגביע ללא בחישה לאחר ההחמצה", "הבחישה היא שלב הכרחי בכל מוצר Set", "התקלה מוכיחה שלא התרחשה כלל ירידת pH", "יש להפוך את המוצר ל-Frozen לפני האריזה"],
+                correctIndex: 0,
+                explanation: "ב-Set הג׳ל נוצר באריזה, ולכן בחישה לאחר יצירתו סותרת את מבנה התהליך ועלולה לשבור אותו. בחישה לאחר ההחמצה מתאימה למסלול Stirred."
+            },
+            {
+                question: "יצרן מזופילי רוצה גם ירידת pH יעילה וגם ארומה מפותחת. איזו מסקנה תהליכית היא המדויקת ביותר?",
+                options: ["יש להעלות את הטמפרטורה ככל האפשר, משום שכל התוצרים נוצרים מהר יותר באותה מידה", "אין צורך לשלוט בטמפרטורה מפני שהיא משפיעה רק על האריזה", "יש לאזן את טמפרטורת האינקובציה, משום שחימום יכול להאיץ החמצה אך להאט יצירת ארומות", "יש להימנע לחלוטין מחיידקים תוססי ציטרט"],
+                correctIndex: 2,
+                explanation: "טמפרטורה גבוהה עשויה להאיץ את ההחמצה ובו בזמן להאט יצירת ארומות. לכן אופטימיזציה מחייבת איזון ולא בחירה אוטומטית בטמפרטורה הגבוהה ביותר."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "פרמנטציה של חלב משמשת הן לשימור והן להתפתחות טעמים אופייניים.",
+                answer: true,
+                explanation: "החמצת החלב היא שיטת שימור עתיקה, ובמקביל תוצרי המחמצת יוצרים טעם וארומה אופייניים."
+            },
+            {
+                question: "כל מוצרי החלב המותססים משתמשים באותה מחמצת ולכן מפתחים אותו פרופיל ארומה.",
+                answer: false,
+                explanation: "סוג המחמצת הוא גורם מרכזי בקביעת הטעמים והארומות. זנים שונים מייצרים הרכבים שונים של חומצה לקטית, דיאצטיל, אצטאלדהיד ותוצרים נוספים."
+            },
+            {
+                question: "במוצר Set הג׳ל נוצר בתוך האריזה במהלך ההחמצה.",
+                answer: true,
+                explanation: "המאפיין המגדיר של Set הוא אינקובציה והקרשה בגביע, בניגוד ל-Stirred שבו ההחמצה מתרחשת במכל."
+            },
+            {
+                question: "במוצר Frozen מתבצעת אינקובציה במכל ולאחר האריזה המוצר מוקפא.",
+                answer: true,
+                explanation: "מסלול Frozen כולל החמצה במכל ולאחריה אריזה והקפאה בדומה לגלידה."
+            },
+            {
+                question: "במחמצת מזופילית יש להימנע מתוססי ציטרט מפני שהם מונעים יצירת ארומה.",
+                answer: false,
+                explanation: "תוססי ציטרט משולבים דווקא כדי לתרום ארומת דיאצטיל לצד החמיצות הנוצרת על ידי החיידקים הלקטיים."
+            },
+            {
+                question: "העלאת טמפרטורת האינקובציה המזופילית מאיצה באותה מידה גם את ההחמצה וגם את יצירת הארומות.",
+                answer: false,
+                explanation: "טמפרטורה גבוהה מגבירה את קצב ההחמצה, אך עשויה להאט את קצב יצירת הארומות. שני המדדים אינם מגיבים בהכרח באותו אופן."
+            },
+            {
+                question: "במוצרי תסיסה מזופילית מתוארת תסיסה של כ-18–20% מהלקטוז.",
+                answer: true,
+                explanation: "זהו היקף תסיסת הלקטוז המתואר, לצד רמת חומצה של כ-0.6–0.7%."
+            },
+            {
+                question: "יוגורט מוגדר כמוצר של תסיסה מזופילית ב-25–30°C.",
+                answer: false,
+                explanation: "יוגורט הוא מוצר תסיסה תרמופילית, והאינקובציה שלו מתבצעת בדרך כלל ב-40–45°C."
+            },
+            {
+                question: "שני חיידקי היוגורט מקיימים קשר אסוציאטיבי שבו כל אחד מספק תוצרים המעודדים את האחר.",
+                answer: true,
+                explanation: "Lactobacillus bulgaricus תורם חומצות אמינו ופפטידים, ואילו Streptococcus thermophilus תורם חומצה פורמית ופחמן דו-חמצני."
+            },
+            {
+                question: "Streptococcus thermophilus משחרר את חומצות האמינו והפפטידים המעודדים את Lactobacillus bulgaricus.",
+                answer: false,
+                explanation: "הכיוון המתואר הפוך: Lactobacillus bulgaricus משחרר חומצות אמינו ופפטידים המעודדים את Streptococcus thermophilus."
+            },
+            {
+                question: "יחס שכיח בין Streptococcus thermophilus לבין Lactobacillus bulgaricus הוא 1:1 או 2:1.",
+                answer: true,
+                explanation: "יחסים אלה מסייעים לשמור על איזון המחמצת ועל מאפייני pH, טעם, ארומה ומרקם."
+            },
+            {
+                question: "אצטאלדהיד מתחיל לבוא לידי ביטוי סביב pH 5.3 ומגיע לשיא סביב pH 4.2.",
+                answer: true,
+                explanation: "ירידת ה-pH מלווה בהתפתחות האצטאלדהיד, ושיאו מתואר סביב pH 4.2."
+            },
+            {
+                question: "ריכוז האצטאלדהיד האופייני ביוגורט הוא 200–250 ppm.",
+                answer: false,
+                explanation: "התחום המתואר הוא כ-23–40 ppm. המספר 200–250 מתייחס ללחץ ההמגון ביחידות bar."
+            },
+            {
+                question: "אפשר להעלות את רמת החלבון ביוגורט באמצעות אבקת חלב, איוד או ריכוז ב-UF.",
+                answer: true,
+                explanation: "שלוש השיטות מעלות את ריכוז המוצקים והחלבון בחומר הגלם או במוצר."
+            },
+            {
+                question: "קיימת הגדרה עולמית יחידה שלפיה כל יוגורט עם 5.6% חלבון חייב להיקרא High Protein.",
+                answer: false,
+                explanation: "אין הגדרה יחידה ומדויקת. 5.6% הוא סף מקובל, ואילו הקריטריון האירופי המתואר מבוסס על שיעור הקלוריות שמקורן בחלבון."
+            },
+            {
+                question: "הקריטריון האירופי High Protein דורש שחלבון יהווה לפחות 20% ממשקל המוצר.",
+                answer: false,
+                explanation: "הדרישה מתייחסת לכך שלפחות 20% מהקלוריות יגיעו מחלבון, ולא לכך שחלבון יהווה 20% ממסת המוצר."
+            },
+            {
+                question: "פסטור גבוה לפני ההחמצה עשוי לשפר את החלב כמצע גידול ולהפחית סינרסיס.",
+                answer: true,
+                explanation: "טיפול של 90–95°C במשך 5 דקות משפר את תנאי המצע ותורם למבנה חלבוני המחזיק מים טוב יותר."
+            },
+            {
+                question: "פסטור גבוה מפחית סינרסיס משום שהוא שומר את β-lactoglobulin במצבו הטבעי ומונע ממנו להגיב עם קזאין.",
+                answer: false,
+                explanation: "המנגנון מבוסס דווקא על דנטורציה של β-lactoglobulin ועל יצירת קשרים עם מיצלת הקזאין דרך κ-casein."
+            },
+            {
+                question: "המגון משפיע רק על מראה המוצר ואינו משפיע על צמיגות או הפרדת פאזות.",
+                answer: false,
+                explanation: "המגון מעלה צמיגות, מפחית הפרדת פאזות ותורם למרקם חלק ואחיד, מעבר להשפעתו החזותית."
+            },
+            {
+                question: "לא לכל סוגי היוגורט מוסיפים מייצבים.",
+                answer: true,
+                explanation: "מייצבים עשויים לשפר מרקם ולצמצם סינרסיס, אך השימוש בהם אינו הכרחי בכל סוג יוגורט."
+            },
+            {
+                question: "הוספה של יותר מ-10% סוכר לפני האינקובציה עשויה להשפיע על הפרמנטציה עקב שינוי בלחץ האוסמוטי.",
+                answer: true,
+                explanation: "ריכוז סוכר גבוה לפני האינקובציה משנה את התנאים האוסמוטיים בחלב ועלול להשפיע על פעילות המחמצת."
+            },
+            {
+                question: "תפקידו היחיד של CIP הוא להגדיל את צמיגות המוצר לאחר האריזה.",
+                answer: false,
+                explanation: "CIP מיועד לניקוי קו הייצור ולמניעת זיהומים משניים. העלייה האפשרית בצמיגות לאחר האריזה קשורה לתכנון התהליך הכולל."
+            },
+            {
+                question: "לחץ מכני וחיכוך בזמן הזרמת מוצר מותסס עלולים לשבור את המרקם ולהגביר סינרסיס.",
+                answer: true,
+                explanation: "עומס מכני על הג׳ל עלול לגרום להפרדה ולשחרור מי גבינה, ולכן יש להפחית חיכוך ולשלוט בבחישה."
+            },
+            {
+                question: "מסלולי Set ו-Stirred זהים לאחר הוספת המחמצת, משום שבשניהם חובה לבחוש את הג׳ל לפני האריזה.",
+                answer: false,
+                explanation: "ב-Set ההחמצה והקרישה מתרחשות בגביע ללא בחישה של הג׳ל לפני האריזה. ב-Stirred ההחמצה במכל ולאחריה מתבצעת בחישה."
+            },
+            {
+                question: "בתהליך המזופילי ובתהליך התרמופילי עשויים להופיע אותם שלבי הכנה מוקדמים, אך טמפרטורות הקירור והאינקובציה שונות.",
+                answer: true,
+                explanation: "שני המסלולים כוללים סטנדרטיזציה, המגון ופסטור, אך המזופילי מתבצע ב-25–30°C והתרמופילי ב-40–45°C."
+            },
+            {
+                question: "נקודת הסיום הטיפוסית של תסיסה מזופילית היא pH של 3.7–4.2.",
+                answer: false,
+                explanation: "בתהליך המזופילי נקודת הסיום המתוארת היא pH של 4.6–5.0. התחום 3.7–4.2 שייך לתהליך היוגורט התרמופילי."
+            },
+            {
+                question: "אצטאלדהיד מתחיל להיווצר רק לאחר שהיוגורט כבר הגיע ל-pH של 4.2.",
+                answer: false,
+                explanation: "האצטאלדהיד מתחיל לבוא לידי ביטוי כבר סביב pH 5.3 ומגיע לשיא סביב pH 4.2."
+            },
+            {
+                question: "פירות ומחיות פרי יכולים לתרום הן לטעם והן למרקם של המוצר.",
+                answer: true,
+                explanation: "תוספות פרי אינן מיועדות רק לטעם; הן עשויות להשפיע גם על מרקם המוצר."
+            },
+            {
+                question: "שמירת היחס בין חלבוני מי הגבינה לקזאין כפי שהוא בחלב אינה קשורה כלל לסינרסיס.",
+                answer: false,
+                explanation: "שמירת היחס החלבוני, לצד חומר יבש מתאים, מתוארת כדרך להפחתת הפרדת מי גבינה."
+            },
+            {
+                question: "טמפרטורת אינקובציה מתאימה ביוגורט מסייעת לשמור על היחס בין שני זני המחמצת ועל מאפייני pH, טעם, ארומה ומרקם.",
+                answer: true,
+                explanation: "הטמפרטורה משפיעה על האיזון בין החיידקים, ולכן גם על מכלול מאפייני המוצר ולא רק על משך התהליך."
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = '';
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+
+        initialize();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הקרשת חלב: אנזימים, תהליך ואיכות</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger this manually via JS
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Root Variables for Theme --- */
+        :root {
+            --primary-bg: #0a0a0f;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.1);
+
+            --accent-start: #6C63FF;
+            --accent-end: #A855F7;
+            --accent-gradient: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            --accent-color: #8B5CF6; /* Midpoint fallback */
+
+            --text-color: #E0E0E0;
+            --text-muted: #9ca3af;
+
+            --correct-color: rgba(16, 185, 129, 0.2);
+            --correct-border: #10b981;
+            --incorrect-color: rgba(239, 68, 68, 0.2);
+            --incorrect-border: #ef4444;
+
+            --insight-bg: rgba(168, 85, 247, 0.08);
+            --insight-border: #A855F7;
+        }
+
+        /* --- Global Styles & Glow Effects --- */
+        body {
+            background-color: var(--primary-bg);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(108, 99, 255, 0.06), transparent 25vw),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.06), transparent 25vw);
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- Panel Containers (Optimized: No blur for performance) --- */
+        .container, .section, #flashcard-content, .question-container-single, .question-container-all, .explanation {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 15px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .section {
+            padding: 25px;
+            margin-bottom: 30px;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        /* --- Theory & Key Insight Styling --- */
+        .theory-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .theory-text p, .theory-text li {
+            color: var(--text-color);
+        }
+
+        .theory-text h3 {
+            color: #fff;
+            margin-top: 25px;
+            border-bottom: none;
+            text-align: right;
+            font-size: 1.3em;
+        }
+
+        .insight-box {
+            background-color: var(--insight-bg);
+            border-right: 4px solid var(--insight-border);
+            padding: 18px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .insight-box strong {
+            color: #fff;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        /* --- Study Cards Styling --- */
+        .flashcard-container {
+            height: 250px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        #flashcard-content {
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.3s ease-in-out, transform 0.2s;
+        }
+
+        #flashcard-content:hover {
+            transform: translateY(-2px);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.15);
+        }
+
+        .flashcard-front-style {
+             font-size: 1.6em;
+             font-weight: 600;
+             font-family: 'JetBrains Mono', monospace;
+             color: var(--accent-end);
+        }
+
+        .flashcard-back-style {
+             font-size: 1.2em;
+             color: var(--text-color);
+        }
+
+        /* --- Questions Styling (MCQ & T/F) --- */
+         .question-container-single, .question-container-all {
+            margin-bottom: 20px;
+            padding: 20px;
+         }
+
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        /* Buttons & Glass Inputs */
+        .options button, .tf-options button, .nav-button, .view-all-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: right;
+            font-family: 'Inter', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button, .view-all-button {
+            width: auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .options button:hover:not(:disabled), .tf-options button:hover:not(:disabled), .nav-button:hover:not(:disabled), .view-all-button:hover {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.25);
+        }
+
+        .options button:disabled, .tf-options button:disabled, .nav-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+        }
+
+        /* Correct/Incorrect States */
+        .options button.correct, .tf-options button.correct {
+            background: var(--correct-color);
+            border-color: var(--correct-border);
+            color: #fff;
+            opacity: 1;
+        }
+        .options button.incorrect, .tf-options button.incorrect {
+            background: var(--incorrect-color);
+            border-color: var(--incorrect-border);
+            color: #fff;
+            opacity: 1;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .feedback.correct {
+            color: var(--correct-border);
+            background: var(--correct-color);
+            border: 1px solid var(--correct-border);
+        }
+
+        .feedback.incorrect {
+            color: var(--incorrect-border);
+            background: var(--incorrect-color);
+            border: 1px solid var(--incorrect-border);
+        }
+
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+            font-size: 0.95em;
+            padding: 15px;
+            color: var(--text-muted);
+            border-right: 3px solid var(--accent-start);
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* --- Navigation & Utility --- */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .counter {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .view-all-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>הקרשת חלב: אנזימים, תהליך ואיכות</h1>
+
+        <div class="section">
+            <h2>תקציר תיאוריה ותובנות מפתח</h2>
+            <div id="theory-content" class="theory-text">
+                <h3>מהי הגבנת חלב?</h3>
+                <p>הגבנה, או הקרשה, היא התהליך שבו חלב עובר ממצב נוזלי למצב מוצק ונוצר גבן, המשמש בהמשך לייצור גבינות. המעבר יכול להתרחש באמצעות פעילות אנזימטית, באמצעות החמצה או באמצעות שילוב של שתי הדרכים.</p>
+
+                <h3>שלוש דרכים ליצירת גבן</h3>
+                <ul>
+                    <li><strong>הגבנה אנזימטית:</strong> שימוש באנזימי הגבנה, כגון כימוזין או רנט, כדי לשנות את מבנה ה-K-casein ולאפשר למיצלות הקזאין להתאגד.</li>
+                    <li><strong>הגבנה חומצית:</strong> שימוש בחיידקי חלב או בחומרים חומציים להורדת ה-pH עד לנקודה האיזואלקטרית. בנקודה זו הקזאינים עוברים דנטורציה ושוקעים.</li>
+                    <li><strong>הגבנה משולבת:</strong> שילוב של אנזימי הגבנה עם מחמצת.</li>
+                </ul>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    הגבנה חומצית והגבנה אנזימטית מובילות שתיהן ליצירת גבן, אך אינן פועלות באותו מנגנון. בהחמצה מורידים את ה-pH עד לנקודה האיזואלקטרית, ואילו בהגבנה אנזימטית חותכים אתר מסוים ב-K-casein ומסירים את המחסום המונע אגרגציה.
+                </div>
+
+                <h3>אנזימי הגבנה ומקורותיהם</h3>
+                <p>כימוזין, הידוע גם בשם רנין, הוא אנזים פרוטאוליטי המצוי בקיבת עגלים ויונקים נוספים. אפשר להשתמש גם באנזימים ממקור מיקרוביאלי המכונים רנט. דוגמה למקור כזה היא הפטרייה Rhizomucor miehei, המשמשת לייצור רנט תעשייתי.</p>
+                <p>חוזק האנזים מבוטא באמצעות IMCU, כלומר International Milk Clotting Units. זהו ערך השוואתי למדידת עוצמת האנזים. לדוגמה, יחס של 1:15,000 פירושו גרם אחד של אנזים עבור 15,000 גרם חלב, כאשר ההקרשה מתרחשת בתוך 40 דקות בטמפרטורה של 35°C.</p>
+
+                <h3>שני שלבי ההגבנה האנזימטית</h3>
+                <p>ההגבנה האנזימטית מורכבת משני שלבים עוקבים. השלב הראשון הוא שלב אנזימטי, והשלב השני הוא שלב ספונטני של קואגולציה ויצירת גבן.</p>
+
+                <h3>השלב הראשוני: חיתוך אנזימטי</h3>
+                <p>בשלב הראשוני הכימוזין או הרנט חותכים ב-K-casein את הקשר שבין חומצת האמינו Phe בעמדה 105 לבין Met בעמדה 106. החיתוך יוצר שני מקטעים:</p>
+                <ul>
+                    <li><strong>Glycomacropeptide:</strong> המקטע ההידרופילי הכולל את העמדות 106–169.</li>
+                    <li><strong>Para-K-casein:</strong> המקטע הבלתי מסיס הכולל את העמדות 1–105. הוא נותר במיצלת הקזאין ומצטרף לגבן.</li>
+                </ul>
+                <p>בעקבות החיתוך מוסר המחסום בפני אגרגציה. נפח המיצלה ומסתה קטנים, ואילו שטח הפנים ההידרופובי גדל. שלב האגרגציה מתחיל לאחר שכ-80% מן ה-K-casein עבר חיתוך אנזימטי.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    עצם נוכחות האנזים אינה מספיקה ליצירת ג'ל. נדרשת רמת חיתוך מספקת של K-casein, ורק לאחר הגעה לסף של כ-80% חיתוך יכול שלב האגרגציה להתחיל.
+                </div>
+
+                <h3>השלב המשני: אגרגציה ויצירת ג'ל</h3>
+                <p>לאחר חיתוך הזנב ההידרופילי, K-casein אינו מסוגל עוד להחזיק את מיצלות הקזאין מופרדות. המיצלות מאבדות מיציבותן וקוטרן קטן. המטען השלילי של המיצלה, יחד עם ההידרופוביות של Para-K-casein, מובילים לחוסר יציבות.</p>
+                <p>בנוכחות יוני סידן ובטמפרטורה שמעל 20°C נוצרים קשרים בין הסידן לבין Para-casein. פרק זמן זה מכונה clotting time. צברי הקזאין ממשיכים לגדול עד להיווצרות מטריצת ג'ל תלת-ממדית.</p>
+                <p>המטריצה כולאת גלובולות שומן, מים ומוצקים מסיסים. הגבן מוקף במי גבינה וממשיך להתחזק. בסיום ההגבנה עליו להיות חזק דיו כדי לאפשר חיתוך והמשך עיבוד לייצור גבינות.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    שני השלבים תלויים זה בזה אך אינם זהים: האנזים יוצר את השינוי המבני ב-K-casein, ואילו הג'ל עצמו נוצר בשלב ספונטני של אגרגציה התלוי גם בסידן ובטמפרטורה.
+                </div>
+
+                <h3>הגורמים הקובעים את פעולת ההקרשה</h3>
+                <p>מאפייני פעולת ההקרשה תלויים בשלושה גורמים עיקריים:</p>
+                <ol>
+                    <li>קצב פעילות האנזים לפי מנגנון Michaelis–Menten.</li>
+                    <li>השגת רמת חיתוך מספקת של K-casein ליצירת ג'ל.</li>
+                    <li>קצב האגרגציה של הקזאין לאחר אובדן יציבות המיצלה.</li>
+                </ol>
+                <p>שלושת הגורמים מושפעים מטמפרטורת ההגבנה, מה-pH של החלב, מטיפול תרמי ומרמת החלבון בחלב.</p>
+
+                <h3>איכות החלב והטיפול התרמי</h3>
+                <p>חלב ישן, חלב בעל רמת חלבון נמוכה או חלב בעל חמיצות בלתי מתאימה עלולים ליצור ג'ל חלש. התוצאות האפשריות הן איבוד רב של חלקיקי קזאין קטנים, המכונים fines, איבוד שומן וסינרסיס מרובה במהלך הכנת הגבינה.</p>
+                <p>ליצירת גבן מוצק, אחיד ומיוצב נדרש טיפול תרמי מינימלי. פסטור בטמפרטורה גבוהה גורם לדנטורציה של חלבוני מי הגבינה, ובעיקר β-globulin. חלבון זה מגיב עם K-casein ומפריע לתהליך ההגבנה, ולכן עלול להיווצר גבן חלש.</p>
+
+                <h3>טמפרטורה, אנזים ותפעול מכל ההגבנה</h3>
+                <ul>
+                    <li>מתחת ל-20°C לא תתרחש הגבנה. תחום הטמפרטורה האופטימלי הוא 30–35°C.</li>
+                    <li>נדרשים אנזים באיכות טובה, כמות מספקת וחוזק תקין.</li>
+                    <li>יש לפזר את האנזים היטב במכל באמצעות בחישה של מספר דקות, ולאחר מכן לסגור את הבוחשים.</li>
+                </ul>
+
+                <h3>תוספת סידן והמגון</h3>
+                <p>אפשר להוסיף לחלב סידן כלורי, CaCl2, בכמות של 5–20 גרם לכל 100 קילוגרם חלב כדי לשפר את ההגבנה ואת איכות הגבן. מחסור בסידן יוצר גבן רך מדי, ואילו עודף סידן עלול ליצור גבן קשה בעל טעמי לוואי.</p>
+                <p>בדרך כלל נמנעים מהמגון כאשר מייצרים גבן המיועד לגבינות חצי קשות וקשות. ההמגון מגדיל את יכולת החזקת המים של הגבן, ובחלב מהומגן יש פחות קזאין זמין להקרשה.</p>
+
+                <div class="insight-box">
+                    <strong>תובנת מפתח:</strong>
+                    איכות ההגבנה אינה נקבעת רק לפי כמות האנזים. גם איכות החלב, הטיפול התרמי, הטמפרטורה, זמינות הסידן, פיזור האנזים וההמגון יכולים לקבוע אם יתקבל גבן חזק וניתן לעיבוד או גבן חלש ובעייתי.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>כרטיסי לימוד</h2>
+            <div class="flashcard-container">
+                <div id="flashcard-content"></div>
+            </div>
+            <div class="navigation">
+                <button class="nav-button" id="prev-card">הקודם</button>
+                <span class="counter" id="card-counter"></span>
+                <button class="nav-button" id="next-card">הבא</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות רב-ברירה (אמריקאיות)</h2>
+            <div id="mcq-single-view">
+                <div class="question-container-single" id="mcq-container">
+                    <div class="question-text" id="mcq-question"></div>
+                    <div class="options" id="mcq-options"></div>
+                    <div class="feedback hidden" id="mcq-feedback"></div>
+                    <div class="explanation hidden" id="mcq-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-mcq">הקודם</button>
+                    <span class="counter" id="mcq-counter"></span>
+                    <button class="nav-button" id="next-mcq">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-mcq">הצג את כל השאלות</button>
+                 </div>
+            </div>
+            <div id="mcq-all-questions" class="hidden">
+                </div>
+        </div>
+
+        <div class="section">
+            <h2>שאלות נכון/לא נכון</h2>
+             <div id="tf-single-view">
+                <div class="question-container-single" id="tf-container">
+                    <div class="question-text" id="tf-question"></div>
+                    <div class="tf-options" id="tf-options">
+                        <button data-answer="true">נכון</button>
+                        <button data-answer="false">לא נכון</button>
+                    </div>
+                    <div class="feedback hidden" id="tf-feedback"></div>
+                    <div class="explanation hidden" id="tf-explanation"></div>
+                </div>
+                <div class="navigation">
+                    <button class="nav-button" id="prev-tf">הקודם</button>
+                    <span class="counter" id="tf-counter"></span>
+                    <button class="nav-button" id="next-tf">הבא</button>
+                </div>
+                 <div class="view-all-container">
+                     <button class="view-all-button" id="view-all-tf">הצג את כל השאלות</button>
+                 </div>
+            </div>
+             <div id="tf-all-questions" class="hidden">
+                 </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const flashcardData = [
+            {
+                term: "הגבנה או הקרשה",
+                definition: "מעבר החלב ממצב נוזלי למצב מוצק ויצירת גבן, המשמש להמשך ייצור גבינות."
+            },
+            {
+                term: "הגבנה חומצית",
+                definition: "הורדת ה-pH באמצעות חיידקי חלב או חומרים חומציים עד לנקודה האיזואלקטרית, שבה הקזאינים עוברים דנטורציה ושוקעים."
+            },
+            {
+                term: "הגבנה אנזימטית",
+                definition: "יצירת גבן באמצעות אנזימי הגבנה, כגון כימוזין או רנט, החותכים את K-casein ומאפשרים אגרגציה."
+            },
+            {
+                term: "כימוזין",
+                definition: "אנזים פרוטאוליטי, הידוע גם כרנין, המצוי בקיבת עגלים ויונקים נוספים ומשמש להגבנת חלב."
+            },
+            {
+                term: "רנט מיקרוביאלי",
+                definition: "אנזים הגבנה ממקור מיקרוביאלי; הפטרייה Rhizomucor miehei משמשת לייצורו התעשייתי."
+            },
+            {
+                term: "IMCU",
+                definition: "International Milk Clotting Units, ערך השוואתי המשמש למדידת עוצמת אנזים ההגבנה."
+            },
+            {
+                term: "יחס חוזק 1:15,000",
+                definition: "גרם אחד של אנזים עבור 15,000 גרם חלב, עם פעילות הקרשה בתוך 40 דקות בטמפרטורה של 35°C."
+            },
+            {
+                term: "Primary phase",
+                definition: "השלב האנזימטי שבו נחתך K-casein בין Phe בעמדה 105 לבין Met בעמדה 106."
+            },
+            {
+                term: "Glycomacropeptide",
+                definition: "המקטע ההידרופילי בעמדות 106–169 הנוצר בעקבות חיתוך K-casein."
+            },
+            {
+                term: "Para-K-casein",
+                definition: "המקטע הבלתי מסיס בעמדות 1–105, הנותר במיצלת הקזאין ומצטרף לגבן."
+            },
+            {
+                term: "סף תחילת האגרגציה",
+                definition: "האגרגציה מתחילה לאחר שכ-80% מן ה-K-casein עבר חיתוך אנזימטי."
+            },
+            {
+                term: "Secondary phase",
+                definition: "השלב הספונטני שבו המיצלות שאיבדו את יציבותן עוברות אגרגציה ונוצר גבן."
+            },
+            {
+                term: "Clotting time",
+                definition: "פרק הזמן בשלב יצירת הגבן, שבו מתפתחים קשרים ואגרגציה המובילים למטריצת ג'ל."
+            },
+            {
+                term: "מטריצת הג'ל",
+                definition: "רשת תלת-ממדית של צברי קזאין הכולאת שומן, מים ומוצקים מסיסים."
+            },
+            {
+                term: "טמפרטורת ההגבנה",
+                definition: "מתחת ל-20°C לא מתרחשת הגבנה; התחום האופטימלי הוא 30–35°C."
+            },
+            {
+                term: "סידן כלורי",
+                definition: "תוסף המשפר את ההגבנה; מחסור בסידן יוצר גבן רך, ועודף עלול ליצור גבן קשה וטעמי לוואי."
+            },
+            {
+                term: "פסטור בטמפרטורה גבוהה",
+                definition: "טיפול הגורם לדנטורציה של חלבוני מי גבינה ולתגובה עם K-casein, ולכן עלול להחליש את הגבן."
+            },
+            {
+                term: "המגון והשפעתו על הגבן",
+                definition: "המגון מגדיל את החזקת המים ומפחית את זמינות הקזאין להקרשה, ולכן מקשה על ייצור גבינות חצי קשות וקשות."
+            }
+        ];
+
+        const mcqData = [
+            {
+                question: "מה מתאר באופן המדויק ביותר את תהליך הגבנת החלב?",
+                options: ["פירוק מלא של כל חלבוני החלב למקטעים מסיסים", "מעבר החלב ממצב נוזלי למצב מוצק ויצירת גבן", "הפרדה של השומן בלבד תוך שמירת החלב כנוזל", "העלאת ה-pH של החלב עד להיווצרות מי גבינה"],
+                correctIndex: 1,
+                explanation: "בהגבנה החלב עובר ממצב נוזלי למצב מוצק ונוצר גבן המשמש לייצור גבינות. התהליך אינו מוגדר כהפרדת שומן בלבד או כפירוק מלא של כל החלבונים."
+            },
+            {
+                question: "איזו רשימה כוללת את שלוש הדרכים המתוארות ליצירת גבן?",
+                options: ["פסטור, קירור והמגון", "סינרסיס, חיתוך וערבול", "הפרדת שומן, ריכוז וייבוש", "הגבנה אנזימטית, הגבנה חומצית ושילוב של אנזים עם מחמצת"],
+                correctIndex: 3,
+                explanation: "גבן יכול להיווצר באמצעות אנזימי הגבנה, באמצעות החמצה או באמצעות שילוב של השניים. פסטור והמגון עשויים להשפיע על התהליך, אך אינם שלוש דרכי ההגבנה."
+            },
+            {
+                question: "מהי המטרה הישירה של הורדת ה-pH בהגבנה חומצית?",
+                options: ["להגיע לנקודה האיזואלקטרית שבה הקזאינים עוברים דנטורציה ושוקעים", "להגדיל את חוזק האנזים הנמדד ב-IMCU", "לחתוך את K-casein בין Phe 105 ל-Met 106", "להגדיל את זמינות הקזאין באמצעות המגון"],
+                correctIndex: 0,
+                explanation: "בהגבנה חומצית מורידים את ה-pH עד לנקודה האיזואלקטרית, שבה הקזאינים עוברים דנטורציה ושוקעים. חיתוך הקשר ב-K-casein מאפיין את המנגנון האנזימטי."
+            },
+            {
+                question: "איזה תיאור מתאים לכימוזין?",
+                options: ["חומר חומצי המוריד את ה-pH של החלב", "חלבון מי גבינה המפריע להגבנה לאחר חימום", "אנזים פרוטאוליטי המצוי בקיבת עגלים ויונקים נוספים", "יון היוצר קשרים עם Para-casein"],
+                correctIndex: 2,
+                explanation: "כימוזין, המכונה גם רנין, הוא אנזים פרוטאוליטי שמקורו בקיבת עגלים ויונקים נוספים. הוא אינו חומר מחמיץ או יון סידן."
+            },
+            {
+                question: "איזה מקור משמש לייצור רנט מיקרוביאלי תעשייתי?",
+                options: ["חיידקי חלב בלבד", "הפטרייה Rhizomucor miehei", "חלבוני מי הגבינה", "מיצלות קזאין מהומגנות"],
+                correctIndex: 1,
+                explanation: "Rhizomucor miehei היא דוגמה לפטרייה המשמשת לייצור רנט תעשייתי. חיידקי חלב משמשים להחמצה, אך אינם המקור המיקרוביאלי המצוין לרנט."
+            },
+            {
+                question: "מה מבטא ערך IMCU של אנזים הגבנה?",
+                options: ["ערך השוואתי למדידת עוצמת הקרשת החלב של האנזים", "את רמת החלבון הכוללת בחלב", "את מידת החזקת המים של הגבן", "את רמת החומציות שבה הקזאין שוקע"],
+                correctIndex: 0,
+                explanation: "IMCU הוא ערך השוואתי המשמש למדידת עוצמת אנזים ההגבנה. הוא אינו מדד לרמת חלבון, לחומציות או ליכולת החזקת מים."
+            },
+            {
+                question: "אנזים מסומן ביחס חוזק 1:15,000. כמה חלב מתאים עקרונית לשני גרם אנזים לפי יחס זה?",
+                options: ["7.5 קילוגרם", "15 קילוגרם", "20 קילוגרם", "30 קילוגרם"],
+                correctIndex: 3,
+                explanation: "כל גרם אנזים מתאים ל-15,000 גרם חלב, ולכן שני גרם מתאימים ל-30,000 גרם, שהם 30 קילוגרם. שימוש ב-15 קילוגרם מתעלם מהכפלת כמות האנזים."
+            },
+            {
+                question: "מהו הסדר הנכון של שלבי ההגבנה האנזימטית?",
+                options: ["תחילה אגרגציה ספונטנית ולאחריה חיתוך אנזימטי", "תחילה המגון ולאחריו הורדת ה-pH לנקודה האיזואלקטרית", "תחילה שלב אנזימטי ולאחריו שלב ספונטני של קואגולציה", "תחילה יצירת ג'ל ולאחריה הוספת אנזים"],
+                correctIndex: 2,
+                explanation: "השלב הראשוני הוא חיתוך אנזימטי של K-casein, והשלב המשני הוא אגרגציה ספונטנית ויצירת גבן. האגרגציה אינה קודמת לשינוי האנזימטי."
+            },
+            {
+                question: "איזה קשר נחתך ב-K-casein בשלב האנזימטי?",
+                options: ["בין His 98 ל-Phe 105", "בין Met 106 ל-Lys 111", "בין Phe 105 ל-Met 106", "בין הקצה N לקצה C"],
+                correctIndex: 2,
+                explanation: "הכימוזין או הרנט חותכים את הקשר שבין Phe בעמדה 105 לבין Met בעמדה 106. זהו החיתוך המפריד בין Para-K-casein לבין glycomacropeptide."
+            },
+            {
+                question: "איזה מיפוי נכון של תוצרי חיתוך K-casein?",
+                options: ["עמדות 1–105 יוצרות glycomacropeptide מסיס, ועמדות 106–169 יוצרות Para-K-casein", "עמדות 1–105 יוצרות Para-K-casein בלתי מסיס, ועמדות 106–169 יוצרות glycomacropeptide הידרופילי", "שני המקטעים נותרים מסיסים ואינם קשורים לגבן", "שני המקטעים שוקעים מיד לפני תחילת האגרגציה"],
+                correctIndex: 1,
+                explanation: "המקטע 1–105 הוא Para-K-casein בלתי מסיס הנשאר במיצלה, ואילו המקטע 106–169 הוא glycomacropeptide הידרופילי. החלפת זהויות המקטעים הופכת את גורלם בתהליך."
+            },
+            {
+                question: "מה קורה ל-Para-K-casein לאחר החיתוך האנזימטי?",
+                options: ["הוא הופך לחומר המחמיץ את החלב", "הוא מתפרק מיד לחומצות אמינו חופשיות", "הוא עובר כולו למי הגבינה כמקטע הידרופילי", "הוא נותר במיצלת הקזאין ומצטרף לגבן"],
+                correctIndex: 3,
+                explanation: "Para-K-casein הוא מקטע בלתי מסיס שנותר במיצלת הקזאין ונכלל בגבן. המקטע ההידרופילי הוא glycomacropeptide, ולכן אין להחליף בין גורל שני התוצרים."
+            },
+            {
+                question: "איזה צירוף שינויים מתרחש במיצלת הקזאין לאחר החיתוך האנזימטי?",
+                options: ["המחסום בפני אגרגציה מוסר, נפח ומסה קטנים ושטח הפנים ההידרופובי גדל", "המחסום בפני אגרגציה מתחזק, הנפח גדל והשטח ההידרופובי קטן", "המיצלה נעשית יציבה יותר ומפסיקה להגיב עם סידן", "רק ה-pH משתנה, ללא שינוי במאפייני המיצלה"],
+                correctIndex: 0,
+                explanation: "החיתוך מסיר את המחסום בפני אגרגציה, מפחית את נפח המיצלה ומסתה ומגדיל את שטח הפנים ההידרופובי. הכיוון ההפוך היה מייצב את המיצלות במקום להכינן לאגרגציה."
+            },
+            {
+                question: "מתי מתחיל בקירוב שלב האגרגציה בהגבנה אנזימטית?",
+                options: ["לאחר חיתוך של כ-20% מן ה-K-casein", "לאחר חיתוך של כ-80% מן ה-K-casein", "רק לאחר חיתוך מלא של 100% מן הקזאין הכולל", "מיד עם הכנסת האנזים, ללא תלות ברמת החיתוך"],
+                correctIndex: 1,
+                explanation: "האגרגציה מתחילה לאחר שכ-80% מן ה-K-casein עבר חיתוך אנזימטי. לכן נוכחות אנזים בלבד אינה מספיקה לפני שהושגה רמת חיתוך משמעותית."
+            },
+            {
+                question: "איזה תיאור מאפיין את ה-Secondary phase?",
+                options: ["שלב של הורדת pH באמצעות חיידקי חלב בלבד", "שלב שבו מודדים את חוזק האנזים בלבד", "שלב החיתוך הפרוטאוליטי של K-casein", "שלב ספונטני של אגרגציה, קואגולציה ויצירת גבן"],
+                correctIndex: 3,
+                explanation: "השלב המשני הוא שלב ספונטני שבו מיצלות הקזאין שאיבדו את יציבותן עוברות אגרגציה ונוצר גבן. החיתוך הפרוטאוליטי שייך לשלב הראשוני."
+            },
+            {
+                question: "מדוע חיתוך הזנב ההידרופילי של K-casein מאפשר למיצלות להתחיל להתאגד?",
+                options: ["משום שהוא מעלה את ה-pH אל מעל הנקודה האיזואלקטרית", "משום שהוא הופך את כל הקזאין למסיס במי הגבינה", "משום שהוא מסיר את היכולת של K-casein להחזיק את המיצלות מופרדות", "משום שהוא מבטל את הצורך ביוני סידן ובטמפרטורה מתאימה"],
+                correctIndex: 2,
+                explanation: "הזנב ההידרופילי מסייע לשמור את מיצלות הקזאין מופרדות. לאחר חיתוכו מוסר מחסום היציבות, אך עדיין נדרשים תנאים מתאימים כגון סידן וטמפרטורה מעל 20°C."
+            },
+            {
+                question: "איזה שילוב תנאים תומך ביצירת קשרים בין סידן לבין Para-casein בשלב יצירת הגבן?",
+                options: ["נוכחות יוני סידן וטמפרטורה מעל 20°C", "היעדר מוחלט של סידן וטמפרטורה של 10°C", "המגון מלא והפסקת החיתוך האנזימטי בתחילתו", "פסטור בטמפרטורה גבוהה ככל האפשר"],
+                correctIndex: 0,
+                explanation: "בשלב המשני נוצרים קשרים בין יוני הסידן לבין Para-casein כאשר הטמפרטורה מעל 20°C. טמפרטורה נמוכה או מחסור בסידן אינם תומכים ביצירת גבן תקין."
+            },
+            {
+                question: "אילו מרכיבים נכלאים במטריצת הג'ל התלת-ממדית?",
+                options: ["אנזים בלבד", "חומצות אמינו חופשיות בלבד", "חלבוני מי גבינה בלבד", "גלובולות שומן, מים ומוצקים מסיסים"],
+                correctIndex: 3,
+                explanation: "מטריצת הקזאין הנוצרת כולאת בתוכה גלובולות שומן, מים ומוצקים מסיסים. היא אינה מורכבת מאנזים בלבד או מקבוצה יחידה של רכיבים."
+            },
+            {
+                question: "למה מתייחס המונח clotting time בתהליך ההגבנה האנזימטית?",
+                options: ["למשך הפסטור בטמפרטורה גבוהה", "לפרק הזמן בשלב יצירת הגבן שבו מתפתחים קשרים ואגרגציה", "לזמן הנדרש להורדת ה-pH לנקודה האיזואלקטרית בלבד", "למשך ההמגון של החלב"],
+                correctIndex: 1,
+                explanation: "Clotting time מתייחס לזמן הקשור להתפתחות הקואגולציה ויצירת הגבן בשלב המשני. אין זה משך הפסטור או ההמגון."
+            },
+            {
+                question: "מהו המאפיין התפעולי הנדרש מן הגבן בתום ההגבנה?",
+                options: ["חוזק המספיק לחיתוך ולהמשך עיבוד לייצור גבינות", "מסיסות מלאה במי הגבינה", "היעדר מוחלט של מים ושומן", "רכות מרבית המונעת כל אפשרות לחיתוך"],
+                correctIndex: 0,
+                explanation: "בתום ההגבנה הגבן צריך להיות חזק דיו לחיתוך ולהמשך עיבוד. גבן רך מדי או מסיס לחלוטין אינו מתאים למטרה זו."
+            },
+            {
+                question: "איזה צירוף כולל את שלושת הגורמים העיקריים הקובעים את מאפייני פעולת ההקרשה של האנזים?",
+                options: ["משך פסטור, כמות שומן וצבע החלב", "המגון, סינרסיס וכמות מי הגבינה", "קצב פעילות האנזים, רמת חיתוך מספקת של K-casein וקצב אגרגציית הקזאין", "מקור החלב, גודל המכל וסוג הגבינה בלבד"],
+                correctIndex: 2,
+                explanation: "הפעולה תלויה בקצב האנזימטי, בהשגת חיתוך מספק של K-casein ובקצב האגרגציה לאחר אובדן היציבות. גורמים אחרים עשויים להשפיע על שלושת אלה, אך אינם מחליפים אותם."
+            },
+            {
+                question: "איזו קבוצה כוללת גורמים המשפיעים על שלושת המרכיבים המרכזיים של פעולת ההקרשה?",
+                options: ["צבע הגבן, צורת המכל ושם האנזים", "טמפרטורת ההגבנה, pH החלב, טיפול תרמי ורמת החלבון", "מספר חומצות האמינו בלבד", "כמות מי הגבינה לאחר חיתוך בלבד"],
+                correctIndex: 1,
+                explanation: "טמפרטורה, pH, טיפול תרמי ורמת החלבון משפיעים על פעילות האנזים, על החיתוך ועל האגרגציה. מאפיינים כגון צבע או שם מסחרי אינם הגורמים המתוארים."
+            },
+            {
+                question: "איזו תוצאה צפויה מחלב ישן, בעל רמת חלבון נמוכה או חמיצות בלתי מתאימה?",
+                options: ["ג'ל חזק יותר ופחות סינרסיס", "הפסקה מוחלטת של יצירת fines בלבד", "ג'ל חלש, איבוד מוגבר של קזאין ושומן וסינרסיס מרובה", "עלייה אוטומטית בחוזק האנזים"],
+                correctIndex: 2,
+                explanation: "איכות חלב ירודה קשורה לג'ל חלש, לאיבוד fines של קזאין ושומן ולסינרסיס מרובה. היא אינה משפרת אוטומטית את חוזק הגבן או את פעילות האנזים."
+            },
+            {
+                question: "מדוע פסטור בטמפרטורה גבוהה עלול להוביל לגבן חלש?",
+                options: ["משום שהוא מגדיל תמיד את כמות הקזאין הזמין", "משום שהוא מונע כל שינוי בחלבוני מי הגבינה", "משום שהוא מוסיף עודף סידן לחלב", "משום שהוא גורם לדנטורציה של חלבוני מי גבינה, ובעיקר β-globulin, המגיב עם K-casein ומפריע להגבנה"],
+                correctIndex: 3,
+                explanation: "חימום גבוה גורם לדנטורציה של חלבוני מי הגבינה, ובעיקר β-globulin, אשר יוצר תגובה עם K-casein. תגובה זו מפריעה לתהליך ההגבנה ועלולה ליצור גבן חלש."
+            },
+            {
+                question: "חלב המכיל אנזים וסידן מוחזק בטמפרטורה של 18°C. מה צפוי לפי תנאי התהליך?",
+                options: ["לא תתרחש הגבנה משום שהטמפרטורה נמוכה מ-20°C", "תתרחש הגבנה אופטימלית משום שכל טמפרטורה מתחת ל-20°C עדיפה", "ייווצר בהכרח גבן קשה עם טעמי לוואי", "הטמפרטורה לא תשפיע כל עוד קיים אנזים"],
+                correctIndex: 0,
+                explanation: "מתחת ל-20°C לא צפויה להתרחש הגבנה. עצם נוכחותם של אנזים וסידן אינה מבטלת את דרישת הטמפרטורה."
+            },
+            {
+                question: "מהו תחום הטמפרטורות האופטימלי להגבנת חלב?",
+                options: ["0–5°C", "15–20°C", "30–35°C", "מעל 60°C"],
+                correctIndex: 2,
+                explanation: "תחום הטמפרטורות האופטימלי המתואר הוא 30–35°C. מתחת ל-20°C לא מתרחשת הגבנה, ולכן תחום נמוך אינו אופטימלי."
+            },
+            {
+                question: "איזה טיפול באנזים תומך בהגבנה איכותית?",
+                options: ["שימוש באנזים באיכות טובה, בכמות מספקת ובחוזק תקין, תוך פיזור מספק במכל", "שימוש בכמות אקראית ללא ערבוב", "בחירת אנזים חלש כדי להאריך את התהליך ככל האפשר", "הוספת האנזים רק לאחר שכבר נוצר ג'ל"],
+                correctIndex: 0,
+                explanation: "נדרשים אנזים איכותי, כמות מתאימה, חוזק תקין ופיזור מספק במכל. הוספה בלתי אחידה או כמות בלתי מספקת עלולות לפגוע בתהליך."
+            },
+            {
+                question: "מהי התוצאה הצפויה של מחסור בסידן בתהליך ההגבנה?",
+                options: ["גבן קשה במיוחד עם טעמי לוואי", "גבן רך מדי", "פסטור יעיל יותר", "עלייה בזמינות הקזאין בעקבות המגון"],
+                correctIndex: 1,
+                explanation: "מחסור בסידן פוגע ביצירת הקשרים הנדרשים בשלב האגרגציה וגורם לגבן רך מדי. גבן קשה עם טעמי לוואי קשור דווקא לעודף סידן."
+            },
+            {
+                question: "מה עלול להתרחש כאשר מוסיפים סידן בכמות עודפת?",
+                options: ["הגבן יישאר נוזלי לחלוטין בכל טמפרטורה", "כל הקזאין יהפוך ל-glycomacropeptide", "תימנע כל אפשרות לסינרסיס", "יתקבל גבן קשה שעלולים להופיע בו טעמי לוואי"],
+                correctIndex: 3,
+                explanation: "עודף סידן עלול ליצור גבן קשה עם טעמי לוואי. תוספת סידן אינה ממירה את כל הקזאין ואינה מבטיחה היעדר מוחלט של תופעות אחרות."
+            },
+            {
+                question: "כיצד יש לפעול במכל ההגבנה לאחר הוספת האנזים?",
+                options: ["לבחוש מספר דקות לפיזור האנזים ולאחר מכן לסגור את הבוחשים", "להמשיך בחישה רציפה לאורך כל יצירת הג'ל", "להימנע לחלוטין מכל פיזור של האנזים", "להפעיל המגון במקום בחישה"],
+                correctIndex: 0,
+                explanation: "יש לבצע בחישה במשך מספר דקות כדי לפזר את האנזים, ולאחר מכן לסגור את הבוחשים. היעדר פיזור אינו רצוי, אך גם בחישה רציפה אינה ההנחיה המתוארת."
+            },
+            {
+                question: "מדוע בדרך כלל נמנעים מהמגון חלב המיועד לגבינות חצי קשות וקשות?",
+                options: ["מפני שהמגון מוריד בהכרח את ה-pH לנקודה האיזואלקטרית", "מפני שהמגון מפרק את הכימוזין", "מפני שהמגון מבטל לחלוטין את הצורך בסידן", "מפני שהוא מגדיל את יכולת החזקת המים של הגבן ומקשה על יצירת גבן מתאים"],
+                correctIndex: 3,
+                explanation: "המגון מגדיל את יכולת החזקת המים של הגבן, ולכן מקשה על ייצור גבן המיועד לגבינות חצי קשות וקשות. הוא אינו פועל באמצעות הורדת pH או פירוק הכימוזין."
+            },
+            {
+                question: "איזה שינוי נוסף מיוחס לחלב מהומגן בהקשר של ההקרשה?",
+                options: ["יותר K-casein עובר חיתוך לפני הוספת אנזים", "כל חלבוני מי הגבינה הופכים לקזאין", "פחות קזאין זמין להקרשה", "רמת הסידן עולה ללא תוספת"],
+                correctIndex: 2,
+                explanation: "בחלב מהומגן פחות קזאין זמין להקרשה. ההמגון אינו יוצר קזאין חדש ואינו מוסיף סידן."
+            },
+            {
+                question: "שתי מנות חלב זהות מקבלות אותו אנזים. מנה אחת עוברת טיפול תרמי מינימלי, והאחרת פסטור בטמפרטורה גבוהה. מהו ההבדל הסביר?",
+                options: ["המנה המחוממת יותר תיצור בהכרח גבן חזק יותר", "המנה שעברה טיפול מינימלי צפויה ליצור גבן מיוצב יותר, משום שחימום גבוה עלול ליצור הפרעה בין חלבוני מי הגבינה ל-K-casein", "לא יהיה כל הבדל משום שטיפול תרמי אינו משפיע על הגבנה", "המנה המחוממת יותר תכיל בהכרח יותר קזאין זמין"],
+                correctIndex: 1,
+                explanation: "טיפול תרמי מינימלי תומך בגבן מיוצב, מוצק ואחיד. פסטור בטמפרטורה גבוהה עלול לגרום לדנטורציה ולתגובה המפריעה ל-K-casein, ולכן אינו מבטיח גבן חזק."
+            },
+            {
+                question: "יצרן משתמש גם ברנט וגם בחיידקי חלב המורידים את ה-pH. כיצד יש לסווג את שיטת ההגבנה?",
+                options: ["הגבנה חומצית בלבד", "הגבנה אנזימטית בלבד", "המגון ללא הגבנה", "שילוב של הגבנה אנזימטית עם מחמצת"],
+                correctIndex: 3,
+                explanation: "שימוש משותף ברנט ובמחמצת הוא הגבנה משולבת. העובדה שקיימת החמצה אינה מבטלת את תרומת האנזים."
+            },
+            {
+                question: "מדוע קצב פעילות אנזימטי גבוה אינו מבטיח לבדו היווצרות ג'ל תקין?",
+                options: ["משום שאנזים אינו משתתף כלל בהגבנה", "משום שנדרשים גם חיתוך מספק של K-casein ואגרגציה לאחר אובדן יציבות המיצלה", "משום שהג'ל נוצר רק באמצעות המגון", "משום שכל פעילות אנזימטית מונעת קשרים עם סידן"],
+                correctIndex: 1,
+                explanation: "הקרשה תקינה תלויה לא רק בקצב האנזימטי אלא גם בהגעה לרמת חיתוך מספקת ובקצב האגרגציה. פעילות מהירה שאינה מובילה לשני התנאים האחרים אינה מספיקה."
+            },
+            {
+                question: "איזה רצף מתאר נכון את המעבר מ-K-casein לגבן?",
+                options: ["חיתוך בין Phe 105 ל-Met 106, יצירת Para-K-casein ו-glycomacropeptide, אובדן יציבות, אגרגציה ויצירת ג'ל", "אגרגציה מלאה, חיתוך K-casein, המגון ולאחריו יצירת glycomacropeptide", "העלאת pH, יצירת β-globulin ולאחר מכן תוספת אנזים", "פירוק כל הקזאין למקטעים מסיסים ולאחר מכן הפרדת שומן"],
+                correctIndex: 0,
+                explanation: "תחילה מתרחש חיתוך מוגדר של K-casein ונוצרים שני המקטעים. בעקבות הסרת המחסום המיצלות מאבדות יציבות, מתאגדות ולבסוף יוצרות ג'ל."
+            },
+            {
+                question: "בדיקה מראה שרק 60% מן ה-K-casein עבר חיתוך אנזימטי. מהו ההסבר הסביר לכך ששלב האגרגציה טרם החל?",
+                options: ["נחתך יותר מדי K-casein", "האגרגציה יכולה להתחיל רק לאחר היעלמות כל הסידן", "טרם הושג סף החיתוך של כ-80% הנדרש לתחילת האגרגציה", "החיתוך חייב להתרחש דווקא בין Met 106 ל-Lys 111"],
+                correctIndex: 2,
+                explanation: "האגרגציה מתחילה לאחר שכ-80% מן ה-K-casein נחתך. שיעור של 60% נמוך מן הסף המתואר, גם אם האנזים כבר פעיל."
+            },
+            {
+                question: "כיצד יש לסווג את pH החלב במסגרת הגורמים הקובעים את ההקרשה האנזימטית?",
+                options: ["גורם נוסף המשפיע על קצב האנזים, רמת החיתוך והאגרגציה", "תוצר ישיר של חיתוך K-casein בלבד", "שם אחר ל-IMCU", "רכיב הנלכד בג'ל כמו גלובולת שומן"],
+                correctIndex: 0,
+                explanation: "ה-pH הוא אחד הגורמים המשפיעים על שלושת המרכיבים המרכזיים של פעולת ההקרשה. הוא אינו מדד לחוזק האנזים ואינו תוצר חיתוך."
+            },
+            {
+                question: "במהלך הכנת גבינה מתקבלים ג'ל חלש, אובדן רב של fines ושומן וסינרסיס מרובה. איזה גורם מתאים ביותר לתמונה זו?",
+                options: ["חלב טרי בעל רמת חלבון מתאימה בלבד", "פיזור אחיד של אנזים איכותי", "חלב באיכות ירודה, כגון חלב ישן או בעל רמת חלבון נמוכה", "טמפרטורה אופטימלית יחד עם כמות סידן מאוזנת"],
+                correctIndex: 2,
+                explanation: "השילוב של ג'ל חלש, אובדן fines ושומן וסינרסיס מרובה מאפיין חלב באיכות ירודה. תנאים אופטימליים ופיזור אחיד של אנזים אמורים לתמוך בתוצאה טובה יותר."
+            },
+            {
+                question: "מהו ההבדל המרכזי בין הגבנה חומצית להגבנה אנזימטית?",
+                options: ["בהגבנה חומצית נחתך תמיד הקשר Phe 105–Met 106, ובהגבנה אנזימטית מורידים pH בלבד", "בהגבנה חומצית מורידים pH לנקודה האיזואלקטרית, ובהגבנה אנזימטית חותכים K-casein ומאפשרים אגרגציה", "בהגבנה חומצית אין שינוי בקזאינים, ובהגבנה אנזימטית אין יצירת גבן", "שתי השיטות זהות לחלוטין במנגנון ופועלות רק באמצעות סידן"],
+                correctIndex: 1,
+                explanation: "החמצה פועלת באמצעות הורדת pH עד לנקודה האיזואלקטרית, ואילו האנזים חותך אתר מוגדר ב-K-casein. שתיהן יכולות ליצור גבן, אך המנגנון המוביל לכך שונה."
+            },
+            {
+                question: "איזו תוכנית פעולה היא המקיפה ביותר לשיפור הסיכוי לקבל גבן חזק, אחיד וניתן לחיתוך?",
+                options: ["להשתמש בחלב באיכות ירודה ולהעלות מאוד את טמפרטורת הפסטור", "לבצע המגון מלא ולהפחית את כמות האנזים ללא בדיקת חוזקו", "להוסיף עודף סידן ולהמשיך בחישה לאורך כל יצירת הג'ל", "לבחור חלב איכותי, טיפול תרמי מינימלי, טמפרטורה של 30–35°C, אנזים מתאים המפוזר היטב וכמות סידן מאוזנת"],
+                correctIndex: 3,
+                explanation: "איכות הגבן תלויה בשילוב של איכות חלב, טיפול תרמי מתאים, טמפרטורה אופטימלית, אנזים תקין ומפוזר היטב וסידן בכמות מאוזנת. עודף סידן, חימום גבוה או המגון עלולים לפגוע בתוצאה."
+            }
+        ];
+
+        const tfData = [
+            {
+                question: "ניתן ליצור גבן באמצעות תהליך אנזימטי, באמצעות החמצה או באמצעות שילוב של שניהם.",
+                answer: true,
+                explanation: "אלה שלוש דרכי ההגבנה המתוארות. כל אחת משתמשת במנגנון שונה או בשילוב מנגנונים כדי להעביר את החלב למצב של גבן."
+            },
+            {
+                question: "בהגבנה חומצית מעלים את ה-pH של החלב עד לנקודה האיזואלקטרית.",
+                answer: false,
+                explanation: "בהגבנה חומצית מורידים את ה-pH באמצעות חיידקי חלב או חומרים חומציים. הירידה מובילה לנקודה האיזואלקטרית שבה הקזאינים עוברים דנטורציה ושוקעים."
+            },
+            {
+                question: "כימוזין הוא אנזים פרוטאוליטי המצוי בקיבת עגלים ויונקים נוספים.",
+                answer: true,
+                explanation: "כימוזין, המכונה גם רנין, הוא מקור אנזימטי להגבנת חלב. פעולתו הפרוטאוליטית מכוונת לחיתוך K-casein."
+            },
+            {
+                question: "הפטרייה Rhizomucor miehei יכולה לשמש מקור לייצור רנט מיקרוביאלי תעשייתי.",
+                answer: true,
+                explanation: "זהו מקור מיקרוביאלי מצוין לאנזימי רנט תעשייתיים. מקור זה שונה מן הכימוזין המצוי בקיבת יונקים."
+            },
+            {
+                question: "ערך IMCU מודד את רמת החלבון בחלב ולא את עוצמת אנזים ההגבנה.",
+                answer: false,
+                explanation: "IMCU הוא ערך השוואתי למדידת עוצמת הקרשת החלב של האנזים. רמת החלבון בחלב היא גורם נפרד המשפיע על התהליך."
+            },
+            {
+                question: "יחס חוזק 1:15,000 פירושו 15,000 גרם אנזים עבור גרם אחד של חלב.",
+                answer: false,
+                explanation: "היחס מתפרש בכיוון ההפוך: גרם אחד של אנזים עבור 15,000 גרם חלב. בתנאים המתוארים ההקרשה מתרחשת בתוך 40 דקות ב-35°C."
+            },
+            {
+                question: "ההגבנה האנזימטית כוללת שלב אנזימטי ולאחריו שלב ספונטני של קואגולציה.",
+                answer: true,
+                explanation: "השלב הראשוני מבצע את החיתוך האנזימטי, ואילו בשלב המשני מתרחשות אגרגציה ויצירת גבן. הסדר בין השלבים חיוני להבנת המנגנון."
+            },
+            {
+                question: "האגרגציה הספונטנית של מיצלות הקזאין קודמת לחיתוך K-casein.",
+                answer: false,
+                explanation: "החיתוך האנזימטי קודם לאגרגציה ומסיר את המחסום השומר על הפרדת המיצלות. רק לאחר רמת חיתוך מספקת מתחיל השלב הספונטני."
+            },
+            {
+                question: "בשלב האנזימטי נחתך הקשר בין Phe בעמדה 105 לבין Met בעמדה 106 ב-K-casein.",
+                answer: true,
+                explanation: "זהו אתר החיתוך המוגדר של הכימוזין או הרנט. החיתוך יוצר Para-K-casein ו-glycomacropeptide."
+            },
+            {
+                question: "Glycomacropeptide הוא המקטע הבלתי מסיס בעמדות 1–105 הנשאר במיצלת הקזאין.",
+                answer: false,
+                explanation: "המקטע 1–105 הוא Para-K-casein הבלתי מסיס. Glycomacropeptide הוא המקטע ההידרופילי בעמדות 106–169."
+            },
+            {
+                question: "Para-K-casein הוא מקטע הידרופילי מסיס שעובר כולו למי הגבינה.",
+                answer: false,
+                explanation: "Para-K-casein הוא המקטע הבלתי מסיס שנותר במיצלת הקזאין ומצטרף לגבן. המקטע ההידרופילי הוא glycomacropeptide."
+            },
+            {
+                question: "לאחר חיתוך K-casein גדל שטח הפנים ההידרופובי של המיצלה.",
+                answer: true,
+                explanation: "החיתוך מסיר את המחסום בפני אגרגציה ומגדיל את החשיפה ההידרופובית. במקביל חלה ירידה בנפח המיצלה ובמסתה."
+            },
+            {
+                question: "שלב האגרגציה מתחיל לאחר שכ-80% מן ה-K-casein עבר חיתוך אנזימטי.",
+                answer: true,
+                explanation: "כ-80% חיתוך הוא הסף המתואר לתחילת האגרגציה. לכן שינוי חלקי קטן יותר אינו מבטיח ששלב יצירת הגבן כבר יתחיל."
+            },
+            {
+                question: "ה-Secondary phase הוא השלב שבו האנזים חותך את הקשר Phe 105–Met 106.",
+                answer: false,
+                explanation: "החיתוך מתרחש ב-Primary phase. ה-Secondary phase הוא שלב ספונטני של אגרגציה וקואגולציה."
+            },
+            {
+                question: "חיתוך הזנב ההידרופילי של K-casein מפחית את יכולתו להחזיק את מיצלות הקזאין מופרדות.",
+                answer: true,
+                explanation: "הזנב ההידרופילי משמש מחסום בפני אגרגציה. הסרתו גורמת לאובדן יציבות ומאפשרת למיצלות להתחיל להתאגד."
+            },
+            {
+                question: "נוכחות יוני סידן לבדה מספיקה ליצירת גבן תקין גם כאשר הטמפרטורה נמוכה מ-20°C.",
+                answer: false,
+                explanation: "בנוסף לסידן נדרשת טמפרטורה מתאימה. מתחת ל-20°C לא מתרחשת הגבנה לפי תנאי התהליך המתוארים."
+            },
+            {
+                question: "מטריצת הג'ל התלת-ממדית כולאת גלובולות שומן, מים ומוצקים מסיסים.",
+                answer: true,
+                explanation: "צברי הקזאין יוצרים רשת הכולאת את המרכיבים האלה. הג'ל שנוצר מוקף במי גבינה וממשיך להתחזק."
+            },
+            {
+                question: "המונח clotting time קשור לפרק הזמן שבו מתפתחים קשרים ואגרגציה בשלב יצירת הגבן.",
+                answer: true,
+                explanation: "זהו הזמן המשויך להתפתחות הקואגולציה בשלב המשני. אין מדובר במשך ההמגון או הפסטור."
+            },
+            {
+                question: "בתום ההגבנה רצוי שהגבן יהיה חלש מכדי לאפשר חיתוך.",
+                answer: false,
+                explanation: "הגבן צריך להיות חזק דיו כדי לאפשר חיתוך והמשך עיבוד לייצור גבינות. חולשה המונעת חיתוך היא פגם באיכות ההגבנה."
+            },
+            {
+                question: "חלב ישן ובעל רמת חלבון נמוכה צפוי ליצור ג'ל חזק יותר מחלב באיכות טובה.",
+                answer: false,
+                explanation: "איכות חלב ירודה מובילה לג'ל חלש, לאיבוד קזאין ושומן ולסינרסיס מרובה. רמת חלבון נמוכה אינה מחזקת את הגבן."
+            },
+            {
+                question: "פסטור בטמפרטורה גבוהה עלול לגרום לדנטורציה של β-globulin ולתגובה המפריעה ל-K-casein.",
+                answer: true,
+                explanation: "תגובה זו מפריעה לתהליך ההגבנה ועלולה להוביל לגבן חלש. לכן לקבלת גבן מוצק ואחיד נדרש טיפול תרמי מינימלי."
+            },
+            {
+                question: "תחום הטמפרטורה האופטימלי להגבנה הוא מתחת ל-20°C.",
+                answer: false,
+                explanation: "מתחת ל-20°C לא מתרחשת הגבנה. התחום האופטימלי המתואר הוא 30–35°C."
+            },
+            {
+                question: "איכות האנזים, הכמות שלו, חוזקו ומידת פיזורו במכל עשויים להשפיע על איכות ההגבנה.",
+                answer: true,
+                explanation: "נדרשים אנזים איכותי בכמות מספקת, חוזק תקין ופיזור אחיד. פגיעה באחד התנאים עלולה להפריע לחיתוך ולהמשך יצירת הגבן."
+            },
+            {
+                question: "מחסור בסידן צפוי ליצור גבן קשה בעל טעמי לוואי.",
+                answer: false,
+                explanation: "מחסור בסידן יוצר גבן רך מדי. גבן קשה וטעמי לוואי קשורים דווקא לעודף סידן."
+            },
+            {
+                question: "ככל שמוסיפים יותר סידן, איכות הגבן משתפרת ללא כל מגבלה.",
+                answer: false,
+                explanation: "כמות הסידן צריכה להיות מאוזנת. עודף סידן עלול ליצור גבן קשה בעל טעמי לוואי, ולכן יותר סידן אינו תמיד טוב יותר."
+            },
+            {
+                question: "לאחר הוספת האנזים יש לבחוש מספר דקות כדי לפזרו, ולאחר מכן לסגור את הבוחשים.",
+                answer: true,
+                explanation: "בחישה קצרה מסייעת לפיזור האנזים במכל ההגבנה. לאחר הפיזור מפסיקים את פעולת הבוחשים בהתאם לתהליך המתואר."
+            },
+            {
+                question: "המגון מגדיל את יכולת החזקת המים של הגבן ועלול להקשות על ייצור גבינות חצי קשות וקשות.",
+                answer: true,
+                explanation: "הגדלת החזקת המים מקשה על יצירת גבן המתאים לסוגי גבינות אלה. זו אחת הסיבות שבדרך כלל נמנעים מהמגון למטרה זו."
+            },
+            {
+                question: "בחלב מהומגן יש יותר קזאין זמין להקרשה מאשר בחלב שלא עבר המגון.",
+                answer: false,
+                explanation: "בחלב מהומגן פחות קזאין זמין להקרשה. לכן ההמגון אינו משפר בהכרח את יכולת יצירת הגבן."
+            },
+            {
+                question: "פסטור בטמפרטורה גבוהה תמיד מחזק את הגבן משום שהוא מייצב את K-casein.",
+                answer: false,
+                explanation: "חימום גבוה עלול דווקא לגרום לחלבוני מי הגבינה להגיב עם K-casein ולהפריע להגבנה. התוצאה האפשרית היא גבן חלש."
+            },
+            {
+                question: "פעולת ההקרשה תלויה בקצב האנזימטי, ברמת חיתוך מספקת של K-casein ובקצב האגרגציה, וגורמים כגון pH וטמפרטורה משפיעים עליהם.",
+                answer: true,
+                explanation: "אלה שלושת המרכיבים המרכזיים של פעולת ההקרשה. טמפרטורה, pH, טיפול תרמי ורמת החלבון משפיעים על התפתחותם ועל איכות הגבן."
+            }
+        ];
+
+        // --- Global State Variables ---
+        let currentCardIndex = 0;
+        let isCardFront = true;
+        let isCardAnimating = false;
+        let currentMCQIndex = 0;
+        let currentTFIndex = 0;
+        let mcqAnswers = new Array(mcqData.length).fill(null);
+        let tfAnswers = new Array(tfData.length).fill(null);
+
+        // --- DOM Element References ---
+        const flashcardContent = document.getElementById('flashcard-content');
+        const cardCounter = document.getElementById('card-counter');
+        const prevCardBtn = document.getElementById('prev-card');
+        const nextCardBtn = document.getElementById('next-card');
+        const mcqQuestion = document.getElementById('mcq-question');
+        const mcqOptions = document.getElementById('mcq-options');
+        const mcqFeedback = document.getElementById('mcq-feedback');
+        const mcqExplanation = document.getElementById('mcq-explanation');
+        const mcqCounter = document.getElementById('mcq-counter');
+        const prevMCQBtn = document.getElementById('prev-mcq');
+        const nextMCQBtn = document.getElementById('next-mcq');
+        const viewAllMCQBtn = document.getElementById('view-all-mcq');
+        const mcqSingleView = document.getElementById('mcq-single-view');
+        const mcqAllQuestionsContainer = document.getElementById('mcq-all-questions');
+        const tfQuestion = document.getElementById('tf-question');
+        const tfOptionsContainer = document.getElementById('tf-options');
+        const tfFeedback = document.getElementById('tf-feedback');
+        const tfExplanation = document.getElementById('tf-explanation');
+        const tfCounter = document.getElementById('tf-counter');
+        const prevTFBtn = document.getElementById('prev-tf');
+        const nextTFBtn = document.getElementById('next-tf');
+        const viewAllTFBtn = document.getElementById('view-all-tf');
+        const tfSingleView = document.getElementById('tf-single-view');
+        const tfAllQuestionsContainer = document.getElementById('tf-all-questions');
+
+        // --- MathJax Re-rendering Helper ---
+        function triggerMathJax() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.error('MathJax error:', err.message));
+            }
+        }
+
+        function displayCard(index) {
+            if (!flashcardData || flashcardData.length === 0) return;
+            const cardData = flashcardData[index];
+            isCardFront = true;
+            flashcardContent.style.opacity = '1';
+            flashcardContent.textContent = cardData.term;
+            flashcardContent.className = 'flashcard-front-style';
+            cardCounter.textContent = `כרטיס ${index + 1} / ${flashcardData.length}`;
+            prevCardBtn.disabled = index === 0;
+            nextCardBtn.disabled = index === flashcardData.length - 1;
+            triggerMathJax();
+        }
+
+        function flipCard() {
+            if (isCardAnimating || !flashcardData || flashcardData.length === 0) return;
+            isCardAnimating = true;
+            flashcardContent.style.opacity = '0';
+            setTimeout(() => {
+                isCardFront = !isCardFront;
+                const cardData = flashcardData[currentCardIndex];
+                if (isCardFront) {
+                    flashcardContent.textContent = cardData.term;
+                    flashcardContent.className = 'flashcard-front-style';
+                } else {
+                    flashcardContent.textContent = cardData.definition;
+                    flashcardContent.className = 'flashcard-back-style';
+                }
+                flashcardContent.style.opacity = '1';
+                isCardAnimating = false;
+                triggerMathJax();
+            }, 300);
+        }
+
+        function displayMCQuestion(index) {
+            if (!mcqData || mcqData.length === 0) return;
+            const qData = mcqData[index];
+            mcqQuestion.textContent = qData.question;
+            mcqOptions.innerHTML = '';
+            mcqFeedback.classList.add('hidden');
+            mcqExplanation.classList.add('hidden');
+            qData.options.forEach((option, i) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => handleMCQAnswer(index, i);
+                mcqOptions.appendChild(button);
+            });
+            mcqCounter.textContent = `שאלה ${index + 1} / ${mcqData.length}`;
+            prevMCQBtn.disabled = index === 0;
+            nextMCQBtn.disabled = index === mcqData.length - 1;
+            if (mcqAnswers[index] !== null) {
+                highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, index, mcqAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleMCQAnswer(qIndex, selectedIndex) {
+            if (mcqAnswers[qIndex] !== null) return;
+            const isCorrect = selectedIndex === mcqData[qIndex].correctIndex;
+            mcqAnswers[qIndex] = { selected: selectedIndex, correct: isCorrect };
+            highlightMCQAnswer(mcqOptions, mcqFeedback, mcqExplanation, qIndex, selectedIndex);
+        }
+
+        function highlightMCQAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedIndex) {
+            const qData = mcqData[qIndex];
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach((button, i) => {
+                button.disabled = true;
+                if (i === qData.correctIndex) {
+                    button.classList.add('correct');
+                }
+                if (i === selectedIndex && i !== qData.correctIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+            feedbackEl.textContent = selectedIndex === qData.correctIndex ? "נכון!" : "לא נכון.";
+            feedbackEl.className = `feedback ${selectedIndex === qData.correctIndex ? 'correct' : 'incorrect'}`;
+            explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+            explanationEl.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayAllMCQ() {
+            if (!mcqData || mcqData.length === 0) return;
+            mcqSingleView.classList.add('hidden');
+            mcqAllQuestionsContainer.innerHTML = '';
+            mcqData.forEach((qData, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-container-all';
+                questionDiv.innerHTML = `
+                    <div class="question-text">${index + 1}. ${qData.question}</div>
+                    <div class="options">
+                        ${qData.options.map((option, i) => `<button data-qindex="${index}" data-oindex="${i}">${option}</button>`).join('')}
+                    </div>
+                    <div class="feedback hidden"></div>
+                    <div class="explanation hidden"></div>
+                `;
+                mcqAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                        const qIndex = parseInt(button.dataset.qindex);
+                        const oIndex = parseInt(button.dataset.oindex);
+                        if (mcqAnswers[qIndex] === null) {
+                            const isCorrect = oIndex === mcqData[qIndex].correctIndex;
+                            mcqAnswers[qIndex] = { selected: oIndex, correct: isCorrect };
+                        }
+                        const optionsDiv = button.closest('.options');
+                        const feedbackDiv = questionDiv.querySelector('.feedback');
+                        const explanationDiv = questionDiv.querySelector('.explanation');
+                        highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, mcqAnswers[qIndex].selected);
+                     };
+                 });
+                 if (mcqAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightMCQAnswer(optionsDiv, feedbackDiv, explanationDiv, index, mcqAnswers[index].selected);
+                 }
+            });
+            mcqAllQuestionsContainer.classList.remove('hidden');
+            triggerMathJax();
+        }
+
+        function displayTFQuestion(index) {
+            if (!tfData || tfData.length === 0) return;
+            const qData = tfData[index];
+            tfQuestion.textContent = qData.question;
+            tfFeedback.classList.add('hidden');
+            tfExplanation.classList.add('hidden');
+             const buttons = tfOptionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 button.disabled = false;
+                 button.classList.remove('correct', 'incorrect');
+                 button.onclick = () => handleTFAnswer(index, button.dataset.answer === 'true');
+             });
+            tfCounter.textContent = `שאלה ${index + 1} / ${tfData.length}`;
+            prevTFBtn.disabled = index === 0;
+            nextTFBtn.disabled = index === tfData.length - 1;
+            if (tfAnswers[index] !== null) {
+                highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, index, tfAnswers[index].selected);
+            }
+            triggerMathJax();
+        }
+
+        function handleTFAnswer(qIndex, selectedAnswer) {
+            if (tfAnswers[qIndex] !== null) return;
+            const isCorrect = selectedAnswer === tfData[qIndex].answer;
+            tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+            highlightTFAnswer(tfOptionsContainer, tfFeedback, tfExplanation, qIndex, selectedAnswer);
+        }
+
+        function highlightTFAnswer(optionsContainer, feedbackEl, explanationEl, qIndex, selectedAnswer) {
+             const qData = tfData[qIndex];
+             const buttons = optionsContainer.querySelectorAll('button');
+             buttons.forEach(button => {
+                 const buttonAnswer = button.dataset.answer === 'true';
+                 button.disabled = true;
+                 if (buttonAnswer === qData.answer) {
+                     button.classList.add('correct');
+                 }
+                 if (buttonAnswer === selectedAnswer && buttonAnswer !== qData.answer) {
+                     button.classList.add('incorrect');
+                 }
+             });
+             feedbackEl.textContent = selectedAnswer === qData.answer ? "נכון!" : "לא נכון.";
+             feedbackEl.className = `feedback ${selectedAnswer === qData.answer ? 'correct' : 'incorrect'}`;
+             explanationEl.innerHTML = `<strong>הסבר:</strong> ${qData.explanation}`;
+             explanationEl.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function displayAllTF() {
+             if (!tfData || tfData.length === 0) return;
+             tfSingleView.classList.add('hidden');
+             tfAllQuestionsContainer.innerHTML = '';
+             tfData.forEach((qData, index) => {
+                 const questionDiv = document.createElement('div');
+                 questionDiv.className = 'question-container-all';
+                 questionDiv.innerHTML = `
+                     <div class="question-text">${index + 1}. ${qData.question}</div>
+                     <div class="tf-options">
+                         <button data-qindex="${index}" data-answer="true">נכון</button>
+                         <button data-qindex="${index}" data-answer="false">לא נכון</button>
+                     </div>
+                     <div class="feedback hidden"></div>
+                     <div class="explanation hidden"></div>
+                 `;
+                 tfAllQuestionsContainer.appendChild(questionDiv);
+                 const optionButtons = questionDiv.querySelectorAll('.tf-options button');
+                 optionButtons.forEach(button => {
+                     button.onclick = () => {
+                         const qIndex = parseInt(button.dataset.qindex);
+                         const selectedAnswer = button.dataset.answer === 'true';
+                         if (tfAnswers[qIndex] === null) {
+                             const isCorrect = selectedAnswer === tfData[qIndex].answer;
+                             tfAnswers[qIndex] = { selected: selectedAnswer, correct: isCorrect };
+                         }
+                         const optionsDiv = button.closest('.tf-options');
+                         const feedbackDiv = questionDiv.querySelector('.feedback');
+                         const explanationDiv = questionDiv.querySelector('.explanation');
+                         highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, qIndex, tfAnswers[qIndex].selected);
+                     };
+                 });
+                 if (tfAnswers[index] !== null) {
+                    const optionsDiv = questionDiv.querySelector('.tf-options');
+                    const feedbackDiv = questionDiv.querySelector('.feedback');
+                    const explanationDiv = questionDiv.querySelector('.explanation');
+                    highlightTFAnswer(optionsDiv, feedbackDiv, explanationDiv, index, tfAnswers[index].selected);
+                 }
+             });
+             tfAllQuestionsContainer.classList.remove('hidden');
+             triggerMathJax();
+        }
+
+        function initialize() {
+            if (flashcardData.length > 0) displayCard(currentCardIndex);
+            if (mcqData.length > 0) displayMCQuestion(currentMCQIndex);
+            if (tfData.length > 0) displayTFQuestion(currentTFIndex);
+            flashcardContent.addEventListener('click', flipCard);
+            prevCardBtn.addEventListener('click', () => { if (currentCardIndex > 0) { currentCardIndex--; displayCard(currentCardIndex); } });
+            nextCardBtn.addEventListener('click', () => { if (currentCardIndex < flashcardData.length - 1) { currentCardIndex++; displayCard(currentCardIndex); } });
+            prevMCQBtn.addEventListener('click', () => { if (currentMCQIndex > 0) { currentMCQIndex--; displayMCQuestion(currentMCQIndex); } });
+            nextMCQBtn.addEventListener('click', () => { if (currentMCQIndex < mcqData.length - 1) { currentMCQIndex++; displayMCQuestion(currentMCQIndex); } });
+            viewAllMCQBtn.addEventListener('click', displayAllMCQ);
+            prevTFBtn.addEventListener('click', () => { if (currentTFIndex > 0) { currentTFIndex--; displayTFQuestion(currentTFIndex); } });
+            nextTFBtn.addEventListener('click', () => { if (currentTFIndex < tfData.length - 1) { currentTFIndex++; displayTFQuestion(currentTFIndex); } });
+            viewAllTFBtn.addEventListener('click', displayAllTF);
+
+            // Initial MathJax render for static HTML (like the Theory section)
+            triggerMathJax();
+        }
+
+        initialize();
+    });
+    </script>
+</body>
+</html>
